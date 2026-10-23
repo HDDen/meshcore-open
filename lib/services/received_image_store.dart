@@ -47,6 +47,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../helpers/background_work_tracker.dart';
+import '../helpers/image_receive_background_work.dart';
 import '../models/image_codec_support.dart';
 import '../widgets/image_send_codec_binding.dart';
 import 'image_chunk_transport.dart';
@@ -664,6 +666,14 @@ abstract class ReceivedImageDecoder {
 /// ```
 /// `failedIncomplete` is terminal: the partial bodies are gone.
 class ReceivedImageStore extends ChangeNotifier {
+  final _backgroundWork = ImageReceiveBackgroundWork();
+
+  void attachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _backgroundWork.attach(tracker);
+
+  void detachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _backgroundWork.detach(tracker);
+
   final ReceivedImageBlobStore blobs;
   ReceivedImageDecoder? decoder;
 
@@ -880,7 +890,7 @@ class ReceivedImageStore extends ChangeNotifier {
     required int channelIndex,
     String? channelId,
     DateTime? at,
-  }) async {
+  }) => _backgroundWork.run(() async {
     final now = at ?? _clock();
     switch (outcome.status) {
       case ImageChunkStatus.malformed:
@@ -992,7 +1002,7 @@ class ReceivedImageStore extends ChangeNotifier {
         if (result == null) return null;
         return _handleCompleted(result, now, channelId);
     }
-  }
+  });
 
   /// Records one repeat of an image packet of ours, from the raw chunk body
   /// as it was heard in the RX log.
@@ -1137,7 +1147,7 @@ class ReceivedImageStore extends ChangeNotifier {
   /// A stream the reassembler gave up on (TTL or concurrency overflow).
   Future<ReceivedImageEntry?> handleFailure(
     ImageReassemblyFailure failure,
-  ) async {
+  ) => _backgroundWork.run(() async {
     final entry = entryForKey(failure.key);
     if (entry == null) return null;
     if (entry.state != ReceivedImageState.receiving) {
@@ -1159,7 +1169,7 @@ class ReceivedImageStore extends ChangeNotifier {
     );
     await evictToBudget(protect: failed.streamId);
     return failed;
-  }
+  });
 
   /// Records the local user's own send.
   ///
@@ -1404,9 +1414,9 @@ class ReceivedImageStore extends ChangeNotifier {
         if (decoder == null ||
             decoder.availability != ImageCodecAvailability.ready) {
           _queue.removeAt(0);
-          await _store(
+          await _backgroundWork.run(() => _store(
             entry.copyWith(state: ReceivedImageState.decoderUnavailable),
-          );
+          ));
           continue;
         }
         if (decoder.isBusy) {
@@ -1432,7 +1442,7 @@ class ReceivedImageStore extends ChangeNotifier {
   Future<void> _decodeOne(
     ReceivedImageEntry entry,
     ReceivedImageDecoder decoder,
-  ) async {
+  ) => _backgroundWork.run(() async {
     if (_decodeInFlight) {
       assert(false, 'ReceivedImageStore: concurrent decode attempted');
       debugPrint('received_image_store: refusing a concurrent decode');
@@ -1445,7 +1455,7 @@ class ReceivedImageStore extends ChangeNotifier {
     } finally {
       _decodeInFlight = false;
     }
-  }
+  });
 
   Future<void> _decodeOneExclusive(
     ReceivedImageEntry entry,

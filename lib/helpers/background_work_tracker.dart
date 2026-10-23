@@ -16,6 +16,7 @@ enum BackgroundWorkKind {
   location,
   backgroundFeature,
   queuedMessageRequest,
+  transportTeardown,
 }
 
 /// Неизменяемый снимок учёта, без кадров, адресов и содержимого сообщений.

@@ -10,6 +10,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../widgets/mco_image_message.dart';
+import '../helpers/background_work_tracker.dart';
+import '../helpers/notification_background_work.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/message_url_image_helper.dart';
@@ -29,6 +31,14 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  final _backgroundWork = NotificationBackgroundWork();
+
+  void attachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _backgroundWork.attach(tracker);
+
+  void detachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _backgroundWork.detach(tracker);
 
   static const MethodChannel _settingsChannel = MethodChannel(
     'mco_advanced/notification_settings',
@@ -107,6 +117,7 @@ class NotificationService {
   static const _batchWindow = Duration(seconds: 5);
 
   DateTime? _lastNotificationTime;
+  DateTime Function() _rateLimitNow = DateTime.now;
   final List<_PendingNotification> _pendingNotifications = [];
   bool _isBatchingActive = false;
   bool _suppressNotifications = false;
@@ -119,15 +130,23 @@ class NotificationService {
     }
   }
 
+  /// Часы только для проверки rate limit; по умолчанию используется DateTime.now.
+  @visibleForTesting
+  void setRateLimitClockForTest(DateTime Function() now) {
+    _rateLimitNow = now;
+  }
+
   /// Forgets the plugin, the permission answer, the tap handler and the
   /// rate limiter, so a test starts from a service nothing has used yet.
   @visibleForTesting
   void resetForTest() {
+    _backgroundWork.detachAll();
     _isInitialized = false;
     _canNotify = null;
     _tapHandler = null;
     _pendingTapPayload = null;
     _lastNotificationTime = null;
+    _rateLimitNow = DateTime.now;
     _pendingNotifications.clear();
     _isBatchingActive = false;
     _suppressNotifications = false;
@@ -779,7 +798,7 @@ class NotificationService {
     NotificationReply reply,
     String text, {
     int? badgeCount,
-  }) async {
+  }) => _backgroundWork.run(() async {
     if (!await _ensureInitialized()) return;
     final id = _conversationId(reply);
     final conversation = _conversations[id];
@@ -793,14 +812,14 @@ class NotificationService {
       _maxConversationMessages,
     );
     await _repostConversation(id, conversation);
-  }
+  });
 
   /// Tells the user a notification reply could not be sent.
   Future<void> showReplyFailed(
     NotificationReply reply,
     NotificationReplyFailure failure, {
     int? badgeCount,
-  }) async {
+  }) => _backgroundWork.run(() async {
     if (!await _ensureInitialized()) return;
     final reason = switch (failure) {
       NotificationReplyFailure.notConnected =>
@@ -838,7 +857,7 @@ class NotificationService {
     } catch (e) {
       debugPrint('Failed to show reply failure notification: $e');
     }
-  }
+  });
 
   Future<void> _repostConversation(int id, _Conversation conversation) async {
     try {
@@ -941,15 +960,15 @@ class NotificationService {
     unawaited(Future<void>.sync(() => handler(payload)));
   }
 
-  Future<void> cancelAll() async {
+  Future<void> cancelAll() => _backgroundWork.run(() async {
     _conversations.clear();
     await _notifications.cancelAll();
     await _updateBadge(0);
-  }
+  });
 
-  Future<void> cancel(int id) async {
+  Future<void> cancel(int id) => _backgroundWork.run(() async {
     await _notifications.cancel(id: id);
-  }
+  });
 
   Future<bool> showLicenseExpiryNotification({
     required String title,
@@ -986,31 +1005,31 @@ class NotificationService {
   Future<void> clearContactNotification(
     String contactId,
     int totalUnreadCount,
-  ) async {
+  ) => _backgroundWork.run(() async {
     if (!await _ensureInitialized()) return;
     _conversations.remove(contactId.hashCode);
     await _notifications.cancel(id: contactId.hashCode);
     await _updateBadge(totalUnreadCount);
-  }
+  });
 
   /// Cancel the notification for a specific channel and update the app badge.
   Future<void> clearChannelNotification(
     int channelIndex,
     int totalUnreadCount,
-  ) async {
+  ) => _backgroundWork.run(() async {
     if (!await _ensureInitialized()) return;
     _conversations.remove(channelIndex.hashCode);
     await _notifications.cancel(id: channelIndex.hashCode);
     await _updateBadge(totalUnreadCount);
-  }
+  });
 
   /// Cancel advert notifications for the given contact public key hexes.
-  Future<void> clearAdvertNotifications(List<String> contactIds) async {
+  Future<void> clearAdvertNotifications(List<String> contactIds) => _backgroundWork.run(() async {
     if (!await _ensureInitialized()) return;
     for (final id in contactIds) {
       await _notifications.cancel(id: 'advert:$id'.hashCode);
     }
-  }
+  });
 
   static const MethodChannel _badgeChannel = MethodChannel(
     'meshcore_open/app_badge',
@@ -1099,7 +1118,7 @@ class NotificationService {
   }
 
   Future<void> _queueNotification(_PendingNotification notification) async {
-    final now = DateTime.now();
+    final now = _rateLimitNow();
     final throttled =
         _lastNotificationTime != null &&
         now.difference(_lastNotificationTime!) < _minNotificationInterval;
@@ -1151,13 +1170,13 @@ class NotificationService {
       await _showBatchSummary(batch);
     }
 
-    _lastNotificationTime = DateTime.now();
+    _lastNotificationTime = _rateLimitNow();
   }
 
   Future<void> _showNotificationImmediately(
     _PendingNotification notification, {
     bool silent = false,
-  }) async {
+  }) => _backgroundWork.run(() async {
     try {
       switch (notification.type) {
         case _NotificationType.message:
@@ -1199,7 +1218,7 @@ class NotificationService {
     } catch (e) {
       debugPrint('Failed to show immediate notification: $e');
     }
-  }
+  });
 
   Future<void> _showBatchSummary(List<_PendingNotification> batch) async {
     // Group by type
@@ -1240,7 +1259,7 @@ class NotificationService {
     required int channelMessagesCount,
     required int advertsCount,
     required Iterable<String> advertNames,
-  }) async {
+  }) => _backgroundWork.run(() async {
     if (!await _ensureCanNotify()) return;
 
     // Build summary text using localized plurals
@@ -1291,7 +1310,7 @@ class NotificationService {
     } catch (e) {
       debugPrint('Failed to show batch summary notification: $e');
     }
-  }
+  });
 }
 
 class _MCOImageNotificationAttachment {

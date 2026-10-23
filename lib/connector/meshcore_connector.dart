@@ -25,8 +25,12 @@ import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/frame_background_work.dart';
+import '../helpers/image_transfer_background_work.dart';
 import '../helpers/message_processing_background_work.dart';
+import '../helpers/outgoing_queue_background_work.dart';
 import '../helpers/queued_message_request_background_work.dart';
+import '../helpers/radio_send_background_work.dart';
+import '../helpers/sync_background_work.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/reaction_helper.dart';
@@ -40,6 +44,7 @@ import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../helpers/connection_cleanup.dart';
+import '../helpers/connection_teardown_background_work.dart';
 import '../helpers/device_polling_intervals.dart';
 import '../helpers/radio_stats_send_polling.dart';
 import '../helpers/reconnect_backoff.dart';
@@ -83,6 +88,7 @@ import '../services/image_chunk_transport.dart'
         dataTypeAeicImage,
         senderPrefixFromKey;
 import '../services/image_codec_service.dart';
+import '../services/received_image_store.dart';
 import '../services/message_retry_service.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
@@ -107,6 +113,7 @@ import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
 import '../storage/message_store.dart';
+import '../storage/message_history_storage.dart';
 import '../storage/node_identity_store.dart';
 import '../storage/shared_message_history_helper.dart';
 import '../storage/unread_store.dart';
@@ -292,17 +299,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// (the USB native close waits out the kernel's closing_wait off the UI
   /// isolate), so state publication is suppressed once the connector is gone.
   bool _disposed = false;
-  final MeshCoreUsbManager _usbManager = MeshCoreUsbManager();
+  final MeshCoreUsbManager _usbManager;
   final LinuxBlePairingService _linuxBlePairingService =
       LinuxBlePairingService();
   StreamSubscription<Uint8List>? _usbFrameSubscription;
-  final MeshCoreTcpConnector _tcpConnector = MeshCoreTcpConnector();
+  final MeshCoreTcpConnector _tcpConnector;
   final BackgroundWorkTracker _backgroundWork = BackgroundWorkTracker();
   late final FrameBackgroundWork _frameBackgroundWork = FrameBackgroundWork(_backgroundWork);
   late final MessageProcessingBackgroundWork _messageProcessingBackgroundWork =
       MessageProcessingBackgroundWork(_backgroundWork);
   late final QueuedMessageRequestBackgroundWork _queuedMessageRequestWork =
       QueuedMessageRequestBackgroundWork(_backgroundWork);
+  late final SyncBackgroundWork _contactSyncWork =
+      SyncBackgroundWork(_backgroundWork, BackgroundWorkKind.contactSync);
+  late final SyncBackgroundWork _channelSyncWork =
+      SyncBackgroundWork(_backgroundWork, BackgroundWorkKind.channelSync);
+  late final SyncBackgroundWork _selfInfoWork =
+      SyncBackgroundWork(_backgroundWork, BackgroundWorkKind.transportSetup);
+  late final ConnectionTeardownBackgroundWork _teardownWork =
+      ConnectionTeardownBackgroundWork(_backgroundWork);
+  late final RadioSendBackgroundWork _radioSendBackgroundWork =
+      RadioSendBackgroundWork(_backgroundWork, _radioStatsSendPolling);
+  late final OutgoingQueueBackgroundWork _outgoingQueueWork =
+      OutgoingQueueBackgroundWork(_backgroundWork);
+  late final ImageTransferBackgroundWork _imageTransferWork =
+      ImageTransferBackgroundWork(_backgroundWork);
   Future<void> Function(Uint8List)? _frameWriterForTest;
   MeshCoreTransportType _activeTransport = MeshCoreTransportType.bluetooth;
   ReviewRadio? _reviewRadio;
@@ -483,6 +504,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // frames (chunks of one image arrive in separate GRP_DATA frames, and via the
   // firmware offline queue they may be minutes apart).
   ImageChunkTransport? _imageTransport;
+  ReceivedImageStore? _receivedImageStore;
   void Function(ImageChunkOutcome outcome)? _onImageChunk;
   // The images of a channel are those stamped with the IDs of its identity
   // group; the slot names only those written before the IDs existed.
@@ -524,7 +546,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   static const int _contactMsgBackoffMaxMs = 15000;
   int _pollingInterval = 30;
   bool _batteryRequested = false;
-  bool _awaitingSelfInfo = false;
+  bool _awaitingSelfInfoValue = false;
+  bool get _awaitingSelfInfo => _awaitingSelfInfoValue;
+  set _awaitingSelfInfo(bool value) {
+    _awaitingSelfInfoValue = value;
+    // Прежний флаг владеет логическим ожиданием, отдельно от actual Futures.
+    if (value) {
+      _selfInfoWork.ensureStarted();
+    } else {
+      _selfInfoWork.finishCurrent();
+    }
+  }
   bool _hasCompletedSelfInfoHandshake = false;
   bool _hasReceivedDeviceInfo = false;
   bool _hasLoadedCachedChannelStorage = false;
@@ -767,7 +799,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _storageUsedKb = -1;
   int _storageTotalKb = -1;
 
-  MeshCoreConnector() {
+  MeshCoreConnector({
+    MeshCoreTcpConnector? tcpConnector,
+    MeshCoreUsbManager? usbManager,
+  }) : _usbManager = usbManager ?? MeshCoreUsbManager(),
+       _tcpConnector = tcpConnector ?? MeshCoreTcpConnector() {
+    MessageHistoryStorage.instance.attachBackgroundWorkTracker(_backgroundWork);
+    _notificationService.attachBackgroundWorkTracker(_backgroundWork);
     _lastNotifyConnectionState = _notificationConnectionState;
     if (PlatformInfo.isIOS) {
       _lastAppLifecycleState = WidgetsBinding.instance.lifecycleState;
@@ -3931,6 +3969,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (changed) notifyListeners();
   }
 
+  /// Привязка учёта; начатая работа прежнего store завершается независимо.
+  void bindImageReceiveBackgroundWork(ReceivedImageStore? store) {
+    _receivedImageStore?.detachBackgroundWorkTracker(_backgroundWork);
+    _receivedImageStore = store;
+    store?.attachBackgroundWorkTracker(_backgroundWork);
+  }
+
   void initialize({
     required MessageRetryService retryService,
     required PathHistoryService pathHistoryService,
@@ -3943,6 +3988,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     TimeoutPredictionService? timeoutPredictionService,
     ImageCodecService? imageCodecService,
     ImageChunkTransport? imageTransport,
+    ReceivedImageStore? receivedImageStore,
     void Function(ImageChunkOutcome outcome)? onImageChunk,
     void Function(Uint8List blob, int channelIndex)? onImageChunkRepeat,
     void Function(int senderPrefix)? onImageSenderPrefix,
@@ -4001,6 +4047,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _translationService = translationService;
     _imageCodecService = imageCodecService;
     _imageTransport = imageTransport;
+    bindImageReceiveBackgroundWork(receivedImageStore);
     _onImageChunk = onImageChunk;
     _onImageChunkRepeat = onImageChunkRepeat;
     _onImageSenderPrefix = onImageSenderPrefix;
@@ -4038,6 +4085,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// where the messages are kept, and what the connector knows about
   /// contacts, routes and timeouts.
   RetryServiceConfig _retryServiceConfig() => RetryServiceConfig(
+    backgroundWorkTracker: _backgroundWork,
     sendMessage: _sendMessageDirect,
     addMessage: _addMessage,
     updateMessage: _updateMessage,
@@ -5200,7 +5248,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> connectUsb({
     required String portName,
     int baudRate = 115200,
-  }) async {
+  }) => _selfInfoWork.run(() async {
     if (_isOfflineMode) {
       _appDebugLogService?.warn(
         'connectUsb ignored while offline history is open',
@@ -5320,13 +5368,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await disconnect(manual: false);
       rethrow;
     }
-  }
+  });
 
   Future<void> connectTcp({
     required String host,
     required int port,
     bool automaticReconnect = false,
-  }) async {
+  }) => _selfInfoWork.run(() async {
     if (_isOfflineMode) {
       _appDebugLogService?.warn(
         'connectTcp ignored while offline history is open',
@@ -5478,7 +5526,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await disconnect(manual: false);
       rethrow;
     }
-  }
+  });
 
   Future<void> connectReview() async {
     if (_state == MeshCoreConnectionState.connecting ||
@@ -5612,9 +5660,43 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void resetSyncProgressForTest() => _resetSyncProgressState();
 
+  /// Общий запрос устройства без открытия BLE/USB/TCP транспорта.
+  @visibleForTesting
+  Future<void> requestDeviceInfoForTest() => _requestDeviceInfo();
+
+  @visibleForTesting
+  Future<bool> waitForSelfInfoForTest(Duration timeout) =>
+      _waitForSelfInfo(timeout: timeout);
+
+  @visibleForTesting
+  void resetConnectionHandshakeForTest() => _resetConnectionHandshakeState();
+
+  @visibleForTesting
+  bool get awaitingSelfInfoForTest => _awaitingSelfInfo;
+
+  @visibleForTesting
+  bool get selfInfoRetryActiveForTest => _selfInfoRetryTimer?.isActive ?? false;
+
+  @visibleForTesting
+  int get selfLocationWaiterCountForTest => _selfInfoRefreshWaiters.length;
+
+  /// Фикстура уже загруженного состояния: SELF_INFO не читает настоящую БД.
+  @visibleForTesting
+  void setCachedSelfInfoKeyForTest(Uint8List key) {
+    _persistedStateLoadedKey = pubKeyToHex(key);
+  }
+
   /// Продолжение после принятого фрагмента; разбор FR01 тестируется отдельно.
   @visibleForTesting
   void handleQueuedFragmentForTest() => _handleQueuedMessageReceived();
+
+  /// Существующий async hook финализации каналов, без запуска initialize.
+  @visibleForTesting
+  void setChannelImageStampForTest(
+    Future<void> Function(Map<int, String> slotIds)? stamp,
+  ) {
+    _stampImageChannelIds = stamp;
+  }
 
   /// Настоящее продолжение очереди; подменяется лишь обработка/сохранение кадра.
   @visibleForTesting
@@ -6692,7 +6774,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<bool> _waitForSelfInfo({required Duration timeout}) async {
+  Future<bool> _waitForSelfInfo({required Duration timeout}) => _selfInfoWork.run(() async {
     if (_selfPublicKey != null) return true;
     if (!isConnected) return false;
 
@@ -6721,7 +6803,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     timer.cancel();
     removeListener(listener);
     return result;
-  }
+  });
 
   Future<void> _startBleInitialSync() async {
     if (_bleInitialSyncStarted ||
@@ -6803,6 +6885,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactSyncTimeout?.cancel();
     _contactSyncTimeout = null;
     _isLoadingContacts = false;
+    _contactSyncWork.finishCurrent();
     _hasLoadedContacts = false;
     _contactSyncIndexes = null;
     _discoveredContactSyncIndexes = null;
@@ -6821,6 +6904,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _queueSyncTimeout?.cancel();
     _queueSyncTimeout = null;
     _isSyncingChannels = false;
+    _channelSyncWork.finishCurrent();
     _channelSyncInFlight = false;
     _channelSyncTimeout?.cancel();
     _channelSyncTimeout = null;
@@ -6980,7 +7064,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _disconnectInternal({
     required bool manual,
     required bool skipBleDeviceDisconnect,
-  }) async {
+  }) => _teardownWork.run(() async {
     if (_isOfflineMode) {
       await exitOfflineHistory();
       return;
@@ -7032,6 +7116,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     final cleanup = ConnectionCleanup(
       timeout: _disconnectStepTimeout,
+      runAction: _teardownWork.cleanup,
       onFailure: (stage, error, stack) => _appDebugLogService?.warn(
         'Disconnect cleanup stage=$stage failed: $error', tag: 'Connection',
       ),
@@ -7200,7 +7285,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!manual && _isRecoveringConnection) {
       _scheduleReconnect();
     }
-  }
+  });
 
   Future<void> sendFrame(
     Uint8List data, {
@@ -7623,7 +7708,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return (pathLen & 0x3F) | (mode << 6);
   }
 
-  Future<void> refreshDeviceInfo() async {
+  Future<void> refreshDeviceInfo() => _selfInfoWork.run(() async {
     if (!isConnected) return;
     if (PlatformInfo.isWeb &&
         _activeTransport == MeshCoreTransportType.bluetooth &&
@@ -7645,11 +7730,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _maybeRequestDeviceConfig();
 
     _scheduleSelfInfoRetry();
-  }
+  });
 
   Future<({double latitude, double longitude})?> refreshSelfLocation({
     Duration timeout = const Duration(seconds: 3),
-  }) async {
+  }) => _selfInfoWork.run(() async {
     if (!isConnected) return _validSelfLocationOrNull();
 
     final waiter = Completer<void>();
@@ -7664,7 +7749,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     return _validSelfLocationOrNull();
-  }
+  });
 
   ({double latitude, double longitude})? _validSelfLocationOrNull() {
     final latitude = _selfLatitude;
@@ -7673,7 +7758,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return (latitude: latitude!, longitude: longitude!);
   }
 
-  Future<void> _requestDeviceInfo() async {
+  Future<void> _requestDeviceInfo() => _selfInfoWork.run(() async {
     if (!isConnected || _awaitingSelfInfo) return;
     if (PlatformInfo.isWeb &&
         _activeTransport == MeshCoreTransportType.bluetooth &&
@@ -7694,7 +7779,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _deviceConfigRequested = false;
     _maybeRequestDeviceConfig();
     _scheduleSelfInfoRetry();
-  }
+  });
 
   /// Version-gated config queries, sent once the firmware version (DEVICE_INFO)
   /// and SELF_INFO (which the auto-add reply handler relies on) are known.
@@ -7740,6 +7825,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         timer,
       ) {
         if (!isConnected || !_awaitingSelfInfo) {
+          _selfInfoWork.finishCurrent();
           timer.cancel();
           return;
         }
@@ -7760,10 +7846,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       timer,
     ) {
       if (!isConnected) {
+        _selfInfoWork.finishCurrent();
         timer.cancel();
         return;
       }
       if (!_awaitingSelfInfo) {
+        _selfInfoWork.finishCurrent();
         timer.cancel();
         return;
       }
@@ -7802,6 +7890,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    return _contactSyncWork.run(
+      () => _getContactsCore(since: since, preserveExisting: preserveExisting),
+    );
+  }
+
+  Future<void> _getContactsCore({
+    int? since,
+    required bool preserveExisting,
+  }) async {
     final contactCacheLoad = _contactCacheLoadFuture;
     if (contactCacheLoad != null) {
       await contactCacheLoad;
@@ -7809,6 +7906,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     _contactSyncRequestedAt = DateTime.now();
+    final contactWork = _contactSyncWork.begin();
     _isLoadingContacts = true;
     _preserveContactsOnRefresh = preserveExisting;
     _contactSyncTotal = null;
@@ -7829,6 +7927,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _isLoadingContacts = false;
       notifyListeners();
       _continueAfterContactSync();
+      _contactSyncWork.finish(contactWork);
       rethrow;
     }
   }
@@ -7899,6 +7998,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // otherwise remains active forever, so treat prolonged RX silence as end.
     _contactSyncTimeout = Timer(_contactSyncIdleTimeout, () {
       if (!_isLoadingContacts) return;
+      final contactWork = _contactSyncWork.current;
       appLogger.warn(
         'Contact sync timed out after receiving $_contactSyncReceived contacts',
         tag: 'Connector',
@@ -7932,6 +8032,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _startPostChannelInitialQueuedMessageSync();
       }
       _continueAfterContactSync();
+      _contactSyncWork.finish(contactWork);
     });
   }
 
@@ -7961,7 +8062,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? replyToSenderName,
     String? replyToText,
     int? replyToTimestamp,
-  }) => _radioStatsSendPolling.run(() async {
+  }) => _radioSendBackgroundWork.run(() async {
     // A marker is normalised before anything else: what is stored, what goes
     // on the wire and what a later `del:` command names have to be one string.
     // Skipped when committing a queued or retried message — that text came out
@@ -8581,7 +8682,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The region to send under instead of the channel's own: a reply to a
     // message heard under a region goes back there.
     String? region,
-  }) => _radioStatsSendPolling.run(() async {
+  }) => _radioSendBackgroundWork.run(() async {
     // See sendMessage: normalised up front, and only for a first send.
     var text =
         pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
@@ -9167,7 +9268,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function() resend, {
     required int minHops,
     required int maxResends,
-  }) async {
+  }) => _outgoingQueueWork.runRetry(() async {
     _channelHopChecks[messageId] = (resends: 0, maxResends: maxResends);
     _channelResendRevision++;
     notifyListeners();
@@ -9263,7 +9364,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _scheduleChannelNoRetransmissionWarning(messageId, since: lastAttemptAt);
       notifyListeners();
     }
-  }
+  });
 
   /// Moves with every change of the hop checks and shortfalls, for the
   /// transcript's selector: a notification alone does not rebuild it.
@@ -9379,7 +9480,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _flushDeferredChannelMessageSends() async {
+  Future<void> _flushDeferredChannelMessageSends() =>
+      _outgoingQueueWork.runSend(() async {
     if (_isFlushingDeferredChannelMessageSends ||
         _deferredChannelMessageSends.isEmpty ||
         !isConnected ||
@@ -9398,11 +9500,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     } finally {
       _isFlushingDeferredChannelMessageSends = false;
     }
-  }
+  });
 
   Future<void> _sendDeferredChannelMessage(
     _DeferredChannelMessageSend pending,
-  ) async {
+  ) => _outgoingQueueWork.runSend(() async {
     final outgoingRegion =
         pending.region ??
         await _outgoingChannelRegionForMessage(pending.channel.index);
@@ -9499,7 +9601,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       region: pending.region ?? getChannelRegion(pending.channel.index),
       waitForScopeReset: !shouldBypassAckAndRetry,
     );
-  }
+  });
 
   void _updatePendingChannelMessageRegion(String messageId, String? region) {
     for (final entry in _channelMessages.entries) {
@@ -9557,7 +9659,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required int channelIndex,
     required Duration interChunkDelay,
     void Function(int sent, int total)? onProgress,
-  }) async {
+  }) => _imageTransferWork.run(() async {
     if (blobs.isEmpty) return false;
     if (!supportsChannelData) return false;
     // `return` inside the scoped callback only exits the callback, so a
@@ -9583,7 +9685,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
     }, region: _channelSendScope(channelIndex));
     return sentAll;
-  }
+  });
 
   Future<void> _runScopedChannelSend(
     Future<void> Function() action, {
@@ -9857,7 +9959,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _retryService?.setSendingPaused(true);
   }
 
-  Future<void> resumePendingOutgoingMessages() async {
+  Future<void> resumePendingOutgoingMessages() =>
+      _outgoingQueueWork.runSend(() async {
     if (!isSessionReady || _isFlushingPendingOutgoingMessages) return;
     _isFlushingPendingOutgoingMessages = true;
     try {
@@ -9904,9 +10007,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _retryService?.setSendingPaused(false);
       }
     }
-  }
+  });
 
-  Future<void> _flushRetriableChannelMessageSends() async {
+  Future<void> _flushRetriableChannelMessageSends() =>
+      _outgoingQueueWork.runSend(() async {
     if (_isFlushingRetriableChannelMessageSends || !isSessionReady) return;
     _isFlushingRetriableChannelMessageSends = true;
     try {
@@ -9944,7 +10048,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     } finally {
       _isFlushingRetriableChannelMessageSends = false;
     }
-  }
+  });
 
   void scheduleContactMessage(
     Contact contact,
@@ -10316,7 +10420,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return pending.inputText;
   }
 
-  Future<void> _commitPendingContactSend(String messageId) async {
+  Future<void> _commitPendingContactSend(String messageId) =>
+      _outgoingQueueWork.runSend(() async {
     final pending = _pendingContactSends[messageId];
     if (pending == null) return;
     if (!isSessionReady) return;
@@ -10348,9 +10453,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         tag: 'Connector',
       );
     }
-  }
+  });
 
-  Future<void> _commitPendingChannelSend(String messageId) async {
+  Future<void> _commitPendingChannelSend(String messageId) =>
+      _outgoingQueueWork.runSend(() async {
     final pending = _pendingChannelSends[messageId];
     if (pending == null) return;
     if (!_committingPendingChannelSends.add(messageId)) return;
@@ -10407,7 +10513,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     } finally {
       _committingPendingChannelSends.remove(messageId);
     }
-  }
+  });
 
   Future<void> _failPendingChannelSend(_PendingChannelSend pending) async {
     final removed = _pendingChannelSends.remove(pending.message.messageId);
@@ -11166,6 +11272,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    _channelSyncWork.begin();
     _isLoadingChannels = true;
     _isSyncingChannels = true;
     _hasLoadedChannels = false;
@@ -11374,7 +11481,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     };
   }
 
-  Future<void> _completeChannelSync() async {
+  Future<void> _completeChannelSync() =>
+      _channelSyncWork.run(_completeChannelSyncCore);
+
+  Future<void> _completeChannelSyncCore() async {
     _channelSyncTimeout?.cancel();
 
     if (_pendingChannelSyncRestart) {
@@ -11407,6 +11517,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _cleanupChannelSync({required bool completed}) {
+    final channelWork = _channelSyncWork.current;
     _isSyncingChannels = false;
     _channelSyncInFlight = false;
     _isLoadingChannels = false;
@@ -11437,9 +11548,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!completed) {
       notifyListeners();
     }
+    _channelSyncWork.finish(channelWork);
   }
 
-  Future<void> _restartPendingChannelSync() async {
+  Future<void> _restartPendingChannelSync() =>
+      _channelSyncWork.run(_restartPendingChannelSyncCore);
+
+  Future<void> _restartPendingChannelSyncCore() async {
     if (!_pendingChannelSyncRestart || _channelSyncInFlight) return;
     final maxChannels = _pendingChannelSyncRestartMaxChannels;
     _pendingChannelSyncRestart = false;
@@ -11462,6 +11577,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _recalculateCachedChannelsUnreadTotal();
     }
 
+    _channelSyncWork.finishCurrent();
     await getChannels(maxChannels: maxChannels, force: true);
   }
 
@@ -11619,6 +11735,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         break;
       case respCodeContactsStart:
         debugPrint('Got CONTACTS_START');
+        _contactSyncWork.ensureStarted();
         _armContactSyncTimeout();
         if (!_preserveContactsOnRefresh &&
             _contactMessageSummarySnapshot.isEmpty) {
@@ -11705,6 +11822,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         break;
       case respCodeEndOfContacts:
         debugPrint('Got END_OF_CONTACTS');
+        final contactWork = _contactSyncWork.current;
         _contactSyncTimeout?.cancel();
         _contactSyncTimeout = null;
         _dropContactsMissingFromNode();
@@ -11738,6 +11856,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _startPostChannelInitialQueuedMessageSync();
         }
         _continueAfterContactSync();
+        _contactSyncWork.finish(contactWork);
         break;
       case respCodeContactMsgRecv:
       case respCodeContactMsgRecvV3:
@@ -16980,7 +17099,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return true;
   }
 
-  Future<void> _handleChannelInfo(Uint8List frame) async {
+  Future<void> _handleChannelInfo(Uint8List frame) =>
+      _channelSyncWork.run(() => _handleChannelInfoCore(frame));
+
+  Future<void> _handleChannelInfoCore(Uint8List frame) async {
     final channel = Channel.fromFrame(frame);
     if (channel == null) return;
     _unconfirmedChannelSlots.remove(channel.index);
@@ -18622,6 +18744,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearDirectEchoKey('dispose');
     _channelKeyHashCache.clear();
     _disposed = true;
+    _selfInfoWork.finishCurrent();
+    MessageHistoryStorage.instance.detachBackgroundWorkTracker(_backgroundWork);
+    _notificationService.detachBackgroundWorkTracker(_backgroundWork);
+    _receivedImageStore?.detachBackgroundWorkTracker(_backgroundWork);
     _backgroundWork.close();
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();

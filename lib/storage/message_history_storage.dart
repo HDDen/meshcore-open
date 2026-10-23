@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../helpers/background_work_tracker.dart';
+import '../helpers/persistence_background_work.dart';
 import '../models/wardrive_sample.dart';
 import 'data_root.dart';
 import 'message_history_database.dart';
@@ -16,6 +18,14 @@ class MessageHistoryStorage {
   MessageHistoryStorage._();
 
   static final MessageHistoryStorage instance = MessageHistoryStorage._();
+
+  final PersistenceBackgroundWork _persistenceWork = PersistenceBackgroundWork();
+
+  void attachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _persistenceWork.attach(tracker);
+
+  void detachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
+      _persistenceWork.detach(tracker);
 
   static const String databaseFileName = 'message_history.sqlite';
   static const String _discoveredContactsKey = 'discovered_contacts';
@@ -1206,6 +1216,7 @@ class MessageHistoryStorage {
   /// initialises the storage more than once in one process.
   Future<void> resetForTesting() async {
     await _database?.close();
+    _persistenceWork.detachAll();
     _database = null;
     for (final keys in _keys.values) {
       keys.clear();
@@ -1315,7 +1326,7 @@ class MessageHistoryStorage {
     MessageHistoryKind kind,
     String key,
     String value,
-  ) async {
+  ) => _persistenceWork.run(() async {
     _requireInitialized();
     final messages = _decodeMessageList(value, key);
     if (messages.isEmpty) return;
@@ -1362,13 +1373,13 @@ class MessageHistoryStorage {
     if (kind == MessageHistoryKind.direct && containsMarker) {
       _directMarkerKeys.add(key);
     }
-  }
+  });
 
   Future<void> replaceString(
     MessageHistoryKind kind,
     String key,
     String value,
-  ) async {
+  ) => _persistenceWork.run(() async {
     _requireInitialized();
     final messages = _decodeMessageList(value, key);
     if (kIsWeb) {
@@ -1405,13 +1416,13 @@ class MessageHistoryStorage {
         _directMarkerKeys.remove(key);
       }
     }
-  }
+  });
 
   Future<void> deleteMessage(
     MessageHistoryKind kind,
     String key,
     String messageId,
-  ) async {
+  ) => _persistenceWork.run(() async {
     _requireInitialized();
     if (kIsWeb) {
       final value = PrefsManager.instance.getString(key);
@@ -1432,9 +1443,10 @@ class MessageHistoryStorage {
         _directMarkerKeys.remove(key);
       }
     }
-  }
+  });
 
-  Future<void> remove(MessageHistoryKind kind, String key) async {
+  Future<void> remove(MessageHistoryKind kind, String key) =>
+      _persistenceWork.run(() async {
     _requireInitialized();
     if (kIsWeb) {
       await PrefsManager.instance.remove(key);
@@ -1449,7 +1461,7 @@ class MessageHistoryStorage {
     if (kind == MessageHistoryKind.direct) {
       _directMarkerKeys.remove(key);
     }
-  }
+  });
 
   void _requireInitialized() {
     if (!_initialized) {

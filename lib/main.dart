@@ -381,6 +381,7 @@ Future<void> _startApplication() async {
     timeoutPredictionService: timeoutPredictionService,
     imageCodecService: imageCodecService,
     imageTransport: kImageCodecFeatureAvailable ? imageTransport : null,
+    receivedImageStore: kImageCodecFeatureAvailable ? receivedImageStore : null,
     // ImageStreamReassembler.addChunk already forwards every outcome to the
     // store together with the channel index (which ImageChunkOutcome itself
     // does not carry), so onImageChunk would be a second, channel-blind path.

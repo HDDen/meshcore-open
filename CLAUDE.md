@@ -2101,6 +2101,199 @@ channel data и локальные источники учитываются, к
 Принятый `test/connector/queued_message_request_baseline_test.dart` сохранён:
 сроки, ранний пустой ответ, ошибки/поздняя запись и сброс проверяются настоящим
 алгоритмом; отдельные регрессии счётчиков — `queued_message_request_work_tracking_test.dart`.
+Перед подключением контактов/каналов принят владельцем
+`test/connector/contact_channel_sync_baseline_test.dart`: ожидание END/idle timeout,
+поканальные retry/restart и async-финализация перед запуском очереди сообщений.
+Fixture с mock preferences и пустыми слотами проверяет lifecycle без native
+handshake/SQLite. Через `helpers/sync_background_work.dart` подключены
+`contactSync`/`channelSync`: логическое ожидание ответов отдельно от реальных
+async-участков подготовки контактов, обработки каналов, restart и финализации.
+Reset снимает ожидания, сохраняя удержания незавершённых Future. END/idle timeout,
+retry, ERR_NOT_FOUND и queued handoff сохраняют прежний порядок и сроки.
+Старый токен не снимает новый; счётчик одного kind может включать несколько
+удержаний. Принятый baseline неизменен, новые счётчики проверяет отдельный
+`contact_channel_sync_work_tracking_test.dart`. Не ожидаемые записи/replay
+остаются вне этого участка; CPU/Wi-Fi/heartbeat и 14 параметров прежние.
+Для участка подготовки direct/channel отправок принят владельцем
+`test/connector/radio_send_preparation_baseline_test.dart`: существующая активность
+polling до записи, ошибки/timeout/dispose и канальная последовательность scope/ACK.
+Это изолированный lifecycle baseline без node scope/SQLite и реальной подписи;
+через `helpers/radio_send_background_work.dart` подключён общий `radioSend`
+вместе с прежним `RadioStatsSendPolling.run` в двух send entrypoints. Удержание
+начинается до callback подготовки и заканчивается с исходным send-Future;
+включает прежние ожидаемые scope/text ACK/reset. Параллельные вызовы независимы,
+caller timeout/dispose не объявляют исходную операцию завершённой. После write
+timeout незавершённый writer сохраняет свой отдельный `transportWrite`;
+после close late calls выполняются прежним кодом без новых leases.
+Принятый baseline неизменен, отдельные регрессии — `radio_send_work_tracking_test.dart`.
+Unawaited/дальнейшие retry и scheduled/deferred операции требуют своего учёта;
+CPU/Wi-Fi/heartbeat и параметры профилей прежние. Команды — `documentation/background-activity.md`.
+Перед подключением direct ACK/retry подготовлен
+`test/services/retry_lifecycle_baseline_test.dart`: per-contact/global очередь,
+SENT/ACK/backoff, pause/resume, failed grace, отмена/незавершённый radio-Future.
+`pendingMessageCount` включает пассивные failed-записи позднего ACK и не является
+общим busy. Fixture без connector/native/БД; принятый владельцем baseline сохранён.
+Через `helpers/retry_background_work.dart` и необязательный
+`RetryServiceConfig.backgroundWorkTracker` коннектор передаёт общий реестр.
+Kind `retry` считает отдельно логические queue/SENT/ACK/backoff ожидания и actual
+`_attemptSend`, поэтому count может превышать число сообщений. Pause снимает
+ожидания, resume восстанавливает только неразрешённые; failed grace не busy.
+Cancel/dispose/rebind не освобождают незавершённый radio/path Future, сервис не
+закрывает общий tracker. Без tracker/после close callbacks сохраняют прежний путь.
+Таймеры, ACK/очереди/grace, pendingMessageCount и polling остаются прежними;
+канальные повторы/scheduled/deferred и unawaited cleanup требуют своего охвата.
+Регрессии — `retry_work_tracking_test.dart`, `retry_work_binding_test.dart`;
+команды и границы — `documentation/background-activity.md`.
+Принят владельцем baseline `test/connector/outgoing_queue_lifecycle_baseline_test.dart`:
+канальные hop-loop/deadline и pending resend, scheduled commit/resume/cancel,
+deferred flush после END с сохранением порядка и защитой от повторного запуска.
+Фикстура без реальной ноды/SQLite, writer и готовность сессии синтетические.
+`OutgoingQueueBackgroundWork` учитывает исходный hop-loop как `retry`,
+commit/resume/deferred/replay Future как `radioSend`, включая подготовку scope.
+Вложенные этапы имеют отдельные удержания; passive scheduled wait и очереди
+до триггера не busy. Dispose/cancel не освобождают незавершённый Future;
+после закрытия реестра callbacks идут прежним путём без новых leases.
+Таймеры, guard/order/ACK и старый polling сохранены. Новые регрессии —
+`outgoing_queue_work_tracking_test.dart`; пакет принят владельцем.
+Непокрытые ошибки/reconnect replay и прочие владельцы остаются по карте;
+снимок пока не разрешает отпускать CPU. Команды — в том же руководстве.
+Принят baseline `image_send_lifecycle_baseline_test.dart`: настоящий
+`sendImageChunks`, общий scope lock, pacing/progress/ACK, ошибки, disconnect,
+caller timeout и dispose. `ImageTransferBackgroundWork` теперь оборачивает
+исходный `sendImageChunks` целиком как `imageTransfer`, от ожидания scope lock
+до reset, включая паузы. Параллельные вызовы независимы; caller timeout/dispose
+не снимают actual lease, closed пропускает callback без новой регистрации.
+После прежнего write timeout физический writer может оставаться отдельным
+`transportWrite`. Тело метода, wire/кодеки/ACK/pacing и старые false/exception
+ветви сохранены. Пакет `image_send_work_tracking_test.dart` и helper-тестов
+принят владельцем. Capability/writer синтетические; очередь
+ImageChunkTransport, encoding/decoding/RX reassembly и диск этим шагом не покрыты.
+Принят baseline `test/storage/history_persistence_lifecycle_baseline_test.dart`:
+ожидание реальной записи, ошибки/внешний timeout/parallel/detached writes,
+обновление caches только после БД и model-store entrypoints. SQLite в памяти,
+gates перед настоящими DB-методами; SQL/режим сохранения не менялись.
+`PersistenceBackgroundWork` теперь оборачивает setString/replaceString/
+deleteMessage/remove до завершения исходного callback и caches как persistence.
+Storage общий: constructor коннектора прикрепляет наблюдателя с принятием уже
+начатых записей, dispose открепляет будущие регистрации, сохраняя active holds
+до окончания записи. Несколько наблюдателей видят одну общую работу независимо;
+reattach не удваивает один lease. Test reset снимает подписки без обнуления
+начатых операций. Принятые baseline не переписаны; новый persistenceWorkTests
+принят владельцем. Без SQLite storage-сценарии пропускаются, такой skip их не проверяет.
+Другие DB-операции, миграции, чтения, web и disk durability требуют своего охвата;
+CPU/Wi-Fi/service/heartbeat и режим сохранения этот учёт не меняет.
+Принят baseline `notification_lifecycle_baseline_test.dart`: разные границы
+public Future и native show, advert batch/rate limit/suppression, caught errors,
+cancel и reply. Для детерминированных сроков добавлен setRateLimitClockForTest;
+по умолчанию и после reset используются DateTime.now, изменены только два
+обращения rate limiter к часам. Native plugin подменён MethodChannel.
+`NotificationBackgroundWork` учитывает подготовку/show, summary, own/failed reply
+и cancel/clear до завершения исходного callback как notification. Detached show
+direct/channel учитывается независимо от раннего возврата public Future.
+Пассивное ожидание advert batch не удерживает реестр; фактический show после
+таймера удерживает. Constructor коннектора принимает текущие операции singleton,
+dispose снимает будущие регистрации без завершения active holds; новый коннектор
+принимает незавершённые операции. Reset тестов снимает bindings, сохраняя holds.
+Тела девяти методов, RX, rate limit и особенности suppression/cancelAll сохранены.
+Пакет notificationWorkTests принят владельцем 23.10.2026. Отдельные badge,
+другие show entrypoints, background action isolate и завершение underlying image
+I/O после существующего timeout требуют отдельного охвата; CPU-политика прежняя.
+Принят baseline `image_receive_lifecycle_baseline_test.dart`: запись
+принятого bitstream/sidecar и отдельная очередь декодирования ReceivedImageStore.
+ImageStreamReassembler передаёт outcomes без ожидания; intake может завершиться
+раньше decode, тогда как requestDecode/settle ждут текущую работу. Неполные
+чанки, фон и busy encoder оставляют пассивное ожидание; isDecoding может быть
+true без активного decoder Future. Запрос отмены не завершает native Future;
+dispose очищает очередь, но текущую декодировку не отменяет.
+`ImageReceiveBackgroundWork` считает handleOutcome/handleFailure, active
+_decodeOne (включая подготовку/сохранение/eviction) и запись decoderUnavailable
+из очереди как receiveAssembly. Passive pending chunks/background/busy очередь
+не удерживаются. Intake/decode могут иметь два независимых lease одного
+изображения; count не равен числу изображений. Store ведёт операции независимо
+от наблюдателей: bindImageReceiveBackgroundWork принимает pending, смена store
+и dispose коннектора сохраняют начатые holds; closed не принимает новые.
+Main передаёт store через initialize при доступной image feature.
+Принятые baseline не переписаны; подготовлены 21 service-регрессия и 10
+helper-тестов; пакет imageReceiveWorkTests принят владельцем. Startup/load/paging/delete,
+outgoing registration, отдельные записи manual/memory-pressure/repeat metadata,
+encoding/backend и FR01 требуют охвата. CPU-политика и 14 параметров прежние.
+Принят baseline `handshake_lifecycle_baseline_test.dart`: общий запрос
+устройства, refresh, ожидание SELF_INFO, retry 3500 мс и location waiters.
+Его 22 сценария используют @visibleForTesting adapters. Writer синтетический,
+SELF_INFO использует fixture cached-path без привязки stores/первой загрузки БД.
+Проверки transport labels BLE/TCP/USB относятся к общей non-web ветви таймера,
+не к реальному открытию соединения. Native connect, cold initial sync и Web
+handshake требуют отдельного охвата.
+Теперь существующий SyncBackgroundWork считает общий handshake как
+transportSetup: логическое ожидание принадлежит прежнему awaiting-флагу,
+четыре actual Future (request/refresh/location/wait) учитываются независимо.
+Reset/SELF_INFO снимают только логическую фазу; local timeout/известный ключ
+не снимают ещё установленный awaiting-флаг. Retry при потере связи и dispose
+снимают logical hold, сохраняя actual запросы/waiters и отдельный transportWrite.
+Значение флага, команды, deadlines/retry и прежние error/early-response quirks
+сохранены; после close новые leases не создаются. Подготовлены 23 отдельные
+connector-регрессии; handshakeWorkTests принят владельцем.
+Native connect/cold load/полный initial sync и Web требуют своего охвата;
+CPU-политика, таймеры и 14 параметров энергосбережения прежние.
+Принят baseline `tcp_connect_lifecycle_baseline_test.dart`: полный
+connectTcp от ожидания teardown/stopScan/dial до SELF_INFO и syncTime, cancel
+и late completion. Конструктор принимает optional TCP manager; default по-прежнему
+создаёт MeshCoreTcpConnector. Подготовлены 20 сценариев с synthetic manager,
+cached SELF_INFO, frame writer seam и настоящим teardown при пустом USB/BLE.
+Реальные сокеты/overlay, native lifetime и cold load не проверяются новой
+фикстурой; stopScan/default scope изолированы. Теперь прежний SyncBackgroundWork
+учитывает весь connectTcp как transportSetup до завершения исходного Future,
+включая ожидаемый cleanup; тело алгоритма сохранено. Отмена/reset/dispose и
+внешний timeout не снимают удержание незавершённого connect. Общий handshake
+и фактический writer учитываются независимо; после write timeout writer может
+оставаться активным уже после завершения connect. Unawaited default-region
+refresh и полный initial sync этим удержанием не охватываются.
+Пакет tcpConnectWorkTests с 22 отдельными сценариями принят владельцем;
+CPU-политика и 14 параметров прежние.
+Принят baseline `usb_connect_lifecycle_baseline_test.dart`: подготовлены
+20 сценариев полного connectUsb с fake manager, без создания UsbSerialService
+и flserial. Конструктор принимает optional usbManager с прежним default.
+Проверяются open/200 мс/SELF_INFO/time sync, ошибки/guards/teardown и ожидание
+USB close без внешнего deadline; native FFI join не менялся. Теперь весь
+connectUsb выполняется через прежний SyncBackgroundWork как transportSetup
+до завершения исходного Future с ожидаемым cleanup; тело алгоритма сохранено.
+Reset/отмена/caller timeout/dispose не снимают незавершённый connect; writer и
+logical SELF_INFO независимы. Пакет usbConnectWorkTests с 22 отдельными
+регрессиями принят владельцем.
+Unawaited region refresh и последующий disconnect после уже завершённого
+connect не входят в эту обёртку. Реальный native USB/Web/cold load и позднее
+открытие после отмены требуют отдельного охвата. CPU-политика прежняя.
+Принят baseline `disconnect_lifecycle_baseline_test.dart`: 20 сценариев
+настоящего disconnect с synthetic close/release, без изменения коннектора.
+Фиксируются coalescing, приоритет ручного отключения, порядок USB/TCP/models,
+ошибки manager close и отдельные трёхсекундные deadlines release моделей.
+Позднее завершение timeout-операции не должно продолжать старый teardown.
+Native FFI, review/offline storage и настоящие модели фикстура не открывает.
+Теперь ConnectionTeardownBackgroundWork считает весь _disconnectInternal
+как transportTeardown; параллельные callers не создают дубликат outer hold.
+ConnectionCleanup получил optional runAction: отдельный actual hold создаётся
+до action и живёт ниже timeout, до фактического результата/ошибки. Null и
+синхронные ошибки сохраняют прежнее выполнение; late completion освобождает
+только своё удержание. CPU-политика и правила закрытия прежние.
+Пакет disconnectWorkTests с 16 connector-регрессиями и восемью helper-тестами
+принят владельцем. Baseline не переписан. В двух TCP/USB tracking-тестах
+общая сумма теперь учитывает новый kind, setup/write assertions сохранены.
+Пустой snapshot сон не разрешает; underlying native I/O вне Futures manager
+и неохваченные владельцы ещё требуют отдельной проверки.
+Следующий baseline — `ble_connect_lifecycle_baseline_test.dart`: 20 сценариев
+Windows-ветви плагина, другие платформы явно skipped. Device/GATT/bond ответ
+синтетические; настоящие connect/disconnect/handshake сохранены. Проверяются
+scan/open/discovery/CCCD, Windows-пауза 750 мс и CCCD retries 1/2 с, ошибки,
+guards/cancel/caller timeout и time sync. После двух missing SELF_INFO окон
+BLE connect-Future по прежнему коду может завершиться без ошибки, сохраняя
+незавершённый handshake; это baseline, не новый критерий готовности сессии.
+Native iOS/Linux pairing/Web/Android MTU, cold sync и аппаратный BLE требуют
+своего охвата. BleConnectBaselineTests принят владельцем после исправления
+фикстуры; outer hold полного BLE connect пока не добавлен. Коннектор
+не менялся на этапе этого baseline.
+Потоки фикстуры имеют управляемые Stream/Subscription: cancel завершается
+в зоне widget-теста. Это устраняет ожидание root-Zone Future._nullFuture
+от broadcast.cancel внутри FakeAsync; проверки и таймауты сценариев сохранены.
 
 `AirActivityDot` (`widgets/radio_stats_entry.dart`) blinks while the last
 radio-stats frame showed the node's airtime growing

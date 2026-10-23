@@ -9,6 +9,8 @@ import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/path_selection.dart';
 import '../helpers/direct_message_progress_helper.dart';
+import '../helpers/background_work_tracker.dart';
+import '../helpers/retry_background_work.dart';
 import '../helpers/direct_progress_rx_parser.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcotxt_app_codec.dart';
@@ -121,6 +123,8 @@ class RetryServiceConfig {
   /// to that attempt instead of the snapshot taken at queueing.
   final Contact? Function(String publicKeyHex)? findContact;
 
+  final BackgroundWorkTracker? backgroundWorkTracker;
+
   const RetryServiceConfig({
     required this.sendMessage,
     required this.addMessage,
@@ -137,6 +141,7 @@ class RetryServiceConfig {
     this.onDeliveryObserved,
     this.selectRetryPath,
     this.findContact,
+    this.backgroundWorkTracker,
   });
 }
 
@@ -197,6 +202,16 @@ class MessageRetryService extends ChangeNotifier {
   int _sendingGeneration = 0;
 
   RetryServiceConfig? _config;
+  final RetryBackgroundWork _retryWork = RetryBackgroundWork();
+
+  Iterable<String> get _waitingRetryMessageIds => _sendingPaused
+      ? const <String>[]
+      : _pendingMessages.entries
+          .where((entry) =>
+              entry.value.status != MessageStatus.failed &&
+              entry.value.status != MessageStatus.delivered &&
+              !_resolvedMessages.contains(entry.key))
+          .map((entry) => entry.key);
 
   /// Extra time allowed for RESP_CODE_SENT on top of the delivery timeout
   /// before an attempt with no SENT reply is treated as timed out.
@@ -207,6 +222,7 @@ class MessageRetryService extends ChangeNotifier {
   void initialize(RetryServiceConfig config) {
     _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _config = config;
+    _retryWork.attach(config.backgroundWorkTracker, _waitingRetryMessageIds);
     config.appSettingsService?.addListener(_syncRxProgressPowerSettings);
     _syncRxProgressPowerSettings();
   }
@@ -232,6 +248,7 @@ class MessageRetryService extends ChangeNotifier {
     if (_sendingPaused == paused) return;
     _sendingPaused = paused;
     if (paused) {
+      _retryWork.finishAll();
       _sendingGeneration++;
       for (final timer in _timeoutTimers.values) {
         timer.cancel();
@@ -240,6 +257,7 @@ class MessageRetryService extends ChangeNotifier {
       return;
     }
 
+    _retryWork.synchronize(_waitingRetryMessageIds);
     for (final messageId in List<String>.from(_activeMessages)) {
       final pendingMessage = _pendingMessages[messageId];
       if (pendingMessage == null) continue;
@@ -365,6 +383,9 @@ class MessageRetryService extends ChangeNotifier {
 
     _pendingMessages[resolvedMessageId] = message;
     _pendingContacts[resolvedMessageId] = contact;
+    if (!_sendingPaused) {
+      _retryWork.begin(resolvedMessageId);
+    }
     _publishPendingMessageCount();
     if (preparedOutboundText != null) {
       _preparedOutboundTexts[resolvedMessageId] = preparedOutboundText;
@@ -456,6 +477,7 @@ class MessageRetryService extends ChangeNotifier {
   void _onMessageResolved(String messageId, String contactKey) {
     if (_resolvedMessages.contains(messageId)) return;
     _resolvedMessages.add(messageId);
+    _retryWork.finish(messageId);
     // If cleanup already removed this message from the active set, it has
     // already pumped the queues; avoid double-pumping.
     if (!_activeMessages.remove(messageId)) return;
@@ -562,7 +584,10 @@ class MessageRetryService extends ChangeNotifier {
     }
   }
 
-  Future<void> _attemptSend(String messageId) async {
+  Future<void> _attemptSend(String messageId) =>
+      _retryWork.run(() => _attemptSendCore(messageId));
+
+  Future<void> _attemptSendCore(String messageId) async {
     if (_sendingPaused) return;
     final sendingGeneration = _sendingGeneration;
     final message = _pendingMessages[messageId];
@@ -1032,6 +1057,7 @@ class MessageRetryService extends ChangeNotifier {
     _retiredProgressPayloads.remove(messageId);
     _timeoutTimers.remove(messageId);
     _resolvedMessages.remove(messageId);
+    _retryWork.finish(messageId);
     // Cancellation (and other cleanup paths) must release the active in-flight
     // slot and pump waiting queues so the global cap does not stall forever.
     if (_activeMessages.remove(messageId) && contactKey != null) {
@@ -1388,6 +1414,7 @@ class MessageRetryService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _retryWork.close();
     _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _pendingMessageCountDisposed = true;
     _pendingMessageCount.dispose();
