@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
+import '../helpers/background_task_options.dart';
 import '../l10n/app_localizations.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
@@ -84,13 +85,15 @@ class BackgroundService {
         showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(5000),
-        autoRunOnBoot: false,
-        allowWifiLock: false,
-      ),
+      foregroundTaskOptions: backgroundTaskOptions(),
     );
     _initialized = true;
+    if (kDiagnosticCpuOff) {
+      _debugLogService?.warn(
+        'Diagnostic CPU-off: plugin wake lock disabled; heartbeat unchanged',
+        tag: 'Background',
+      );
+    }
     _debugLogService?.info(
       'Foreground service initialized',
       tag: 'Background',

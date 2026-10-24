@@ -30,6 +30,7 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 17. [Review Mode](review-mode.md) - Simulated radio and reviewer instructions for Google Play and App Store review
 18. [Network Map](network-map.md) - Online repeater map, adding and managing repeaters from it, opt-in uploads, and hiding a repeater
 19. [Энергосбережение](power-saving.md) — профили, радиостатистика, интервалы батареи и GPS ноды
+20. [Диагностический CPU-off на Android](android-cpu-wake-lock-experiment.md) — параметр сборки `MCO_DIAGNOSTIC_CPU_OFF` (по умолчанию `false`), команды сборки и проверки
 
 ## App Overview
 

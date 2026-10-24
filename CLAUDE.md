@@ -36,6 +36,14 @@ This checkout is the **"Advanced mod"** fork (app title `MeshCore Open (Advanced
 ~/flutter/bin/flutter run -d windows --dart-entrypoint-args=--data-dir=<absolute path>
 ```
 
+### Диагностические параметры сборки
+
+| Параметр | По умолчанию | Действие |
+|---|---|---|
+| `MCO_DIAGNOSTIC_CPU_OFF` | `false` | При `true` Android-служба запускается с `allowWakeLock=false` для сравнительного замера. Обычная сборка сохраняет CPU wake lock. |
+
+Включение: добавить `--dart-define=MCO_DIAGNOSTIC_CPU_OFF=true` к команде сборки. Это отдельный диагностический вариант APK; профиль энергосбережения в приложении этим флагом не переключается. После установки нужно остановить прежнюю службу и вручную переподключиться. Точные команды, проверки и ограничения: [диагностический CPU-off на Android](documentation/android-cpu-wake-lock-experiment.md).
+
 ## Project Structure
 
 ```
@@ -2997,6 +3005,8 @@ was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
 `BackgroundService.ensureBatteryOptimizationExemption` checks Android's battery-optimization whitelist, which is what lets the foreground service — and with it the BLE or TCP link — survive Doze. It has nothing to do with wardriving, which runs its own location service. The **check** runs on every launch and on the first explicit BLE connection; the **prompt** is spent once per install and recorded in `background_battery_exemption_asked_v1`, because it throws the user out to a system screen and repeating that every launch reads as nagging for something already declined. The record is written before the prompt, so backing out of that screen still counts as the one ask. Settings → Debug has an Android-only tile that asks again on purpose, through `force: true`, which steps past both that record and the once-per-reason guard held for the current run.
 
 `flutter_foreground_task` registers a connected-device `ForegroundService` (`foregroundServiceType="connectedDevice"`, `stopWithTask="false"`); a separate wardrive `location` foreground service is declared and enabled only via the Android-only wardrive path. `MainActivity` caches the main Flutter engine while the service has an active keep-alive reason. The engine sends an in-process heartbeat every 5 seconds; after 20 seconds without one, a surviving/restarted foreground task changes its notification to `app_connectionLostBreaked`. This heartbeat is not a BLE or LoRa packet. While the link stays down every failed reconnect attempt goes through `disconnect(manual: false)` and reports the loss again, seconds apart, so `BackgroundService.setConnectionLost` posts the `app_connectionLostReconnect` text once per outage (`_connectionLostPosted`) and leaves it in the notification until the link is back; a restored connection re-arms it, so the next loss is always announced. If Android kills the whole process, the service cannot reconstruct BLE because it has no connector of its own.
+
+Диагностический Android CPU-off управляется только compile-time параметром `MCO_DIAGNOSTIC_CPU_OFF=true` через `lib/helpers/background_task_options.dart`: обычная сборка сохраняет `allowWakeLock=true`, диагностическая задаёт false при инициализации службы. Repeat/heartbeat 5 с, timeout 20 с, owners, engine retention и Wi-Fi канал не меняются; автоматическая CPU policy этим не вводится. После установки требуется остановка старой службы и ручное переподключение. Прежние проверки обычного режима остаются в `test/services/background_activity_baseline_test.dart`, отдельный диагностический контракт — `test/services/background_cpu_diagnostic_test.dart`. Команды сборки/проверок и ограничения: `documentation/android-cpu-wake-lock-experiment.md`; аппаратный результат CPU-off пока не подтверждён.
 
 **Build config (`android/app/build.gradle.kts`)**: `applicationId = com.meshcore.mcoadvanced`, NDK `29.0.14206865`, Java/Kotlin 17 with core-library desugaring (`desugar_jdk_libs:2.1.4`), release signing via `key.properties` (debug fallback).
 
