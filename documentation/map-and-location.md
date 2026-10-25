@@ -201,10 +201,18 @@ Each waypoint includes: name, lat/lon, type label, and public key hex.
 
 ## Location Data Sources
 
-The phone's own GPS is **never used**. All location data comes from the mesh:
+Координаты нод поступают из mesh. Для локальной позиции на карте и измерений wardrive также может использоваться GPS телефона:
 
 1. **Device self-location**: Read from firmware device-info response. Set manually in Settings → Location, or updated automatically if the device has a GPS module.
 2. **Remote node locations**: Extracted from advertisement packets received over the mesh. Encoded as integer lat/lon × 1,000,000.
+
+### GPS телефона и discovery
+
+Поиск соседей из списка контактов не запрашивает GPS телефона. Разовый discovery с карты и определение позиции телефона выполняют ограниченный запрос координат (таймаут 15 секунд); если телефон не предоставил координаты, используется допустимая позиция ноды, когда она доступна. Координаты телефона в этих сценариях не записываются в ноду.
+
+Опция «Непрерывный GPS-location» удерживает постоянную подписку только при запущенном wardrive. Сохранённая включённая опция сама по себе не включает GPS после разового запроса. При остановке wardrive, выключении опции или освобождении сервиса подписка отменяется; запоздалая подготовка не может включить её обратно. Завершение разового запроса сохраняет GPS действующего wardrive.
+
+Ранее начатый разовый запрос может оставаться активным до получения координат или таймаута; это отличается от постоянной подписки. При аппаратной проверке нужно учитывать также активный wardrive и другие функции, запрашивающие геопозицию.
 
 ## Regions and offline use
 

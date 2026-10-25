@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/continuous_location_subscription.dart';
 import '../helpers/wardrive_background_requirements.dart';
 import '../helpers/wardrive_coverage_helper.dart';
 import '../storage/prefs_manager.dart';
@@ -86,7 +87,19 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   static const String _coveragePrecisionKey = 'wardrive_coverage_precision_v1';
 
   StreamSubscription<Uint8List>? _framesSubscription;
-  StreamSubscription<Position>? _positionSubscription;
+  bool _disposed = false;
+  int _locationRevision = 0;
+  late final _continuousLocation = ContinuousLocationSubscription<Position>(
+    prepare: _ensureLocationAvailable,
+    openStream: () => Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+      ),
+    ),
+    onData: _handleContinuousLocation,
+    onError: _handleContinuousLocationError,
+  );
   Timer? _autoDiscoveryTimer;
   Timer? _oneShotDiscoveryTimer;
   Timer? _discoveryResponseWaitTimer;
@@ -175,7 +188,9 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<({double latitude, double longitude})?> requestPhoneLocation() async {
+    final revision = _locationRevision;
     await _updateNodeLocationFromPhone(reportErrors: false);
+    if (_disposed || revision != _locationRevision) return null;
     final latitude = _lastPhoneLatitude;
     final longitude = _lastPhoneLongitude;
     if (latitude == null || longitude == null) return null;
@@ -191,7 +206,9 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     })?
   >
   _resolveDiscoveryLocation({required bool reportPhoneErrors}) async {
+    final revision = _locationRevision;
     await _updateNodeLocationFromPhone(reportErrors: reportPhoneErrors);
+    if (_disposed || revision != _locationRevision) return null;
     final phoneLatitude = _lastPhoneLatitude;
     final phoneLongitude = _lastPhoneLongitude;
     if (phoneLatitude != null && phoneLongitude != null) {
@@ -239,7 +256,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void start() {
-    if (_isRunning) return;
+    if (_disposed || _isRunning) return;
     _framesSubscription ??= _connector.receivedFrames.listen(_handleFrame);
     _isRunning = true;
     _showMapState = true;
@@ -392,39 +409,19 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _startContinuousLocationStream() async {
-    if (_positionSubscription != null) return;
-    try {
-      await _ensureLocationAvailable();
-      _positionSubscription =
-          Geolocator.getPositionStream(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              distanceFilter: 0,
-            ),
-          ).listen(
-            _handleContinuousLocation,
-            onError: (Object error) {
-              _lastPhoneLatitude = null;
-              _lastPhoneLongitude = null;
-              _lastPhoneLocationAt = null;
-              _lastLocationError = _formatWardriveError(error);
-              notifyListeners();
-            },
-          );
-    } catch (error) {
-      _lastPhoneLatitude = null;
-      _lastPhoneLongitude = null;
-      _lastPhoneLocationAt = null;
-      _lastLocationError = _formatWardriveError(error);
-      notifyListeners();
-    }
+    if (_disposed || !_isRunning || !_continuousGpsEnabled) return;
+    await _continuousLocation.start();
   }
 
-  Future<void> _stopContinuousLocationStream() async {
-    final subscription = _positionSubscription;
-    if (subscription == null) return;
-    _positionSubscription = null;
-    await subscription.cancel();
+  Future<void> _stopContinuousLocationStream() => _continuousLocation.stop();
+
+  void _handleContinuousLocationError(Object error) {
+    if (_disposed) return;
+    _lastPhoneLatitude = null;
+    _lastPhoneLongitude = null;
+    _lastPhoneLocationAt = null;
+    _lastLocationError = _formatWardriveError(error);
+    notifyListeners();
   }
 
   void _handleContinuousLocation(Position position) {
@@ -511,6 +508,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _stop({required bool resetForegroundResume}) {
+    _locationRevision++;
     if (!_isRunning) return;
     if (resetForegroundResume) {
       _resumeAfterForegroundPause = false;
@@ -598,6 +596,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _isSendingDiscovery = true;
     notifyListeners();
 
+    final locationRevision = _locationRevision;
     final previousDiscoveryKeys = Set<String>.from(_currentDiscoveryPublicKeys);
     final previousDiscoveries = List<WardriveDiscoveryResult>.from(
       _recentDiscoveries,
@@ -609,6 +608,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       final location = await _resolveDiscoveryLocation(
         reportPhoneErrors: startWardrive,
       );
+      if (_disposed || locationRevision != _locationRevision) return;
       if (startWardrive && location == null) {
         throw StateError(
           _lastLocationError ??
@@ -685,7 +685,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       if (_isRunning) {
         _scheduleAutoDiscovery(_autoDiscoveryInterval);
       }
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -707,19 +707,23 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _updateNodeLocationFromPhone({
     required bool reportErrors,
   }) async {
+    if (_disposed) return;
+    final revision = _locationRevision;
     _isUpdatingLocation = true;
     _lastLocationError = null;
     notifyListeners();
 
     try {
-      if (_continuousGpsEnabled) {
+      if (_isRunning && _continuousGpsEnabled) {
         await _startContinuousLocationStream();
+        if (_disposed || revision != _locationRevision) return;
         if (_hasFreshPhoneLocation()) {
           return;
         }
       }
 
       await _ensureLocationAvailable();
+      if (_disposed || revision != _locationRevision) return;
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -727,6 +731,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
           timeLimit: Duration(seconds: 15),
         ),
       );
+      if (_disposed || revision != _locationRevision) return;
       _lastPhoneLatitude = position.latitude;
       _lastPhoneLongitude = position.longitude;
       _lastPhoneLocationAt = DateTime.now();
@@ -734,6 +739,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       // Wardrive samples use the phone position as local measurement context;
       // do not write it into the connected node's advertised coordinates.
     } catch (error) {
+      if (_disposed || revision != _locationRevision) return;
       // Do not reuse stale phone coordinates for wardrive samples if iOS/Android
       // fails to provide a fresh GPS fix for the current request.
       _lastPhoneLatitude = null;
@@ -744,7 +750,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
       }
     } finally {
       _isUpdatingLocation = false;
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -1146,6 +1152,10 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _disposed = true;
+    _isRunning = false;
+    _locationRevision++;
+    _samplesLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
     _finishSession();
     unawaited(_backgroundService?.stop(reason: 'wardrive'));
@@ -1155,10 +1165,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _discoveryResponseWaitTimer?.cancel();
     _autoUploadTimer?.cancel();
     _clearDiscoveryTracking();
-    final positionSubscription = _positionSubscription;
-    if (positionSubscription != null) {
-      unawaited(positionSubscription.cancel());
-    }
+    unawaited(_continuousLocation.close());
     _framesSubscription?.cancel();
     super.dispose();
   }
