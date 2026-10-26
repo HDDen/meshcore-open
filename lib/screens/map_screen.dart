@@ -58,6 +58,7 @@ import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/map_action_buttons_layer.dart';
 import '../widgets/map_poi_cluster.dart';
 import '../widgets/marker_label_dialog.dart';
 import '../widgets/network_map_online_layer.dart';
@@ -1639,6 +1640,19 @@ class _MapScreenState extends State<MapScreen>
                     (_online.state == NetworkMapLoadState.zoomIn ||
                         _online.state == NetworkMapLoadState.error))
                   _buildOnlineHint(context, _online.state),
+                MapActionButtonsLayer(
+                  child: AnimatedBuilder(
+                    animation: wardrive,
+                    builder: (context, _) => _buildMapActionButtons(
+                      context: context,
+                      connector: connector,
+                      settingsService: settingsService,
+                      wardrive: wardrive,
+                      center: center,
+                      zoom: initialZoom,
+                    ),
+                  ),
+                ),
                 if (selectedContact != null && !_isBuildingPathTrace)
                   _buildSelectedNodeCard(context, selectedContact, connector),
               ],
@@ -1652,17 +1666,6 @@ class _MapScreenState extends State<MapScreen>
                 contactsUnreadCount: connector.getTotalContactsUnreadCount(),
                 channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
                 highContrast: true,
-              ),
-            ),
-            floatingActionButton: AnimatedBuilder(
-              animation: wardrive,
-              builder: (context, _) => _buildMapActionButtons(
-                context: context,
-                connector: connector,
-                settingsService: settingsService,
-                wardrive: wardrive,
-                center: center,
-                zoom: initialZoom,
               ),
             ),
           ),
