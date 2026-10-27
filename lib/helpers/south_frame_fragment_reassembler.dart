@@ -176,6 +176,12 @@ class SouthFrameFragmentReassembler {
     );
   }
 
+  /// Проверка для несрочных APP_START; потерянный фрагмент не блокирует GPS.
+  bool hasPendingFragments({DateTime? now}) {
+    _pruneExpired(now ?? DateTime.now());
+    return _pending.isNotEmpty;
+  }
+
   void clear() => _pending.clear();
 
   SouthFrameFragmentIngestResult _reject(String reason, [int? fragmentId]) {

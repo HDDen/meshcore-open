@@ -76,6 +76,7 @@ import '../helpers/mcotxt_app_codec.dart';
 import '../helpers/mcmp_signature_verifier.dart';
 import '../helpers/south_frame_fragment_reassembler.dart';
 import '../helpers/south_queued_fragment_ack_tracker.dart';
+import '../helpers/gps_app_start_guard.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -7593,9 +7594,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _gpsLocationPollTimer = null;
         return;
       }
-      // Skipped mid contact sync: APP_START would abort the firmware's
-      // contact iteration. The next tick polls again.
-      if (_isLoadingContacts) return;
+      // APP_START сбрасывает сессию прошивки. Несрочный GPS ждёт следующий тик.
+      if (shouldDeferGpsAppStart(
+        loadingContacts: _isLoadingContacts,
+        awaitingSelfInfo: _awaitingSelfInfo,
+        syncingQueuedMessages: _isSyncingQueuedMessages,
+        queuedMessageInFlight: _queuedMessageSyncInFlight,
+        fragments: _southFrameFragmentReassembler,
+        queuedAcks: _southQueuedFragmentAckTracker,
+      )) {
+        return;
+      }
       unawaited(_sendAppStart().catchError(_logTimerSendError));
     });
   }

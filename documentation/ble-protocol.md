@@ -125,6 +125,16 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope |
 | 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
 
+### APP_START и периодический GPS-опрос
+
+`CMD_APP_START` начинает сессию companion-протокола: он может прервать
+итерацию контактов и сбросить South FR01-передачу. Поэтому периодический
+GPS-опрос пропускает тик при активной синхронизации/ожидании `SELF_INFO`,
+незавершённой очереди или принятом неполном FR01-кадре. Опрос возвращается на
+следующем плановом тике; форматы команд, fragment ACK и исходные timeout не
+меняются. Ручной refresh и первичное объявление приложения сохраняют прежнюю
+сессионную семантику. Подробнее: [GPS ноды](power-saving.md#батарея-и-gps-ноды).
+
 ## Response / Push Codes (Device → App)
 
 | Code | Name | Description |
