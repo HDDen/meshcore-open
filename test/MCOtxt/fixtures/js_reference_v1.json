@@ -1,0 +1,1026 @@
+{
+  "schema": 1,
+  "codecVersion": 1,
+  "modelGeneration": 0,
+  "models": {
+    "en": "55988b3bb2a000adf6e768a8541df5a25fec1628b4ec661a10b577e3af8b3770",
+    "ru": "d123c4978a635bf1b26fe37261b7e96a0206b3ba15b2a80542e560f00d1eb193",
+    "fr": "910c5821a202a9b35313a9b939355f09d1c4293fe2ed246fed0123639d379ccb",
+    "de": "00b971288fee56f37535ce03b4ac0d8ebddfc12ecbd5ef282ab4b0f4a659f451",
+    "it": "f6d073a1d6ae6344eaac445b86fb8a454b276a740fd40651956b1ff28f5af270",
+    "uk": "949992c57156526843cdb9634c5c14bee23218878f116ef90be2a8497274c131",
+    "be": "dd23c2b82288e0a4452f237ccd905055974779e3cc5cc6f3d03be1b24e5bb1fd"
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "input": {
+        "text": "",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "",
+        "originalBytes": 0,
+        "streamHex": "2080",
+        "bitLength": 12,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [],
+        "frameHex": "0c2080",
+        "textEncodedBytes": 3,
+        "bodyHex": "0000f15365000c2080",
+        "bodyBytes": 9,
+        "bodyBase91": "AAgs5j*h:Cg",
+        "appPayloadHex": "310000f15365000c2080",
+        "mct": "mct:xAXLvdKBFBK\"",
+        "envelopeHex": "00310000f15365000c2080",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "one-letter",
+      "input": {
+        "text": "A",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "A",
+        "originalBytes": 1,
+        "streamHex": "239041",
+        "bitLength": 24,
+        "encodingMode": "rawUtf8",
+        "languageA": null,
+        "languageB": null,
+        "usedTables": [],
+        "frameHex": "18239041",
+        "textEncodedBytes": 4,
+        "bodyHex": "0000f153650018239041",
+        "bodyBytes": 10,
+        "bodyBase91": "AAgs5jv(HDKuA",
+        "appPayloadHex": "310000f153650018239041",
+        "mct": "mct:xAXLvdKB5*fLoB",
+        "envelopeHex": "00310000f153650018239041",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "russian",
+      "input": {
+        "text": "Привет, как дела?",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Привет, как дела?",
+        "originalBytes": 30,
+        "streamHex": "208f09e72584454cd35a3d1c40",
+        "bitLength": 100,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation"
+        ],
+        "frameHex": "64208f09e72584454cd35a3d1c40",
+        "textEncodedBytes": 14,
+        "bodyHex": "0000f153650064208f09e72584454cd35a3d1c40",
+        "bodyBytes": 20,
+        "bodyBase91": "AAgs5jXLh+%GThW)XR.f0VcAB",
+        "appPayloadHex": "310000f153650064208f09e72584454cd35a3d1c40",
+        "mct": "mct:xAXLvdKB.I6K2n8G*HKl`fo?5F",
+        "envelopeHex": "00310000f153650064208f09e72584454cd35a3d1c40",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "english",
+      "input": {
+        "text": "Hello there, meeting at seven.",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Hello there, meeting at seven.",
+        "originalBytes": 30,
+        "streamHex": "208fbc1144c211844729c9880243b561f040",
+        "bitLength": 138,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "en",
+          "punctuation"
+        ],
+        "frameHex": "8a01208fbc1144c211844729c9880243b561f040",
+        "textEncodedBytes": 20,
+        "bodyHex": "0000f15365008a01208fbc1144c211844729c9880243b561f040",
+        "bodyBytes": 26,
+        "bodyBase91": "AAgs5jMcMAey[x\"ysMaqY0gM?h(#Hu$F",
+        "appPayloadHex": "310000f15365008a01208fbc1144c211844729c9880243b561f040",
+        "mct": "mct:xAXLvdKB6iuW8+KDRD.tNZ+ZD5Lv3JYqg",
+        "envelopeHex": "00310000f15365008a01208fbc1144c211844729c9880243b561f040",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "mixed",
+      "input": {
+        "text": "Смешанный text with цифрами 12345!!!",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Смешанный text with цифрами 12345!!!",
+        "originalBytes": 52,
+        "streamHex": "208f4184acb4891511f33d744c497cd78bf1142927d61ed5dbf8787860",
+        "bitLength": 227,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "en",
+          "punctuation"
+        ],
+        "frameHex": "e301208f4184acb4891511f33d744c497cd78bf1142927d61ed5dbf8787860",
+        "textEncodedBytes": 31,
+        "bodyHex": "0000f1536500e301208f4184acb4891511f33d744c497cd78bf1142927d61ed5dbf8787860",
+        "bodyBytes": 37,
+        "bodyBase91": "AAgs5joIPAey}LPP;GJG)|r/3O$rchVV[c4inyNn`KhqFB",
+        "appPayloadHex": "310000f1536500e301208f4184acb4891511f33d744c497cd78bf1142927d61ed5dbf8787860",
+        "mct": "mct:xAXLvdKBqquW+IXXI:c!AGX_TKyzKq2*pd0@b;l7dTH`6CG",
+        "envelopeHex": "00310000f1536500e301208f4184acb4891511f33d744c497cd78bf1142927d61ed5dbf8787860",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "case",
+      "input": {
+        "text": "ВНИМАНИЕ! Attention! ALL CAPS и Тихий текст.",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "ВНИМАНИЕ! Attention! ALL CAPS и Тихий текст.",
+        "originalBytes": 63,
+        "streamHex": "208fdce90f09e43c6c33e87fb525de4c482619fb4c34a6968fc02fee69e756daa8f420c23040",
+        "bitLength": 298,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation",
+          "en",
+          "uk"
+        ],
+        "frameHex": "aa02208fdce90f09e43c6c33e87fb525de4c482619fb4c34a6968fc02fee69e756daa8f420c23040",
+        "textEncodedBytes": 40,
+        "bodyHex": "0000f1536500aa02208fdce90f09e43c6c33e87fb525de4c482619fb4c34a6968fc02fee69e756daa8f420c23040",
+        "bodyBytes": 46,
+        "bodyBase91": "AAgs5jMcVAey(b]Xg+=)DJ[~V$K>fX?Z0{RYUd_VV|)^=U70&ciFMia\"A",
+        "appPayloadHex": "310000f1536500aa02208fdce90f09e43c6c33e87fb525de4c482619fb4c34a6968fc02fee69e756daa8f420c23040",
+        "mct": "mct:xAXLvdKB|7uW8+L{(MD3FmGX)hvak.$MijE4jS%#4M1h?3!oEln01LNv6F",
+        "envelopeHex": "00310000f1536500aa02208fdce90f09e43c6c33e87fb525de4c482619fb4c34a6968fc02fee69e756daa8f420c23040",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "punctuation",
+      "input": {
+        "text": "0123456789 .,:;!? () [] {} / \\ @#%&",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "0123456789 .,:;!? () [] {} / \\ @#%&",
+        "originalBytes": 35,
+        "streamHex": "208e57d61ed5dbedc2b9c33070b171b0f10d3d435758fd05edf606b9b06ced6dee00",
+        "bitLength": 265,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "en",
+          "punctuation"
+        ],
+        "frameHex": "8902208e57d61ed5dbedc2b9c33070b171b0f10d3d435758fd05edf606b9b06ced6dee00",
+        "textEncodedBytes": 36,
+        "bodyHex": "0000f15365008902208e57d61ed5dbedc2b9c33070b171b0f10d3d435758fd05edf606b9b06ced6dee00",
+        "bodyBytes": 42,
+        "bodyBase91": "AAgs5jdZUA~x=!TZ1$rQ9=1)QQ~n*x&Xav_uy~d#h>F%#jir8=BA",
+        "appPayloadHex": "310000f15365008902208e57d61ed5dbedc2b9c33070b171b0f10d3d435758fd05edf606b9b06ced6dee00",
+        "mct": "mct:xAXLvdKBF5uWuq!l$d_%x)rKaE+itCu|?`%[Ff=Q=%[EGEL$2$rKA",
+        "envelopeHex": "00310000f15365008902208e57d61ed5dbedc2b9c33070b171b0f10d3d435758fd05edf606b9b06ced6dee00",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "line-endings",
+      "input": {
+        "text": "Первая\r\nSecond\rТретья\n",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Первая\nSecond\nТретья\n",
+        "originalBytes": 34,
+        "streamHex": "208f119e734adffbd35a5042dffbd2e232795be0",
+        "bitLength": 155,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation",
+          "en"
+        ],
+        "frameHex": "9b01208f119e734adffbd35a5042dffbd2e232795be0",
+        "textEncodedBytes": 22,
+        "bodyHex": "0000f15365009b01208f119e734adffbd35a5042dffbd2e232795be0",
+        "bodyBytes": 28,
+        "bodyBase91": "AAgs5j|;MAey1_P3B(lW}PXD0rR:L1P>*(B",
+        "appPayloadHex": "310000f15365009b01208f119e734adffbd35a5042dffbd2e232795be0",
+        "mct": "mct:xAXLvdKBMkuW+I/.#O0rx:Auf/K|@P|16m>J",
+        "envelopeHex": "00310000f15365009b01208f119e734adffbd35a5042dffbd2e232795be0",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "combining",
+      "input": {
+        "text": "й ё é ä q́",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "й ё é ä q́",
+        "originalBytes": 21,
+        "streamHex": "208ac70cfc027243f41cc888157f41cc81",
+        "bitLength": 136,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "it"
+        ],
+        "frameHex": "8801208ac70cfc027243f41cc888157f41cc81",
+        "textEncodedBytes": 19,
+        "bodyHex": "0000f15365008801208ac70cfc027243f41cc888157f41cc81",
+        "bodyBytes": 25,
+        "bodyBase91": "AAgs5juWMA0w{jP(Q@~XIFgM%?CXFFE",
+        "appPayloadHex": "310000f15365008801208ac70cfc027243f41cc888157f41cc81",
+        "mct": "mct:xAXLvdKBqiuWmqWCSE+m[`:Wwii~{):W",
+        "envelopeHex": "00310000f15365008801208ac70cfc027243f41cc888157f41cc81",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "utf8",
+      "input": {
+        "text": "日本語 中文 😀 🛰️ 👩‍🚀",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "日本語 中文 😀 🛰️ 👩‍🚀",
+        "originalBytes": 41,
+        "streamHex": "2390e697a5e69cace8aa9e20e4b8ade6968720f09f988020f09f9bb0efb88f20f09f91a9e2808df09f9a80",
+        "bitLength": 344,
+        "encodingMode": "rawUtf8",
+        "languageA": null,
+        "languageB": null,
+        "usedTables": [],
+        "frameHex": "d8022390e697a5e69cace8aa9e20e4b8ade6968720f09f988020f09f9bb0efb88f20f09f91a9e2808df09f9a80",
+        "textEncodedBytes": 45,
+        "bodyHex": "0000f1536500d8022390e697a5e69cace8aa9e20e4b8ade6968720f09f988020f09f9bb0efb88f20f09f91a9e2808df09f9a80",
+        "bodyBytes": 51,
+        "bodyBase91": "AAgs5jv(*(fLpsKd7o1HJ8(BFUOg;m<X#(CHUtht0[QiZyYZ#(ZS57sCoMqWkDI",
+        "appPayloadHex": "310000f1536500d8022390e697a5e69cace8aa9e20e4b8ade6968720f09f988020f09f9bb0efb88f20f09f91a9e2808df09f9a80",
+        "mct": "mct:xAXLvdKBA$4Y_k%,g2]z:[Y{>CBo0lx,)td~81lB5}mTZ}v=.td~SzsH<hO?+73W",
+        "envelopeHex": "00310000f1536500d8022390e697a5e69cace8aa9e20e4b8ade6968720f09f988020f09f9bb0efb88f20f09f91a9e2808df09f9a80",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "other-languages",
+      "input": {
+        "text": "été déjà français über Straße українська беларуская",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "été déjà français über Straße українська беларуская",
+        "originalBytes": 78,
+        "streamHex": "208fc014f27a27d0b2554cd6011f803acc23d054b7e29f805234186afbc24c8934254f871a141538",
+        "bitLength": 318,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "fr",
+          "de",
+          "uk"
+        ],
+        "frameHex": "be02208fc014f27a27d0b2554cd6011f803acc23d054b7e29f805234186afbc24c8934254f871a141538",
+        "textEncodedBytes": 42,
+        "bodyHex": "0000f1536500be02208fc014f27a27d0b2554cd6011f803acc23d054b7e29f805234186afbc24c8934254f871a141538",
+        "bodyBytes": 48,
+        "bodyBase91": "AAgs5jk_VAeyi6a&*b;PGPhf=>EtkiND77ZPKcCabCcljIXd{kT`,XZc{\"D",
+        "appPayloadHex": "310000f1536500be02208fc014f27a27d0b2554cd6011f803acc23d054b7e29f805234186afbc24c8934254f871a141538",
+        "mct": "mct:xAXLvdKB%9uWND7D^]&B@!#ifp/VH7^@#Wt]%?)BXHCRU$ZiHN06;b5:YYonA",
+        "envelopeHex": "00310000f1536500be02208fc014f27a27d0b2554cd6011f803acc23d054b7e29f805234186afbc24c8934254f871a141538",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "en-ru",
+      "input": {
+        "text": "Hello, привет!",
+        "languageA": "en",
+        "languageB": "ru",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Hello, привет!",
+        "originalBytes": 20,
+        "streamHex": "201f0451611f09e72586",
+        "bitLength": 79,
+        "encodingMode": "mcotxt",
+        "languageA": "en",
+        "languageB": "ru",
+        "usedTables": [
+          "en",
+          "punctuation",
+          "ru"
+        ],
+        "frameHex": "4f201f0451611f09e72586",
+        "textEncodedBytes": 11,
+        "bodyHex": "0000f15365004f201f0451611f09e72586",
+        "bodyBytes": 17,
+        "bodyBase91": "AAgs5jSqg+[ClHwy]2Q*Q",
+        "appPayloadHex": "310000f15365004f201f0451611f09e72586",
+        "mct": "mct:xAXLvdKB{G[V%FL!;Mm&Pv",
+        "envelopeHex": "00310000f15365004f201f0451611f09e72586",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "ru-only",
+      "input": {
+        "text": "Привет world!",
+        "languageA": "ru",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Привет world!",
+        "originalBytes": 19,
+        "streamHex": "20ff09e724df8039ae47a786",
+        "bitLength": 95,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": null,
+        "usedTables": [
+          "ru",
+          "de",
+          "punctuation"
+        ],
+        "frameHex": "5f20ff09e724df8039ae47a786",
+        "textEncodedBytes": 13,
+        "bodyHex": "0000f15365005f20ff09e724df8039ae47a786",
+        "bodyBytes": 19,
+        "bodyBase91": "AAgs5jT|g+CH1bVn@@m{:6rB",
+        "appPayloadHex": "310000f15365005f20ff09e724df8039ae47a786",
+        "mct": "mct:xAXLvdKBgIl~2ntzUBE+SZ%SE",
+        "envelopeHex": "00310000f15365005f20ff09e724df8039ae47a786",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "fr",
+      "input": {
+        "text": "Bonjour, été français.",
+        "languageA": "fr",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Bonjour, été français.",
+        "originalBytes": 25,
+        "streamHex": "217f014123089e4f555335805820",
+        "bitLength": 107,
+        "encodingMode": "mcotxt",
+        "languageA": "fr",
+        "languageB": null,
+        "usedTables": [
+          "fr",
+          "punctuation"
+        ],
+        "frameHex": "6b217f014123089e4f555335805820",
+        "textEncodedBytes": 15,
+        "bodyHex": "0000f15365006b217f014123089e4f555335805820",
+        "bodyBytes": 21,
+        "bodyBase91": "AAgs5j{ep+EBcSnB}Vul)S_)<C",
+        "appPayloadHex": "310000f15365006b217f014123089e4f555335805820",
+        "mct": "mct:xAXLvdKB^fl~7FSGWq*7bd1A[DE",
+        "envelopeHex": "00310000f15365006b217f014123089e4f555335805820",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "de",
+      "input": {
+        "text": "Guten Tag, schöne Straße!",
+        "languageA": "de",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Guten Tag, schöne Straße!",
+        "originalBytes": 27,
+        "streamHex": "21ff0920f4268d844172c8cde82a5bf14c30",
+        "bitLength": 140,
+        "encodingMode": "mcotxt",
+        "languageA": "de",
+        "languageB": null,
+        "usedTables": [
+          "de",
+          "punctuation"
+        ],
+        "frameHex": "8c0121ff0920f4268d844172c8cde82a5bf14c30",
+        "textEncodedBytes": 20,
+        "bodyHex": "0000f15365008c0121ff0920f4268d844172c8cde82a5bf14c30",
+        "bodyBytes": 26,
+        "bodyBase91": "AAgs5j*h6Wl~TAr&WJxIIUjT(gFglkWE",
+        "appPayloadHex": "310000f15365008c0121ff0920f4268d844172c8cde82a5bf14c30",
+        "mct": "mct:xAXLvdKB:iTXW45F.2TzDX*XISQe5HwNY",
+        "envelopeHex": "00310000f15365008c0121ff0920f4268d844172c8cde82a5bf14c30",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "it",
+      "input": {
+        "text": "Buongiorno, perché è così?",
+        "languageA": "it",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Buongiorno, perché è così?",
+        "originalBytes": 29,
+        "streamHex": "227f00a509a7984441486e4958724f0f10",
+        "bitLength": 134,
+        "encodingMode": "mcotxt",
+        "languageA": "it",
+        "languageB": null,
+        "usedTables": [
+          "it",
+          "punctuation"
+        ],
+        "frameHex": "8601227f00a509a7984441486e4958724f0f10",
+        "textEncodedBytes": 19,
+        "bodyHex": "0000f15365008601227f00a509a7984441486e4958724f0f10",
+        "bodyBytes": 25,
+        "bodyBase91": "AAgs5j@QNtl~Mc$u9iYOlZwa+0?3g\"A",
+        "appPayloadHex": "310000f15365008601227f00a509a7984441486e4958724f0f10",
+        "mct": "mct:xAXLvdKBai^X.CC:]2%z{WQopGm@M{:C",
+        "envelopeHex": "00310000f15365008601227f00a509a7984441486e4958724f0f10",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "uk",
+      "input": {
+        "text": "Привіт, українська їжа є тут.",
+        "languageA": "uk",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Привіт, українська їжа є тут.",
+        "originalBytes": 52,
+        "streamHex": "22ff571d3d1c2234186afbc24c8bf62797078cd820",
+        "bitLength": 163,
+        "encodingMode": "mcotxt",
+        "languageA": "uk",
+        "languageB": null,
+        "usedTables": [
+          "uk",
+          "punctuation"
+        ],
+        "frameHex": "a30122ff571d3d1c2234186afbc24c8bf62797078cd820",
+        "textEncodedBytes": 23,
+        "bodyHex": "0000f1536500a30122ff571d3d1c2234186afbc24c8bf62797078cd820",
+        "bodyBytes": 29,
+        "bodyBase91": "AAgs5joIOtl~G;(K~vaCcljIY:h^XoeBwioB",
+        "appPayloadHex": "310000f1536500a30122ff571d3d1c2234186afbc24c8bf62797078cd820",
+        "mct": "mct:xAXLvdKB<k^X\"sPy%nuuuIL=MR{H/s1,^QvJE",
+        "envelopeHex": "00310000f1536500a30122ff571d3d1c2234186afbc24c8bf62797078cd820",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "be",
+      "input": {
+        "text": "Прывітанне, беларуская мова.",
+        "languageA": "be",
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Прывітанне, беларуская мова.",
+        "originalBytes": 52,
+        "streamHex": "237f4f5463f26629121b08a91613c67782492191d608",
+        "bitLength": 173,
+        "encodingMode": "mcotxt",
+        "languageA": "be",
+        "languageB": null,
+        "usedTables": [
+          "be",
+          "punctuation"
+        ],
+        "frameHex": "ad01237f4f5463f26629121b08a91613c67782492191d608",
+        "textEncodedBytes": 24,
+        "bodyHex": "0000f1536500ad01237f4f5463f26629121b08a91613c67782492191d608",
+        "bodyBytes": 30,
+        "bodyBase91": "AAgs5j0k8(l~WYqR,2dYvJlZu*Zx@N`5IYnJB",
+        "appPayloadHex": "310000f1536500ad01237f4f5463f26629121b08a91613c67782492191d608",
+        "mct": "mct:xAXLvdKB%l4YR|;7?++PjG/W?7mN(r{(:u[/JD",
+        "envelopeHex": "00310000f1536500ad01237f4f5463f26629121b08a91613c67782492191d608",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "auto-pair",
+      "input": {
+        "text": "Hello, bonjour!",
+        "languageA": null,
+        "languageB": null,
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Hello, bonjour!",
+        "originalBytes": 15,
+        "streamHex": "202f0451611f0141230c",
+        "bitLength": 78,
+        "encodingMode": "mcotxt",
+        "languageA": "en",
+        "languageB": "fr",
+        "usedTables": [
+          "en",
+          "punctuation",
+          "fr"
+        ],
+        "frameHex": "4e202f0451611f0141230c",
+        "textEncodedBytes": 11,
+        "bodyHex": "0000f15365004e202f0451611f0141230c",
+        "bodyBytes": 17,
+        "bodyBase91": "AAgs5jjng+`ClHwylBzuB",
+        "appPayloadHex": "310000f15365004e202f0451611f0141230c",
+        "mct": "mct:xAXLvdKB>GNh%FL!0B4kYE",
+        "envelopeHex": "00310000f15365004e202f0451611f0141230c",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "sender",
+      "input": {
+        "text": "Привет!",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": "HDDen",
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Привет!",
+        "originalBytes": 13,
+        "streamHex": "208f09e72586",
+        "bitLength": 47,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation"
+        ],
+        "frameHex": "2f208f09e72586",
+        "textEncodedBytes": 7,
+        "bodyHex": "0200f153650105484444656e002f208f09e72586",
+        "bodyBytes": 20,
+        "bodyBase91": "CAgs5jHOeGBw\"@HtYtxRW[aRE",
+        "appPayloadHex": "310200f153650105484444656e002f208f09e72586",
+        "mct": "mct:PGuWD7=H@ACw5dlTK&Q@gD3Q.L",
+        "envelopeHex": "00310200f153650105484444656e002f208f09e72586",
+        "timestamp": 1700000000,
+        "senderName": "HDDen",
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "empty-sender-field",
+      "input": {
+        "text": "Текст",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": "",
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Текст",
+        "originalBytes": 10,
+        "streamHex": "208f4b8d1608",
+        "bitLength": 47,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru"
+        ],
+        "frameHex": "2f208f4b8d1608",
+        "textEncodedBytes": 7,
+        "bodyHex": "0200f153650100002f208f4b8d1608",
+        "bodyBytes": 15,
+        "bodyBase91": "CAgs5jBA+>cLvgn5!FA",
+        "appPayloadHex": "310200f153650100002f208f4b8d1608",
+        "mct": "mct:PGuWD7=HAAFhJ`a6%fgA",
+        "envelopeHex": "00310200f153650100002f208f4b8d1608",
+        "timestamp": 1700000000,
+        "senderName": "",
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "reply",
+      "input": {
+        "text": "Отвечаю!",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": "Иван",
+        "replyAuthorName": "Alice",
+        "replyTimestamp": 1699999999,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Отвечаю!",
+        "originalBytes": 15,
+        "streamHex": "208f53539506b586",
+        "bitLength": 63,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation"
+        ],
+        "frameHex": "3f208f53539506b586",
+        "textEncodedBytes": 9,
+        "bodyHex": "0300f15365002a208f499cd2000105416c696365fff05365003f208f53539506b586",
+        "bodyBytes": 34,
+        "bodyBase91": "DAgs5jMcf+&z!OOtDH?vGlOPpWD7UCHLZVnlu0N7<L",
+        "appPayloadHex": "310300f15365002a208f499cd2000105416c696365fff05365003f208f53539506b586",
+        "mct": "mct:~IuWD7UCjHZVWwF::C{WM<RT<!^){7O\"gtEobdvS_8h",
+        "envelopeHex": "00310300f15365002a208f499cd2000105416c696365fff05365003f208f53539506b586",
+        "timestamp": 1700000000,
+        "senderName": "Иван",
+        "replyAuthorName": "Alice",
+        "replyTimestamp": 1699999999
+      }
+    },
+    {
+      "id": "inherited-time",
+      "input": {
+        "text": "Ответ",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": false,
+        "senderName": null,
+        "replyAuthorName": "Боб",
+        "replyTimestamp": 0,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Ответ",
+        "originalBytes": 10,
+        "streamHex": "208f535392",
+        "bitLength": 40,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru"
+        ],
+        "frameHex": "28208f535392",
+        "textEncodedBytes": 6,
+        "bodyHex": "050021208f4c2600000000000028208f535392",
+        "bodyBytes": 19,
+        "bodyBase91": "FApBey%RBAAAAABt8yubPaS",
+        "appPayloadHex": "31050021208f4c2600000000000028208f535392",
+        "mct": "mct:3OuW2W8+&GAAAAAAGOyq>:@MB",
+        "envelopeHex": "0031050021208f4c2600000000000028208f535392",
+        "timestamp": 0,
+        "senderName": null,
+        "replyAuthorName": "Боб",
+        "replyTimestamp": 0
+      }
+    },
+    {
+      "id": "uint32",
+      "input": {
+        "text": "Time",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 4294967295,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": "",
+        "replyTimestamp": 4294967295,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Time",
+        "originalBytes": 4,
+        "streamHex": "208fbcd12380",
+        "bitLength": 43,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "en"
+        ],
+        "frameHex": "2b208fbcd12380",
+        "textEncodedBytes": 7,
+        "bodyHex": "01ffffffff0100ffffffff002b208fbcd12380",
+        "bodyBytes": 19,
+        "bodyBase91": "U|B\"B\"DA`~B\"4FzHZVxT2MlB",
+        "appPayloadHex": "3101ffffffff0100ffffffff002b208fbcd12380",
+        "mct": "mct:gD`~B\"WLBtB\"B\"h\"Wtbz)/jAC",
+        "envelopeHex": "003101ffffffff0100ffffffff002b208fbcd12380",
+        "timestamp": 4294967295,
+        "senderName": null,
+        "replyAuthorName": "",
+        "replyTimestamp": 4294967295
+      }
+    },
+    {
+      "id": "outer-name",
+      "input": {
+        "text": "Legacy envelope",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": "Relay"
+      },
+      "expected": {
+        "text": "Legacy envelope",
+        "originalBytes": 15,
+        "streamHex": "208fbd15e7c39520a6f588aa58",
+        "bitLength": 103,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "en"
+        ],
+        "frameHex": "67208fbd15e7c39520a6f588aa58",
+        "textEncodedBytes": 14,
+        "bodyHex": "0000f153650067208fbd15e7c39520a6f588aa58",
+        "bodyBytes": 20,
+        "bodyBase91": "AAgs5j#Th+ar>np?;tz#Owj*C",
+        "appPayloadHex": "310000f153650067208fbd15e7c39520a6f588aa58",
+        "mct": "mct:xAXLvdKBFJ6Kbg6`3e{)i{5d.H",
+        "envelopeHex": "0552656c6179310000f153650067208fbd15e7c39520a6f588aa58",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    },
+    {
+      "id": "long-frame",
+      "input": {
+        "text": "Встречаемся у ретранслятора на вершине. Связь устойчивая, дорога свободна. Встречаемся у ретранслятора на вершине. Связь устойчивая, дорога свободна.",
+        "languageA": "ru",
+        "languageB": "en",
+        "timestamp": 1700000000,
+        "includeTimestamp": true,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null,
+        "outerSenderName": ""
+      },
+      "expected": {
+        "text": "Встречаемся у ретранслятора на вершине. Связь устойчивая, дорога свободна. Встречаемся у ретранслятора на вершине. Связь устойчивая, дорога свободна.",
+        "originalBytes": 275,
+        "streamHex": "208f4e82446a0d1a1419443223288a4418f29111003a7b299b04f34e94d6c87042b33ce695844d5109ec34e798348304f3c12235068d0a0ca219119445220c794888801d3d94cd8279a74a6b643821599e734ac226a884f61a73cc1a4182",
+        "bitLength": 751,
+        "encodingMode": "mcotxt",
+        "languageA": "ru",
+        "languageB": "en",
+        "usedTables": [
+          "ru",
+          "punctuation"
+        ],
+        "frameHex": "ef05208f4e82446a0d1a1419443223288a4418f29111003a7b299b04f34e94d6c87042b33ce695844d5109ec34e798348304f3c12235068d0a0ca219119445220c794888801d3d94cd8279a74a6b643821599e734ac226a884f61a73cc1a4182",
+        "textEncodedBytes": 96,
+        "bodyHex": "0000f1536500ef05208f4e82446a0d1a1419443223288a4418f29111003a7b299b04f34e94d6c87042b33ce695844d5109ec34e798348304f3c12235068d0a0ca219119445220c794888801d3d94cd8279a74a6b643821599e734ac226a884f61a73cc1a4182",
+        "bodyBytes": 102,
+        "bodyBase91": "AAgs5jSqvAeysGDznJHXlE$+xB1wY),rgMY49&Sm|h*bv#7R&up,s`oG8OZD>6dU\"kjZ(|@w=*1x?h)kCMjfCGW@QDSt][wj}BFqM6Uz&NffR3yzXbSafr@,sf[WnB",
+        "appPayloadHex": "310000f1536500ef05208f4e82446a0d1a1419443223288a4418f29111003a7b299b04f34e94d6c87042b33ce695844d5109ec34e798348304f3c12235068d0a0ca219119445220c794888801d3d94cd8279a74a6b643821599e734ac226a884f61a73cc1a4182",
+        "mct": "mct:xAXLvdKBvrvW^[]Wp7IXGHwL`,UcxZYEWZ+AT3f6;zp`L5>Sd?eS9K/eI!1c>hP.uRDS/t(C.5QC!dGuCS@WVMGRdF_v\"]hFz2u1od[8lE!Li`P34u>tdX_lGymJfGE",
+        "envelopeHex": "00310000f1536500ef05208f4e82446a0d1a1419443223288a4418f29111003a7b299b04f34e94d6c87042b33ce695844d5109ec34e798348304f3c12235068d0a0ca219119445220c794888801d3d94cd8279a74a6b643821599e734ac226a884f61a73cc1a4182",
+        "timestamp": 1700000000,
+        "senderName": null,
+        "replyAuthorName": null,
+        "replyTimestamp": null
+      }
+    }
+  ]
+}

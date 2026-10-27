@@ -488,6 +488,20 @@ are exported as C headers for microcontroller ports. Four layers, each in its ow
   **empty** outer name and subtype byte `0x31`, the name travelling inside the body. A revision
   other than `1` is shown as a placeholder text rather than dropped.
 
+Браузерный порт ES6 — `docs/mcotxt/assets/mcotxt.js` (классический скрипт,
+`window.MCOtxt`, без modules/зависимостей); демо — `docs/mcotxt/index.html`, интерфейс на английском.
+[`API и проверки`](docs/mcotxt/README.md), [руководство](documentation/mcotxt-js.md).
+`encode` возвращает body без envelope, пустое имя опускается; `encodedBytes`
+учитывает возвращённый binary/Base91, `textEncodedBytes` измеряет только frame.
+`languages` выбирает основную пару, остальные модели остаются доступны;
+`languagePair` закрепляет A/B. Есть frame, Hex/Base91 и явные mct/envelope helpers.
+Неизвестное унаследованное время возвращается null, внешнее имя не подменяет
+senderName body. Буквальный Dart-эталон фиксирует `tool/mcotxt_js_reference.dart`
+(`--write` только один раз, затем `--check`); Flutter baseline сравнивает контейнер
+с рабочими helpers, `node tool/test_mcotxt_js.cjs` проверяет JS по этому снимку и
+все литералы моделей. Предварительный пакет принят владельцем; итоговые JS-тесты
+и браузер ещё ожидают проверки. Рабочий Dart-кодек и generation 0 не менялись.
+
 The app names itself `MeshCoreOpen;cap=mctxt,mcmp,mcimg,aeic` in `CMD_APP_START`
 (`buildMeshCoreOpenAppName`, with `frmfrg1` added to the comma-separated `cap=` list when framed packets are on). A South
 Edition node reads those capabilities: without `mctxt`, and with its **MCOtxt conversion** setting on, the

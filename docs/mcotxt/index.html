@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>MCOtxt · compact text encoding</title>
+  <link rel="stylesheet" href="assets/demo.css">
+  <script defer src="assets/mcotxt.js"></script>
+  <script defer src="assets/demo.js"></script>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">MCOa / TOOLS</p>
+        <h1>MCOtxt<span class="version">v1</span></h1>
+        <p class="intro">See how many bytes your text takes.</p>
+      </div>
+      <a class="api-link" href="README.md">API documentation (Russian) ↗</a>
+    </header>
+
+    <div class="workspace">
+      <section class="panel" aria-labelledby="encode-title">
+        <div class="panel-heading"><span class="step">01</span><h2 id="encode-title">Encode</h2></div>
+        <form id="encodeForm">
+          <label for="sourceText">Original text</label>
+          <textarea id="sourceText" rows="6" spellcheck="false">Hello! Meet me at the repeater on the summit. The connection is stable and everything is fine.</textarea>
+          <fieldset class="languages"><legend>Candidate languages for the primary pair</legend><div id="languageChoices" class="language-choices"></div></fieldset>
+          <p class="hint">The encoder can still switch to other language tables within the text.</p>
+          <div class="two-fields">
+            <div><label for="senderName">Sender name</label><input id="senderName" placeholder="No sender name" autocomplete="off"></div>
+            <div><label for="timestamp">Message timestamp</label><input id="timestamp" type="number" min="0" max="4294967295" step="1" placeholder="Inherit from the packet"></div>
+          </div>
+          <details>
+            <summary>Reply to a message</summary>
+            <div class="two-fields detail-fields">
+              <div><label for="replyAuthor">Quoted message author</label><input id="replyAuthor" autocomplete="off" placeholder="Author name"></div>
+              <div><label for="replyTimestamp">Quoted message timestamp</label><input id="replyTimestamp" type="number" min="0" max="4294967295" step="1" placeholder="Unix time in seconds"></div>
+            </div>
+            <p class="hint">Provide both fields together. A timestamp of zero is valid.</p>
+          </details>
+          <div class="encode-options">
+            <div><label for="encodeFormat">Encoding format</label><select id="encodeFormat"><option value="body">Container with metadata</option><option value="frame">Text only (frame)</option></select></div>
+            <label class="check"><input id="useBase91" type="checkbox"> Base91 output</label>
+          </div>
+          <button class="primary" type="submit">Encode <span aria-hidden="true">→</span></button>
+        </form>
+        <p id="encodeError" class="error" role="alert" hidden></p>
+
+        <div id="encodedResult" class="result-section" hidden>
+          <div class="metrics">
+            <div><span class="metric-label">Original text</span><strong id="originalSize">—</strong><span>UTF-8 bytes</span></div>
+            <div><span class="metric-label">Encoded result</span><strong id="encodedSize">—</strong><span id="encodedType">bytes</span></div>
+            <div><span class="metric-label">Space saved</span><strong id="saving">—</strong><span>compared to original text</span></div>
+          </div>
+          <p id="textOnlyStats" class="hint"></p>
+          <div class="output-heading"><label for="encodedData">Encoded data</label><button id="copyData" type="button" class="text-button">Copy</button></div>
+          <textarea id="encodedData" rows="4" readonly spellcheck="false" class="monospace"></textarea>
+          <div class="actions">
+            <button id="toDecoder" type="button" class="secondary">Send to decoder ↓</button>
+            <button id="showMct" type="button" class="secondary">Get mct:</button>
+            <button id="showEnvelope" type="button" class="secondary">Binary envelope</button>
+          </div>
+          <p id="transportStatus" class="hint" role="status"></p>
+          <details><summary>Encode response object</summary><pre id="encodeObject"></pre></details>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="decode-title">
+        <div class="panel-heading"><span class="step">02</span><h2 id="decode-title">Decode</h2></div>
+        <form id="decodeForm">
+          <label for="decodeData">MCOtxt, envelope or mct:</label>
+          <textarea id="decodeData" rows="6" spellcheck="false" class="monospace" placeholder="Paste Hex, Base91 or an mct: string"></textarea>
+          <div class="two-fields">
+            <div><label for="decodeType">Representation</label><select id="decodeType"><option value="hex">Hex → binary</option><option value="base91">Base91</option></select></div>
+            <div><label for="decodeFormat">Data format</label><select id="decodeFormat"><option value="auto">Detect container</option><option value="body">Container body</option><option value="frame">Text only (frame)</option><option value="envelope">Binary envelope</option><option value="payload">0x31 + body</option><option value="mct">mct:</option></select></div>
+          </div>
+          <label for="inheritedTimestamp">Outer packet timestamp, if needed</label>
+          <input id="inheritedTimestamp" type="number" min="0" max="4294967295" step="1" placeholder="Not specified">
+          <p class="hint">Select the frame format explicitly. If a binary container is ambiguous, the decoder will ask you to specify its format.</p>
+          <button class="primary" type="submit">Decode <span aria-hidden="true">→</span></button>
+        </form>
+        <p id="decodeError" class="error" role="alert" hidden></p>
+        <div id="decodedResult" class="result-section" hidden>
+          <label for="decodedText">Decoded text</label>
+          <textarea id="decodedText" rows="6" readonly></textarea>
+          <p id="decodedLanguages" class="hint"></p>
+          <details open><summary>Metadata and response object</summary><pre id="decodeObject"></pre></details>
+        </div>
+      </section>
+    </div>
+    <footer>Everything runs in your browser. Your text and names are never sent anywhere.<br>Generation 0 models · ES6 · no external libraries</footer>
+    <noscript><p class="error">Enable JavaScript to use the codec.</p></noscript>
+  </main>
+</body>
+</html>
