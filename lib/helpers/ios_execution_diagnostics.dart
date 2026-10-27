@@ -10,6 +10,7 @@ const _events = <String>{
   'initial', 'started', 'stopped', 'categoryFailed', 'activationFailed',
   'playFailed', 'interruptionBegan', 'interruptionEnded', 'mediaServicesReset',
   'routeChanged',
+  'powerChanged', 'preferencesFailed', 'formatFailed',
 };
 const _categories = <String>{
   'AVAudioSessionCategoryAmbient', 'AVAudioSessionCategorySoloAmbient',
@@ -69,6 +70,18 @@ String? formatIosExecutionDiagnostics(Object? raw) {
     return null;
   }
   final portTypes = routes.map((value) => _token(value, _ports)).toSet().toList()..sort();
+  final power = raw['powerOptions'];
+  const powerFlags = <String>['pauseUiFrames', 'leanHooks', 'withoutAudio', 'useOutputSampleRate'];
+  if (power != null && (power is! Map || power['schema'] != 1 ||
+      !powerFlags.every((key) => power[key] is bool) ||
+      power['audioBufferMilliseconds'] is! int ||
+      (power['audioBufferMilliseconds'] as int) < 0 ||
+      (power['audioBufferMilliseconds'] as int) > 200 ||
+      (power['audioBufferMilliseconds'] as int) % 10 != 0 ||
+      power['loopSeconds'] is! int || (power['loopSeconds'] as int) < 1 ||
+      (power['loopSeconds'] as int) > 10)) {
+    return null;
+  }
   final fields = <String>[
     'audioSchema=1', 'revision=${raw['revision']}', 'source=${raw['source']}',
     for (final key in flags) '$key=${raw[key]}',
@@ -80,6 +93,11 @@ String? formatIosExecutionDiagnostics(Object? raw) {
     for (final key in values) '$key=${(audio[key] as num).toStringAsFixed(6)}',
     if (raw['nativeAtUtcMs'] is int) 'nativeAtUtcMs=${raw['nativeAtUtcMs']}',
     if (raw['nativeUptimeMs'] is int) 'nativeUptimeMs=${raw['nativeUptimeMs']}',
+    if (power is Map) ...[
+      for (final key in powerFlags) 'power.$key=${power[key]}',
+      'power.audioBufferMilliseconds=${power['audioBufferMilliseconds']}',
+      'power.loopSeconds=${power['loopSeconds']}',
+    ],
   ];
   return fields.join(', ');
 }

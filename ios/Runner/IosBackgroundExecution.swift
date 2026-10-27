@@ -1,5 +1,46 @@
 import Flutter
 import UIKit
+import CoreFoundation
+
+/// Только параметры эксперимента, без разрешений TCP/ручного переключателя.
+struct IosImmortalizerPowerOptions: Equatable {
+  var pauseUiFrames = false
+  var leanHooks = false
+  var withoutAudio = false
+  var useOutputSampleRate = false
+  var audioBufferMilliseconds = 0
+  var loopSeconds = 1
+
+  static func parse(_ raw: [String: Any]) -> IosImmortalizerPowerOptions? {
+    func integer(_ key: String) -> Int? {
+      guard let number = raw[key] as? NSNumber,
+            CFGetTypeID(number) != CFBooleanGetTypeID(),
+            number.doubleValue.isFinite,
+            number.doubleValue.rounded() == number.doubleValue,
+            number.doubleValue >= 0, number.doubleValue <= 1000 else { return nil }
+      return number.intValue
+    }
+    func flag(_ key: String) -> Bool? {
+      guard let number = raw[key] as? NSNumber,
+            CFGetTypeID(number) == CFBooleanGetTypeID() else { return nil }
+      return number.boolValue
+    }
+    guard integer("schema") == 1,
+          let pause = flag("pauseUiFrames"), let lean = flag("leanHooks"),
+          let noAudio = flag("withoutAudio"), let output = flag("useOutputSampleRate"),
+          let buffer = integer("audioBufferMilliseconds"), buffer <= 200, buffer % 10 == 0,
+          let seconds = integer("loopSeconds"), (1...10).contains(seconds) else { return nil }
+    return IosImmortalizerPowerOptions(pauseUiFrames: pause, leanHooks: lean,
+      withoutAudio: noAudio, useOutputSampleRate: output,
+      audioBufferMilliseconds: buffer, loopSeconds: seconds)
+  }
+
+  var arguments: [String: Any] {
+    ["schema": 1, "pauseUiFrames": pauseUiFrames, "leanHooks": leanHooks,
+     "withoutAudio": withoutAudio, "useOutputSampleRate": useOutputSampleRate,
+     "audioBufferMilliseconds": audioBufferMilliseconds, "loopSeconds": loopSeconds]
+  }
+}
 
 extension Notification.Name {
   static let mcoIosExecutionCompatibilityChanged = Notification.Name("mco.ios.execution.compatibility")
@@ -12,6 +53,13 @@ protocol IosBackgroundExecutionBackend: AnyObject {
   var audioDiagnostics: [String: Any] { get }
   func setArmed(_ armed: Bool) -> Bool
   func setBackground(_ background: Bool)
+  func configurePower(_ options: IosImmortalizerPowerOptions) -> Bool
+}
+
+extension IosBackgroundExecutionBackend {
+  func configurePower(_ options: IosImmortalizerPowerOptions) -> Bool {
+    options == IosImmortalizerPowerOptions()
+  }
 }
 
 final class ImmortalizerExecutionBackend: IosBackgroundExecutionBackend {
@@ -26,6 +74,14 @@ final class ImmortalizerExecutionBackend: IosBackgroundExecutionBackend {
   var audioDiagnostics: [String: Any] { MCOImmortalizerAudioDiagnostics() }
   func setArmed(_ armed: Bool) -> Bool { MCOImmortalizerSetArmed(armed) }
   func setBackground(_ background: Bool) { MCOImmortalizerSetBackground(background) }
+  func configurePower(_ options: IosImmortalizerPowerOptions) -> Bool {
+    MCOImmortalizerConfigurePower(options.leanHooks, options.withoutAudio,
+      Double(options.audioBufferMilliseconds) / 1000, options.useOutputSampleRate, UInt(options.loopSeconds))
+  }
+  static func silentWav(sampleRate: Int, seconds: Int) -> Data? {
+    guard sampleRate >= 0, seconds >= 0 else { return nil }
+    return MCOImmortalizerCreateSilentWav(UInt(sampleRate), UInt(seconds))
+  }
 }
 
 /// Physical state is native-owned; Dart sends authorized TCP reasons only.
@@ -48,6 +104,7 @@ final class IosBackgroundExecutionController {
   private(set) var eligible = false
   private(set) var manualAllowed: Bool
   private(set) var armed = false
+  private(set) var powerOptions = IosImmortalizerPowerOptions()
   var compatibilityRequired: Bool { armed }
 
   init(backend: IosBackgroundExecutionBackend? = nil,
@@ -122,6 +179,7 @@ final class IosBackgroundExecutionController {
     return ["schema": 1, "revision": diagnosticsRevision, "source": source,
             "eligible": eligible, "manualAllowed": manualAllowed, "background": background,
             "armed": armed, "legacyInjection": legacyDetected(), "audio": backend.audioDiagnostics,
+            "powerOptions": powerOptions.arguments,
             "nativeAtUtcMs": Int64(Date().timeIntervalSince1970 * 1000),
             "nativeUptimeMs": Int64(ProcessInfo.processInfo.systemUptime * 1000)]
   }
@@ -151,6 +209,17 @@ final class IosBackgroundExecutionController {
         result(["eligible": self.eligible, "manualAllowed": self.manualAllowed,
                 "background": self.background, "armed": self.armed,
                 "audioRunning": self.backend.audioRunning, "legacyInjection": self.legacyDetected()])
+      case "configurePower":
+        guard let arguments = call.arguments as? [String: Any],
+              let options = IosImmortalizerPowerOptions.parse(arguments) else {
+          result(FlutterError(code: "bad_args", message: "Invalid iOS power options", details: nil))
+          return
+        }
+        guard self.configurePower(options) else {
+          result(FlutterError(code: "unavailable", message: "iOS power options unavailable", details: nil))
+          return
+        }
+        result(nil)
       case "diagnostics":
         result(self.diagnosticsSnapshot(source: "requested"))
       default:
@@ -170,6 +239,21 @@ final class IosBackgroundExecutionController {
     manualAllowed = allowed
     preferences.set(allowed, forKey: Self.manualAllowedKey)
     reconcile()
+  }
+
+  @discardableResult
+  func configurePower(_ options: IosImmortalizerPowerOptions) -> Bool {
+    guard !closed else { return false }
+    if options == powerOptions { return true }
+    let previous = powerOptions
+    powerOptions = options
+    guard backend.configurePower(options) else {
+      powerOptions = previous
+      return false
+    }
+    // Ручной OFF/eligibility не изменяются; снимок обновляет только реальное состояние.
+    reconcile(forceState: true)
+    return true
   }
 
   private func reconcile(forceState: Bool = false) {
@@ -216,6 +300,8 @@ final class IosBackgroundExecutionController {
     channels.removeAll()
     _ = backend.setArmed(false)
     backend.setBackground(false)
+    _ = backend.configurePower(IosImmortalizerPowerOptions())
+    powerOptions = IosImmortalizerPowerOptions()
     let wasArmed = armed
     armed = false
     button.close()

@@ -16,6 +16,7 @@ class PowerSavingIntervalCard extends StatefulWidget {
     required this.maximum,
     this.step = 1,
     this.milliseconds = false,
+    this.valueLabel,
     this.onSaved,
   });
 
@@ -26,6 +27,7 @@ class PowerSavingIntervalCard extends StatefulWidget {
   final int maximum;
   final int step;
   final bool milliseconds;
+  final String Function(int)? valueLabel;
   final Future<void> Function(int)? onSaved;
 
   @override
@@ -46,9 +48,9 @@ class _PowerSavingIntervalCardState extends State<PowerSavingIntervalCard> {
   @override
   Widget build(BuildContext context) {
     final value = _dragValue ?? widget.value;
-    final label = widget.milliseconds
+    final label = widget.valueLabel?.call(value) ?? (widget.milliseconds
         ? context.l10n.powerSaving_milliseconds(value)
-        : context.l10n.powerSaving_seconds(value);
+        : context.l10n.powerSaving_seconds(value));
     return MeshCard(
       padding: const EdgeInsets.all(16),
       child: Column(

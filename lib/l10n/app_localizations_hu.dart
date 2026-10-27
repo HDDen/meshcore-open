@@ -8570,4 +8570,63 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
       'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+
+  @override
+  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+
+  @override
+  String get powerSaving_iosImmortalizerDescription =>
+      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+
+  @override
+  String get powerSaving_iosImmortalizerFrames =>
+      'Pause UI frame scheduling in the background';
+
+  @override
+  String get powerSaving_iosImmortalizerHooks =>
+      'Reduce native hook processing';
+
+  @override
+  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+
+  @override
+  String get powerSaving_iosImmortalizerOriginal =>
+      'Original (hooks and silent audio)';
+
+  @override
+  String get powerSaving_iosImmortalizerWithoutAudio =>
+      'Without audio (experimental)';
+
+  @override
+  String get powerSaving_iosImmortalizerWithoutAudioDescription =>
+      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+
+  @override
+  String get powerSaving_iosImmortalizerSampleRate =>
+      'Silent audio file sample rate';
+
+  @override
+  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+
+  @override
+  String get powerSaving_iosImmortalizerOutputRate =>
+      'Match the actual audio output';
+
+  @override
+  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+
+  @override
+  String get powerSaving_iosImmortalizerBufferDescription =>
+      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+
+  @override
+  String get powerSaving_iosImmortalizerSystem =>
+      'System (original preference)';
+
+  @override
+  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+
+  @override
+  String get powerSaving_iosImmortalizerLoopDescription =>
+      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
 }

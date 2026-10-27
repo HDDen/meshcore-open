@@ -3406,5 +3406,21 @@
   "powerSaving_releaseTcpWifiLock": "Не удерживать Wi-Fi для TCP",
   "powerSaving_releaseTcpWifiLockDescription": "Разрешать штатное энергосбережение Wi-Fi при TCP-подключении к ноде, включая Tailscale. Применяется сразу, на экране и в фоне; фоновая служба и настройка сна CPU сохраняются. На некоторых устройствах возможны задержки или разрывы связи.",
   "powerSaving_reduceDeliveryObservationWrites": "Сокращать перезапись статистики доставки",
-  "powerSaving_reduceDeliveryObservationWritesDescription": "Обновлять только изменившуюся часть накопленной статистики доставки. Содержимое и порядок статистики не меняются, запись не откладывается дополнительно."
+  "powerSaving_reduceDeliveryObservationWritesDescription": "Обновлять только изменившуюся часть накопленной статистики доставки. Содержимое и порядок статистики не меняются, запись не откладывается дополнительно.",
+  "powerSaving_iosImmortalizerTitle": "iOS: фоновое удержание",
+  "powerSaving_iosImmortalizerDescription": "Экспериментальные параметры встроенного удержания TCP в фоне. Доступны через «Свои настройки»; исходные значения сохраняют нынешнее поведение. Защита кадров и GPU остаётся включённой.",
+  "powerSaving_iosImmortalizerFrames": "Приостанавливать планирование UI-кадров в фоне",
+  "powerSaving_iosImmortalizerHooks": "Облегчённая обработка native hooks",
+  "powerSaving_iosImmortalizerMode": "Режим фонового удержания",
+  "powerSaving_iosImmortalizerOriginal": "Штатный (hooks и тихое аудио)",
+  "powerSaving_iosImmortalizerWithoutAudio": "Без аудио (эксперимент)",
+  "powerSaving_iosImmortalizerWithoutAudioDescription": "Без тихого аудио iOS может приостановить приложение и доставку сообщений. Аудиопараметры сохраняются, но в этом режиме не применяются.",
+  "powerSaving_iosImmortalizerSampleRate": "Частота файла тишины",
+  "powerSaving_iosImmortalizerEightKhz": "Исходная: 8 кГц",
+  "powerSaving_iosImmortalizerOutputRate": "По фактическому аудиовыходу",
+  "powerSaving_iosImmortalizerBuffer": "Предпочтительный аудиобуфер I/O",
+  "powerSaving_iosImmortalizerBufferDescription": "Запрос к iOS, а не гарантированная аппаратная длительность. «Системная» оставляет исходное предпочтение. Принятое значение смотрите в диагностике.",
+  "powerSaving_iosImmortalizerSystem": "Системная (исходное предпочтение)",
+  "powerSaving_iosImmortalizerLoop": "Длина цикла тишины",
+  "powerSaving_iosImmortalizerLoopDescription": "Исходно 1 секунда. Длинный PCM-цикл занимает больше памяти; экономия батареи пока не установлена."
 }

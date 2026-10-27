@@ -7,6 +7,8 @@ import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/ios_background_execution_binding.dart';
 import 'package:meshcore_open/models/app_settings.dart';
+import 'package:meshcore_open/models/ios_immortalizer_power_options.dart';
+import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'ios_execution_diagnostics_fixture.dart';
 
@@ -112,6 +114,37 @@ void main() {
     connection.changed();
     await drain();
     expect(eligibility(), <bool>[false]);
+  });
+
+  test('custom power is sent before TCP authorization and reset after revocation', () async {
+    settings.settings = settings.settings.copyWith(powerSaving: const PowerSavingSettings(
+      profile: PowerSavingProfile.custom,
+      custom: PowerSavingOptions(iosImmortalizer: IosImmortalizerPowerOptions(
+        leanHooks: true, audioBufferMilliseconds: 100,
+      )),
+    ));
+    connection.transport = MeshCoreTransportType.tcp;
+    connection.connected = true;
+    start();
+    await drain();
+    expect(calls.map((call) => call.method), ['configurePower', 'configure']);
+    expect((calls.first.arguments as Map)['audioBufferMilliseconds'], 100);
+    expect(calls.last.arguments, {'eligible': true});
+    binding!.dispose();
+    await drain();
+    expect(calls[calls.length - 2].arguments, {'eligible': false});
+    expect((calls.last.arguments as Map)['audioBufferMilliseconds'], 0);
+    expect(calls.last.method, 'configurePower');
+  });
+
+  test('custom iOS options never open a channel on another platform', () async {
+    settings.settings = settings.settings.copyWith(powerSaving: const PowerSavingSettings(
+      profile: PowerSavingProfile.custom,
+      custom: PowerSavingOptions(iosImmortalizer: IosImmortalizerPowerOptions(withoutAudio: true)),
+    ));
+    start(isIos: false);
+    await drain();
+    expect(calls, isEmpty);
   });
 
   test('TCP authorizes once and retains a previously established recovery', () async {

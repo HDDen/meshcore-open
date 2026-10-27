@@ -600,6 +600,140 @@ class RunnerTests: XCTestCase {
     if Thread.isMainThread { check() } else { DispatchQueue.main.sync(execute: check) }
   }
 
+  func testExecutionPowerOptionsParseStrictlyAndKeepManualOff() throws {
+    let f = executionFixture(background: true)
+    let messenger = PresentationTestMessenger()
+    let channel = "mco_advanced/ios_execution"
+    f.controller.register(binaryMessenger: messenger, viewController: { nil })
+    f.controller.configure(eligible: true)
+    f.controller.setManualAllowed(false)
+    let options = IosImmortalizerPowerOptions(pauseUiFrames: true, leanHooks: true,
+      withoutAudio: true, useOutputSampleRate: true, audioBufferMilliseconds: 200, loopSeconds: 10)
+    XCTAssertEqual(IosImmortalizerPowerOptions.parse(options.arguments), options)
+    _ = try messenger.call(channel, method: "configurePower", arguments: options.arguments)
+    XCTAssertEqual(f.controller.powerOptions, options)
+    XCTAssertEqual(f.backend.powerRequests, [options])
+    XCTAssertTrue(f.controller.eligible)
+    XCTAssertFalse(f.controller.manualAllowed)
+    XCTAssertFalse(f.controller.armed)
+    XCTAssertFalse(f.backend.audioRunning)
+    let snapshot = try XCTUnwrap(try messenger.call(channel, method: "diagnostics") as? [String: Any])
+    XCTAssertEqual((snapshot["powerOptions"] as? [String: Any])?["audioBufferMilliseconds"] as? Int, 200)
+    for (key, value) in [("schema", 2 as Any), ("schema", true as Any),
+                         ("pauseUiFrames", 1 as Any), ("loopSeconds", 11 as Any),
+                         ("audioBufferMilliseconds", 15 as Any),
+                         ("audioBufferMilliseconds", Double.nan as Any)] {
+      var invalid = options.arguments
+      invalid[key] = value
+      XCTAssertNil(IosImmortalizerPowerOptions.parse(invalid))
+      let reply = try messenger.call(channel, method: "configurePower", arguments: invalid)
+      XCTAssertEqual((reply as? FlutterError)?.code, "bad_args")
+    }
+    XCTAssertEqual(f.backend.powerRequests.count, 1)
+    XCTAssertFalse(f.controller.manualAllowed)
+    f.controller.close()
+    XCTAssertEqual(f.backend.powerRequests.last, IosImmortalizerPowerOptions())
+    XCTAssertFalse(f.preferences.bool(forKey: IosBackgroundExecutionController.manualAllowedKey))
+  }
+
+  func testExecutionWithoutAudioKeepsCompatibilityAndRestoresOnlyEligibleBackground() {
+    let f = executionFixture(background: true)
+    f.controller.configure(eligible: true)
+    XCTAssertTrue(f.backend.audioRunning)
+    let noAudio = IosImmortalizerPowerOptions(withoutAudio: true,
+      audioBufferMilliseconds: 100, loopSeconds: 5)
+    XCTAssertTrue(f.controller.configurePower(noAudio))
+    XCTAssertTrue(f.controller.armed)
+    XCTAssertTrue(f.controller.compatibilityRequired)
+    XCTAssertFalse(f.backend.audioRunning)
+    XCTAssertEqual(f.backend.audioStops, 1)
+    // Repeated requests do not restart the audio path.
+    XCTAssertTrue(f.controller.configurePower(noAudio))
+    XCTAssertEqual(f.backend.powerRequests.count, 1)
+    var audio = noAudio
+    audio.withoutAudio = false
+    XCTAssertTrue(f.controller.configurePower(audio))
+    XCTAssertTrue(f.backend.audioRunning)
+    XCTAssertEqual(f.backend.audioStarts, 2)
+    f.center.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+    XCTAssertFalse(f.backend.audioRunning)
+    audio.loopSeconds = 10
+    XCTAssertTrue(f.controller.configurePower(audio))
+    XCTAssertFalse(f.backend.audioRunning)
+    f.controller.configure(eligible: false)
+    f.center.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    XCTAssertTrue(f.controller.configurePower(IosImmortalizerPowerOptions()))
+    XCTAssertFalse(f.backend.audioRunning)
+  }
+
+  func testExecutionRejectedPowerRequestRollsBackWithoutStartingOrChangingEligibility() {
+    let f = executionFixture()
+    f.backend.canConfigure = false
+    XCTAssertFalse(f.controller.configurePower(IosImmortalizerPowerOptions(withoutAudio: true)))
+    XCTAssertEqual(f.controller.powerOptions, IosImmortalizerPowerOptions())
+    XCTAssertTrue(f.backend.armRequests.isEmpty)
+    XCTAssertFalse(f.controller.eligible)
+    XCTAssertTrue(f.controller.manualAllowed)
+    XCTAssertEqual(f.backend.audioStarts, 0)
+  }
+
+  func testSilentWavHeaderAndBoundsWithoutStartingAudio() throws {
+    func u32(_ data: Data, _ offset: Int) -> UInt32 {
+      (0..<4).reduce(UInt32(0)) { $0 | (UInt32(data[offset + $1]) << ($1 * 8)) }
+    }
+    let original = try XCTUnwrap(ImmortalizerExecutionBackend.silentWav(sampleRate: 8000, seconds: 1))
+    let header: [UInt8] = [
+      82,73,70,70,164,62,0,0,87,65,86,69,102,109,116,32,16,0,0,0,1,0,1,0,
+      64,31,0,0,128,62,0,0,2,0,16,0,100,97,116,97,128,62,0,0
+    ]
+    XCTAssertEqual(Array(original.prefix(44)), header)
+    XCTAssertEqual(original.count, 16044)
+    for (rate, seconds) in [(8000, 10), (44100, 3), (48000, 10), (192000, 10)] {
+      let data = try XCTUnwrap(ImmortalizerExecutionBackend.silentWav(sampleRate: rate, seconds: seconds))
+      XCTAssertEqual(data.count, 44 + rate * seconds * 2)
+      XCTAssertEqual(u32(data, 4), UInt32(data.count - 8))
+      XCTAssertEqual(u32(data, 24), UInt32(rate))
+      XCTAssertEqual(u32(data, 28), UInt32(rate * 2))
+      XCTAssertEqual(u32(data, 40), UInt32(data.count - 44))
+      XCTAssertTrue(data.dropFirst(44).allSatisfy { $0 == 0 })
+    }
+    for (rate, seconds) in [(-1, 1), (7999, 1), (192001, 1), (8000, 0), (8000, 11)] {
+      XCTAssertNil(ImmortalizerExecutionBackend.silentWav(sampleRate: rate, seconds: seconds))
+    }
+  }
+
+  func testLeanClassifierKeepsLegacyTokenSemanticsWithoutArmingBackend() {
+    let check = {
+      let backend = ImmortalizerExecutionBackend()
+      // The test host has no authorized TCP session; do not install private hooks.
+      guard !backend.isArmed else {
+        XCTFail("Classifier test requires an unarmed test host")
+        return
+      }
+      defer { _ = backend.configurePower(IosImmortalizerPowerOptions()) }
+      let corpus = ["", "foreground = NotSet", "foreground = No", "foreground = NO;",
+        "foreground = BSSettingFlagNo }", "foreground = YES", "foreground = NoOther",
+        "FBSceneSnapshotAction:", "hostContextIdentifierForSnapshotting = 0"]
+      var legacy: [Bool] = []
+      for lean in [false, true] {
+        XCTAssertTrue(backend.configurePower(IosImmortalizerPowerOptions(leanHooks: lean)))
+        var results: [Bool] = []
+        for description in corpus {
+          for background in [false, true] {
+            for transitioning in [false, true] {
+              results.append(ImmortalizerExecutionBackend.defersDiff(description,
+                background: background, transitioning: transitioning))
+            }
+          }
+        }
+        if lean { XCTAssertEqual(results, legacy) } else { legacy = results }
+      }
+      XCTAssertFalse(backend.isArmed)
+      XCTAssertFalse(backend.audioRunning)
+    }
+    if Thread.isMainThread { check() } else { DispatchQueue.main.sync(execute: check) }
+  }
+
   func testImmortalizerDiffClassifierWithoutInstallingPrivateHooks() {
     for marker in ["foreground = NotSet", "foreground = No", "foreground = BSSettingFlagNo",
                    "foreground = NO", "hostContextIdentifierForSnapshotting = 0",
@@ -750,6 +884,9 @@ private final class ButtonDockClock {
 
 private final class ExecutionTestBackend: IosBackgroundExecutionBackend {
   var canArm = true
+  var canConfigure = true
+  private(set) var powerRequests: [IosImmortalizerPowerOptions] = []
+  private var powerOptions = IosImmortalizerPowerOptions()
   var onArm: ((Bool) -> Void)?
   private var armed = false
   private var background = false
@@ -776,8 +913,16 @@ private final class ExecutionTestBackend: IosBackgroundExecutionBackend {
     updateAudio()
   }
 
+  func configurePower(_ options: IosImmortalizerPowerOptions) -> Bool {
+    guard canConfigure else { return false }
+    powerRequests.append(options)
+    powerOptions = options
+    updateAudio()
+    return true
+  }
+
   private func updateAudio() {
-    let running = armed && background
+    let running = armed && background && !powerOptions.withoutAudio
     if running != audioRunning {
       if running { audioStarts += 1 } else { audioStops += 1 }
       audioRunning = running

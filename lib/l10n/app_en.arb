@@ -4455,5 +4455,21 @@
   "powerSaving_releaseTcpWifiLock": "Release Wi-Fi lock for TCP",
   "powerSaving_releaseTcpWifiLockDescription": "Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.",
   "powerSaving_reduceDeliveryObservationWrites": "Reduce delivery statistics rewrites",
-  "powerSaving_reduceDeliveryObservationWritesDescription": "Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further."
+  "powerSaving_reduceDeliveryObservationWritesDescription": "Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.",
+  "powerSaving_iosImmortalizerTitle": "iOS: background execution",
+  "powerSaving_iosImmortalizerDescription": "Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.",
+  "powerSaving_iosImmortalizerFrames": "Pause UI frame scheduling in the background",
+  "powerSaving_iosImmortalizerHooks": "Reduce native hook processing",
+  "powerSaving_iosImmortalizerMode": "Background hold mode",
+  "powerSaving_iosImmortalizerOriginal": "Original (hooks and silent audio)",
+  "powerSaving_iosImmortalizerWithoutAudio": "Without audio (experimental)",
+  "powerSaving_iosImmortalizerWithoutAudioDescription": "Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.",
+  "powerSaving_iosImmortalizerSampleRate": "Silent audio file sample rate",
+  "powerSaving_iosImmortalizerEightKhz": "Original: 8 kHz",
+  "powerSaving_iosImmortalizerOutputRate": "Match the actual audio output",
+  "powerSaving_iosImmortalizerBuffer": "Preferred audio I/O buffer",
+  "powerSaving_iosImmortalizerBufferDescription": "A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.",
+  "powerSaving_iosImmortalizerSystem": "System (original preference)",
+  "powerSaving_iosImmortalizerLoop": "Silent audio loop length",
+  "powerSaving_iosImmortalizerLoopDescription": "Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established."
 }

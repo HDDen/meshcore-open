@@ -5,6 +5,11 @@
 NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT BOOL MCOImmortalizerSetArmed(BOOL armed);
 FOUNDATION_EXPORT void MCOImmortalizerSetBackground(BOOL background);
+// Не включает hooks/hold само по себе; параметры применяются только к нашему audio path.
+FOUNDATION_EXPORT BOOL MCOImmortalizerConfigurePower(BOOL leanHooks, BOOL withoutAudio,
+    NSTimeInterval bufferDuration, BOOL useOutputSampleRate, NSUInteger loopSeconds);
+// Чистая фабрика PCM WAV; nil для неподдерживаемого размера, без audio session.
+FOUNDATION_EXPORT NSData * _Nullable MCOImmortalizerCreateSilentWav(NSUInteger sampleRate, NSUInteger seconds);
 FOUNDATION_EXPORT BOOL MCOImmortalizerIsArmed(void);
 FOUNDATION_EXPORT BOOL MCOImmortalizerAudioRunning(void);
 FOUNDATION_EXPORT NSNotificationName const MCOImmortalizerAudioDiagnosticsChanged;

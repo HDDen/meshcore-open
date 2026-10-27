@@ -16,6 +16,7 @@ import '../services/app_settings_service.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_interval_card.dart';
 import '../widgets/cpu_sleep_settings_card.dart';
+import '../widgets/ios_immortalizer_settings_card.dart';
 import '../utils/platform_info.dart';
 
 String powerSavingProfileLabel(
@@ -278,6 +279,13 @@ class PowerSavingScreen extends StatelessWidget {
             CpuSleepSettingsCard(
               options: effective.cpuSleep,
               onChanged: custom ? (value) => unawaited(service.setCpuSleepOptions(value)) : null,
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (PlatformInfo.isIOS) ...[
+            IosImmortalizerSettingsCard(
+              options: effective.iosImmortalizer,
+              onChanged: custom ? (value) => unawaited(service.setIosImmortalizerPowerOptions(value)) : null,
             ),
             const SizedBox(height: 12),
           ],

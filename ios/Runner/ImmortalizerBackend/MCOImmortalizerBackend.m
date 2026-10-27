@@ -16,6 +16,7 @@
 #import <dlfcn.h>
 #import <stdatomic.h>
 #import <stdbool.h>
+#import <math.h>
 
 static atomic_bool armed;
 static atomic_bool physicallyBackground;
@@ -29,6 +30,12 @@ static BOOL ownsAudioSession;
 static NSString *previousCategory;
 static NSString *previousMode;
 static AVAudioSessionCategoryOptions previousOptions;
+static atomic_bool leanHooks;
+static BOOL withoutAudio, useOutputSampleRate;
+static NSTimeInterval requestedBufferDuration;
+static NSUInteger loopSeconds = 1;
+static NSTimeInterval previousBufferDuration, ownedBufferDuration;
+static BOOL ownsBufferPreference;
 NSNotificationName const MCOImmortalizerAudioDiagnosticsChanged = @"mco.ios.execution.audioDiagnostics";
 static NSUInteger audioStartAttempts, audioPlayStarts, audioCleanupStops;
 static NSUInteger audioInterruptions, audioMediaResets, audioRouteChanges, audioFailures;
@@ -90,6 +97,19 @@ static BOOL foregroundFlag(NSString *description, BOOL active) {
     NSString *pattern = active
         ? @"\\bforeground\\s*=\\s*(?:Yes|YES|BSSettingFlagYes)(?:[;\\s,}]|$)"
         : @"\\bforeground\\s*=\\s*(?:No|NO|BSSettingFlagNo)(?:[;\\s,}]|$)";
+    if (atomic_load(&leanHooks)) {
+        static NSRegularExpression *yesPattern, *noPattern;
+        static dispatch_once_t once;
+        dispatch_once(&once, ^{
+            yesPattern = [NSRegularExpression regularExpressionWithPattern:
+                @"\\bforeground\\s*=\\s*(?:Yes|YES|BSSettingFlagYes)(?:[;\\s,}]|$)" options:0 error:nil];
+            noPattern = [NSRegularExpression regularExpressionWithPattern:
+                @"\\bforeground\\s*=\\s*(?:No|NO|BSSettingFlagNo)(?:[;\\s,}]|$)" options:0 error:nil];
+        });
+        NSRegularExpression *expression = active ? yesPattern : noPattern;
+        return [expression firstMatchInString:description options:0
+            range:NSMakeRange(0, description.length)] != nil;
+    }
     return [description rangeOfString:pattern options:NSRegularExpressionSearch].location != NSNotFound;
 }
 
@@ -107,6 +127,11 @@ static void flushScenes(void) {
 static void sceneUpdate(id receiver, SEL selector, id scene, id diff, id context, id completion) {
     // Private callbacks on unknown queues stay untouched. All deferred calls
     // originate on main and are replayed on main in their original order.
+    if (atomic_load(&leanHooks) && (!NSThread.isMainThread ||
+            (!atomic_load(&armed) && deferredScenes.count == 0))) {
+        originalScene(receiver, selector, scene, diff, context, completion);
+        return;
+    }
     NSString *description = [diff description];
     if (NSThread.isMainThread && foregroundFlag(description, YES)) {
         sceneBackgroundTransition = NO;
@@ -145,45 +170,71 @@ static UIApplicationState applicationState(id receiver, SEL selector) {
     return originalApplicationState(receiver, selector);
 }
 
-static NSData *silentWav(void) {
-    // One second, PCM16 mono at 8 kHz. No borrowed base64 asset or generator.
-    const unsigned char header[44] = {
+NSData *MCOImmortalizerCreateSilentWav(NSUInteger sampleRate, NSUInteger seconds) {
+    // PCM16 mono, ограничение размера до выделения памяти (максимум 3,84 МБ).
+    if (sampleRate < 8000 || sampleRate > 192000 || seconds < 1 || seconds > 10) return nil;
+    const uint32_t bytes = (uint32_t)(sampleRate * seconds * 2);
+    unsigned char header[44] = {
         'R','I','F','F',0xa4,0x3e,0,0,'W','A','V','E',
         'f','m','t',' ',16,0,0,0,1,0,1,0,0x40,0x1f,0,0,
         0x80,0x3e,0,0,2,0,16,0,'d','a','t','a',0x80,0x3e,0,0
     };
-    NSMutableData *data = [NSMutableData dataWithLength:sizeof(header) + 16000];
+    const uint32_t values[4] = {bytes + 36, (uint32_t)sampleRate, (uint32_t)sampleRate * 2, bytes};
+    const NSUInteger offsets[4] = {4, 24, 28, 40};
+    for (NSUInteger field = 0; field < 4; field++) {
+        for (NSUInteger byte = 0; byte < 4; byte++) header[offsets[field] + byte] = (values[field] >> (byte * 8)) & 0xff;
+    }
+    NSMutableData *data = [NSMutableData dataWithLength:sizeof(header) + bytes];
     [data replaceBytesInRange:NSMakeRange(0, sizeof(header)) withBytes:header];
     return data;
 }
 
-static void stopAudio(void) {
+static BOOL ownsCurrentCategory(AVAudioSession *session) {
+    return ownsAudioSession && [session.category isEqualToString:AVAudioSessionCategoryPlayback] &&
+        [session.mode isEqualToString:AVAudioSessionModeDefault] &&
+        session.categoryOptions == AVAudioSessionCategoryOptionMixWithOthers;
+}
+
+static void stopAudioWithNotification(BOOL notifyOthers) {
     if (!player && !ownsAudioSession) return;
     audioCleanupStops++;
     [player stop];
     player = nil;
     AVAudioSession *session = AVAudioSession.sharedInstance;
     // Do not overwrite a category changed by another app feature meanwhile.
-    if (ownsAudioSession && [session.category isEqualToString:AVAudioSessionCategoryPlayback] &&
-            [session.mode isEqualToString:AVAudioSessionModeDefault] &&
-            session.categoryOptions == AVAudioSessionCategoryOptionMixWithOthers) {
-        [session setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    if (ownsCurrentCategory(session)) {
+        [session setActive:NO withOptions:notifyOthers ? AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation : 0 error:nil];
+        // Не стираем preference, которое успела изменить другая функция приложения.
+        if (ownsBufferPreference && fabs(session.preferredIOBufferDuration - ownedBufferDuration) < 0.000001 &&
+                previousBufferDuration > 0) {
+            [session setPreferredIOBufferDuration:previousBufferDuration error:nil];
+        }
         [session setCategory:previousCategory mode:previousMode options:previousOptions error:nil];
     }
+    ownsBufferPreference = NO;
     ownsAudioSession = NO;
     previousCategory = nil;
     previousMode = nil;
     publishAudioDiagnostics(@"stopped");
 }
 
+static void stopAudio(void) { stopAudioWithNotification(YES); }
+
+static NSUInteger currentPlayerRate(void) {
+    const double rate = AVAudioSession.sharedInstance.sampleRate;
+    return useOutputSampleRate && isfinite(rate) && rate >= 8000 && rate <= 192000
+        ? (NSUInteger)llround(rate) : 8000;
+}
+
 static void startAudio(void) {
-    if (!atomic_load(&armed) || !atomic_load(&physicallyBackground) || player.isPlaying) return;
+    if (!atomic_load(&armed) || !atomic_load(&physicallyBackground) || withoutAudio || player.isPlaying) return;
     audioStartAttempts++;
     AVAudioSession *session = AVAudioSession.sharedInstance;
     if (!ownsAudioSession) {
         previousCategory = session.category;
         previousMode = session.mode;
         previousOptions = session.categoryOptions;
+        previousBufferDuration = session.preferredIOBufferDuration;
     }
     NSError *error = nil;
     if (![session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault
@@ -194,6 +245,16 @@ static void startAudio(void) {
         return;
     }
     ownsAudioSession = YES;
+    if (requestedBufferDuration > 0 && !ownsBufferPreference) {
+        if ([session setPreferredIOBufferDuration:requestedBufferDuration error:&error]) {
+            ownsBufferPreference = YES;
+            ownedBufferDuration = session.preferredIOBufferDuration;
+        } else {
+            // Непринятое предпочтение не должно отключать прежнее рабочее удержание.
+            audioFailures++;
+            publishAudioDiagnostics(@"preferencesFailed");
+        }
+    }
     if (![session setActive:YES error:&error]) {
         audioFailures++;
         publishAudioDiagnostics(@"activationFailed");
@@ -202,7 +263,14 @@ static void startAudio(void) {
         return;
     }
     if (!player) {
-        player = [[AVAudioPlayer alloc] initWithData:silentWav() error:&error];
+        NSData *wav = MCOImmortalizerCreateSilentWav(currentPlayerRate(), loopSeconds);
+        if (!wav) {
+            audioFailures++;
+            publishAudioDiagnostics(@"formatFailed");
+            stopAudio();
+            return;
+        }
+        player = [[AVAudioPlayer alloc] initWithData:wav error:&error];
         player.volume = 0;
         player.numberOfLoops = -1;
     }
@@ -249,6 +317,7 @@ static BOOL installHooks(void) {
         queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         player = nil;
         ownsAudioSession = NO;
+        ownsBufferPreference = NO;
         audioMediaResets++;
         publishAudioDiagnostics(@"mediaServicesReset");
         startAudio();
@@ -256,6 +325,13 @@ static BOOL installHooks(void) {
     [center addObserverForName:AVAudioSessionRouteChangeNotification object:nil
         queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         audioRouteChanges++;
+        // Формат меняется только при изменившейся частоте нашего активного выхода.
+        if (useOutputSampleRate && player.isPlaying && ownsCurrentCategory(AVAudioSession.sharedInstance) &&
+                fabs(player.format.sampleRate - currentPlayerRate()) > 0.5) {
+            [player stop];
+            player = nil;
+            startAudio();
+        }
         publishAudioDiagnostics(@"routeChanged");
     }];
     installed = YES;
@@ -287,4 +363,22 @@ void MCOImmortalizerSetBackground(BOOL background) {
         sceneBackgroundTransition = NO;
         flushScenes();
     }
+}
+
+BOOL MCOImmortalizerConfigurePower(BOOL lean, BOOL noAudio, NSTimeInterval buffer,
+                                  BOOL outputRate, NSUInteger seconds) {
+    NSCAssert(NSThread.isMainThread, @"Immortalizer power belongs on main");
+    if (!isfinite(buffer) || buffer < 0 || buffer > 0.2 || seconds < 1 || seconds > 10) return NO;
+    const BOOL audioChanged = withoutAudio != noAudio || useOutputSampleRate != outputRate ||
+        requestedBufferDuration != buffer || loopSeconds != seconds;
+    // При полном отказе от audio освобождаем session с обычным уведомлением.
+    if (audioChanged) stopAudioWithNotification(noAudio);
+    atomic_store(&leanHooks, lean);
+    withoutAudio = noAudio;
+    useOutputSampleRate = outputRate;
+    requestedBufferDuration = buffer;
+    loopSeconds = seconds;
+    if (audioChanged) startAudio(); // startAudio проверяет прежние armed/background gates.
+    publishAudioDiagnostics(@"powerChanged");
+    return YES;
 }

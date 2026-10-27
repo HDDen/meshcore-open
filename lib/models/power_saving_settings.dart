@@ -1,10 +1,12 @@
 import 'cpu_sleep_options.dart';
 import 'ble_power_options.dart';
+import 'ios_immortalizer_power_options.dart';
 
 enum PowerSavingProfile { disabled, balanced, economical, maximum, custom }
 
 class PowerSavingOptions {
   const PowerSavingOptions({
+    this.iosImmortalizer = const IosImmortalizerPowerOptions(),
     this.cpuSleep = const CpuSleepOptions(),
     this.bleConnectionPriority = BleConnectionPriorityMode.original,
     this.blePeripheralLatency = BlePeripheralLatencyMode.original,
@@ -54,6 +56,7 @@ class PowerSavingOptions {
   static const backgroundReconnectIntervalStep = 30;
 
   final CpuSleepOptions cpuSleep;
+  final IosImmortalizerPowerOptions iosImmortalizer;
   final BleConnectionPriorityMode bleConnectionPriority;
   final BlePeripheralLatencyMode blePeripheralLatency;
   final bool releaseTcpWifiLock;
@@ -93,6 +96,7 @@ class PowerSavingOptions {
   }
 
   PowerSavingOptions copyWith({
+    IosImmortalizerPowerOptions? iosImmortalizer,
     CpuSleepOptions? cpuSleep,
     BleConnectionPriorityMode? bleConnectionPriority,
     BlePeripheralLatencyMode? blePeripheralLatency,
@@ -114,6 +118,7 @@ class PowerSavingOptions {
     int? backgroundReconnectIntervalSeconds,
   }) =>
       PowerSavingOptions(
+        iosImmortalizer: iosImmortalizer ?? this.iosImmortalizer,
         cpuSleep: cpuSleep ?? this.cpuSleep,
         bleConnectionPriority: bleConnectionPriority ?? this.bleConnectionPriority,
         blePeripheralLatency: blePeripheralLatency ?? this.blePeripheralLatency,
@@ -156,6 +161,7 @@ class PowerSavingOptions {
     final value = json is Map
         ? json['hidden_radio_stats_interval_seconds'] : null;
     return PowerSavingOptions(
+      iosImmortalizer: IosImmortalizerPowerOptions.fromJson(json is Map ? json['ios_immortalizer'] : null),
       cpuSleep: CpuSleepOptions.fromJson(json is Map ? json['cpu_sleep'] : null),
       releaseTcpWifiLock: json is Map && json['release_tcp_wifi_lock'] == true,
       reduceDeliveryObservationWrites:
@@ -198,6 +204,7 @@ class PowerSavingOptions {
   }
 
   Map<String, dynamic> toJson() => {
+    if (!iosImmortalizer.isOriginal) 'ios_immortalizer': iosImmortalizer.toJson(),
     if (cpuSleep.enabled) 'cpu_sleep': cpuSleep.toJson(),
     if (releaseTcpWifiLock) 'release_tcp_wifi_lock': true,
     if (reduceDeliveryObservationWrites) 'reduce_delivery_observation_writes': true,

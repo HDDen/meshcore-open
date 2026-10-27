@@ -19,7 +19,25 @@ ValueListenable<bool> get iosAppPresentationActive => _iosAppPresentationActive;
 /// Native notifications remain useful when a dylib reports a false app state.
 mixin IosPresentationFrameGate on RendererBinding {
   bool _iosPresentationAllowed = true;
+  bool _iosPauseFrameScheduling = false;
   final iosFrameDiagnostics = IosFrameDiagnostics();
+
+  // Не меняем lifecycle/isolate: только обычное планирование UI-кадров.
+  // Forced/warm-up кадры по-прежнему защищены drawFrame/GPU gates.
+  @override
+  bool get framesEnabled =>
+      !(_iosPauseFrameScheduling && !_iosPresentationAllowed) && super.framesEnabled;
+
+  void updateIosFrameSchedulingPause(bool enabled) {
+    if (_iosPauseFrameScheduling == enabled) {
+      return;
+    }
+    final wasEnabled = framesEnabled;
+    _iosPauseFrameScheduling = enabled;
+    if (!wasEnabled && framesEnabled) {
+      scheduleFrame();
+    }
+  }
 
   @override
   void handleBeginFrame(Duration? rawTimeStamp) {
@@ -65,6 +83,19 @@ String? currentIosFrameDiagnosticsSummary() {
     return null;
   } on TypeError {
     return null;
+  }
+}
+
+void setIosFrameSchedulingPause(bool enabled) {
+  try {
+    final binding = RendererBinding.instance;
+    if (binding is IosPresentationFrameGate) {
+      binding.updateIosFrameSchedulingPause(enabled);
+    }
+  } on FlutterError {
+    // Не инициализируем binding ради настройки в headless/test окружении.
+  } on TypeError {
+    // Отсутствующий binding в release сохраняет обычное поведение.
   }
 }
 

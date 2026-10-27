@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/ios_execution_diagnostics.dart';
+import 'package:meshcore_open/models/ios_immortalizer_power_options.dart';
 
 import 'ios_execution_diagnostics_fixture.dart';
 
@@ -11,6 +12,24 @@ void main() {
   const channel = MethodChannel('mco_test/ios_execution_diagnostics');
 
   tearDown(() { messenger.setMockMethodCallHandler(channel, null); });
+
+  test('power requests are distinct from actual values and unknown fields stay private', () {
+    final raw = iosExecutionDiagnosticsFixture();
+    raw['powerOptions'] = {
+      ...const IosImmortalizerPowerOptions(audioBufferMilliseconds: 200,
+        loopSeconds: 10, useOutputSampleRate: true).toNativeArguments(),
+      'privateExtra': 'synthetic-private-marker',
+    };
+    final message = formatIosExecutionDiagnostics(raw);
+    expect(message, contains('power.audioBufferMilliseconds=200'));
+    expect(message, contains('power.loopSeconds=10'));
+    expect(message, contains('ioBufferDuration=0.020000'));
+    expect(message, isNot(contains('synthetic-private-marker')));
+    for (final invalid in [true, -1, 201, 15, double.nan, '100']) {
+      (raw['powerOptions'] as Map)['audioBufferMilliseconds'] = invalid;
+      expect(formatIosExecutionDiagnostics(raw), isNull);
+    }
+  });
 
   test('diagnostics keep actual and preferred hardware values distinct', () {
     final message = formatIosExecutionDiagnostics(iosExecutionDiagnosticsFixture());

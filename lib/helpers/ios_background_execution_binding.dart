@@ -7,6 +7,7 @@ import '../connector/meshcore_connector.dart';
 import '../services/app_settings_service.dart';
 import '../utils/platform_info.dart';
 import 'ios_execution_diagnostics.dart';
+import 'ios_immortalizer_power_binding.dart';
 
 /// Native owns physical background state and the persistent manual override.
 /// Dart supplies only the current, already-authorized TCP reasons.
@@ -53,6 +54,10 @@ class IosBackgroundExecutionBinding {
           'background=${state['background']}, armed=${state['armed']}, '
           'audio=${state['audioRunning']}, legacy=${state['legacyInjection']}');
     });
+    // Параметры отправляются раньше первой авторизации удержания, тем же FIFO channel.
+    _powerBinding = IosImmortalizerPowerBinding(
+      settings: settings, channel: _channel, onError: onError,
+    );
     connector.addListener(_sync);
     settings.addListener(_sync);
     sections.addListener(_sync);
@@ -67,6 +72,7 @@ class IosBackgroundExecutionBinding {
   final void Function(String diagnostics)? onDiagnostics;
   final MethodChannel _channel;
   final bool _enabled;
+  IosImmortalizerPowerBinding? _powerBinding;
   bool _tcpWasConnected = false;
   bool? _sent;
   bool _disposed = false;
@@ -128,5 +134,6 @@ class IosBackgroundExecutionBinding {
     _channel.setMethodCallHandler(null);
     // This does not clear the native manual preference.
     _send(false, force: true);
+    _powerBinding?.dispose();
   }
 }

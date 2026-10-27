@@ -8572,4 +8572,63 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
       'Обновлять только изменившуюся часть накопленной статистики доставки. Содержимое и порядок статистики не меняются, запись не откладывается дополнительно.';
+
+  @override
+  String get powerSaving_iosImmortalizerTitle => 'iOS: фоновое удержание';
+
+  @override
+  String get powerSaving_iosImmortalizerDescription =>
+      'Экспериментальные параметры встроенного удержания TCP в фоне. Доступны через «Свои настройки»; исходные значения сохраняют нынешнее поведение. Защита кадров и GPU остаётся включённой.';
+
+  @override
+  String get powerSaving_iosImmortalizerFrames =>
+      'Приостанавливать планирование UI-кадров в фоне';
+
+  @override
+  String get powerSaving_iosImmortalizerHooks =>
+      'Облегчённая обработка native hooks';
+
+  @override
+  String get powerSaving_iosImmortalizerMode => 'Режим фонового удержания';
+
+  @override
+  String get powerSaving_iosImmortalizerOriginal =>
+      'Штатный (hooks и тихое аудио)';
+
+  @override
+  String get powerSaving_iosImmortalizerWithoutAudio =>
+      'Без аудио (эксперимент)';
+
+  @override
+  String get powerSaving_iosImmortalizerWithoutAudioDescription =>
+      'Без тихого аудио iOS может приостановить приложение и доставку сообщений. Аудиопараметры сохраняются, но в этом режиме не применяются.';
+
+  @override
+  String get powerSaving_iosImmortalizerSampleRate => 'Частота файла тишины';
+
+  @override
+  String get powerSaving_iosImmortalizerEightKhz => 'Исходная: 8 кГц';
+
+  @override
+  String get powerSaving_iosImmortalizerOutputRate =>
+      'По фактическому аудиовыходу';
+
+  @override
+  String get powerSaving_iosImmortalizerBuffer =>
+      'Предпочтительный аудиобуфер I/O';
+
+  @override
+  String get powerSaving_iosImmortalizerBufferDescription =>
+      'Запрос к iOS, а не гарантированная аппаратная длительность. «Системная» оставляет исходное предпочтение. Принятое значение смотрите в диагностике.';
+
+  @override
+  String get powerSaving_iosImmortalizerSystem =>
+      'Системная (исходное предпочтение)';
+
+  @override
+  String get powerSaving_iosImmortalizerLoop => 'Длина цикла тишины';
+
+  @override
+  String get powerSaving_iosImmortalizerLoopDescription =>
+      'Исходно 1 секунда. Длинный PCM-цикл занимает больше памяти; экономия батареи пока не установлена.';
 }

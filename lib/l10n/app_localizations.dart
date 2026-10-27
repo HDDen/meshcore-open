@@ -14362,6 +14362,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.'**
   String get powerSaving_reduceDeliveryObservationWritesDescription;
+
+  /// No description provided for @powerSaving_iosImmortalizerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'iOS: background execution'**
+  String get powerSaving_iosImmortalizerTitle;
+
+  /// No description provided for @powerSaving_iosImmortalizerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.'**
+  String get powerSaving_iosImmortalizerDescription;
+
+  /// No description provided for @powerSaving_iosImmortalizerFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause UI frame scheduling in the background'**
+  String get powerSaving_iosImmortalizerFrames;
+
+  /// No description provided for @powerSaving_iosImmortalizerHooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce native hook processing'**
+  String get powerSaving_iosImmortalizerHooks;
+
+  /// No description provided for @powerSaving_iosImmortalizerMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Background hold mode'**
+  String get powerSaving_iosImmortalizerMode;
+
+  /// No description provided for @powerSaving_iosImmortalizerOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original (hooks and silent audio)'**
+  String get powerSaving_iosImmortalizerOriginal;
+
+  /// No description provided for @powerSaving_iosImmortalizerWithoutAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Without audio (experimental)'**
+  String get powerSaving_iosImmortalizerWithoutAudio;
+
+  /// No description provided for @powerSaving_iosImmortalizerWithoutAudioDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.'**
+  String get powerSaving_iosImmortalizerWithoutAudioDescription;
+
+  /// No description provided for @powerSaving_iosImmortalizerSampleRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent audio file sample rate'**
+  String get powerSaving_iosImmortalizerSampleRate;
+
+  /// No description provided for @powerSaving_iosImmortalizerEightKhz.
+  ///
+  /// In en, this message translates to:
+  /// **'Original: 8 kHz'**
+  String get powerSaving_iosImmortalizerEightKhz;
+
+  /// No description provided for @powerSaving_iosImmortalizerOutputRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Match the actual audio output'**
+  String get powerSaving_iosImmortalizerOutputRate;
+
+  /// No description provided for @powerSaving_iosImmortalizerBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred audio I/O buffer'**
+  String get powerSaving_iosImmortalizerBuffer;
+
+  /// No description provided for @powerSaving_iosImmortalizerBufferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.'**
+  String get powerSaving_iosImmortalizerBufferDescription;
+
+  /// No description provided for @powerSaving_iosImmortalizerSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System (original preference)'**
+  String get powerSaving_iosImmortalizerSystem;
+
+  /// No description provided for @powerSaving_iosImmortalizerLoop.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent audio loop length'**
+  String get powerSaving_iosImmortalizerLoop;
+
+  /// No description provided for @powerSaving_iosImmortalizerLoopDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.'**
+  String get powerSaving_iosImmortalizerLoopDescription;
 }
 
 class _AppLocalizationsDelegate
