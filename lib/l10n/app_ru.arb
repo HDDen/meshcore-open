@@ -3396,5 +3396,11 @@
   "powerSaving_cpuSleepTitle": "Сон CPU (Android)",
   "powerSaving_cpuSleepWardrive": "При работающем wardrive",
   "powerSaving_cpuSleepUnconditional": "Всегда, без исключений",
-  "powerSaving_cpuSleepUnconditionalDescription": "Полностью снимает наши удержания CPU, в том числе во время операций. Сон устройства может задержать или прервать их выполнение. Удержания Android и других компонентов не меняются."
+  "powerSaving_cpuSleepUnconditionalDescription": "Полностью снимает наши удержания CPU, в том числе во время операций. Сон устройства может задержать или прервать их выполнение. Удержания Android и других компонентов не меняются.",
+  "powerSaving_blePriorityTitle": "Режим BLE-подключения к ноде",
+  "powerSaving_blePriorityDescription": "Применяется после переподключения к ноде. Исходный режим не запрашивает изменения; High отдаёт приоритет скорости, Low power — экономии энергии. Фактические параметры выбирают Android и нода; экономный режим может замедлить обмен.",
+  "powerSaving_bleOriginal": "Исходный",
+  "powerSaving_bleBalanced": "Сбалансированный (Balanced)",
+  "powerSaving_bleHigh": "Высокая скорость (High)",
+  "powerSaving_bleLowPower": "Экономия энергии (Low power)"
 }

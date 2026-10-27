@@ -1,10 +1,13 @@
 import 'cpu_sleep_options.dart';
+import 'ble_power_options.dart';
 
 enum PowerSavingProfile { disabled, balanced, economical, maximum, custom }
 
 class PowerSavingOptions {
   const PowerSavingOptions({
     this.cpuSleep = const CpuSleepOptions(),
+    this.bleConnectionPriority = BleConnectionPriorityMode.original,
+    this.blePeripheralLatency = BlePeripheralLatencyMode.original,
     this.hiddenRadioStatsIntervalSeconds = 1,
     this.pauseHiddenRadioIndicator = false,
     this.pauseIdleImageCleanup = false,
@@ -49,6 +52,8 @@ class PowerSavingOptions {
   static const backgroundReconnectIntervalStep = 30;
 
   final CpuSleepOptions cpuSleep;
+  final BleConnectionPriorityMode bleConnectionPriority;
+  final BlePeripheralLatencyMode blePeripheralLatency;
   final int hiddenRadioStatsIntervalSeconds;
   final bool pauseHiddenRadioIndicator;
   final bool pauseIdleImageCleanup;
@@ -85,6 +90,8 @@ class PowerSavingOptions {
 
   PowerSavingOptions copyWith({
     CpuSleepOptions? cpuSleep,
+    BleConnectionPriorityMode? bleConnectionPriority,
+    BlePeripheralLatencyMode? blePeripheralLatency,
     int? hiddenRadioStatsIntervalSeconds,
     bool? pauseHiddenRadioIndicator,
     bool? pauseIdleImageCleanup,
@@ -102,6 +109,8 @@ class PowerSavingOptions {
   }) =>
       PowerSavingOptions(
         cpuSleep: cpuSleep ?? this.cpuSleep,
+        bleConnectionPriority: bleConnectionPriority ?? this.bleConnectionPriority,
+        blePeripheralLatency: blePeripheralLatency ?? this.blePeripheralLatency,
         backgroundReconnectIntervalSeconds: _reconnectInterval(
           backgroundReconnectIntervalSeconds ?? this.backgroundReconnectIntervalSeconds,
         ),
@@ -139,6 +148,12 @@ class PowerSavingOptions {
         ? json['hidden_radio_stats_interval_seconds'] : null;
     return PowerSavingOptions(
       cpuSleep: CpuSleepOptions.fromJson(json is Map ? json['cpu_sleep'] : null),
+      bleConnectionPriority: bleConnectionPriorityFromJson(
+        json is Map ? json['ble_connection_priority'] : null,
+      ),
+      blePeripheralLatency: blePeripheralLatencyFromJson(
+        json is Map ? json['ble_peripheral_latency'] : null,
+      ),
       backgroundReconnectIntervalSeconds: _reconnectInterval(json is Map
           ? json['background_reconnect_interval_seconds'] : null),
       hiddenRadioStatsIntervalSeconds: value is int
@@ -172,6 +187,10 @@ class PowerSavingOptions {
 
   Map<String, dynamic> toJson() => {
     if (cpuSleep.enabled) 'cpu_sleep': cpuSleep.toJson(),
+    if (bleConnectionPriority != BleConnectionPriorityMode.original)
+      'ble_connection_priority': bleConnectionPriority.name,
+    if (blePeripheralLatency != BlePeripheralLatencyMode.original)
+      'ble_peripheral_latency': blePeripheralLatency.name,
     'background_reconnect_interval_seconds': backgroundReconnectIntervalSeconds,
     'hidden_radio_stats_interval_seconds': hiddenRadioStatsIntervalSeconds,
     'pause_hidden_radio_indicator': pauseHiddenRadioIndicator,

@@ -113,7 +113,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "de": [
@@ -230,7 +236,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "es": [
@@ -347,7 +359,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "fr": [
@@ -464,7 +482,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "hu": [
@@ -581,7 +605,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "it": [
@@ -698,7 +728,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "ja": [
@@ -815,7 +851,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "ko": [
@@ -932,7 +974,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "nl": [
@@ -1049,7 +1097,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "pl": [
@@ -1166,7 +1220,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "pt": [
@@ -1283,7 +1343,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "sk": [
@@ -1400,7 +1466,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "sl": [
@@ -1517,7 +1589,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "sv": [
@@ -1634,7 +1712,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "uk": [
@@ -1751,7 +1835,13 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ],
 
   "zh": [
@@ -1868,6 +1958,12 @@
     "powerSaving_cpuSleepTitle",
     "powerSaving_cpuSleepWardrive",
     "powerSaving_cpuSleepUnconditional",
-    "powerSaving_cpuSleepUnconditionalDescription"
+    "powerSaving_cpuSleepUnconditionalDescription",
+    "powerSaving_blePriorityTitle",
+    "powerSaving_blePriorityDescription",
+    "powerSaving_bleOriginal",
+    "powerSaving_bleBalanced",
+    "powerSaving_bleHigh",
+    "powerSaving_bleLowPower"
   ]
 }

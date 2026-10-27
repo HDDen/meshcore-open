@@ -14302,6 +14302,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.'**
   String get powerSaving_cpuSleepUnconditionalDescription;
+
+  /// No description provided for @powerSaving_blePriorityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'BLE connection mode to the node'**
+  String get powerSaving_blePriorityTitle;
+
+  /// No description provided for @powerSaving_blePriorityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.'**
+  String get powerSaving_blePriorityDescription;
+
+  /// No description provided for @powerSaving_bleOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get powerSaving_bleOriginal;
+
+  /// No description provided for @powerSaving_bleBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get powerSaving_bleBalanced;
+
+  /// No description provided for @powerSaving_bleHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High speed (High)'**
+  String get powerSaving_bleHigh;
+
+  /// No description provided for @powerSaving_bleLowPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy saving (Low power)'**
+  String get powerSaving_bleLowPower;
 }
 
 class _AppLocalizationsDelegate

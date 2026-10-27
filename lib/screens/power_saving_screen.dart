@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:mco_service/mco_service.dart';
 
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/power_saving_settings.dart';
+import '../models/ble_power_options.dart';
+import '../widgets/ble_connection_priority_card.dart';
 import '../helpers/device_polling_intervals.dart';
 import '../services/app_settings_service.dart';
 import '../widgets/mesh_ui.dart';
@@ -35,6 +38,15 @@ class PowerSavingScreen extends StatelessWidget {
     final effective = settings.effective;
     final deviceIntervals = DevicePollingIntervals.fromOptions(effective);
     final l10n = context.l10n;
+    final peripheralCard = PlatformInfo.isIOS
+        ? context.watch<SettingsSectionsService?>()?.blePeripheralPowerSettings(
+            context,
+            mode: effective.blePeripheralLatency.name,
+            onChanged: custom ? (value) => unawaited(
+              service.setBlePeripheralLatencyMode(blePeripheralLatencyFromJson(value)),
+            ) : null,
+          )
+        : null;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.powerSaving_title)),
       body: ListView(
@@ -238,10 +250,21 @@ class PowerSavingScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (PlatformInfo.isAndroid) ...[
+            BleConnectionPriorityCard(
+              mode: effective.bleConnectionPriority,
+              onChanged: custom ? (value) => unawaited(
+                service.setBleConnectionPriorityMode(value),
+              ) : null,
+            ),
+            const SizedBox(height: 12),
             CpuSleepSettingsCard(
               options: effective.cpuSleep,
               onChanged: custom ? (value) => unawaited(service.setCpuSleepOptions(value)) : null,
             ),
+            const SizedBox(height: 12),
+          ],
+          if (peripheralCard != null) ...[
+            peripheralCard,
             const SizedBox(height: 12),
           ],
           Text(custom

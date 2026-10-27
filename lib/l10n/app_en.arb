@@ -4445,5 +4445,11 @@
   "powerSaving_cpuSleepTitle": "CPU sleep (Android)",
   "powerSaving_cpuSleepWardrive": "While wardrive is running",
   "powerSaving_cpuSleepUnconditional": "Always, without exceptions",
-  "powerSaving_cpuSleepUnconditionalDescription": "Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged."
+  "powerSaving_cpuSleepUnconditionalDescription": "Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.",
+  "powerSaving_blePriorityTitle": "BLE connection mode to the node",
+  "powerSaving_blePriorityDescription": "Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.",
+  "powerSaving_bleOriginal": "Original",
+  "powerSaving_bleBalanced": "Balanced",
+  "powerSaving_bleHigh": "High speed (High)",
+  "powerSaving_bleLowPower": "Energy saving (Low power)"
 }

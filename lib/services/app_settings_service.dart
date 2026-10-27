@@ -4,6 +4,7 @@ import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
 import '../models/cpu_sleep_options.dart';
 import '../models/power_saving_settings.dart';
+import '../models/ble_power_options.dart';
 import '../models/image_codec_support.dart';
 import '../models/translation_support.dart';
 import '../storage/prefs_manager.dart';
@@ -143,6 +144,22 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setClearPathOnMaxRetry(bool value) async {
     await updateSettings(_settings.copyWith(clearPathOnMaxRetry: value));
+  }
+
+  Future<void> setBleConnectionPriorityMode(BleConnectionPriorityMode mode) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(bleConnectionPriority: mode),
+      ),
+    ));
+  }
+
+  Future<void> setBlePeripheralLatencyMode(BlePeripheralLatencyMode mode) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(blePeripheralLatency: mode),
+      ),
+    ));
   }
 
   Future<void> setPowerSavingProfile(PowerSavingProfile profile) async {

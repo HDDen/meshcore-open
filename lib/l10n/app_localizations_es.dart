@@ -8549,4 +8549,23 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
       'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+
+  @override
+  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+
+  @override
+  String get powerSaving_blePriorityDescription =>
+      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+
+  @override
+  String get powerSaving_bleOriginal => 'Original';
+
+  @override
+  String get powerSaving_bleBalanced => 'Balanced';
+
+  @override
+  String get powerSaving_bleHigh => 'High speed (High)';
+
+  @override
+  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
 }

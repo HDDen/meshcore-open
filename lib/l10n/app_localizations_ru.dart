@@ -8538,4 +8538,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
       'Полностью снимает наши удержания CPU, в том числе во время операций. Сон устройства может задержать или прервать их выполнение. Удержания Android и других компонентов не меняются.';
+
+  @override
+  String get powerSaving_blePriorityTitle => 'Режим BLE-подключения к ноде';
+
+  @override
+  String get powerSaving_blePriorityDescription =>
+      'Применяется после переподключения к ноде. Исходный режим не запрашивает изменения; High отдаёт приоритет скорости, Low power — экономии энергии. Фактические параметры выбирают Android и нода; экономный режим может замедлить обмен.';
+
+  @override
+  String get powerSaving_bleOriginal => 'Исходный';
+
+  @override
+  String get powerSaving_bleBalanced => 'Сбалансированный (Balanced)';
+
+  @override
+  String get powerSaving_bleHigh => 'Высокая скорость (High)';
+
+  @override
+  String get powerSaving_bleLowPower => 'Экономия энергии (Low power)';
 }

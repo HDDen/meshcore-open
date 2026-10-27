@@ -44,6 +44,13 @@ class SettingsSectionsService extends ChangeNotifier {
   bool get companionProxyRunning => false;
   bool get companionProxyBleRunning => false;
 
+  void setBlePeripheralLatency(String mode) {}
+
+  Widget? blePeripheralPowerSettings(BuildContext context, {
+    required String mode,
+    ValueChanged<String>? onChanged,
+  }) => null;
+
   bool get allowsRestrictedMapBulkDownload => false;
 
   Future<bool> authorizeRestrictedMapBulkDownload() async => false;

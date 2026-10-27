@@ -63,6 +63,7 @@ import 'helpers/image_reassembly_maintenance.dart';
 import 'helpers/ble_log_power_settings.dart';
 import 'helpers/ios_background_execution_binding.dart';
 import 'helpers/cpu_sleep_binding.dart';
+import 'helpers/ble_peripheral_power_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
@@ -233,6 +234,10 @@ Future<void> _startApplication() async {
   // (after the constructions) without those two starting out wrong.
   _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
+  // До auto-start приватного адаптера: первый клиент получает сохранённый режим.
+  settingsSectionsService.setBlePeripheralLatency(
+    appSettingsService.settings.powerSaving.effective.blePeripheralLatency.name,
+  );
   StartupTiming.mark('  private settings module');
   await settingsSectionsService.initialize();
   mapTileCacheService.restrictedBulkDownloadAuthorizer =
@@ -659,6 +664,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final BlePluginLogPowerSettings _blePluginLogPowerSettings;
   late final IosBackgroundExecutionBinding _iosBackgroundExecution;
   late final CpuSleepBinding _cpuSleep;
+  late final BlePeripheralPowerBinding _blePeripheralPower;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -708,6 +714,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         'iOS background execution bridge unavailable (${error.runtimeType})',
         tag: 'iOSExecution',
       ),
+    );
+    _blePeripheralPower = BlePeripheralPowerBinding(
+      settings: widget.appSettingsService,
+      apply: widget.settingsSectionsService.setBlePeripheralLatency,
     );
     _blePluginLogPowerSettings = BlePluginLogPowerSettings(
       settings: widget.appSettingsService,
@@ -791,6 +801,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();
     _cpuSleep.dispose();
+    _blePeripheralPower.dispose();
     _iosBackgroundExecution.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

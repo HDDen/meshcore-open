@@ -39,6 +39,7 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
   private var notifyQueues: [UUID: [FlutterStandardTypedData]] = [:]
   private var isNotifying: Set<UUID> = []
   private var subscribedCentrals: Set<UUID> = []
+  private var desiredConnectionLatency: CBPeripheralManagerConnectionLatency?
   private var refusedCentrals: Set<UUID> = []
   private var lastNotifyAt: [UUID: Date] = [:]
 
@@ -59,6 +60,14 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
     case "stop":
       stop()
       result(nil)
+    case "setConnectionLatency":
+      guard let args = call.arguments as? [String: Any],
+            let mode = args["mode"] as? String,
+            setConnectionLatency(mode) else {
+        result(FlutterError(code: "bad_args", message: "Invalid BLE latency mode", details: nil))
+        return
+      }
+      result(nil) // Только будущие подписки; текущие соединения не меняются.
     case "refreshAdvertising":
       if let args = call.arguments as? [String: Any] {
         advertiseName = args["name"] as? String
@@ -114,6 +123,10 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
       return
     }
 
+    guard setConnectionLatency(args["connectionLatency"] as? String ?? "original") else {
+      result(FlutterError(code: "bad_args", message: "Invalid BLE latency mode", details: nil))
+      return
+    }
     serviceUuid = service
     rxUuid = rx
     txUuid = tx
@@ -144,6 +157,18 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
     subscribedCentrals.removeAll()
     refusedCentrals.removeAll()
     lastNotifyAt.removeAll()
+    desiredConnectionLatency = nil
+  }
+
+  private func setConnectionLatency(_ mode: String) -> Bool {
+    switch mode {
+    case "original": desiredConnectionLatency = nil
+    case "low": desiredConnectionLatency = .low
+    case "medium": desiredConnectionLatency = .medium
+    case "high": desiredConnectionLatency = .high
+    default: return false
+    }
+    return true
   }
 
   private func configureGattIfNeeded() {
@@ -341,8 +366,12 @@ final class IosBleProxyAdapter: NSObject, CBPeripheralManagerDelegate, FlutterSt
       emit(["event": "refused", "clientId": uuid.uuidString, "reason": "clientLimit"])
       return
     }
+    let isNewSubscription = !subscribedCentrals.contains(uuid)
     centrals[uuid] = central
     subscribedCentrals.insert(uuid)
+    if isNewSubscription, let latency = desiredConnectionLatency {
+      peripheral.setDesiredConnectionLatency(latency, for: central)
+    }
     emit([
       "event": "subscribed",
       "clientId": uuid.uuidString,

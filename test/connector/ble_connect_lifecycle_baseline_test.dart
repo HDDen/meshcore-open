@@ -564,5 +564,63 @@ void main() {
         expect(c.ble.opens, 1);
       });
     }, timeout: timeout);
+    testWidgets('baseline: a second physical BLE session repeats SELF_INFO and time setup',
+        (tester) async {
+      await _withBle(tester, (c) async {
+        final first = _Result(c.open());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 750));
+        expect(first.completed, isTrue);
+        expect(first.error, isNull);
+        expect(c.hasCompletedSelfInfoHandshake, isTrue);
+        expect(c.appStarts, 1);
+        expect(c.commands.where((code) => code == cmdSetDeviceTime).length, 1);
+
+        await c.disconnect(manual: true);
+        c.replyAtAppStart = c.appStarts + 1;
+        final second = _Result(c.open());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 750));
+        expect(second.completed, isTrue);
+        expect(second.error, isNull);
+        expect(c.ble.opens, 2);
+        expect(c.ble.discoveries, 2);
+        expect(c.ble.tx.enables, 2);
+        expect(c.appStarts, 2);
+        expect(c.commands.where((code) => code == cmdSetDeviceTime).length, 2);
+        expect(c.hasCompletedSelfInfoHandshake, isTrue);
+        expect(c.state, MeshCoreConnectionState.connected);
+      });
+    }, timeout: timeout);
+
+    testWidgets('baseline: automatic BLE recovery repeats notification setup and handshake',
+        (tester) async {
+      await _withBle(tester, (c) async {
+        final first = _Result(c.open());
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 750));
+        expect(first.completed, isTrue);
+        expect(first.error, isNull);
+        c.replyAtAppStart = c.appStarts + 1;
+
+        c.ble.connected = false;
+        c.ble.states.add(BluetoothConnectionState.disconnected);
+        await tester.pump();
+        expect(c.hasCompletedSelfInfoHandshake, isFalse);
+        expect(c.isAutoReconnectScheduled, isTrue);
+        await tester.pump(const Duration(milliseconds: 999));
+        expect(c.ble.opens, 1);
+        await tester.pump(const Duration(milliseconds: 1));
+        expect(c.ble.opens, 2);
+        await tester.pump(const Duration(milliseconds: 750));
+        expect(c.ble.discoveries, 2);
+        expect(c.ble.tx.enables, 2);
+        expect(c.appStarts, 2);
+        expect(c.commands.where((code) => code == cmdSetDeviceTime).length, 2);
+        expect(c.hasCompletedSelfInfoHandshake, isTrue);
+        expect(c.state, MeshCoreConnectionState.connected);
+        expect(c.isAutoReconnectScheduled, isFalse);
+      });
+    }, timeout: timeout);
   }, skip: !PlatformInfo.isWindows);
 }

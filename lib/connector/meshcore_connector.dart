@@ -77,6 +77,8 @@ import '../helpers/mcmp_signature_verifier.dart';
 import '../helpers/south_frame_fragment_reassembler.dart';
 import '../helpers/south_queued_fragment_ack_tracker.dart';
 import '../helpers/gps_app_start_guard.dart';
+import '../helpers/ble_connection_priority.dart';
+import '../models/ble_power_options.dart';
 import '../helpers/smaz.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -6159,6 +6161,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     await stopScan();
     _setState(MeshCoreConnectionState.connecting);
     final connectGeneration = ++_bleConnectGeneration;
+    final blePriority = _appSettingsService?.settings.powerSaving.effective
+        .bleConnectionPriority ?? BleConnectionPriorityMode.original;
     _device = device;
     _deviceId = device.remoteId.toString();
     if (displayName != null && displayName.trim().isNotEmpty) {
@@ -6568,6 +6572,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (_selfPublicKey != null) {
         _reconnectAttempts = 0;
       }
+      // Выбор фиксируется при старте сеанса; смена профиля не рвёт BLE.
+      unawaited(applyBleConnectionPriority(
+        mode: blePriority,
+        isAndroid: PlatformInfo.isAndroid,
+        isCurrentSession: () => !_disposed && isConnected &&
+            _activeTransport == MeshCoreTransportType.bluetooth &&
+            connectGeneration == _bleConnectGeneration &&
+            identical(_device, device) && _hasCompletedSelfInfoHandshake,
+        request: (priority) => device.requestConnectionPriority(
+          connectionPriorityRequest: priority,
+        ),
+        onInfo: (message) => _appDebugLogService?.info(message, tag: 'BLE Power'),
+        onWarning: (message) => _appDebugLogService?.warn(message, tag: 'BLE Power'),
+      ));
     } catch (e) {
       // The user cancelled (manual disconnect) or a newer connect took over
       // while this attempt was in flight. Tearing down again here would

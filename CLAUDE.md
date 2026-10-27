@@ -1986,6 +1986,19 @@ capability negotiation и reset при новом соединении сохр�
 Регрессии: `test/connector/gps_fragment_session_baseline_test.dart`,
 `test/helpers/gps_app_start_guard_test.dart`; подробности —
 [опрос GPS ноды](documentation/power-saving.md#батарея-и-gps-ноды).
+Платформенные BLE-опции хранятся типизированными enum из
+`models/ble_power_options.dart`. Android central предлагает original/balanced/
+high/lowPower через `widgets/ble_connection_priority_card.dart` только в custom;
+готовые профили сохраняют original, custom при их выборе не перезаписывается.
+Default-поля не добавляются в JSON, старый исходный снимок остаётся прежним.
+Выбор фиксируется при начале connect и после успешного NUS/SELF_INFO/time
+передаётся через `helpers/ble_connection_priority.dart`: на каждый новый сеанс,
+с generation/device guard, без задержки connect и с nonfatal timeout 2 с.
+Фактический интервал API не сообщает. Смена профиля применяется после нового
+соединения. Дополнительный платформенный UI делегируется mco_service;
+`helpers/ble_peripheral_power_binding.dart` передаёт только effective-значение
+адаптеру для будущих подключений и снимает listener при dispose.
+Публичные команды и ограничения — [режим BLE](documentation/power-saving.md#режим-ble-подключения-к-ноде-на-android).
 Четыре числовых параметра используют `widgets/power_saving_interval_card.dart`
 с локальным состоянием перетаскивания и единственным сохранением после отпускания.
 JSON новых периодов нормализуется к допустимым минутным шагам; старые настройки
