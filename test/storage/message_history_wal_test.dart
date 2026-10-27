@@ -119,6 +119,48 @@ Future<void> main() async {
       expect(await _pragma(database, 'auto_vacuum'), 2, reason: 'INCREMENTAL');
     }, skip: skip);
 
+    test('a new file enables incremental vacuum before schema migration', () async {
+      int? modeBeforeMigration;
+      final database = MessageHistoryDatabase.withExecutor(
+        NativeDatabase(File(databasePath()), setup: (raw) {
+          MessageHistoryDatabase.setupConnection(raw);
+          modeBeforeMigration = raw.select('PRAGMA auto_vacuum')
+              .single['auto_vacuum'] as int;
+        }),
+      );
+      addTearDown(database.close);
+
+      await database.writeNodeState(nodeKey: 'node', name: 'name', value: 'v');
+
+      expect(modeBeforeMigration, 2, reason: 'Configured before onCreate');
+      expect(await _pragma(database, 'auto_vacuum'), 2);
+      expect(await database.readNodeState('node', 'name'), 'v');
+    }, skip: skip);
+
+    for (final mode in [0, 1]) {
+      test('opening existing vacuum mode $mode preserves it and its rows', () async {
+        final before = MessageHistoryDatabase.withExecutor(
+          NativeDatabase(File(databasePath())),
+        );
+        try {
+          await before.writeNodeState(nodeKey: 'node', name: 'name', value: 'v');
+          // Только временная БД теста: готовим старый NONE либо FULL.
+          await before.customStatement('PRAGMA auto_vacuum = $mode');
+          await before.customStatement('VACUUM');
+          expect(await _pragma(before, 'auto_vacuum'), mode);
+        } finally {
+          await before.close();
+        }
+
+        final database = fileDatabase();
+        addTearDown(database.close);
+        expect(await database.readNodeState('node', 'name'), 'v');
+        expect(await _pragma(database, 'auto_vacuum'), mode);
+        expect(await _pragma(database, 'journal_mode'), 'wal');
+        expect(await _pragma(database, 'synchronous'), 2, reason: 'FULL');
+      }, skip: skip);
+    }
+
     test('a database from before the change switches over at its next open '
         'and keeps its rows', () async {
       final before = MessageHistoryDatabase.withExecutor(

@@ -10,6 +10,7 @@ import '../models/power_saving_settings.dart';
 import '../models/ble_power_options.dart';
 import '../widgets/ble_connection_priority_card.dart';
 import '../widgets/tcp_wifi_power_card.dart';
+import '../widgets/delivery_observation_power_card.dart';
 import '../helpers/device_polling_intervals.dart';
 import '../services/app_settings_service.dart';
 import '../widgets/mesh_ui.dart';
@@ -250,6 +251,15 @@ class PowerSavingScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (!PlatformInfo.isWeb) ...[
+            DeliveryObservationPowerCard(
+              enabled: effective.reduceDeliveryObservationWrites,
+              onChanged: custom ? (value) => unawaited(
+                service.setReduceDeliveryObservationWrites(value),
+              ) : null,
+            ),
+            const SizedBox(height: 12),
+          ],
           if (PlatformInfo.isAndroid) ...[
             TcpWifiPowerCard(
               releaseAllowed: effective.releaseTcpWifiLock,

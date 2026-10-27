@@ -65,6 +65,7 @@ import 'helpers/ios_background_execution_binding.dart';
 import 'helpers/cpu_sleep_binding.dart';
 import 'helpers/ble_peripheral_power_binding.dart';
 import 'helpers/tcp_wifi_power_binding.dart';
+import 'helpers/delivery_observation_power_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
@@ -235,6 +236,9 @@ Future<void> _startApplication() async {
   // (after the constructions) without those two starting out wrong.
   _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
+  MessageHistoryStorage.instance.setReduceDeliveryObservationWrites(
+    appSettingsService.settings.powerSaving.effective.reduceDeliveryObservationWrites,
+  );
   // До подключения: сохранённая Wi-Fi-политика не допускает лишнего acquire.
   await backgroundService.setTcpWifiPowerSaving(
     appSettingsService.settings.powerSaving.effective.releaseTcpWifiLock,
@@ -671,6 +675,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final CpuSleepBinding _cpuSleep;
   late final BlePeripheralPowerBinding _blePeripheralPower;
   TcpWifiPowerBinding? _tcpWifiPower;
+  DeliveryObservationPowerBinding? _deliveryObservationPower;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -731,6 +736,12 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         apply: (value) => unawaited(
           widget.backgroundService.setTcpWifiPowerSaving(value),
         ),
+      );
+    }
+    if (!PlatformInfo.isWeb) {
+      _deliveryObservationPower = DeliveryObservationPowerBinding(
+        settings: widget.appSettingsService,
+        apply: MessageHistoryStorage.instance.setReduceDeliveryObservationWrites,
       );
     }
     _blePluginLogPowerSettings = BlePluginLogPowerSettings(
@@ -817,6 +828,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _cpuSleep.dispose();
     _blePeripheralPower.dispose();
     _tcpWifiPower?.dispose();
+    _deliveryObservationPower?.dispose();
     _iosBackgroundExecution.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

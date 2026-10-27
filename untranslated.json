@@ -121,7 +121,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "de": [
@@ -246,7 +248,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "es": [
@@ -371,7 +375,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "fr": [
@@ -496,7 +502,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "hu": [
@@ -621,7 +629,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "it": [
@@ -746,7 +756,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "ja": [
@@ -871,7 +883,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "ko": [
@@ -996,7 +1010,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "nl": [
@@ -1121,7 +1137,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "pl": [
@@ -1246,7 +1264,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "pt": [
@@ -1371,7 +1391,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "sk": [
@@ -1496,7 +1518,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "sl": [
@@ -1621,7 +1645,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "sv": [
@@ -1746,7 +1772,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "uk": [
@@ -1871,7 +1899,9 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ],
 
   "zh": [
@@ -1996,6 +2026,8 @@
     "powerSaving_bleHigh",
     "powerSaving_bleLowPower",
     "powerSaving_releaseTcpWifiLock",
-    "powerSaving_releaseTcpWifiLockDescription"
+    "powerSaving_releaseTcpWifiLockDescription",
+    "powerSaving_reduceDeliveryObservationWrites",
+    "powerSaving_reduceDeliveryObservationWritesDescription"
   ]
 }

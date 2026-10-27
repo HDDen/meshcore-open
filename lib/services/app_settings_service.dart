@@ -176,6 +176,14 @@ class AppSettingsService extends ChangeNotifier {
     ));
   }
 
+  Future<void> setReduceDeliveryObservationWrites(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(reduceDeliveryObservationWrites: value),
+      ),
+    ));
+  }
+
   Future<void> setBackgroundReconnectIntervalSeconds(int seconds) async {
     await updateSettings(_settings.copyWith(
       powerSaving: _settings.powerSaving.copyWith(

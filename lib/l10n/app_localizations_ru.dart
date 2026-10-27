@@ -8564,4 +8564,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
       'Разрешать штатное энергосбережение Wi-Fi при TCP-подключении к ноде, включая Tailscale. Применяется сразу, на экране и в фоне; фоновая служба и настройка сна CPU сохраняются. На некоторых устройствах возможны задержки или разрывы связи.';
+
+  @override
+  String get powerSaving_reduceDeliveryObservationWrites =>
+      'Сокращать перезапись статистики доставки';
+
+  @override
+  String get powerSaving_reduceDeliveryObservationWritesDescription =>
+      'Обновлять только изменившуюся часть накопленной статистики доставки. Содержимое и порядок статистики не меняются, запись не откладывается дополнительно.';
 }

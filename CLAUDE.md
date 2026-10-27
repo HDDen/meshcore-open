@@ -233,7 +233,24 @@ Message history moved out of `SharedPreferences` into SQLite via **drift** (`mes
 
 **The file is in WAL mode with `synchronous = FULL`** (`MessageHistoryDatabase.setupConnection`, run in the database isolate at every open through `DriftNativeOptions.setup`, and what the tests hand `NativeDatabase` to open a file the same way). Before, the database ran with the rollback journal, so every commit, one per received message, per copy of one and per contact write, wrote the journal, the file and an fsync of each: 11 to 15 ms measured, which `_addChannelMessage` waited out before notifying and the queue drain before its next `SYNC_NEXT`, and reads queued behind writes on the one connection. A commit now appends to the write-ahead log, 3.5 ms with FULL, and reads no longer wait for writes. FULL rather than NORMAL is the owner's decision: the tile cache runs NORMAL because a tile can be fetched again, a message cannot, so every commit is on disk before the write returns, a power cut included. A database from before the change switches over at its next open. The log is reused after a checkpoint but never shrunk by itself, and the app never closes this database, so `journal_size_limit` (4 MB) cuts it back after a checkpoint, `initializeAndMigrate` runs `truncateWriteAheadLog` (`PRAGMA wal_checkpoint(TRUNCATE)`) at every launch after the one-time moves, each of which is one transaction the size of what it moves, and `fullVacuum` runs it after the `VACUUM`, which writes the whole rebuilt file into the log. The multi-row writes of the auxiliary tables (the node collections, the discovered contacts, the delivery observations, the wardrive imports and deletions) go through `batch()`, one round trip to the database isolate per batch instead of one per row, with the same statements in the same order in one transaction; `importWardriveSamples` counts its rows before and after the batch, since a batch reports no change counts (`test/storage/message_history_journal_test.dart`, `message_history_wal_test.dart`).
 
-**Indexes** (`schemaVersion = 2`, `auto_vacuum = INCREMENTAL` set in `onCreate` *before* `createAll()` — the only moment that pragma takes effect):
+**Индексы** (`schemaVersion = 2`). Для новой native-БД `auto_vacuum = INCREMENTAL` задаётся в `setupConnection` до включения WAL и миграций, если `sqlite_master` ещё пуст; установка в `onCreate` сохраняется для остальных executors. Открытие существующей схемы не меняет её auto-vacuum и не запускает перестройку. WAL и `synchronous = FULL` сохраняются. Подробности: [хранилище истории](documentation/message-history-storage.md).
+
+Статистика доставки имеет отдельную native-опцию `reduceDeliveryObservationWrites`
+(JSON `reduce_delivery_observation_writes`, false в Off/готовых профилях/старом JSON,
+редактирование через custom). `helpers/delivery_observation_write_plan.dart`
+сохраняет совпадающий суффикс старого/префикс нового списка без потери дубликатов
+и порядка. MessageHistoryDatabase читает актуальные id/JSON и применяет удаление
+выбывших строк/append одним transaction+batch; кэша «успешно сохранённого» списка
+нет. Off использует прежний DELETE+INSERT. Общая последовательная очередь
+снимает snapshot входа до ожидания и не блокируется навсегда после ошибки.
+`helpers/delivery_observation_power_binding.dart` передаёт effective-флаг
+MessageHistoryStorage, main задаёт его до инициализации сервиса статистики;
+binding снимается при dispose, Web остаётся на прежнем пути. Новый флаг не меняет
+двухсекундный debounce, предел 100, первичную историю, SYNC_NEXT_MESSAGE, WAL/FULL
+или схему БД. Регрессии SQL-счётчиков, rollback, очереди, профилей и reopen:
+`test/storage/delivery_observation_power_test.dart`; модель до/после на том же
+корпусе — `tool/benchmark_delivery_observation_write_plan.dart`. Правила:
+[статистика доставки](documentation/power-saving.md#сокращение-перезаписи-статистики-доставки).
 
 | Index | Serves |
 |---|---|

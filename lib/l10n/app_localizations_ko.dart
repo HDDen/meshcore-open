@@ -8195,4 +8195,12 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
       'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+
+  @override
+  String get powerSaving_reduceDeliveryObservationWrites =>
+      'Reduce delivery statistics rewrites';
+
+  @override
+  String get powerSaving_reduceDeliveryObservationWritesDescription =>
+      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
 }

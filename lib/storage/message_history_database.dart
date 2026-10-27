@@ -7,6 +7,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../helpers/message_text_codec.dart';
+import '../helpers/delivery_observation_write_plan.dart';
 
 part 'message_history_database.g.dart';
 
@@ -384,6 +385,7 @@ class HeardPacketInsert {
   tables: [HistoryMessages, HistoryMetadata, LegacyRejectedMessages],
 )
 class MessageHistoryDatabase extends _$MessageHistoryDatabase {
+  Future<void> _deliveryObservationWrites = Future<void>.value();
   static const int currentSchemaVersion = 2;
   static const String _legacyMigrationKey = 'legacy_migration_complete';
   static const String _legacySkippedHistoriesKey =
@@ -424,6 +426,10 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
   static final DriftNativeOptions _nativeOptions = DriftNativeOptions(
     databaseDirectory: getApplicationSupportDirectory,
     setup: (database) {
+      // Для новой БД — до WAL и миграций. Существующую схему не перестраиваем.
+      if (database.select('SELECT 1 FROM sqlite_master LIMIT 1').isEmpty) {
+        database.execute('PRAGMA auto_vacuum = INCREMENTAL');
+      }
       database
         ..execute('PRAGMA journal_mode = WAL')
         ..execute('PRAGMA synchronous = FULL')
@@ -967,7 +973,20 @@ WHERE contact_key = ? AND node_key IN (?, '')
 
   /// Replaces the observations with [observations], in one transaction; the
   /// service hands over its whole capped list.
-  Future<void> replaceDeliveryObservations(List<String> observations) async {
+  Future<void> replaceDeliveryObservations(
+    List<String> observations, {
+    bool reduceWrites = false,
+  }) {
+    final snapshot = List<String>.of(observations);
+    // Off/On идут в одном порядке, включая смену профиля во время записи.
+    final write = _deliveryObservationWrites.then((_) => reduceWrites
+        ? _updateDeliveryObservations(snapshot)
+        : _replaceDeliveryObservations(snapshot));
+    _deliveryObservationWrites = write.catchError((Object error) {});
+    return write;
+  }
+
+  Future<void> _replaceDeliveryObservations(List<String> observations) async {
     await batch((batch) {
       batch.customStatement('DELETE FROM delivery_observations');
       for (final observation in observations) {
@@ -978,6 +997,33 @@ WHERE contact_key = ? AND node_key IN (?, '')
       }
     });
   }
+
+  Future<void> _updateDeliveryObservations(List<String> observations) =>
+      transaction(() async {
+        // Актуальные строки в той же транзакции: кэша успешности записи нет.
+        final rows = await customSelect(
+          'SELECT id, observation_json FROM delivery_observations ORDER BY id',
+        ).get();
+        final plan = planDeliveryObservationWrite(
+          [for (final row in rows) row.read<String>('observation_json')],
+          observations,
+        );
+        if (plan.changedRows == 0) return;
+        await batch((batch) {
+          if (plan.removePrefixCount > 0) {
+            batch.customStatement(
+              'DELETE FROM delivery_observations WHERE id <= ?',
+              [rows[plan.removePrefixCount - 1].read<int>('id')],
+            );
+          }
+          for (final observation in plan.append) {
+            batch.customStatement(
+              'INSERT INTO delivery_observations (observation_json) VALUES (?)',
+              [observation],
+            );
+          }
+        });
+      });
 
   Future<String?> readNodeState(String nodeKey, String name) async {
     final row = await customSelect(

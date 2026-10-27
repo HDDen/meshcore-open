@@ -39,6 +39,11 @@ class MessageHistoryStorage {
   );
 
   MessageHistoryDatabase? _database;
+  bool _reduceDeliveryObservationWrites = false;
+
+  void setReduceDeliveryObservationWrites(bool enabled) {
+    _reduceDeliveryObservationWrites = !kIsWeb && enabled;
+  }
   final Map<MessageHistoryKind, Set<String>> _keys = {
     for (final kind in MessageHistoryKind.values) kind: <String>{},
   };
@@ -1085,7 +1090,10 @@ class MessageHistoryStorage {
   Future<void> replaceDeliveryObservations(List<String> observations) async {
     _requireInitialized();
     if (kIsWeb) return;
-    await _database!.replaceDeliveryObservations(observations);
+    await _database!.replaceDeliveryObservations(
+      observations,
+      reduceWrites: _reduceDeliveryObservationWrites,
+    );
   }
 
   Future<String?> readNodeState(String nodeKey, String name) async {
@@ -1216,6 +1224,7 @@ class MessageHistoryStorage {
   /// initialises the storage more than once in one process.
   Future<void> resetForTesting() async {
     await _database?.close();
+    _reduceDeliveryObservationWrites = false;
     _persistenceWork.detachAll();
     _database = null;
     for (final keys in _keys.values) {

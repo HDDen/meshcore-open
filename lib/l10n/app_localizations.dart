@@ -14350,6 +14350,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.'**
   String get powerSaving_releaseTcpWifiLockDescription;
+
+  /// No description provided for @powerSaving_reduceDeliveryObservationWrites.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce delivery statistics rewrites'**
+  String get powerSaving_reduceDeliveryObservationWrites;
+
+  /// No description provided for @powerSaving_reduceDeliveryObservationWritesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.'**
+  String get powerSaving_reduceDeliveryObservationWritesDescription;
 }
 
 class _AppLocalizationsDelegate
