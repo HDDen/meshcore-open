@@ -27,7 +27,7 @@
 
     <application
         android:label="MCO Advanced"
-        android:name="${applicationName}"
+        android:name=".McoaApplication"
         android:icon="@mipmap/ic_launcher"
         android:fullBackupContent="@xml/mco_backup_rules"
         android:dataExtractionRules="@xml/mco_data_extraction_rules">

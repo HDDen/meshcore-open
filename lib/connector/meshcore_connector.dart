@@ -820,6 +820,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Getters
   /// Частичный наблюдательный учёт: пустота пока не разрешает сон CPU.
   BackgroundWorkSnapshot get backgroundWorkSnapshot => _backgroundWork.snapshot;
+  void addBackgroundWorkListener(void Function() listener) => _backgroundWork.addListener(listener);
+  void removeBackgroundWorkListener(void Function() listener) => _backgroundWork.removeListener(listener);
+  int runningBackgroundWorkCount(BackgroundWorkKind kind) => _backgroundWork.runningCountFor(kind);
+  Future<void>? Function(BackgroundWorkKind)? get backgroundWorkPreparation => _backgroundWork.prepareOperation;
+  set backgroundWorkPreparation(Future<void>? Function(BackgroundWorkKind)? value) {
+    _backgroundWork.prepareOperation = value;
+  }
 
   MeshCoreConnectionState get state => _state;
   BluetoothDevice? get device => _device;

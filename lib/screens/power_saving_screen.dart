@@ -10,6 +10,8 @@ import '../helpers/device_polling_intervals.dart';
 import '../services/app_settings_service.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_interval_card.dart';
+import '../widgets/cpu_sleep_settings_card.dart';
+import '../utils/platform_info.dart';
 
 String powerSavingProfileLabel(
   AppLocalizations l10n,
@@ -235,6 +237,13 @@ class PowerSavingScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (PlatformInfo.isAndroid) ...[
+            CpuSleepSettingsCard(
+              options: effective.cpuSleep,
+              onChanged: custom ? (value) => unawaited(service.setCpuSleepOptions(value)) : null,
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(custom
               ? l10n.powerSaving_customDescription
               : l10n.powerSaving_presetDescription),

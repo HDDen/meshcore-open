@@ -69,6 +69,7 @@ void main() {
   ) async {
     const engineChannel = MethodChannel('mco_advanced/engine_lifecycle');
     const wifiChannel = MethodChannel('mco_advanced/tcp_wifi_lock');
+    const cpuChannel = MethodChannel('mco_advanced/cpu_policy');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     final originalPlatform = FlutterForegroundTaskPlatform.instance;
@@ -78,6 +79,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterForegroundTask.resetStatic();
     FlutterForegroundTaskPlatform.instance = backend;
+    // Старый статический опыт не использует managed native CPU adapter.
+    messenger.setMockMethodCallHandler(cpuChannel, (call) async {
+      throw MissingPluginException('Synthetic CPU adapter unavailable');
+    });
     messenger.setMockMethodCallHandler(engineChannel, (call) async {
       retention.add((call.arguments as Map)['retain'] as bool);
       return null;
@@ -134,6 +139,7 @@ void main() {
       FlutterForegroundTaskPlatform.instance = originalPlatform;
       messenger.setMockMethodCallHandler(engineChannel, null);
       messenger.setMockMethodCallHandler(wifiChannel, null);
+      messenger.setMockMethodCallHandler(cpuChannel, null);
     }
   });
 }

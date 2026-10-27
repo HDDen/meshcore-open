@@ -8508,4 +8508,34 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_backgroundReconnectDescription =>
       'Только BLE и TCP, после первых шести пауз 1/2/4/8/16/30 секунд. Действует при неактивном приложении; возврат в приложение восстанавливает обычное расписание. Большая пауза может задержать восстановление связи. Время подключения добавляется к паузе.';
+
+  @override
+  String get powerSaving_cpuSleepAlways =>
+      'Разрешать сон CPU всегда, когда возможно';
+
+  @override
+  String get powerSaving_cpuSleepBle => 'При BLE-подключении';
+
+  @override
+  String get powerSaving_cpuSleepDescription =>
+      'Разрешать устройству спать между операциями. Отдельные галочки действуют в фоне; сон должны разрешать все активные сценарии. Общая галочка действует независимо от сценария.';
+
+  @override
+  String get powerSaving_cpuSleepProxy => 'При работающем companion-прокси';
+
+  @override
+  String get powerSaving_cpuSleepTcp => 'При TCP-подключении';
+
+  @override
+  String get powerSaving_cpuSleepTitle => 'Сон CPU (Android)';
+
+  @override
+  String get powerSaving_cpuSleepWardrive => 'При работающем wardrive';
+
+  @override
+  String get powerSaving_cpuSleepUnconditional => 'Всегда, без исключений';
+
+  @override
+  String get powerSaving_cpuSleepUnconditionalDescription =>
+      'Полностью снимает наши удержания CPU, в том числе во время операций. Сон устройства может задержать или прервать их выполнение. Удержания Android и других компонентов не меняются.';
 }

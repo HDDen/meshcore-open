@@ -4436,5 +4436,14 @@
   "powerSaving_pauseHiddenGifs": "Pause hidden GIFs",
   "powerSaving_pauseHiddenGifsDescription": "Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.",
   "powerSaving_backgroundReconnectInterval": "Background reconnection pause",
-  "powerSaving_backgroundReconnectDescription": "BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause."
+  "powerSaving_backgroundReconnectDescription": "BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.",
+  "powerSaving_cpuSleepAlways": "Allow CPU sleep whenever possible",
+  "powerSaving_cpuSleepBle": "With a BLE connection",
+  "powerSaving_cpuSleepDescription": "Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.",
+  "powerSaving_cpuSleepProxy": "While the companion proxy is running",
+  "powerSaving_cpuSleepTcp": "With a TCP connection",
+  "powerSaving_cpuSleepTitle": "CPU sleep (Android)",
+  "powerSaving_cpuSleepWardrive": "While wardrive is running",
+  "powerSaving_cpuSleepUnconditional": "Always, without exceptions",
+  "powerSaving_cpuSleepUnconditionalDescription": "Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged."
 }

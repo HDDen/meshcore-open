@@ -57,6 +57,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        if (!flutterEngine.plugins.has(CpuPolicyBridge::class.java)) {
+            flutterEngine.plugins.add(CpuPolicyBridge())
+        }
         FlutterEngineCache.getInstance().put(ENGINE_CACHE_ID, flutterEngine)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

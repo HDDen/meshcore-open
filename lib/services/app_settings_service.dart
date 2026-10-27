@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
+import '../models/cpu_sleep_options.dart';
 import '../models/power_saving_settings.dart';
 import '../models/image_codec_support.dart';
 import '../models/translation_support.dart';
@@ -264,6 +265,14 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(
       powerSaving: _settings.powerSaving.copyWith(
         custom: _settings.powerSaving.custom.copyWith(cacheChannelKeyHashes: value),
+      ),
+    ));
+  }
+
+  Future<void> setCpuSleepOptions(CpuSleepOptions value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(cpuSleep: value),
       ),
     ));
   }

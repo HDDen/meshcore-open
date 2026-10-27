@@ -104,7 +104,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "de": [
@@ -212,7 +221,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "es": [
@@ -320,7 +338,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "fr": [
@@ -428,7 +455,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "hu": [
@@ -536,7 +572,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "it": [
@@ -644,7 +689,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "ja": [
@@ -752,7 +806,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "ko": [
@@ -860,7 +923,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "nl": [
@@ -968,7 +1040,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "pl": [
@@ -1076,7 +1157,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "pt": [
@@ -1184,7 +1274,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "sk": [
@@ -1292,7 +1391,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "sl": [
@@ -1400,7 +1508,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "sv": [
@@ -1508,7 +1625,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "uk": [
@@ -1616,7 +1742,16 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ],
 
   "zh": [
@@ -1724,6 +1859,15 @@
     "powerSaving_pauseHiddenGifs",
     "powerSaving_pauseHiddenGifsDescription",
     "powerSaving_backgroundReconnectInterval",
-    "powerSaving_backgroundReconnectDescription"
+    "powerSaving_backgroundReconnectDescription",
+    "powerSaving_cpuSleepAlways",
+    "powerSaving_cpuSleepBle",
+    "powerSaving_cpuSleepDescription",
+    "powerSaving_cpuSleepProxy",
+    "powerSaving_cpuSleepTcp",
+    "powerSaving_cpuSleepTitle",
+    "powerSaving_cpuSleepWardrive",
+    "powerSaving_cpuSleepUnconditional",
+    "powerSaving_cpuSleepUnconditionalDescription"
   ]
 }

@@ -8465,4 +8465,34 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get powerSaving_backgroundReconnectDescription =>
       'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+
+  @override
+  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+
+  @override
+  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+
+  @override
+  String get powerSaving_cpuSleepDescription =>
+      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+
+  @override
+  String get powerSaving_cpuSleepProxy =>
+      'While the companion proxy is running';
+
+  @override
+  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+
+  @override
+  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+
+  @override
+  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+
+  @override
+  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+
+  @override
+  String get powerSaving_cpuSleepUnconditionalDescription =>
+      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
 }

@@ -14248,6 +14248,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.'**
   String get powerSaving_backgroundReconnectDescription;
+
+  /// No description provided for @powerSaving_cpuSleepAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow CPU sleep whenever possible'**
+  String get powerSaving_cpuSleepAlways;
+
+  /// No description provided for @powerSaving_cpuSleepBle.
+  ///
+  /// In en, this message translates to:
+  /// **'With a BLE connection'**
+  String get powerSaving_cpuSleepBle;
+
+  /// No description provided for @powerSaving_cpuSleepDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.'**
+  String get powerSaving_cpuSleepDescription;
+
+  /// No description provided for @powerSaving_cpuSleepProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'While the companion proxy is running'**
+  String get powerSaving_cpuSleepProxy;
+
+  /// No description provided for @powerSaving_cpuSleepTcp.
+  ///
+  /// In en, this message translates to:
+  /// **'With a TCP connection'**
+  String get powerSaving_cpuSleepTcp;
+
+  /// No description provided for @powerSaving_cpuSleepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU sleep (Android)'**
+  String get powerSaving_cpuSleepTitle;
+
+  /// No description provided for @powerSaving_cpuSleepWardrive.
+  ///
+  /// In en, this message translates to:
+  /// **'While wardrive is running'**
+  String get powerSaving_cpuSleepWardrive;
+
+  /// No description provided for @powerSaving_cpuSleepUnconditional.
+  ///
+  /// In en, this message translates to:
+  /// **'Always, without exceptions'**
+  String get powerSaving_cpuSleepUnconditional;
+
+  /// No description provided for @powerSaving_cpuSleepUnconditionalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.'**
+  String get powerSaving_cpuSleepUnconditionalDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -42,6 +42,7 @@ class SettingsSectionsService extends ChangeNotifier {
   bool get companionProxyEnabled => false;
 
   bool get companionProxyRunning => false;
+  bool get companionProxyBleRunning => false;
 
   bool get allowsRestrictedMapBulkDownload => false;
 

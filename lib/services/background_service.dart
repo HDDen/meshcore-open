@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../helpers/background_task_options.dart';
+import '../helpers/android_cpu_runtime.dart';
+import '../helpers/uptime_heartbeat_monitor.dart';
 import '../l10n/app_localizations.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
@@ -40,6 +42,77 @@ class BackgroundService {
   static TaskHandler taskHandlerForTest({DateTime Function()? now}) =>
       _MeshCoreTaskHandler(now: now);
   bool _initialized = false;
+  bool _managedCpu = false;
+  bool _pluginCpuManaged = false;
+  bool _cpuRequested = false;
+  bool _cpuSleepAllowed = false;
+  bool _cpuWork = false;
+  bool _cpuUnconditional = false;
+  bool _cpuPolicyKnown = false;
+  Future<void> _cpuUpdates = Future<void>.value();
+  int _heartbeatSequence = 0;
+
+  Future<void> get cpuPolicySettled => _cpuUpdates;
+
+  Future<void> configureCpuSleep({required bool requested,
+    required bool allowSleep, required bool protectedWork,
+    bool unconditional = false}) {
+    if (!_isAndroid || kDiagnosticCpuOff) return Future<void>.value();
+    if (unconditional) {
+      requested = true;
+      allowSleep = true;
+      protectedWork = false;
+    }
+    if (_cpuPolicyKnown && _cpuRequested == requested && _cpuSleepAllowed == allowSleep &&
+        _cpuWork == protectedWork && _cpuUnconditional == unconditional) {
+      return _cpuUpdates;
+    }
+    final policyChanged = _cpuRequested != requested || _cpuSleepAllowed != allowSleep ||
+        _cpuUnconditional != unconditional;
+    _cpuPolicyKnown = true;
+    _cpuRequested = requested;
+    _cpuSleepAllowed = allowSleep;
+    _cpuWork = protectedWork;
+    _cpuUnconditional = unconditional;
+    return _cpuUpdates = _cpuUpdates.then((_) async {
+      try {
+        var handedOff = false;
+        if (!_initialized) await initialize();
+        if (!_managedCpu && !requested) return;
+        if (!_pluginCpuManaged && requested) {
+          final running = await FlutterForegroundTask.isRunningService;
+          await AndroidCpuRuntime.configure(hold: !unconditional, work: protectedWork,
+              migrate: running, unconditional: unconditional);
+          _managedCpu = true;
+          _configureTaskOptions();
+          if (running) {
+            final update = await FlutterForegroundTask.updateService(
+              foregroundTaskOptions: backgroundTaskOptions(managedCpu: true));
+            if (update is ServiceRequestFailure) throw update.error;
+            final restart = await FlutterForegroundTask.restartService();
+            if (restart is ServiceRequestFailure) throw restart.error;
+          }
+          _pluginCpuManaged = true;
+          handedOff = true;
+        }
+        await AndroidCpuRuntime.configure(hold: !allowSleep, work: protectedWork,
+          unconditional: unconditional);
+        // Packet work must not create a log and worker heartbeat on every lease.
+        if (policyChanged || handedOff) {
+          _debugLogService?.info('CPU policy: sleepAllowed=$allowSleep, unconditional=$unconditional',
+            tag: 'PowerSaving', noNotify: true);
+          _sendConnectionHeartbeat();
+        }
+      } catch (error) {
+        _cpuPolicyKnown = false;
+        try { await AndroidCpuRuntime.configure(hold: !unconditional, work: false,
+          unconditional: unconditional); }
+        catch (_) { /* Original plugin lock is retained before handoff. */ }
+        _debugLogService?.warn('CPU policy could not be applied: $error',
+            tag: 'PowerSaving');
+      }
+    });
+  }
   // Multiple app features can keep the foreground service alive independently.
   // Stop it only after the last active feature releases its reason.
   final Set<String> _keepAliveReasons = {};
@@ -73,6 +146,23 @@ class BackgroundService {
 
   Future<void> initialize() async {
     if (!_isAndroid || _initialized) return;
+    try {
+      if (kDiagnosticCpuOff) await AndroidCpuRuntime.diagnostic(true);
+      _managedCpu = (await AndroidCpuRuntime.clock())?.managed ?? false;
+      if (_managedCpu) await AndroidCpuRuntime.beginMainSession();
+    } catch (_) { /* Older native builds keep the original plugin lock. */ }
+    _configureTaskOptions();
+    _initialized = true;
+    if (kDiagnosticCpuOff) {
+      _debugLogService?.warn(
+        'Diagnostic CPU-off: plugin wake lock disabled; heartbeat unchanged',
+        tag: 'Background',
+      );
+    }
+    _debugLogService?.info('Foreground service initialized', tag: 'Background');
+  }
+
+  void _configureTaskOptions() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'meshcore_background',
@@ -85,18 +175,7 @@ class BackgroundService {
         showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: backgroundTaskOptions(),
-    );
-    _initialized = true;
-    if (kDiagnosticCpuOff) {
-      _debugLogService?.warn(
-        'Diagnostic CPU-off: plugin wake lock disabled; heartbeat unchanged',
-        tag: 'Background',
-      );
-    }
-    _debugLogService?.info(
-      'Foreground service initialized',
-      tag: 'Background',
+      foregroundTaskOptions: backgroundTaskOptions(managedCpu: _managedCpu),
     );
   }
 
@@ -203,6 +282,7 @@ class BackgroundService {
   Future<void> start({String reason = 'connection'}) async {
     if (!_isAndroid) return;
     _keepAliveReasons.add(reason);
+    await _cpuUpdates;
     try {
       if (!_initialized) {
         await initialize();
@@ -218,6 +298,7 @@ class BackgroundService {
         return;
       }
       final l10n = await _loadLocalizations();
+      if (_managedCpu) await _syncConnectionMonitor(l10n: l10n);
       final result = await FlutterForegroundTask.startService(
         notificationTitle: l10n.background_serviceTitle,
         notificationText: _connectionLost
@@ -304,11 +385,16 @@ class BackgroundService {
         key: _connectionMonitorDataKey,
         value: false,
       );
-      FlutterForegroundTask.sendDataToTask(<String, Object>{
+      final disabled = <String, Object>{
         'type': _connectionTaskMessageType,
         'monitor': false,
         'timestampMs': DateTime.now().millisecondsSinceEpoch,
-      });
+      };
+      if (_managedCpu) {
+        unawaited(_sendManagedHeartbeat(disabled));
+      } else {
+        FlutterForegroundTask.sendDataToTask(disabled);
+      }
       return;
     }
 
@@ -355,10 +441,27 @@ class BackgroundService {
   void _sendConnectionHeartbeat() {
     final data = _connectionHeartbeatData;
     if (data == null) return;
+    if (_managedCpu) {
+      unawaited(_sendManagedHeartbeat(data));
+      return;
+    }
     FlutterForegroundTask.sendDataToTask(<String, Object>{
       ...data,
       'timestampMs': DateTime.now().millisecondsSinceEpoch,
     });
+  }
+
+  Future<void> _sendManagedHeartbeat(Map<String, Object> data) async {
+    final sequence = ++_heartbeatSequence;
+    try {
+      final clock = await AndroidCpuRuntime.clock();
+      if (clock == null || sequence != _heartbeatSequence) return;
+      FlutterForegroundTask.sendDataToTask(<String, Object>{
+        ...data, 'uptimeMs': clock.uptimeMs, 'generation': clock.generation,
+        'sequence': sequence, 'session': clock.session,
+        'timestampMs': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (_) { /* Do not send an unverified heartbeat. */ }
   }
 
   Future<AppLocalizations> _loadLocalizations() async {
@@ -407,6 +510,9 @@ class BackgroundService {
         return;
       }
       final result = await FlutterForegroundTask.stopService();
+      if (_managedCpu && result is ServiceRequestSuccess) {
+        await AndroidCpuRuntime.stopped();
+      }
       switch (result) {
         case ServiceRequestSuccess():
           _debugLogService?.info(
@@ -458,6 +564,9 @@ class _MeshCoreTaskHandler extends TaskHandler {
   String? _reconnectingText;
   String? _brokenText;
   String? _shownState;
+  UptimeHeartbeatMonitor? _uptimeMonitor;
+  bool _closed = false;
+  bool _checking = false;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -479,10 +588,23 @@ class _MeshCoreTaskHandler extends TaskHandler {
     _brokenText = await FlutterForegroundTask.getData<String>(
       key: _connectionBrokenTextDataKey,
     );
+    try {
+      final clock = await AndroidCpuRuntime.clock(workerReady: true);
+      if (clock != null && clock.managed) {
+        _uptimeMonitor = UptimeHeartbeatMonitor(
+          generation: clock.generation, startedAt: clock.uptimeMs)
+          ..restoreMonitoring(_monitorConnection);
+      }
+    } catch (_) { /* Ordinary builds and tests retain the legacy monitor. */ }
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
+    if (_closed) return;
+    if (_uptimeMonitor != null) {
+      unawaited(_checkUptime());
+      return;
+    }
     if (!_monitorConnection) return;
     final now = _now();
     final heartbeatAnchor = _lastHeartbeatAt ?? _startedAt;
@@ -496,7 +618,11 @@ class _MeshCoreTaskHandler extends TaskHandler {
 
   @override
   void onReceiveData(Object data) {
-    if (data is! Map || data['type'] != _connectionTaskMessageType) return;
+    if (_closed || data is! Map || data['type'] != _connectionTaskMessageType) return;
+    if (_uptimeMonitor != null) {
+      unawaited(_receiveUptime(data));
+      return;
+    }
 
     _monitorConnection = data['monitor'] == true;
     if (!_monitorConnection) {
@@ -519,6 +645,41 @@ class _MeshCoreTaskHandler extends TaskHandler {
     unawaited(_showState(state));
   }
 
+  Future<void> _checkUptime() async {
+    if (_checking || _closed) return;
+    _checking = true;
+    var valid = false;
+    try {
+      final clock = await AndroidCpuRuntime.clock();
+      if (_closed || clock == null || clock.generation != _uptimeMonitor?.generation) return;
+      valid = true;
+      if (_uptimeMonitor!.expired(clock.uptimeMs)) await _showState('broken');
+    } catch (_) { /* Leave native protection held until the clock recovers. */ }
+    finally {
+      _checking = false;
+      if (valid) {
+        try { await AndroidCpuRuntime.tickDone(); } catch (_) { /* Worker ended. */ }
+      }
+    }
+  }
+
+  Future<void> _receiveUptime(Map data) async {
+    try {
+      final clock = await AndroidCpuRuntime.clock();
+      if (_closed || clock == null || !_uptimeMonitor!.receive(data, clock.uptimeMs,
+          session: clock.session)) {
+        return;
+      }
+      _monitorConnection = data['monitor'] == true;
+      if (!_monitorConnection) { _shownState = null; return; }
+      _title = data['title'] as String? ?? _title;
+      _connectedText = data['connectedText'] as String? ?? _connectedText;
+      _reconnectingText = data['reconnectingText'] as String? ?? _reconnectingText;
+      _brokenText = data['brokenText'] as String? ?? _brokenText;
+      await _showState(data['state'] as String? ?? 'connected');
+    } catch (_) { /* Clock/channel failure is not evidence of a lost link. */ }
+  }
+
   Future<void> _showState(String state) async {
     if (_shownState == state || _title == null) return;
     final text = switch (state) {
@@ -535,7 +696,7 @@ class _MeshCoreTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async { _closed = true; }
 
   @override
   void onNotificationButtonPressed(String id) {}

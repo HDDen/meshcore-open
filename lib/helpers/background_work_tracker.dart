@@ -57,8 +57,19 @@ class BackgroundWorkLease {
   }
 }
 
-/// Только учёт операций: не управляет CPU, транспортами или временем их жизни.
+/// Учёт операций с необязательным ожиданием подготовки перед run().
+/// Сам tracker не управляет CPU, транспортами или временем жизни операций.
 class BackgroundWorkTracker {
+  final Set<void Function()> _listeners = {};
+  final Map<BackgroundWorkKind, int> _running = {};
+  Future<void>? Function(BackgroundWorkKind)? prepareOperation;
+
+  void addListener(void Function() listener) => _listeners.add(listener);
+  void removeListener(void Function() listener) => _listeners.remove(listener);
+  int runningCountFor(BackgroundWorkKind kind) => _running[kind] ?? 0;
+  void _notify() {
+    for (final listener in List.of(_listeners)) { listener(); }
+  }
   final Map<BackgroundWorkKind, int> _counts = {};
   int _activeCount = 0;
   int _revision = 0;
@@ -77,14 +88,21 @@ class BackgroundWorkTracker {
     _counts[kind] = (_counts[kind] ?? 0) + 1;
     _activeCount++;
     _revision++;
+    _notify();
     return BackgroundWorkLease._(this, kind);
   }
 
   Future<T> run<T>(BackgroundWorkKind kind, FutureOr<T> Function() operation) async {
+    if (_closed) throw StateError('Background work tracker is closed');
+    _running[kind] = (_running[kind] ?? 0) + 1;
     final lease = begin(kind);
     try {
+      final preparation = prepareOperation?.call(kind);
+      if (preparation != null) await preparation;
       return await operation();
     } finally {
+      final remaining = _running[kind]! - 1;
+      if (remaining == 0) { _running.remove(kind); } else { _running[kind] = remaining; }
       lease.release();
     }
   }
@@ -98,12 +116,14 @@ class BackgroundWorkTracker {
     }
     _activeCount--;
     _revision++;
+    _notify();
   }
 
   void close() {
     if (_closed) return;
     _closed = true;
     _revision++;
+    _notify();
     // Запрещаем новые операции, но не объявляем незавершённые выполненными.
     // Их удержания остаются до настоящего завершения или отмены владельцем.
   }

@@ -99,6 +99,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const engineChannel = MethodChannel('mco_advanced/engine_lifecycle');
   const wifiChannel = MethodChannel('mco_advanced/tcp_wifi_lock');
+  const cpuChannel = MethodChannel('mco_advanced/cpu_policy');
   final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late FlutterForegroundTaskPlatform originalPlatform;
   late _TaskBackend backend;
@@ -113,6 +114,10 @@ void main() {
     FlutterForegroundTaskPlatform.instance = backend;
     retention = [];
     wifiLocks = [];
+    // Новый native-канал отсутствует в legacy fixture; не отправляем вызов в host.
+    messenger.setMockMethodCallHandler(cpuChannel, (call) async {
+      throw MissingPluginException('Synthetic CPU adapter unavailable');
+    });
     messenger.setMockMethodCallHandler(engineChannel, (call) async {
       expect(call.method, 'setRetainEngine');
       retention.add((call.arguments as Map)['retain'] as bool);
@@ -130,6 +135,7 @@ void main() {
     FlutterForegroundTaskPlatform.instance = originalPlatform;
     messenger.setMockMethodCallHandler(engineChannel, null);
     messenger.setMockMethodCallHandler(wifiChannel, null);
+    messenger.setMockMethodCallHandler(cpuChannel, null);
   });
 
   testWidgets('baseline: service keeps current locks and a single five-second heartbeat',

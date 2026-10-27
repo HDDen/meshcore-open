@@ -1,7 +1,10 @@
+import 'cpu_sleep_options.dart';
+
 enum PowerSavingProfile { disabled, balanced, economical, maximum, custom }
 
 class PowerSavingOptions {
   const PowerSavingOptions({
+    this.cpuSleep = const CpuSleepOptions(),
     this.hiddenRadioStatsIntervalSeconds = 1,
     this.pauseHiddenRadioIndicator = false,
     this.pauseIdleImageCleanup = false,
@@ -45,6 +48,7 @@ class PowerSavingOptions {
   static const maxBackgroundReconnectInterval = 600;
   static const backgroundReconnectIntervalStep = 30;
 
+  final CpuSleepOptions cpuSleep;
   final int hiddenRadioStatsIntervalSeconds;
   final bool pauseHiddenRadioIndicator;
   final bool pauseIdleImageCleanup;
@@ -80,6 +84,7 @@ class PowerSavingOptions {
   }
 
   PowerSavingOptions copyWith({
+    CpuSleepOptions? cpuSleep,
     int? hiddenRadioStatsIntervalSeconds,
     bool? pauseHiddenRadioIndicator,
     bool? pauseIdleImageCleanup,
@@ -96,6 +101,7 @@ class PowerSavingOptions {
     int? backgroundReconnectIntervalSeconds,
   }) =>
       PowerSavingOptions(
+        cpuSleep: cpuSleep ?? this.cpuSleep,
         backgroundReconnectIntervalSeconds: _reconnectInterval(
           backgroundReconnectIntervalSeconds ?? this.backgroundReconnectIntervalSeconds,
         ),
@@ -132,6 +138,7 @@ class PowerSavingOptions {
     final value = json is Map
         ? json['hidden_radio_stats_interval_seconds'] : null;
     return PowerSavingOptions(
+      cpuSleep: CpuSleepOptions.fromJson(json is Map ? json['cpu_sleep'] : null),
       backgroundReconnectIntervalSeconds: _reconnectInterval(json is Map
           ? json['background_reconnect_interval_seconds'] : null),
       hiddenRadioStatsIntervalSeconds: value is int
@@ -164,6 +171,7 @@ class PowerSavingOptions {
   }
 
   Map<String, dynamic> toJson() => {
+    if (cpuSleep.enabled) 'cpu_sleep': cpuSleep.toJson(),
     'background_reconnect_interval_seconds': backgroundReconnectIntervalSeconds,
     'hidden_radio_stats_interval_seconds': hiddenRadioStatsIntervalSeconds,
     'pause_hidden_radio_indicator': pauseHiddenRadioIndicator,
@@ -209,6 +217,7 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 120,
     ),
     PowerSavingProfile.economical => const PowerSavingOptions(
+      cpuSleep: CpuSleepOptions(ble: true),
       backgroundReconnectIntervalSeconds: 180,
       skipIdleDirectProgressParsing: true,
       cacheChannelKeyHashes: true,
@@ -225,6 +234,7 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 300,
     ),
     PowerSavingProfile.maximum => const PowerSavingOptions(
+      cpuSleep: CpuSleepOptions(always: true),
       backgroundReconnectIntervalSeconds: 600,
       skipIdleDirectProgressParsing: true,
       cacheChannelKeyHashes: true,

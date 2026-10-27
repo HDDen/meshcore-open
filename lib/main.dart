@@ -62,6 +62,7 @@ import 'helpers/mesh_compressor.dart';
 import 'helpers/image_reassembly_maintenance.dart';
 import 'helpers/ble_log_power_settings.dart';
 import 'helpers/ios_background_execution_binding.dart';
+import 'helpers/cpu_sleep_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
@@ -657,6 +658,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final BleLogPowerSettings _bleLogPowerSettings;
   late final BlePluginLogPowerSettings _blePluginLogPowerSettings;
   late final IosBackgroundExecutionBinding _iosBackgroundExecution;
+  late final CpuSleepBinding _cpuSleep;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -684,6 +686,16 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _bleLogPowerSettings = BleLogPowerSettings(
       log: widget.bleDebugLogService,
       settings: widget.appSettingsService,
+    );
+    _cpuSleep = CpuSleepBinding(
+      connector: widget.connector, settings: widget.appSettingsService,
+      service: widget.backgroundService, wardrive: widget.wardriveService,
+      proxyChanges: widget.settingsSectionsService,
+      onError: (error) => widget.appDebugLogService.warn(
+        'CPU policy state unavailable: ${error.runtimeType}', tag: 'PowerSaving'),
+      proxyActive: () => widget.settingsSectionsService.companionProxyEnabled &&
+          (widget.settingsSectionsService.companionProxyRunning ||
+           widget.settingsSectionsService.companionProxyBleRunning),
     );
     _iosBackgroundExecution = IosBackgroundExecutionBinding(
       connector: widget.connector,
@@ -778,6 +790,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();
+    _cpuSleep.dispose();
     _iosBackgroundExecution.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
