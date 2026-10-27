@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 
 import '../utils/platform_info.dart';
 import '../utils/app_logger.dart';
+import 'ios_frame_diagnostics.dart';
 
 final _iosAppPresentationActive = ValueNotifier<bool>(true);
 
@@ -18,6 +19,13 @@ ValueListenable<bool> get iosAppPresentationActive => _iosAppPresentationActive;
 /// Native notifications remain useful when a dylib reports a false app state.
 mixin IosPresentationFrameGate on RendererBinding {
   bool _iosPresentationAllowed = true;
+  final iosFrameDiagnostics = IosFrameDiagnostics();
+
+  @override
+  void handleBeginFrame(Duration? rawTimeStamp) {
+    iosFrameDiagnostics.beginFrame(warmUp: rawTimeStamp == null);
+    super.handleBeginFrame(rawTimeStamp);
+  }
 
   @override
   bool get sendFramesToEngine =>
@@ -25,6 +33,7 @@ mixin IosPresentationFrameGate on RendererBinding {
 
   @override
   void drawFrame() {
+    iosFrameDiagnostics.drawFrame(suppressed: !_iosPresentationAllowed);
     // sendFramesToEngine alone is checked after layout/paint. Skip the UI
     // pipeline before it prepares text while the native scene is inactive.
     // Dirty widgets/render objects remain queued for the normal resume frame.
@@ -38,11 +47,24 @@ mixin IosPresentationFrameGate on RendererBinding {
       return;
     }
     _iosPresentationAllowed = allowed;
+    iosFrameDiagnostics.presentationChanged(allowed);
+    appLogger.info(iosFrameDiagnostics.summary, tag: 'iOSFrameStats', noNotify: true);
     // Respect Flutter's own lifecycle/first-frame deferral. Its resume path
     // schedules the frame if it has not resumed when the native event arrives.
     if (allowed) {
       scheduleFrame();
     }
+  }
+}
+
+String? currentIosFrameDiagnosticsSummary() {
+  try {
+    final binding = RendererBinding.instance;
+    return binding is IosPresentationFrameGate ? binding.iosFrameDiagnostics.summary : null;
+  } on FlutterError {
+    return null;
+  } on TypeError {
+    return null;
   }
 }
 

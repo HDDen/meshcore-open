@@ -6,6 +6,7 @@ import 'package:mco_service/mco_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../services/app_settings_service.dart';
 import '../utils/platform_info.dart';
+import 'ios_execution_diagnostics.dart';
 
 /// Native owns physical background state and the persistent manual override.
 /// Dart supplies only the current, already-authorized TCP reasons.
@@ -18,12 +19,23 @@ class IosBackgroundExecutionBinding {
     MethodChannel channel = const MethodChannel('mco_advanced/ios_execution'),
     this.onError,
     this.onState,
+    this.onDiagnostics,
   }) : _channel = channel,
        _enabled = isIos ?? PlatformInfo.isIOS {
     if (!_enabled) {
       return;
     }
     _channel.setMethodCallHandler((call) async {
+      if (!_disposed && call.method == 'diagnostics') {
+        final raw = call.arguments;
+        final formatted = formatIosExecutionDiagnostics(raw);
+        if (formatted != null && raw is Map &&
+            (raw['revision'] as int) > _diagnosticsRevision) {
+          _diagnosticsRevision = raw['revision'] as int;
+          onDiagnostics?.call(formatted);
+        }
+        return;
+      }
       if (_disposed || call.method != 'state' || call.arguments is! Map) {
         return;
       }
@@ -52,6 +64,7 @@ class IosBackgroundExecutionBinding {
   final SettingsSectionsService sections;
   final void Function(Object error)? onError;
   final void Function(String state)? onState;
+  final void Function(String diagnostics)? onDiagnostics;
   final MethodChannel _channel;
   final bool _enabled;
   bool _tcpWasConnected = false;
@@ -59,6 +72,7 @@ class IosBackgroundExecutionBinding {
   bool _disposed = false;
   int _revision = 0;
   int _nativeRevision = -1;
+  int _diagnosticsRevision = -1;
 
   void _sync() {
     if (_disposed || !_enabled) {

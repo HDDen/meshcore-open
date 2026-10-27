@@ -3,11 +3,13 @@ import UIKit
 
 extension Notification.Name {
   static let mcoIosExecutionCompatibilityChanged = Notification.Name("mco.ios.execution.compatibility")
+  static let mcoIosExecutionAudioDiagnosticsChanged = MCOImmortalizerAudioDiagnosticsChanged
 }
 
 /// Replaceable native backend; no private APIs in policy/channel/button code.
 protocol IosBackgroundExecutionBackend: AnyObject {
   var audioRunning: Bool { get }
+  var audioDiagnostics: [String: Any] { get }
   func setArmed(_ armed: Bool) -> Bool
   func setBackground(_ background: Bool)
 }
@@ -20,6 +22,8 @@ final class ImmortalizerExecutionBackend: IosBackgroundExecutionBackend {
     MCOImmortalizerShouldDeferDiff(description, background, transitioning)
   }
   var audioRunning: Bool { MCOImmortalizerAudioRunning() }
+  var isArmed: Bool { MCOImmortalizerIsArmed() }
+  var audioDiagnostics: [String: Any] { MCOImmortalizerAudioDiagnostics() }
   func setArmed(_ armed: Bool) -> Bool { MCOImmortalizerSetArmed(armed) }
   func setBackground(_ background: Bool) { MCOImmortalizerSetBackground(background) }
 }
@@ -37,6 +41,7 @@ final class IosBackgroundExecutionController {
   private let button = IosBackgroundExecutionButton()
   private var closed = false
   private var stateRevision = 0
+  private var diagnosticsRevision = 0
   private var lastState: [String: Bool]?
   private var foregroundVisible: Bool
   private(set) var background: Bool
@@ -62,6 +67,7 @@ final class IosBackgroundExecutionController {
       guard let self = self else { return }
       self.setManualAllowed(!self.manualAllowed)
     }
+    observeAudioDiagnostics()
     observe(UIApplication.willResignActiveNotification) { $0.foregroundVisible = false }
     observe(UIApplication.didEnterBackgroundNotification) {
       $0.background = true
@@ -102,6 +108,24 @@ final class IosBackgroundExecutionController {
     })
   }
 
+  private func observeAudioDiagnostics() {
+    observers.append(center.addObserver(forName: .mcoIosExecutionAudioDiagnosticsChanged,
+                                       object: nil, queue: .main) { [weak self] _ in
+      guard let self = self, !self.closed else { return }
+      let snapshot = self.diagnosticsSnapshot(source: "audio")
+      for channel in self.channels.values { channel.invokeMethod("diagnostics", arguments: snapshot) }
+    })
+  }
+
+  private func diagnosticsSnapshot(source: String) -> [String: Any] {
+    diagnosticsRevision += 1
+    return ["schema": 1, "revision": diagnosticsRevision, "source": source,
+            "eligible": eligible, "manualAllowed": manualAllowed, "background": background,
+            "armed": armed, "legacyInjection": legacyDetected(), "audio": backend.audioDiagnostics,
+            "nativeAtUtcMs": Int64(Date().timeIntervalSince1970 * 1000),
+            "nativeUptimeMs": Int64(ProcessInfo.processInfo.systemUptime * 1000)]
+  }
+
   func register(binaryMessenger: FlutterBinaryMessenger,
                 viewController: @escaping () -> UIViewController?) {
     let identity = ObjectIdentifier(binaryMessenger as AnyObject)
@@ -127,6 +151,8 @@ final class IosBackgroundExecutionController {
         result(["eligible": self.eligible, "manualAllowed": self.manualAllowed,
                 "background": self.background, "armed": self.armed,
                 "audioRunning": self.backend.audioRunning, "legacyInjection": self.legacyDetected()])
+      case "diagnostics":
+        result(self.diagnosticsSnapshot(source: "requested"))
       default:
         result(FlutterMethodNotImplemented)
       }

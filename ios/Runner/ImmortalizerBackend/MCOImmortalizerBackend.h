@@ -7,6 +7,8 @@ FOUNDATION_EXPORT BOOL MCOImmortalizerSetArmed(BOOL armed);
 FOUNDATION_EXPORT void MCOImmortalizerSetBackground(BOOL background);
 FOUNDATION_EXPORT BOOL MCOImmortalizerIsArmed(void);
 FOUNDATION_EXPORT BOOL MCOImmortalizerAudioRunning(void);
+FOUNDATION_EXPORT NSNotificationName const MCOImmortalizerAudioDiagnosticsChanged;
+FOUNDATION_EXPORT NSDictionary<NSString *, id> *MCOImmortalizerAudioDiagnostics(void);
 FOUNDATION_EXPORT BOOL MCOImmortalizerHasLegacyInjection(void);
 // Pure decision used by the native regression tests; installs no hooks.
 FOUNDATION_EXPORT BOOL MCOImmortalizerSuppressesDiff(NSString *description);

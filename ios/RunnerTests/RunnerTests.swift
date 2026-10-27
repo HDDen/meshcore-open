@@ -551,6 +551,55 @@ class RunnerTests: XCTestCase {
     XCTAssertNil(messenger.handlers["mco_advanced/ios_execution"])
   }
 
+  func testExecutionDiagnosticsRequestsNeverChangeHoldOrPreference() throws {
+    let f = executionFixture(background: true)
+    let messenger = PresentationTestMessenger()
+    f.controller.register(binaryMessenger: messenger, viewController: { nil })
+    let previousRequests = f.backend.armRequests
+    let previousPreference = f.preferences.object(forKey: IosBackgroundExecutionController.manualAllowedKey) as? Bool
+    let first = try XCTUnwrap(try messenger.call("mco_advanced/ios_execution", method: "diagnostics") as? [String: Any])
+    let second = try XCTUnwrap(try messenger.call("mco_advanced/ios_execution", method: "diagnostics") as? [String: Any])
+    XCTAssertEqual(first["source"] as? String, "requested")
+    XCTAssertEqual((first["audio"] as? [String: Any])?["sampleRate"] as? Double, 48000)
+    XCTAssertGreaterThan(try XCTUnwrap(second["revision"] as? Int), try XCTUnwrap(first["revision"] as? Int))
+    XCTAssertEqual(f.backend.armRequests, previousRequests)
+    XCTAssertEqual(f.backend.audioStarts, 0)
+    XCTAssertFalse(f.controller.armed)
+    XCTAssertEqual(f.preferences.object(forKey: IosBackgroundExecutionController.manualAllowedKey) as? Bool, previousPreference)
+  }
+
+  func testExecutionAudioEventsPublishDiagnosticsWithoutReconciliationAndStopAfterClose() {
+    let f = executionFixture()
+    let messenger = PresentationTestMessenger()
+    f.controller.register(binaryMessenger: messenger, viewController: { nil })
+    f.controller.configure(eligible: true)
+    let requests = f.backend.armRequests
+    f.center.post(name: .mcoIosExecutionAudioDiagnosticsChanged, object: nil)
+    let events = messenger.events.filter { $0.1.method == "diagnostics" }
+    XCTAssertEqual(events.count, 1)
+    XCTAssertEqual(f.backend.armRequests, requests)
+    XCTAssertFalse(f.backend.audioRunning)
+    f.controller.close()
+    f.center.post(name: .mcoIosExecutionAudioDiagnosticsChanged, object: nil)
+    XCTAssertEqual(messenger.events.filter { $0.1.method == "diagnostics" }.count, 1)
+  }
+
+  func testNativeAudioDiagnosticsSnapshotDoesNotArmOrStartPlayer() {
+    let check = {
+      let backend = ImmortalizerExecutionBackend()
+      let armed = backend.isArmed
+      let running = backend.audioRunning
+      let snapshot = backend.audioDiagnostics
+      XCTAssertEqual(backend.isArmed, armed)
+      XCTAssertEqual(backend.audioRunning, running)
+      XCTAssertNotNil(snapshot["ioBufferDuration"])
+      XCTAssertNotNil(snapshot["preferredIOBufferDuration"])
+      XCTAssertNil(snapshot["deviceName"])
+      XCTAssertNil(snapshot["uid"])
+    }
+    if Thread.isMainThread { check() } else { DispatchQueue.main.sync(execute: check) }
+  }
+
   func testImmortalizerDiffClassifierWithoutInstallingPrivateHooks() {
     for marker in ["foreground = NotSet", "foreground = No", "foreground = BSSettingFlagNo",
                    "foreground = NO", "hostContextIdentifierForSnapshotting = 0",
@@ -708,6 +757,11 @@ private final class ExecutionTestBackend: IosBackgroundExecutionBackend {
   private(set) var audioRunning = false
   private(set) var audioStarts = 0
   private(set) var audioStops = 0
+  var audioDiagnostics: [String: Any] {
+    return ["schema": 1, "running": audioRunning, "sampleRate": 48000.0,
+            "backendArmed": armed, "physicalBackground": background,
+            "ioBufferDuration": 0.02, "preferredIOBufferDuration": 0.005]
+  }
 
   func setArmed(_ armed: Bool) -> Bool {
     armRequests.append(armed)

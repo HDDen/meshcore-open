@@ -12,6 +12,7 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 ## Table of Contents
 
 1. [Scanner & Connection](scanner-and-connection.md) - BLE scanning, USB serial, and TCP connection with automatic reconnect
+   - [Диагностика фонового режима iOS](ios-background-diagnostics.md) — счётчики кадров, снимки аудио и сбор журнала.
 2. [Navigation](navigation.md) - App flow, device screen, and quick-switch navigation
 3. [Contacts](contacts.md) - Contact management, groups, discovery, nearby-node scan, discovered-contact import/export, and sharing
 4. [Chat & Messaging](chat-and-messaging.md) - Direct messages, location sharing, message status, reactions, and retries

@@ -164,6 +164,11 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 
 В журнале `iOSRendering` сохраняется `gate=uiPipeline`; новые поля `nativeGpuGuard` и `gpuDisabled` показывают доступность дополнительной защиты и состояние GPU в момент записи. При полном возврате обычное значение — `gpuDisabled=false`; если engine ещё недоступен, возможны `nativeGpuGuard=false, gpuDisabled=null`. Отдельный повтор проверки в очереди main thread учитывает собственный foreground-обработчик Flutter; он не гарантирует остановку уже выполняющейся GPU-команды или восстановление повреждённых символов. Для применения требуется пересобрать iOS-приложение, результат обхода ожидает проверки на устройстве. При повторении дефекта сохраните эти строки вокруг перехода в фон/возврата и отметьте, сохраняется ли проблема после навигации и обновления данных.
 
+Для исследования расхода iOS добавлены событийные снимки `iOSExecutionStats`
+и сводки `iOSFrameStats`. Копирование журнала приложения запрашивает свежий
+снимок без запуска аудио или изменения удержания. Поля, единицы измерения и
+порядок сбора описаны в [диагностике фонового режима](ios-background-diagnostics.md).
+
 ### Experimental iOS background TCP receiver
 
 The iOS research branch adds a separate native background receiver. With **Keep TCP-connection alive in background** enabled, the TCP screen accepts a Wi-Fi SSID and saves it with the endpoint and its bookmark. It first tries to read the current SSID; if none is available, a manual connection can ask for it. After a successful foreground connection it saves an `NEAppPushManager` configuration for that SSID and endpoint. Connection diagnostics use the `iOS TCP` log tag.

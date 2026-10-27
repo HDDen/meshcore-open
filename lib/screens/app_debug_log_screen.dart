@@ -8,9 +8,12 @@ import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/confirm_clear_dialog.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/ios_execution_diagnostics.dart';
 
 class AppDebugLogScreen extends StatelessWidget {
-  const AppDebugLogScreen({super.key});
+  const AppDebugLogScreen({super.key, this.readDiagnostics = readIosExecutionDiagnostics});
+
+  final Future<String?> Function() readDiagnostics;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,11 @@ class AppDebugLogScreen extends StatelessWidget {
                 icon: const Icon(Icons.copy),
                 onPressed: hasEntries
                     ? () async {
-                        final text = entries
+                        final diagnostics = await readDiagnostics();
+                        if (diagnostics != null) {
+                          logService.info(diagnostics, tag: 'iOSExecutionStats', noNotify: true);
+                        }
+                        final text = logService.entries.reversed
                             .map(
                               (entry) =>
                                   '[${entry.formattedTime}] [${entry.levelLabel}] [${entry.tag}] ${entry.message}',

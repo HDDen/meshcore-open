@@ -8,6 +8,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/ios_background_execution_binding.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'ios_execution_diagnostics_fixture.dart';
 
 // State-only fakes: no license runtime, transport, socket or native backend.
 class _Connection extends ChangeNotifier implements MeshCoreConnector {
@@ -63,6 +64,7 @@ void main() {
   late List<MethodCall> calls;
   late List<Object> errors;
   late List<String> states;
+  late List<String> diagnostics;
   IosBackgroundExecutionBinding? binding;
   List<bool> eligibility() => calls.map((call) => (call.arguments as Map)['eligible'] as bool).toList();
   Future<void> drain() => Future<void>.delayed(Duration.zero);
@@ -71,6 +73,7 @@ void main() {
       connector: connection, settings: settings, sections: sections,
       isIos: isIos, onError: errors.add,
       onState: states.add,
+      onDiagnostics: diagnostics.add,
     );
   }
 
@@ -81,6 +84,7 @@ void main() {
     calls = <MethodCall>[];
     errors = <Object>[];
     states = <String>[];
+    diagnostics = <String>[];
     messenger.setMockMethodCallHandler(channel, (call) async {
       calls.add(call);
       return null;
@@ -249,5 +253,26 @@ void main() {
     binding!.dispose();
     await emit({...state, 'revision': 4});
     expect(states, hasLength(1));
+  });
+
+  test('audio diagnostics are independently ordered and never authorize or reconfigure a hold', () async {
+    start();
+    await drain();
+    const codec = StandardMethodCodec();
+    Future<void> emit(Map<String, Object> raw) async {
+      await messenger.handlePlatformMessage(channel.name,
+          codec.encodeMethodCall(MethodCall('diagnostics', raw)), null);
+    }
+    await emit(iosExecutionDiagnosticsFixture(revision: 2));
+    await emit(iosExecutionDiagnosticsFixture(revision: 1));
+    await emit({...iosExecutionDiagnosticsFixture(revision: 3), 'audio': 'invalid'});
+    await emit(iosExecutionDiagnosticsFixture(revision: 3));
+    expect(diagnostics, hasLength(2));
+    expect(states, isEmpty);
+    expect(eligibility(), [false]);
+    binding!.dispose();
+    await drain();
+    await emit(iosExecutionDiagnosticsFixture(revision: 4));
+    expect(diagnostics, hasLength(2));
   });
 }

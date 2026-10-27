@@ -29,6 +29,42 @@ static BOOL ownsAudioSession;
 static NSString *previousCategory;
 static NSString *previousMode;
 static AVAudioSessionCategoryOptions previousOptions;
+NSNotificationName const MCOImmortalizerAudioDiagnosticsChanged = @"mco.ios.execution.audioDiagnostics";
+static NSUInteger audioStartAttempts, audioPlayStarts, audioCleanupStops;
+static NSUInteger audioInterruptions, audioMediaResets, audioRouteChanges, audioFailures;
+static NSString *audioEvent = @"initial";
+
+// Read-only hardware/session snapshot: no route names, UIDs, paths or account data.
+NSDictionary<NSString *, id> *MCOImmortalizerAudioDiagnostics(void) {
+    NSCAssert(NSThread.isMainThread, @"Audio diagnostics belong on main");
+    AVAudioSession *session = AVAudioSession.sharedInstance;
+    NSMutableArray<NSString *> *ports = [NSMutableArray array];
+    for (AVAudioSessionPortDescription *port in session.currentRoute.outputs) {
+        [ports addObject:port.portType];
+    }
+    return @{
+        @"schema": @1, @"event": audioEvent, @"running": @(player.isPlaying),
+        @"backendArmed": @(atomic_load(&armed)),
+        @"physicalBackground": @(atomic_load(&physicallyBackground)),
+        @"startAttempts": @(audioStartAttempts), @"playStarts": @(audioPlayStarts),
+        @"cleanupStops": @(audioCleanupStops), @"interruptions": @(audioInterruptions),
+        @"mediaResets": @(audioMediaResets), @"routeChanges": @(audioRouteChanges),
+        @"failures": @(audioFailures), @"category": session.category ?: @"unknown",
+        @"mode": session.mode ?: @"unknown",
+        @"categoryOptions": @(session.categoryOptions), @"outputPortTypes": ports,
+        @"sampleRate": @(session.sampleRate), @"preferredSampleRate": @(session.preferredSampleRate),
+        @"ioBufferDuration": @(session.IOBufferDuration),
+        @"preferredIOBufferDuration": @(session.preferredIOBufferDuration),
+        @"playerSampleRate": @(player ? player.format.sampleRate : 0),
+        @"playerChannels": @(player ? player.format.channelCount : 0),
+        @"playerDuration": @(player.duration), @"playerVolume": @(player.volume)
+    };
+}
+
+static void publishAudioDiagnostics(NSString *event) {
+    audioEvent = event;
+    [NSNotificationCenter.defaultCenter postNotificationName:MCOImmortalizerAudioDiagnosticsChanged object:nil];
+}
 
 BOOL MCOImmortalizerHasLegacyInjection(void) {
     return NSClassFromString(@"FloatingButtonWindow") != Nil;
@@ -123,6 +159,7 @@ static NSData *silentWav(void) {
 
 static void stopAudio(void) {
     if (!player && !ownsAudioSession) return;
+    audioCleanupStops++;
     [player stop];
     player = nil;
     AVAudioSession *session = AVAudioSession.sharedInstance;
@@ -136,10 +173,12 @@ static void stopAudio(void) {
     ownsAudioSession = NO;
     previousCategory = nil;
     previousMode = nil;
+    publishAudioDiagnostics(@"stopped");
 }
 
 static void startAudio(void) {
     if (!atomic_load(&armed) || !atomic_load(&physicallyBackground) || player.isPlaying) return;
+    audioStartAttempts++;
     AVAudioSession *session = AVAudioSession.sharedInstance;
     if (!ownsAudioSession) {
         previousCategory = session.category;
@@ -149,11 +188,15 @@ static void startAudio(void) {
     NSError *error = nil;
     if (![session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault
             options:AVAudioSessionCategoryOptionMixWithOthers error:&error]) {
+        audioFailures++;
+        publishAudioDiagnostics(@"categoryFailed");
         NSLog(@"[iOSExecution] Audio session unavailable: %@", error.localizedDescription);
         return;
     }
     ownsAudioSession = YES;
     if (![session setActive:YES error:&error]) {
+        audioFailures++;
+        publishAudioDiagnostics(@"activationFailed");
         NSLog(@"[iOSExecution] Audio activation failed: %@", error.localizedDescription);
         stopAudio();
         return;
@@ -164,8 +207,13 @@ static void startAudio(void) {
         player.numberOfLoops = -1;
     }
     if (![player play]) {
+        audioFailures++;
+        publishAudioDiagnostics(@"playFailed");
         NSLog(@"[iOSExecution] Silent audio did not start: %@", error.localizedDescription);
         stopAudio();
+    } else {
+        audioPlayStarts++;
+        publishAudioDiagnostics(@"started");
     }
 }
 
@@ -187,16 +235,28 @@ static BOOL installHooks(void) {
     [center addObserverForName:AVAudioSessionInterruptionNotification object:nil
         queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         if ([note.userInfo[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue] == AVAudioSessionInterruptionTypeBegan) {
+            audioInterruptions++;
             [player pause];
+            publishAudioDiagnostics(@"interruptionBegan");
         } else if ([note.userInfo[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue] & AVAudioSessionInterruptionOptionShouldResume) {
+            publishAudioDiagnostics(@"interruptionEnded");
             startAudio();
+        } else {
+            publishAudioDiagnostics(@"interruptionEnded");
         }
     }];
     [center addObserverForName:AVAudioSessionMediaServicesWereResetNotification object:nil
         queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         player = nil;
         ownsAudioSession = NO;
+        audioMediaResets++;
+        publishAudioDiagnostics(@"mediaServicesReset");
         startAudio();
+    }];
+    [center addObserverForName:AVAudioSessionRouteChangeNotification object:nil
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+        audioRouteChanges++;
+        publishAudioDiagnostics(@"routeChanged");
     }];
     installed = YES;
     return YES;

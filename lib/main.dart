@@ -721,6 +721,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       onState: (state) => widget.appDebugLogService.info(
         state, tag: 'iOSExecution', noNotify: true,
       ),
+      onDiagnostics: (message) => widget.appDebugLogService.info(
+        message, tag: 'iOSExecutionStats', noNotify: true,
+      ),
       onError: (error) => widget.appDebugLogService.warn(
         'iOS background execution bridge unavailable (${error.runtimeType})',
         tag: 'iOSExecution',
