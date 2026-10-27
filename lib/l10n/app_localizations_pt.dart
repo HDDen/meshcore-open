@@ -8550,4 +8550,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+
+  @override
+  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+
+  @override
+  String get powerSaving_releaseTcpWifiLockDescription =>
+      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
 }

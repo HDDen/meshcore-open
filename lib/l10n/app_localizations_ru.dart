@@ -8557,4 +8557,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get powerSaving_bleLowPower => 'Экономия энергии (Low power)';
+
+  @override
+  String get powerSaving_releaseTcpWifiLock => 'Не удерживать Wi-Fi для TCP';
+
+  @override
+  String get powerSaving_releaseTcpWifiLockDescription =>
+      'Разрешать штатное энергосбережение Wi-Fi при TCP-подключении к ноде, включая Tailscale. Применяется сразу, на экране и в фоне; фоновая служба и настройка сна CPU сохраняются. На некоторых устройствах возможны задержки или разрывы связи.';
 }

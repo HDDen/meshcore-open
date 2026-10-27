@@ -7,6 +7,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import '../helpers/background_task_options.dart';
 import '../helpers/android_cpu_runtime.dart';
 import '../helpers/uptime_heartbeat_monitor.dart';
+import '../helpers/tcp_wifi_lock_policy.dart';
 import '../l10n/app_localizations.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
@@ -136,6 +137,8 @@ class BackgroundService {
   static const MethodChannel _tcpWifiLockChannel = MethodChannel(
     'mco_advanced/tcp_wifi_lock',
   );
+  late final TcpWifiLockPolicy _tcpWifiLockPolicy =
+      TcpWifiLockPolicy(apply: _applyTcpWifiLock);
 
   /// Allows the app to expose its current language override (e.g. from
   /// AppSettingsService) so the foreground notification matches the app UI
@@ -353,6 +356,15 @@ class BackgroundService {
 
   Future<void> setTcpWifiLock(bool enabled) async {
     if (!_isAndroid) return;
+    await _tcpWifiLockPolicy.request(enabled);
+  }
+
+  Future<void> setTcpWifiPowerSaving(bool releaseAllowed) async {
+    if (!_isAndroid) return;
+    await _tcpWifiLockPolicy.setReleaseAllowed(releaseAllowed);
+  }
+
+  Future<void> _applyTcpWifiLock(bool enabled) async {
     try {
       await _tcpWifiLockChannel.invokeMethod<void>('setEnabled', {
         'enabled': enabled,

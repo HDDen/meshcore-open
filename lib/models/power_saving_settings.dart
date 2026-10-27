@@ -8,6 +8,7 @@ class PowerSavingOptions {
     this.cpuSleep = const CpuSleepOptions(),
     this.bleConnectionPriority = BleConnectionPriorityMode.original,
     this.blePeripheralLatency = BlePeripheralLatencyMode.original,
+    this.releaseTcpWifiLock = false,
     this.hiddenRadioStatsIntervalSeconds = 1,
     this.pauseHiddenRadioIndicator = false,
     this.pauseIdleImageCleanup = false,
@@ -54,6 +55,7 @@ class PowerSavingOptions {
   final CpuSleepOptions cpuSleep;
   final BleConnectionPriorityMode bleConnectionPriority;
   final BlePeripheralLatencyMode blePeripheralLatency;
+  final bool releaseTcpWifiLock;
   final int hiddenRadioStatsIntervalSeconds;
   final bool pauseHiddenRadioIndicator;
   final bool pauseIdleImageCleanup;
@@ -92,6 +94,7 @@ class PowerSavingOptions {
     CpuSleepOptions? cpuSleep,
     BleConnectionPriorityMode? bleConnectionPriority,
     BlePeripheralLatencyMode? blePeripheralLatency,
+    bool? releaseTcpWifiLock,
     int? hiddenRadioStatsIntervalSeconds,
     bool? pauseHiddenRadioIndicator,
     bool? pauseIdleImageCleanup,
@@ -111,6 +114,7 @@ class PowerSavingOptions {
         cpuSleep: cpuSleep ?? this.cpuSleep,
         bleConnectionPriority: bleConnectionPriority ?? this.bleConnectionPriority,
         blePeripheralLatency: blePeripheralLatency ?? this.blePeripheralLatency,
+        releaseTcpWifiLock: releaseTcpWifiLock ?? this.releaseTcpWifiLock,
         backgroundReconnectIntervalSeconds: _reconnectInterval(
           backgroundReconnectIntervalSeconds ?? this.backgroundReconnectIntervalSeconds,
         ),
@@ -148,6 +152,7 @@ class PowerSavingOptions {
         ? json['hidden_radio_stats_interval_seconds'] : null;
     return PowerSavingOptions(
       cpuSleep: CpuSleepOptions.fromJson(json is Map ? json['cpu_sleep'] : null),
+      releaseTcpWifiLock: json is Map && json['release_tcp_wifi_lock'] == true,
       bleConnectionPriority: bleConnectionPriorityFromJson(
         json is Map ? json['ble_connection_priority'] : null,
       ),
@@ -187,6 +192,7 @@ class PowerSavingOptions {
 
   Map<String, dynamic> toJson() => {
     if (cpuSleep.enabled) 'cpu_sleep': cpuSleep.toJson(),
+    if (releaseTcpWifiLock) 'release_tcp_wifi_lock': true,
     if (bleConnectionPriority != BleConnectionPriorityMode.original)
       'ble_connection_priority': bleConnectionPriority.name,
     if (blePeripheralLatency != BlePeripheralLatencyMode.original)

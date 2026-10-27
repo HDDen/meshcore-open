@@ -64,6 +64,7 @@ import 'helpers/ble_log_power_settings.dart';
 import 'helpers/ios_background_execution_binding.dart';
 import 'helpers/cpu_sleep_binding.dart';
 import 'helpers/ble_peripheral_power_binding.dart';
+import 'helpers/tcp_wifi_power_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
@@ -234,6 +235,10 @@ Future<void> _startApplication() async {
   // (after the constructions) without those two starting out wrong.
   _setStartupStage('MCO-STARTUP-103', 'Application and private settings');
   await appSettingsService.loadSettings();
+  // До подключения: сохранённая Wi-Fi-политика не допускает лишнего acquire.
+  await backgroundService.setTcpWifiPowerSaving(
+    appSettingsService.settings.powerSaving.effective.releaseTcpWifiLock,
+  );
   // До auto-start приватного адаптера: первый клиент получает сохранённый режим.
   settingsSectionsService.setBlePeripheralLatency(
     appSettingsService.settings.powerSaving.effective.blePeripheralLatency.name,
@@ -665,6 +670,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final IosBackgroundExecutionBinding _iosBackgroundExecution;
   late final CpuSleepBinding _cpuSleep;
   late final BlePeripheralPowerBinding _blePeripheralPower;
+  TcpWifiPowerBinding? _tcpWifiPower;
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
@@ -719,6 +725,14 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       settings: widget.appSettingsService,
       apply: widget.settingsSectionsService.setBlePeripheralLatency,
     );
+    if (PlatformInfo.isAndroid) {
+      _tcpWifiPower = TcpWifiPowerBinding(
+        settings: widget.appSettingsService,
+        apply: (value) => unawaited(
+          widget.backgroundService.setTcpWifiPowerSaving(value),
+        ),
+      );
+    }
     _blePluginLogPowerSettings = BlePluginLogPowerSettings(
       settings: widget.appSettingsService,
       onError: (error, _) => widget.appDebugLogService.warn(
@@ -802,6 +816,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     _blePluginLogPowerSettings.dispose();
     _cpuSleep.dispose();
     _blePeripheralPower.dispose();
+    _tcpWifiPower?.dispose();
     _iosBackgroundExecution.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

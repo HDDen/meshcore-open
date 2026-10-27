@@ -3402,5 +3402,7 @@
   "powerSaving_bleOriginal": "Исходный",
   "powerSaving_bleBalanced": "Сбалансированный (Balanced)",
   "powerSaving_bleHigh": "Высокая скорость (High)",
-  "powerSaving_bleLowPower": "Экономия энергии (Low power)"
+  "powerSaving_bleLowPower": "Экономия энергии (Low power)",
+  "powerSaving_releaseTcpWifiLock": "Не удерживать Wi-Fi для TCP",
+  "powerSaving_releaseTcpWifiLockDescription": "Разрешать штатное энергосбережение Wi-Fi при TCP-подключении к ноде, включая Tailscale. Применяется сразу, на экране и в фоне; фоновая служба и настройка сна CPU сохраняются. На некоторых устройствах возможны задержки или разрывы связи."
 }

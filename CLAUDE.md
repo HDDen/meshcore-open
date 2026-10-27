@@ -1999,6 +1999,18 @@ Default-поля не добавляются в JSON, старый исходн�
 `helpers/ble_peripheral_power_binding.dart` передаёт только effective-значение
 адаптеру для будущих подключений и снимает listener при dispose.
 Публичные команды и ограничения — [режим BLE](documentation/power-saving.md#режим-ble-подключения-к-ноде-на-android).
+Android-параметр `releaseTcpWifiLock` (JSON `release_tcp_wifi_lock`) снимает
+собственный Wi-Fi lock для upstream TCP без остановки CPU/FGS/транспорта.
+`widgets/tcp_wifi_power_card.dart` доступен только на Android, редактируется
+в custom; все готовые профили и старый JSON сохраняют false. Default-поле
+не добавляется в JSON. `helpers/tcp_wifi_power_binding.dart` передаёт effective
+значение BackgroundService, а `helpers/tcp_wifi_lock_policy.dart` разделяет
+запрос транспорта и разрешение энергопрофиля, последовательно применяя
+платформенные команды. Это защищает новый release от позднего ответа acquire.
+Возврат исходного профиля восстанавливает lock только при сохранённом TCP demand.
+Сохранённая политика задаётся в main до подключений; binding снимает listener
+при dispose. Коннектор и Kotlin-канал не менялись. Правила и ограничения ОС:
+[Wi-Fi для TCP](documentation/power-saving.md#удержание-wi-fi-для-tcp-на-android).
 Четыре числовых параметра используют `widgets/power_saving_interval_card.dart`
 с локальным состоянием перетаскивания и единственным сохранением после отпускания.
 JSON новых периодов нормализуется к допустимым минутным шагам; старые настройки

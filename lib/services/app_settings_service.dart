@@ -162,6 +162,14 @@ class AppSettingsService extends ChangeNotifier {
     ));
   }
 
+  Future<void> setReleaseTcpWifiLock(bool value) async {
+    await updateSettings(_settings.copyWith(
+      powerSaving: _settings.powerSaving.copyWith(
+        custom: _settings.powerSaving.custom.copyWith(releaseTcpWifiLock: value),
+      ),
+    ));
+  }
+
   Future<void> setPowerSavingProfile(PowerSavingProfile profile) async {
     await updateSettings(_settings.copyWith(
       powerSaving: _settings.powerSaving.copyWith(profile: profile),

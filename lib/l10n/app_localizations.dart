@@ -14338,6 +14338,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Energy saving (Low power)'**
   String get powerSaving_bleLowPower;
+
+  /// No description provided for @powerSaving_releaseTcpWifiLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Release Wi-Fi lock for TCP'**
+  String get powerSaving_releaseTcpWifiLock;
+
+  /// No description provided for @powerSaving_releaseTcpWifiLockDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.'**
+  String get powerSaving_releaseTcpWifiLockDescription;
 }
 
 class _AppLocalizationsDelegate
