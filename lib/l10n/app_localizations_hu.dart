@@ -8726,107 +8726,107 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'A parancsok a csatlakoztatott companion csomóponton futnak. Koppintson egy parancsra a beszúrásához, cserélje le a <...> paramétereket, majd koppintson a küldésre. Az elérhetőség a firmware-től és a paneltől függ.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Megmutatja a beállított UTC-eltolást órában.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Beállítja az UTC-eltolást −12 és +14 óra között, tört értékekkel is.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Beállítja a BLE PIN-kódot. A set pin után adja meg saját számjegyes PIN-kódját.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Megmutatja, hogy be van-e kapcsolva a csatornaaktivitás-érzékelés (CAD).';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Be- vagy kikapcsolja a csatornaaktivitás-érzékelést (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Megmutatja a rádiócsip megnövelt vételi erősítésének állapotát.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Be- vagy kikapcsolja a megnövelt vételi erősítést. A rádiócsip illesztőprogramjának támogatása szükséges.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Megmutatja a flood csomagok útvonal-kivonatának hosszmódját: 0 = 1 bájt, 1 = 2 bájt, 2 = 3 bájt ugrásonként.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Beállítja a LoRa adóteljesítményét dBm-ben, és a rádió-illesztőprogramon keresztül azonnal alkalmazza.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Ezek a parancsok csak a Wi-Fi-interfésszel fordított firmware-ben érhetők el. A beállítások módosítása újraindítást igényel.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Megmutatja a beállított Wi-Fi-hálózatnevet (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Egyszerű szövegként megmutatja a mentett Wi-Fi-jelszót.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Megmutatja, hogy a Wi-Fi engedélyezve van-e a beállításokban: 0 vagy 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Megmutatja, hogy a csomópont jelenleg csatlakozik-e Wi-Fi-hez.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Megmutatja a csomópont IP-címét a Wi-Fi-hálózaton, vagy jelzi, hogy nincs kapcsolat.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Beállítja a Wi-Fi-hálózat nevét. Az alkalmazáshoz újraindítás szükséges.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Beállítja a Wi-Fi-jelszót. Az alkalmazáshoz újraindítás szükséges.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Engedélyezi (1) vagy letiltja (0) a Wi-Fi-t. Az alkalmazáshoz újraindítás szükséges.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Törli a mentett Wi-Fi-hálózatnevet és -jelszót. Az alkalmazáshoz újraindítás szükséges.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Panelspecifikus parancsok';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Az FEM-erősítés parancsai a paneltől és az előtétmodultól függenek. A ventilátorparancsok a T-Beam 1W-n érhetők el.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Megmutatja a ventilátor módját, a hőmérsékletet, a ventilátor állapotát és a hűtési időt a T-Beam 1W-n.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Beállítja a T-Beam 1W ventilátorának módját: be, ki vagy automatikus.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Beállítja a ventilátor alsó hőmérsékleti küszöbét °C-ban: 0–100, a fan.hi alatt.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Beállítja a ventilátor felső hőmérsékleti küszöbét °C-ban: a fan.lo felett, legfeljebb 120.';
 }

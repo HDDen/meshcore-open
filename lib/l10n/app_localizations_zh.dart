@@ -8136,107 +8136,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      '命令在已连接的 companion 节点上执行。点按命令即可插入，替换 <...> 参数后点按发送。可用性取决于固件和板子。';
 
   @override
-  String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+  String get companionCli_helpGetTimezone => '显示已设置的 UTC 偏移（小时）。';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      '设置 UTC 偏移，范围为 −12 至 +14 小时，可包含小数。';
 
   @override
-  String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+  String get companionCli_helpSetPin => '设置 BLE PIN。在 set pin 后输入你自己的数字 PIN。';
 
   @override
-  String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+  String get companionCli_helpGetCad => '显示信道活动检测（CAD）是否开启。';
 
   @override
-  String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+  String get companionCli_helpSetCad => '开启或关闭信道活动检测（CAD）。';
 
   @override
-  String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+  String get companionCli_helpGetRxGain => '显示无线电芯片的增强接收增益是否开启。';
 
   @override
-  String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+  String get companionCli_helpSetRxGain => '开启或关闭增强接收增益。需要无线电驱动支持。';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      '显示泛洪数据包的路径哈希长度模式：每跳 0 = 1 字节，1 = 2 字节，2 = 3 字节。';
 
   @override
-  String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+  String get companionCli_helpSetTx => '以 dBm 为单位设置 LoRa 发射功率，并通过无线电驱动立即生效。';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
-  String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+  String get companionCli_helpWifiNote => '只有带 Wi-Fi 接口编译的固件才支持这些命令。更改配置后需要重启。';
 
   @override
-  String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+  String get companionCli_helpGetWifiSsid => '显示已设置的 Wi-Fi 网络名称（SSID）。';
 
   @override
-  String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+  String get companionCli_helpGetWifiPassword => '以明文显示已保存的 Wi-Fi 密码。';
 
   @override
-  String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+  String get companionCli_helpGetWifiEnabled => '显示设置中是否启用 Wi-Fi：0 或 1。';
 
   @override
-  String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+  String get companionCli_helpGetWifiStatus => '显示节点当前是否已连接 Wi-Fi。';
 
   @override
-  String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+  String get companionCli_helpGetWifiIp => '显示节点在 Wi-Fi 中的 IP 地址，或提示未连接。';
 
   @override
-  String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+  String get companionCli_helpSetWifiSsid => '设置 Wi-Fi 网络名称。重启后生效。';
 
   @override
-  String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+  String get companionCli_helpSetWifiPassword => '设置 Wi-Fi 密码。重启后生效。';
 
   @override
-  String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+  String get companionCli_helpSetWifiEnabled => '启用（1）或禁用（0）Wi-Fi。重启后生效。';
 
   @override
-  String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+  String get companionCli_helpClearWifi => '清除已保存的 Wi-Fi 网络名称和密码。重启后生效。';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => '特定板子的命令';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'FEM 增益命令取决于板子和前端模块。风扇命令适用于 T-Beam 1W。';
 
   @override
-  String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+  String get companionCli_helpGetFan => '显示 T-Beam 1W 的风扇模式、温度、风扇状态和冷却时间。';
 
   @override
-  String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+  String get companionCli_helpSetFan => '设置 T-Beam 1W 的风扇模式：开、关或自动。';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      '以 °C 为单位设置风扇的温度下限阈值：0–100，低于 fan.hi。';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      '以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。';
 }

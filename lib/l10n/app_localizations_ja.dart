@@ -8303,107 +8303,102 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'コマンドは接続中の companion ノードで実行されます。コマンドをタップして挿入し、<...> のパラメーターを置き換えてから送信をタップしてください。利用できるかどうかはファームウェアとボードによって異なります。';
 
   @override
-  String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+  String get companionCli_helpGetTimezone => '設定されている UTC からの時差を時間単位で表示します。';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'UTC からの時差を −12～+14 時間の範囲で設定します。小数も指定できます。';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'BLE の PIN を設定します。set pin の後に独自の数字の PIN を入力してください。';
 
   @override
-  String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+  String get companionCli_helpGetCad => 'チャンネルアクティビティ検出（CAD）がオンかオフかを表示します。';
 
   @override
-  String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+  String get companionCli_helpSetCad => 'チャンネルアクティビティ検出（CAD）をオンまたはオフにします。';
 
   @override
-  String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+  String get companionCli_helpGetRxGain => '無線チップの受信ゲイン強化が有効かどうかを表示します。';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      '受信ゲイン強化をオンまたはオフにします。無線ドライバーの対応が必要です。';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'フラッドパケットのパスハッシュ長モードを表示します。0 = 1 ホップあたり 1 バイト、1 = 2 バイト、2 = 3 バイト。';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'LoRa の送信電力を dBm で設定し、無線ドライバーを通じて直ちに適用します。';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'これらのコマンドは Wi-Fi インターフェース付きでビルドされたファームウェアでのみ使用できます。設定の変更には再起動が必要です。';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      '設定されている Wi-Fi ネットワーク名（SSID）を表示します。';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      '保存されている Wi-Fi パスワードを平文で表示します。';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      '設定で Wi-Fi が有効かどうかを表示します：0 または 1。';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'ノードが現在 Wi-Fi に接続しているかどうかを表示します。';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Wi-Fi 上のノードの IP アドレス、または未接続であることを表示します。';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Wi-Fi ネットワーク名を設定します。適用には再起動が必要です。';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Wi-Fi パスワードを設定します。適用には再起動が必要です。';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Wi-Fi を有効（1）または無効（0）にします。適用には再起動が必要です。';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      '保存されている Wi-Fi ネットワーク名とパスワードを消去します。適用には再起動が必要です。';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'ボード固有のコマンド';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'FEM ゲインのコマンドはボードとフロントエンドモジュールによって異なります。ファンのコマンドは T-Beam 1W で使用できます。';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'T-Beam 1W のファンモード、温度、ファンの状態、クールダウン時間を表示します。';
 
   @override
-  String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+  String get companionCli_helpSetFan => 'T-Beam 1W のファンモードを設定します：オン、オフ、自動。';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'ファンの下限温度しきい値を ℃ で設定します：0～100、fan.hi 未満。';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'ファンの上限温度しきい値を ℃ で設定します：fan.lo より上、最大 120。';
 }

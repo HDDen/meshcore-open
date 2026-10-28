@@ -8310,107 +8310,100 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      '명령은 연결된 companion 노드에서 실행됩니다. 명령을 눌러 삽입하고 <...> 매개변수를 바꾼 다음 전송을 누르세요. 사용 가능 여부는 펌웨어와 보드에 따라 다릅니다.';
 
   @override
-  String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+  String get companionCli_helpGetTimezone => '설정된 UTC 기준 시차를 시간 단위로 표시합니다.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'UTC 기준 시차를 −12~+14시간 범위에서 설정합니다. 소수 값도 가능합니다.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'BLE PIN을 설정합니다. set pin 뒤에 직접 정한 숫자 PIN을 입력하세요.';
 
   @override
-  String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+  String get companionCli_helpGetCad => '채널 활동 감지(CAD)가 켜져 있는지 표시합니다.';
 
   @override
-  String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+  String get companionCli_helpSetCad => '채널 활동 감지(CAD)를 켜거나 끕니다.';
 
   @override
-  String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+  String get companionCli_helpGetRxGain => '무선 칩의 강화된 수신 이득이 켜져 있는지 표시합니다.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      '강화된 수신 이득을 켜거나 끕니다. 무선 드라이버의 지원이 필요합니다.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      '플러드 패킷의 경로 해시 길이 모드를 표시합니다: 홉당 0 = 1바이트, 1 = 2바이트, 2 = 3바이트.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'LoRa 송신 전력을 dBm 단위로 설정하고 무선 드라이버를 통해 즉시 적용합니다.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      '이 명령은 Wi-Fi 인터페이스를 포함해 빌드한 펌웨어에서만 사용할 수 있습니다. 설정 변경은 재부팅해야 적용됩니다.';
 
   @override
-  String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+  String get companionCli_helpGetWifiSsid => '설정된 Wi-Fi 네트워크 이름(SSID)을 표시합니다.';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      '저장된 Wi-Fi 비밀번호를 일반 텍스트로 표시합니다.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      '설정에서 Wi-Fi가 허용되어 있는지 표시합니다: 0 또는 1.';
 
   @override
-  String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+  String get companionCli_helpGetWifiStatus => '노드가 지금 Wi-Fi에 연결되어 있는지 표시합니다.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Wi-Fi에서의 노드 IP 주소 또는 연결되지 않았음을 표시합니다.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Wi-Fi 네트워크 이름을 설정합니다. 재부팅해야 적용됩니다.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Wi-Fi 비밀번호를 설정합니다. 재부팅해야 적용됩니다.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Wi-Fi를 허용(1)하거나 끕니다(0). 재부팅해야 적용됩니다.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      '저장된 Wi-Fi 네트워크 이름과 비밀번호를 삭제합니다. 재부팅해야 적용됩니다.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => '보드별 명령';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'FEM 이득 명령은 보드와 프런트엔드 모듈에 따라 다릅니다. 팬 명령은 T-Beam 1W에서 사용할 수 있습니다.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'T-Beam 1W의 팬 모드, 온도, 팬 상태, 냉각 시간을 표시합니다.';
 
   @override
-  String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+  String get companionCli_helpSetFan => 'T-Beam 1W의 팬 모드를 설정합니다: 켜짐, 꺼짐 또는 자동.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      '팬의 하한 온도 임계값을 °C 단위로 설정합니다: 0–100, fan.hi보다 낮게.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      '팬의 상한 온도 임계값을 °C 단위로 설정합니다: fan.lo보다 높게, 최대 120.';
 }

@@ -8747,107 +8747,107 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Die Befehle werden auf dem verbundenen Companion-Knoten ausgeführt. Tippen Sie auf einen Befehl, um ihn einzufügen, ersetzen Sie die Parameter <...> und tippen Sie auf Senden. Die Verfügbarkeit hängt von Firmware und Board ab.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Zeigt den eingestellten UTC-Versatz in Stunden an.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Legt den UTC-Versatz von −12 bis +14 Stunden fest, auch mit Bruchteilen.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Legt die BLE-PIN fest. Geben Sie nach set pin Ihre eigene numerische PIN ein.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Zeigt an, ob die Kanalaktivitätserkennung (CAD) ein- oder ausgeschaltet ist.';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Schaltet die Kanalaktivitätserkennung (CAD) ein oder aus.';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Zeigt an, ob die erhöhte Empfangsverstärkung des Funkchips aktiviert ist.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Schaltet die erhöhte Empfangsverstärkung ein oder aus. Erfordert Unterstützung durch den Funktreiber.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Zeigt den Modus der Pfad-Hash-Länge von Flood-Paketen: 0 = 1 Byte, 1 = 2 Bytes, 2 = 3 Bytes pro Hop.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Legt die LoRa-Sendeleistung in dBm fest und wendet sie über den Funktreiber sofort an.';
 
   @override
-  String get companionCli_helpWifiTitle => 'Wi-Fi';
+  String get companionCli_helpWifiTitle => 'WLAN';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Diese Befehle gibt es nur in Firmware-Builds mit WLAN-Schnittstelle. Änderungen der Einstellungen erfordern einen Neustart.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Zeigt den eingestellten WLAN-Netzwerknamen (SSID) an.';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Zeigt das gespeicherte WLAN-Passwort im Klartext an.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Zeigt an, ob WLAN in den Einstellungen aktiviert ist: 0 oder 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Zeigt an, ob der Knoten gerade mit dem WLAN verbunden ist.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Zeigt die IP-Adresse des Knotens im WLAN an oder meldet, dass keine Verbindung besteht.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Legt den WLAN-Netzwerknamen fest. Wird nach einem Neustart wirksam.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Legt das WLAN-Passwort fest. Wird nach einem Neustart wirksam.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Aktiviert (1) oder deaktiviert (0) WLAN. Wird nach einem Neustart wirksam.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Löscht den gespeicherten WLAN-Netzwerknamen und das Passwort. Wird nach einem Neustart wirksam.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Board-spezifische Befehle';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Die Befehle zur FEM-Verstärkung hängen vom Board und vom Front-End-Modul ab. Die Lüfterbefehle gibt es auf dem T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Zeigt Lüftermodus, Temperatur, Lüfterzustand und Abkühlzeit auf dem T-Beam 1W an.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Legt den Lüftermodus des T-Beam 1W fest: ein, aus oder automatisch.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Legt die untere Temperaturschwelle des Lüfters in °C fest: 0–100, unter fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Legt die obere Temperaturschwelle des Lüfters in °C fest: über fan.lo, höchstens 120.';
 }

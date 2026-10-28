@@ -8741,107 +8741,107 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Los comandos se ejecutan en el nodo companion conectado. Pulsa un comando para insertarlo, sustituye los parámetros <...> y pulsa enviar. La disponibilidad depende del firmware y de la placa.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Muestra el desfase configurado respecto a UTC en horas.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Establece el desfase respecto a UTC de −12 a +14 horas, también con fracciones.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Establece el PIN de BLE. Después de set pin, escribe tu propio PIN numérico.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Muestra si la detección de actividad del canal (CAD) está activada o desactivada.';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Activa o desactiva la detección de actividad del canal (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Muestra si está activada la ganancia de recepción aumentada del chip de radio.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Activa o desactiva la ganancia de recepción aumentada. Requiere compatibilidad del controlador de radio.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Muestra el modo de longitud del hash de ruta de los paquetes de inundación: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes por salto.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Establece la potencia de transmisión LoRa en dBm y la aplica de inmediato mediante el controlador de radio.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Estos comandos solo están disponibles en compilaciones de firmware con interfaz Wi-Fi. Los cambios de configuración requieren reiniciar.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Muestra el nombre de la red Wi-Fi configurada (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Muestra la contraseña Wi-Fi guardada en texto plano.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Muestra si el Wi-Fi está habilitado en la configuración: 0 o 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Muestra si el nodo está conectado ahora a una red Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Muestra la dirección IP del nodo en la red Wi-Fi o indica que no hay conexión.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Establece el nombre de la red Wi-Fi. Se aplica tras reiniciar.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Establece la contraseña Wi-Fi. Se aplica tras reiniciar.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Habilita (1) o deshabilita (0) el Wi-Fi. Se aplica tras reiniciar.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Borra el nombre de red y la contraseña Wi-Fi guardados. Se aplica tras reiniciar.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Comandos específicos de placa';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Los comandos de ganancia FEM dependen de la placa y del módulo de radiofrecuencia. Los comandos del ventilador están disponibles en T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Muestra el modo del ventilador, la temperatura, el estado del ventilador y el tiempo de enfriamiento en T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Establece el modo del ventilador del T-Beam 1W: encendido, apagado o automático.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Establece el umbral inferior de temperatura del ventilador en °C: 0–100, por debajo de fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Establece el umbral superior de temperatura del ventilador en °C: por encima de fan.lo, como máximo 120.';
 }

@@ -8688,107 +8688,107 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Príkazy sa vykonávajú na pripojenom companion uzle. Ťuknite na príkaz, aby sa vložil, nahraďte parametre <...> a ťuknite na odoslanie. Dostupnosť závisí od firmvéru a dosky.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Zobrazuje nastavený posun voči UTC v hodinách.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Nastavuje posun voči UTC od −12 do +14 hodín, aj zlomkový.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Nastavuje PIN pre BLE. Po set pin zadajte vlastný číselný PIN.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Zobrazuje, či je zapnutá detekcia aktivity kanála (CAD).';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Zapína alebo vypína detekciu aktivity kanála (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Zobrazuje stav zvýšeného zosilnenia príjmu rádiového čipu.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Zapína alebo vypína zvýšené zosilnenie príjmu. Vyžaduje podporu ovládača rádiového čipu.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Zobrazuje režim dĺžky hashu cesty flood paketov: 0 — 1 bajt, 1 — 2 bajty, 2 — 3 bajty na skok.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Nastavuje vysielací výkon LoRa v dBm a hneď ho uplatní cez ovládač rádiového čipu.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Tieto príkazy sú dostupné len vo firmvéri zostavenom s rozhraním Wi-Fi. Zmeny nastavení vyžadujú reštart.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Zobrazuje nastavený názov siete Wi-Fi (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Zobrazuje uložené heslo Wi-Fi ako čistý text.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Zobrazuje, či je Wi-Fi povolené v nastaveniach: 0 alebo 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Zobrazuje, či je uzol práve pripojený k Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Zobrazuje IP adresu uzla vo Wi-Fi alebo že pripojenie chýba.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Nastavuje názov siete Wi-Fi. Na uplatnenie je potrebný reštart.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Nastavuje heslo Wi-Fi. Na uplatnenie je potrebný reštart.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Povoľuje (1) alebo zakazuje (0) Wi-Fi. Na uplatnenie je potrebný reštart.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Odstraňuje uložený názov siete a heslo Wi-Fi. Na uplatnenie je potrebný reštart.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Príkazy konkrétnych dosiek';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Príkazy zosilnenia FEM závisia od dosky a vstupného modulu. Príkazy ventilátora sú dostupné na T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Zobrazuje režim ventilátora, teplotu, stav a čas chladenia na T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Nastavuje režim ventilátora T-Beam 1W: zapnutý, vypnutý alebo automatický.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Nastavuje dolný teplotný prah ventilátora v °C: 0–100, pod fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Nastavuje horný teplotný prah ventilátora v °C: nad fan.lo, najviac 120.';
 }

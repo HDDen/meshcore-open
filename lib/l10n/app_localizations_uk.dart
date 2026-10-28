@@ -8734,107 +8734,107 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Команди виконуються на підключеній companion-ноді. Натисніть команду, щоб вставити її, замініть параметри <...> і натисніть надсилання. Доступність залежить від прошивки та плати.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Показує налаштоване зміщення відносно UTC у годинах.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Задає зміщення відносно UTC від −12 до +14 годин, зокрема дробове.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Задає PIN для BLE. Після set pin введіть свій числовий PIN.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Показує, чи ввімкнено виявлення активності каналу (CAD).';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Вмикає або вимикає виявлення активності каналу (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Показує стан підвищеного підсилення приймання радіочипа.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Вмикає або вимикає підвищене підсилення приймання. Потрібна підтримка драйвера радіочипа.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Показує режим довжини хешу шляху flood-пакетів: 0 — 1 байт, 1 — 2 байти, 2 — 3 байти на перехід.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Задає потужність передавання LoRa в дБм і одразу застосовує її через драйвер радіочипа.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Ці команди доступні лише у збірках з Wi-Fi-інтерфейсом. Зміни налаштувань потребують перезавантаження.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Показує налаштоване ім\'я мережі Wi-Fi (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Показує збережений пароль Wi-Fi відкритим текстом.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Показує, чи дозволено Wi-Fi у налаштуваннях: 0 або 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Показує, чи нода зараз підключена до Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Показує IP-адресу ноди у Wi-Fi або відсутність підключення.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Задає ім\'я мережі Wi-Fi. Для застосування потрібне перезавантаження.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Задає пароль Wi-Fi. Для застосування потрібне перезавантаження.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Дозволяє (1) або вимикає (0) Wi-Fi. Для застосування потрібне перезавантаження.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Видаляє збережені ім\'я мережі та пароль Wi-Fi. Для застосування потрібне перезавантаження.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Команди конкретних плат';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Команди підсилення FEM залежать від плати та вхідного модуля. Команди вентилятора доступні на T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Показує режим вентилятора, температуру, стан і час охолодження на T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Задає режим вентилятора T-Beam 1W: увімкнений, вимкнений або автоматичний.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Задає нижній температурний поріг вентилятора в °C: 0–100, нижче fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Задає верхній температурний поріг вентилятора в °C: вище fan.lo, не більше 120.';
 }

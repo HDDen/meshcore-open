@@ -8678,107 +8678,107 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Kommandona körs på den anslutna companion-noden. Tryck på ett kommando för att infoga det, ersätt parametrarna <...> och tryck på skicka. Tillgängligheten beror på firmware och kort.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Visar den inställda UTC-förskjutningen i timmar.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Ställer in UTC-förskjutningen från −12 till +14 timmar, även med bråkdelar.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Ställer in BLE-PIN-koden. Skriv din egen numeriska PIN-kod efter set pin.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Visar om kanalaktivitetsdetektering (CAD) är på eller av.';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Slår på eller av kanalaktivitetsdetektering (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Visar om radiochipets förstärkta mottagningsförstärkning är på.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Slår på eller av förstärkt mottagningsförstärkning. Kräver stöd i radiodrivrutinen.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Visar läget för hashlängden i sökvägen för flood-paket: 0 = 1 byte, 1 = 2 byte, 2 = 3 byte per hopp.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Ställer in LoRa-sändeffekten i dBm och tillämpar den direkt via radiodrivrutinen.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Bara firmware som byggts med Wi-Fi-gränssnitt har de här kommandona. Ändrade inställningar kräver omstart.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Visar det inställda Wi-Fi-nätverksnamnet (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Visar det sparade Wi-Fi-lösenordet i klartext.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Visar om Wi-Fi är aktiverat i inställningarna: 0 eller 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Visar om noden just nu är ansluten till Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Visar nodens IP-adress på Wi-Fi, eller att anslutning saknas.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Ställer in Wi-Fi-nätverksnamnet. Starta om för att tillämpa.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Ställer in Wi-Fi-lösenordet. Starta om för att tillämpa.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Aktiverar (1) eller inaktiverar (0) Wi-Fi. Starta om för att tillämpa.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Raderar det sparade Wi-Fi-nätverksnamnet och lösenordet. Starta om för att tillämpa.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Kortspecifika kommandon';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Kommandona för FEM-förstärkning beror på kortet och front-end-modulen. Fläktkommandona finns på T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Visar fläktläge, temperatur, fläktstatus och nedkylningstid på T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Ställer in fläktläget för T-Beam 1W: på, av eller automatiskt.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Ställer in fläktens nedre temperaturtröskel i °C: 0–100, under fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Ställer in fläktens övre temperaturtröskel i °C: över fan.lo, högst 120.';
 }

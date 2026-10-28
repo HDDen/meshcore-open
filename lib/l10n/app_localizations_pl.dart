@@ -8748,107 +8748,107 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Polecenia są wykonywane na podłączonym węźle companion. Naciśnij polecenie, aby je wstawić, zastąp parametry <...> i naciśnij wysyłanie. Dostępność zależy od oprogramowania i płytki.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Pokazuje ustawione przesunięcie względem UTC w godzinach.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Ustawia przesunięcie względem UTC od −12 do +14 godzin, także ułamkowe.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Ustawia PIN dla BLE. Po set pin wpisz własny numeryczny PIN.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Pokazuje, czy wykrywanie aktywności kanału (CAD) jest włączone.';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Włącza lub wyłącza wykrywanie aktywności kanału (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Pokazuje stan zwiększonego wzmocnienia odbioru układu radiowego.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Włącza lub wyłącza zwiększone wzmocnienie odbioru. Wymaga obsługi przez sterownik układu radiowego.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Pokazuje tryb długości hasza ścieżki pakietów flood: 0 — 1 bajt, 1 — 2 bajty, 2 — 3 bajty na skok.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Ustawia moc nadawania LoRa w dBm i od razu stosuje ją przez sterownik układu radiowego.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Te polecenia są dostępne tylko w kompilacjach z interfejsem Wi-Fi. Zmiany ustawień wymagają ponownego uruchomienia.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Pokazuje ustawioną nazwę sieci Wi-Fi (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Pokazuje zapisane hasło Wi-Fi jawnym tekstem.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Pokazuje, czy Wi-Fi jest dozwolone w ustawieniach: 0 lub 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Pokazuje, czy węzeł jest teraz połączony z Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Pokazuje adres IP węzła w sieci Wi-Fi albo brak połączenia.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Ustawia nazwę sieci Wi-Fi. Zmiana wymaga ponownego uruchomienia.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Ustawia hasło Wi-Fi. Zmiana wymaga ponownego uruchomienia.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Włącza (1) lub wyłącza (0) Wi-Fi. Zmiana wymaga ponownego uruchomienia.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Usuwa zapisane nazwę sieci i hasło Wi-Fi. Zmiana wymaga ponownego uruchomienia.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Polecenia konkretnych płytek';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Polecenia wzmocnienia FEM zależą od płytki i modułu front-end. Polecenia wentylatora są dostępne w T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Pokazuje tryb wentylatora, temperaturę, stan i czas chłodzenia w T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Ustawia tryb wentylatora T-Beam 1W: włączony, wyłączony lub automatyczny.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Ustawia dolny próg temperatury wentylatora w °C: 0–100, poniżej fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Ustawia górny próg temperatury wentylatora w °C: powyżej fan.lo, najwyżej 120.';
 }

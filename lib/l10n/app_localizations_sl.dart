@@ -8687,107 +8687,107 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get companionCli_helpNote =>
-      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+      'Ukazi se izvajajo na povezanem vozlišču companion. Dotaknite se ukaza, da ga vstavite, zamenjajte parametre <...> in se dotaknite pošiljanja. Razpoložljivost je odvisna od vdelane programske opreme in plošče.';
 
   @override
   String get companionCli_helpGetTimezone =>
-      'Shows the configured UTC offset in hours.';
+      'Prikaže nastavljeni zamik glede na UTC v urah.';
 
   @override
   String get companionCli_helpSetTimezone =>
-      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+      'Nastavi zamik glede na UTC od −12 do +14 ur, tudi z decimalnimi vrednostmi.';
 
   @override
   String get companionCli_helpSetPin =>
-      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+      'Nastavi PIN za BLE. Za set pin vnesite svoj številski PIN.';
 
   @override
   String get companionCli_helpGetCad =>
-      'Shows whether channel activity detection (CAD) is on or off.';
+      'Prikaže, ali je zaznavanje dejavnosti kanala (CAD) vklopljeno.';
 
   @override
   String get companionCli_helpSetCad =>
-      'Turns channel activity detection (CAD) on or off.';
+      'Vklopi ali izklopi zaznavanje dejavnosti kanala (CAD).';
 
   @override
   String get companionCli_helpGetRxGain =>
-      'Shows whether boosted radio RX gain is enabled.';
+      'Prikaže stanje povečanega ojačanja sprejema radijskega čipa.';
 
   @override
   String get companionCli_helpSetRxGain =>
-      'Turns boosted RX gain on or off. Radio-driver support is required.';
+      'Vklopi ali izklopi povečano ojačanje sprejema. Potrebna je podpora gonilnika radijskega čipa.';
 
   @override
   String get companionCli_helpGetPathHashMode =>
-      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+      'Prikaže način dolžine zgoščene vrednosti poti paketov flood: 0 — 1 bajt, 1 — 2 bajta, 2 — 3 bajti na skok.';
 
   @override
   String get companionCli_helpSetTx =>
-      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+      'Nastavi oddajno moč LoRa v dBm in jo takoj uveljavi prek gonilnika radijskega čipa.';
 
   @override
   String get companionCli_helpWifiTitle => 'Wi-Fi';
 
   @override
   String get companionCli_helpWifiNote =>
-      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+      'Ti ukazi so na voljo le v različicah z vmesnikom Wi-Fi. Spremembe nastavitev zahtevajo ponovni zagon.';
 
   @override
   String get companionCli_helpGetWifiSsid =>
-      'Shows the configured Wi-Fi network name (SSID).';
+      'Prikaže nastavljeno ime omrežja Wi-Fi (SSID).';
 
   @override
   String get companionCli_helpGetWifiPassword =>
-      'Shows the saved Wi-Fi password as plain text.';
+      'Prikaže shranjeno geslo Wi-Fi kot navadno besedilo.';
 
   @override
   String get companionCli_helpGetWifiEnabled =>
-      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+      'Prikaže, ali je Wi-Fi v nastavitvah dovoljen: 0 ali 1.';
 
   @override
   String get companionCli_helpGetWifiStatus =>
-      'Shows whether the node is currently connected to Wi-Fi.';
+      'Prikaže, ali je vozlišče trenutno povezano z omrežjem Wi-Fi.';
 
   @override
   String get companionCli_helpGetWifiIp =>
-      'Shows the node IP address on Wi-Fi, or reports no connection.';
+      'Prikaže naslov IP vozlišča v omrežju Wi-Fi ali da povezave ni.';
 
   @override
   String get companionCli_helpSetWifiSsid =>
-      'Sets the Wi-Fi network name. Reboot to apply.';
+      'Nastavi ime omrežja Wi-Fi. Za uveljavitev je potreben ponovni zagon.';
 
   @override
   String get companionCli_helpSetWifiPassword =>
-      'Sets the Wi-Fi password. Reboot to apply.';
+      'Nastavi geslo Wi-Fi. Za uveljavitev je potreben ponovni zagon.';
 
   @override
   String get companionCli_helpSetWifiEnabled =>
-      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+      'Dovoli (1) ali onemogoči (0) Wi-Fi. Za uveljavitev je potreben ponovni zagon.';
 
   @override
   String get companionCli_helpClearWifi =>
-      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+      'Izbriše shranjeno ime omrežja in geslo Wi-Fi. Za uveljavitev je potreben ponovni zagon.';
 
   @override
-  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+  String get companionCli_helpHardwareTitle => 'Ukazi posameznih plošč';
 
   @override
   String get companionCli_helpHardwareNote =>
-      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+      'Ukazi ojačanja FEM so odvisni od plošče in vhodnega modula. Ukazi ventilatorja so na voljo na T-Beam 1W.';
 
   @override
   String get companionCli_helpGetFan =>
-      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+      'Prikaže način ventilatorja, temperaturo, stanje in čas hlajenja na T-Beam 1W.';
 
   @override
   String get companionCli_helpSetFan =>
-      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+      'Nastavi način ventilatorja T-Beam 1W: vklopljen, izklopljen ali samodejen.';
 
   @override
   String get companionCli_helpSetFanLow =>
-      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+      'Nastavi spodnji temperaturni prag ventilatorja v °C: 0–100, pod fan.hi.';
 
   @override
   String get companionCli_helpSetFanHigh =>
-      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
+      'Nastavi zgornji temperaturni prag ventilatorja v °C: nad fan.lo, največ 120.';
 }
