@@ -11,6 +11,22 @@ MeshCore Open can send a highly compressed image as channel GRP_DATA packets. Un
 
 Downloads use the configured Hugging Face model bundle, support resume, and verify file checksums. Download the model while internet is available. Once installed, encoding and reconstruction run locally; photos are not uploaded for inference. Compatible recipients need the same supported codec/model format.
 
+## Android: сбой при открытии отправки или обработке AEIC
+
+Если приложение полностью закрывается при обработке AEIC на Android, причиной
+может быть native runtime, а не размер изображения. В полученном отчёте Poco
+зафиксирован SIGILL внутри старой ONNX Runtime 1.23.0. Для похожих сбоев на
+Android 16 исправлялся выбор CPU-инструкций; это отличается от нехватки памяти.
+См. [обсуждение ONNX Runtime](https://github.com/microsoft/onnxruntime/issues/27884).
+
+Текущая зависимость приложения `flutter_onnxruntime` 1.9.0 использует Android
+ORT 1.28.0. Перед повторной проверкой нужна сборка с обновлённой библиотекой;
+важен состав установленного APK, а не только номер версии приложения.
+Переустановка с сохранением данных не требует повторного скачивания модели.
+После обновления проверить и отправку, и получение AEIC; если сбой повторится,
+нужен новый logcat. Наличие NPU не гарантирует его использование кодеком:
+текущий путь выполняет модель через CPU ONNX Runtime.
+
 ## Send an image
 
 1. Open channel chat and tap the image button beside the composer.

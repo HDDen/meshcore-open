@@ -18,7 +18,7 @@ import 'rans_coder.dart';
 /// This is the ONLY place where real neural-network execution belongs.
 ///
 /// [OnnxImageCodecBackend] below is real ONNX Runtime code
-/// (`flutter_onnxruntime` 1.8.3 / ORT 1.23.0) driving three graphs:
+/// (`flutter_onnxruntime` 1.9.0 / Android ORT 1.28.0) driving three graphs:
 ///
 ///   * the **decoder** (synthesis) half, int8 QDQ, ~835 MB of weights:
 ///     `y_hat float32 [1, 256, 16, 16]  ->  image float32 [1, 3, 512, 512]`
