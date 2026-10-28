@@ -2634,10 +2634,12 @@ A failed load stays in Flutter's image cache as a completer that only repeats it
 ### Локальная консоль CompanionCLI
 
 `CompanionCliSession` использует локальные command 66 / response 29 при firmware
-code >=14 (MeshCore 1.18), независимо от app protocol 4; remote repeater CLI ниже
-остаётся прежним. Helpers `companion_cli_protocol.dart` и `companion_cli_list_layout.dart`
+code >=14 и распознанной версии прошивки >=1.18, независимо от app protocol 4;
+проверку обоих полей DEVICE_INFO выполняет `companion_cli_support.dart`.
+Неизвестная версия поддержку не включает; remote repeater CLI ниже остаётся прежним. Helpers `companion_cli_protocol.dart` и `companion_cli_list_layout.dart`
 выносят формат/корреляцию и служебный порядок из коннектора/экранов. В контактах
-`CompanionCliTile` закреплён сверху; на каналах показывается даже пустым при
+`CompanionCliTile` показывается только при supportsCompanionCli: в контактах
+закреплён сверху; на каналах показывается даже пустым при
 `roomServerShowNotemptyContactsOnChatscreen` и перетаскивается в manual sort,
 включая legacy branch. Строка не является Contact/Channel ноды.
 `CompanionCliStore` хранит операции в отдельных SQL-колонках таблицы

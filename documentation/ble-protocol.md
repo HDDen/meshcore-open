@@ -124,7 +124,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 62 | CMD_SEND_CHANNEL_DATA | Send a typed channel `GROUP_DATA` payload |
 | 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope |
 | 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
-| 66 | CMD_RUN_CLI_COMMAND | Локальный CLI подключённой companion-ноды, firmware code 14+ |
+| 66 | CMD_RUN_CLI_COMMAND | Локальный CLI подключённой companion-ноды, MeshCore 1.18+, firmware code 14+ |
 
 ### APP_START и периодический GPS-опрос
 
@@ -296,8 +296,10 @@ timestamp, LoRa ACK или `SYNC_NEXT_MESSAGE`. MCOa добавляет `ID|` п
 не содержит ID и сопоставляется через очередь ожидаемых команд. После CLI timeout
 запрашивается восстановление транспорта; автоматического повторения команды нет.
 Полный frame ограничен 176 байтами, поэтому с трёхбайтовым префиксом остаётся
-172 байта UTF-8 команды. Поддержка определяется firmware code >=14 из DEVICE_INFO,
-а не appProtocolVersion (он остаётся 4). Helper: `helpers/companion_cli_protocol.dart`.
+172 байта UTF-8 команды. Приложение требует одновременно firmware code >=14
+и строку версии прошивки >=1.18 из DEVICE_INFO; неизвестная версия не разрешает CLI.
+Это не appProtocolVersion (он остаётся 4). Проверка версии вынесена в
+`helpers/companion_cli_support.dart`, wire helper — `helpers/companion_cli_protocol.dart`.
 Code 29 подтверждает получение ответа, в том числе `Unknown command`/текстовой
 ошибки; он не подтверждает успех изменения настроек.
 

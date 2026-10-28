@@ -795,7 +795,8 @@ class _ContactsScreenState extends State<ContactsScreen>
         body: Column(
           children: [
             const ReviewModeBanner(),
-            if (!widget.selectionMode && !widget.batchOperationsMode)
+            if (!widget.selectionMode && !widget.batchOperationsMode &&
+                connector.supportsCompanionCli)
               CompanionCliTile(connector: connector),
             Expanded(
               child: IgnorePointer(

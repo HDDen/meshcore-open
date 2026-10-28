@@ -1284,8 +1284,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
-  bool get _showCompanionCli => context.read<AppSettingsService>()
-      .settings.roomServerShowNotemptyContactsOnChatscreen;
+  bool get _showCompanionCli => context.read<MeshCoreConnector>().supportsCompanionCli &&
+      context.read<AppSettingsService>().settings.roomServerShowNotemptyContactsOnChatscreen;
 
   Widget _buildChannelsList(
     BuildContext context,

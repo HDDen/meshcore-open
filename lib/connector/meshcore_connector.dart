@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
+import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
 
 import 'package:crypto/crypto.dart' as crypto;
@@ -1142,7 +1143,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   CompanionCliSession? _companionCli;
   bool _cliProxyHandled = false;
   bool get companionCliRoutingEnabled => true;
-  bool get supportsCompanionCli => (_firmwareVerCode ?? 0) >= 14;
+  bool get supportsCompanionCli => supportsCompanionCliFirmware(
+    protocolCode: _firmwareVerCode, version: _firmwareVersion);
   CompanionCliSession get companionCli => _companionCli ??= CompanionCliSession(
     nodeKey: () => selfPublicKeyHex,
     nodeName: () => _selfName ?? selfPublicKeyHex,

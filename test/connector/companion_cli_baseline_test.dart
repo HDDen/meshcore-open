@@ -20,6 +20,14 @@ class _CliConnector extends MeshCoreConnector {
   String get selfPublicKeyHex => '01' * 32;
 }
 
+List<int> _deviceInfo(int protocol, String version) {
+  final frame = List<int>.filled(80, 0);
+  frame[0] = respCodeDeviceInfo;
+  frame[1] = protocol;
+  frame.setRange(60, 60 + version.length, version.codeUnits);
+  return frame;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -38,10 +46,20 @@ void main() {
     addTearDown(storage.resetForTesting);
     final connector = _CliConnector();
     try {
-      connector.handleFrameForTest([respCodeDeviceInfo, 13, 0, 0]);
-      expect(connector.supportsCompanionCli, isFalse);
-      await expectLater(connector.companionCli.sendCommand('ver'), throwsException);
-      connector.handleFrameForTest([respCodeDeviceInfo, 14, 0, 0]);
+      var writes = 0;
+      connector.setFrameWriterForTest((_) async { writes++; });
+      for (final frame in [
+        [respCodeDeviceInfo, 14, 0, 0], // Version string not supplied.
+        _deviceInfo(14, '1.17.1'), // Protocol alone is insufficient.
+        _deviceInfo(13, '1.18.0'),
+      ]) {
+        connector.handleFrameForTest(frame);
+        expect(connector.supportsCompanionCli, isFalse);
+        await expectLater(connector.companionCli.sendCommand('ver'), throwsException);
+      }
+      expect(writes, 0);
+      expect(connector.companionCli.entries(shared: false), isEmpty);
+      connector.handleFrameForTest(_deviceInfo(14, '1.18.0'));
       expect(connector.supportsCompanionCli, isTrue);
       connector.setFrameWriterForTest((frame) async {
         expect(frame.first, cmdRunCliCommand);

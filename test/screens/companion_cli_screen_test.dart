@@ -158,6 +158,27 @@ void main() {
     });
   }
 
+  for (final screen in ['contacts', 'channels', 'legacy channels']) {
+    testWidgets('unsupported firmware hides the CLI entry on $screen', (tester) async {
+      connector.supported = false;
+      await settings.updateSettings(settings.settings.copyWith(
+        roomServerShowNotemptyContactsOnChatscreen: true,
+        roomServerDisableRoomAndContactsSorting: screen == 'legacy channels'));
+      await show(tester, screen == 'contacts'
+        ? const ContactsScreen(hideBackButton: true)
+        : const ChannelsScreen(hideBackButton: true));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsNothing);
+      connector.supported = true;
+      connector.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsOneWidget);
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('contacts keep the service above an empty or loading list under every sort', (tester) async {
     await show(tester, const ContactsScreen(hideBackButton: true));
     for (final sort in ContactSortOption.values) {
@@ -199,6 +220,15 @@ void main() {
       await tester.pumpAndSettle();
       final store = ChannelGroupStore()..setPublicKeyHex = connector.selfPublicKeyHex;
       expect((await store.loadScreenOrder()).last, companionCliOrderKey);
+      connector.supported = false;
+      connector.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsNothing);
+      expect((await store.loadScreenOrder()).last, companionCliOrderKey);
+      connector.supported = true;
+      connector.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(tester.widget<CompanionCliTile>(find.byType(CompanionCliTile)).dragIndex, 2);
       await settings.updateSettings(settings.settings.copyWith(
         roomServerShowNotemptyContactsOnChatscreen: false));
       await tester.pumpAndSettle();
