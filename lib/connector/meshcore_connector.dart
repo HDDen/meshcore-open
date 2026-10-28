@@ -66,6 +66,7 @@ import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
 import '../helpers/versioned_map.dart';
 import '../helpers/channel_resend_coverage.dart';
+import '../helpers/channel_resend_control.dart';
 import '../helpers/channel_resend_warning.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
@@ -5849,6 +5850,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required int minHops,
     required int maxResends,
   }) => _resendUntilMinHops(messageId, () async {
+    final control = _channelHopControls[messageId];
+    if (control == null || !_channelResendWanted(messageId, control)) {
+      return;
+    }
+    control.lastAttemptAt = _channelResendNow();
     _incrementChannelResendCount(messageId);
     await resend();
   }, minHops: minHops, maxResends: maxResends);
@@ -9305,27 +9311,41 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // that forwarded it already drop the copy and recipients see it once. The
     // echo registry and the heard-packet map were fed by the first send, and
     // the same frame bytes feed them nothing new.
+    final settings = _appSettingsService?.settings;
+    final minHopsSettings = settings != null && settings.channelMinHopsEnabled
+        ? settings
+        : null;
+    final hopControl = minHopsSettings == null ? null : ChannelResendControl(
+      minHops: minHopsSettings.channelMinHops);
     int? sentTimestampSeconds;
-    Future<void> transmit({bool isResend = false}) =>
-        _runScopedChannelSend(() async {
+    Future<void> transmit({bool isResend = false}) async {
+      if (isResend && !_channelResendWanted(message.messageId, hopControl!)) {
+        return;
+      }
+      await _runScopedChannelSend(() async {
           await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+          // Scope/очередь и radio quiet могли ждать: отмена и достаточное эхо
+          // проверяются снова непосредственно перед повторной передачей.
+          if (isResend && !_channelResendWanted(message.messageId, hopControl!)) {
+            return;
+          }
           if (!isResend) {
             final sentByRadioAt = DateTime.now();
-            final resendSettings = _appSettingsService?.settings;
-            final resendUntilMinHops =
-                resendSettings?.channelMinHopsEnabled ?? false;
+            final resendUntilMinHops = hopControl != null;
             _markChannelMessageSentByRadio(
               message.messageId,
               sentByRadioAt,
               // Under the resend setting the warning waits for the resends.
               deferNoRetransmissionWarning: resendUntilMinHops,
             );
-            if (resendUntilMinHops) {
+            if (hopControl != null) {
               // The attempt badge spins from the radio transmission on; the
               // resend loop keeps the entry once the node has taken the frame.
+              _registerChannelHopControl(message.messageId, hopControl);
+              hopControl.lastAttemptAt = sentByRadioAt;
               _channelHopChecks[message.messageId] = (
                 resends: 0,
-                maxResends: resendSettings?.channelMinHopsRetries ?? 1,
+                maxResends: minHopsSettings!.channelMinHopsRetries,
               );
               _channelResendRevision++;
             }
@@ -9344,7 +9364,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   : null,
             );
           }
-          if (isResend) _incrementChannelResendCount(message.messageId);
+          if (isResend) {
+            hopControl!.lastAttemptAt = _channelResendNow();
+            _incrementChannelResendCount(message.messageId);
+          }
           if (binaryFrame != null) {
             await _sendFrameAndWaitForCommandAck(
               binaryFrame,
@@ -9367,14 +9390,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             channelSendQueueId: isResend ? null : message.messageId,
           );
         }, region: region ?? _channelSendScope(channel.index));
-    final settings = _appSettingsService?.settings;
-    final minHopsSettings = settings != null && settings.channelMinHopsEnabled
-        ? settings
-        : null;
+    }
     try {
       await transmit();
     } catch (_) {
       // The hop check registered at the radio transmission, if it got there.
+      hopControl?.cancel();
+      if (identical(_channelHopControls[message.messageId], hopControl)) {
+        _channelHopControls.remove(message.messageId);
+      }
       _channelHopChecks.remove(message.messageId);
       _channelResendRevision++;
       // A failed or timed-out SET_FLOOD_SCOPE (or text send) means no OK/ERR
@@ -9392,6 +9416,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           () => transmit(isResend: true),
           minHops: minHopsSettings.channelMinHops,
           maxResends: minHopsSettings.channelMinHopsRetries,
+          control: hopControl,
         ),
       );
     }
@@ -9413,7 +9438,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function() resend, {
     required int minHops,
     required int maxResends,
+    ChannelResendControl? control,
   }) => _outgoingQueueWork.runRetry(() async {
+    final run = control ?? ChannelResendControl(minHops: minHops);
+    if (control == null) {
+      _registerChannelHopControl(messageId, run);
+    }
+    if (run.cancelled || _disposed || !identical(_channelHopControls[messageId], run)) {
+      if (identical(_channelHopControls[messageId], run)) {
+        _channelHopControls.remove(messageId);
+        _channelHopChecks.remove(messageId);
+        if (!_disposed && _channelHopShortfalls.containsKey(messageId)) {
+          _scheduleChannelNoRetransmissionWarning(messageId, since: run.lastAttemptAt);
+        }
+      }
+      return;
+    }
     _channelHopChecks[messageId] = (resends: 0, maxResends: maxResends);
     _channelResendRevision++;
     notifyListeners();
@@ -9421,7 +9461,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The no-retransmission warning of the mod settings waits for the
     // resends and then counts from the last attempt (Denis, 2026-10-13).
     var lastAttemptAt =
-        _findChannelMessageById(messageId)?.sentByRadioAt ?? _channelResendNow();
+        run.lastAttemptAt ?? _findChannelMessageById(messageId)?.sentByRadioAt ?? _channelResendNow();
     try {
       for (var attempt = 0; ; attempt++) {
         // Wait out the delay, but look again at every echo that comes in:
@@ -9433,32 +9473,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ChannelMessage? message;
         var satisfied = false;
         while (true) {
+          if (run.cancelled) { return; }
+          // Сохраняем исходное окно после завершения callback. Только ручная
+          // отмена завершает ожидание без оставшейся паузы.
           final remaining = deadline.difference(_channelResendNow());
           if (remaining > Duration.zero) {
-            final wakeup = Completer<void>();
-            _channelHopWakeups[messageId] = wakeup;
-            await Future.any<void>([
-              Future<void>.delayed(remaining),
-              wakeup.future,
-            ]);
-            if (identical(_channelHopWakeups[messageId], wakeup)) {
-              _channelHopWakeups.remove(messageId);
-            }
+            await run.wait(remaining);
           }
+          if (run.cancelled) { return; }
           message = _findChannelMessageById(messageId);
           if (message == null) return;
           if (message.status == ChannelMessageStatus.failed) return;
           hops = message.pathLength ?? 0;
-          // Read live so changing the nearby-repeater controls takes effect.
-          final coverageSettings = _appSettingsService?.settings;
-          satisfied = channelResendSatisfied(
-            message,
-            minHops: minHops,
-            countDistinctRepeaters:
-                coverageSettings?.channelMinHopsCountRepeaters ?? false,
-            minRepeaters: coverageSettings?.channelMinHopsRepeaterCount ?? 2,
-            selfPublicKey: _selfPublicKey,
-          );
+          satisfied = _channelResendConditionMet(message, minHops);
           if (satisfied || !_channelResendNow().isBefore(deadline)) break;
         }
         if (satisfied) {
@@ -9486,8 +9513,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         notifyListeners();
         try {
           await resend();
+          if (run.cancelled) { return; }
+          // Прежняя cadence: следующее окно начинается после callback/ACK.
+          // Для отмены отдельно известен момент фактической передачи кадра.
           lastAttemptAt = _channelResendNow();
         } catch (e) {
+          if (run.cancelled) { return; }
           _appDebugLogService?.warn(
             'Channel resend failed: $e',
             tag: 'Channel resend',
@@ -9503,11 +9534,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // this is a warning, not a failure.
       _channelHopShortfalls[messageId] = (hops: hops, required: minHops);
     } finally {
-      _channelHopChecks.remove(messageId);
-      _channelHopWakeups.remove(messageId);
-      _channelResendRevision++;
-      _scheduleChannelNoRetransmissionWarning(messageId, since: lastAttemptAt);
-      notifyListeners();
+      final warningSince = run.cancelled
+          ? (run.lastAttemptAt ?? lastAttemptAt) : lastAttemptAt;
+      run.cancel();
+      if (identical(_channelHopControls[messageId], run)) {
+        _channelHopControls.remove(messageId);
+        _channelHopChecks.remove(messageId);
+        _channelResendRevision++;
+        if (!_disposed) {
+          _scheduleChannelNoRetransmissionWarning(messageId, since: warningSince);
+          notifyListeners();
+        }
+      }
     }
   });
 
@@ -9517,13 +9555,63 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int get channelResendRevision => _channelResendRevision;
 
   final Map<String, ({int resends, int maxResends})> _channelHopChecks = {};
-  final Map<String, Completer<void>> _channelHopWakeups = {};
+  final Map<String, ChannelResendControl> _channelHopControls = {};
+
+  void _registerChannelHopControl(String messageId, ChannelResendControl control) {
+    final previous = _channelHopControls[messageId];
+    if (!identical(previous, control)) { previous?.cancel(); }
+    _channelHopControls[messageId] = control;
+  }
+
+  bool _channelResendConditionMet(ChannelMessage message, int minHops) {
+    final settings = _appSettingsService?.settings;
+    return channelResendSatisfied(message, minHops: minHops,
+      countDistinctRepeaters: settings?.channelMinHopsCountRepeaters ?? false,
+      minRepeaters: settings?.channelMinHopsRepeaterCount ?? 2,
+      selfPublicKey: _selfPublicKey);
+  }
+
+  bool _channelResendWanted(String messageId, ChannelResendControl control) {
+    if (control.cancelled || _disposed ||
+        !identical(_channelHopControls[messageId], control)) { return false; }
+    final message = _findChannelMessageById(messageId);
+    return message != null && message.isOutgoing &&
+      message.status != ChannelMessageStatus.failed &&
+      !_channelResendConditionMet(message, control.minHops);
+  }
+
+  bool canStopChannelSending(String messageId) {
+    final control = _channelHopControls[messageId];
+    return control != null && _channelHopChecks.containsKey(messageId) &&
+      _channelResendWanted(messageId, control);
+  }
+
+  /// Останавливает оставшиеся повторы, сохраняя пакет и услышанные пути.
+  /// Уже переданный в транспорт кадр и ожидаемый ACK не прерываются.
+  void stopSendingChannelMessage(String messageId) {
+    if (!canStopChannelSending(messageId)) { return; }
+    final control = _channelHopControls[messageId]!;
+    final message = _findChannelMessageById(messageId)!;
+    control.cancel();
+    _channelHopChecks.remove(messageId);
+    _retriableChannelMessageSends.remove(messageId);
+    _channelHopShortfalls[messageId] = (
+      hops: message.pathLength ?? 0, required: control.minHops);
+    _channelResendRevision++;
+    notifyListeners();
+  }
+
+  void _cancelChannelHopControls() {
+    for (final control in _channelHopControls.values) {
+      control.cancel();
+    }
+    _channelHopControls.clear();
+  }
 
   /// An echo of [messageId] arrived: the resend loop looks at its condition
   /// again instead of waiting out the rest of its delay.
   void _wakeChannelHopCheck(String messageId) {
-    final wakeup = _channelHopWakeups[messageId];
-    if (wakeup != null && !wakeup.isCompleted) wakeup.complete();
+    _channelHopControls[messageId]?.wake();
   }
   final Map<String, ({int hops, int required})> _channelHopShortfalls = {};
 
@@ -18673,7 +18761,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _processedChannelReactions.clear();
     _processedContactReactions.clear();
     _channelHopChecks.clear();
-    _channelHopWakeups.clear();
+    _cancelChannelHopControls();
     _channelHopShortfalls.clear();
     _channelResendRevision++;
     _messageStateOwnerKey = null;
@@ -18914,6 +19002,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearDirectEchoKey('dispose');
     _channelKeyHashCache.clear();
     _disposed = true;
+    _cancelChannelHopControls();
     _selfInfoWork.finishCurrent();
     MessageHistoryStorage.instance.detachBackgroundWorkTracker(_backgroundWork);
     _notificationService.detachBackgroundWorkTracker(_backgroundWork);

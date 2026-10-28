@@ -123,6 +123,7 @@ import 'channels_screen.dart';
 import 'contacts_screen.dart';
 import 'map_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
+import '../widgets/stop_sending_bar.dart';
 
 class ChannelChatScreen extends StatefulWidget {
   final Channel channel;
@@ -1548,6 +1549,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // while the resends run, the replay icon once the loop has ended.
     final resendInProgress =
         isOutgoing && connector.channelResendProgress(message.messageId) != null;
+    final showStopSending = isOutgoing &&
+        settingsService.settings.channelMinHopsEnabled &&
+        connector.canStopChannelSending(message.messageId);
     // Not while the message waits out its sending delay: nothing has gone
     // on the air yet, and the bar under the bubble already says so.
     final showSendAttempts =
@@ -1790,7 +1794,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       border: Border.all(color: bubbleBorder, width: 1),
                     ),
                     child: _stretchToContentWhen(
-                      pendingSendAt != null,
+                      pendingSendAt != null || showStopSending,
                       Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2600,6 +2604,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               connector,
                               message.messageId,
                             ),
+                            foregroundColor: textColor,
+                            contentPadding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                          )
+                        else if (showStopSending)
+                          StopSendingBar(
+                            key: ValueKey('channel-stop-sending:${message.messageId}'),
+                            onStop: () => connector.stopSendingChannelMessage(message.messageId),
                             foregroundColor: textColor,
                             contentPadding: isMediaMessage
                                 ? const EdgeInsets.symmetric(horizontal: 8)
@@ -6307,7 +6320,7 @@ class _ComposerEncoding {
   final String outboundText;
 }
 
-/// Wraps the bubble column in [IntrinsicWidth] only while a pending-send bar
+/// Wraps the bubble column in [IntrinsicWidth] while a pending-send or stop bar
 /// is shown. The bar's divider has to follow the bubble's own width, which a
 /// loosely laid out column cannot tell it: without the wrapper the bar either
 /// shrinks to its row or, asking for infinite width, blows the bubble up to

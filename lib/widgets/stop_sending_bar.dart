@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 
-/// The row under an outgoing direct or room message the retry service is
-/// still working on: a tap stops the attempts and the wait for the
-/// acknowledgement. Laid out as `PendingSendCancelBar`, divider included, so
+/// The row under an outgoing direct, room or channel message while attempts
+/// are active. A tap stops retries (and ACK tracking for direct/room sends).
+/// Laid out as `PendingSendCancelBar`, divider included, so
 /// the two read as one control, and needing the same `IntrinsicWidth` around
 /// the bubble column for the divider to span the bubble.
 class StopSendingBar extends StatelessWidget {

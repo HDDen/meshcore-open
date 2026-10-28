@@ -141,6 +141,23 @@ Messages also show a region label when known, independently of message tracing. 
 
 ### Channel Auto-Resend
 
+При включённой настройке повторной отправки до нужного числа хопов в исходящем
+сообщении появляется кнопка **«Остановить отправку»**, пока серия активна и
+не достигнут ни порог хопов, ни разрешённый порог разных ближайших репитеров.
+Нажатие отменяет оставшиеся попытки только этого сообщения. Ожидающая очереди
+повторная передача проверяет отмену ещё раз перед отправкой; уже переданный
+в транспорт кадр нельзя отозвать. После достижения цели, остановки или исчерпания
+попыток кнопка исчезает. До первой передачи при настроенной задержке остаётся
+прежняя кнопка отмены отложенной отправки.
+
+Остановка не удаляет сообщение и не возвращает его в редактор. Сохраняются
+время пакета, фактическое число отправок и услышанные пути. Она не считается
+подтверждением достаточного распространения: при недостигнутом пороге остаётся
+признак недостаточного покрытия, а предупреждение показывается по действующей
+mod-настройке. Позднее достаточное эхо может снять этот признак и предупреждение,
+но автоматические повторы после остановки не возобновляются.
+
+
 With **Resend channel messages until they travel far enough** on (App Settings → Messaging), the app waits after each channel send and checks how far the message was heard repeated. If neither the required hop count nor the optional nearby-repeater target below is reached, it sends the message again, up to the configured number of times.
 
 Where your radio only hears nearby repeaters, turn on **Also count different nearby repeaters**: the message then also counts as sent once the required number of *different* first-hop repeaters have repeated it, across all attempts. Set this number with **Required nearby repeaters**, which appears below the toggle (2–10, step 1, default 2). It is independent of **Required hops**: a long enough route OR enough different nearby repeaters stops resending. Changing the nearby-repeater target or toggle also affects an ongoing resend wait. Your own radio's echo and zero-hop echoes don't count.

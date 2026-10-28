@@ -2775,6 +2775,21 @@ packet timestamp, счётчики и статус передачи в ради�
 поле warning, но не восстановление цели старой серии после новой сессии.
 Экран пути по-прежнему использует snapshot при открытии. Подробности —
 `documentation/channels.md#channel-auto-resend`.
+При включённом channelMinHopsEnabled активная серия с недостигнутым порогом
+показывает StopSendingBar в исходящем канальном bubble (тот же IntrinsicWidth,
+что у pending-send cancel). canStopChannelSending проверяет актуальные hops /
+distinct repeaters; stopSendingChannelMessage отменяет только эту серию,
+убирает progress/retriable replay и сохраняет shortfall без подмены sent-статуса.
+helpers/channel_resend_control.dart хранит идентичность серии и отменяемый
+таймер: stop/echo будят ожидание, finally старой серии не трогает новую.
+transmit проверяет отмену и достаточное эхо до scope-очереди и после ожидания
+scope/radio quiet, до увеличения resendCount и передачи кадра. Начатый writer /
+ACK и scope cleanup не обрываются. Без ручной отмены сохранены прежние
+окно после callback/ACK и учёт retry-work до его окончания; ручной stop завершает
+серию без следующего окна, но после завершения уже начатого writer/scope.
+Остановка до первого ACK не запускает серию после позднего ответа. Поздние эхо
+по-прежнему обновляют пути и могут снять shortfall; сами повторы не воскресают.
+Повторы отменяются при очистке сессии/dispose без оставшихся deadline-таймеров.
 The no-retransmission warning of
 the mod settings is held back while the resends run, counts from the last
 attempt, and its line under a resent message names the resends

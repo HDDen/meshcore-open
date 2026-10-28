@@ -256,6 +256,94 @@ void main() {
     });
   });
 
+  testWidgets('manual stop cancels the deadline, keeps evidence and accepts late coverage', (tester) async {
+    await _withHarness(tester, (h) async {
+      final original = h.message;
+      h.start();
+      expect(h.connector.canStopChannelSending(original.messageId), isTrue);
+      final revision = h.connector.channelResendRevision;
+      h.connector.stopSendingChannelMessage(original.messageId);
+      h.connector.stopSendingChannelMessage(original.messageId);
+      expect(h.connector.canStopChannelSending(original.messageId), isFalse);
+      expect(h.connector.channelResendProgress(original.messageId), isNull);
+      expect(h.connector.channelResendRevision, greaterThan(revision));
+      await tester.pump();
+      expect(h.finished, isTrue);
+      await tester.pump(const Duration(minutes: 2));
+      expect(h.resends, 0);
+      expect(h.message.status, ChannelMessageStatus.sent);
+      expect(h.message.timestamp, original.timestamp);
+      expect(h.message.pathBytes, original.pathBytes);
+      expect(h.message.resendCount, 0);
+      expect(h.connector.channelHopShortfall(original.messageId), (hops: 1, required: 2));
+      h.echo([0x81, 0x30]);
+      expect(h.connector.channelHopShortfall(original.messageId), isNotNull);
+      h.echo([0x81, 0x30, 0x99, 0x99]);
+      expect(h.connector.channelHopShortfall(original.messageId), isNull);
+      expect(h.message.noRetransmissionWarningSeconds, isNull);
+      await tester.pump(const Duration(minutes: 1));
+      expect(h.resends, 0);
+    });
+  });
+
+  testWidgets('a repeated nearby relay keeps stop available, the third distinct relay removes it', (tester) async {
+    await _withHarness(tester, (h) async {
+      h.start();
+      h.echo([0x81, 0x40]);
+      h.echo([0x81, 0x40]);
+      expect(h.connector.canStopChannelSending(h.message.messageId), isTrue);
+      h.echo([0x81, 0x50]);
+      expect(h.connector.canStopChannelSending(h.message.messageId), isFalse);
+      h.connector.stopSendingChannelMessage(h.message.messageId);
+      await tester.pump();
+      expect(h.finished, isTrue);
+      expect(h.resends, 0);
+      expect(h.connector.channelHopShortfall(h.message.messageId), isNull);
+    });
+  });
+
+  testWidgets('stopping one message leaves the other channel retry active', (tester) async {
+    await _withHarness(tester, (h) async {
+      final first = h.message;
+      h.start();
+      final second = ChannelMessage(
+        messageId: 'other-synthetic-send', senderName: first.senderName,
+        text: 'other', timestamp: first.timestamp, sentByRadioAt: first.sentByRadioAt,
+        isOutgoing: true, status: ChannelMessageStatus.sent,
+      );
+      h.connector.setChannelMessagesForTest(_channel.index, [first, second]);
+      var otherResends = 0;
+      final other = h.connector.runChannelHopCheckForTest(second.messageId,
+        minHops: 2, maxResends: 1, resend: () async { otherResends++; });
+      h.connector.stopSendingChannelMessage(first.messageId);
+      await tester.pump();
+      expect(h.finished, isTrue);
+      expect(h.connector.canStopChannelSending(second.messageId), isTrue);
+      await tester.pump(Duration(seconds: h.delay));
+      expect(h.resends, 0);
+      expect(otherResends, 1);
+      await tester.pump(Duration(seconds: h.delay));
+      await other;
+      expect(h.connector.channelResendProgress(second.messageId), isNull);
+    });
+  });
+
+  testWidgets('stop after a real retry keeps its count and prevents the remaining retries', (tester) async {
+    await _withHarness(tester, (h) async {
+      h.start();
+      await tester.pump(Duration(seconds: h.delay));
+      expect(h.resends, 1);
+      expect(h.message.resendCount, 1);
+      h.connector.stopSendingChannelMessage(h.message.messageId);
+      await tester.pump();
+      expect(h.finished, isTrue);
+      await tester.pump(const Duration(minutes: 2));
+      expect(h.resends, 1);
+      expect(h.message.resendCount, 1);
+      expect(h.message.status, ChannelMessageStatus.sent);
+    });
+  });
+
   testWidgets('without a recorded shortfall any echo still clears the ordinary warning', (tester) async {
     await _withHarness(tester, (h) async {
       h.connector.scheduleChannelNoRetransmissionWarningForTest(h.message.messageId,
