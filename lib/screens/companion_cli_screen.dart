@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/companion_cli_protocol.dart';
+import '../helpers/companion_cli_commands.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -16,6 +17,7 @@ import '../services/companion_cli_session.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/confirm_clear_dialog.dart';
+import '../widgets/companion_cli_command_help_sheet.dart';
 import '../widgets/popup_menu_row.dart';
 
 class CompanionCliScreen extends StatefulWidget {
@@ -37,7 +39,26 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
   bool _clearing = false;
   bool? _shared;
   int _historyIndex = -1;
-  static const _quickCommands = ['ver', 'board', 'get name', 'get radio', 'get tx'];
+
+  void _applyCommand(String command) {
+    final example = companionCliCommandExample(command);
+    _historyIndex = -1;
+    _input.value = TextEditingValue(text: example,
+      selection: TextSelection.collapsed(offset: example.length));
+    _focus.requestFocus();
+  }
+
+  Future<void> _showCommandHelp() async {
+    _focus.unfocus();
+    final command = await showModalBottomSheet<String>(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => CompanionCliCommandHelpSheet(
+        sections: companionCliHelpSections(context.l10n),
+        onSelect: (command) => Navigator.pop(sheetContext, command)),
+    );
+    if (mounted && command != null) { _applyCommand(command); }
+  }
 
   @override
   void initState() {
@@ -169,6 +190,9 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
               tooltip: l10n.companionCli_sharedHistory, isSelected: shared,
               icon: const Icon(Icons.hub_outlined), selectedIcon: const Icon(Icons.hub),
               onPressed: () => setState(() => _shared = !shared)),
+            IconButton(key: const ValueKey('companion-cli-help'),
+              tooltip: l10n.repeater_commandHelp, icon: const Icon(Icons.help_outline),
+              onPressed: () => unawaited(_showCommandHelp())),
             PopupMenuButton<String>(onSelected: (value) {
               switch (value) {
                 case 'copy': unawaited(_copy(entries));
@@ -201,12 +225,13 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
             child: Scrollbar(controller: _quickScroll, thumbVisibility: PlatformInfo.isDesktop,
               child: SingleChildScrollView(controller: _quickScroll, scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.only(bottom: PlatformInfo.isDesktop ? 14 : 0),
-                child: Row(children: [for (final command in _quickCommands) Padding(
+                child: Row(children: [for (final command in companionCliQuickCommands) Padding(
                   padding: const EdgeInsets.only(right: 6), child: ActionChip(
+                    key: ValueKey('companion-cli-quick:$command'),
                     label: Text(command, style: MeshTheme.mono(fontSize: 13, fontWeight: FontWeight.w600, color: scheme.primary)),
                     backgroundColor: scheme.primary.withValues(alpha: 0.12),
                     side: BorderSide(color: scheme.primary.withValues(alpha: 0.5)),
-                    onPressed: canSend ? () { _input.text = command; unawaited(_send()); } : null,
+                    onPressed: () => _applyCommand(command),
                   ))])),
             )),
           Divider(height: 1, color: scheme.outlineVariant),

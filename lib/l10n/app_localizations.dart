@@ -14590,6 +14590,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.'**
   String get cliHistory_clearCurrentNodeConfirm;
+
+  /// No description provided for @companionCli_helpNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.'**
+  String get companionCli_helpNote;
+
+  /// No description provided for @companionCli_helpGetTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the configured UTC offset in hours.'**
+  String get companionCli_helpGetTimezone;
+
+  /// No description provided for @companionCli_helpSetTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the UTC offset from -12 to +14 hours, including fractional values.'**
+  String get companionCli_helpSetTimezone;
+
+  /// No description provided for @companionCli_helpSetPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the BLE PIN. Enter your own numeric PIN after set pin.'**
+  String get companionCli_helpSetPin;
+
+  /// No description provided for @companionCli_helpGetCad.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether channel activity detection (CAD) is on or off.'**
+  String get companionCli_helpGetCad;
+
+  /// No description provided for @companionCli_helpSetCad.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns channel activity detection (CAD) on or off.'**
+  String get companionCli_helpSetCad;
+
+  /// No description provided for @companionCli_helpGetRxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether boosted radio RX gain is enabled.'**
+  String get companionCli_helpGetRxGain;
+
+  /// No description provided for @companionCli_helpSetRxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns boosted RX gain on or off. Radio-driver support is required.'**
+  String get companionCli_helpSetRxGain;
+
+  /// No description provided for @companionCli_helpGetPathHashMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.'**
+  String get companionCli_helpGetPathHashMode;
+
+  /// No description provided for @companionCli_helpSetTx.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.'**
+  String get companionCli_helpSetTx;
+
+  /// No description provided for @companionCli_helpWifiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi'**
+  String get companionCli_helpWifiTitle;
+
+  /// No description provided for @companionCli_helpWifiNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.'**
+  String get companionCli_helpWifiNote;
+
+  /// No description provided for @companionCli_helpGetWifiSsid.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the configured Wi-Fi network name (SSID).'**
+  String get companionCli_helpGetWifiSsid;
+
+  /// No description provided for @companionCli_helpGetWifiPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the saved Wi-Fi password as plain text.'**
+  String get companionCli_helpGetWifiPassword;
+
+  /// No description provided for @companionCli_helpGetWifiEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether Wi-Fi is enabled in settings: 0 or 1.'**
+  String get companionCli_helpGetWifiEnabled;
+
+  /// No description provided for @companionCli_helpGetWifiStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows whether the node is currently connected to Wi-Fi.'**
+  String get companionCli_helpGetWifiStatus;
+
+  /// No description provided for @companionCli_helpGetWifiIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the node IP address on Wi-Fi, or reports no connection.'**
+  String get companionCli_helpGetWifiIp;
+
+  /// No description provided for @companionCli_helpSetWifiSsid.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the Wi-Fi network name. Reboot to apply.'**
+  String get companionCli_helpSetWifiSsid;
+
+  /// No description provided for @companionCli_helpSetWifiPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the Wi-Fi password. Reboot to apply.'**
+  String get companionCli_helpSetWifiPassword;
+
+  /// No description provided for @companionCli_helpSetWifiEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enables (1) or disables (0) Wi-Fi. Reboot to apply.'**
+  String get companionCli_helpSetWifiEnabled;
+
+  /// No description provided for @companionCli_helpClearWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears the saved Wi-Fi network name and password. Reboot to apply.'**
+  String get companionCli_helpClearWifi;
+
+  /// No description provided for @companionCli_helpHardwareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Board-specific commands'**
+  String get companionCli_helpHardwareTitle;
+
+  /// No description provided for @companionCli_helpHardwareNote.
+  ///
+  /// In en, this message translates to:
+  /// **'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.'**
+  String get companionCli_helpHardwareNote;
+
+  /// No description provided for @companionCli_helpGetFan.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.'**
+  String get companionCli_helpGetFan;
+
+  /// No description provided for @companionCli_helpSetFan.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the T-Beam 1W fan mode: on, off or automatic.'**
+  String get companionCli_helpSetFan;
+
+  /// No description provided for @companionCli_helpSetFanLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.'**
+  String get companionCli_helpSetFanLow;
+
+  /// No description provided for @companionCli_helpSetFanHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.'**
+  String get companionCli_helpSetFanHigh;
 }
 
 class _AppLocalizationsDelegate

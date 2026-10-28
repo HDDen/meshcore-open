@@ -8307,4 +8307,110 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
       '현재 노드에 대한 이 콘솔의 기록을 지울까요? 다른 노드의 기록은 유지됩니다. 실행 중인 명령은 취소되지 않습니다.';
+
+  @override
+  String get companionCli_helpNote =>
+      'Commands run on the connected companion node. Tap a command to insert it, replace <...> parameters, then press Send. Availability depends on the firmware and board.';
+
+  @override
+  String get companionCli_helpGetTimezone =>
+      'Shows the configured UTC offset in hours.';
+
+  @override
+  String get companionCli_helpSetTimezone =>
+      'Sets the UTC offset from -12 to +14 hours, including fractional values.';
+
+  @override
+  String get companionCli_helpSetPin =>
+      'Sets the BLE PIN. Enter your own numeric PIN after set pin.';
+
+  @override
+  String get companionCli_helpGetCad =>
+      'Shows whether channel activity detection (CAD) is on or off.';
+
+  @override
+  String get companionCli_helpSetCad =>
+      'Turns channel activity detection (CAD) on or off.';
+
+  @override
+  String get companionCli_helpGetRxGain =>
+      'Shows whether boosted radio RX gain is enabled.';
+
+  @override
+  String get companionCli_helpSetRxGain =>
+      'Turns boosted RX gain on or off. Radio-driver support is required.';
+
+  @override
+  String get companionCli_helpGetPathHashMode =>
+      'Shows the flood path hash width mode: 0 = 1 byte, 1 = 2 bytes, 2 = 3 bytes per hop.';
+
+  @override
+  String get companionCli_helpSetTx =>
+      'Sets LoRa transmit power in dBm and applies it immediately through the radio driver.';
+
+  @override
+  String get companionCli_helpWifiTitle => 'Wi-Fi';
+
+  @override
+  String get companionCli_helpWifiNote =>
+      'Only firmware built with the Wi-Fi interface supports these commands. Configuration changes require a reboot.';
+
+  @override
+  String get companionCli_helpGetWifiSsid =>
+      'Shows the configured Wi-Fi network name (SSID).';
+
+  @override
+  String get companionCli_helpGetWifiPassword =>
+      'Shows the saved Wi-Fi password as plain text.';
+
+  @override
+  String get companionCli_helpGetWifiEnabled =>
+      'Shows whether Wi-Fi is enabled in settings: 0 or 1.';
+
+  @override
+  String get companionCli_helpGetWifiStatus =>
+      'Shows whether the node is currently connected to Wi-Fi.';
+
+  @override
+  String get companionCli_helpGetWifiIp =>
+      'Shows the node IP address on Wi-Fi, or reports no connection.';
+
+  @override
+  String get companionCli_helpSetWifiSsid =>
+      'Sets the Wi-Fi network name. Reboot to apply.';
+
+  @override
+  String get companionCli_helpSetWifiPassword =>
+      'Sets the Wi-Fi password. Reboot to apply.';
+
+  @override
+  String get companionCli_helpSetWifiEnabled =>
+      'Enables (1) or disables (0) Wi-Fi. Reboot to apply.';
+
+  @override
+  String get companionCli_helpClearWifi =>
+      'Clears the saved Wi-Fi network name and password. Reboot to apply.';
+
+  @override
+  String get companionCli_helpHardwareTitle => 'Board-specific commands';
+
+  @override
+  String get companionCli_helpHardwareNote =>
+      'FEM gain commands depend on the board and front-end module. Fan commands are available on T-Beam 1W.';
+
+  @override
+  String get companionCli_helpGetFan =>
+      'Shows the fan mode, temperature, fan state and cooldown on T-Beam 1W.';
+
+  @override
+  String get companionCli_helpSetFan =>
+      'Sets the T-Beam 1W fan mode: on, off or automatic.';
+
+  @override
+  String get companionCli_helpSetFanLow =>
+      'Sets the lower fan temperature threshold in degrees Celsius: 0-100, below fan.hi.';
+
+  @override
+  String get companionCli_helpSetFanHigh =>
+      'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.';
 }

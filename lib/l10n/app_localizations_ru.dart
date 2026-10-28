@@ -8711,4 +8711,110 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
       'Очистить историю этой консоли для текущей ноды? История других нод сохранится. Выполняемая команда не будет отменена.';
+
+  @override
+  String get companionCli_helpNote =>
+      'Команды выполняются на подключённой companion-ноде. Нажмите команду для вставки, замените параметры <...> и нажмите отправку. Доступность зависит от прошивки и платы.';
+
+  @override
+  String get companionCli_helpGetTimezone =>
+      'Показывает настроенное смещение относительно UTC в часах.';
+
+  @override
+  String get companionCli_helpSetTimezone =>
+      'Задаёт смещение относительно UTC от −12 до +14 часов, в том числе дробное.';
+
+  @override
+  String get companionCli_helpSetPin =>
+      'Задаёт PIN для BLE. После set pin введите свой числовой PIN.';
+
+  @override
+  String get companionCli_helpGetCad =>
+      'Показывает, включено ли обнаружение активности канала (CAD).';
+
+  @override
+  String get companionCli_helpSetCad =>
+      'Включает или выключает обнаружение активности канала (CAD).';
+
+  @override
+  String get companionCli_helpGetRxGain =>
+      'Показывает состояние повышенного усиления приёма радиочипа.';
+
+  @override
+  String get companionCli_helpSetRxGain =>
+      'Включает или выключает повышенное усиление приёма. Требуется поддержка драйвера радиочипа.';
+
+  @override
+  String get companionCli_helpGetPathHashMode =>
+      'Показывает режим длины хеша пути flood-пакетов: 0 — 1 байт, 1 — 2 байта, 2 — 3 байта на хоп.';
+
+  @override
+  String get companionCli_helpSetTx =>
+      'Задаёт мощность передачи LoRa в дБм и сразу применяет её через драйвер радиочипа.';
+
+  @override
+  String get companionCli_helpWifiTitle => 'Wi-Fi';
+
+  @override
+  String get companionCli_helpWifiNote =>
+      'Эти команды доступны только в сборках с Wi-Fi-интерфейсом. Изменения настроек требуют перезагрузки.';
+
+  @override
+  String get companionCli_helpGetWifiSsid =>
+      'Показывает настроенное имя сети Wi-Fi (SSID).';
+
+  @override
+  String get companionCli_helpGetWifiPassword =>
+      'Показывает сохранённый пароль Wi-Fi открытым текстом.';
+
+  @override
+  String get companionCli_helpGetWifiEnabled =>
+      'Показывает, разрешён ли Wi-Fi в настройках: 0 или 1.';
+
+  @override
+  String get companionCli_helpGetWifiStatus =>
+      'Показывает, подключена ли нода сейчас к Wi-Fi.';
+
+  @override
+  String get companionCli_helpGetWifiIp =>
+      'Показывает IP-адрес ноды в Wi-Fi либо отсутствие подключения.';
+
+  @override
+  String get companionCli_helpSetWifiSsid =>
+      'Задаёт имя сети Wi-Fi. Для применения нужна перезагрузка.';
+
+  @override
+  String get companionCli_helpSetWifiPassword =>
+      'Задаёт пароль Wi-Fi. Для применения нужна перезагрузка.';
+
+  @override
+  String get companionCli_helpSetWifiEnabled =>
+      'Разрешает (1) или отключает (0) Wi-Fi. Для применения нужна перезагрузка.';
+
+  @override
+  String get companionCli_helpClearWifi =>
+      'Удаляет сохранённые имя сети и пароль Wi-Fi. Для применения нужна перезагрузка.';
+
+  @override
+  String get companionCli_helpHardwareTitle => 'Команды конкретных плат';
+
+  @override
+  String get companionCli_helpHardwareNote =>
+      'Команды усиления FEM зависят от платы и входного модуля. Команды вентилятора доступны на T-Beam 1W.';
+
+  @override
+  String get companionCli_helpGetFan =>
+      'Показывает режим вентилятора, температуру, состояние и время охлаждения на T-Beam 1W.';
+
+  @override
+  String get companionCli_helpSetFan =>
+      'Задаёт режим вентилятора T-Beam 1W: включён, выключен или автоматический.';
+
+  @override
+  String get companionCli_helpSetFanLow =>
+      'Задаёт нижний температурный порог вентилятора в °C: 0–100, ниже fan.hi.';
+
+  @override
+  String get companionCli_helpSetFanHigh =>
+      'Задаёт верхний температурный порог вентилятора в °C: выше fan.lo, не более 120.';
 }

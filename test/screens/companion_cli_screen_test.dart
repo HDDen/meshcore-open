@@ -26,6 +26,7 @@ import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/contact_filter_types.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/companion_cli_tile.dart';
+import 'package:meshcore_open/widgets/companion_cli_command_help_sheet.dart';
 
 class _History implements CompanionCliHistory {
   final rows = <String, CompanionCliEntry>{};
@@ -144,6 +145,51 @@ void main() {
     find.descendant(of: card, matching: find.byType(Material)).first);
 
   for (final locale in ['ru', 'en']) {
+    testWidgets('Companion help searches categories and inserts a template without sending ($locale)', (tester) async {
+      await show(tester, CompanionCliScreen(connector: connector), locale: locale, textScale: 1.5);
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(tester.element(find.byType(CompanionCliScreen)));
+      final help = find.byTooltip(l10n.repeater_commandHelp);
+      expect(help, findsOneWidget);
+      await tester.tap(help);
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliCommandHelpSheet), findsOneWidget);
+      final search = find.byKey(const ValueKey('companion-cli-help-search'));
+      await tester.enterText(search, 'wifi');
+      await tester.pump();
+      expect(find.text(l10n.companionCli_helpWifiTitle), findsOneWidget);
+      expect(find.text(l10n.companionCli_helpWifiNote), findsOneWidget);
+      expect(find.text('get wifi.ssid'), findsWidgets);
+      await tester.enterText(search, 'not-a-cli-command');
+      await tester.pump();
+      expect(find.text(l10n.repeater_cliNoMatchingCommands), findsOneWidget);
+      await tester.enterText(search, 'set pin');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('companion-cli-help:set pin <PIN>')));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliCommandHelpSheet), findsNothing);
+      final input = tester.widget<TextField>(find.byKey(const ValueKey('companion-cli-input')));
+      expect(input.controller!.text, 'set pin ');
+      expect(input.controller!.selection.baseOffset, 'set pin '.length);
+      expect(input.focusNode!.hasFocus, isTrue);
+      expect(connector.writes, isEmpty);
+      // The catalog also remains available while sending is unavailable.
+      connector.supported = false;
+      connector.notifyListeners();
+      await tester.pump();
+      await tester.tap(help);
+      await tester.pumpAndSettle();
+      await tester.enterText(search, 'shutdown');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('companion-cli-help:shutdown')));
+      await tester.pumpAndSettle();
+      expect(input.controller!.text, 'shutdown');
+      expect(tester.widget<IconButton>(find.byKey(const ValueKey('companion-cli-send'))).onPressed, isNull);
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('terminal header and quick commands fill the screen without duplicate clear ($locale)', (tester) async {
       await show(tester, CompanionCliScreen(connector: connector), locale: locale, textScale: 1.5);
       await tester.pumpAndSettle();
@@ -304,6 +350,42 @@ void main() {
     view.setContactsSortOption(ContactSortOption.name);
     await tester.pump();
     expect(find.byType(CompanionCliTile), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('extended quick commands only edit the draft until explicit Send', (tester) async {
+    await show(tester, CompanionCliScreen(connector: connector));
+    await tester.pumpAndSettle();
+    final requested = [
+      'ver', 'board', 'get name', 'get radio', 'get tx',
+      'set pin <PIN>', 'reboot', 'poweroff', 'shutdown',
+      'get cad', 'get radio.rxgain', 'get rxdelay', 'get agc.reset.interval',
+      'get multi.acks', 'get txdelay', 'get direct.txdelay',
+      'get wifi.ssid', 'get wifi.pwd', 'get wifi.enabled', 'get wifi.status',
+      'get wifi.ip', 'set wifi.clear',
+    ];
+    for (final command in requested) {
+      final chip = find.byKey(ValueKey('companion-cli-quick:$command'));
+      expect(chip, findsOneWidget);
+      // Invoke the callback for offscreen chips without depending on scroll distance.
+      tester.widget<ActionChip>(chip).onPressed!();
+      await tester.pump();
+      final input = tester.widget<TextField>(find.byKey(const ValueKey('companion-cli-input')));
+      expect(input.controller!.text, command == 'set pin <PIN>' ? 'set pin ' : command);
+      expect(connector.writes, isEmpty);
+    }
+    // Check a real tap too, then the explicit send action, using the synthetic node.
+    final first = find.byKey(const ValueKey('companion-cli-quick:ver'));
+    await tester.ensureVisible(first);
+    await tester.tap(first);
+    await tester.pump();
+    expect(connector.writes, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('companion-cli-send')));
+    await tester.pumpAndSettle();
+    expect(connector.writes, hasLength(1));
+    expect(connector.writes.single.first, 66);
+    expect(connector.history.rows.values.single.command, 'ver');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
