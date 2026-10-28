@@ -4,6 +4,7 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/companion_cli_protocol.dart';
 import '../l10n/l10n.dart';
 import '../screens/companion_cli_screen.dart';
+import '../theme/mesh_theme.dart';
 import 'mesh_ui.dart';
 
 /// Служебный чат не является Contact и не участвует в радио-синхронизации.
@@ -31,10 +32,14 @@ class CompanionCliTile extends StatelessWidget {
         Expanded(child: Column(mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(context.l10n.companionCli_title, maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-          if (!compact)
+            style: compact
+                ? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)
+                : theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+          if (!compact) ...[
+            const SizedBox(height: 2),
             Text(context.l10n.companionCli_description, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              style: MeshTheme.mono(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant)),
+          ],
         ])),
         const SizedBox(width: 4),
         if (dragIndex case final index?)

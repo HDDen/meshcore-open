@@ -2655,7 +2655,9 @@ Drift-generated файлов. Shared view
 `FrameBackgroundWork`; timeout не повторяет команду и запрашивает transport restart.
 ID не переиспользуется в пределах сессии, исчерпание требует перезапуска.
 Карточка `CompanionCliTile` использует `MeshCard`: compact включён только в контактах
-(без subtitle, avatar 32/icon18, vertical padding8); в каналах обычный вид.
+(без subtitle, avatar 32/icon18, vertical padding8); в каналах avatar42/icon24,
+заголовок bodyMedium/w500 как у имени канала, subtitle MeshTheme.mono(11.5)
+как у превью сообщения, между строками 2px. Типографика compact-карточки прежняя.
 В контактах боковые поля 16, у ведущей CLI-строки margin top0/bottom4:
 8px снизу toolbar дают тот же интервал, что и 8px над фильтрами.
 В каналах margin vertical4 и padding/drag handle совпадают с каналами.
