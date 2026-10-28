@@ -4332,5 +4332,6 @@
   "companionCli_helpGetFan": "T-Beam 1W의 팬 모드, 온도, 팬 상태, 냉각 시간을 표시합니다.",
   "companionCli_helpSetFan": "T-Beam 1W의 팬 모드를 설정합니다: 켜짐, 꺼짐 또는 자동.",
   "companionCli_helpSetFanLow": "팬의 하한 온도 임계값을 °C 단위로 설정합니다: 0–100, fan.hi보다 낮게.",
-  "companionCli_helpSetFanHigh": "팬의 상한 온도 임계값을 °C 단위로 설정합니다: fan.lo보다 높게, 최대 120."
+  "companionCli_helpSetFanHigh": "팬의 상한 온도 임계값을 °C 단위로 설정합니다: fan.lo보다 높게, 최대 120.",
+  "settings_modSettingsGeneral": "일반"
 }

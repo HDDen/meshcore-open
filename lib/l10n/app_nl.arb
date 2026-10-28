@@ -3985,5 +3985,6 @@
   "companionCli_helpGetFan": "Toont de ventilatormodus, temperatuur, ventilatorstatus en afkoeltijd op de T-Beam 1W.",
   "companionCli_helpSetFan": "Stelt de ventilatormodus van de T-Beam 1W in: aan, uit of automatisch.",
   "companionCli_helpSetFanLow": "Stelt de onderste temperatuurdrempel van de ventilator in °C in: 0–100, onder fan.hi.",
-  "companionCli_helpSetFanHigh": "Stelt de bovenste temperatuurdrempel van de ventilator in °C in: boven fan.lo, maximaal 120."
+  "companionCli_helpSetFanHigh": "Stelt de bovenste temperatuurdrempel van de ventilator in °C in: boven fan.lo, maximaal 120.",
+  "settings_modSettingsGeneral": "Algemeen"
 }

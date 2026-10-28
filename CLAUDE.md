@@ -1985,8 +1985,10 @@ message and a channel message get no section
 
 ### Air activity dot
 
-Энергосбережение выбирается в настройках приложения через `PowerSavingSettingsTile`
-и `PowerSavingScreen`. `models/power_saving_settings.dart` хранит профиль и отдельные
+Энергосбережение выбирается через «Настройки → Настройки модификации → Общее»:
+`ModSettingsScreen` размещает `PowerSavingSettingsTile` перед секцией «Визуал»;
+навигационный пункт из `AppSettingsScreen` перенесён, без дублирования.
+`PowerSavingSettingsTile` открывает прежний `PowerSavingScreen`. `models/power_saving_settings.dart` хранит профиль и отдельные
 пользовательские параметры в JSON `power_saving`. «Выключено» — фиксированный
 исходный профиль для сравнения, выбранный по умолчанию. Каждый новый параметр
 обязан сохранять в нём поведение до работ по энергосбережению; свои значения

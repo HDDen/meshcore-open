@@ -3431,6 +3431,7 @@
   "chat_showHops": "Show hops",
   "settings_modSettings": "Modification Settings",
   "settings_modSettingsSubtitle": "This section contains options added by MCOa that are not part of the original meshcore_open",
+  "settings_modSettingsGeneral": "General",
   "settings_modSettingsVisual": "Visual",
   "settings_modSettingsMessaging": "Messaging",
   "settings_modSettingsMCMP": "MCMP",

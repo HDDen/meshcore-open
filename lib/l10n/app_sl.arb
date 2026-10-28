@@ -4168,5 +4168,6 @@
   "companionCli_helpGetFan": "Prikaže način ventilatorja, temperaturo, stanje in čas hlajenja na T-Beam 1W.",
   "companionCli_helpSetFan": "Nastavi način ventilatorja T-Beam 1W: vklopljen, izklopljen ali samodejen.",
   "companionCli_helpSetFanLow": "Nastavi spodnji temperaturni prag ventilatorja v °C: 0–100, pod fan.hi.",
-  "companionCli_helpSetFanHigh": "Nastavi zgornji temperaturni prag ventilatorja v °C: nad fan.lo, največ 120."
+  "companionCli_helpSetFanHigh": "Nastavi zgornji temperaturni prag ventilatorja v °C: nad fan.lo, največ 120.",
+  "settings_modSettingsGeneral": "Splošno"
 }

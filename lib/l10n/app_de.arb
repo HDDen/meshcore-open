@@ -4330,5 +4330,6 @@
   "companionCli_helpGetFan": "Zeigt Lüftermodus, Temperatur, Lüfterzustand und Abkühlzeit auf dem T-Beam 1W an.",
   "companionCli_helpSetFan": "Legt den Lüftermodus des T-Beam 1W fest: ein, aus oder automatisch.",
   "companionCli_helpSetFanLow": "Legt die untere Temperaturschwelle des Lüfters in °C fest: 0–100, unter fan.hi.",
-  "companionCli_helpSetFanHigh": "Legt die obere Temperaturschwelle des Lüfters in °C fest: über fan.lo, höchstens 120."
+  "companionCli_helpSetFanHigh": "Legt die obere Temperaturschwelle des Lüfters in °C fest: über fan.lo, höchstens 120.",
+  "settings_modSettingsGeneral": "Allgemein"
 }

@@ -3984,5 +3984,6 @@
   "companionCli_helpGetFan": "Mostra o modo da ventoinha, a temperatura, o estado da ventoinha e o tempo de resfriamento no T-Beam 1W.",
   "companionCli_helpSetFan": "Define o modo da ventoinha do T-Beam 1W: ligada, desligada ou automática.",
   "companionCli_helpSetFanLow": "Define o limite inferior de temperatura da ventoinha em °C: 0–100, abaixo de fan.hi.",
-  "companionCli_helpSetFanHigh": "Define o limite superior de temperatura da ventoinha em °C: acima de fan.lo, no máximo 120."
+  "companionCli_helpSetFanHigh": "Define o limite superior de temperatura da ventoinha em °C: acima de fan.lo, no máximo 120.",
+  "settings_modSettingsGeneral": "Geral"
 }

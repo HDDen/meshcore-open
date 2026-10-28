@@ -4235,5 +4235,6 @@
   "companionCli_helpGetFan": "Pokazuje tryb wentylatora, temperaturę, stan i czas chłodzenia w T-Beam 1W.",
   "companionCli_helpSetFan": "Ustawia tryb wentylatora T-Beam 1W: włączony, wyłączony lub automatyczny.",
   "companionCli_helpSetFanLow": "Ustawia dolny próg temperatury wentylatora w °C: 0–100, poniżej fan.hi.",
-  "companionCli_helpSetFanHigh": "Ustawia górny próg temperatury wentylatora w °C: powyżej fan.lo, najwyżej 120."
+  "companionCli_helpSetFanHigh": "Ustawia górny próg temperatury wentylatora w °C: powyżej fan.lo, najwyżej 120.",
+  "settings_modSettingsGeneral": "Ogólne"
 }

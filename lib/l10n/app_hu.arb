@@ -4199,5 +4199,6 @@
   "companionCli_helpGetFan": "Megmutatja a ventilátor módját, a hőmérsékletet, a ventilátor állapotát és a hűtési időt a T-Beam 1W-n.",
   "companionCli_helpSetFan": "Beállítja a T-Beam 1W ventilátorának módját: be, ki vagy automatikus.",
   "companionCli_helpSetFanLow": "Beállítja a ventilátor alsó hőmérsékleti küszöbét °C-ban: 0–100, a fan.hi alatt.",
-  "companionCli_helpSetFanHigh": "Beállítja a ventilátor felső hőmérsékleti küszöbét °C-ban: a fan.lo felett, legfeljebb 120."
+  "companionCli_helpSetFanHigh": "Beállítja a ventilátor felső hőmérsékleti küszöbét °C-ban: a fan.lo felett, legfeljebb 120.",
+  "settings_modSettingsGeneral": "Általános"
 }

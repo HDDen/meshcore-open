@@ -6164,6 +6164,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'У розділі зібрані опції, відсутні в оригінальному meshcore_open';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Візуал';
 
   @override

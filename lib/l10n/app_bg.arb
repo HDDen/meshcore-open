@@ -4167,5 +4167,6 @@
   "companionCli_helpGetFan": "Показва режима на вентилатора, температурата, състоянието и времето за охлаждане на T-Beam 1W.",
   "companionCli_helpSetFan": "Задава режима на вентилатора на T-Beam 1W: включен, изключен или автоматичен.",
   "companionCli_helpSetFanLow": "Задава долния температурен праг на вентилатора в °C: 0–100, под fan.hi.",
-  "companionCli_helpSetFanHigh": "Задава горния температурен праг на вентилатора в °C: над fan.lo, не повече от 120."
+  "companionCli_helpSetFanHigh": "Задава горния температурен праг на вентилатора в °C: над fan.lo, не повече от 120.",
+  "settings_modSettingsGeneral": "Общи"
 }

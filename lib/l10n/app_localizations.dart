@@ -10442,6 +10442,12 @@ abstract class AppLocalizations {
   /// **'This section contains options added by MCOa that are not part of the original meshcore_open'**
   String get settings_modSettingsSubtitle;
 
+  /// No description provided for @settings_modSettingsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settings_modSettingsGeneral;
+
   /// No description provided for @settings_modSettingsVisual.
   ///
   /// In en, this message translates to:

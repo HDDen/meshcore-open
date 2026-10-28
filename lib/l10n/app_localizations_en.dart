@@ -6055,6 +6055,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This section contains options added by MCOa that are not part of the original meshcore_open';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Visual';
 
   @override

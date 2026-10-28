@@ -26,7 +26,6 @@ import '../utils/battery_utils.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/channel_resend_repeater_settings.dart';
-import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/network_map_settings_section.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -103,11 +102,6 @@ class AppSettingsScreen extends StatelessWidget {
                             context,
                             settingsService,
                           ),
-                        ),
-
-                        const MeshCard(
-                          padding: EdgeInsets.zero,
-                          child: PowerSavingSettingsTile(),
                         ),
 
                         // BATTERY

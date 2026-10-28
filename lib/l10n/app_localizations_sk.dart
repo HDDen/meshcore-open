@@ -6129,6 +6129,9 @@ class AppLocalizationsSk extends AppLocalizations {
       'V tejto sekcii sú zhromaždené možnosti, ktoré v pôvodnom meshcore_open chýbajú';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Vzhľad';
 
   @override

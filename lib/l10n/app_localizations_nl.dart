@@ -6129,6 +6129,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'In deze sectie staan opties die in het originele meshcore_open ontbreken';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Weergave';
 
   @override

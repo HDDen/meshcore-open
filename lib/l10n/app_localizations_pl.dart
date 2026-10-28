@@ -6178,6 +6178,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ta sekcja zawiera opcje, których nie ma w oryginalnym meshcore_open';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Wygląd';
 
   @override

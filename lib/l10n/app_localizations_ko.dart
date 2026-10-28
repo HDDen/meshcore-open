@@ -5863,6 +5863,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '원본 meshcore_open에 없는 옵션을 모아 놓은 섹션입니다';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => '표시';
 
   @override

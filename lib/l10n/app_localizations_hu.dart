@@ -6149,6 +6149,9 @@ class AppLocalizationsHu extends AppLocalizations {
       'Ebben a szakaszban azok a beállítások szerepelnek, amelyek az eredeti meshcore_openből hiányoznak';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Megjelenés';
 
   @override

@@ -4273,5 +4273,6 @@
   "companionCli_helpGetFan": "Muestra el modo del ventilador, la temperatura, el estado del ventilador y el tiempo de enfriamiento en T-Beam 1W.",
   "companionCli_helpSetFan": "Establece el modo del ventilador del T-Beam 1W: encendido, apagado o automático.",
   "companionCli_helpSetFanLow": "Establece el umbral inferior de temperatura del ventilador en °C: 0–100, por debajo de fan.hi.",
-  "companionCli_helpSetFanHigh": "Establece el umbral superior de temperatura del ventilador en °C: por encima de fan.lo, como máximo 120."
+  "companionCli_helpSetFanHigh": "Establece el umbral superior de temperatura del ventilador en °C: por encima de fan.lo, como máximo 120.",
+  "settings_modSettingsGeneral": "General"
 }

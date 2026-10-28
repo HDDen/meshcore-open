@@ -4200,5 +4200,6 @@
   "companionCli_helpGetFan": "显示 T-Beam 1W 的风扇模式、温度、风扇状态和冷却时间。",
   "companionCli_helpSetFan": "设置 T-Beam 1W 的风扇模式：开、关或自动。",
   "companionCli_helpSetFanLow": "以 °C 为单位设置风扇的温度下限阈值：0–100，低于 fan.hi。",
-  "companionCli_helpSetFanHigh": "以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。"
+  "companionCli_helpSetFanHigh": "以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。",
+  "settings_modSettingsGeneral": "常规"
 }

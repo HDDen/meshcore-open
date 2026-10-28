@@ -2374,6 +2374,7 @@
   "chat_showHops": "Отображать хопы",
   "settings_modSettings": "Настройки модификации",
   "settings_modSettingsSubtitle": "В разделе собраны опции, отсутствующие в оригинальном meshcore_open",
+  "settings_modSettingsGeneral": "Общее",
   "settings_modSettingsVisual": "Визуал",
   "settings_modSettingsMessaging": "Обмен сообщениями",
   "settings_modSettingsMCMP": "MCMP",

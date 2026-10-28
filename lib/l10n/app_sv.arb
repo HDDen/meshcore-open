@@ -3978,5 +3978,6 @@
   "companionCli_helpGetFan": "Visar fläktläge, temperatur, fläktstatus och nedkylningstid på T-Beam 1W.",
   "companionCli_helpSetFan": "Ställer in fläktläget för T-Beam 1W: på, av eller automatiskt.",
   "companionCli_helpSetFanLow": "Ställer in fläktens nedre temperaturtröskel i °C: 0–100, under fan.hi.",
-  "companionCli_helpSetFanHigh": "Ställer in fläktens övre temperaturtröskel i °C: över fan.lo, högst 120."
+  "companionCli_helpSetFanHigh": "Ställer in fläktens övre temperaturtröskel i °C: över fan.lo, högst 120.",
+  "settings_modSettingsGeneral": "Allmänt"
 }

@@ -4168,5 +4168,6 @@
   "companionCli_helpGetFan": "Zobrazuje režim ventilátora, teplotu, stav a čas chladenia na T-Beam 1W.",
   "companionCli_helpSetFan": "Nastavuje režim ventilátora T-Beam 1W: zapnutý, vypnutý alebo automatický.",
   "companionCli_helpSetFanLow": "Nastavuje dolný teplotný prah ventilátora v °C: 0–100, pod fan.hi.",
-  "companionCli_helpSetFanHigh": "Nastavuje horný teplotný prah ventilátora v °C: nad fan.lo, najviac 120."
+  "companionCli_helpSetFanHigh": "Nastavuje horný teplotný prah ventilátora v °C: nad fan.lo, najviac 120.",
+  "settings_modSettingsGeneral": "Všeobecné"
 }

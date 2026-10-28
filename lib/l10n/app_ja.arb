@@ -4300,5 +4300,6 @@
   "companionCli_helpGetFan": "T-Beam 1W のファンモード、温度、ファンの状態、クールダウン時間を表示します。",
   "companionCli_helpSetFan": "T-Beam 1W のファンモードを設定します：オン、オフ、自動。",
   "companionCli_helpSetFanLow": "ファンの下限温度しきい値を ℃ で設定します：0～100、fan.hi 未満。",
-  "companionCli_helpSetFanHigh": "ファンの上限温度しきい値を ℃ で設定します：fan.lo より上、最大 120。"
+  "companionCli_helpSetFanHigh": "ファンの上限温度しきい値を ℃ で設定します：fan.lo より上、最大 120。",
+  "settings_modSettingsGeneral": "一般"
 }

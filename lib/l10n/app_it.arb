@@ -4165,5 +4165,6 @@
   "companionCli_helpGetFan": "Mostra la modalità della ventola, la temperatura, lo stato della ventola e il tempo di raffreddamento su T-Beam 1W.",
   "companionCli_helpSetFan": "Imposta la modalità della ventola del T-Beam 1W: accesa, spenta o automatica.",
   "companionCli_helpSetFanLow": "Imposta la soglia di temperatura inferiore della ventola in °C: 0–100, sotto fan.hi.",
-  "companionCli_helpSetFanHigh": "Imposta la soglia di temperatura superiore della ventola in °C: sopra fan.lo, al massimo 120."
+  "companionCli_helpSetFanHigh": "Imposta la soglia di temperatura superiore della ventola in °C: sopra fan.lo, al massimo 120.",
+  "settings_modSettingsGeneral": "Generale"
 }

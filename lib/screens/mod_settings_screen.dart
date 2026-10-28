@@ -9,6 +9,7 @@ import 'package:mco_service/mco_service.dart';
 import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'message_history_database_screen.dart';
 
@@ -31,6 +32,11 @@ class ModSettingsScreen extends StatelessWidget {
             return ListView(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
               children: [
+                SectionHeader(context.l10n.settings_modSettingsGeneral),
+                const MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: PowerSavingSettingsTile(),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsVisual),
                 MeshCard(
                   padding: EdgeInsets.zero,

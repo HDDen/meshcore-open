@@ -1,1 +1,65 @@
-{}
+{
+  "bg": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "de": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "es": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "fr": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "hu": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "it": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "ja": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "ko": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "nl": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "pl": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "pt": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "sk": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "sl": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "sv": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "uk": [
+    "settings_modSettingsGeneral"
+  ],
+
+  "zh": [
+    "settings_modSettingsGeneral"
+  ]
+}

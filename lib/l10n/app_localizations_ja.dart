@@ -5857,6 +5857,9 @@ class AppLocalizationsJa extends AppLocalizations {
       'オリジナルの meshcore_open にはない項目をまとめたセクションです';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => '表示';
 
   @override

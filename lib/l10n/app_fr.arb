@@ -4301,5 +4301,6 @@
   "companionCli_helpGetFan": "Indique le mode du ventilateur, la température, l'état du ventilateur et le délai de refroidissement sur le T-Beam 1W.",
   "companionCli_helpSetFan": "Définit le mode du ventilateur du T-Beam 1W : marche, arrêt ou automatique.",
   "companionCli_helpSetFanLow": "Définit le seuil de température bas du ventilateur en °C : 0–100, inférieur à fan.hi.",
-  "companionCli_helpSetFanHigh": "Définit le seuil de température haut du ventilateur en °C : supérieur à fan.lo, 120 au maximum."
+  "companionCli_helpSetFanHigh": "Définit le seuil de température haut du ventilateur en °C : supérieur à fan.lo, 120 au maximum.",
+  "settings_modSettingsGeneral": "Général"
 }

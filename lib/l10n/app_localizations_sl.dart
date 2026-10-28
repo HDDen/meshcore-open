@@ -6118,6 +6118,9 @@ class AppLocalizationsSl extends AppLocalizations {
       'V tem razdelku so zbrane možnosti, ki jih v izvirnem meshcore_open ni';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => 'Videz';
 
   @override

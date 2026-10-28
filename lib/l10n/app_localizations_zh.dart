@@ -5741,6 +5741,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsSubtitle => '本节汇集了原版 meshcore_open 中没有的选项';
 
   @override
+  String get settings_modSettingsGeneral => 'General';
+
+  @override
   String get settings_modSettingsVisual => '外观';
 
   @override
