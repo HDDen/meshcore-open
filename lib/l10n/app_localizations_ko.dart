@@ -936,7 +936,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String appSettings_channelMinHopsRepeaterCount(Object count) {
-    return 'Required nearby repeaters: $count';
+    return '필요한 근처 리피터 수: $count';
   }
 
   @override
@@ -4139,7 +4139,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get telemetry_powerLabel => '전력';
 
   @override
-  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+  String get telemetry_calculatedPowerLabel => '계산된 전력 (V × I)';
 
   @override
   String get telemetry_distanceLabel => '거리';
@@ -7105,169 +7105,161 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_addToNodeFull => '노드 메모리가 가득 찼습니다';
 
   @override
-  String get channels_shareCopyLink => 'Copy link';
+  String get channels_shareCopyLink => '링크 복사';
 
   @override
-  String get dataFolder_inUseTitle => 'The data folder is already in use';
+  String get dataFolder_inUseTitle => '데이터 폴더가 이미 사용 중입니다';
 
   @override
   String dataFolder_inUseBody(String path) {
-    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+    return '실행 중인 다른 앱 사본이 이 데이터 폴더를 사용하고 있습니다:\n$path\n\n그 사본을 닫은 다음 앱을 다시 시작하세요.';
   }
 
   @override
-  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+  String get dataFolder_unavailableTitle => '데이터 폴더를 사용할 수 없습니다';
 
   @override
   String dataFolder_unavailableBody(String path) {
-    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+    return '앱은 이 폴더에 데이터를 저장하지만 폴더를 만들거나 쓸 수 없습니다:\n$path\n\n쓰기 권한이 있는 폴더로 앱을 옮기세요.';
   }
 
   @override
   String get dataFolder_missingPath =>
-      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+      '--data-dir 매개변수에 폴더가 지정되지 않았습니다. --data-dir=<경로> 형식으로 씁니다.';
 
   @override
   String get dataFolder_otherFolderHint =>
-      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+      '앱 사본을 시작할 때 전용 데이터 폴더를 지정할 수 있습니다: --data-dir=<경로>. 상대 경로는 앱 폴더를 기준으로 합니다.';
 
   @override
   String dataFolder_details(String error) {
-    return 'Details: $error';
+    return '자세한 정보: $error';
   }
 
   @override
-  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+  String get dataTransfer_offerTitle => '이전 설치의 데이터를 찾았습니다';
 
   @override
   String dataTransfer_offerBody(String target) {
-    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+    return '이전에는 앱이 시스템 폴더에 데이터를 저장했습니다. 이 데이터 폴더로 복사할 수 있습니다:\n$target';
   }
 
   @override
-  String get dataTransfer_offerSources => 'Copied from:';
+  String get dataTransfer_offerSources => '복사할 위치:';
 
   @override
   String dataTransfer_offerSize(String size) {
-    return 'Size: $size';
+    return '크기: $size';
   }
 
   @override
-  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+  String get dataTransfer_offerSizeCounting => '크기: 계산 중…';
 
   @override
-  String get dataTransfer_offerCopiedBefore =>
-      'These data have already been copied:';
+  String get dataTransfer_offerCopiedBefore => '이 데이터는 이미 복사되었습니다:';
 
   @override
   String get dataTransfer_offerNote =>
-      'The original folders stay as they are. Close other running copies of the app before copying.';
+      '원래 폴더는 그대로 유지됩니다. 복사하기 전에 실행 중인 다른 앱 사본을 닫으세요.';
 
   @override
-  String get dataTransfer_copy => 'Copy';
+  String get dataTransfer_copy => '복사';
 
   @override
-  String get dataTransfer_startEmpty => 'Start with empty data';
+  String get dataTransfer_startEmpty => '빈 데이터로 시작';
 
   @override
-  String get dataTransfer_progressTitle => 'Copying data';
+  String get dataTransfer_progressTitle => '데이터 복사 중';
 
   @override
   String dataTransfer_progress(String copied, String total) {
-    return 'Copied $copied of $total';
+    return '$total 중 $copied 복사됨';
   }
 
   @override
-  String get dataTransfer_progressNote =>
-      'Closing the window stops the copy; the next start offers it again.';
+  String get dataTransfer_progressNote => '창을 닫으면 복사가 중단되며, 다음 시작 시 다시 제안됩니다.';
 
   @override
-  String get dataTransfer_failedTitle => 'The data could not be copied';
+  String get dataTransfer_failedTitle => '데이터를 복사하지 못했습니다';
 
   @override
   String get dataTransfer_failedBody =>
-      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+      '원래 폴더는 변경되지 않았습니다. 다음 시작 시 복사가 다시 제안됩니다. 그 전에 다른 앱 사본을 닫으세요.';
 
   @override
-  String get dataCleanup_title => 'Delete the old data?';
+  String get dataCleanup_title => '이전 데이터를 삭제할까요?';
 
   @override
   String get dataCleanup_body =>
-      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+      '이전 시작 시 데이터가 이 데이터 폴더로 복사되었습니다. 원본은 아직 시스템 폴더에 있으며, 여기에 모두 있다면 삭제해도 됩니다:';
 
   @override
   String get dataCleanup_note =>
-      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+      '다른 새 앱 사본에는 이 데이터가 더 이상 제안되지 않습니다. 공유 임시 폴더와 \'문서\'에서는 여기로 복사된 파일만 삭제됩니다.';
 
   @override
-  String get dataCleanup_keep => 'Keep';
+  String get dataCleanup_keep => '유지';
 
   @override
-  String get dataCleanup_progress => 'Deleting the old data…';
+  String get dataCleanup_progress => '이전 데이터 삭제 중…';
 
   @override
   String dataCleanup_partial(int count) {
-    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+    return '일부 이전 폴더를 비우지 못했습니다($count): 실행 중인 다른 앱 사본이 파일을 사용하고 있을 수 있습니다. 다음 시작 시 다시 묻습니다.';
   }
 
   @override
-  String get settings_modSettingsExactQuoteLatest =>
-      'Use for the author\'s latest message too';
+  String get settings_modSettingsExactQuoteLatest => '작성자의 최신 메시지에도 사용';
 
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
-      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+      '끄면 작성자의 최신 메시지에 대한 답장에는 멘션만 포함됩니다. 켜면 나와 다른 사람의 최신 메시지가 동기화되지 않아 서로 다른 메시지인 경우도 올바르게 처리됩니다.';
 
   @override
-  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+  String get channelPath_deliveryConfirmedPath => '이 경로로 전달 확인됨';
 
   @override
   String get channelPath_deliveryPathUnknown =>
-      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+      '이 메시지에 대한 전달 확인을 아직 받지 못했거나 경로를 확인하지 못했습니다.';
 
   @override
-  String get channelPath_deliveredDirectly =>
-      'Delivered directly, without repeaters';
+  String get channelPath_deliveredDirectly => '리피터 없이 직접 전달됨';
 
   @override
   String get channelPath_incompletePathsNote =>
-      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+      '개인 메시지 패킷에는 전체 경로가 아니라 남은 홉만 들어 있습니다. 각 리피터가 차례로 남은 경로에서 자신을 제거하기 때문입니다.';
 
   @override
-  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+  String get discoveredContacts_previouslyHeard => '이전에 수신된 노드';
 
   @override
   String map_wardriveBackgroundNeeds(String requirement) {
-    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+    return '백그라운드 모드에는 $requirement이(가) 필요합니다. 다음 권한으로 넘어가려면 이 항목을 다시 누르세요.';
   }
 
   @override
   String map_wardriveBackgroundOff(String requirement) {
-    return 'Background mode is off, still needed: $requirement.';
+    return '백그라운드 모드가 꺼져 있습니다. 아직 필요한 항목: $requirement.';
   }
 
   @override
-  String get map_wardriveRequirementNotifications =>
-      'the notification permission';
+  String get map_wardriveRequirementNotifications => '알림 권한';
 
   @override
-  String get map_wardriveRequirementLocationServices =>
-      'location services turned on';
+  String get map_wardriveRequirementLocationServices => '휴대폰 위치 서비스 켜기';
 
   @override
-  String get map_wardriveRequirementLocationAlways =>
-      'location access “All the time”';
+  String get map_wardriveRequirementLocationAlways => '위치 접근 \'항상 허용\'';
 
   @override
-  String get map_wardriveRequirementBattery =>
-      'battery optimization turned off for the app';
+  String get map_wardriveRequirementBattery => '앱의 배터리 최적화 끄기';
 
   @override
   String get map_wardriveRequirementBackgroundActivity =>
-      'background activity allowed (not restricted in the battery settings)';
+      '백그라운드 활동 허용(배터리 설정에서 제한 없음)';
 
   @override
-  String get settings_modSettingsSenderNameScale => 'Sender name size';
+  String get settings_modSettingsSenderNameScale => '보낸 사람 이름 크기';
 
   @override
   String get reviewMode_dialogTitle => '검토 모드로 들어갈까요?';
@@ -7784,31 +7776,30 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channels_dataScopeQuestion =>
-      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+      '채널 데이터를 이 노드에서만 삭제할까요, 아니면 앱의 모든 노드 통합 기록에서 삭제할까요?';
 
   @override
-  String get channels_dataScopeThisNode => 'This node';
+  String get channels_dataScopeThisNode => '이 노드';
 
   @override
-  String get channels_dataScopeAllNodes => 'All nodes';
+  String get channels_dataScopeAllNodes => '모든 노드';
 
   @override
-  String get chat_historyLinkBanner =>
-      'A message history exists for a contact with this name under another key.';
+  String get chat_historyLinkBanner => '같은 이름이지만 다른 키를 가진 연락처의 메시지 기록이 있습니다.';
 
   @override
-  String get chat_historyLinkAttach => 'Attach';
+  String get chat_historyLinkAttach => '가져오기';
 
   @override
-  String get chat_historyLinkTitle => 'Attach the history?';
+  String get chat_historyLinkTitle => '기록을 가져올까요?';
 
   @override
   String chat_historyLinkBody(String name, String key) {
-    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+    return '이름이 \"$name\"이고 키가 다른($key) 연락처의 기록을 찾았습니다. 동명이인이 아니라 같은 사람이라고 확신할 때만 이 대화로 가져오세요. 그러면 두 키가 앱에서 하나의 연락처가 됩니다.';
   }
 
   @override
-  String get chat_historyLinked => 'The history has been attached.';
+  String get chat_historyLinked => '기록을 가져왔습니다.';
 
   @override
   String get scanner_getNodeTitle => '새 노드가 필요하신가요?';
@@ -7938,15 +7929,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get networkMap_unnamed => '이름 없는 리피터';
 
   @override
-  String get channelPath_sendAttemptsLabel => 'Send attempts';
+  String get channelPath_sendAttemptsLabel => '전송 시도 횟수';
 
   @override
-  String get settings_modSettingsHideChannelMute =>
-      'Hide the channel mute switch';
+  String get settings_modSettingsHideChannelMute => '채널 음소거 스위치 숨기기';
 
   @override
   String appSettings_channelMinHopsDelay(int seconds) {
-    return 'Wait before resending: $seconds s';
+    return '재전송 전 대기: $seconds초';
   }
 
   @override
@@ -7954,102 +7944,93 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attempts',
-      one: '$count attempt',
+      other: '$count번 시도',
     );
-    return 'Not spread over the mesh in $_temp0.';
+    return '$_temp0 동안 메시에 퍼지지 않았습니다.';
   }
 
   @override
-  String get channels_senderNameLabel => 'Sender';
+  String get channels_senderNameLabel => '보낸 사람';
 
   @override
-  String get channels_senderNameDefault => 'default';
+  String get channels_senderNameDefault => '기본값';
 
   @override
-  String get channels_senderNameTitle => 'Sender name';
+  String get channels_senderNameTitle => '보낸 사람 이름';
 
   @override
-  String get channels_senderNameBody =>
-      'You can change the name for this channel.';
+  String get channels_senderNameBody => '이 채널에서 사용할 이름을 바꿀 수 있습니다.';
 
   @override
   String channels_senderNameBytes(int count, int max) {
-    return '$count / $max bytes';
+    return '$count / $max바이트';
   }
 
   @override
   String get channels_senderNameLockedBySign =>
-      'A channel with signed MCMP sends under the node\'s name.';
+      'MCMP 서명을 사용하는 채널은 노드 이름으로 보냅니다.';
 
   @override
-  String get channels_senderNameNeedsFirmware =>
-      'Needs firmware with version code 13 or newer.';
+  String get channels_senderNameNeedsFirmware => '버전 코드 13 이상의 펌웨어가 필요합니다.';
 
   @override
   String get channels_senderNamePrivateRegion =>
-      'The region\'s key is on the repeater, so the name cannot be changed.';
+      '리전 키가 리피터에 저장되어 있어 이름을 바꿀 수 없습니다.';
 
   @override
-  String get channels_senderNameResetBySign =>
-      'The sender name set for this channel will be reset.';
+  String get channels_senderNameResetBySign => '이 채널에 설정한 보낸 사람 이름이 초기화됩니다.';
 
   @override
-  String get powerSaving_title => 'Power saving';
+  String get powerSaving_title => '절전';
 
   @override
-  String get powerSaving_skipIdleDirectProgressParsing =>
-      'Parse progress only while sending';
+  String get powerSaving_skipIdleDirectProgressParsing => '전송 중에만 진행 상황 분석';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+      '추적 중인 전송이 없을 때는 개인 메시지 전달 진행 상황을 위해 무선 프레임을 분석하지 않습니다. 메시지 수신과 전달 확인은 유지됩니다.';
 
   @override
-  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+  String get powerSaving_cacheChannelKeyHashes => '채널 매개변수 캐시';
 
   @override
   String get powerSaving_cacheChannelKeyHashesDescription =>
-      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+      '수신 패킷을 처리할 때 변경되지 않은 채널 키의 계산된 해시를 재사용합니다. 메시지 확인과 복호화는 유지됩니다.';
 
   @override
-  String get powerSaving_pauseHiddenStatusAnimations =>
-      'Pause hidden status animations';
+  String get powerSaving_pauseHiddenStatusAnimations => '숨겨진 상태 애니메이션 일시 중지';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+      '보이는 영역 밖, 다른 화면 아래, 앱이 비활성 상태일 때 전송 점과 깜박이는 표시기를 멈춥니다. 화면에 보이는 표시기는 계속 움직입니다.';
 
   @override
-  String get powerSaving_disableContinuousStatusAnimations =>
-      'Static status indicators';
+  String get powerSaving_disableContinuousStatusAnimations => '정적 상태 표시기';
 
   @override
   String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+      '전송 점 애니메이션과 상태 표시기의 부드러운 깜박임을 화면에서도 정적 표시기로 바꿉니다. 상태, 반복 횟수, 전송 처리는 유지됩니다.';
 
   @override
-  String get powerSaving_reduceBlePluginLogs =>
-      'Reduce Bluetooth diagnostic logs';
+  String get powerSaving_reduceBlePluginLogs => 'Bluetooth 진단 로그 줄이기';
 
   @override
   String get powerSaving_reduceBlePluginLogsDescription =>
-      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+      'Android, iOS, macOS에서 Bluetooth 진단 출력을 줄입니다. 경고, 오류, 앱의 프레임 로그는 유지됩니다. Windows, Linux, 브라우저에서는 효과가 없습니다.';
 
   @override
-  String get powerSaving_deferBleLogDescriptions =>
-      'Defer frame log descriptions';
+  String get powerSaving_deferBleLogDescriptions => '프레임 로그 설명을 나중에 생성';
 
   @override
   String get powerSaving_deferBleLogDescriptionsDescription =>
-      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+      '표시하거나 복사할 때 필요해지면 텍스트 설명을 만듭니다. 프레임 데이터와 기록 시각은 즉시 저장되며, 로그 내용과 개인 데이터 보호는 바뀌지 않습니다.';
 
   @override
-  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+  String get powerSaving_uiNotificationInterval => '화면 업데이트 간격';
 
   @override
   String get powerSaving_uiNotificationDescription =>
-      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+      '이벤트가 연속될 때 일반 업데이트를 묶어서 처리합니다. 간격이 길수록 표시가 덜 즉각적입니다. 패킷과 확인 응답 처리는 지연되지 않으며, 연결 상태 변경은 원래의 50 ms 창을 유지합니다.';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
@@ -8057,291 +8038,273 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get powerSaving_profile => 'Profile';
+  String get powerSaving_profile => '프로필';
 
   @override
-  String get powerSaving_disabled => 'Off';
+  String get powerSaving_disabled => '끔';
 
   @override
-  String get powerSaving_balanced => 'Balanced';
+  String get powerSaving_balanced => '균형';
 
   @override
-  String get powerSaving_economical => 'Economical';
+  String get powerSaving_economical => '절약';
 
   @override
-  String get powerSaving_maximum => 'Maximum saving';
+  String get powerSaving_maximum => '최대 절약';
 
   @override
-  String get powerSaving_custom => 'Custom settings';
+  String get powerSaving_custom => '사용자 설정';
 
   @override
-  String get powerSaving_hiddenRadioStatsInterval =>
-      'Radio statistics interval on a hidden screen';
+  String get powerSaving_hiddenRadioStatsInterval => '숨겨진 화면의 무선 통계 간격';
 
   @override
   String powerSaving_seconds(int seconds) {
-    return '$seconds s';
+    return '$seconds초';
   }
 
   @override
   String get powerSaving_radioStatsDescription =>
-      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+      '무선 통계 화면이 다른 화면에 가려졌거나 앱이 비활성 상태일 때 적용됩니다. 보이는 화면은 계속 1초마다 업데이트됩니다. 다른 기능이 더 잦은 업데이트를 요청할 수 있습니다.';
 
   @override
   String get powerSaving_customDescription =>
-      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+      '최솟값은 원래 동작을 유지합니다. 사용자 설정은 기본 프로필과 별도로 저장됩니다.';
 
   @override
   String get powerSaving_presetDescription =>
-      'Preset values are fixed. Select Custom settings to adjust them individually.';
+      '기본 프로필의 값은 고정되어 있습니다. 개별적으로 바꾸려면 \'사용자 설정\'을 선택하세요.';
 
   @override
-  String get powerSaving_pauseHiddenRadioIndicator =>
-      'Pause polling for a hidden radio indicator';
+  String get powerSaving_pauseHiddenRadioIndicator => '숨겨진 무선 표시기 폴링 일시 중지';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+      '표시기가 숨겨졌거나 다른 화면에 가려졌거나 앱이 비활성 상태이면 표시기를 위한 폴링을 멈춥니다. 메시지 전송과 다른 폴링 사용처는 필요한 업데이트를 유지합니다.';
 
   @override
-  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+  String get powerSaving_batteryInterval => '노드 배터리 조회 간격';
 
   @override
   String powerSaving_batteryDescription(int minutes) {
-    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+    return '앱이 열려 있을 때와 백그라운드에서 적용됩니다. 연결 감시의 무응답 임계값은 $minutes분이며, 간격이 길수록 응답 없는 연결을 늦게 감지합니다. 수동 새로 고침은 계속 사용할 수 있습니다.';
   }
 
   @override
-  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+  String get powerSaving_gpsInterval => '노드 GPS 업데이트 간격';
 
   @override
   String get powerSaving_gpsDescription =>
-      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+      '앱이 열려 있을 때와 백그라운드에서, 노드의 GPS가 켜져 있을 때만 적용됩니다. 간격이 길수록 표시되는 노드 위치가 덜 최신입니다. 휴대폰 GPS와 wardrive는 따로 설정합니다.';
 
   @override
-  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+  String get powerSaving_pauseIdleImageCleanup => '유휴 상태의 이미지 정리 일시 중지';
 
   @override
   String get powerSaving_pauseIdleImageCleanupDescription =>
-      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+      '미완성 이미지나 중복을 식별하려고 보관 중인 최근 완성 이미지가 있을 때만 정리를 실행합니다. 누락된 패킷의 대기 시간은 바뀌지 않습니다.';
 
   @override
-  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+  String get powerSaving_pauseHiddenGifs => '숨겨진 GIF 일시 중지';
 
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
-      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+      '보이는 영역 밖, 다른 화면 아래, 앱이 비활성 상태일 때 GIF 프레임을 멈춥니다. 돌아오면 재생이 다시 시작됩니다(GIF를 직접 일시 중지한 경우 제외).';
 
   @override
-  String get powerSaving_backgroundReconnectInterval =>
-      'Background reconnection pause';
+  String get powerSaving_backgroundReconnectInterval => '백그라운드 재연결 간격';
 
   @override
   String get powerSaving_backgroundReconnectDescription =>
-      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+      'BLE와 TCP만 해당하며, 처음 6번의 대기(1/2/4/8/16/30초) 이후에 적용됩니다. 앱이 비활성 상태일 때 적용되고, 앱으로 돌아오면 일반 일정으로 돌아갑니다. 대기가 길수록 연결 복구가 늦어질 수 있습니다. 연결에 걸리는 시간은 대기에 더해집니다.';
 
   @override
-  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+  String get powerSaving_cpuSleepAlways => '가능하면 항상 CPU 절전 허용';
 
   @override
-  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+  String get powerSaving_cpuSleepBle => 'BLE 연결 시';
 
   @override
   String get powerSaving_cpuSleepDescription =>
-      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+      '작업 사이에 기기가 절전하도록 허용합니다. 개별 선택은 백그라운드에서 적용되며, 활성화된 모든 시나리오가 절전을 허용해야 합니다. \'항상\' 옵션은 시나리오와 관계없이 적용됩니다.';
 
   @override
-  String get powerSaving_cpuSleepProxy =>
-      'While the companion proxy is running';
+  String get powerSaving_cpuSleepProxy => 'companion 프록시 실행 중';
 
   @override
-  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+  String get powerSaving_cpuSleepTcp => 'TCP 연결 시';
 
   @override
-  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+  String get powerSaving_cpuSleepTitle => 'CPU 절전 (Android)';
 
   @override
-  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+  String get powerSaving_cpuSleepWardrive => 'wardrive 실행 중';
 
   @override
-  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+  String get powerSaving_cpuSleepUnconditional => '항상, 예외 없이';
 
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
-      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+      '작업 중에도 앱의 CPU 웨이크 록을 완전히 해제합니다. 기기 절전으로 작업이 지연되거나 중단될 수 있습니다. Android와 다른 구성 요소의 웨이크 록은 바뀌지 않습니다.';
 
   @override
-  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+  String get powerSaving_blePriorityTitle => '노드와의 BLE 연결 모드';
 
   @override
   String get powerSaving_blePriorityDescription =>
-      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+      '노드에 다시 연결한 후 적용됩니다. \'원래 설정\'은 변경을 요청하지 않으며, High는 속도를, Low power는 절전을 우선합니다. 실제 매개변수는 Android와 노드가 결정하며, 절전 모드에서는 통신이 느려질 수 있습니다.';
 
   @override
-  String get powerSaving_bleOriginal => 'Original';
+  String get powerSaving_bleOriginal => '원래 설정';
 
   @override
-  String get powerSaving_bleBalanced => 'Balanced';
+  String get powerSaving_bleBalanced => '균형 (Balanced)';
 
   @override
-  String get powerSaving_bleHigh => 'High speed (High)';
+  String get powerSaving_bleHigh => '고속 (High)';
 
   @override
-  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+  String get powerSaving_bleLowPower => '절전 (Low power)';
 
   @override
-  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+  String get powerSaving_releaseTcpWifiLock => 'TCP용 Wi-Fi 유지 해제';
 
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
-      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+      'Tailscale을 포함해 노드와 TCP로 연결된 동안에도 Wi-Fi의 일반 절전을 허용합니다. 화면과 백그라운드에서 즉시 적용되며, 백그라운드 서비스와 CPU 절전 설정은 바뀌지 않습니다. 일부 기기에서는 지연이나 연결 끊김이 생길 수 있습니다.';
 
   @override
-  String get powerSaving_reduceDeliveryObservationWrites =>
-      'Reduce delivery statistics rewrites';
+  String get powerSaving_reduceDeliveryObservationWrites => '전달 통계 재작성 줄이기';
 
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+      '저장된 전달 통계 중 바뀐 부분만 업데이트합니다. 내용과 순서는 그대로이며, 저장이 추가로 지연되지 않습니다.';
 
   @override
-  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+  String get powerSaving_iosImmortalizerTitle => 'iOS: 백그라운드 실행';
 
   @override
   String get powerSaving_iosImmortalizerDescription =>
-      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+      '내장된 TCP 백그라운드 유지를 위한 실험적 옵션입니다. \'사용자 설정\'에서 사용할 수 있으며, 원래 값은 현재 동작을 유지합니다. 프레임 및 GPU 보호는 계속 켜져 있습니다.';
 
   @override
-  String get powerSaving_iosImmortalizerFrames =>
-      'Pause UI frame scheduling in the background';
+  String get powerSaving_iosImmortalizerFrames => '백그라운드에서 UI 프레임 예약 일시 중지';
 
   @override
-  String get powerSaving_iosImmortalizerHooks =>
-      'Reduce native hook processing';
+  String get powerSaving_iosImmortalizerHooks => '네이티브 훅 처리 간소화';
 
   @override
-  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+  String get powerSaving_iosImmortalizerMode => '백그라운드 유지 모드';
 
   @override
-  String get powerSaving_iosImmortalizerOriginal =>
-      'Original (hooks and silent audio)';
+  String get powerSaving_iosImmortalizerOriginal => '표준 (훅 및 무음 오디오)';
 
   @override
-  String get powerSaving_iosImmortalizerWithoutAudio =>
-      'Without audio (experimental)';
+  String get powerSaving_iosImmortalizerWithoutAudio => '오디오 없음 (실험적)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+      '무음 오디오가 없으면 iOS가 앱과 메시지 전달을 일시 중지할 수 있습니다. 오디오 설정은 저장되지만 이 모드에서는 적용되지 않습니다.';
 
   @override
-  String get powerSaving_iosImmortalizerSampleRate =>
-      'Silent audio file sample rate';
+  String get powerSaving_iosImmortalizerSampleRate => '무음 파일 샘플링 속도';
 
   @override
-  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+  String get powerSaving_iosImmortalizerEightKhz => '원래 설정: 8 kHz';
 
   @override
-  String get powerSaving_iosImmortalizerOutputRate =>
-      'Match the actual audio output';
+  String get powerSaving_iosImmortalizerOutputRate => '실제 오디오 출력에 맞춤';
 
   @override
-  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+  String get powerSaving_iosImmortalizerBuffer => '선호 오디오 I/O 버퍼';
 
   @override
   String get powerSaving_iosImmortalizerBufferDescription =>
-      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+      'iOS에 보내는 요청이며 보장된 하드웨어 길이가 아닙니다. \'시스템\'은 원래 설정을 바꾸지 않습니다. 적용된 값은 진단에서 확인하세요.';
 
   @override
-  String get powerSaving_iosImmortalizerSystem =>
-      'System (original preference)';
+  String get powerSaving_iosImmortalizerSystem => '시스템 (원래 설정)';
 
   @override
-  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+  String get powerSaving_iosImmortalizerLoop => '무음 루프 길이';
 
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
-      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+      '원래 설정은 1초입니다. PCM 루프가 길수록 메모리를 더 사용하며, 배터리 절약 효과는 아직 확인되지 않았습니다.';
 
   @override
   String get companionCli_title => 'CompanionCLI';
 
   @override
   String companionCli_nodeTitle(String nodeName) {
-    return 'Node CLI: $nodeName';
+    return '노드 CLI: $nodeName';
   }
 
   @override
-  String get companionCli_description =>
-      'Service console for the connected node';
+  String get companionCli_description => '연결된 노드의 서비스 콘솔';
 
   @override
-  String get companionCli_noNode => 'No node selected';
+  String get companionCli_noNode => '선택된 노드 없음';
 
   @override
-  String get companionCli_localOnly =>
-      'Commands run only on the currently connected node';
+  String get companionCli_localOnly => '명령은 현재 연결된 노드에서만 실행됩니다';
 
   @override
-  String get companionCli_sharedHistory => 'Shared history with source nodes';
+  String get companionCli_sharedHistory => '노드가 표시된 공통 기록';
 
   @override
-  String get companionCli_empty =>
-      'Console history is empty. Try the ver command.';
+  String get companionCli_empty => '콘솔 기록이 비어 있습니다. ver 명령을 실행해 보세요.';
 
   @override
-  String get companionCli_command => 'Command';
+  String get companionCli_command => '명령';
 
   @override
-  String get companionCli_send => 'Run command';
+  String get companionCli_send => '명령 실행';
 
   @override
-  String get companionCli_emptyReply => 'An empty reply was received';
+  String get companionCli_emptyReply => '빈 응답을 받았습니다';
 
   @override
   String get companionCli_unavailable =>
-      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+      '전송하려면 프로토콜 버전 14 이상(MeshCore 1.18+)의 companion 노드가 연결되어 있어야 합니다. 기록은 계속 볼 수 있습니다.';
 
   @override
-  String get companionCli_busy => 'Wait for the current command to finish.';
+  String get companionCli_busy => '현재 명령의 응답을 기다려 주세요.';
 
   @override
   String get companionCli_invalidCommand =>
-      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+      '줄바꿈과 널 바이트가 없는 명령 하나를 UTF-8 기준 2바이트 이상으로 입력하세요.';
 
   @override
   String get companionCli_tooLong =>
-      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+      '명령이 제한을 초과했습니다: UTF-8 기준 최대 172바이트, set radio 매개변수는 최대 131바이트입니다.';
 
   @override
   String get companionCli_tagExhausted =>
-      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+      'CLI 요청 식별자를 모두 사용했습니다. 새로운 안전한 세션을 시작하려면 앱을 다시 시작하세요.';
 
   @override
   String get companionCli_timeout =>
-      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+      '제때 응답이 오지 않았습니다. 명령이 실행되었을 수 있으며, 자동으로 다시 시도하지 않습니다. 연결을 갱신하는 중입니다.';
 
   @override
-  String get companionCli_protocolError =>
-      'The node or proxy rejected the request.';
+  String get companionCli_protocolError => '노드 또는 프록시가 요청을 거부했습니다.';
 
   @override
   String get companionCli_disconnected =>
-      'The connection or node changed. The command will not resume automatically.';
+      '연결 또는 노드가 바뀌었습니다. 명령 실행은 자동으로 재개되지 않습니다.';
 
   @override
-  String get companionCli_historyError =>
-      'Console history could not be read or saved.';
+  String get companionCli_historyError => '콘솔 기록을 읽거나 저장하지 못했습니다.';
 
   @override
-  String get companionCli_sendFailed =>
-      'Sending could not be confirmed. The command will not be retried automatically.';
+  String get companionCli_sendFailed => '명령 전송을 확인하지 못했습니다. 자동으로 다시 시도하지 않습니다.';
 
   @override
   String get cliHistory_temporary =>
-      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+      '이 브라우저에서는 CLI 기록이 페이지를 새로 고칠 때까지만 유지됩니다. 설정에는 저장되지 않습니다.';
 
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
-      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
+      '현재 노드에 대한 이 콘솔의 기록을 지울까요? 다른 노드의 기록은 유지됩니다. 실행 중인 명령은 취소되지 않습니다.';
 }

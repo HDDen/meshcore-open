@@ -977,7 +977,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String appSettings_channelMinHopsRepeaterCount(Object count) {
-    return 'Required nearby repeaters: $count';
+    return 'Erforderliche Repeater in der Nähe: $count';
   }
 
   @override
@@ -4356,7 +4356,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get telemetry_powerLabel => 'Leistung';
 
   @override
-  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+  String get telemetry_calculatedPowerLabel => 'Berechnete Leistung (U × I)';
 
   @override
   String get telemetry_distanceLabel => 'Entfernung';
@@ -7470,31 +7470,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contacts_addToNodeFull => 'Der Knotenspeicher ist voll';
 
   @override
-  String get channels_shareCopyLink => 'Copy link';
+  String get channels_shareCopyLink => 'Link kopieren';
 
   @override
-  String get dataFolder_inUseTitle => 'The data folder is already in use';
+  String get dataFolder_inUseTitle => 'Der Datenordner wird bereits verwendet';
 
   @override
   String dataFolder_inUseBody(String path) {
-    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+    return 'Eine andere laufende Kopie der App verwendet diesen Datenordner:\n$path\n\nSchließen Sie diese Kopie und starten Sie die App erneut.';
   }
 
   @override
-  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+  String get dataFolder_unavailableTitle =>
+      'Der Datenordner kann nicht verwendet werden';
 
   @override
   String dataFolder_unavailableBody(String path) {
-    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+    return 'Die App speichert ihre Daten in diesem Ordner, kann ihn aber nicht anlegen oder nicht hineinschreiben:\n$path\n\nVerschieben Sie die App in einen Ordner mit Schreibrechten.';
   }
 
   @override
   String get dataFolder_missingPath =>
-      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+      'Der Parameter --data-dir nennt keinen Ordner. Er wird so geschrieben: --data-dir=<Pfad>.';
 
   @override
   String get dataFolder_otherFolderHint =>
-      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+      'Einer Kopie der App kann beim Start ein eigener Datenordner zugewiesen werden: --data-dir=<Pfad>. Ein relativer Pfad gilt ab dem Ordner der App.';
 
   @override
   String dataFolder_details(String error) {
@@ -7502,137 +7503,140 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+  String get dataTransfer_offerTitle =>
+      'Daten einer früheren Installation gefunden';
 
   @override
   String dataTransfer_offerBody(String target) {
-    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+    return 'Früher speicherte die App ihre Daten in den Systemordnern. Sie können in diesen Datenordner kopiert werden:\n$target';
   }
 
   @override
-  String get dataTransfer_offerSources => 'Copied from:';
+  String get dataTransfer_offerSources => 'Kopieren aus:';
 
   @override
   String dataTransfer_offerSize(String size) {
-    return 'Size: $size';
+    return 'Größe: $size';
   }
 
   @override
-  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+  String get dataTransfer_offerSizeCounting => 'Größe: wird berechnet…';
 
   @override
   String get dataTransfer_offerCopiedBefore =>
-      'These data have already been copied:';
+      'Diese Daten wurden bereits kopiert:';
 
   @override
   String get dataTransfer_offerNote =>
-      'The original folders stay as they are. Close other running copies of the app before copying.';
+      'Die ursprünglichen Ordner bleiben unverändert. Schließen Sie vor dem Kopieren andere laufende Kopien der App.';
 
   @override
-  String get dataTransfer_copy => 'Copy';
+  String get dataTransfer_copy => 'Kopieren';
 
   @override
-  String get dataTransfer_startEmpty => 'Start with empty data';
+  String get dataTransfer_startEmpty => 'Mit leeren Daten starten';
 
   @override
-  String get dataTransfer_progressTitle => 'Copying data';
+  String get dataTransfer_progressTitle => 'Daten werden kopiert';
 
   @override
   String dataTransfer_progress(String copied, String total) {
-    return 'Copied $copied of $total';
+    return '$copied von $total kopiert';
   }
 
   @override
   String get dataTransfer_progressNote =>
-      'Closing the window stops the copy; the next start offers it again.';
+      'Wird das Fenster geschlossen, bricht das Kopieren ab; beim nächsten Start wird es erneut angeboten.';
 
   @override
-  String get dataTransfer_failedTitle => 'The data could not be copied';
+  String get dataTransfer_failedTitle =>
+      'Die Daten konnten nicht kopiert werden';
 
   @override
   String get dataTransfer_failedBody =>
-      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+      'Die ursprünglichen Ordner wurden nicht verändert. Beim nächsten Start wird das Kopieren erneut angeboten; schließen Sie vorher andere Kopien der App.';
 
   @override
-  String get dataCleanup_title => 'Delete the old data?';
+  String get dataCleanup_title => 'Alte Daten löschen?';
 
   @override
   String get dataCleanup_body =>
-      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+      'Bei einem früheren Start wurden die Daten in diesen Datenordner kopiert. Die Originale liegen noch in den Systemordnern und können gelöscht werden, wenn hier alles vorhanden ist:';
 
   @override
   String get dataCleanup_note =>
-      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+      'Anderen neuen Kopien der App werden diese Daten nicht mehr angeboten. Aus den gemeinsamen Ordnern für temporäre Dateien und Dokumente werden nur die hierher kopierten Dateien gelöscht.';
 
   @override
-  String get dataCleanup_keep => 'Keep';
+  String get dataCleanup_keep => 'Behalten';
 
   @override
-  String get dataCleanup_progress => 'Deleting the old data…';
+  String get dataCleanup_progress => 'Alte Daten werden gelöscht…';
 
   @override
   String dataCleanup_partial(int count) {
-    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+    return 'Einige alte Ordner konnten nicht geleert werden ($count): Ihre Dateien werden möglicherweise von einer anderen laufenden Kopie der App gehalten. Beim nächsten Start wird erneut gefragt.';
   }
 
   @override
   String get settings_modSettingsExactQuoteLatest =>
-      'Use for the author\'s latest message too';
+      'Auch für die letzte Nachricht des Autors verwenden';
 
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
-      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+      'Aus: Die Antwort auf die letzte Nachricht des Autors enthält nur eine Erwähnung. Ein: Korrekt behandelt wird auch der Fall, dass die letzte Nachricht bei Ihnen und bei den anderen nicht übereinstimmt und es verschiedene Nachrichten sind.';
 
   @override
-  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+  String get channelPath_deliveryConfirmedPath =>
+      'Zustellung bestätigt über Pfad';
 
   @override
   String get channelPath_deliveryPathUnknown =>
-      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+      'Für diese Nachricht ist noch keine Zustellbestätigung eingegangen, oder die Route konnte nicht ermittelt werden.';
 
   @override
   String get channelPath_deliveredDirectly =>
-      'Delivered directly, without repeaters';
+      'Direkt zugestellt, ohne Repeater';
 
   @override
   String get channelPath_incompletePathsNote =>
-      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+      'Pakete von Direktnachrichten enthalten nur die verbleibenden Hops, nicht die vollständige Route: Jeder Repeater entfernt sich der Reihe nach selbst aus dem verbleibenden Pfad.';
 
   @override
-  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+  String get discoveredContacts_previouslyHeard => 'früher gehörte Knoten';
 
   @override
   String map_wardriveBackgroundNeeds(String requirement) {
-    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+    return 'Für den Hintergrundmodus wird benötigt: $requirement. Tippen Sie erneut auf die Option, um zur nächsten Berechtigung zu gelangen.';
   }
 
   @override
   String map_wardriveBackgroundOff(String requirement) {
-    return 'Background mode is off, still needed: $requirement.';
+    return 'Der Hintergrundmodus ist aus, es fehlt noch: $requirement.';
   }
 
   @override
   String get map_wardriveRequirementNotifications =>
-      'the notification permission';
+      'die Berechtigung für Benachrichtigungen';
 
   @override
   String get map_wardriveRequirementLocationServices =>
-      'location services turned on';
+      'eingeschaltete Standortdienste';
 
   @override
   String get map_wardriveRequirementLocationAlways =>
-      'location access “All the time”';
+      'Standortzugriff „Immer zulassen“';
 
   @override
   String get map_wardriveRequirementBattery =>
-      'battery optimization turned off for the app';
+      'ausgeschaltete Akkuoptimierung für die App';
 
   @override
   String get map_wardriveRequirementBackgroundActivity =>
-      'background activity allowed (not restricted in the battery settings)';
+      'erlaubte Hintergrundaktivität (nicht eingeschränkt in den Akkueinstellungen)';
 
   @override
-  String get settings_modSettingsSenderNameScale => 'Sender name size';
+  String get settings_modSettingsSenderNameScale => 'Größe der Absendernamen';
 
   @override
   String get reviewMode_dialogTitle => 'Prüfmodus aktivieren?';
@@ -8165,31 +8169,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get channels_dataScopeQuestion =>
-      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+      'Die Daten des Kanals nur für diesen Knoten löschen oder im zusammengeführten Verlauf aller Knoten der App?';
 
   @override
-  String get channels_dataScopeThisNode => 'This node';
+  String get channels_dataScopeThisNode => 'Dieser Knoten';
 
   @override
-  String get channels_dataScopeAllNodes => 'All nodes';
+  String get channels_dataScopeAllNodes => 'Alle Knoten';
 
   @override
   String get chat_historyLinkBanner =>
-      'A message history exists for a contact with this name under another key.';
+      'Für einen Kontakt mit diesem Namen, aber einem anderen Schlüssel gibt es einen Nachrichtenverlauf.';
 
   @override
-  String get chat_historyLinkAttach => 'Attach';
+  String get chat_historyLinkAttach => 'Übernehmen';
 
   @override
-  String get chat_historyLinkTitle => 'Attach the history?';
+  String get chat_historyLinkTitle => 'Verlauf übernehmen?';
 
   @override
   String chat_historyLinkBody(String name, String key) {
-    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+    return 'Für einen Kontakt namens „$name“ mit einem anderen Schlüssel ($key) wurde ein Verlauf gefunden. Übernehmen Sie ihn in diesen Chat nur, wenn Sie sicher sind, dass es dieselbe Person ist und kein Namensvetter. Die beiden Schlüssel werden dann in der App zu einem Kontakt.';
   }
 
   @override
-  String get chat_historyLinked => 'The history has been attached.';
+  String get chat_historyLinked => 'Der Verlauf wurde übernommen.';
 
   @override
   String get scanner_getNodeTitle => 'Brauchst du einen neuen Node?';
@@ -8325,15 +8329,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get networkMap_unnamed => 'Unbenannter Repeater';
 
   @override
-  String get channelPath_sendAttemptsLabel => 'Send attempts';
+  String get channelPath_sendAttemptsLabel => 'Sendeversuche';
 
   @override
   String get settings_modSettingsHideChannelMute =>
-      'Hide the channel mute switch';
+      'Schalter für Kanal-Stummschaltung ausblenden';
 
   @override
   String appSettings_channelMinHopsDelay(int seconds) {
-    return 'Wait before resending: $seconds s';
+    return 'Pause vor dem erneuten Senden: $seconds s';
   }
 
   @override
@@ -8341,102 +8345,104 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attempts',
-      one: '$count attempt',
+      other: '$count Versuchen',
+      one: '$count Versuch',
     );
-    return 'Not spread over the mesh in $_temp0.';
+    return 'In $_temp0 nicht im Mesh verbreitet.';
   }
 
   @override
-  String get channels_senderNameLabel => 'Sender';
+  String get channels_senderNameLabel => 'Absender';
 
   @override
-  String get channels_senderNameDefault => 'default';
+  String get channels_senderNameDefault => 'Standard';
 
   @override
-  String get channels_senderNameTitle => 'Sender name';
+  String get channels_senderNameTitle => 'Absendername';
 
   @override
   String get channels_senderNameBody =>
-      'You can change the name for this channel.';
+      'Sie können den Namen für diesen Kanal ändern.';
 
   @override
   String channels_senderNameBytes(int count, int max) {
-    return '$count / $max bytes';
+    return '$count / $max Bytes';
   }
 
   @override
   String get channels_senderNameLockedBySign =>
-      'A channel with signed MCMP sends under the node\'s name.';
+      'Ein Kanal mit MCMP-Signatur sendet unter dem Namen des Knotens.';
 
   @override
   String get channels_senderNameNeedsFirmware =>
-      'Needs firmware with version code 13 or newer.';
+      'Erfordert Firmware mit Versionscode 13 oder neuer.';
 
   @override
   String get channels_senderNamePrivateRegion =>
-      'The region\'s key is on the repeater, so the name cannot be changed.';
+      'Der Schlüssel der Region liegt auf dem Repeater, daher kann der Name nicht geändert werden.';
 
   @override
   String get channels_senderNameResetBySign =>
-      'The sender name set for this channel will be reset.';
+      'Der für diesen Kanal festgelegte Absendername wird zurückgesetzt.';
 
   @override
-  String get powerSaving_title => 'Power saving';
+  String get powerSaving_title => 'Energiesparen';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsing =>
-      'Parse progress only while sending';
+      'Fortschritt nur beim Senden auswerten';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+      'Wertet Funkframes für den Fortschritt der Direktzustellung nicht aus, solange keine Sendungen verfolgt werden. Nachrichtenempfang und Zustellbestätigungen bleiben erhalten.';
 
   @override
-  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+  String get powerSaving_cacheChannelKeyHashes =>
+      'Kanalparameter zwischenspeichern';
 
   @override
   String get powerSaving_cacheChannelKeyHashesDescription =>
-      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+      'Verwendet den berechneten Hash eines unveränderten Kanalschlüssels bei der Verarbeitung eingehender Pakete erneut. Prüfung und Entschlüsselung der Nachrichten bleiben erhalten.';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimations =>
-      'Pause hidden status animations';
+      'Verborgene Statusanimationen pausieren';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+      'Hält Sendepunkte und pulsierende Anzeigen außerhalb des sichtbaren Bereichs, unter einem anderen Bildschirm und bei inaktiver App an. Sichtbare Anzeigen bleiben animiert.';
 
   @override
   String get powerSaving_disableContinuousStatusAnimations =>
-      'Static status indicators';
+      'Statische Statusanzeigen';
 
   @override
   String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+      'Ersetzt animierte Sendepunkte und sanft pulsierende Statusanzeigen durch statische, auch auf dem Bildschirm. Status, Wiederholungszähler und Sendeverarbeitung bleiben erhalten.';
 
   @override
   String get powerSaving_reduceBlePluginLogs =>
-      'Reduce Bluetooth diagnostic logs';
+      'Weniger Bluetooth-Diagnoseprotokolle';
 
   @override
   String get powerSaving_reduceBlePluginLogsDescription =>
-      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+      'Reduziert die Bluetooth-Diagnoseausgabe unter Android, iOS und macOS. Warnungen, Fehler und das Frame-Protokoll der App bleiben erhalten. Unter Windows, Linux und im Browser ohne Wirkung.';
 
   @override
   String get powerSaving_deferBleLogDescriptions =>
-      'Defer frame log descriptions';
+      'Beschreibungen im Frame-Protokoll aufschieben';
 
   @override
   String get powerSaving_deferBleLogDescriptionsDescription =>
-      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+      'Erstellt die Textbeschreibung erst, wenn sie zur Anzeige oder zum Kopieren gebraucht wird. Frame-Daten und Zeitstempel werden sofort gespeichert; Inhalt des Protokolls und Schutz privater Daten bleiben gleich.';
 
   @override
-  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+  String get powerSaving_uiNotificationInterval =>
+      'Aktualisierungsintervall der Oberfläche';
 
   @override
   String get powerSaving_uiNotificationDescription =>
-      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+      'Fasst gewöhnliche Aktualisierungen bei einem Strom von Ereignissen zusammen. Ein längeres Intervall macht die Anzeige weniger aktuell. Die Verarbeitung von Paketen und Bestätigungen wird nicht verzögert; Änderungen des Verbindungsstatus behalten das ursprüngliche 50-ms-Fenster.';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
@@ -8444,26 +8450,26 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get powerSaving_profile => 'Profile';
+  String get powerSaving_profile => 'Profil';
 
   @override
-  String get powerSaving_disabled => 'Off';
+  String get powerSaving_disabled => 'Aus';
 
   @override
-  String get powerSaving_balanced => 'Balanced';
+  String get powerSaving_balanced => 'Ausgewogen';
 
   @override
-  String get powerSaving_economical => 'Economical';
+  String get powerSaving_economical => 'Sparsam';
 
   @override
-  String get powerSaving_maximum => 'Maximum saving';
+  String get powerSaving_maximum => 'Maximale Einsparung';
 
   @override
-  String get powerSaving_custom => 'Custom settings';
+  String get powerSaving_custom => 'Eigene Einstellungen';
 
   @override
   String get powerSaving_hiddenRadioStatsInterval =>
-      'Radio statistics interval on a hidden screen';
+      'Intervall der Funkstatistik bei verborgenem Bildschirm';
 
   @override
   String powerSaving_seconds(int seconds) {
@@ -8472,263 +8478,270 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get powerSaving_radioStatsDescription =>
-      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+      'Gilt, wenn der Bildschirm der Funkstatistik verdeckt oder die App inaktiv ist. Der sichtbare Bildschirm wird weiterhin jede Sekunde aktualisiert. Andere Funktionen können häufigere Aktualisierungen anfordern.';
 
   @override
   String get powerSaving_customDescription =>
-      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+      'Minimalwerte behalten das ursprüngliche Verhalten bei. Eigene Werte werden getrennt von den Profilen gespeichert.';
 
   @override
   String get powerSaving_presetDescription =>
-      'Preset values are fixed. Select Custom settings to adjust them individually.';
+      'Die Werte des Profils sind fest. Um sie einzeln anzupassen, wählen Sie „Eigene Einstellungen“.';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicator =>
-      'Pause polling for a hidden radio indicator';
+      'Abfrage für verborgene Funkanzeige pausieren';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+      'Beendet die Abfrage für die Anzeige, wenn sie verborgen oder verdeckt ist oder die App inaktiv ist. Das Senden von Nachrichten und andere Nutzer der Abfrage erhalten weiterhin die benötigten Aktualisierungen.';
 
   @override
-  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+  String get powerSaving_batteryInterval =>
+      'Abfrageintervall für den Akku des Knotens';
 
   @override
   String powerSaving_batteryDescription(int minutes) {
-    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+    return 'Gilt bei geöffneter App und im Hintergrund. Die Schwelle für Funkstille der Verbindungsüberwachung beträgt $minutes Minuten; längere Intervalle verzögern das Erkennen einer stummen Verbindung. Manuelles Aktualisieren bleibt verfügbar.';
   }
 
   @override
-  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+  String get powerSaving_gpsInterval =>
+      'Aktualisierungsintervall für GPS des Knotens';
 
   @override
   String get powerSaving_gpsDescription =>
-      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+      'Gilt bei geöffneter App und im Hintergrund, nur wenn GPS auf dem Knoten eingeschaltet ist. Ein längeres Intervall macht die angezeigte Position des Knotens weniger aktuell. GPS des Telefons und Wardrive werden separat eingestellt.';
 
   @override
-  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+  String get powerSaving_pauseIdleImageCleanup =>
+      'Bildbereinigung im Leerlauf pausieren';
 
   @override
   String get powerSaving_pauseIdleImageCleanupDescription =>
-      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+      'Die Bereinigung läuft nur, solange unvollständige Bilder oder kürzlich fertige Bilder zum Erkennen von Duplikaten vorhanden sind. Die Wartezeit für fehlende Pakete bleibt gleich.';
 
   @override
-  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+  String get powerSaving_pauseHiddenGifs => 'Verborgene GIFs pausieren';
 
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
-      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+      'Hält GIF-Frames außerhalb des sichtbaren Bereichs, unter einem anderen Bildschirm und bei inaktiver App an. Bei der Rückkehr wird die Wiedergabe fortgesetzt, sofern das GIF nicht manuell pausiert wurde.';
 
   @override
   String get powerSaving_backgroundReconnectInterval =>
-      'Background reconnection pause';
+      'Pause zwischen Wiederverbindungen im Hintergrund';
 
   @override
   String get powerSaving_backgroundReconnectDescription =>
-      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+      'Nur BLE und TCP, nach den ersten sechs Pausen von 1/2/4/8/16/30 Sekunden. Gilt bei inaktiver App; die Rückkehr zur App stellt den normalen Ablauf wieder her. Eine längere Pause kann die Wiederherstellung der Verbindung verzögern. Die Verbindungsdauer kommt zur Pause hinzu.';
 
   @override
-  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+  String get powerSaving_cpuSleepAlways =>
+      'CPU-Schlaf immer erlauben, wenn möglich';
 
   @override
-  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+  String get powerSaving_cpuSleepBle => 'Bei BLE-Verbindung';
 
   @override
   String get powerSaving_cpuSleepDescription =>
-      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+      'Dem Gerät erlauben, zwischen Vorgängen zu schlafen. Einzelne Optionen gelten im Hintergrund; alle aktiven Szenarien müssen den Schlaf erlauben. Die Option „Immer“ gilt unabhängig vom Szenario.';
 
   @override
-  String get powerSaving_cpuSleepProxy =>
-      'While the companion proxy is running';
+  String get powerSaving_cpuSleepProxy => 'Bei laufendem Companion-Proxy';
 
   @override
-  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+  String get powerSaving_cpuSleepTcp => 'Bei TCP-Verbindung';
 
   @override
-  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+  String get powerSaving_cpuSleepTitle => 'CPU-Schlaf (Android)';
 
   @override
-  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+  String get powerSaving_cpuSleepWardrive => 'Bei laufendem Wardrive';
 
   @override
-  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+  String get powerSaving_cpuSleepUnconditional => 'Immer, ohne Ausnahmen';
 
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
-      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+      'Gibt unsere CPU-Wakelocks vollständig frei, auch während Vorgängen. Der Geräteschlaf kann sie verzögern oder unterbrechen. Wakelocks von Android und anderen Komponenten bleiben unverändert.';
 
   @override
-  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+  String get powerSaving_blePriorityTitle => 'BLE-Verbindungsmodus zum Knoten';
 
   @override
   String get powerSaving_blePriorityDescription =>
-      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+      'Gilt nach dem erneuten Verbinden mit dem Knoten. „Ursprünglich“ fordert nichts an; High bevorzugt Geschwindigkeit, Low power das Energiesparen. Die tatsächlichen Parameter wählen Android und der Knoten; der Sparmodus kann die Übertragung verlangsamen.';
 
   @override
-  String get powerSaving_bleOriginal => 'Original';
+  String get powerSaving_bleOriginal => 'Ursprünglich';
 
   @override
-  String get powerSaving_bleBalanced => 'Balanced';
+  String get powerSaving_bleBalanced => 'Ausgewogen (Balanced)';
 
   @override
-  String get powerSaving_bleHigh => 'High speed (High)';
+  String get powerSaving_bleHigh => 'Hohe Geschwindigkeit (High)';
 
   @override
-  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+  String get powerSaving_bleLowPower => 'Energiesparen (Low power)';
 
   @override
-  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+  String get powerSaving_releaseTcpWifiLock => 'WLAN-Sperre für TCP freigeben';
 
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
-      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+      'Normales WLAN-Energiesparen bei einer TCP-Verbindung zum Knoten erlauben, auch über Tailscale. Gilt sofort, auf dem Bildschirm und im Hintergrund; der Hintergrunddienst und die Einstellung für den CPU-Schlaf bleiben unverändert. Auf manchen Geräten sind Verzögerungen oder Verbindungsabbrüche möglich.';
 
   @override
   String get powerSaving_reduceDeliveryObservationWrites =>
-      'Reduce delivery statistics rewrites';
+      'Neuschreiben der Zustellstatistik reduzieren';
 
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+      'Nur den geänderten Teil der gespeicherten Zustellstatistik aktualisieren. Inhalt und Reihenfolge bleiben gleich, das Speichern wird nicht zusätzlich verzögert.';
 
   @override
-  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+  String get powerSaving_iosImmortalizerTitle => 'iOS: Hintergrundausführung';
 
   @override
   String get powerSaving_iosImmortalizerDescription =>
-      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+      'Experimentelle Optionen für das integrierte Halten von TCP im Hintergrund. Verfügbar über „Eigene Einstellungen“; die ursprünglichen Werte behalten das aktuelle Verhalten. Der Schutz von Frames und GPU bleibt aktiv.';
 
   @override
   String get powerSaving_iosImmortalizerFrames =>
-      'Pause UI frame scheduling in the background';
+      'UI-Frame-Planung im Hintergrund pausieren';
 
   @override
   String get powerSaving_iosImmortalizerHooks =>
-      'Reduce native hook processing';
+      'Native Hooks reduziert verarbeiten';
 
   @override
-  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+  String get powerSaving_iosImmortalizerMode =>
+      'Modus des Haltens im Hintergrund';
 
   @override
   String get powerSaving_iosImmortalizerOriginal =>
-      'Original (hooks and silent audio)';
+      'Ursprünglich (Hooks und stilles Audio)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudio =>
-      'Without audio (experimental)';
+      'Ohne Audio (experimentell)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+      'Ohne stilles Audio kann iOS die App und die Zustellung von Nachrichten anhalten. Audioeinstellungen bleiben gespeichert, werden in diesem Modus aber nicht angewendet.';
 
   @override
   String get powerSaving_iosImmortalizerSampleRate =>
-      'Silent audio file sample rate';
+      'Abtastrate der Stille-Datei';
 
   @override
-  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+  String get powerSaving_iosImmortalizerEightKhz => 'Ursprünglich: 8 kHz';
 
   @override
   String get powerSaving_iosImmortalizerOutputRate =>
-      'Match the actual audio output';
+      'Nach dem tatsächlichen Audioausgang';
 
   @override
-  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+  String get powerSaving_iosImmortalizerBuffer =>
+      'Bevorzugter Audio-I/O-Puffer';
 
   @override
   String get powerSaving_iosImmortalizerBufferDescription =>
-      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+      'Eine Anfrage an iOS, keine garantierte Hardwaredauer. „System“ lässt die ursprüngliche Vorgabe unverändert. Den angenommenen Wert finden Sie in der Diagnose.';
 
   @override
   String get powerSaving_iosImmortalizerSystem =>
-      'System (original preference)';
+      'System (ursprüngliche Vorgabe)';
 
   @override
-  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+  String get powerSaving_iosImmortalizerLoop => 'Länge der Stille-Schleife';
 
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
-      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+      'Ursprünglich 1 Sekunde. Eine längere PCM-Schleife belegt mehr Speicher; eine Akkuersparnis ist nicht nachgewiesen.';
 
   @override
   String get companionCli_title => 'CompanionCLI';
 
   @override
   String companionCli_nodeTitle(String nodeName) {
-    return 'Node CLI: $nodeName';
+    return 'Knoten-CLI: $nodeName';
   }
 
   @override
   String get companionCli_description =>
-      'Service console for the connected node';
+      'Dienstkonsole des verbundenen Knotens';
 
   @override
-  String get companionCli_noNode => 'No node selected';
+  String get companionCli_noNode => 'Kein Knoten ausgewählt';
 
   @override
   String get companionCli_localOnly =>
-      'Commands run only on the currently connected node';
+      'Befehle werden nur auf dem aktuell verbundenen Knoten ausgeführt';
 
   @override
-  String get companionCli_sharedHistory => 'Shared history with source nodes';
+  String get companionCli_sharedHistory =>
+      'Gemeinsamer Verlauf mit Angabe des Knotens';
 
   @override
   String get companionCli_empty =>
-      'Console history is empty. Try the ver command.';
+      'Der Konsolenverlauf ist leer. Probieren Sie den Befehl ver.';
 
   @override
-  String get companionCli_command => 'Command';
+  String get companionCli_command => 'Befehl';
 
   @override
-  String get companionCli_send => 'Run command';
+  String get companionCli_send => 'Befehl ausführen';
 
   @override
-  String get companionCli_emptyReply => 'An empty reply was received';
+  String get companionCli_emptyReply => 'Leere Antwort erhalten';
 
   @override
   String get companionCli_unavailable =>
-      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+      'Zum Senden ist ein verbundener Companion mit Protokollversion 14 oder neuer (MeshCore 1.18+) nötig. Der Verlauf bleibt einsehbar.';
 
   @override
-  String get companionCli_busy => 'Wait for the current command to finish.';
+  String get companionCli_busy =>
+      'Warten Sie, bis der aktuelle Befehl abgeschlossen ist.';
 
   @override
   String get companionCli_invalidCommand =>
-      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+      'Geben Sie einen einzelnen Befehl ohne Zeilenumbrüche und Nullbytes ein, mindestens zwei UTF-8-Bytes.';
 
   @override
   String get companionCli_tooLong =>
-      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+      'Der Befehl überschreitet das Limit: höchstens 172 UTF-8-Bytes; Parameter von set radio höchstens 131 Bytes.';
 
   @override
   String get companionCli_tagExhausted =>
-      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+      'Die Kennungen für CLI-Anfragen sind aufgebraucht. Starten Sie die App neu, um eine neue sichere Sitzung zu beginnen.';
 
   @override
   String get companionCli_timeout =>
-      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+      'Keine Antwort rechtzeitig erhalten. Der Befehl wurde möglicherweise ausgeführt; er wird nicht automatisch wiederholt. Die Verbindung wird erneuert.';
 
   @override
   String get companionCli_protocolError =>
-      'The node or proxy rejected the request.';
+      'Der Knoten oder der Proxy hat die Anfrage abgelehnt.';
 
   @override
   String get companionCli_disconnected =>
-      'The connection or node changed. The command will not resume automatically.';
+      'Die Verbindung oder der Knoten hat sich geändert. Der Befehl wird nicht automatisch fortgesetzt.';
 
   @override
   String get companionCli_historyError =>
-      'Console history could not be read or saved.';
+      'Der Konsolenverlauf konnte nicht gelesen oder gespeichert werden.';
 
   @override
   String get companionCli_sendFailed =>
-      'Sending could not be confirmed. The command will not be retried automatically.';
+      'Das Senden konnte nicht bestätigt werden. Der Befehl wird nicht automatisch wiederholt.';
 
   @override
   String get cliHistory_temporary =>
-      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+      'In diesem Browser bleibt der CLI-Verlauf nur bis zum Neuladen der Seite erhalten. Er wird nicht in den Einstellungen gespeichert.';
 
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
-      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
+      'Verlauf dieser Konsole für den aktuellen Knoten löschen? Der Verlauf anderer Knoten bleibt erhalten. Ein laufender Befehl wird nicht abgebrochen.';
 }

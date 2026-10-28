@@ -976,7 +976,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String appSettings_channelMinHopsRepeaterCount(Object count) {
-    return 'Required nearby repeaters: $count';
+    return 'Szükséges közeli átjátszók: $count';
   }
 
   @override
@@ -4351,7 +4351,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get telemetry_powerLabel => 'Teljesítmény';
 
   @override
-  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+  String get telemetry_calculatedPowerLabel => 'Számított teljesítmény (U × I)';
 
   @override
   String get telemetry_distanceLabel => 'Távolság';
@@ -7452,169 +7452,171 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_addToNodeFull => 'A csomópont memóriája megtelt';
 
   @override
-  String get channels_shareCopyLink => 'Copy link';
+  String get channels_shareCopyLink => 'Hivatkozás másolása';
 
   @override
-  String get dataFolder_inUseTitle => 'The data folder is already in use';
+  String get dataFolder_inUseTitle => 'Az adatmappa már használatban van';
 
   @override
   String dataFolder_inUseBody(String path) {
-    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+    return 'Ezt az adatmappát az alkalmazás egy másik futó példánya használja:\n$path\n\nZárja be azt a példányt, majd indítsa újra az alkalmazást.';
   }
 
   @override
-  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+  String get dataFolder_unavailableTitle => 'Az adatmappa nem használható';
 
   @override
   String dataFolder_unavailableBody(String path) {
-    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+    return 'Az alkalmazás ebben a mappában tárolja az adatait, de nem tudja létrehozni, és nem tud bele írni:\n$path\n\nHelyezze át az alkalmazást egy írható mappába.';
   }
 
   @override
   String get dataFolder_missingPath =>
-      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+      'A --data-dir paraméter nem ad meg mappát. Így kell írni: --data-dir=<útvonal>.';
 
   @override
   String get dataFolder_otherFolderHint =>
-      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+      'Indításkor az alkalmazás egy példányának saját adatmappa adható meg: --data-dir=<útvonal>. A relatív útvonal az alkalmazás mappájától számít.';
 
   @override
   String dataFolder_details(String error) {
-    return 'Details: $error';
+    return 'Részletek: $error';
   }
 
   @override
-  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+  String get dataTransfer_offerTitle =>
+      'Egy korábbi telepítés adatai találhatók';
 
   @override
   String dataTransfer_offerBody(String target) {
-    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+    return 'Korábban az alkalmazás a rendszermappákban tárolta az adatait. Ezek átmásolhatók ebbe az adatmappába:\n$target';
   }
 
   @override
-  String get dataTransfer_offerSources => 'Copied from:';
+  String get dataTransfer_offerSources => 'Másolás innen:';
 
   @override
   String dataTransfer_offerSize(String size) {
-    return 'Size: $size';
+    return 'Méret: $size';
   }
 
   @override
-  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+  String get dataTransfer_offerSizeCounting => 'Méret: számítás…';
 
   @override
   String get dataTransfer_offerCopiedBefore =>
-      'These data have already been copied:';
+      'Ezeket az adatokat már átmásolták:';
 
   @override
   String get dataTransfer_offerNote =>
-      'The original folders stay as they are. Close other running copies of the app before copying.';
+      'Az eredeti mappák változatlanok maradnak. Másolás előtt zárja be az alkalmazás többi futó példányát.';
 
   @override
-  String get dataTransfer_copy => 'Copy';
+  String get dataTransfer_copy => 'Másolás';
 
   @override
-  String get dataTransfer_startEmpty => 'Start with empty data';
+  String get dataTransfer_startEmpty => 'Indítás üres adatokkal';
 
   @override
-  String get dataTransfer_progressTitle => 'Copying data';
+  String get dataTransfer_progressTitle => 'Adatok másolása';
 
   @override
   String dataTransfer_progress(String copied, String total) {
-    return 'Copied $copied of $total';
+    return 'Átmásolva: $copied / $total';
   }
 
   @override
   String get dataTransfer_progressNote =>
-      'Closing the window stops the copy; the next start offers it again.';
+      'Az ablak bezárása megszakítja a másolást; a következő indításkor újra felajánljuk.';
 
   @override
-  String get dataTransfer_failedTitle => 'The data could not be copied';
+  String get dataTransfer_failedTitle => 'Az adatokat nem sikerült átmásolni';
 
   @override
   String get dataTransfer_failedBody =>
-      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+      'Az eredeti mappák nem változtak. A következő indításkor újra felajánljuk a másolást; előtte zárja be az alkalmazás többi példányát.';
 
   @override
-  String get dataCleanup_title => 'Delete the old data?';
+  String get dataCleanup_title => 'Törli a régi adatokat?';
 
   @override
   String get dataCleanup_body =>
-      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+      'Egy korábbi indításkor az adatok átkerültek ebbe az adatmappába. Az eredetiek még a rendszermappákban vannak, és törölhetők, ha itt minden megvan:';
 
   @override
   String get dataCleanup_note =>
-      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+      'Az alkalmazás többi új példányának ezeket az adatokat már nem ajánljuk fel. A közös ideiglenes és dokumentummappákból csak az ide másolt fájlok törlődnek.';
 
   @override
-  String get dataCleanup_keep => 'Keep';
+  String get dataCleanup_keep => 'Megtartás';
 
   @override
-  String get dataCleanup_progress => 'Deleting the old data…';
+  String get dataCleanup_progress => 'A régi adatok törlése…';
 
   @override
   String dataCleanup_partial(int count) {
-    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+    return 'Néhány régi mappát nem sikerült kiüríteni ($count): a fájljaikat az alkalmazás egy másik futó példánya tarthatja nyitva. A következő indításkor újra rákérdezünk.';
   }
 
   @override
   String get settings_modSettingsExactQuoteLatest =>
-      'Use for the author\'s latest message too';
+      'A szerző legutóbbi üzenetéhez is';
 
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
-      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+      'Kikapcsolva a szerző legutóbbi üzenetére adott válasz csak egy említést tartalmaz. Bekapcsolva helyesen kezeli azt az esetet, amikor az Ön és a többiek legutóbbi üzenete nincs szinkronban, és különböző üzenetek.';
 
   @override
-  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+  String get channelPath_deliveryConfirmedPath =>
+      'Kézbesítés megerősítve ezen az útvonalon';
 
   @override
   String get channelPath_deliveryPathUnknown =>
-      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+      'Ehhez az üzenethez még nem érkezett kézbesítési visszaigazolás, vagy az útvonalat nem sikerült megállapítani.';
 
   @override
   String get channelPath_deliveredDirectly =>
-      'Delivered directly, without repeaters';
+      'Közvetlenül kézbesítve, átjátszók nélkül';
 
   @override
   String get channelPath_incompletePathsNote =>
-      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+      'A közvetlen üzenetek csomagjai csak a hátralévő ugrásokat hordozzák, nem a teljes útvonalat: minden következő átjátszó kiveszi magát a hátralévő útvonalból.';
 
   @override
-  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+  String get discoveredContacts_previouslyHeard =>
+      'korábban hallott csomópontok';
 
   @override
   String map_wardriveBackgroundNeeds(String requirement) {
-    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+    return 'A háttérmódhoz szükséges: $requirement. Koppintson újra a lehetőségre a következő engedélyhez.';
   }
 
   @override
   String map_wardriveBackgroundOff(String requirement) {
-    return 'Background mode is off, still needed: $requirement.';
+    return 'A háttérmód ki van kapcsolva, még hiányzik: $requirement.';
   }
 
   @override
-  String get map_wardriveRequirementNotifications =>
-      'the notification permission';
+  String get map_wardriveRequirementNotifications => 'az értesítési engedély';
 
   @override
   String get map_wardriveRequirementLocationServices =>
-      'location services turned on';
+      'bekapcsolt helymeghatározás a telefonon';
 
   @override
   String get map_wardriveRequirementLocationAlways =>
-      'location access “All the time”';
+      'helyhozzáférés „Mindig engedélyezve”';
 
   @override
   String get map_wardriveRequirementBattery =>
-      'battery optimization turned off for the app';
+      'kikapcsolt akkumulátor-optimalizálás az alkalmazáshoz';
 
   @override
   String get map_wardriveRequirementBackgroundActivity =>
-      'background activity allowed (not restricted in the battery settings)';
+      'engedélyezett háttértevékenység (korlátozás nélkül az akkumulátor-beállításokban)';
 
   @override
-  String get settings_modSettingsSenderNameScale => 'Sender name size';
+  String get settings_modSettingsSenderNameScale => 'Feladónevek mérete';
 
   @override
   String get reviewMode_dialogTitle => 'Belép az áttekintő módba?';
@@ -8145,31 +8147,31 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get channels_dataScopeQuestion =>
-      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+      'Csak ennél a csomópontnál törli a csatorna adatait, vagy az alkalmazás összes csomópontjának egyesített előzményeiben?';
 
   @override
-  String get channels_dataScopeThisNode => 'This node';
+  String get channels_dataScopeThisNode => 'Ez a csomópont';
 
   @override
-  String get channels_dataScopeAllNodes => 'All nodes';
+  String get channels_dataScopeAllNodes => 'Összes csomópont';
 
   @override
   String get chat_historyLinkBanner =>
-      'A message history exists for a contact with this name under another key.';
+      'Ugyanilyen nevű, de más kulcsú névjegyhez tartozó üzenetelőzmény található.';
 
   @override
-  String get chat_historyLinkAttach => 'Attach';
+  String get chat_historyLinkAttach => 'Csatolás';
 
   @override
-  String get chat_historyLinkTitle => 'Attach the history?';
+  String get chat_historyLinkTitle => 'Csatolja az előzményeket?';
 
   @override
   String chat_historyLinkBody(String name, String key) {
-    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+    return 'Egy „$name” nevű, de más kulcsú ($key) névjegyhez előzmények találhatók. Csak akkor csatolja őket ehhez a beszélgetéshez, ha biztos benne, hogy ugyanarról a személyről van szó, és nem névrokonról. A két kulcs ezután egy névjegy lesz az alkalmazásban.';
   }
 
   @override
-  String get chat_historyLinked => 'The history has been attached.';
+  String get chat_historyLinked => 'Az előzmények csatolva.';
 
   @override
   String get scanner_getNodeTitle => 'Új csomópontra van szükséged?';
@@ -8305,15 +8307,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get networkMap_unnamed => 'Névtelen repeater';
 
   @override
-  String get channelPath_sendAttemptsLabel => 'Send attempts';
+  String get channelPath_sendAttemptsLabel => 'Küldési kísérletek';
 
   @override
   String get settings_modSettingsHideChannelMute =>
-      'Hide the channel mute switch';
+      'A csatorna némítási kapcsolójának elrejtése';
 
   @override
   String appSettings_channelMinHopsDelay(int seconds) {
-    return 'Wait before resending: $seconds s';
+    return 'Szünet az újraküldés előtt: $seconds mp';
   }
 
   @override
@@ -8321,102 +8323,104 @@ class AppLocalizationsHu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attempts',
-      one: '$count attempt',
+      other: '$count kísérlet',
+      one: '$count kísérlet',
     );
-    return 'Not spread over the mesh in $_temp0.';
+    return '$_temp0 alatt sem terjedt tovább a hálózatban.';
   }
 
   @override
-  String get channels_senderNameLabel => 'Sender';
+  String get channels_senderNameLabel => 'Feladó';
 
   @override
-  String get channels_senderNameDefault => 'default';
+  String get channels_senderNameDefault => 'alapértelmezett';
 
   @override
-  String get channels_senderNameTitle => 'Sender name';
+  String get channels_senderNameTitle => 'Feladó neve';
 
   @override
   String get channels_senderNameBody =>
-      'You can change the name for this channel.';
+      'Ennél a csatornánál módosíthatja a nevet.';
 
   @override
   String channels_senderNameBytes(int count, int max) {
-    return '$count / $max bytes';
+    return '$count / $max bájt';
   }
 
   @override
   String get channels_senderNameLockedBySign =>
-      'A channel with signed MCMP sends under the node\'s name.';
+      'Az MCMP-aláírással rendelkező csatorna a csomópont nevével küld.';
 
   @override
   String get channels_senderNameNeedsFirmware =>
-      'Needs firmware with version code 13 or newer.';
+      'Legalább 13-as verziókódú firmware szükséges.';
 
   @override
   String get channels_senderNamePrivateRegion =>
-      'The region\'s key is on the repeater, so the name cannot be changed.';
+      'A régió kulcsa az átjátszón van, ezért a név nem módosítható.';
 
   @override
   String get channels_senderNameResetBySign =>
-      'The sender name set for this channel will be reset.';
+      'A csatornához beállított feladónév visszaáll.';
 
   @override
-  String get powerSaving_title => 'Power saving';
+  String get powerSaving_title => 'Energiatakarékosság';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsing =>
-      'Parse progress only while sending';
+      'Előrehaladás feldolgozása csak küldéskor';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+      'Nem dolgozza fel a rádiókereteket a közvetlen kézbesítés előrehaladásához, amíg nincs követett küldés. Az üzenetek fogadása és a kézbesítési visszaigazolások megmaradnak.';
 
   @override
-  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+  String get powerSaving_cacheChannelKeyHashes =>
+      'Csatornaparaméterek gyorsítótárazása';
 
   @override
   String get powerSaving_cacheChannelKeyHashesDescription =>
-      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+      'A bejövő csomagok feldolgozásakor újrahasználja egy változatlan csatornakulcs kiszámított hash-ét. Az üzenetek ellenőrzése és visszafejtése megmarad.';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimations =>
-      'Pause hidden status animations';
+      'Rejtett állapotanimációk szüneteltetése';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+      'Megállítja a küldési pontokat és a pulzáló jelzőket a látható területen kívül, egy másik képernyő alatt és inaktív alkalmazásnál. A látható jelzők animálva maradnak.';
 
   @override
   String get powerSaving_disableContinuousStatusAnimations =>
-      'Static status indicators';
+      'Statikus állapotjelzők';
 
   @override
   String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+      'A küldési pontok animációját és az állapotjelzők lágy pulzálását statikus jelzőkre cseréli, a képernyőn is. Az állapotok, az ismétlésszámlálók és a küldés feldolgozása megmarad.';
 
   @override
   String get powerSaving_reduceBlePluginLogs =>
-      'Reduce Bluetooth diagnostic logs';
+      'Kevesebb Bluetooth-diagnosztikai napló';
 
   @override
   String get powerSaving_reduceBlePluginLogsDescription =>
-      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+      'Csökkenti a Bluetooth diagnosztikai kimenetét Androidon, iOS-en és macOS-en. A figyelmeztetések, a hibák és az alkalmazás keretnaplója megmarad. Windowson, Linuxon és böngészőben nincs hatása.';
 
   @override
   String get powerSaving_deferBleLogDescriptions =>
-      'Defer frame log descriptions';
+      'A keretnapló leírásainak elhalasztása';
 
   @override
   String get powerSaving_deferBleLogDescriptionsDescription =>
-      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+      'A szöveges leírást akkor készíti el, amikor megjelenítéshez vagy másoláshoz szükség van rá. A keret adatai és az időbélyeg azonnal mentésre kerülnek; a napló tartalma és a személyes adatok védelme nem változik.';
 
   @override
-  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+  String get powerSaving_uiNotificationInterval =>
+      'A felület frissítési időköze';
 
   @override
   String get powerSaving_uiNotificationDescription =>
-      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+      'Eseményfolyam közben összevonja a szokásos frissítéseket. Hosszabb időköz mellett a megjelenítés kevésbé azonnali. A csomagok és visszaigazolások feldolgozása nem késik; a kapcsolat állapotának változásai megtartják az eredeti 50 ms-os ablakot.';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
@@ -8424,291 +8428,299 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get powerSaving_profile => 'Profile';
+  String get powerSaving_profile => 'Profil';
 
   @override
-  String get powerSaving_disabled => 'Off';
+  String get powerSaving_disabled => 'Kikapcsolva';
 
   @override
-  String get powerSaving_balanced => 'Balanced';
+  String get powerSaving_balanced => 'Kiegyensúlyozott';
 
   @override
-  String get powerSaving_economical => 'Economical';
+  String get powerSaving_economical => 'Takarékos';
 
   @override
-  String get powerSaving_maximum => 'Maximum saving';
+  String get powerSaving_maximum => 'Maximális takarékosság';
 
   @override
-  String get powerSaving_custom => 'Custom settings';
+  String get powerSaving_custom => 'Saját beállítások';
 
   @override
   String get powerSaving_hiddenRadioStatsInterval =>
-      'Radio statistics interval on a hidden screen';
+      'Rádióstatisztika időköze rejtett képernyőnél';
 
   @override
   String powerSaving_seconds(int seconds) {
-    return '$seconds s';
+    return '$seconds mp';
   }
 
   @override
   String get powerSaving_radioStatsDescription =>
-      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+      'Akkor érvényes, ha a rádióstatisztika képernyőjét egy másik képernyő takarja, vagy az alkalmazás inaktív. A látható képernyő továbbra is másodpercenként frissül. Más funkciók gyakoribb frissítést kérhetnek.';
 
   @override
   String get powerSaving_customDescription =>
-      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+      'A minimális értékek megtartják az eredeti működést. A saját beállítások a kész profiloktól külön tárolódnak.';
 
   @override
   String get powerSaving_presetDescription =>
-      'Preset values are fixed. Select Custom settings to adjust them individually.';
+      'A kész profil értékei rögzítettek. Az egyenkénti módosításhoz válassza a „Saját beállítások” lehetőséget.';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicator =>
-      'Pause polling for a hidden radio indicator';
+      'Lekérdezés szüneteltetése rejtett rádiójelzőnél';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+      'Leállítja a jelző lekérdezését, ha az rejtett, egy másik képernyő takarja, vagy az alkalmazás inaktív. Az üzenetküldés és a lekérdezés más felhasználói megkapják a szükséges frissítéseket.';
 
   @override
-  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+  String get powerSaving_batteryInterval =>
+      'A csomópont akkumulátorának lekérdezési időköze';
 
   @override
   String powerSaving_batteryDescription(int minutes) {
-    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+    return 'Megnyitott alkalmazásnál és a háttérben is érvényes. A kapcsolatfigyelés csendküszöbe $minutes perc; hosszabb időköz késlelteti a nem válaszoló kapcsolat felismerését. A kézi frissítés továbbra is elérhető.';
   }
 
   @override
-  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+  String get powerSaving_gpsInterval =>
+      'A csomópont GPS-ének frissítési időköze';
 
   @override
   String get powerSaving_gpsDescription =>
-      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+      'Megnyitott alkalmazásnál és a háttérben is érvényes, csak ha a csomóponton be van kapcsolva a GPS. Hosszabb időköz mellett a csomópont megjelenített pozíciója kevésbé friss. A telefon GPS-e és a wardrive külön állítható be.';
 
   @override
-  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+  String get powerSaving_pauseIdleImageCleanup =>
+      'Képtisztítás szüneteltetése tétlenségkor';
 
   @override
   String get powerSaving_pauseIdleImageCleanupDescription =>
-      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+      'A tisztítás csak addig fut, amíg vannak befejezetlen képek vagy a duplikátumok felismerésére megőrzött, nemrég befejezett képek. A hiányzó csomagokra várás ideje nem változik.';
 
   @override
-  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+  String get powerSaving_pauseHiddenGifs => 'Rejtett GIF-ek szüneteltetése';
 
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
-      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+      'Megállítja a GIF-képkockákat a látható területen kívül, egy másik képernyő alatt és inaktív alkalmazásnál. Visszatéréskor a lejátszás folytatódik, hacsak nem állította meg kézzel a GIF-et.';
 
   @override
   String get powerSaving_backgroundReconnectInterval =>
-      'Background reconnection pause';
+      'Szünet az újracsatlakozások között a háttérben';
 
   @override
   String get powerSaving_backgroundReconnectDescription =>
-      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+      'Csak BLE és TCP esetén, az első hat 1/2/4/8/16/30 másodperces szünet után. Inaktív alkalmazásnál érvényes; az alkalmazásba visszatérve visszaáll a szokásos ütemezés. Hosszabb szünet késleltetheti a kapcsolat helyreállását. A csatlakozás ideje hozzáadódik a szünethez.';
 
   @override
-  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+  String get powerSaving_cpuSleepAlways =>
+      'CPU-alvás engedélyezése mindig, amikor lehetséges';
 
   @override
-  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+  String get powerSaving_cpuSleepBle => 'BLE-kapcsolat esetén';
 
   @override
   String get powerSaving_cpuSleepDescription =>
-      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+      'Engedélyezi, hogy az eszköz a műveletek között alvó állapotba kerüljön. Az egyes beállítások a háttérben érvényesek; minden aktív forgatókönyvnek engedélyeznie kell az alvást. A „Mindig” beállítás a forgatókönyvtől függetlenül érvényes.';
 
   @override
-  String get powerSaving_cpuSleepProxy =>
-      'While the companion proxy is running';
+  String get powerSaving_cpuSleepProxy => 'Futó companion-proxy esetén';
 
   @override
-  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+  String get powerSaving_cpuSleepTcp => 'TCP-kapcsolat esetén';
 
   @override
-  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+  String get powerSaving_cpuSleepTitle => 'CPU-alvás (Android)';
 
   @override
-  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+  String get powerSaving_cpuSleepWardrive => 'Futó wardrive esetén';
 
   @override
-  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+  String get powerSaving_cpuSleepUnconditional => 'Mindig, kivétel nélkül';
 
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
-      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+      'Teljesen feloldja a CPU-ébrentartásainkat, műveletek közben is. Az eszköz alvása késleltetheti vagy megszakíthatja őket. Az Android és más összetevők ébrentartásai nem változnak.';
 
   @override
-  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+  String get powerSaving_blePriorityTitle =>
+      'BLE-kapcsolat módja a csomóponthoz';
 
   @override
   String get powerSaving_blePriorityDescription =>
-      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+      'A csomóponthoz való újracsatlakozás után érvényes. Az eredeti mód nem kér változtatást; a High a sebességet, a Low power az energiatakarékosságot részesíti előnyben. A tényleges paramétereket az Android és a csomópont választja; a takarékos mód lassíthatja az adatcserét.';
 
   @override
-  String get powerSaving_bleOriginal => 'Original';
+  String get powerSaving_bleOriginal => 'Eredeti';
 
   @override
-  String get powerSaving_bleBalanced => 'Balanced';
+  String get powerSaving_bleBalanced => 'Kiegyensúlyozott (Balanced)';
 
   @override
-  String get powerSaving_bleHigh => 'High speed (High)';
+  String get powerSaving_bleHigh => 'Nagy sebesség (High)';
 
   @override
-  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+  String get powerSaving_bleLowPower => 'Energiatakarékos (Low power)';
 
   @override
-  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+  String get powerSaving_releaseTcpWifiLock =>
+      'Ne tartsa ébren a Wi-Fit a TCP-hez';
 
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
-      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+      'Engedélyezi a Wi-Fi szokásos energiatakarékosságát a csomóponthoz fűződő TCP-kapcsolat közben, Tailscale esetén is. Azonnal érvényes, a képernyőn és a háttérben; a háttérszolgáltatás és a CPU-alvás beállítása nem változik. Egyes eszközökön késések vagy kapcsolatmegszakadások fordulhatnak elő.';
 
   @override
   String get powerSaving_reduceDeliveryObservationWrites =>
-      'Reduce delivery statistics rewrites';
+      'A kézbesítési statisztika újraírásának csökkentése';
 
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+      'Csak a tárolt kézbesítési statisztika megváltozott részét frissíti. A tartalom és a sorrend nem változik, a mentés nem késik tovább.';
 
   @override
-  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+  String get powerSaving_iosImmortalizerTitle => 'iOS: háttérben tartás';
 
   @override
   String get powerSaving_iosImmortalizerDescription =>
-      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+      'Kísérleti beállítások a TCP beépített háttérben tartásához. A „Saját beállítások” alatt érhetők el; az eredeti értékek megtartják a jelenlegi működést. A képkockák és a GPU védelme bekapcsolva marad.';
 
   @override
   String get powerSaving_iosImmortalizerFrames =>
-      'Pause UI frame scheduling in the background';
+      'UI-képkockák ütemezésének szüneteltetése a háttérben';
 
   @override
   String get powerSaving_iosImmortalizerHooks =>
-      'Reduce native hook processing';
+      'A natív hookok könnyített feldolgozása';
 
   @override
-  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+  String get powerSaving_iosImmortalizerMode => 'Háttérben tartási mód';
 
   @override
   String get powerSaving_iosImmortalizerOriginal =>
-      'Original (hooks and silent audio)';
+      'Szokásos (hookok és néma hang)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudio =>
-      'Without audio (experimental)';
+      'Hang nélkül (kísérleti)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+      'Néma hang nélkül az iOS felfüggesztheti az alkalmazást és az üzenetek kézbesítését. A hangbeállítások megmaradnak, de ebben a módban nem érvényesek.';
 
   @override
   String get powerSaving_iosImmortalizerSampleRate =>
-      'Silent audio file sample rate';
+      'A csendfájl mintavételi frekvenciája';
 
   @override
-  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+  String get powerSaving_iosImmortalizerEightKhz => 'Eredeti: 8 kHz';
 
   @override
   String get powerSaving_iosImmortalizerOutputRate =>
-      'Match the actual audio output';
+      'A tényleges hangkimenet szerint';
 
   @override
-  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+  String get powerSaving_iosImmortalizerBuffer =>
+      'Előnyben részesített hang I/O-puffer';
 
   @override
   String get powerSaving_iosImmortalizerBufferDescription =>
-      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+      'Kérés az iOS felé, nem garantált hardveres időtartam. A „Rendszer” változatlanul hagyja az eredeti beállítást. Az elfogadott értéket a diagnosztikában találja.';
 
   @override
   String get powerSaving_iosImmortalizerSystem =>
-      'System (original preference)';
+      'Rendszer (eredeti beállítás)';
 
   @override
-  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+  String get powerSaving_iosImmortalizerLoop => 'A csendhurok hossza';
 
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
-      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+      'Eredetileg 1 másodperc. A hosszabb PCM-hurok több memóriát foglal; akkumulátor-megtakarítást eddig nem igazoltak.';
 
   @override
   String get companionCli_title => 'CompanionCLI';
 
   @override
   String companionCli_nodeTitle(String nodeName) {
-    return 'Node CLI: $nodeName';
+    return 'Csomópont CLI: $nodeName';
   }
 
   @override
   String get companionCli_description =>
-      'Service console for the connected node';
+      'A csatlakoztatott csomópont szervizkonzolja';
 
   @override
-  String get companionCli_noNode => 'No node selected';
+  String get companionCli_noNode => 'Nincs kiválasztott csomópont';
 
   @override
   String get companionCli_localOnly =>
-      'Commands run only on the currently connected node';
+      'A parancsok csak az éppen csatlakoztatott csomóponton futnak';
 
   @override
-  String get companionCli_sharedHistory => 'Shared history with source nodes';
+  String get companionCli_sharedHistory =>
+      'Közös előzmények a csomópont megjelölésével';
 
   @override
   String get companionCli_empty =>
-      'Console history is empty. Try the ver command.';
+      'A konzol előzményei üresek. Próbálja ki a ver parancsot.';
 
   @override
-  String get companionCli_command => 'Command';
+  String get companionCli_command => 'Parancs';
 
   @override
-  String get companionCli_send => 'Run command';
+  String get companionCli_send => 'Parancs futtatása';
 
   @override
-  String get companionCli_emptyReply => 'An empty reply was received';
+  String get companionCli_emptyReply => 'Üres válasz érkezett';
 
   @override
   String get companionCli_unavailable =>
-      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+      'A küldéshez legalább 14-es protokollverziójú csatlakoztatott companion eszköz szükséges (MeshCore 1.18+). Az előzmények továbbra is megtekinthetők.';
 
   @override
-  String get companionCli_busy => 'Wait for the current command to finish.';
+  String get companionCli_busy =>
+      'Várja meg, amíg az aktuális parancs befejeződik.';
 
   @override
   String get companionCli_invalidCommand =>
-      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+      'Adjon meg egyetlen parancsot sortörés és nullbájt nélkül, legalább két UTF-8 bájttal.';
 
   @override
   String get companionCli_tooLong =>
-      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+      'A parancs túllépi a korlátot: legfeljebb 172 UTF-8 bájt; a set radio paraméterei legfeljebb 131 bájt.';
 
   @override
   String get companionCli_tagExhausted =>
-      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+      'A CLI-kérések azonosítói elfogytak. Indítsa újra az alkalmazást egy új, biztonságos munkamenethez.';
 
   @override
   String get companionCli_timeout =>
-      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+      'A válasz túllépte az időkorlátot. A parancs lefuthatott; automatikusan nem ismétlődik. A kapcsolat megújul.';
 
   @override
   String get companionCli_protocolError =>
-      'The node or proxy rejected the request.';
+      'A csomópont vagy a proxy elutasította a kérést.';
 
   @override
   String get companionCli_disconnected =>
-      'The connection or node changed. The command will not resume automatically.';
+      'A kapcsolat vagy a csomópont megváltozott. A parancs nem folytatódik automatikusan.';
 
   @override
   String get companionCli_historyError =>
-      'Console history could not be read or saved.';
+      'A konzol előzményeit nem sikerült beolvasni vagy menteni.';
 
   @override
   String get companionCli_sendFailed =>
-      'Sending could not be confirmed. The command will not be retried automatically.';
+      'A küldést nem sikerült megerősíteni. A parancs automatikusan nem ismétlődik.';
 
   @override
   String get cliHistory_temporary =>
-      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+      'Ebben a böngészőben a CLI-előzmények csak az oldal újratöltéséig maradnak meg. Nem kerülnek a beállításokba.';
 
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
-      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
+      'Törli ennek a konzolnak az előzményeit az aktuális csomóponthoz? A többi csomópont előzményei megmaradnak. A futó parancs nem szakad meg.';
 }

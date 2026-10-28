@@ -11,6 +11,7 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/companion_cli_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/channel_group.dart';
 import 'package:meshcore_open/models/companion_cli_entry.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/screens/companion_cli_screen.dart';
@@ -62,6 +63,7 @@ class _Connector extends MeshCoreConnector {
   }
   final history = _History();
   final writes = <List<int>>[];
+  final channelOrders = <List<int>>[];
   late final CompanionCliSession testSession;
   bool supported = true;
   bool loaded = true;
@@ -94,6 +96,10 @@ class _Connector extends MeshCoreConnector {
   bool get hasLoadedChannels => true;
   @override
   Future<void> getChannels({int? maxChannels, bool force = false}) async {}
+  @override
+  Future<void> setChannelOrder(List<int> order) async {
+    channelOrders.add(List<int>.of(order));
+  }
   @override
   void dispose() { testSession.dispose(); super.dispose(); }
 }
@@ -212,7 +218,7 @@ void main() {
     });
   }
 
-  testWidgets('contacts card has equal visible gaps when the filter toolbar is present', (tester) async {
+  testWidgets('compact contacts CLI starts below filters and above contact rows', (tester) async {
     connector.contactData.add(Contact(
       publicKey: Uint8List.fromList(List.filled(32, 3)),
       name: 'Synthetic geometry contact', type: advTypeChat,
@@ -229,11 +235,60 @@ void main() {
     final groupButton = find.ancestor(of: find.text(l10n.listFilter_all),
       matching: find.byType(PopupMenuButton<String>));
     expect(groupButton, findsOneWidget);
-    final topGap = surface.top - tester.getRect(find.byType(AppBar)).bottom;
-    final bottomGap = tester.getRect(groupButton).top - surface.bottom;
+    final filters = tester.getRect(groupButton);
+    final header = tester.getRect(find.byType(AppBar));
+    expect(surface.top - filters.bottom, closeTo(filters.top - header.bottom, 0.01));
+    expect(surface.bottom, lessThan(tester.getRect(find.text('Synthetic geometry contact')).top));
     expect(surface.left, 16);
     expect(surface.right, 984);
-    expect(topGap, closeTo(bottomGap, 0.01));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('CLI scrolls with contacts while filters stay fixed and remains first under every sort', (tester) async {
+    for (var i = 0; i < 30; i++) {
+      connector.contactData.add(Contact(
+        publicKey: Uint8List.fromList(List.filled(32, i + 3)),
+        name: 'Scroll contact ${i.toString().padLeft(2, '0')}', type: advTypeChat,
+        pathLength: -1, path: Uint8List(0), lastSeen: DateTime.utc(2026, 1, i + 1),
+      ));
+    }
+    await show(tester, const ContactsScreen(hideBackButton: true));
+    await tester.pumpAndSettle();
+    final cli = find.byType(CompanionCliTile);
+    final scroll = find.ancestor(of: cli, matching: find.byType(CustomScrollView));
+    expect(scroll, findsOneWidget);
+    // Capture the position while the sliver header is still on screen.
+    final position = Scrollable.of(tester.element(cli)).position;
+    final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+    final groupButton = find.ancestor(of: find.text(l10n.listFilter_all),
+      matching: find.byType(PopupMenuButton<String>));
+    final filterRect = tester.getRect(groupButton);
+    expect(cli.hitTestable(), findsOneWidget);
+    await tester.drag(scroll, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    expect(cli.hitTestable(), findsNothing);
+    expect(tester.getRect(groupButton), filterRect);
+    // Return without pulling beyond the top and triggering a real refresh.
+    position.jumpTo(0);
+    await tester.pumpAndSettle();
+    expect(cli.hitTestable(), findsOneWidget);
+    for (final sort in ContactSortOption.values) {
+      view.setContactsSortOption(sort);
+      await tester.pumpAndSettle();
+      final cliRect = cardSurface(tester, cli);
+      final rows = find.byWidgetPredicate((widget) => widget is Text &&
+        (widget.data?.startsWith('Scroll contact ') ?? false));
+      expect(rows, findsWidgets);
+      for (final row in rows.evaluate()) {
+        expect(tester.getRect(find.byWidget(row.widget)).top, greaterThan(cliRect.bottom));
+      }
+    }
+    view.setContactsSearchText('no matching contact');
+    await tester.pumpAndSettle();
+    expect(cli.hitTestable(), findsOneWidget);
+    expect(find.text(l10n.contacts_noContactsFound), findsOneWidget);
+    expect(connector.writes, isEmpty);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -253,7 +308,118 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  Future<void> editGroup(WidgetTester tester, String name) async {
+    final l10n = AppLocalizations.of(tester.element(find.byType(ChannelsScreen)));
+    await tester.longPress(find.widgetWithText(ListTile, name));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ListTile, l10n.contacts_editGroup));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> saveGroup(WidgetTester tester) async {
+    final l10n = AppLocalizations.of(tester.element(find.byType(ChannelsScreen)));
+    await tester.tap(find.widgetWithText(TextButton, l10n.common_save));
+    await tester.pumpAndSettle();
+  }
+
   for (final legacy in [true, false]) {
+    testWidgets('CLI can enter and leave a folder without duplication, legacy=$legacy', (tester) async {
+      connector.channelData.clear();
+      await settings.updateSettings(settings.settings.copyWith(
+        roomServerShowNotemptyContactsOnChatscreen: true,
+        roomServerDisableRoomAndContactsSorting: legacy));
+      final store = ChannelGroupStore()..setPublicKeyHex = connector.selfPublicKeyHex;
+      await store.saveGroups(const [ChannelGroup(name: 'Tools', channelNames: [])]);
+      await store.saveExpandedGroupNames({'Tools'});
+      await show(tester, const ChannelsScreen(hideBackButton: true));
+      await tester.pumpAndSettle();
+      await editGroup(tester, 'Tools');
+      final member = find.byKey(const ValueKey('companion-cli-group-member'));
+      expect(tester.widget<CheckboxListTile>(member).value, isFalse);
+      await tester.tap(member);
+      await saveGroup(tester);
+      expect((await store.loadGroups()).single.channelNames, [companionCliOrderKey]);
+      expect(find.byType(CompanionCliTile), findsOneWidget);
+      expect(find.ancestor(of: find.byType(CompanionCliTile),
+        matching: find.byType(AnimatedCrossFade)), findsOneWidget);
+      await tester.tap(find.widgetWithText(ListTile, 'Tools'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile).hitTestable(), findsNothing);
+      await tester.tap(find.widgetWithText(ListTile, 'Tools'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile).hitTestable(), findsOneWidget);
+      // Removing and reselecting before saving must keep the checkbox available.
+      await editGroup(tester, 'Tools');
+      await tester.tap(member);
+      await tester.pump();
+      expect(member, findsOneWidget);
+      await tester.tap(member);
+      await tester.pump();
+      expect(tester.widget<CheckboxListTile>(member).value, isTrue);
+      await tester.tap(member);
+      await saveGroup(tester);
+      expect((await store.loadGroups()).single.channelNames, isEmpty);
+      expect(find.byType(CompanionCliTile), findsOneWidget);
+      expect(find.ancestor(of: find.byType(CompanionCliTile),
+        matching: find.byType(AnimatedCrossFade)), findsNothing);
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('folder order survives hidden CLI and reopening, legacy=$legacy', (tester) async {
+      await settings.updateSettings(settings.settings.copyWith(
+        roomServerShowNotemptyContactsOnChatscreen: true,
+        roomServerDisableRoomAndContactsSorting: legacy));
+      final store = ChannelGroupStore()..setPublicKeyHex = connector.selfPublicKeyHex;
+      await store.saveGroups(const [ChannelGroup(name: 'Tools',
+        channelNames: ['Alpha', companionCliOrderKey, 'Beta'], allowOrderingInGroup: true)]);
+      await store.saveExpandedGroupNames({'Tools'});
+      await show(tester, const ChannelsScreen(hideBackButton: true));
+      await tester.pumpAndSettle();
+      final nested = tester.widgetList<ReorderableListView>(
+        find.byType(ReorderableListView)).singleWhere((list) => list.itemCount == 3);
+      nested.onReorderItem!(1, 2);
+      await tester.pumpAndSettle();
+      expect((await store.loadGroups()).single.channelNames,
+        ['Alpha', 'Beta', companionCliOrderKey]);
+      connector.supported = false;
+      connector.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsNothing);
+      // A reorder while hidden must retain membership, rather than erase CLI.
+      final hidden = tester.widgetList<ReorderableListView>(
+        find.byType(ReorderableListView)).singleWhere((list) => list.itemCount == 2);
+      hidden.onReorderItem!(0, 1);
+      await tester.pumpAndSettle();
+      expect((await store.loadGroups()).single.channelNames,
+        ['Beta', 'Alpha', companionCliOrderKey]);
+      // Saving an ordinary folder edit while unsupported must retain CLI too.
+      await editGroup(tester, 'Tools');
+      await saveGroup(tester);
+      expect((await store.loadGroups()).single.channelNames,
+        ['Beta', 'Alpha', companionCliOrderKey]);
+      await tester.pumpWidget(const SizedBox.shrink());
+      connector.supported = true;
+      await show(tester, const ChannelsScreen(hideBackButton: true));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsOneWidget);
+      expect(tester.widget<CompanionCliTile>(find.byType(CompanionCliTile)).dragIndex, 2);
+      await settings.updateSettings(settings.settings.copyWith(
+        roomServerShowNotemptyContactsOnChatscreen: false));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompanionCliTile), findsNothing);
+      expect((await store.loadGroups()).single.channelNames.last, companionCliOrderKey);
+      if (legacy) {
+        expect(connector.channelOrders, isNotEmpty);
+        expect(connector.channelOrders.every((order) => order.length == 2 &&
+          order.toSet().containsAll({1, 2})), isTrue);
+      }
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('CLI remains visible when there are no channels, legacy=$legacy', (tester) async {
       connector.channelData.clear();
       await settings.updateSettings(settings.settings.copyWith(

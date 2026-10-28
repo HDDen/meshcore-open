@@ -984,7 +984,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String appSettings_channelMinHopsRepeaterCount(Object count) {
-    return 'Required nearby repeaters: $count';
+    return 'Необходими близки повторители: $count';
   }
 
   @override
@@ -4364,7 +4364,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get telemetry_powerLabel => 'Мощност';
 
   @override
-  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+  String get telemetry_calculatedPowerLabel => 'Изчислена мощност (U × I)';
 
   @override
   String get telemetry_distanceLabel => 'Разстояние';
@@ -7477,169 +7477,171 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_addToNodeFull => 'Паметта на възела е пълна';
 
   @override
-  String get channels_shareCopyLink => 'Copy link';
+  String get channels_shareCopyLink => 'Копирай връзката';
 
   @override
-  String get dataFolder_inUseTitle => 'The data folder is already in use';
+  String get dataFolder_inUseTitle => 'Папката с данни вече се използва';
 
   @override
   String dataFolder_inUseBody(String path) {
-    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+    return 'Тази папка с данни се използва от друго работещо копие на приложението:\n$path\n\nЗатворете онова копие и стартирайте приложението отново.';
   }
 
   @override
-  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+  String get dataFolder_unavailableTitle =>
+      'Папката с данни не може да се използва';
 
   @override
   String dataFolder_unavailableBody(String path) {
-    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+    return 'Приложението пази данните си в тази папка, но не може да я създаде или да записва в нея:\n$path\n\nПреместете приложението в папка с право на запис.';
   }
 
   @override
   String get dataFolder_missingPath =>
-      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+      'Параметърът --data-dir не посочва папка. Записва се така: --data-dir=<път>.';
 
   @override
   String get dataFolder_otherFolderHint =>
-      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+      'При стартиране на копие на приложението може да му се зададе собствена папка с данни: --data-dir=<път>. Относителният път се брои от папката на приложението.';
 
   @override
   String dataFolder_details(String error) {
-    return 'Details: $error';
+    return 'Подробности: $error';
   }
 
   @override
-  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+  String get dataTransfer_offerTitle =>
+      'Открити са данни от предишна инсталация';
 
   @override
   String dataTransfer_offerBody(String target) {
-    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+    return 'Преди приложението пазеше данните си в системните папки. Те могат да бъдат копирани в тази папка с данни:\n$target';
   }
 
   @override
-  String get dataTransfer_offerSources => 'Copied from:';
+  String get dataTransfer_offerSources => 'Откъде да се копира:';
 
   @override
   String dataTransfer_offerSize(String size) {
-    return 'Size: $size';
+    return 'Размер: $size';
   }
 
   @override
-  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+  String get dataTransfer_offerSizeCounting => 'Размер: изчислява се…';
 
   @override
-  String get dataTransfer_offerCopiedBefore =>
-      'These data have already been copied:';
+  String get dataTransfer_offerCopiedBefore => 'Тези данни вече са копирани:';
 
   @override
   String get dataTransfer_offerNote =>
-      'The original folders stay as they are. Close other running copies of the app before copying.';
+      'Изходните папки остават непроменени. Преди копирането затворете другите работещи копия на приложението.';
 
   @override
-  String get dataTransfer_copy => 'Copy';
+  String get dataTransfer_copy => 'Копирай';
 
   @override
-  String get dataTransfer_startEmpty => 'Start with empty data';
+  String get dataTransfer_startEmpty => 'Започни с празни данни';
 
   @override
-  String get dataTransfer_progressTitle => 'Copying data';
+  String get dataTransfer_progressTitle => 'Копиране на данните';
 
   @override
   String dataTransfer_progress(String copied, String total) {
-    return 'Copied $copied of $total';
+    return 'Копирани $copied от $total';
   }
 
   @override
   String get dataTransfer_progressNote =>
-      'Closing the window stops the copy; the next start offers it again.';
+      'Ако затворите прозореца, копирането ще прекъсне и при следващото стартиране ще бъде предложено отново.';
 
   @override
-  String get dataTransfer_failedTitle => 'The data could not be copied';
+  String get dataTransfer_failedTitle => 'Данните не можаха да бъдат копирани';
 
   @override
   String get dataTransfer_failedBody =>
-      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+      'Изходните папки не са променени. При следващото стартиране копирането ще бъде предложено отново; преди това затворете другите копия на приложението.';
 
   @override
-  String get dataCleanup_title => 'Delete the old data?';
+  String get dataCleanup_title => 'Да се изтрият ли старите данни?';
 
   @override
   String get dataCleanup_body =>
-      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+      'При едно от предишните стартирания данните бяха копирани в тази папка с данни. Оригиналите още са в системните папки и могат да бъдат изтрити, ако тук всичко е на мястото си:';
 
   @override
   String get dataCleanup_note =>
-      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+      'На другите нови копия на приложението тези данни повече няма да се предлагат. От общите папки за временни файлове и документи се изтриват само файловете, копирани тук.';
 
   @override
-  String get dataCleanup_keep => 'Keep';
+  String get dataCleanup_keep => 'Запази';
 
   @override
-  String get dataCleanup_progress => 'Deleting the old data…';
+  String get dataCleanup_progress => 'Изтриване на старите данни…';
 
   @override
   String dataCleanup_partial(int count) {
-    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+    return 'Някои стари папки не можаха да бъдат изчистени ($count): файловете им може да се държат от друго работещо копие на приложението. При следващото стартиране въпросът ще се повтори.';
   }
 
   @override
   String get settings_modSettingsExactQuoteLatest =>
-      'Use for the author\'s latest message too';
+      'Използване и за последното съобщение на автора';
 
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
-      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+      'Изключено: отговорът на последното съобщение на автора съдържа само споменаване. Включено: правилно се обработва случаят, когато последното съобщение при вас и при останалите не съвпада и това са различни съобщения.';
 
   @override
-  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+  String get channelPath_deliveryConfirmedPath =>
+      'Доставката е потвърдена по пътя';
 
   @override
   String get channelPath_deliveryPathUnknown =>
-      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+      'За това съобщение още не е получено потвърждение за доставка или маршрутът не можа да бъде определен.';
 
   @override
   String get channelPath_deliveredDirectly =>
-      'Delivered directly, without repeaters';
+      'Доставено директно, без повторители';
 
   @override
   String get channelPath_incompletePathsNote =>
-      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+      'Пакетите на личните съобщения носят само оставащите скокове, а не пълния маршрут: всеки следващ повторител премахва себе си от оставащия път.';
 
   @override
-  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+  String get discoveredContacts_previouslyHeard => 'по-рано чути възли';
 
   @override
   String map_wardriveBackgroundNeeds(String requirement) {
-    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+    return 'За фоновия режим е нужно: $requirement. Докоснете опцията отново, за да преминете към следващото разрешение.';
   }
 
   @override
   String map_wardriveBackgroundOff(String requirement) {
-    return 'Background mode is off, still needed: $requirement.';
+    return 'Фоновият режим е изключен, още липсва: $requirement.';
   }
 
   @override
-  String get map_wardriveRequirementNotifications =>
-      'the notification permission';
+  String get map_wardriveRequirementNotifications => 'разрешение за известия';
 
   @override
   String get map_wardriveRequirementLocationServices =>
-      'location services turned on';
+      'включено местоположение на телефона';
 
   @override
   String get map_wardriveRequirementLocationAlways =>
-      'location access “All the time”';
+      'достъп до местоположението „Винаги“';
 
   @override
   String get map_wardriveRequirementBattery =>
-      'battery optimization turned off for the app';
+      'изключена оптимизация на батерията за приложението';
 
   @override
   String get map_wardriveRequirementBackgroundActivity =>
-      'background activity allowed (not restricted in the battery settings)';
+      'разрешена фонова активност (без ограничение в настройките на батерията)';
 
   @override
-  String get settings_modSettingsSenderNameScale => 'Sender name size';
+  String get settings_modSettingsSenderNameScale =>
+      'Размер на имената на подателите';
 
   @override
   String get reviewMode_dialogTitle => 'Вход в режим за преглед?';
@@ -8174,31 +8176,31 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get channels_dataScopeQuestion =>
-      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+      'Да се изтрият ли данните на канала само за този възел или в обединената история на всички възли в приложението?';
 
   @override
-  String get channels_dataScopeThisNode => 'This node';
+  String get channels_dataScopeThisNode => 'Този възел';
 
   @override
-  String get channels_dataScopeAllNodes => 'All nodes';
+  String get channels_dataScopeAllNodes => 'Всички възли';
 
   @override
   String get chat_historyLinkBanner =>
-      'A message history exists for a contact with this name under another key.';
+      'Открита е история на съобщенията за контакт със същото име, но с друг ключ.';
 
   @override
-  String get chat_historyLinkAttach => 'Attach';
+  String get chat_historyLinkAttach => 'Свържи';
 
   @override
-  String get chat_historyLinkTitle => 'Attach the history?';
+  String get chat_historyLinkTitle => 'Да се свърже ли историята?';
 
   @override
   String chat_historyLinkBody(String name, String key) {
-    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+    return 'Открита е история за контакт с име „$name“, но с друг ключ ($key). Свържете я с този разговор само ако сте сигурни, че това е същият човек, а не съименник. Тогава двата ключа ще станат един контакт в приложението.';
   }
 
   @override
-  String get chat_historyLinked => 'The history has been attached.';
+  String get chat_historyLinked => 'Историята е свързана.';
 
   @override
   String get scanner_getNodeTitle => 'Нуждаете се от нов възел?';
@@ -8336,15 +8338,15 @@ class AppLocalizationsBg extends AppLocalizations {
   String get networkMap_unnamed => 'Неназован повторител';
 
   @override
-  String get channelPath_sendAttemptsLabel => 'Send attempts';
+  String get channelPath_sendAttemptsLabel => 'Опити за изпращане';
 
   @override
   String get settings_modSettingsHideChannelMute =>
-      'Hide the channel mute switch';
+      'Скриване на превключвателя за заглушаване на канала';
 
   @override
   String appSettings_channelMinHopsDelay(int seconds) {
-    return 'Wait before resending: $seconds s';
+    return 'Пауза преди повторно изпращане: $seconds с';
   }
 
   @override
@@ -8352,394 +8354,399 @@ class AppLocalizationsBg extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attempts',
-      one: '$count attempt',
+      other: '$count опита',
+      one: '$count опит',
     );
-    return 'Not spread over the mesh in $_temp0.';
+    return 'Не се разпространи в мрежата за $_temp0.';
   }
 
   @override
-  String get channels_senderNameLabel => 'Sender';
+  String get channels_senderNameLabel => 'Подател';
 
   @override
-  String get channels_senderNameDefault => 'default';
+  String get channels_senderNameDefault => 'по подразбиране';
 
   @override
-  String get channels_senderNameTitle => 'Sender name';
+  String get channels_senderNameTitle => 'Име на подателя';
 
   @override
   String get channels_senderNameBody =>
-      'You can change the name for this channel.';
+      'Можете да смените името за този канал.';
 
   @override
   String channels_senderNameBytes(int count, int max) {
-    return '$count / $max bytes';
+    return '$count / $max байта';
   }
 
   @override
   String get channels_senderNameLockedBySign =>
-      'A channel with signed MCMP sends under the node\'s name.';
+      'Канал с подпис MCMP изпраща под името на възела.';
 
   @override
   String get channels_senderNameNeedsFirmware =>
-      'Needs firmware with version code 13 or newer.';
+      'Нужен е фърмуер с код на версията 13 или по-нов.';
 
   @override
   String get channels_senderNamePrivateRegion =>
-      'The region\'s key is on the repeater, so the name cannot be changed.';
+      'Ключът на региона се пази на повторителя, затова името не може да бъде сменено.';
 
   @override
   String get channels_senderNameResetBySign =>
-      'The sender name set for this channel will be reset.';
+      'Името на подателя, зададено за канала, ще бъде нулирано.';
 
   @override
-  String get powerSaving_title => 'Power saving';
+  String get powerSaving_title => 'Пестене на енергия';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsing =>
-      'Parse progress only while sending';
+      'Анализиране на напредъка само при изпращане';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+      'Не анализира радиокадрите за напредъка на личната доставка, докато няма следени изпращания. Приемането на съобщения и потвържденията за доставка се запазват.';
 
   @override
-  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+  String get powerSaving_cacheChannelKeyHashes =>
+      'Кеширане на параметрите на каналите';
 
   @override
   String get powerSaving_cacheChannelKeyHashesDescription =>
-      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+      'Използва повторно изчисления хеш на непроменен ключ на канал при обработката на входящи пакети. Проверката и дешифрирането на съобщенията се запазват.';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimations =>
-      'Pause hidden status animations';
+      'Спиране на скритите анимации на статуса';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+      'Спира точките на изпращане и пулсирането на индикаторите извън видимата област, под друг екран и при неактивно приложение. На екрана анимацията се запазва.';
 
   @override
   String get powerSaving_disableContinuousStatusAnimations =>
-      'Static status indicators';
+      'Статични индикатори на статуса';
 
   @override
   String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+      'Заменя анимацията на точките на изпращане и плавното пулсиране със статични индикатори, включително на екрана. Статусите, броячите на повторенията и обработката на изпращането се запазват.';
 
   @override
-  String get powerSaving_reduceBlePluginLogs =>
-      'Reduce Bluetooth diagnostic logs';
+  String get powerSaving_reduceBlePluginLogs => 'По-малко служебни BLE журнали';
 
   @override
   String get powerSaving_reduceBlePluginLogsDescription =>
-      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+      'Намалява служебния изход на Bluetooth на Android, iOS и macOS. Предупрежденията, грешките и журналът на кадрите на приложението се запазват. На Windows, Linux и в браузъра няма ефект.';
 
   @override
   String get powerSaving_deferBleLogDescriptions =>
-      'Defer frame log descriptions';
+      'Отлагане на описанието на кадрите в журнала';
 
   @override
   String get powerSaving_deferBleLogDescriptionsDescription =>
-      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+      'Създава текстовото описание, когато е нужно за показване или копиране. Данните на кадъра и времето на записа се запазват веднага; съставът на журнала и защитата на личните данни не се променят.';
 
   @override
-  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+  String get powerSaving_uiNotificationInterval =>
+      'Интервал на обновяване на интерфейса';
 
   @override
   String get powerSaving_uiNotificationDescription =>
-      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+      'Обединява обичайните обновявания при поток от събития. По-големият интервал прави показването по-малко оперативно. Обработката на пакетите и потвържденията не се забавя; промените в състоянието на връзката запазват предишния прозорец от 50 мс.';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
-    return '$milliseconds ms';
+    return '$milliseconds мс';
   }
 
   @override
-  String get powerSaving_profile => 'Profile';
+  String get powerSaving_profile => 'Профил';
 
   @override
-  String get powerSaving_disabled => 'Off';
+  String get powerSaving_disabled => 'Изключено';
 
   @override
-  String get powerSaving_balanced => 'Balanced';
+  String get powerSaving_balanced => 'Балансиран';
 
   @override
-  String get powerSaving_economical => 'Economical';
+  String get powerSaving_economical => 'Икономичен';
 
   @override
-  String get powerSaving_maximum => 'Maximum saving';
+  String get powerSaving_maximum => 'Максимална икономия';
 
   @override
-  String get powerSaving_custom => 'Custom settings';
+  String get powerSaving_custom => 'Собствени настройки';
 
   @override
   String get powerSaving_hiddenRadioStatsInterval =>
-      'Radio statistics interval on a hidden screen';
+      'Интервал на радиостатистиката при скрит екран';
 
   @override
   String powerSaving_seconds(int seconds) {
-    return '$seconds s';
+    return '$seconds с';
   }
 
   @override
   String get powerSaving_radioStatsDescription =>
-      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+      'Действа, когато екранът с радиостатистиката е закрит от друг екран или приложението е неактивно. На видимия екран обновяването остава веднъж в секунда. Други функции могат да изискват по-често обновяване.';
 
   @override
   String get powerSaving_customDescription =>
-      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+      'Минималните стойности запазват първоначалното поведение. Собствените настройки се пазят отделно от готовите профили.';
 
   @override
   String get powerSaving_presetDescription =>
-      'Preset values are fixed. Select Custom settings to adjust them individually.';
+      'Стойностите на готовия профил са фиксирани. За да променяте параметрите поотделно, изберете „Собствени настройки“.';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicator =>
-      'Pause polling for a hidden radio indicator';
+      'Спиране на запитванията за скрития радиоиндикатор';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+      'Изключва запитванията за индикатора, когато е скрит, закрит от друг екран или приложението е неактивно. Изпращането на съобщения и другите потребители на запитванията запазват нужните обновявания.';
 
   @override
-  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+  String get powerSaving_batteryInterval =>
+      'Интервал на запитване на батерията на възела';
 
   @override
   String powerSaving_batteryDescription(int minutes) {
-    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+    return 'Действа при отворено приложение и във фонов режим. Прагът на тишина за контрол на връзката: $minutes мин; по-големият интервал забавя откриването на мълчаща връзка. Ръчното обновяване остава достъпно.';
   }
 
   @override
-  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+  String get powerSaving_gpsInterval =>
+      'Интервал на обновяване на GPS на възела';
 
   @override
   String get powerSaving_gpsDescription =>
-      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+      'Действа при отворено приложение и във фонов режим, само ако GPS е включен на възела. По-големият интервал намалява актуалността на показаните координати на възела. GPS на телефона и wardrive се настройват отделно.';
 
   @override
-  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+  String get powerSaving_pauseIdleImageCleanup =>
+      'Спиране на почистването на изображения в покой';
 
   @override
   String get powerSaving_pauseIdleImageCleanupDescription =>
-      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+      'Почистването се изпълнява само докато има незавършени изображения или временно запазени данни за защита от дубликати. Срокът за изчакване на липсващите пакети не се променя.';
 
   @override
-  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+  String get powerSaving_pauseHiddenGifs => 'Спиране на скритите GIF';
 
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
-      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+      'Спира показването на кадрите на GIF извън видимата област, под друг екран и при неактивно приложение. При връщане показването се възобновява, ако GIF не е бил поставен на пауза ръчно.';
 
   @override
   String get powerSaving_backgroundReconnectInterval =>
-      'Background reconnection pause';
+      'Пауза между повторните свързвания във фонов режим';
 
   @override
   String get powerSaving_backgroundReconnectDescription =>
-      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+      'Само BLE и TCP, след първите шест паузи от 1/2/4/8/16/30 секунди. Действа при неактивно приложение; връщането в приложението възстановява обичайния график. По-дългата пауза може да забави възстановяването на връзката. Времето за свързване се добавя към паузата.';
 
   @override
-  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+  String get powerSaving_cpuSleepAlways =>
+      'Разрешаване на заспиване на CPU винаги, когато е възможно';
 
   @override
-  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+  String get powerSaving_cpuSleepBle => 'При BLE връзка';
 
   @override
   String get powerSaving_cpuSleepDescription =>
-      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+      'Разрешава на устройството да заспива между операциите. Отделните отметки действат във фонов режим; заспиването трябва да се разрешава от всички активни сценарии. Общата отметка действа независимо от сценария.';
 
   @override
-  String get powerSaving_cpuSleepProxy =>
-      'While the companion proxy is running';
+  String get powerSaving_cpuSleepProxy => 'При работещо companion-прокси';
 
   @override
-  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+  String get powerSaving_cpuSleepTcp => 'При TCP връзка';
 
   @override
-  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+  String get powerSaving_cpuSleepTitle => 'Заспиване на CPU (Android)';
 
   @override
-  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+  String get powerSaving_cpuSleepWardrive => 'При работещ wardrive';
 
   @override
-  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+  String get powerSaving_cpuSleepUnconditional => 'Винаги, без изключения';
 
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
-      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+      'Напълно освобождава нашите задържания на CPU, включително по време на операции. Заспиването на устройството може да ги забави или прекъсне. Задържанията на Android и други компоненти не се променят.';
 
   @override
-  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+  String get powerSaving_blePriorityTitle => 'Режим на BLE връзката с възела';
 
   @override
   String get powerSaving_blePriorityDescription =>
-      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+      'Прилага се след повторно свързване с възела. Първоначалният режим не изисква промени; High дава приоритет на скоростта, Low power на пестенето на енергия. Действителните параметри избират Android и възелът; икономичният режим може да забави обмена.';
 
   @override
-  String get powerSaving_bleOriginal => 'Original';
+  String get powerSaving_bleOriginal => 'Първоначален';
 
   @override
-  String get powerSaving_bleBalanced => 'Balanced';
+  String get powerSaving_bleBalanced => 'Балансиран (Balanced)';
 
   @override
-  String get powerSaving_bleHigh => 'High speed (High)';
+  String get powerSaving_bleHigh => 'Висока скорост (High)';
 
   @override
-  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+  String get powerSaving_bleLowPower => 'Пестене на енергия (Low power)';
 
   @override
-  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+  String get powerSaving_releaseTcpWifiLock => 'Без задържане на Wi-Fi за TCP';
 
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
-      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+      'Разрешава обичайното пестене на енергия на Wi-Fi при TCP връзка с възела, включително през Tailscale. Прилага се веднага, на екрана и във фонов режим; фоновата услуга и настройката за заспиване на CPU се запазват. На някои устройства са възможни забавяния или прекъсвания на връзката.';
 
   @override
   String get powerSaving_reduceDeliveryObservationWrites =>
-      'Reduce delivery statistics rewrites';
+      'Ограничаване на презаписа на статистиката за доставка';
 
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+      'Обновява само променената част от натрупаната статистика за доставка. Съдържанието и редът не се променят, записът не се отлага допълнително.';
 
   @override
-  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+  String get powerSaving_iosImmortalizerTitle =>
+      'iOS: задържане във фонов режим';
 
   @override
   String get powerSaving_iosImmortalizerDescription =>
-      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+      'Експериментални параметри на вграденото задържане на TCP във фонов режим. Достъпни са чрез „Собствени настройки“; първоначалните стойности запазват сегашното поведение. Защитата на кадрите и GPU остава включена.';
 
   @override
   String get powerSaving_iosImmortalizerFrames =>
-      'Pause UI frame scheduling in the background';
+      'Спиране на планирането на UI кадри във фонов режим';
 
   @override
   String get powerSaving_iosImmortalizerHooks =>
-      'Reduce native hook processing';
+      'Облекчена обработка на native hooks';
 
   @override
-  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+  String get powerSaving_iosImmortalizerMode =>
+      'Режим на задържане във фонов режим';
 
   @override
   String get powerSaving_iosImmortalizerOriginal =>
-      'Original (hooks and silent audio)';
+      'Стандартен (hooks и тихо аудио)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudio =>
-      'Without audio (experimental)';
+      'Без аудио (експеримент)';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+      'Без тихо аудио iOS може да спре приложението и доставката на съобщения. Аудиопараметрите се запазват, но в този режим не се прилагат.';
 
   @override
   String get powerSaving_iosImmortalizerSampleRate =>
-      'Silent audio file sample rate';
+      'Честота на файла с тишина';
 
   @override
-  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+  String get powerSaving_iosImmortalizerEightKhz => 'Първоначална: 8 kHz';
 
   @override
   String get powerSaving_iosImmortalizerOutputRate =>
-      'Match the actual audio output';
+      'Според действителния аудиоизход';
 
   @override
-  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+  String get powerSaving_iosImmortalizerBuffer => 'Предпочитан аудиобуфер I/O';
 
   @override
   String get powerSaving_iosImmortalizerBufferDescription =>
-      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+      'Заявка към iOS, а не гарантирана хардуерна продължителност. „Системна“ оставя първоначалното предпочитание. Приетата стойност вижте в диагностиката.';
 
   @override
   String get powerSaving_iosImmortalizerSystem =>
-      'System (original preference)';
+      'Системна (първоначално предпочитание)';
 
   @override
-  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+  String get powerSaving_iosImmortalizerLoop => 'Дължина на цикъла с тишина';
 
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
-      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+      'Първоначално 1 секунда. По-дългият PCM цикъл заема повече памет; икономия на батерия засега не е установена.';
 
   @override
   String get companionCli_title => 'CompanionCLI';
 
   @override
   String companionCli_nodeTitle(String nodeName) {
-    return 'Node CLI: $nodeName';
+    return 'CLI на възела: $nodeName';
   }
 
   @override
-  String get companionCli_description =>
-      'Service console for the connected node';
+  String get companionCli_description => 'Служебна конзола на свързания възел';
 
   @override
-  String get companionCli_noNode => 'No node selected';
+  String get companionCli_noNode => 'Няма избран възел';
 
   @override
   String get companionCli_localOnly =>
-      'Commands run only on the currently connected node';
+      'Командите се изпълняват само на текущия свързан възел';
 
   @override
-  String get companionCli_sharedHistory => 'Shared history with source nodes';
+  String get companionCli_sharedHistory => 'Обща история с посочване на възела';
 
   @override
   String get companionCli_empty =>
-      'Console history is empty. Try the ver command.';
+      'Историята на конзолата е празна. Опитайте командата ver.';
 
   @override
-  String get companionCli_command => 'Command';
+  String get companionCli_command => 'Команда';
 
   @override
-  String get companionCli_send => 'Run command';
+  String get companionCli_send => 'Изпълни командата';
 
   @override
-  String get companionCli_emptyReply => 'An empty reply was received';
+  String get companionCli_emptyReply => 'Получен е празен отговор';
 
   @override
   String get companionCli_unavailable =>
-      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+      'За изпращане е нужен свързан companion възел с версия на протокола 14 или по-нова (MeshCore 1.18+). Историята остава достъпна за преглед.';
 
   @override
-  String get companionCli_busy => 'Wait for the current command to finish.';
+  String get companionCli_busy => 'Изчакайте отговора на текущата команда.';
 
   @override
   String get companionCli_invalidCommand =>
-      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+      'Въведете една команда без нов ред и нулеви байтове, поне два байта UTF-8.';
 
   @override
   String get companionCli_tooLong =>
-      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+      'Командата надвишава допустимата дължина: максимум 172 байта UTF-8; параметрите на set radio са максимум 131 байта.';
 
   @override
   String get companionCli_tagExhausted =>
-      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+      'Идентификаторите на CLI заявките са изчерпани. Рестартирайте приложението, за да започнете нова безопасна сесия.';
 
   @override
   String get companionCli_timeout =>
-      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+      'Отговорът не беше получен навреме. Командата може да е изпълнена; автоматично повторение няма. Връзката се обновява.';
 
   @override
   String get companionCli_protocolError =>
-      'The node or proxy rejected the request.';
+      'Възелът или проксито отхвърлиха заявката.';
 
   @override
   String get companionCli_disconnected =>
-      'The connection or node changed. The command will not resume automatically.';
+      'Връзката или възелът се промениха. Изпълнението на командата не се възобновява автоматично.';
 
   @override
   String get companionCli_historyError =>
-      'Console history could not be read or saved.';
+      'Историята на конзолата не можа да бъде прочетена или запазена.';
 
   @override
   String get companionCli_sendFailed =>
-      'Sending could not be confirmed. The command will not be retried automatically.';
+      'Изпращането на командата не можа да бъде потвърдено. Автоматично повторение няма.';
 
   @override
   String get cliHistory_temporary =>
-      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+      'В браузъра историята на CLI се пази само до презареждане на страницата. Тя не се записва в настройките.';
 
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
-      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
+      'Да се изчисти ли историята на тази конзола за текущия възел? Историята на другите възли ще се запази. Изпълняваната команда няма да бъде отменена.';
 }

@@ -50,6 +50,7 @@ import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_badge.dart';
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/companion_cli_list_layout.dart';
+import '../helpers/companion_cli_group_members.dart';
 import '../widgets/companion_cli_tile.dart';
 import '../helpers/channel_group_helper.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-scan
@@ -472,7 +473,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       waitingForFirstChannel ||
                       waitingForChannelGroups) {
                     return Column(children: [
-                      if (_showCompanionCli) CompanionCliTile(connector: connector,
+                      if (_showUngroupedCompanionCli) CompanionCliTile(connector: connector,
                         margin: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
                       const Expanded(child: Center(child: CircularProgressIndicator())),
                     ]);
@@ -1288,6 +1289,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   bool get _showCompanionCli => context.read<MeshCoreConnector>().supportsCompanionCli &&
       context.read<AppSettingsService>().settings.roomServerShowNotemptyContactsOnChatscreen;
 
+  bool get _showUngroupedCompanionCli => _showCompanionCli &&
+      !_channelGroups.any((group) => hasCompanionCliGroupMember(group.channelNames));
+
+  bool _groupMatchesCompanionCli(ChannelGroup group, String query) =>
+      _showCompanionCli && hasCompanionCliGroupMember(group.channelNames) &&
+      context.l10n.companionCli_title.toLowerCase().contains(query);
+
   Widget _buildChannelsList(
     BuildContext context,
     MeshCoreConnector connector,
@@ -1322,6 +1330,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       if (viewState.channelsSearchText.isEmpty) return true;
       final query = viewState.channelsSearchText.toLowerCase();
       return group.name.toLowerCase().contains(query) ||
+          _groupMatchesCompanionCli(group, query) ||
           _itemsForGroup(
             group,
             filteredChannels,
@@ -1352,7 +1361,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       );
     }
     final hasVisibleContent =
-        visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty || _showCompanionCli;
+        visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty || _showUngroupedCompanionCli;
 
     if (!hasVisibleContent) {
       return ListView(
@@ -1391,7 +1400,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           : baseEntries;
       final cliLayout = CompanionCliListLayout<_ChannelScreenListEntry>(
         items: entries, keyOf: _screenOrderKeyForEntry,
-        previousOrder: _manualScreenOrder, visible: _showCompanionCli,
+        previousOrder: _manualScreenOrder, visible: _showUngroupedCompanionCli,
         minimumPosition: sortUnreadFirst ? entries.takeWhile(
           (entry) => _unreadCountForScreenEntry(connector, entry) > 0).length : 0);
       return ReorderableListView.builder(
@@ -1502,7 +1511,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
       );
     }
-    if (_showCompanionCli) {
+    if (_showUngroupedCompanionCli) {
       children.insert(0, CompanionCliTile(connector: connector));
     }
     return ListView(
@@ -1527,6 +1536,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       if (viewState.channelsSearchText.isEmpty) return true;
       final query = viewState.channelsSearchText.toLowerCase();
       return group.name.toLowerCase().contains(query) ||
+          _groupMatchesCompanionCli(group, query) ||
           channelsForGroup(group, filteredChannels).isNotEmpty;
     }).toList();
     final ungroupedChannels = filteredChannels
@@ -1543,7 +1553,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final hasVisibleContent =
         visibleGroups.isNotEmpty ||
         ungroupedChannels.isNotEmpty ||
-        detachedItems.isNotEmpty || _showCompanionCli;
+        detachedItems.isNotEmpty || _showUngroupedCompanionCli;
 
     if (!hasVisibleContent) {
       return ListView(
@@ -1584,7 +1594,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           ? _screenOrderKeyForGroup(entry.group!) : 'channel:${entry.channel!.index}';
       final cliLayout = CompanionCliListLayout<ChannelGroupListEntry>(
         items: entries, keyOf: entryKey, previousOrder: _manualScreenOrder,
-        visible: _showCompanionCli, retainPeerKeys: true,
+        visible: _showUngroupedCompanionCli, retainPeerKeys: true,
         minimumPosition: sortUnreadFirst ? entries.takeWhile(
           (entry) => _unreadCountForChannelEntry(connector, entry) > 0).length : 0);
       return ListView(
@@ -1724,7 +1734,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
       );
     }
-    if (_showCompanionCli) {
+    if (_showUngroupedCompanionCli) {
       children.insert(0, CompanionCliTile(connector: connector));
     }
     return ListView(
@@ -1986,7 +1996,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     required bool sortUnreadFirst,
     Color? emptyTextColor,
   }) {
-    if (items.isEmpty) {
+    final cliLayout = CompanionCliListLayout<_ChannelScreenItem>(
+      items: items,
+      keyOf: _groupNameForItemKey,
+      previousOrder: group.channelNames.map((key) => key.trim().toLowerCase()).toList(),
+      visible: _showCompanionCli && hasCompanionCliGroupMember(group.channelNames),
+      minimumPosition: sortUnreadFirst ? items.takeWhile(
+        (item) => _unreadCountForItem(connector, item) > 0).length : 0,
+    );
+    if (cliLayout.entries.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Align(
@@ -2002,8 +2020,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     if (!canReorder) {
       return Column(
         children: [
-          for (final channel in items)
-            _buildChannelScreenItem(
+          for (final channel in cliLayout.entries)
+            if (channel == null)
+              CompanionCliTile(connector: connector)
+            else _buildChannelScreenItem(
               context,
               connector,
               channelMessageStore,
@@ -2022,19 +2042,23 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       buildDefaultDragHandles: false,
-      itemCount: items.length,
+      itemCount: cliLayout.entries.length,
       onReorderItem: (oldIndex, newIndex) {
         _reorderItemsInGroup(
           connector,
           group,
-          items,
           oldIndex,
           newIndex,
           sortUnreadFirst: sortUnreadFirst,
+          cliLayout: cliLayout,
         );
       },
       itemBuilder: (context, index) {
-        final item = items[index];
+        final item = cliLayout.entries[index];
+        if (item == null) {
+          return CompanionCliTile(key: const ValueKey(companionCliOrderKey),
+            connector: connector, dragIndex: index);
+        }
         final channel = item.channel;
         final showDragHandle = !_isUnreadSortedItem(
           connector,
@@ -2061,16 +2085,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   void _reorderItemsInGroup(
     MeshCoreConnector connector,
     ChannelGroup group,
-    List<_ChannelScreenItem> displayItems,
     int oldIndex,
     int newIndex, {
     required bool sortUnreadFirst,
+    required CompanionCliListLayout<_ChannelScreenItem> cliLayout,
   }) {
-    final reorderedItems = List<_ChannelScreenItem>.from(displayItems);
-    if (oldIndex < 0 || oldIndex >= reorderedItems.length) return;
-    final item = reorderedItems.removeAt(oldIndex);
-    final insertIndex = max(0, min(newIndex, reorderedItems.length));
-    reorderedItems.insert(insertIndex, item);
+    if (oldIndex < 0 || oldIndex >= cliLayout.entries.length) return;
+    final moved = cliLayout.moved(oldIndex,
+      newIndex.clamp(0, cliLayout.entries.length - 1).toInt());
+    final reorderedItems = moved.whereType<_ChannelScreenItem>().toList();
     final persistedItems = sortUnreadFirst
         ? _restoreUnreadItemPositions(
             _itemsForGroup(group, connector.channels, _visibleRoomServers()),
@@ -2078,8 +2101,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             connector,
           )
         : reorderedItems;
+    final originalNames = {
+      for (final item in persistedItems) _groupNameForItemKey(item): _groupNameForItem(item),
+    };
     final reorderedNames = [
-      for (final item in persistedItems) _groupNameForItem(item),
+      for (final key in cliLayout.order(moved, persistedItems)) originalNames[key] ?? key,
     ];
     final updatedGroups = [
       for (final item in _channelGroups)
@@ -2226,6 +2252,21 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
+                    if (hasCompanionCliGroupMember(group.channelNames) ||
+                        (_showCompanionCli && !groupedNames.contains(companionCliOrderKey)))
+                      CheckboxListTile(
+                        key: const ValueKey('companion-cli-group-member'),
+                        value: selectedNames.contains(companionCliOrderKey),
+                        title: Text(context.l10n.companionCli_title),
+                        secondary: const Icon(Icons.terminal),
+                        onChanged: (value) => setDialogState(() {
+                          if (value == true) {
+                            selectedNames.add(companionCliOrderKey);
+                          } else {
+                            selectedNames.remove(companionCliOrderKey);
+                          }
+                        }),
+                      ),
                     Expanded(
                       child: editableItems.isEmpty
                           ? Center(
@@ -2708,7 +2749,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         orderedNames.add(name);
       }
     }
-    return orderedNames;
+    return withCompanionCliGroupMember(orderedNames,
+      selected: selectedNames.contains(companionCliOrderKey),
+      previousOrder: group.channelNames);
   }
 
   List<String> _selectedItemNamesForGroupEditSorted(
@@ -2719,7 +2762,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       for (final item in editableItems)
         if (selectedNames.contains(_groupNameForItemKey(item))) item,
     ]..sort((a, b) => _itemNameForSort(a).compareTo(_itemNameForSort(b)));
-    return [for (final item in selectedItems) _groupNameForItem(item)];
+    return withCompanionCliGroupMember(
+      [for (final item in selectedItems) _groupNameForItem(item)],
+      selected: selectedNames.contains(companionCliOrderKey));
   }
 
   List<Contact> _roomServerContactsForChannelsScreen(

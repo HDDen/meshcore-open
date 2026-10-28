@@ -920,7 +920,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String appSettings_channelMinHopsRepeaterCount(Object count) {
-    return 'Required nearby repeaters: $count';
+    return '所需附近中继器数：$count';
   }
 
   @override
@@ -4052,7 +4052,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get telemetry_powerLabel => '功率';
 
   @override
-  String get telemetry_calculatedPowerLabel => 'Calculated power (V × I)';
+  String get telemetry_calculatedPowerLabel => '计算功率（V × I）';
 
   @override
   String get telemetry_distanceLabel => '距离';
@@ -6954,169 +6954,157 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_addToNodeFull => '节点内存已满';
 
   @override
-  String get channels_shareCopyLink => 'Copy link';
+  String get channels_shareCopyLink => '复制链接';
 
   @override
-  String get dataFolder_inUseTitle => 'The data folder is already in use';
+  String get dataFolder_inUseTitle => '数据文件夹已被占用';
 
   @override
   String dataFolder_inUseBody(String path) {
-    return 'Another running copy of the app is using this data folder:\n$path\n\nClose that copy, then start the app again.';
+    return '另一个正在运行的应用副本正在使用此数据文件夹：\n$path\n\n请关闭那个副本，然后重新启动应用。';
   }
 
   @override
-  String get dataFolder_unavailableTitle => 'The data folder cannot be used';
+  String get dataFolder_unavailableTitle => '无法使用数据文件夹';
 
   @override
   String dataFolder_unavailableBody(String path) {
-    return 'The app keeps its data in this folder, but cannot create it or write to it:\n$path\n\nMove the app to a folder you can write to.';
+    return '应用将数据保存在此文件夹中，但无法创建该文件夹或向其中写入：\n$path\n\n请将应用移动到有写入权限的文件夹。';
   }
 
   @override
   String get dataFolder_missingPath =>
-      'The --data-dir parameter names no folder. It is written as --data-dir=<path>.';
+      '--data-dir 参数未指定文件夹。写法为：--data-dir=<路径>。';
 
   @override
   String get dataFolder_otherFolderHint =>
-      'A copy of the app can be given a data folder of its own at start: --data-dir=<path>. A relative path counts from the app\'s folder.';
+      '启动应用副本时可以为其指定单独的数据文件夹：--data-dir=<路径>。相对路径从应用所在文件夹算起。';
 
   @override
   String dataFolder_details(String error) {
-    return 'Details: $error';
+    return '详细信息：$error';
   }
 
   @override
-  String get dataTransfer_offerTitle => 'Data of an earlier installation found';
+  String get dataTransfer_offerTitle => '发现以前安装的数据';
 
   @override
   String dataTransfer_offerBody(String target) {
-    return 'Earlier the app kept its data in the system folders. They can be copied into this data folder:\n$target';
+    return '以前应用将数据保存在系统文件夹中。可以将其复制到此数据文件夹：\n$target';
   }
 
   @override
-  String get dataTransfer_offerSources => 'Copied from:';
+  String get dataTransfer_offerSources => '复制来源：';
 
   @override
   String dataTransfer_offerSize(String size) {
-    return 'Size: $size';
+    return '大小：$size';
   }
 
   @override
-  String get dataTransfer_offerSizeCounting => 'Size: counting…';
+  String get dataTransfer_offerSizeCounting => '大小：正在计算…';
 
   @override
-  String get dataTransfer_offerCopiedBefore =>
-      'These data have already been copied:';
+  String get dataTransfer_offerCopiedBefore => '这些数据已复制过：';
 
   @override
-  String get dataTransfer_offerNote =>
-      'The original folders stay as they are. Close other running copies of the app before copying.';
+  String get dataTransfer_offerNote => '原文件夹将保持不变。复制前请关闭其他正在运行的应用副本。';
 
   @override
-  String get dataTransfer_copy => 'Copy';
+  String get dataTransfer_copy => '复制';
 
   @override
-  String get dataTransfer_startEmpty => 'Start with empty data';
+  String get dataTransfer_startEmpty => '以空数据开始';
 
   @override
-  String get dataTransfer_progressTitle => 'Copying data';
+  String get dataTransfer_progressTitle => '正在复制数据';
 
   @override
   String dataTransfer_progress(String copied, String total) {
-    return 'Copied $copied of $total';
+    return '已复制 $copied / $total';
   }
 
   @override
-  String get dataTransfer_progressNote =>
-      'Closing the window stops the copy; the next start offers it again.';
+  String get dataTransfer_progressNote => '关闭窗口会中断复制，下次启动时会再次提示。';
 
   @override
-  String get dataTransfer_failedTitle => 'The data could not be copied';
+  String get dataTransfer_failedTitle => '无法复制数据';
 
   @override
-  String get dataTransfer_failedBody =>
-      'The original folders were not changed. The next start offers the copy again; close other copies of the app first.';
+  String get dataTransfer_failedBody => '原文件夹未被更改。下次启动时会再次提示复制；在此之前请关闭其他应用副本。';
 
   @override
-  String get dataCleanup_title => 'Delete the old data?';
+  String get dataCleanup_title => '删除旧数据？';
 
   @override
   String get dataCleanup_body =>
-      'At an earlier start the data were copied into this data folder. The originals are still in the system folders and can go once everything here is in place:';
+      '在之前的某次启动中，数据已复制到此数据文件夹。原始数据仍在系统文件夹中，如果这里的数据完整，可以将其删除：';
 
   @override
   String get dataCleanup_note =>
-      'Other new copies of the app will no longer be offered these data. From the shared temporary and documents folders only the files copied here are deleted.';
+      '其他新的应用副本将不再收到这些数据的提示。在共享的临时文件夹和“文档”中，只会删除复制到这里的文件。';
 
   @override
-  String get dataCleanup_keep => 'Keep';
+  String get dataCleanup_keep => '保留';
 
   @override
-  String get dataCleanup_progress => 'Deleting the old data…';
+  String get dataCleanup_progress => '正在删除旧数据…';
 
   @override
   String dataCleanup_partial(int count) {
-    return 'Some old folders could not be emptied ($count): another running copy of the app may hold their files. The next start asks again.';
+    return '部分旧文件夹未能清空（$count）：其中的文件可能被另一个正在运行的应用副本占用。下次启动时会再次询问。';
   }
 
   @override
-  String get settings_modSettingsExactQuoteLatest =>
-      'Use for the author\'s latest message too';
+  String get settings_modSettingsExactQuoteLatest => '也用于作者的最新消息';
 
   @override
   String get settings_modSettingsExactQuoteLatestDscr =>
-      'Off, the reply to the author’s latest message will only include a mention. On, the system will handle correctly situations where your latest message and those of others are out of sync and are different messages.';
+      '关闭时，对作者最新消息的回复只包含提及。开启时，可正确处理你与其他人的最新消息不同步、实际是不同消息的情况。';
 
   @override
-  String get channelPath_deliveryConfirmedPath => 'Delivery confirmed via path';
+  String get channelPath_deliveryConfirmedPath => '已通过此路径确认送达';
 
   @override
-  String get channelPath_deliveryPathUnknown =>
-      'No delivery confirmation has been received for this message yet, or the route could not be determined.';
+  String get channelPath_deliveryPathUnknown => '尚未收到此消息的送达确认，或无法确定路线。';
 
   @override
-  String get channelPath_deliveredDirectly =>
-      'Delivered directly, without repeaters';
+  String get channelPath_deliveredDirectly => '已直接送达，未经过中继器';
 
   @override
   String get channelPath_incompletePathsNote =>
-      'Direct message packets carry only the remaining hops, not the full route: each repeater in turn removes itself from the remaining path.';
+      '私聊消息的数据包只携带剩余的跳，而不是完整路线：每个中继器依次将自身从剩余路径中移除。';
 
   @override
-  String get discoveredContacts_previouslyHeard => 'previously heard nodes';
+  String get discoveredContacts_previouslyHeard => '以前收到的节点';
 
   @override
   String map_wardriveBackgroundNeeds(String requirement) {
-    return 'Background mode needs $requirement. Tap the option again for the next permission.';
+    return '后台模式需要：$requirement。再次点按此选项以进入下一项权限。';
   }
 
   @override
   String map_wardriveBackgroundOff(String requirement) {
-    return 'Background mode is off, still needed: $requirement.';
+    return '后台模式已关闭，仍缺少：$requirement。';
   }
 
   @override
-  String get map_wardriveRequirementNotifications =>
-      'the notification permission';
+  String get map_wardriveRequirementNotifications => '通知权限';
 
   @override
-  String get map_wardriveRequirementLocationServices =>
-      'location services turned on';
+  String get map_wardriveRequirementLocationServices => '开启手机定位服务';
 
   @override
-  String get map_wardriveRequirementLocationAlways =>
-      'location access “All the time”';
+  String get map_wardriveRequirementLocationAlways => '位置信息访问“始终允许”';
 
   @override
-  String get map_wardriveRequirementBattery =>
-      'battery optimization turned off for the app';
+  String get map_wardriveRequirementBattery => '关闭应用的电池优化';
 
   @override
-  String get map_wardriveRequirementBackgroundActivity =>
-      'background activity allowed (not restricted in the battery settings)';
+  String get map_wardriveRequirementBackgroundActivity => '允许后台活动（电池设置中不受限制）';
 
   @override
-  String get settings_modSettingsSenderNameScale => 'Sender name size';
+  String get settings_modSettingsSenderNameScale => '发送者名称大小';
 
   @override
   String get reviewMode_dialogTitle => '进入审核模式？';
@@ -7626,32 +7614,30 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_dataScopeQuestion =>
-      'Remove the channel\'s data on this node only, or in the merged history of every node in the app?';
+  String get channels_dataScopeQuestion => '仅为此节点删除频道数据，还是在应用中所有节点的合并历史中删除？';
 
   @override
-  String get channels_dataScopeThisNode => 'This node';
+  String get channels_dataScopeThisNode => '此节点';
 
   @override
-  String get channels_dataScopeAllNodes => 'All nodes';
+  String get channels_dataScopeAllNodes => '所有节点';
 
   @override
-  String get chat_historyLinkBanner =>
-      'A message history exists for a contact with this name under another key.';
+  String get chat_historyLinkBanner => '找到了同名但密钥不同的联系人的消息历史。';
 
   @override
-  String get chat_historyLinkAttach => 'Attach';
+  String get chat_historyLinkAttach => '合并';
 
   @override
-  String get chat_historyLinkTitle => 'Attach the history?';
+  String get chat_historyLinkTitle => '合并历史？';
 
   @override
   String chat_historyLinkBody(String name, String key) {
-    return 'A history was found for a contact named \"$name\" with another key ($key). Attach it to this chat only if you are sure it is the same person and not a namesake. The two keys then become one contact in the app.';
+    return '找到了名为“$name”但密钥不同（$key）的联系人的历史。只有在确定是同一个人而不是同名者时，才将其合并到此对话中。之后这两个密钥将在应用中成为同一个联系人。';
   }
 
   @override
-  String get chat_historyLinked => 'The history has been attached.';
+  String get chat_historyLinked => '历史已合并。';
 
   @override
   String get scanner_getNodeTitle => '需要新节点吗？';
@@ -7778,15 +7764,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkMap_unnamed => '未命名转发节点';
 
   @override
-  String get channelPath_sendAttemptsLabel => 'Send attempts';
+  String get channelPath_sendAttemptsLabel => '发送尝试次数';
 
   @override
-  String get settings_modSettingsHideChannelMute =>
-      'Hide the channel mute switch';
+  String get settings_modSettingsHideChannelMute => '隐藏频道静音开关';
 
   @override
   String appSettings_channelMinHopsDelay(int seconds) {
-    return 'Wait before resending: $seconds s';
+    return '重发前等待：$seconds 秒';
   }
 
   @override
@@ -7794,394 +7779,358 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count attempts',
-      one: '$count attempt',
+      other: '$count 次尝试',
     );
-    return 'Not spread over the mesh in $_temp0.';
+    return '经过 $_temp0仍未在网络中传播。';
   }
 
   @override
-  String get channels_senderNameLabel => 'Sender';
+  String get channels_senderNameLabel => '发送者';
 
   @override
-  String get channels_senderNameDefault => 'default';
+  String get channels_senderNameDefault => '默认';
 
   @override
-  String get channels_senderNameTitle => 'Sender name';
+  String get channels_senderNameTitle => '发送者名称';
 
   @override
-  String get channels_senderNameBody =>
-      'You can change the name for this channel.';
+  String get channels_senderNameBody => '你可以为此频道更改名称。';
 
   @override
   String channels_senderNameBytes(int count, int max) {
-    return '$count / $max bytes';
+    return '$count / $max 字节';
   }
 
   @override
-  String get channels_senderNameLockedBySign =>
-      'A channel with signed MCMP sends under the node\'s name.';
+  String get channels_senderNameLockedBySign => '启用 MCMP 签名的频道以节点名称发送。';
 
   @override
-  String get channels_senderNameNeedsFirmware =>
-      'Needs firmware with version code 13 or newer.';
+  String get channels_senderNameNeedsFirmware => '需要版本代码 13 或更新的固件。';
 
   @override
-  String get channels_senderNamePrivateRegion =>
-      'The region\'s key is on the repeater, so the name cannot be changed.';
+  String get channels_senderNamePrivateRegion => '区域密钥保存在中继器上，因此无法更改名称。';
 
   @override
-  String get channels_senderNameResetBySign =>
-      'The sender name set for this channel will be reset.';
+  String get channels_senderNameResetBySign => '为此频道设置的发送者名称将被重置。';
 
   @override
-  String get powerSaving_title => 'Power saving';
+  String get powerSaving_title => '节能';
 
   @override
-  String get powerSaving_skipIdleDirectProgressParsing =>
-      'Parse progress only while sending';
+  String get powerSaving_skipIdleDirectProgressParsing => '仅在发送时解析进度';
 
   @override
   String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      'Skips parsing radio frames for direct delivery progress when no sends are being tracked. Message reception and delivery acknowledgements are preserved.';
+      '没有被跟踪的发送时，不为私聊送达进度解析无线电帧。消息接收和送达确认保持不变。';
 
   @override
-  String get powerSaving_cacheChannelKeyHashes => 'Cache channel parameters';
+  String get powerSaving_cacheChannelKeyHashes => '缓存频道参数';
 
   @override
   String get powerSaving_cacheChannelKeyHashesDescription =>
-      'Reuses the computed hash of an unchanged channel key when processing incoming packets. Message verification and decryption are preserved.';
+      '处理传入数据包时，重复使用未更改频道密钥的已计算哈希。消息校验和解密保持不变。';
 
   @override
-  String get powerSaving_pauseHiddenStatusAnimations =>
-      'Pause hidden status animations';
+  String get powerSaving_pauseHiddenStatusAnimations => '暂停隐藏的状态动画';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      'Stops sending dots and pulsing indicators outside the visible area, under another screen and while the app is inactive. Visible indicators keep animating.';
+      '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止发送圆点和脉动指示器。屏幕上可见的指示器继续播放动画。';
 
   @override
-  String get powerSaving_disableContinuousStatusAnimations =>
-      'Static status indicators';
+  String get powerSaving_disableContinuousStatusAnimations => '静态状态指示器';
 
   @override
   String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      'Keeps sending dots and softly pulsing status indicators static, including on screen. Statuses, repeat counts and send processing are preserved.';
+      '将发送圆点动画和状态指示器的柔和脉动替换为静态指示器，包括屏幕上。状态、重复计数和发送处理保持不变。';
 
   @override
-  String get powerSaving_reduceBlePluginLogs =>
-      'Reduce Bluetooth diagnostic logs';
+  String get powerSaving_reduceBlePluginLogs => '减少蓝牙诊断日志';
 
   @override
   String get powerSaving_reduceBlePluginLogsDescription =>
-      'Reduces Bluetooth diagnostic output on Android, iOS and macOS. Warnings, errors and the app frame journal are preserved. Has no effect on Windows, Linux or in a browser.';
+      '减少 Android、iOS 和 macOS 上的蓝牙诊断输出。警告、错误和应用的帧日志保持不变。在 Windows、Linux 和浏览器中无效。';
 
   @override
-  String get powerSaving_deferBleLogDescriptions =>
-      'Defer frame log descriptions';
+  String get powerSaving_deferBleLogDescriptions => '延迟生成帧日志描述';
 
   @override
   String get powerSaving_deferBleLogDescriptionsDescription =>
-      'Builds the text description when needed for display or copying. Frame data and timestamps are saved immediately; log contents and private data protection stay the same.';
+      '在需要显示或复制时才生成文字描述。帧数据和记录时间会立即保存；日志内容和隐私数据保护不变。';
 
   @override
-  String get powerSaving_uiNotificationInterval => 'Interface update interval';
+  String get powerSaving_uiNotificationInterval => '界面更新间隔';
 
   @override
   String get powerSaving_uiNotificationDescription =>
-      'Combines ordinary updates during a stream of events. Longer intervals make displayed data less immediate. Packet and acknowledgement processing is not delayed; connection state changes keep the original 50 ms window.';
+      '在事件连续到来时合并普通更新。间隔越长，显示越不及时。数据包和确认的处理不会延迟；连接状态的变化保持原有的 50 毫秒窗口。';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
-    return '$milliseconds ms';
+    return '$milliseconds 毫秒';
   }
 
   @override
-  String get powerSaving_profile => 'Profile';
+  String get powerSaving_profile => '配置文件';
 
   @override
-  String get powerSaving_disabled => 'Off';
+  String get powerSaving_disabled => '关闭';
 
   @override
-  String get powerSaving_balanced => 'Balanced';
+  String get powerSaving_balanced => '均衡';
 
   @override
-  String get powerSaving_economical => 'Economical';
+  String get powerSaving_economical => '节约';
 
   @override
-  String get powerSaving_maximum => 'Maximum saving';
+  String get powerSaving_maximum => '最大节能';
 
   @override
-  String get powerSaving_custom => 'Custom settings';
+  String get powerSaving_custom => '自定义设置';
 
   @override
-  String get powerSaving_hiddenRadioStatsInterval =>
-      'Radio statistics interval on a hidden screen';
+  String get powerSaving_hiddenRadioStatsInterval => '隐藏屏幕上的无线电统计间隔';
 
   @override
   String powerSaving_seconds(int seconds) {
-    return '$seconds s';
+    return '$seconds 秒';
   }
 
   @override
   String get powerSaving_radioStatsDescription =>
-      'Applies when the radio statistics screen is covered or the app is inactive. The visible screen still refreshes every second. Other features may request more frequent updates.';
+      '在无线电统计屏幕被其他屏幕覆盖或应用不活动时生效。可见屏幕仍每秒更新一次。其他功能可能请求更频繁的更新。';
 
   @override
-  String get powerSaving_customDescription =>
-      'Minimum values keep the original behavior. Your custom values are saved separately from presets.';
+  String get powerSaving_customDescription => '最小值保持原有行为。自定义设置与预设配置文件分开保存。';
 
   @override
-  String get powerSaving_presetDescription =>
-      'Preset values are fixed. Select Custom settings to adjust them individually.';
+  String get powerSaving_presetDescription => '预设配置文件的值是固定的。如需单独调整，请选择“自定义设置”。';
 
   @override
-  String get powerSaving_pauseHiddenRadioIndicator =>
-      'Pause polling for a hidden radio indicator';
+  String get powerSaving_pauseHiddenRadioIndicator => '暂停隐藏的无线电指示器的轮询';
 
   @override
   String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      'Stops polling for the indicator when it is hidden, covered or the app is inactive. Message sends and other polling consumers retain the updates they need.';
+      '当指示器被隐藏、被其他屏幕覆盖或应用不活动时，停止为其轮询。消息发送和其他轮询使用者仍保留所需的更新。';
 
   @override
-  String get powerSaving_batteryInterval => 'Radio battery polling interval';
+  String get powerSaving_batteryInterval => '节点电池查询间隔';
 
   @override
   String powerSaving_batteryDescription(int minutes) {
-    return 'Applies while the app is open and in the background. The connection silence threshold is $minutes minutes; longer polling intervals delay detection of an unresponsive connection. Manual refresh remains available.';
+    return '在应用打开时和后台均生效。连接监控的静默阈值为 $minutes 分钟；间隔越长，发现无响应连接越慢。手动刷新仍可使用。';
   }
 
   @override
-  String get powerSaving_gpsInterval => 'Radio GPS update interval';
+  String get powerSaving_gpsInterval => '节点 GPS 更新间隔';
 
   @override
   String get powerSaving_gpsDescription =>
-      'Applies while the app is open and in the background, only when GPS is enabled on the radio. Longer intervals make the radio\'s displayed position less current. Phone GPS and wardrive are configured separately.';
+      '在应用打开时和后台均生效，仅当节点上开启了 GPS 时适用。间隔越长，显示的节点位置越不及时。手机 GPS 和 wardrive 单独设置。';
 
   @override
-  String get powerSaving_pauseIdleImageCleanup => 'Pause idle image cleanup';
+  String get powerSaving_pauseIdleImageCleanup => '空闲时暂停图像清理';
 
   @override
   String get powerSaving_pauseIdleImageCleanupDescription =>
-      'Runs cleanup only while there are incomplete images or recently completed images retained to recognize duplicates. The timeout for missing packets stays the same.';
+      '仅在存在未完成的图像或为识别重复而保留的最近完成图像时执行清理。缺失数据包的等待时间不变。';
 
   @override
-  String get powerSaving_pauseHiddenGifs => 'Pause hidden GIFs';
+  String get powerSaving_pauseHiddenGifs => '暂停隐藏的 GIF';
 
   @override
   String get powerSaving_pauseHiddenGifsDescription =>
-      'Stops GIF frames outside the viewport, under another screen and while the app is inactive. Playback resumes on return unless you paused the GIF manually.';
+      '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止 GIF 帧。返回时继续播放，除非你手动暂停了该 GIF。';
 
   @override
-  String get powerSaving_backgroundReconnectInterval =>
-      'Background reconnection pause';
+  String get powerSaving_backgroundReconnectInterval => '后台重新连接的间隔';
 
   @override
   String get powerSaving_backgroundReconnectDescription =>
-      'BLE and TCP only, after the first six pauses of 1/2/4/8/16/30 seconds. Applies while the app is inactive; returning to the app restores normal timing. A longer pause can delay reconnection. Connection time is added to the pause.';
+      '仅限 BLE 和 TCP，在前六次 1/2/4/8/16/30 秒的等待之后生效。应用不活动时适用；返回应用后恢复正常节奏。等待越长，连接恢复可能越慢。连接所用的时间会计入等待。';
 
   @override
-  String get powerSaving_cpuSleepAlways => 'Allow CPU sleep whenever possible';
+  String get powerSaving_cpuSleepAlways => '尽可能始终允许 CPU 休眠';
 
   @override
-  String get powerSaving_cpuSleepBle => 'With a BLE connection';
+  String get powerSaving_cpuSleepBle => 'BLE 连接时';
 
   @override
   String get powerSaving_cpuSleepDescription =>
-      'Allow the device to sleep between operations. Individual choices apply in the background; all active scenarios must allow sleep. Always mode applies regardless of the scenario.';
+      '允许设备在操作之间休眠。单独的选项在后台生效；所有活动场景都必须允许休眠。“始终”选项不受场景限制。';
 
   @override
-  String get powerSaving_cpuSleepProxy =>
-      'While the companion proxy is running';
+  String get powerSaving_cpuSleepProxy => 'companion 代理运行时';
 
   @override
-  String get powerSaving_cpuSleepTcp => 'With a TCP connection';
+  String get powerSaving_cpuSleepTcp => 'TCP 连接时';
 
   @override
-  String get powerSaving_cpuSleepTitle => 'CPU sleep (Android)';
+  String get powerSaving_cpuSleepTitle => 'CPU 休眠（Android）';
 
   @override
-  String get powerSaving_cpuSleepWardrive => 'While wardrive is running';
+  String get powerSaving_cpuSleepWardrive => 'wardrive 运行时';
 
   @override
-  String get powerSaving_cpuSleepUnconditional => 'Always, without exceptions';
+  String get powerSaving_cpuSleepUnconditional => '始终，无例外';
 
   @override
   String get powerSaving_cpuSleepUnconditionalDescription =>
-      'Releases our CPU wake locks, including during operations. Device sleep may delay or interrupt them. Wake locks held by Android and other components are unchanged.';
+      '完全释放本应用的 CPU 唤醒锁，包括操作进行期间。设备休眠可能延迟或中断这些操作。Android 和其他组件的唤醒锁不变。';
 
   @override
-  String get powerSaving_blePriorityTitle => 'BLE connection mode to the node';
+  String get powerSaving_blePriorityTitle => '与节点的 BLE 连接模式';
 
   @override
   String get powerSaving_blePriorityDescription =>
-      'Applies after reconnecting to the node. Original makes no request; High prioritizes speed, Low power prioritizes energy saving. Android and the node select the actual parameters; low power may slow transfers.';
+      '重新连接到节点后生效。“原始”不请求任何更改；High 优先考虑速度，Low power 优先考虑节能。实际参数由 Android 和节点决定；节能模式可能使数据交换变慢。';
 
   @override
-  String get powerSaving_bleOriginal => 'Original';
+  String get powerSaving_bleOriginal => '原始';
 
   @override
-  String get powerSaving_bleBalanced => 'Balanced';
+  String get powerSaving_bleBalanced => '均衡（Balanced）';
 
   @override
-  String get powerSaving_bleHigh => 'High speed (High)';
+  String get powerSaving_bleHigh => '高速（High）';
 
   @override
-  String get powerSaving_bleLowPower => 'Energy saving (Low power)';
+  String get powerSaving_bleLowPower => '节能（Low power）';
 
   @override
-  String get powerSaving_releaseTcpWifiLock => 'Release Wi-Fi lock for TCP';
+  String get powerSaving_releaseTcpWifiLock => '不为 TCP 保持 Wi-Fi';
 
   @override
   String get powerSaving_releaseTcpWifiLockDescription =>
-      'Allow normal Wi-Fi power saving when connected to a node over TCP, including Tailscale. Applies immediately, on screen and in the background; the background service and CPU sleep setting stay unchanged. Some devices may experience delays or disconnections.';
+      '通过 TCP 连接节点时（包括经由 Tailscale）允许 Wi-Fi 正常节能。立即生效，屏幕上和后台均适用；后台服务和 CPU 休眠设置不变。部分设备上可能出现延迟或连接中断。';
 
   @override
-  String get powerSaving_reduceDeliveryObservationWrites =>
-      'Reduce delivery statistics rewrites';
+  String get powerSaving_reduceDeliveryObservationWrites => '减少送达统计的重写';
 
   @override
   String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      'Update only the changed part of stored delivery statistics. Keeps the same contents and order without delaying saves further.';
+      '仅更新已保存送达统计中发生变化的部分。内容和顺序不变，保存也不会额外延迟。';
 
   @override
-  String get powerSaving_iosImmortalizerTitle => 'iOS: background execution';
+  String get powerSaving_iosImmortalizerTitle => 'iOS：后台保持';
 
   @override
   String get powerSaving_iosImmortalizerDescription =>
-      'Experimental options for the embedded TCP background hold. Available through Custom settings; original values keep the current behavior. Frame and GPU protection remain enabled.';
+      '内置 TCP 后台保持的实验性选项。可通过“自定义设置”使用；原始值保持当前行为。帧和 GPU 保护保持开启。';
 
   @override
-  String get powerSaving_iosImmortalizerFrames =>
-      'Pause UI frame scheduling in the background';
+  String get powerSaving_iosImmortalizerFrames => '在后台暂停 UI 帧调度';
 
   @override
-  String get powerSaving_iosImmortalizerHooks =>
-      'Reduce native hook processing';
+  String get powerSaving_iosImmortalizerHooks => '简化原生钩子处理';
 
   @override
-  String get powerSaving_iosImmortalizerMode => 'Background hold mode';
+  String get powerSaving_iosImmortalizerMode => '后台保持模式';
 
   @override
-  String get powerSaving_iosImmortalizerOriginal =>
-      'Original (hooks and silent audio)';
+  String get powerSaving_iosImmortalizerOriginal => '标准（钩子和静音音频）';
 
   @override
-  String get powerSaving_iosImmortalizerWithoutAudio =>
-      'Without audio (experimental)';
+  String get powerSaving_iosImmortalizerWithoutAudio => '无音频（实验性）';
 
   @override
   String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      'Without silent audio, iOS may suspend the app and message delivery. Audio settings are retained but not applied in this mode.';
+      '没有静音音频时，iOS 可能暂停应用和消息送达。音频设置会保留，但在此模式下不生效。';
 
   @override
-  String get powerSaving_iosImmortalizerSampleRate =>
-      'Silent audio file sample rate';
+  String get powerSaving_iosImmortalizerSampleRate => '静音文件采样率';
 
   @override
-  String get powerSaving_iosImmortalizerEightKhz => 'Original: 8 kHz';
+  String get powerSaving_iosImmortalizerEightKhz => '原始：8 kHz';
 
   @override
-  String get powerSaving_iosImmortalizerOutputRate =>
-      'Match the actual audio output';
+  String get powerSaving_iosImmortalizerOutputRate => '按实际音频输出';
 
   @override
-  String get powerSaving_iosImmortalizerBuffer => 'Preferred audio I/O buffer';
+  String get powerSaving_iosImmortalizerBuffer => '首选音频 I/O 缓冲区';
 
   @override
   String get powerSaving_iosImmortalizerBufferDescription =>
-      'A request to iOS, not a guaranteed hardware duration. System leaves the original preference unchanged. Check the accepted duration in diagnostics.';
+      '这是对 iOS 的请求，而不是保证的硬件时长。“系统”保持原有偏好不变。已接受的值请在诊断中查看。';
 
   @override
-  String get powerSaving_iosImmortalizerSystem =>
-      'System (original preference)';
+  String get powerSaving_iosImmortalizerSystem => '系统（原有偏好）';
 
   @override
-  String get powerSaving_iosImmortalizerLoop => 'Silent audio loop length';
+  String get powerSaving_iosImmortalizerLoop => '静音循环长度';
 
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
-      'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+      '原始为 1 秒。更长的 PCM 循环占用更多内存；尚未证实能节省电量。';
 
   @override
   String get companionCli_title => 'CompanionCLI';
 
   @override
   String companionCli_nodeTitle(String nodeName) {
-    return 'Node CLI: $nodeName';
+    return '节点 CLI：$nodeName';
   }
 
   @override
-  String get companionCli_description =>
-      'Service console for the connected node';
+  String get companionCli_description => '已连接节点的服务控制台';
 
   @override
-  String get companionCli_noNode => 'No node selected';
+  String get companionCli_noNode => '未选择节点';
 
   @override
-  String get companionCli_localOnly =>
-      'Commands run only on the currently connected node';
+  String get companionCli_localOnly => '命令仅在当前连接的节点上执行';
 
   @override
-  String get companionCli_sharedHistory => 'Shared history with source nodes';
+  String get companionCli_sharedHistory => '标明节点的共享历史';
 
   @override
-  String get companionCli_empty =>
-      'Console history is empty. Try the ver command.';
+  String get companionCli_empty => '控制台历史为空。试试 ver 命令。';
 
   @override
-  String get companionCli_command => 'Command';
+  String get companionCli_command => '命令';
 
   @override
-  String get companionCli_send => 'Run command';
+  String get companionCli_send => '执行命令';
 
   @override
-  String get companionCli_emptyReply => 'An empty reply was received';
+  String get companionCli_emptyReply => '收到空回复';
 
   @override
   String get companionCli_unavailable =>
-      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+      '发送需要连接协议版本 14 或更新（MeshCore 1.18+）的 companion 节点。历史仍可查看。';
 
   @override
-  String get companionCli_busy => 'Wait for the current command to finish.';
+  String get companionCli_busy => '请等待当前命令完成。';
 
   @override
-  String get companionCli_invalidCommand =>
-      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+  String get companionCli_invalidCommand => '请输入一条不含换行和空字节、至少两个 UTF-8 字节的命令。';
 
   @override
   String get companionCli_tooLong =>
-      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+      '命令超出限制：最多 172 个 UTF-8 字节；set radio 参数最多 131 字节。';
 
   @override
-  String get companionCli_tagExhausted =>
-      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+  String get companionCli_tagExhausted => 'CLI 请求标识符已用尽。请重新启动应用以开始新的安全会话。';
 
   @override
-  String get companionCli_timeout =>
-      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+  String get companionCli_timeout => '未能及时收到回复。命令可能已执行；不会自动重试。正在更新连接。';
 
   @override
-  String get companionCli_protocolError =>
-      'The node or proxy rejected the request.';
+  String get companionCli_protocolError => '节点或代理拒绝了请求。';
 
   @override
-  String get companionCli_disconnected =>
-      'The connection or node changed. The command will not resume automatically.';
+  String get companionCli_disconnected => '连接或节点已更改。命令不会自动恢复执行。';
 
   @override
-  String get companionCli_historyError =>
-      'Console history could not be read or saved.';
+  String get companionCli_historyError => '无法读取或保存控制台历史。';
 
   @override
-  String get companionCli_sendFailed =>
-      'Sending could not be confirmed. The command will not be retried automatically.';
+  String get companionCli_sendFailed => '无法确认命令已发送。不会自动重试。';
 
   @override
-  String get cliHistory_temporary =>
-      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+  String get cliHistory_temporary => '在此浏览器中，CLI 历史仅保留到页面重新加载前，不会保存到设置中。';
 
   @override
   String get cliHistory_clearCurrentNodeConfirm =>
-      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
+      '清除当前节点的此控制台历史？其他节点的历史将保留。正在执行的命令不会被取消。';
 }

@@ -20,7 +20,7 @@ import '../helpers/channel_qr_link.dart'; // channel-qr-paste
 import '../helpers/contact_link.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
-import '../widgets/companion_cli_tile.dart';
+import '../widgets/companion_cli_contacts_list.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -795,12 +795,6 @@ class _ContactsScreenState extends State<ContactsScreen>
         body: Column(
           children: [
             const ReviewModeBanner(),
-            if (!widget.selectionMode && !widget.batchOperationsMode &&
-                connector.supportsCompanionCli)
-              // The following filter row adds 8 px above its controls: 4 + 8
-              // matches the 12 px gap above this standalone card.
-              CompanionCliTile(connector: connector, compact: true,
-                margin: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
             Expanded(
               child: IgnorePointer(
                 ignoring: lockContactList,
@@ -1442,6 +1436,11 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
     final viewState = context.watch<UiViewStateService>();
+    final showCompanionCli = !widget.selectionMode && !widget.batchOperationsMode &&
+        connector.supportsCompanionCli;
+    Widget placeholder(Widget child) => showCompanionCli
+        ? CompanionCliContactsList.placeholder(connector: connector, child: child)
+        : child;
     // Copied again only when a contact changed, not on every notification.
     // The node's contacts come first, then the repeaters the app has heard
     // that the node does not hold, whose cards say so.
@@ -1465,11 +1464,11 @@ class _ContactsScreenState extends State<ContactsScreen>
         connector.isLoadingContacts && contacts.isEmpty;
 
     if (waitingForInitialContacts || waitingForFirstContact) {
-      return const Center(child: CircularProgressIndicator());
+      return placeholder(const Center(child: CircularProgressIndicator()));
     }
 
     if (contacts.isEmpty && _groups.isEmpty) {
-      return EmptyState(
+      return placeholder(EmptyState(
         icon: Icons.people_outline,
         title: context.l10n.contacts_noContacts,
         subtitle: context.l10n.contacts_contactsWillAppear,
@@ -1481,7 +1480,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           icon: const Icon(Icons.person_add_rounded),
           label: Text(context.l10n.discoveredContacts_Title),
         ),
-      );
+      ));
     }
 
     final groupsByName = <String, ContactGroup>{};
@@ -1745,31 +1744,18 @@ class _ContactsScreenState extends State<ContactsScreen>
           child: RefreshIndicator(
             onRefresh: () => connector.refreshContacts(),
             child: filteredAndSorted.isEmpty
-                ? LayoutBuilder(
-                    builder: (context, constraints) => ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: EmptyState(
-                            icon: Icons.search_off,
-                            title: viewState.contactsShowUnreadOnly
-                                ? context.l10n.contacts_noUnreadContacts
-                                : context.l10n.contacts_noContactsFound,
-                          ),
-                        ),
-                      ],
+                ? CompanionCliContactsList.placeholder(
+                    connector: connector, showCli: showCompanionCli,
+                    child: EmptyState(
+                      icon: Icons.search_off,
+                      title: viewState.contactsShowUnreadOnly
+                          ? context.l10n.contacts_noUnreadContacts
+                          : context.l10n.contacts_noContactsFound,
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 88),
-                    itemCount: contactItems.length,
-                    // A re-sort moves each row's element to its new place
-                    // instead of recreating every row whose place changed.
-                    findChildIndexCallback: (key) => contactIndexByKey[key],
-                    itemBuilder: (context, index) {
+                : CompanionCliContactsList(
+                    connector: connector, showCli: showCompanionCli,
+                    sliver: SliverList(delegate: SliverChildBuilderDelegate((context, index) {
                       final item = contactItems[index];
                       final contact = item.contact;
                       return _ContactTileEntrance(
@@ -1801,7 +1787,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                                 contact,
                               ),
                       );
-                    },
+                    }, childCount: contactItems.length,
+                      // The CLI is a separate sliver: contact keys/indices remain unchanged.
+                      findChildIndexCallback: (key) => contactIndexByKey[key])),
                   ),
           ),
         ),
