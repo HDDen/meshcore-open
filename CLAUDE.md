@@ -236,7 +236,7 @@ Message history moved out of `SharedPreferences` into SQLite via **drift** (`mes
 **Индексы** (`schemaVersion = 2`). Для новой native-БД `auto_vacuum = INCREMENTAL` задаётся в `setupConnection` до включения WAL и миграций, если `sqlite_master` ещё пуст; установка в `onCreate` сохраняется для остальных executors. Открытие существующей схемы не меняет её auto-vacuum и не запускает перестройку. WAL и `synchronous = FULL` сохраняются. Подробности: [хранилище истории](documentation/message-history-storage.md).
 
 Статистика доставки имеет отдельную native-опцию `reduceDeliveryObservationWrites`
-(JSON `reduce_delivery_observation_writes`, false в Off/готовых профилях/старом JSON,
+(JSON `reduce_delivery_observation_writes`, true в maximum, false в Off/остальных готовых профилях/старом custom JSON,
 редактирование через custom). `helpers/delivery_observation_write_plan.dart`
 сохраняет совпадающий суффикс старого/префикс нового списка без потери дубликатов
 и порядка. MessageHistoryDatabase читает актуальные id/JSON и применяет удаление
@@ -371,7 +371,7 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
 
 - Диагностика фонового iOS отделена от политики удержания: `lib/helpers/ios_frame_diagnostics.dart` считает доставленные begin/draw callbacks и окна закрытого presentation gate; `ios_presentation_guard.dart` выдаёт сводку только при переходах. `ios/Runner/ImmortalizerBackend/MCOImmortalizerBackend.m` читает preferred/actual параметры audio session и считает start/stop/interruption/reset/route events, не меняя buffer/sample rate. Read-only `diagnostics` в execution channel возвращает snapshot с отдельной revision; события не вызывают reconcile. Dart helper `lib/helpers/ios_execution_diagnostics.dart` выводит только разрешённые примитивы/enum tokens и ограничивает запрос тремя секундами. При копировании журнала `AppDebugLogScreen` добавляет свежий `iOSExecutionStats`, затем копирует актуальные entries; старый Runner не мешает экспорту. Диагностический запрос не добавляет polling timers/покадровых логов и не меняет scheduler, audio или eligibility; отдельные экспериментальные настройки описаны ниже. `pipelinePasses` — вызовы super.drawFrame, не GPU submissions; данные не являются измерением энергии. Инструкция: `documentation/ios-background-diagnostics.md`.
 
-- Экспериментальные параметры встроенного удержания iOS вынесены в `IosImmortalizerPowerOptions` и отдельный `ios_immortalizer_power_binding.dart`, без второго channel handler. На iOS в «Свои настройки» доступны пауза обычного UI scheduling при закрытом gate, облегчённые hooks, preferred I/O buffer «Системная»/10–200 мс с шагом 10, WAV 8 кГц/фактическая частота выхода, loop 1–10 с и режим без audio. Native `configurePower` проверяет схему/типы/границы отдельно от eligibility/manual OFF. Аудиопараметры применяются только к своему player в физическом фоне, сохраняются при no-audio и смене профиля; изменение audio options перезапускает свой player, lean/UI options — нет. Исходные значения и все ready presets сохраняют прежний режим; pending/forced frames защищены прежними pipeline/GPU gates, Dart isolate/таймеры/транспорт не останавливаются. `power.*` в диагностике — запросы, actual hardware values — отдельные поля. Есть Flutter-регрессии options/binding/UI/scheduler и native parser/controller/WAV/classifier; audio session, экономия и glyphs требуют iPhone. Команды локализации, единого пакета, native XCTest, полной iOS-сборки и приёмки: [настройки удержания iOS](documentation/ios-immortalizer-power.md). Go/blobs/лицензионные поколения этот шаг не меняет.
+- Экспериментальные параметры встроенного удержания iOS вынесены в `IosImmortalizerPowerOptions` и отдельный `ios_immortalizer_power_binding.dart`, без второго channel handler. На iOS в «Свои настройки» доступны пауза обычного UI scheduling при закрытом gate, облегчённые hooks, preferred I/O buffer «Системная»/10–200 мс с шагом 10, WAV 8 кГц/фактическая частота выхода, loop 1–10 с и режим без audio. Native `configurePower` проверяет схему/типы/границы отдельно от eligibility/manual OFF. Аудиопараметры применяются только к своему player в физическом фоне, сохраняются при no-audio и смене профиля; изменение audio options перезапускает свой player, lean/UI options — нет. Исходные значения сохраняют прежний режим; maximum включает pauseUiFrames/leanHooks, сохраняя аудио 8 кГц, системный буфер и цикл 1 с; остальные ready presets исходные; pending/forced frames защищены прежними pipeline/GPU gates, Dart isolate/таймеры/транспорт не останавливаются. `power.*` в диагностике — запросы, actual hardware values — отдельные поля. Есть Flutter-регрессии options/binding/UI/scheduler и native parser/controller/WAV/classifier; audio session, экономия и glyphs требуют iPhone. Команды локализации, единого пакета, native XCTest, полной iOS-сборки и приёмки: [настройки удержания iOS](documentation/ios-immortalizer-power.md). Go/blobs/лицензионные поколения этот шаг не меняет.
 
 - Визуал native-кнопки перенесён из исходного ImmortalizerJailed: круг 50×50 с `hourglass.tophalf.fill`, синий при ручном ON и красный при OFF. Через 5 с кнопка уменьшается и заменяется полупрозрачной ручкой 15×50 у края; нажатие/перетаскивание ручки разворачивает её обратно. Сохранены исходные цвета, геометрия, привязка к краю, анимации, haptic и toast. Однократный UI-таймер отменяется при скрытии; позиция и dock-state сохраняются через фон. Повторные обновления eligibility не откладывают сворачивание. Старый периодический audio timer и захват key window не возвращены. Native `ExecutionButtonTests` проверяют реальные UIView с управляемым временем и анимациями; визуальное совпадение ещё требует проверки на iPhone.
 
@@ -2032,8 +2032,9 @@ capability negotiation и reset при новом соединении сохр�
 [опрос GPS ноды](documentation/power-saving.md#батарея-и-gps-ноды).
 Платформенные BLE-опции хранятся типизированными enum из
 `models/ble_power_options.dart`. Android central предлагает original/balanced/
-high/lowPower через `widgets/ble_connection_priority_card.dart` только в custom;
-готовые профили сохраняют original, custom при их выборе не перезаписывается.
+high/lowPower через `widgets/ble_connection_priority_card.dart` с редактированием в custom;
+economical запрашивает balanced, maximum — lowPower, остальные готовые профили —
+original. Custom при их выборе не перезаписывается.
 Default-поля не добавляются в JSON, старый исходный снимок остаётся прежним.
 Выбор фиксируется при начале connect и после успешного NUS/SELF_INFO/time
 передаётся через `helpers/ble_connection_priority.dart`: на каждый новый сеанс,
@@ -2046,7 +2047,8 @@ Default-поля не добавляются в JSON, старый исходн�
 Android-параметр `releaseTcpWifiLock` (JSON `release_tcp_wifi_lock`) снимает
 собственный Wi-Fi lock для upstream TCP без остановки CPU/FGS/транспорта.
 `widgets/tcp_wifi_power_card.dart` доступен только на Android, редактируется
-в custom; все готовые профили и старый JSON сохраняют false. Default-поле
+в custom; maximum включает true, остальные готовые профили и старый custom JSON
+сохраняют false. Default-поле
 не добавляется в JSON. `helpers/tcp_wifi_power_binding.dart` передаёт effective
 значение BackgroundService, а `helpers/tcp_wifi_lock_policy.dart` разделяет
 запрос транспорта и разрешение энергопрофиля, последовательно применяя

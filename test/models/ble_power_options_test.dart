@@ -31,7 +31,7 @@ void main() {
     }
   });
 
-  test('only custom enables modes and every preset preserves saved custom', () {
+  test('presets select Android priority and preserve custom and iOS latency', () {
     const custom = PowerSavingOptions(
       bleConnectionPriority: BleConnectionPriorityMode.high,
       blePeripheralLatency: BlePeripheralLatencyMode.high,
@@ -39,8 +39,12 @@ void main() {
     for (final profile in PowerSavingProfile.values) {
       final settings = PowerSavingSettings(profile: profile, custom: custom);
       expect(settings.effective.bleConnectionPriority,
-          profile == PowerSavingProfile.custom ? custom.bleConnectionPriority
-              : BleConnectionPriorityMode.original);
+          switch (profile) {
+            PowerSavingProfile.economical => BleConnectionPriorityMode.balanced,
+            PowerSavingProfile.maximum => BleConnectionPriorityMode.lowPower,
+            PowerSavingProfile.custom => custom.bleConnectionPriority,
+            _ => BleConnectionPriorityMode.original,
+          });
       expect(settings.effective.blePeripheralLatency,
           profile == PowerSavingProfile.custom ? custom.blePeripheralLatency
               : BlePeripheralLatencyMode.original);

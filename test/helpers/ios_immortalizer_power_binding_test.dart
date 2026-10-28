@@ -70,23 +70,28 @@ void main() {
     expect(calls.single.arguments, custom.toNativeArguments());
     settings.select(PowerSavingProfile.maximum);
     await drain();
-    expect(calls.last.arguments, original.toNativeArguments());
+    expect(calls.last.arguments, const IosImmortalizerPowerOptions(
+      pauseUiFrames: true, leanHooks: true,
+    ).toNativeArguments());
+    expect(calls.length, 2);
     settings.select(PowerSavingProfile.disabled);
+    await drain();
+    expect(calls.last.arguments, original.toNativeArguments());
     settings.select(PowerSavingProfile.custom);
     await drain();
-    expect(calls.length, 3);
+    expect(calls.length, 4);
     expect(calls.last.arguments, custom.toNativeArguments());
-    expect(framePauses, [true, false, true]);
+    expect(framePauses, [true, true, false, true]);
     expect(settings.settings.powerSaving.custom.iosImmortalizer, custom);
     binding!.dispose();
     binding!.dispose();
     await drain();
-    expect(calls.length, 4);
+    expect(calls.length, 5);
     expect(calls.last.arguments, original.toNativeArguments());
     expect(framePauses.last, isFalse);
     settings.select(PowerSavingProfile.custom, custom.copyWith(loopSeconds: 9));
     await drain();
-    expect(calls.length, 4);
+    expect(calls.length, 5);
     expect(errors, isEmpty);
   });
 

@@ -5,6 +5,24 @@ import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
 
 void main() {
+  test('preset changes never replace saved default custom values', () {
+    const custom = PowerSavingOptions();
+    var settings = const PowerSavingSettings(custom: custom);
+    for (final profile in [
+      PowerSavingProfile.maximum,
+      PowerSavingProfile.disabled,
+      PowerSavingProfile.economical,
+      PowerSavingProfile.balanced,
+      PowerSavingProfile.custom,
+    ]) {
+      settings = PowerSavingSettings.fromJson(jsonDecode(jsonEncode(
+        settings.copyWith(profile: profile).toJson(),
+      )));
+      expect(settings.custom.toJson(), custom.toJson());
+    }
+    expect(settings.effective.toJson(), custom.toJson());
+  });
+
   test('default profile freezes original values independently of custom options', () {
     const settings = PowerSavingSettings(custom: PowerSavingOptions(
       hiddenRadioStatsIntervalSeconds: 30,

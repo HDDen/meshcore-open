@@ -31,7 +31,7 @@ void main() {
     expect(changed.copyWith(gpsIntervalSeconds: 180).reduceDeliveryObservationWrites, isTrue);
   });
 
-  test('all ready profiles keep legacy writes without erasing custom', () {
+  test('maximum reduces writes without erasing custom', () {
     for (final profile in PowerSavingProfile.values) {
       final restored = PowerSavingSettings.fromJson(jsonDecode(jsonEncode(
         PowerSavingSettings(profile: profile,
@@ -39,7 +39,7 @@ void main() {
       )));
       expect(restored.custom.reduceDeliveryObservationWrites, isTrue);
       expect(restored.effective.reduceDeliveryObservationWrites,
-          profile == PowerSavingProfile.custom);
+          profile == PowerSavingProfile.custom || profile == PowerSavingProfile.maximum);
     }
   });
 }

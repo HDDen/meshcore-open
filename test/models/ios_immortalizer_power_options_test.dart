@@ -41,7 +41,7 @@ void main() {
     });
   });
 
-  test('all presets stay original and retain custom settings across persistence', () {
+  test('maximum pauses frames and lightens hooks while preserving audio and custom', () {
     var settings = const PowerSavingSettings(profile: PowerSavingProfile.custom,
       custom: PowerSavingOptions(iosImmortalizer: custom, gpsIntervalSeconds: 180));
     for (final profile in PowerSavingProfile.values) {
@@ -50,7 +50,13 @@ void main() {
       )));
       expect(settings.custom.iosImmortalizer, custom);
       expect(settings.effective.iosImmortalizer,
-          profile == PowerSavingProfile.custom ? custom : original);
+          switch (profile) {
+            PowerSavingProfile.maximum => const IosImmortalizerPowerOptions(
+              pauseUiFrames: true, leanHooks: true,
+            ),
+            PowerSavingProfile.custom => custom,
+            _ => original,
+          });
       expect(settings.custom.gpsIntervalSeconds, 180);
     }
     final enabledAudio = custom.copyWith(withoutAudio: false);

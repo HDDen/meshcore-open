@@ -99,7 +99,7 @@ void main() {
       PowerSavingProfile.economical, PowerSavingProfile.maximum]) {
       await settings.setPowerSavingProfile(profile);
       await settlePolicy();
-      expect(calls.last, isTrue);
+      expect(calls.last, profile != PowerSavingProfile.maximum);
       expect(settings.settings.powerSaving.custom.releaseTcpWifiLock, isTrue);
     }
     await settings.setPowerSavingProfile(PowerSavingProfile.custom);

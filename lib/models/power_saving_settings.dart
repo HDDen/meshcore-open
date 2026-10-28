@@ -257,6 +257,7 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 120,
     ),
     PowerSavingProfile.economical => const PowerSavingOptions(
+      bleConnectionPriority: BleConnectionPriorityMode.balanced,
       cpuSleep: CpuSleepOptions(ble: true),
       backgroundReconnectIntervalSeconds: 180,
       skipIdleDirectProgressParsing: true,
@@ -274,6 +275,13 @@ class PowerSavingSettings {
       gpsIntervalSeconds: 300,
     ),
     PowerSavingProfile.maximum => const PowerSavingOptions(
+      reduceDeliveryObservationWrites: true,
+      releaseTcpWifiLock: true,
+      bleConnectionPriority: BleConnectionPriorityMode.lowPower,
+      iosImmortalizer: IosImmortalizerPowerOptions(
+        pauseUiFrames: true,
+        leanHooks: true,
+      ),
       cpuSleep: CpuSleepOptions(always: true),
       backgroundReconnectIntervalSeconds: 600,
       skipIdleDirectProgressParsing: true,

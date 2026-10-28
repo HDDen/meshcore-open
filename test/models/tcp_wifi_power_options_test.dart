@@ -32,7 +32,7 @@ void main() {
     expect(changed.copyWith(releaseTcpWifiLock: false).toJson(), original.toJson());
   });
 
-  test('all presets retain original holding without erasing custom', () {
+  test('maximum releases Wi-Fi holding without erasing custom', () {
     for (final profile in PowerSavingProfile.values) {
       final settings = PowerSavingSettings(
         profile: profile,
@@ -40,7 +40,8 @@ void main() {
       );
       final restored = PowerSavingSettings.fromJson(jsonDecode(jsonEncode(settings.toJson())));
       expect(restored.custom.releaseTcpWifiLock, isTrue);
-      expect(restored.effective.releaseTcpWifiLock, profile == PowerSavingProfile.custom);
+      expect(restored.effective.releaseTcpWifiLock,
+          profile == PowerSavingProfile.custom || profile == PowerSavingProfile.maximum);
     }
     final unknown = PowerSavingSettings.fromJson({
       'profile': 'future',
