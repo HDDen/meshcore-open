@@ -4473,6 +4473,12 @@
   "powerSaving_iosImmortalizerLoop": "Silent audio loop length",
   "powerSaving_iosImmortalizerLoopDescription": "Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.",
   "companionCli_title": "CompanionCLI",
+  "companionCli_nodeTitle": "Node CLI: {nodeName}",
+  "@companionCli_nodeTitle": {
+    "placeholders": {
+      "nodeName": { "type": "String" }
+    }
+  },
   "companionCli_description": "Service console for the connected node",
   "companionCli_noNode": "No node selected",
   "companionCli_localOnly": "Commands run only on the currently connected node",

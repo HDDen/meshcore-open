@@ -8612,6 +8612,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get companionCli_title => 'CompanionCLI';
 
   @override
+  String companionCli_nodeTitle(String nodeName) {
+    return 'Node CLI: $nodeName';
+  }
+
+  @override
   String get companionCli_description =>
       'Service console for the connected node';
 

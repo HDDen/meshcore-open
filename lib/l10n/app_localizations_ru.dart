@@ -8636,6 +8636,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get companionCli_title => 'CompanionCLI';
 
   @override
+  String companionCli_nodeTitle(String nodeName) {
+    return 'CLI ноды: $nodeName';
+  }
+
+  @override
   String get companionCli_description => 'Служебная консоль подключённой ноды';
 
   @override

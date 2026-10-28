@@ -472,7 +472,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       waitingForFirstChannel ||
                       waitingForChannelGroups) {
                     return Column(children: [
-                      if (_showCompanionCli) CompanionCliTile(connector: connector),
+                      if (_showCompanionCli) CompanionCliTile(connector: connector,
+                        margin: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
                       const Expanded(child: Center(child: CircularProgressIndicator())),
                     ]);
                   }

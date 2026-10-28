@@ -169,8 +169,6 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
               tooltip: l10n.companionCli_sharedHistory, isSelected: shared,
               icon: const Icon(Icons.hub_outlined), selectedIcon: const Icon(Icons.hub),
               onPressed: () => setState(() => _shared = !shared)),
-            IconButton(tooltip: l10n.repeater_clearHistory, icon: const Icon(Icons.clear_all),
-              onPressed: canClear ? _clear : null),
             PopupMenuButton<String>(onSelected: (value) {
               switch (value) {
                 case 'copy': unawaited(_copy(entries));
@@ -187,13 +185,19 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
             ]),
           ]),
         body: Column(children: [
-          ListTile(dense: true, title: Text(connector.selfName ?? l10n.companionCli_noNode),
-            subtitle: Text(canSend || _session.busy ? l10n.companionCli_localOnly : l10n.companionCli_unavailable)),
+          SizedBox(width: double.infinity, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(l10n.companionCli_nodeTitle(connector.selfName ?? l10n.companionCli_noNode),
+              textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium))),
+          if (!connector.isConnected || connector.isOfflineMode || !connector.supportsCompanionCli)
+            Padding(padding: const EdgeInsets.all(8), child: Text(l10n.companionCli_unavailable)),
           if (PlatformInfo.isWeb) Padding(padding: const EdgeInsets.all(8), child: Text(l10n.cliHistory_temporary)),
           if (_loadFailed) ListTile(title: Text(l10n.companionCli_historyError),
             trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: () => unawaited(_load()))),
           if (!_loaded || _session.busy) const LinearProgressIndicator(),
-          Container(color: scheme.surfaceContainer, padding: const EdgeInsets.all(8),
+          Container(key: const ValueKey('companion-cli-quick-commands'),
+            width: double.infinity, color: scheme.surfaceContainer,
+            padding: EdgeInsets.fromLTRB(8, 6, 8, PlatformInfo.isDesktop ? 0 : 6),
             child: Scrollbar(controller: _quickScroll, thumbVisibility: PlatformInfo.isDesktop,
               child: SingleChildScrollView(controller: _quickScroll, scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.only(bottom: PlatformInfo.isDesktop ? 14 : 0),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/companion_cli_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
@@ -22,6 +23,7 @@ import 'package:meshcore_open/storage/channel_group_store.dart';
 import 'package:meshcore_open/storage/companion_cli_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/contact_filter_types.dart';
+import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/companion_cli_tile.dart';
 
 class _History implements CompanionCliHistory {
@@ -63,6 +65,7 @@ class _Connector extends MeshCoreConnector {
   late final CompanionCliSession testSession;
   bool supported = true;
   bool loaded = true;
+  final contactData = <Contact>[];
   final channelData = <Channel>[
     Channel(index: 1, name: 'Alpha', psk: Uint8List.fromList(List.filled(16, 1))),
     Channel(index: 2, name: 'Beta', psk: Uint8List.fromList(List.filled(16, 2))),
@@ -80,7 +83,7 @@ class _Connector extends MeshCoreConnector {
   @override
   CompanionCliSession get companionCli => testSession;
   @override
-  List<Contact> get contacts => const [];
+  List<Contact> get contacts => contactData;
   @override
   List<Contact> get localRepeaters => const [];
   @override
@@ -112,7 +115,7 @@ void main() {
     connector.dispose(); settings.dispose(); view.dispose(); PrefsManager.reset();
   });
 
-  Future<void> show(WidgetTester tester, Widget screen, {String locale = 'en'}) async {
+  Future<void> show(WidgetTester tester, Widget screen, {String locale = 'en', double textScale = 1}) async {
     tester.view.physicalSize = const Size(1000, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -123,12 +126,42 @@ void main() {
       ChangeNotifierProvider<UiViewStateService>.value(value: view),
     ], child: MaterialApp(locale: Locale(locale),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales, home: screen)));
+      supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!), home: screen)));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
   }
 
+  Rect cardSurface(WidgetTester tester, Finder card) => tester.getRect(
+    find.descendant(of: card, matching: find.byType(Material)).first);
+
   for (final locale in ['ru', 'en']) {
+    testWidgets('terminal header and quick commands fill the screen without duplicate clear ($locale)', (tester) async {
+      await show(tester, CompanionCliScreen(connector: connector), locale: locale, textScale: 1.5);
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(tester.element(find.byType(CompanionCliScreen)));
+      final label = locale == 'ru' ? 'CLI ноды: Synthetic node A' : 'Node CLI: Synthetic node A';
+      final title = find.text(label);
+      expect(title, findsOneWidget);
+      expect(tester.widget<Text>(title).textAlign, TextAlign.center);
+      expect(find.text(l10n.companionCli_localOnly), findsNothing);
+      expect(find.byTooltip(l10n.repeater_clearHistory), findsNothing);
+      expect(find.byIcon(Icons.clear_all), findsNothing);
+      final quickBar = find.byKey(const ValueKey('companion-cli-quick-commands'));
+      final rect = tester.getRect(quickBar);
+      final screen = tester.getRect(find.byType(Scaffold));
+      expect(rect.left, screen.left);
+      expect(rect.right, screen.right);
+      // Same mobile padding / desktop scrollbar clearance as RepeaterCliScreen.
+      expect(tester.widget<Container>(quickBar).padding,
+        EdgeInsets.fromLTRB(8, 6, 8, PlatformInfo.isDesktop ? 0 : 6));
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('console keeps source labels, supports shared history and sends local frames ($locale)', (tester) async {
       for (final node in ['01' * 32, '02' * 32]) {
         connector.history.rows[node] = CompanionCliEntry(id: node, nodeKey: node,
@@ -179,6 +212,32 @@ void main() {
     });
   }
 
+  testWidgets('contacts card has equal visible gaps when the filter toolbar is present', (tester) async {
+    connector.contactData.add(Contact(
+      publicKey: Uint8List.fromList(List.filled(32, 3)),
+      name: 'Synthetic geometry contact', type: advTypeChat,
+      pathLength: -1, path: Uint8List(0), lastSeen: DateTime.utc(2026),
+    ));
+    await show(tester, const ContactsScreen(hideBackButton: true));
+    final surface = cardSurface(tester, find.byType(CompanionCliTile));
+    final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+    expect(find.text(l10n.companionCli_description), findsNothing);
+    final avatar = find.descendant(of: find.byType(CompanionCliTile),
+      matching: find.byType(CircleAvatar));
+    expect(tester.getSize(avatar), const Size(32, 32));
+    expect(surface.height, lessThan(62));
+    final groupButton = find.ancestor(of: find.text(l10n.listFilter_all),
+      matching: find.byType(PopupMenuButton<String>));
+    expect(groupButton, findsOneWidget);
+    final topGap = surface.top - tester.getRect(find.byType(AppBar)).bottom;
+    final bottomGap = tester.getRect(groupButton).top - surface.bottom;
+    expect(surface.left, 16);
+    expect(surface.right, 984);
+    expect(topGap, closeTo(bottomGap, 0.01));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('contacts keep the service above an empty or loading list under every sort', (tester) async {
     await show(tester, const ContactsScreen(hideBackButton: true));
     for (final sort in ContactSortOption.values) {
@@ -216,6 +275,16 @@ void main() {
       expect(find.byType(CompanionCliTile), findsOneWidget);
       final list = tester.widget<ReorderableListView>(find.byType(ReorderableListView).first);
       expect(list.itemCount, 3);
+      final cli = find.byType(CompanionCliTile);
+      final channel = find.byKey(const ValueKey('channel_1'));
+      final cliRect = cardSurface(tester, cli);
+      final channelRect = cardSurface(tester, channel);
+      expect(cliRect.left, channelRect.left);
+      expect(cliRect.right, channelRect.right);
+      final cliHandle = find.descendant(of: cli, matching: find.byIcon(Icons.drag_handle));
+      final channelHandle = find.descendant(of: channel, matching: find.byIcon(Icons.drag_handle));
+      expect(cliRect.right - tester.getRect(cliHandle).right,
+        channelRect.right - tester.getRect(channelHandle).right);
       list.onReorderItem!(0, 2);
       await tester.pumpAndSettle();
       final store = ChannelGroupStore()..setPublicKeyHex = connector.selfPublicKeyHex;
@@ -263,7 +332,9 @@ void main() {
     expect(tester.widget<TextField>(find.byKey(const ValueKey('companion-cli-input'))).controller!.text, 'ver');
     await tester.tap(find.byKey(const ValueKey('companion-cli-shared')));
     await tester.pump();
-    await tester.tap(find.byTooltip(l10n.repeater_clearHistory));
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PopupMenuItem<String>, l10n.repeater_clearHistory));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, l10n.common_clear));
     await tester.pumpAndSettle();

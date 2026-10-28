@@ -797,7 +797,10 @@ class _ContactsScreenState extends State<ContactsScreen>
             const ReviewModeBanner(),
             if (!widget.selectionMode && !widget.batchOperationsMode &&
                 connector.supportsCompanionCli)
-              CompanionCliTile(connector: connector),
+              // The following filter row adds 8 px above its controls: 4 + 8
+              // matches the 12 px gap above this standalone card.
+              CompanionCliTile(connector: connector, compact: true,
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 4)),
             Expanded(
               child: IgnorePointer(
                 ignoring: lockContactList,

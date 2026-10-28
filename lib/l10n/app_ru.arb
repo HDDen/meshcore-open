@@ -3424,6 +3424,12 @@
   "powerSaving_iosImmortalizerLoop": "Длина цикла тишины",
   "powerSaving_iosImmortalizerLoopDescription": "Исходно 1 секунда. Длинный PCM-цикл занимает больше памяти; экономия батареи пока не установлена.",
   "companionCli_title": "CompanionCLI",
+  "companionCli_nodeTitle": "CLI ноды: {nodeName}",
+  "@companionCli_nodeTitle": {
+    "placeholders": {
+      "nodeName": { "type": "String" }
+    }
+  },
   "companionCli_description": "Служебная консоль подключённой ноды",
   "companionCli_noNode": "Нода не выбрана",
   "companionCli_localOnly": "Команды выполняются только на текущей подключённой ноде",
