@@ -21,6 +21,11 @@ QuickSwitchBar tab 1 (middle) from any main screen.
 
 ## Channels List Screen
 
+При включённом показе контактов с историей здесь также доступен
+[CompanionCLI](companion-cli.md), даже с пустой историей и без настроенных каналов.
+В ручной сортировке служебная строка перетаскивается за ручку и сохраняет порядок
+по нодам; при автоматических сортировках находится сверху. Это не канал ноды.
+
 ### What the User Sees
 
 - **Search bar** with live text filtering (300ms debounce)

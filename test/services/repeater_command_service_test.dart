@@ -53,6 +53,28 @@ Contact _repeater(int seed) => Contact(
 );
 
 void main() {
+  test('two app services of one connector cannot complete each other through a colliding prefix', () async {
+    final connector = _FakeConnector();
+    final a = RepeaterCommandService(connector);
+    final b = RepeaterCommandService(connector);
+    addTearDown(a.dispose);
+    addTearDown(b.dispose);
+    final repeater = _repeater(1);
+    String? first;
+    String? second;
+    final pendingA = a.sendCommand(repeater, 'ver', retries: 1).then((value) { first = value; });
+    final pendingB = b.sendCommand(repeater, 'board', retries: 1).then((value) { second = value; });
+    await pumpEventQueue();
+    b.handleResponse(repeater, '00|first response');
+    await pumpEventQueue();
+    expect(second, isNull);
+    a.handleResponse(repeater, '00|first response');
+    b.handleResponse(repeater, '01|second response');
+    await Future.wait([pendingA, pendingB]).timeout(const Duration(seconds: 3));
+    expect(first, 'first response');
+    expect(second, 'second response');
+  });
+
   group('normalizeRepeaterClockSyncCommand', () {
     test('translates "clock sync" to explicit time command', () {
       final result = normalizeRepeaterClockSyncCommand(

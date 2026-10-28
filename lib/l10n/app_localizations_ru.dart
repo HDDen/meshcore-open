@@ -8631,4 +8631,79 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
       'Исходно 1 секунда. Длинный PCM-цикл занимает больше памяти; экономия батареи пока не установлена.';
+
+  @override
+  String get companionCli_title => 'CompanionCLI';
+
+  @override
+  String get companionCli_description => 'Служебная консоль подключённой ноды';
+
+  @override
+  String get companionCli_noNode => 'Нода не выбрана';
+
+  @override
+  String get companionCli_localOnly =>
+      'Команды выполняются только на текущей подключённой ноде';
+
+  @override
+  String get companionCli_sharedHistory => 'Общая история с указанием ноды';
+
+  @override
+  String get companionCli_empty =>
+      'История консоли пуста. Попробуйте команду ver.';
+
+  @override
+  String get companionCli_command => 'Команда';
+
+  @override
+  String get companionCli_send => 'Выполнить команду';
+
+  @override
+  String get companionCli_emptyReply => 'Получен пустой ответ';
+
+  @override
+  String get companionCli_unavailable =>
+      'Для отправки нужна подключённая companion-нода с версией протокола 14 или новее (MeshCore 1.18+). История доступна для просмотра.';
+
+  @override
+  String get companionCli_busy => 'Дождитесь ответа на текущую команду.';
+
+  @override
+  String get companionCli_invalidCommand =>
+      'Введите одну команду без перевода строки и нулевых байтов, минимум два байта UTF-8.';
+
+  @override
+  String get companionCli_tooLong =>
+      'Команда превышает допустимую длину: максимум 172 байта UTF-8; параметры set radio — максимум 131 байт.';
+
+  @override
+  String get companionCli_tagExhausted =>
+      'Идентификаторы CLI-запросов исчерпаны. Перезапустите приложение, чтобы начать новую безопасную сессию.';
+
+  @override
+  String get companionCli_timeout =>
+      'Ответ не получен вовремя. Команда могла исполниться; автоматического повтора нет. Соединение обновляется.';
+
+  @override
+  String get companionCli_protocolError => 'Нода или прокси отклонили запрос.';
+
+  @override
+  String get companionCli_disconnected =>
+      'Соединение или нода изменились. Исполнение команды не возобновляется автоматически.';
+
+  @override
+  String get companionCli_historyError =>
+      'Не удалось прочитать или сохранить историю консоли.';
+
+  @override
+  String get companionCli_sendFailed =>
+      'Не удалось подтвердить отправку команды. Автоматического повтора нет.';
+
+  @override
+  String get cliHistory_temporary =>
+      'В браузере история CLI хранится только до перезагрузки страницы. В настройки она не записывается.';
+
+  @override
+  String get cliHistory_clearCurrentNodeConfirm =>
+      'Очистить историю этой консоли для текущей ноды? История других нод сохранится. Выполняемая команда не будет отменена.';
 }

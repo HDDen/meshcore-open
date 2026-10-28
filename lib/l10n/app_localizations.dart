@@ -14458,6 +14458,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.'**
   String get powerSaving_iosImmortalizerLoopDescription;
+
+  /// No description provided for @companionCli_title.
+  ///
+  /// In en, this message translates to:
+  /// **'CompanionCLI'**
+  String get companionCli_title;
+
+  /// No description provided for @companionCli_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Service console for the connected node'**
+  String get companionCli_description;
+
+  /// No description provided for @companionCli_noNode.
+  ///
+  /// In en, this message translates to:
+  /// **'No node selected'**
+  String get companionCli_noNode;
+
+  /// No description provided for @companionCli_localOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands run only on the currently connected node'**
+  String get companionCli_localOnly;
+
+  /// No description provided for @companionCli_sharedHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared history with source nodes'**
+  String get companionCli_sharedHistory;
+
+  /// No description provided for @companionCli_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Console history is empty. Try the ver command.'**
+  String get companionCli_empty;
+
+  /// No description provided for @companionCli_command.
+  ///
+  /// In en, this message translates to:
+  /// **'Command'**
+  String get companionCli_command;
+
+  /// No description provided for @companionCli_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Run command'**
+  String get companionCli_send;
+
+  /// No description provided for @companionCli_emptyReply.
+  ///
+  /// In en, this message translates to:
+  /// **'An empty reply was received'**
+  String get companionCli_emptyReply;
+
+  /// No description provided for @companionCli_unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.'**
+  String get companionCli_unavailable;
+
+  /// No description provided for @companionCli_busy.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the current command to finish.'**
+  String get companionCli_busy;
+
+  /// No description provided for @companionCli_invalidCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.'**
+  String get companionCli_invalidCommand;
+
+  /// No description provided for @companionCli_tooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.'**
+  String get companionCli_tooLong;
+
+  /// No description provided for @companionCli_tagExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'CLI request identifiers are exhausted. Restart the app to begin a new safe session.'**
+  String get companionCli_tagExhausted;
+
+  /// No description provided for @companionCli_timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.'**
+  String get companionCli_timeout;
+
+  /// No description provided for @companionCli_protocolError.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or proxy rejected the request.'**
+  String get companionCli_protocolError;
+
+  /// No description provided for @companionCli_disconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or node changed. The command will not resume automatically.'**
+  String get companionCli_disconnected;
+
+  /// No description provided for @companionCli_historyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Console history could not be read or saved.'**
+  String get companionCli_historyError;
+
+  /// No description provided for @companionCli_sendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending could not be confirmed. The command will not be retried automatically.'**
+  String get companionCli_sendFailed;
+
+  /// No description provided for @cliHistory_temporary.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.'**
+  String get cliHistory_temporary;
+
+  /// No description provided for @cliHistory_clearCurrentNodeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.'**
+  String get cliHistory_clearCurrentNodeConfirm;
 }
 
 class _AppLocalizationsDelegate

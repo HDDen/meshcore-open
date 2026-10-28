@@ -124,6 +124,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 62 | CMD_SEND_CHANNEL_DATA | Send a typed channel `GROUP_DATA` payload |
 | 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope |
 | 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
+| 66 | CMD_RUN_CLI_COMMAND | Локальный CLI подключённой companion-ноды, firmware code 14+ |
 
 ### APP_START и периодический GPS-опрос
 
@@ -161,6 +162,7 @@ GPS-опрос пропускает тик при активной синхро�
 | 25 | RESP_CODE_AUTO_ADD_CONFIG | Auto-add flags |
 | 27 | RESP_CODE_CHANNEL_DATA_RECV | Incoming typed channel data |
 | 28 | RESP_CODE_DEFAULT_FLOOD_SCOPE | Current default flood scope |
+| 29 | RESP_CODE_CLI_REPLY | Текст ответа локального CompanionCLI |
 | 0x80 | PUSH_CODE_ADVERT | Known contact re-seen |
 | 0x81 | PUSH_CODE_PATH_UPDATED | Better path found; carries the 32-byte public key of the updated contact |
 | 0x82 | PUSH_CODE_SEND_CONFIRMED | Delivery ACK from remote; carries ACK hash (4 bytes) + trip time (4 bytes) |
@@ -284,7 +286,20 @@ Remote repeater CLI commands use the text-message command with `txtTypeCliData`,
 [CMD_SEND_TXT_MSG=2][txt_type=1][attempt][timestamp uint32 LE][public-key prefix x6][UTF-8 command][0]
 ```
 
-See `buildSendCliCommandFrame()` (takes the repeater public key) in [meshcore_protocol.dart](../lib/connector/meshcore_protocol.dart). The companion's local CLI command (`CMD_RUN_CLI_COMMAND`, 66) is not used by the app. Companion reboot uses `buildRebootFrame()`; remote repeater reboot is a CLI command.
+See `buildSendCliCommandFrame()` (takes the repeater public key) in [meshcore_protocol.dart](../lib/connector/meshcore_protocol.dart). Companion reboot uses `buildRebootFrame()`; remote repeater reboot is a CLI command.
+
+Локальная [консоль CompanionCLI](companion-cli.md) использует отдельный путь:
+`[66][UTF-8 command]` → `[29][UTF-8 reply]`. Здесь нет адреса назначения,
+timestamp, LoRa ACK или `SYNC_NEXT_MESSAGE`. MCOa добавляет `ID|` перед текстом
+(две ASCII-позиции ID), прошивка отражает этот префикс в ответе. Ответ принимается
+только при совпадении ID; пустой текст после префикса допустим. Generic ERR
+не содержит ID и сопоставляется через очередь ожидаемых команд. После CLI timeout
+запрашивается восстановление транспорта; автоматического повторения команды нет.
+Полный frame ограничен 176 байтами, поэтому с трёхбайтовым префиксом остаётся
+172 байта UTF-8 команды. Поддержка определяется firmware code >=14 из DEVICE_INFO,
+а не appProtocolVersion (он остаётся 4). Helper: `helpers/companion_cli_protocol.dart`.
+Code 29 подтверждает получение ответа, в том числе `Unknown command`/текстовой
+ошибки; он не подтверждает успех изменения настроек.
 
 Reactions use `r:<four-hex message hash>:<two-hex emoji index>`. Channel replies use `@[senderName] text`; location pins use `m:<lat>,<lon>|<label>|...`. These are application conventions and require compatible clients for special rendering.
 

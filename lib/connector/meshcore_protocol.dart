@@ -222,6 +222,7 @@ const int cmdSendChannelData = 62;
 const int cmdSetDefaultFloodScope = 63;
 const int cmdGetDefaultFloodScope = 64;
 const int cmdSendRawPacket = 65;
+const int cmdRunCliCommand = 66;
 
 // Text message types
 const int txtTypePlain = 0;
@@ -336,6 +337,7 @@ const int respCodeAutoAddConfig = 25;
 const int respCodeAllowedRepeatFreq = 26;
 const int respCodeChannelDataRecv = 27;
 const int respCodeDefaultFloodScope = 28;
+const int respCodeCliReply = 29;
 const int respCodeStats = 24;
 
 /// Region name field width in SET/GET_DEFAULT_FLOOD_SCOPE frames (NUL padded,

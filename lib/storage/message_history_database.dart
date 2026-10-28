@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
+import '../models/companion_cli_entry.dart';
+import '../models/repeater_cli_entry.dart';
 
 part 'message_history_database.g.dart';
 
@@ -386,7 +388,7 @@ class HeardPacketInsert {
 )
 class MessageHistoryDatabase extends _$MessageHistoryDatabase {
   Future<void> _deliveryObservationWrites = Future<void>.value();
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
   static const String _legacyMigrationKey = 'legacy_migration_complete';
   static const String _legacySkippedHistoriesKey =
       'legacy_migration_skipped_histories';
@@ -465,6 +467,9 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
       if (from < 2) {
         await _ensureAuxiliaryTables();
       }
+      if (from < 3) {
+        await _ensureCliHistoryTables();
+      }
     },
     beforeOpen: (_) => _ensureAuxiliaryTables(),
   );
@@ -479,6 +484,104 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureNodeCollectionTables();
     await _ensureChannelIdentitiesTable();
     await _ensureContactIdentitiesTable();
+    await _ensureCliHistoryTables();
+  }
+
+  Future<void> _ensureCliHistoryTables() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS companion_cli_history (
+  node_key TEXT NOT NULL,
+  entry_id TEXT NOT NULL,
+  node_name TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  command TEXT NOT NULL,
+  response TEXT,
+  status TEXT NOT NULL,
+  failure TEXT,
+  PRIMARY KEY (node_key, entry_id)
+)
+''');
+    await customStatement('CREATE INDEX IF NOT EXISTS companion_cli_timeline '
+        'ON companion_cli_history(node_key, created_at_ms, entry_id)');
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS repeater_cli_history (
+  node_key TEXT NOT NULL,
+  repeater_key TEXT NOT NULL,
+  entry_id TEXT NOT NULL,
+  node_name TEXT NOT NULL,
+  repeater_name TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  entry_type TEXT NOT NULL,
+  text TEXT NOT NULL,
+  PRIMARY KEY (node_key, repeater_key, entry_id)
+)
+''');
+    await customStatement('CREATE INDEX IF NOT EXISTS repeater_cli_timeline '
+        'ON repeater_cli_history(node_key, repeater_key, created_at_ms, entry_id)');
+  }
+
+  Future<List<CompanionCliEntry>> readCompanionCliHistory() async {
+    final rows = await customSelect('SELECT * FROM companion_cli_history '
+        'ORDER BY created_at_ms, entry_id, node_key').get();
+    return [for (final row in rows) CompanionCliEntry(
+      id: row.read<String>('entry_id'), nodeKey: row.read<String>('node_key'),
+      nodeName: row.read<String>('node_name'), command: row.read<String>('command'),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row.read<int>('created_at_ms')),
+      response: row.readNullable<String>('response'), failure: row.readNullable<String>('failure'),
+      status: CompanionCliStatus.values.firstWhere(
+        (value) => value.name == row.read<String>('status'),
+        orElse: () => CompanionCliStatus.disconnected),
+    )];
+  }
+
+  Future<void> writeCompanionCliEntry(CompanionCliEntry entry) async {
+    await customInsert('''
+INSERT INTO companion_cli_history
+  (node_key, entry_id, node_name, created_at_ms, command, response, status, failure)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(node_key, entry_id) DO UPDATE SET
+  node_name = excluded.node_name, created_at_ms = excluded.created_at_ms,
+  command = excluded.command, response = excluded.response,
+  status = excluded.status, failure = excluded.failure
+''', variables: [Variable<String>(entry.nodeKey), Variable<String>(entry.id),
+      Variable<String>(entry.nodeName), Variable<int>(entry.createdAt.millisecondsSinceEpoch),
+      Variable<String>(entry.command), Variable<String>(entry.response),
+      Variable<String>(entry.status.name), Variable<String>(entry.failure)]);
+  }
+
+  Future<void> clearCompanionCliHistory(String nodeKey) async {
+    await customUpdate('DELETE FROM companion_cli_history WHERE node_key = ?',
+      variables: [Variable<String>(nodeKey)], updateKind: UpdateKind.delete);
+  }
+
+  Future<List<RepeaterCliEntry>> readRepeaterCliHistory(String nodeKey, String repeaterKey) async {
+    final rows = await customSelect('SELECT * FROM repeater_cli_history '
+      'WHERE node_key = ? AND repeater_key = ? ORDER BY created_at_ms, rowid',
+      variables: [Variable<String>(nodeKey), Variable<String>(repeaterKey)]).get();
+    return [for (final row in rows) RepeaterCliEntry(
+      id: row.read<String>('entry_id'), nodeKey: row.read<String>('node_key'),
+      repeaterKey: row.read<String>('repeater_key'), nodeName: row.read<String>('node_name'),
+      repeaterName: row.read<String>('repeater_name'), type: row.read<String>('entry_type'),
+      text: row.read<String>('text'),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row.read<int>('created_at_ms')),
+    )];
+  }
+
+  Future<void> writeRepeaterCliEntry(RepeaterCliEntry entry) async {
+    await customInsert('''
+INSERT INTO repeater_cli_history
+  (node_key, repeater_key, entry_id, node_name, repeater_name, created_at_ms, entry_type, text)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(node_key, repeater_key, entry_id) DO UPDATE SET text = excluded.text
+''', variables: [Variable<String>(entry.nodeKey), Variable<String>(entry.repeaterKey),
+      Variable<String>(entry.id), Variable<String>(entry.nodeName), Variable<String>(entry.repeaterName),
+      Variable<int>(entry.createdAt.millisecondsSinceEpoch), Variable<String>(entry.type),
+      Variable<String>(entry.text)]);
+  }
+
+  Future<void> clearRepeaterCliHistory(String nodeKey, String repeaterKey) async {
+    await customUpdate('DELETE FROM repeater_cli_history WHERE node_key = ? AND repeater_key = ?',
+      variables: [Variable<String>(nodeKey), Variable<String>(repeaterKey)], updateKind: UpdateKind.delete);
   }
 
   // The pairs of key and name that are one channel, app-wide, one row per

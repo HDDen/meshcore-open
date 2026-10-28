@@ -3,6 +3,7 @@ import '../models/contact.dart';
 import '../models/path_selection.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/repeater_cli_prefix_pool.dart';
 
 /// Companion firmware (MeshCore commit 4a869163, 2025-12-30) replaces the CLI
 /// frame timestamp with the companion node's RTC for TXT_TYPE_CLI_DATA, so a
@@ -29,12 +30,13 @@ class RepeaterCommandService {
   final MeshCoreConnector _connector;
   final Set<_PendingCommand> _pendingCommands = {};
   final Map<String, _PendingCommand> _pendingByPrefix = {};
-  int _prefixCounter = 0;
+  final RepeaterCliPrefixPool _prefixes;
 
   static const int maxRetries = 5;
   static final RegExp _prefixPattern = RegExp(r'^[0-9A-Fa-f]{2}\|');
 
-  RepeaterCommandService(this._connector);
+  RepeaterCommandService(this._connector)
+    : _prefixes = RepeaterCliPrefixPool.forConnector(_connector);
 
   /// Send a CLI command to a repeater with automatic retries
   /// Returns a future that completes when a response is received or after max retries.
@@ -89,7 +91,7 @@ class RepeaterCommandService {
     // A reply to an earlier attempt may have arrived during the backoff.
     if (pending.completer.isCompleted) return pending.completer.future;
 
-    final prefix = _nextPrefixToken();
+    final prefix = _prefixes.allocate(pending);
     pending.prefixes.add(prefix);
     _pendingByPrefix[prefix] = pending;
 
@@ -191,6 +193,7 @@ class RepeaterCommandService {
   void _cleanup(_PendingCommand pending) {
     _pendingCommands.remove(pending);
     for (final prefix in pending.prefixes) {
+      _prefixes.release(prefix, pending);
       if (identical(_pendingByPrefix[prefix], pending)) {
         _pendingByPrefix.remove(prefix);
       }
@@ -198,29 +201,13 @@ class RepeaterCommandService {
   }
 
   void dispose() {
-    _pendingCommands.clear();
+    for (final pending in _pendingCommands.toList()) {
+      _cleanup(pending);
+    }
     _pendingByPrefix.clear();
   }
 
   String _peekPrefixToken() {
-    for (var i = 0; i < 256; i++) {
-      final value = (_prefixCounter + i) & 0xFF;
-      final token = '${value.toRadixString(16).padLeft(2, '0').toUpperCase()}|';
-      if (!_pendingByPrefix.containsKey(token)) {
-        return token;
-      }
-    }
-    return '00|';
-  }
-
-  String _nextPrefixToken() {
-    for (var i = 0; i < 256; i++) {
-      final value = _prefixCounter++ & 0xFF;
-      final token = '${value.toRadixString(16).padLeft(2, '0').toUpperCase()}|';
-      if (!_pendingByPrefix.containsKey(token)) {
-        return token;
-      }
-    }
-    return '00|';
+    return _prefixes.peek();
   }
 }

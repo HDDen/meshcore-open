@@ -12,9 +12,10 @@ import '../utils/platform_info.dart';
 import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/debug_frame_viewer.dart';
 import '../widgets/radio_disconnected_banner.dart';
-import '../services/repeater_command_service.dart';
+import '../helpers/repeater_cli_connection.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/repeater_cli_history.dart';
 
 class RepeaterCliScreen extends StatefulWidget {
   final Contact repeater;
@@ -34,10 +35,13 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   final TextEditingController _commandController = TextEditingController();
   final FocusNode _commandFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
-  final List<Map<String, String>> _commandHistory = [];
+  late final RepeaterCliHistory _history;
+  List<Map<String, String>> get _commandHistory => _history.transcript;
+  bool _historyFailed = false;
+  bool _recording = false;
+  bool _clearing = false;
   int _historyIndex = -1;
-  StreamSubscription<Uint8List>? _frameSubscription;
-  RepeaterCommandService? _commandService;
+  RepeaterCliConnection? _commandService;
   bool _regionLoadActive = false;
   final ScrollController _quickCommandsScrollController = ScrollController();
   static final RegExp _regionLoadPattern = RegExp(r'^region +load( |$)');
@@ -59,14 +63,16 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
   void initState() {
     super.initState();
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    _commandService = RepeaterCommandService(connector);
-    _setupMessageListener();
+    _commandService = RepeaterCliConnection.attach(connector, widget.repeater);
+    _history = _commandService!.history;
+    _history.addListener(_historyChanged);
+    unawaited(_loadHistory());
   }
 
   @override
   void dispose() {
-    _frameSubscription?.cancel();
-    _commandService?.dispose();
+    _history.removeListener(_historyChanged);
+    _commandService?.release();
     _commandController.dispose();
     _commandFocusNode.dispose();
     _scrollController.dispose();
@@ -74,15 +80,60 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     super.dispose();
   }
 
-  void _setupMessageListener() {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    _frameSubscription = connector.receivedFrames.listen((frame) {
-      if (frame.isEmpty) return;
-      if (frame[0] == respCodeContactMsgRecv ||
-          frame[0] == respCodeContactMsgRecvV3) {
-        _handleTextMessageResponse(frame);
+  void _historyChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      await _history.ensureLoaded();
+      if (mounted) {
+        setState(() => _historyFailed = false);
+        _scrollToBottom();
       }
-    });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _historyFailed = true);
+      }
+    }
+  }
+
+  bool _canSend(MeshCoreConnector connector) => connector.isConnected &&
+    connector.selfPublicKeyHex == _history.nodeKey && _history.nodeKey.isNotEmpty &&
+    _history.loaded && !_historyFailed && !_recording && !_clearing;
+
+  void _historyError() {
+    if (mounted) {
+      showDismissibleSnackBar(context, content: Text(context.l10n.companionCli_historyError));
+    }
+  }
+
+  // Первая SQL-запись предшествует отправке. Повторные нажатия во время неё
+  // не дублируют команду; очистка/смена ноды до отправки отменяет этот ввод.
+  Future<int?> _recordCommand(String text, {required String input, String? notice}) async {
+    final connector = context.read<MeshCoreConnector>();
+    if (!_canSend(connector)) { return null; }
+    setState(() => _recording = true);
+    final revision = _history.revision;
+    try {
+      if (!await _history.append('command', text, revision: revision)) { return null; }
+      if (notice != null) {
+        await _history.append('response', notice, revision: revision);
+      }
+      if (!mounted || !connector.isConnected || connector.selfPublicKeyHex != _history.nodeKey ||
+          _history.revision != revision) { return null; }
+      if (_commandController.text == input) { _commandController.clear(); }
+      _historyIndex = -1;
+      _commandFocusNode.requestFocus();
+      return revision;
+    } catch (_) {
+      _historyError();
+      return null;
+    } finally {
+      if (mounted) { setState(() => _recording = false); }
+    }
   }
 
   int _resolveRepeaterIndex = -1;
@@ -103,157 +154,72 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     return connector.contacts[_resolveRepeaterIndex];
   }
 
-  void _handleTextMessageResponse(Uint8List frame) {
-    final parsed = parseContactMessageText(frame);
-    if (parsed == null) return;
-    if (!_matchesRepeaterPrefix(parsed.senderPrefix)) return;
-    _commandService?.handleResponse(widget.repeater, parsed.text);
-  }
-
-  bool _matchesRepeaterPrefix(Uint8List prefix) {
-    final target = widget.repeater.publicKey;
-    if (target.length < 6 || prefix.length < 6) return false;
-    for (int i = 0; i < 6; i++) {
-      if (prefix[i] != target[i]) return false;
-    }
-    return true;
-  }
-
   void _sendCommand({bool showDebug = false}) async {
     if (_regionLoadActive) {
-      _sendRegionLoadLine();
+      unawaited(_sendRegionLoadLine());
       return;
     }
-    // Preserve whitespace-only CLI payloads: repeaters may treat " " as a
-    // meaningful command/input, so only reject truly empty text.
     final command = _commandController.text;
+    // Пробелы — допустимый ввод удалённого CLI; проверяем только пустую строку.
     if (command.isEmpty) return;
+    final l10n = context.l10n;
     final startsRegionLoad = _regionLoadPattern.hasMatch(command.toLowerCase());
+    final revision = await _recordCommand(command, input: command,
+      notice: startsRegionLoad ? l10n.repeater_cliRegionLoadActive : null);
+    if (revision == null || !mounted) { return; }
+    // Load mode must be active before awaiting the firmware's first reply.
+    if (startsRegionLoad) { setState(() => _regionLoadActive = true); }
 
-    setState(() {
-      _commandHistory.add({
-        'type': 'command',
-        'text': command,
-        'timestamp': DateTime.now().toString(),
-      });
-      // The repeater enters load mode as soon as it receives the command, and
-      // its reply may take a full timeout (or be lost). Switch modes now so
-      // lines typed meanwhile go out verbatim instead of as `XX|` commands; a
-      // blank line always ends it safely.
-      if (startsRegionLoad) {
-        _regionLoadActive = true;
-        _commandHistory.add({
-          'type': 'response',
-          'text': context.l10n.repeater_cliRegionLoadActive,
-          'timestamp': DateTime.now().toString(),
-        });
-      }
-    });
-    _commandController.clear();
-    _historyIndex = -1;
-    _commandFocusNode.requestFocus();
-
-    if (showDebug && mounted && _commandService != null) {
-      // Preview the exact framed text the service sends (`XX|` prefix and
-      // clock-sync rewrite), not the bare command.
-      final frame = buildSendCliCommandFrame(
-        widget.repeater.publicKey,
-        _commandService!.previewFramedCommand(command),
-      );
-      DebugFrameViewer.showFrameDebug(
-        context,
-        frame,
-        context.l10n.repeater_cliCommandFrameTitle,
-      );
-    }
-
+    final connector = context.read<MeshCoreConnector>();
+    String response;
     try {
-      if (_commandService != null) {
-        final connector = Provider.of<MeshCoreConnector>(
-          context,
-          listen: false,
-        );
-        final repeater = _resolveRepeater(connector);
-        final response = await _commandService!.sendCommand(
-          repeater,
-          command,
-          retries: 1,
-        );
-        if (mounted) {
-          setState(() {
-            _commandHistory.add({
-              'type': 'response',
-              'text': response,
-              'timestamp': DateTime.now().toString(),
-            });
-          });
-        }
+      if (showDebug && _commandService != null) {
+        final frame = buildSendCliCommandFrame(widget.repeater.publicKey,
+          _commandService!.previewFramedCommand(command));
+        DebugFrameViewer.showFrameDebug(context, frame, l10n.repeater_cliCommandFrameTitle);
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _commandHistory.add({
-            'type': 'response',
-            'text': context.l10n.repeater_cliCommandError(e.toString()),
-            'timestamp': DateTime.now().toString(),
-          });
-        });
-      }
+      response = await _commandService!.sendCommand(_resolveRepeater(connector), command, retries: 1);
+    } catch (error) {
+      response = l10n.repeater_cliCommandError(error.toString());
     }
-
+    try {
+      await _history.append('response', response, revision: revision);
+    } catch (_) {
+      _historyError();
+    }
     _scrollToBottom();
   }
 
-  /// In `region load` mode lines go out verbatim: no `XX|` prefix and no
-  /// trimming, since indentation encodes the parent. Region lines get no
-  /// reply; a blank line commits the load and is answered with
-  /// "OK - loaded N regions".
+  /// Region lines keep indentation and have no reply; a blank line commits.
   Future<void> _sendRegionLoadLine() async {
     final line = _commandController.text;
     final isTerminator = line.trim().isEmpty;
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    final l10n = context.l10n;
+    final revision = await _recordCommand(
+      isTerminator ? l10n.repeater_cliRegionLoadEnd : line, input: line);
+    if (revision == null || !mounted) { return; }
+    final connector = context.read<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
-    setState(() {
-      _commandHistory.add({
-        'type': 'command',
-        'text': isTerminator ? context.l10n.repeater_cliRegionLoadEnd : line,
-        'timestamp': DateTime.now().toString(),
-      });
-    });
-    _commandController.clear();
-    _historyIndex = -1;
-    _commandFocusNode.requestFocus();
-
     String? response;
     var ended = false;
     try {
       if (isTerminator) {
-        response = await _commandService!.sendCommand(
-          repeater,
-          '',
-          retries: 1,
-          raw: true,
-        );
+        response = await _commandService!.sendCommand(repeater, '', retries: 1, raw: true);
         ended = true;
       } else {
         await _commandService!.sendUnansweredLine(repeater, line);
       }
-    } catch (e) {
-      if (mounted) {
-        response = context.l10n.repeater_cliCommandError(e.toString());
+    } catch (error) {
+      response = l10n.repeater_cliCommandError(error.toString());
+    }
+    if (mounted && ended) { setState(() => _regionLoadActive = false); }
+    if (response != null) {
+      try {
+        await _history.append('response', response, revision: revision);
+      } catch (_) {
+        _historyError();
       }
     }
-    if (!mounted) return;
-    setState(() {
-      if (ended) _regionLoadActive = false;
-      if (response != null) {
-        _commandHistory.add({
-          'type': 'response',
-          'text': response,
-          'timestamp': DateTime.now().toString(),
-        });
-      }
-    });
     _scrollToBottom();
   }
 
@@ -306,11 +272,16 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     }
   }
 
-  void _clearHistory() {
-    setState(() {
-      _commandHistory.clear();
-      _historyIndex = -1;
-    });
+  Future<void> _clearHistory() async {
+    setState(() => _clearing = true);
+    try {
+      await _history.clear();
+      if (mounted) { setState(() => _historyIndex = -1); }
+    } catch (_) {
+      _historyError();
+    } finally {
+      if (mounted) { setState(() => _clearing = false); }
+    }
   }
 
   Future<void> _confirmClearHistory() async {
@@ -320,7 +291,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       title: l10n.repeater_clearHistory,
       message: l10n.repeater_cliClearHistoryConfirm,
     );
-    if (confirmed && mounted) _clearHistory();
+    if (confirmed && mounted) { await _clearHistory(); }
   }
 
   String _transcriptText() {
@@ -392,9 +363,9 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
-    final connected = connector.isConnected;
+    final connected = _canSend(connector);
     final accent = scheme.primary;
-    final hasHistory = _commandHistory.isNotEmpty;
+    final hasHistory = _commandHistory.isNotEmpty && !_clearing;
 
     return Scaffold(
       backgroundColor: scheme.surfaceContainerLowest,
@@ -453,6 +424,8 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   _copyTranscript();
                 case 'share':
                   _shareTranscript();
+                case 'clear':
+                  _confirmClearHistory();
               }
             },
             itemBuilder: (context) => [
@@ -463,7 +436,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   children: [
                     const Icon(Icons.copy),
                     const SizedBox(width: 8),
-                    Text(l10n.repeater_cliCopyTranscript),
+                    Flexible(child: Text(l10n.repeater_cliCopyTranscript)),
                   ],
                 ),
               ),
@@ -474,7 +447,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   children: [
                     const Icon(Icons.share),
                     const SizedBox(width: 8),
-                    Text(l10n.repeater_cliShareTranscript),
+                    Flexible(child: Text(l10n.repeater_cliShareTranscript)),
                   ],
                 ),
               ),
@@ -485,9 +458,16 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                   children: [
                     const Icon(Icons.bug_report),
                     const SizedBox(width: 8),
-                    Text(l10n.repeater_debugNextCommand),
+                    Flexible(child: Text(l10n.repeater_debugNextCommand)),
                   ],
                 ),
+              ),
+              PopupMenuItem(
+                value: 'clear', enabled: hasHistory,
+                child: Row(children: [
+                  const Icon(Icons.clear_all), const SizedBox(width: 8),
+                  Flexible(child: Text(l10n.repeater_clearHistory)),
+                ]),
               ),
             ],
           ),
@@ -496,6 +476,16 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       body: Column(
         children: [
           const RadioDisconnectedBanner(),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Text('${widget.repeater.name} · ${_history.nodeName}',
+              style: Theme.of(context).textTheme.labelSmall)),
+          if (connector.selfPublicKeyHex != _history.nodeKey)
+            Padding(padding: const EdgeInsets.all(8), child: Text(l10n.companionCli_disconnected)),
+          if (PlatformInfo.isWeb) Padding(padding: const EdgeInsets.all(8),
+            child: Text(l10n.cliHistory_temporary)),
+          if (_historyFailed) ListTile(title: Text(l10n.companionCli_historyError),
+            trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: _loadHistory)),
+          if (!_history.loaded && !_historyFailed) const LinearProgressIndicator(),
           // Quick commands bar
           Container(
             color: scheme.surfaceContainer,

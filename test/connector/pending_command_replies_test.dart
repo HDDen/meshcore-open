@@ -12,6 +12,20 @@ void main() {
   PendingCommandReplies newQueue() =>
       PendingCommandReplies(staleAfter: const Duration(seconds: 10));
 
+  test('CLI reply prefix must match and its generic ERR stays in command order', () {
+    final queue = newQueue();
+    final cli = queue.track(frame([66, ...'A1|ver'.codeUnits]));
+    queue.track(buildSetDeviceTimeFrame(1));
+    expect(queue.completeReply(frame([29, ...'B2|wrong'.codeUnits])), isFalse);
+    expect(queue.length, 2);
+    expect(queue.takeErr(1), same(cli));
+    expect(queue.takeOk()?.commandCode, cmdSetDeviceTime);
+    expect(queue.length, 0);
+    queue.track(frame([66, ...'A2|ver'.codeUnits]));
+    expect(queue.completeReply(frame([29, ...'A1|late'.codeUnits])), isFalse);
+    expect(queue.completeReply(frame([29, ...'A2|current'.codeUnits])), isTrue);
+  });
+
   test('ERR goes to the oldest pending command (firmware order)', () {
     final queue = newQueue();
     final time = queue.track(buildSetDeviceTimeFrame(1));

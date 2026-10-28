@@ -8660,4 +8660,81 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get powerSaving_iosImmortalizerLoopDescription =>
       'Original: 1 second. A longer PCM loop uses more memory; battery savings have not been established.';
+
+  @override
+  String get companionCli_title => 'CompanionCLI';
+
+  @override
+  String get companionCli_description =>
+      'Service console for the connected node';
+
+  @override
+  String get companionCli_noNode => 'No node selected';
+
+  @override
+  String get companionCli_localOnly =>
+      'Commands run only on the currently connected node';
+
+  @override
+  String get companionCli_sharedHistory => 'Shared history with source nodes';
+
+  @override
+  String get companionCli_empty =>
+      'Console history is empty. Try the ver command.';
+
+  @override
+  String get companionCli_command => 'Command';
+
+  @override
+  String get companionCli_send => 'Run command';
+
+  @override
+  String get companionCli_emptyReply => 'An empty reply was received';
+
+  @override
+  String get companionCli_unavailable =>
+      'Sending requires a connected companion with protocol version 14 or newer (MeshCore 1.18+). History remains available.';
+
+  @override
+  String get companionCli_busy => 'Wait for the current command to finish.';
+
+  @override
+  String get companionCli_invalidCommand =>
+      'Enter one command with at least two UTF-8 bytes and no line breaks or null bytes.';
+
+  @override
+  String get companionCli_tooLong =>
+      'The command exceeds the limit: 172 UTF-8 bytes; set radio parameters must fit 131 bytes.';
+
+  @override
+  String get companionCli_tagExhausted =>
+      'CLI request identifiers are exhausted. Restart the app to begin a new safe session.';
+
+  @override
+  String get companionCli_timeout =>
+      'No reply arrived in time. The command may have run; it will not be retried automatically. The connection is being renewed.';
+
+  @override
+  String get companionCli_protocolError =>
+      'The node or proxy rejected the request.';
+
+  @override
+  String get companionCli_disconnected =>
+      'The connection or node changed. The command will not resume automatically.';
+
+  @override
+  String get companionCli_historyError =>
+      'Console history could not be read or saved.';
+
+  @override
+  String get companionCli_sendFailed =>
+      'Sending could not be confirmed. The command will not be retried automatically.';
+
+  @override
+  String get cliHistory_temporary =>
+      'This browser keeps CLI history only until the page is reloaded. It is not saved in preferences.';
+
+  @override
+  String get cliHistory_clearCurrentNodeConfirm =>
+      'Clear this console\'s history for the current node? Other nodes\' history will remain. A running command will not be cancelled.';
 }

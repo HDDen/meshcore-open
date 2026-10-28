@@ -25,6 +25,7 @@ class PendingCommandReply {
 
   /// For GET_CONTACT_BY_KEY: only a CONTACT frame for this key is the reply.
   final Uint8List? matchKey;
+  final Uint8List? cliPrefix;
   final String? channelSendQueueId;
   final Completer<void>? completer;
   final DateTime createdAt;
@@ -40,6 +41,7 @@ class PendingCommandReply {
     required this.commandCode,
     required this.replyCode,
     this.matchKey,
+    this.cliPrefix,
     this.channelSendQueueId,
     this.completer,
     DateTime? createdAt,
@@ -120,6 +122,8 @@ int? replyCodeForCommand(Uint8List data) {
       return respCodeSignature;
     case cmdGetDefaultFloodScope:
       return respCodeDefaultFloodScope;
+    case cmdRunCliCommand:
+      return respCodeCliReply;
   }
   return null;
 }
@@ -162,6 +166,8 @@ class PendingCommandReplies {
       matchKey: data[0] == cmdGetContactByKey && data.length >= 1 + pubKeySize
           ? Uint8List.fromList(data.sublist(1, 1 + pubKeySize))
           : null,
+      cliPrefix: data[0] == cmdRunCliCommand && data.length >= 4 && data[3] == 0x7c
+          ? Uint8List.fromList(data.sublist(1, 4)) : null,
       channelSendQueueId: channelSendQueueId,
       completer: waitForReply ? Completer<void>() : null,
       createdAt: _clock(),
@@ -176,6 +182,15 @@ class PendingCommandReplies {
   }
 
   void remove(PendingCommandReply pending) => _queue.remove(pending);
+
+  void abandonCli(String prefix) {
+    for (final pending in _queue) {
+      if (pending.commandCode == cmdRunCliCommand &&
+          listEquals(pending.cliPrefix, [...prefix.codeUnits, 0x7c])) {
+        markTimedOut(pending);
+      }
+    }
+  }
 
   /// Marks [pending] as abandoned by its sender. It keeps its place in the
   /// FIFO so a late reply is consumed by it rather than misattributed.
@@ -198,6 +213,8 @@ class PendingCommandReplies {
     final index = _queue.indexWhere(
       (p) =>
           p.replyCode == code &&
+          (p.cliPrefix == null || (frame.length >= 4 &&
+            listEquals(p.cliPrefix, frame.sublist(1, 4)))) &&
           (p.matchKey == null || listEquals(p.matchKey, key)),
     );
     if (index < 0) return false;
@@ -234,7 +251,8 @@ class PendingCommandReplies {
     final tombstoneCutoff = now.subtract(tombstoneLifetime);
     _queue.removeWhere(
       (p) =>
-          p.createdAt.isBefore(cutoff) ||
+          p.createdAt.isBefore(p.commandCode == cmdRunCliCommand
+            ? now.subtract(const Duration(seconds: 30)) : cutoff) ||
           (p.timedOutAt?.isBefore(tombstoneCutoff) ?? false),
     );
   }

@@ -76,6 +76,11 @@ class BleDebugLogService extends ChangeNotifier {
       frame = Uint8List.fromList([code]);
       note = 'payload withheld';
     }
+    if (code == cmdRunCliCommand || (!outgoing && code == respCodeCliReply)) {
+      // Консоль хранит текст по выбору владельца; debug export — отдельный канал.
+      frame = Uint8List.fromList([code]);
+      note = 'CLI payload withheld';
+    }
     final copy = Uint8List.fromList(frame);
     _entries.add(
       _recordEntry(

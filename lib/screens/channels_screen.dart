@@ -48,6 +48,9 @@ import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_badge.dart';
+import '../helpers/companion_cli_protocol.dart';
+import '../helpers/companion_cli_list_layout.dart';
+import '../widgets/companion_cli_tile.dart';
 import '../helpers/channel_group_helper.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-scan
 import '../helpers/gif_helper.dart';
@@ -468,10 +471,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   if (waitingForInitialChannels ||
                       waitingForFirstChannel ||
                       waitingForChannelGroups) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Column(children: [
+                      if (_showCompanionCli) CompanionCliTile(connector: connector),
+                      const Expanded(child: Center(child: CircularProgressIndicator())),
+                    ]);
                   }
 
-                  if (channels.isEmpty && roomServerContacts.isEmpty) {
+                  if (channels.isEmpty && roomServerContacts.isEmpty && !_showCompanionCli) {
                     return ListView(
                       children: [
                         SizedBox(
@@ -1278,6 +1284,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     );
   }
 
+  bool get _showCompanionCli => context.read<AppSettingsService>()
+      .settings.roomServerShowNotemptyContactsOnChatscreen;
+
   Widget _buildChannelsList(
     BuildContext context,
     MeshCoreConnector connector,
@@ -1342,7 +1351,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       );
     }
     final hasVisibleContent =
-        visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty;
+        visibleGroups.isNotEmpty || ungroupedItems.isNotEmpty || _showCompanionCli;
 
     if (!hasVisibleContent) {
       return ListView(
@@ -1379,14 +1388,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       final entries = sortUnreadFirst
           ? _sortManualScreenEntriesUnreadFirst(baseEntries, connector)
           : baseEntries;
+      final cliLayout = CompanionCliListLayout<_ChannelScreenListEntry>(
+        items: entries, keyOf: _screenOrderKeyForEntry,
+        previousOrder: _manualScreenOrder, visible: _showCompanionCli,
+        minimumPosition: sortUnreadFirst ? entries.takeWhile(
+          (entry) => _unreadCountForScreenEntry(connector, entry) > 0).length : 0);
       return ReorderableListView.builder(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         buildDefaultDragHandles: false,
-        itemCount: entries.length,
+        itemCount: cliLayout.entries.length,
         onReorderItem: (oldIndex, newIndex) {
-          final reordered = List<_ChannelScreenListEntry>.from(entries);
-          final item = reordered.removeAt(oldIndex);
-          reordered.insert(newIndex, item);
+          final moved = cliLayout.moved(oldIndex, newIndex);
+          final reordered = moved.whereType<_ChannelScreenListEntry>().toList();
           final persistedEntries = sortUnreadFirst
               ? _restoreUnreadManualScreenEntryPositions(
                   baseEntries,
@@ -1397,10 +1410,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           final reorderedGroups = _channelGroupsFromManualScreenEntries(
             persistedEntries,
           );
-          final screenOrder = [
-            for (final entry in persistedEntries)
-              _screenOrderKeyForEntry(entry),
-          ];
+          final screenOrder = cliLayout.order(moved, persistedEntries);
           setState(() {
             _channelGroups = reorderedGroups;
             _manualScreenOrder = screenOrder;
@@ -1409,7 +1419,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           unawaited(_saveManualScreenOrder());
         },
         itemBuilder: (context, index) {
-          final entry = entries[index];
+          final entry = cliLayout.entries[index];
+          if (entry == null) {
+            return CompanionCliTile(key: const ValueKey(companionCliOrderKey),
+              connector: connector, dragIndex: index);
+          }
           final group = entry.group;
           if (group != null) {
             return KeyedSubtree(
@@ -1487,6 +1501,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         ),
       );
     }
+    if (_showCompanionCli) {
+      children.insert(0, CompanionCliTile(connector: connector));
+    }
     return ListView(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
       children: children,
@@ -1525,7 +1542,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final hasVisibleContent =
         visibleGroups.isNotEmpty ||
         ungroupedChannels.isNotEmpty ||
-        detachedItems.isNotEmpty;
+        detachedItems.isNotEmpty || _showCompanionCli;
 
     if (!hasVisibleContent) {
       return ListView(
@@ -1562,6 +1579,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       final entries = sortUnreadFirst
           ? _sortManualChannelEntriesUnreadFirst(baseEntries, connector)
           : baseEntries;
+      String entryKey(ChannelGroupListEntry entry) => entry.group != null
+          ? _screenOrderKeyForGroup(entry.group!) : 'channel:${entry.channel!.index}';
+      final cliLayout = CompanionCliListLayout<ChannelGroupListEntry>(
+        items: entries, keyOf: entryKey, previousOrder: _manualScreenOrder,
+        visible: _showCompanionCli, retainPeerKeys: true,
+        minimumPosition: sortUnreadFirst ? entries.takeWhile(
+          (entry) => _unreadCountForChannelEntry(connector, entry) > 0).length : 0);
       return ListView(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),
         children: [
@@ -1570,11 +1594,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             buildDefaultDragHandles: false,
-            itemCount: entries.length,
+            itemCount: cliLayout.entries.length,
             onReorderItem: (oldIndex, newIndex) {
-              final reordered = List<ChannelGroupListEntry>.from(entries);
-              final item = reordered.removeAt(oldIndex);
-              reordered.insert(newIndex, item);
+              final moved = cliLayout.moved(oldIndex, newIndex);
+              final reordered = moved.whereType<ChannelGroupListEntry>().toList();
               final persistedEntries = sortUnreadFirst
                   ? _restoreUnreadManualChannelEntryPositions(
                       baseEntries,
@@ -1592,12 +1615,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   );
               setState(() {
                 _channelGroups = reorderedGroups;
+                _manualScreenOrder = cliLayout.order(moved, persistedEntries);
               });
               unawaited(_saveChannelGroups());
+              unawaited(_saveManualScreenOrder());
               unawaited(connector.setChannelOrder(orderedChannelIndexes));
             },
             itemBuilder: (context, index) {
-              final entry = entries[index];
+              final entry = cliLayout.entries[index];
+              if (entry == null) {
+                return CompanionCliTile(key: const ValueKey(companionCliOrderKey),
+                  connector: connector, dragIndex: index);
+              }
               final group = entry.group;
               if (group != null) {
                 return KeyedSubtree(
@@ -1693,6 +1722,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           margin: const EdgeInsets.symmetric(vertical: 4),
         ),
       );
+    }
+    if (_showCompanionCli) {
+      children.insert(0, CompanionCliTile(connector: connector));
     }
     return ListView(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 88),

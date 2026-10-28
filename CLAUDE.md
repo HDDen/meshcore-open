@@ -2629,7 +2629,58 @@ A GIF in a message travels as its Giphy id (`g:<id>`, `helpers/gif_helper.dart`)
 
 A failed load stays in Flutter's image cache as a completer that only repeats its error, and resolving the same provider again returns that completer. `GifMessage._retryLoad` therefore evicts the provider before the retry; before, a GIF that failed once kept failing for the rest of the session. The GIF picker's previews are not cached: they are search results, and a year of them would crowd out the GIFs that were actually sent.
 
+### Локальная консоль CompanionCLI
+
+`CompanionCliSession` использует локальные command 66 / response 29 при firmware
+code >=14 (MeshCore 1.18), независимо от app protocol 4; remote repeater CLI ниже
+остаётся прежним. Helpers `companion_cli_protocol.dart` и `companion_cli_list_layout.dart`
+выносят формат/корреляцию и служебный порядок из коннектора/экранов. В контактах
+`CompanionCliTile` закреплён сверху; на каналах показывается даже пустым при
+`roomServerShowNotemptyContactsOnChatscreen` и перетаскивается в manual sort,
+включая legacy branch. Строка не является Contact/Channel ноды.
+`CompanionCliStore` хранит операции в отдельных SQL-колонках таблицы
+`companion_cli_history` с полным node key и source label. Схема БД — 3;
+CLI-таблицы создаются существующим механизмом auxiliary raw SQL, без изменения
+Drift-generated файлов. Shared view
+объединяет чтение, а не адресатов команд. Чувствительный текст сохраняется в
+консоли по решению владельца; `BleDebugLogService` скрывает payload 66/29.
+Первое сохранение предшествует отправке, активная операция учитывается в
+`FrameBackgroundWork`; timeout не повторяет команду и запрашивает transport restart.
+ID не переиспользуется в пределах сессии, исчерпание требует перезапуска.
+Оформление `CompanionCliScreen` взято из терминала репитеров: моноширинные строки,
+быстрые команды, ввод и recall. Хранение и транспорт остаются отдельными.
+Локальная очистка затрагивает только текущую ноду и не отменяет команду.
+`CliHistoryWrites` сериализует записи/очистку и проверяет ревизии адреса, чтобы
+поздний callback не восстановил удалённое. SharedPreferences/JSON fallback
+убран; в web история временная, с явным пояснением в UI. По решению владельца
+перенос из невыпущенного node_state-формата не реализуется.
+Подробнее: `documentation/companion-cli.md`, wire source of truth —
+`documentation/ble-protocol.md`. Аппаратная приёмка ещё требуется.
+
 ### Repeater clock sync and region load
+
+`RepeaterCliHistory` и `RepeaterCliStore` сохраняют transcript экрана в
+`repeater_cli_history` с обычными SQL-колонками, по полным ключам companion-ноды
+и репитера. Первая запись команды предшествует radio send; ошибка БД не
+перенаправляет данные в preferences. В overflow после debug добавлена локальная
+очистка с подтверждением. Ревизия общего `CliHistoryWrites` защищает её от старых
+callbacks даже после закрытия/открытия экрана. Очистка не сбрасывает region load
+и не посылает команд устройству. Команды других management-экранов в transcript
+не добавляются; смена ноды блокирует отправку через старый экземпляр экрана.
+`RepeaterCliConnection` разделяется экранами одного connector/node/repeater и
+держит parser/service/history до завершения начатых операций, даже после закрытия
+UI; после последнего экрана и операции снимает listener. Повторное открытие
+pending консоли не создаёт второй parser или новый набор pending. Активные
+`XX|` идентификаторы `RepeaterCommandService` распределяет общий
+`RepeaterCliPrefixPool` по connector, чтобы префиксный ответ старой консоли не
+завершал команду другого app management service. Wire format и прежний fallback
+для unprefixed replies не менялись; занятый ID не переиспользуется.
+
+Подписи copy/share/debug в меню `RepeaterCliScreen` обёрнуты в `Flexible`:
+длинный перевод и увеличенный системный текст переносятся в пределах popup,
+не вызывая горизонтальный overflow. Проверка ru/en и text scale 1/1.5 находится
+в `test/screens/repeater_cli_history_baseline_test.dart`; действия меню и
+формат команд этим исправлением не меняются.
 
 `RepeaterCommandService.sendCommand` turns `clock sync` into `time <epoch>` with the phone's clock (`normalizeRepeaterClockSyncCommand`), as meshcore-cli does: companion firmware since 2025-12-30 stamps a CLI frame with the node's own RTC, so a plain `clock sync` set the repeater to the node's time. The CLI screen knows the repeater's `region load` mode, in which the firmware takes every line before prefix stripping and answers none: lines go out verbatim through `sendUnansweredLine`, and a blank line commits the load, the only line of the mode that gets an answer. Like every CLI command they take `sendContactFrame`, so they carry the contact's region as the `region load` before them did.
 

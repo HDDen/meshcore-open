@@ -20,6 +20,10 @@ The Contacts screen is the primary hub for managing mesh nodes your radio has a 
 
 ## Contact List
 
+Служебная строка [CompanionCLI](companion-cli.md) закреплена над списком
+независимо от сортировки и наличия контактов. Она открывает консоль подключённой
+ноды, не является радиоконтактом и скрыта при выборе контактов/пакетных операциях.
+
 Each contact is displayed as a list tile showing:
 
 - **Avatar**: Color-coded circle with type icon (or first emoji of the contact's name if it starts with one)

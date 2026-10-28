@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
 import '../models/wardrive_sample.dart';
+import '../models/companion_cli_entry.dart';
+import '../models/repeater_cli_entry.dart';
 import 'data_root.dart';
 import 'message_history_database.dart';
 import 'prefs_manager.dart';
@@ -1239,6 +1241,25 @@ class MessageHistoryStorage {
   /// and in a process that has not initialised the storage, such as a unit
   /// test.
   bool get hasDatabase => _initialized && _database != null;
+
+  MessageHistoryDatabase get _cliDatabase {
+    if (!hasDatabase) {
+      throw StateError('CLI history database is not open');
+    }
+    return _database!;
+  }
+
+  Future<List<CompanionCliEntry>> readCompanionCliHistory() => _cliDatabase.readCompanionCliHistory();
+  Future<void> writeCompanionCliEntry(CompanionCliEntry entry) =>
+      _persistenceWork.run(() => _cliDatabase.writeCompanionCliEntry(entry));
+  Future<void> clearCompanionCliHistory(String nodeKey) =>
+      _persistenceWork.run(() => _cliDatabase.clearCompanionCliHistory(nodeKey));
+  Future<List<RepeaterCliEntry>> readRepeaterCliHistory(String nodeKey, String repeaterKey) =>
+      _cliDatabase.readRepeaterCliHistory(nodeKey, repeaterKey);
+  Future<void> writeRepeaterCliEntry(RepeaterCliEntry entry) =>
+      _persistenceWork.run(() => _cliDatabase.writeRepeaterCliEntry(entry));
+  Future<void> clearRepeaterCliHistory(String nodeKey, String repeaterKey) =>
+      _persistenceWork.run(() => _cliDatabase.clearRepeaterCliHistory(nodeKey, repeaterKey));
 
   Future<List<ChannelIdentityRow>> readChannelIdentities() async {
     _requireInitialized();

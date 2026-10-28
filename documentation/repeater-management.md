@@ -92,8 +92,35 @@ A terminal-style interface for sending commands directly to the repeater.
 - Quick-command buttons populate and send common commands
 - Overflow menu (three-dot icon): "Debug next command" option shows raw frame debug info for the next typed command (shows error snackbar if input field is empty)
 - Help icon: Opens a scrollable reference of all known CLI commands. Tapping any command populates the input field immediately
-- Clear icon: Wipes the command/response history
-- Failed/timed-out commands are automatically retried once
+- Clear icon: Wipes the command/response history after confirmation
+
+На Android/iOS/desktop история этой консоли сохраняется в отдельных колонках
+SQLite-таблицы `repeater_cli_history`. Адрес истории включает полный ключ
+companion-ноды и полный ключ репитера: один репитер через разные ноды имеет
+раздельные журналы. История восстанавливается при повторном открытии экрана;
+автоматические запросы других экранов в неё не добавляются. Режим `region load`
+не возобновляется автоматически из сохранённого текста.
+
+Если закрыть экран при ожидаемом ответе, начатая операция продолжает ждать
+ответ или тайм-аут и сохраняет результат. Повторное открытие в это время
+использует тот же обработчик и transcript, без повторной отправки команды.
+
+В меню сразу после «Отладить следующую команду» есть «Очистить историю».
+Это локальное действие приложения с подтверждением: оно удаляет выбранный журнал
+из БД, не отправляет `erase`/`clear` репитеру и не меняет текущий `region load`.
+Поздний ответ очищенные строки не восстанавливает. Другие репитеры, ноды,
+CompanionCLI и обычные сообщения сохраняются.
+
+Первое сохранение команды предшествует отправке. При недоступной БД консоль
+показывает ошибку и позволяет повторить загрузку, без записи истории в настройки.
+Экран отправляет команду с `retries: 1` (одна попытка), а не автоматически
+повторяет изменяющую команду. В web история временная, до перезагрузки страницы;
+об этом сообщается в консоли. Полный текст команд/ответов сохраняется по решению
+владельца, включая чувствительные значения.
+
+Подписи пунктов меню копирования, отправки истории и отладки переносятся
+на несколько строк, если доступной ширины недостаточно, в том числе при
+увеличенном системном размере текста.
 
 ### Available CLI Commands
 

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import '../helpers/companion_cli_protocol.dart';
+import '../services/companion_cli_session.dart';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:mco_service/mco_service.dart';
@@ -460,6 +462,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _setSelfPublicKey(Uint8List? key) {
     _selfPublicKey = key;
     _selfPublicKeyHex = key == null ? '' : pubKeyToHex(key);
+    _companionCli?.connectionChanged();
   }
   String? _selfName;
   int? _currentTxPower;
@@ -1135,6 +1138,41 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Set<int> get unconfirmedChannelSlots =>
       Set.unmodifiable(_unconfirmedChannelSlots);
   Stream<Uint8List> get receivedFrames => _receivedFramesController.stream;
+
+  CompanionCliSession? _companionCli;
+  bool _cliProxyHandled = false;
+  bool get companionCliRoutingEnabled => true;
+  bool get supportsCompanionCli => (_firmwareVerCode ?? 0) >= 14;
+  CompanionCliSession get companionCli => _companionCli ??= CompanionCliSession(
+    nodeKey: () => selfPublicKeyHex,
+    nodeName: () => _selfName ?? selfPublicKeyHex,
+    available: () => isConnected && !isOfflineMode && supportsCompanionCli,
+    send: (frame) {
+      final prefix = String.fromCharCodes(frame.sublist(1, 3));
+      if (!isCompanionCliRequestActive(prefix)) {
+        throw const CompanionCliException('disconnected');
+      }
+      return sendFrame(frame);
+    },
+    runWork: (operation) => _frameBackgroundWork.command(awaitsReply: true, operation: operation),
+    onTimeout: (prefix) {
+      _pendingGenericAckQueue.abandonCli(prefix);
+      // После неопределённого исхода исключаем атрибуцию позднего generic ERR.
+      if (isConnected) {
+        unawaited(_restartActiveTransport());
+      }
+    },
+  );
+
+  /// Контракт с proxy: чужой ответ не публикуется в host CLI/raw subscribers.
+  void acceptCompanionCliProxyReply(Uint8List frame, bool local) {
+    _cliProxyHandled = true;
+    if (local) {
+      _companionCli?.observeReply(frame);
+    }
+  }
+
+  bool isCompanionCliRequestActive(String prefix) => _companionCli?.isActive(prefix) ?? false;
 
   /// Broadcast of MCMP v3 channel/room signing failures; see
   /// [_mcmpSigningFailedController].
@@ -11814,8 +11852,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) {
     if (frame.isEmpty) return;
     _companionFrameSequence++;
+    _cliProxyHandled = false;
     if (notifyExtensions) {
       _settingsSectionsService?.mcoX2(frame);
+    }
+    if (_cliProxyHandled) {
+      _bleDebugLogService?.logFrame(frame, outgoing: false);
+      return;
     }
     _receivedFramesController.add(frame);
     _bleDebugLogService?.logFrame(frame, outgoing: false);
@@ -12059,6 +12102,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       case respCodeErr:
         _handleErrorFrame(frame);
         break;
+      case respCodeCliReply:
+        _companionCli?.observeReply(frame);
+        break;
       default:
         debugPrint('Unknown frame code: $code');
     }
@@ -12072,6 +12118,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
 
     final failedAck = _pendingGenericAckQueue.takeErr(errCode);
+    if (failedAck != null && failedAck.commandCode == cmdRunCliCommand) {
+      final prefix = failedAck.cliPrefix;
+      if (prefix != null && prefix.length == 3 &&
+          isCompanionCliRequestActive(String.fromCharCodes(prefix.take(2)))) {
+        _companionCli?.observeReply(frame);
+      }
+      return;
+    }
     if (failedAck != null &&
         failedAck.commandCode == cmdGetChannel &&
         errCode == _errCodeNotFound &&
@@ -18699,6 +18753,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_disposed) return;
     if (_state != newState) {
       _state = newState;
+      _companionCli?.connectionChanged();
       _settingsSectionsService?.mcoX3(
         newState == MeshCoreConnectionState.connected,
       );
@@ -18844,6 +18899,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _companionCli?.dispose();
     if (PlatformInfo.isIOS) {
       WidgetsBinding.instance.removeObserver(this);
     }

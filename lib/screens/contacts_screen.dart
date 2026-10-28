@@ -20,6 +20,7 @@ import '../helpers/channel_qr_link.dart'; // channel-qr-paste
 import '../helpers/contact_link.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
+import '../widgets/companion_cli_tile.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
@@ -794,6 +795,8 @@ class _ContactsScreenState extends State<ContactsScreen>
         body: Column(
           children: [
             const ReviewModeBanner(),
+            if (!widget.selectionMode && !widget.batchOperationsMode)
+              CompanionCliTile(connector: connector),
             Expanded(
               child: IgnorePointer(
                 ignoring: lockContactList,
