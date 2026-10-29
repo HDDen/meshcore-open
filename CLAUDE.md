@@ -2638,6 +2638,12 @@ A failed load stays in Flutter's image cache as a completer that only repeats it
 `CompanionCliSession` использует локальные command 66 / response 29 при firmware
 code >=14 и распознанной версии прошивки >=1.18, независимо от app protocol 4;
 проверку обоих полей DEVICE_INFO выполняет `companion_cli_support.dart`.
+Parser в два этапа извлекает числовые фрагменты [0-9]+(.[0-9]+)*,
+пропускает одиночные числа и разбирает первый major.minor[.patch...] на int.
+Префиксы форков и суффиксы .dev поддерживаются для всех версий, в том числе
+1.19/1.25/2.90/35.16; float не используется (1.100 > 1.18, 1.9 < 1.18).
+Patch и поздние build-версии не переопределяют первый major.minor. Частного
+contains('1.18') больше нет; guard protocolCode >=14 выполняется до parser.
 Неизвестная версия поддержку не включает; remote repeater CLI ниже остаётся прежним. Helpers `companion_cli_protocol.dart` и `companion_cli_list_layout.dart`
 выносят формат/корреляцию и служебный порядок из коннектора/экранов. В контактах
 `CompanionCliTile` показывается только при supportsCompanionCli: в контактах

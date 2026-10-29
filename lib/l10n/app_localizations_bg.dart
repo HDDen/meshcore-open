@@ -6161,7 +6161,7 @@ class AppLocalizationsBg extends AppLocalizations {
       'В този раздел са събрани опции, които липсват в оригиналния meshcore_open';
 
   @override
-  String get settings_modSettingsGeneral => 'General';
+  String get settings_modSettingsGeneral => 'Общи';
 
   @override
   String get settings_modSettingsVisual => 'Външен вид';

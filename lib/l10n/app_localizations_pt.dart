@@ -6143,7 +6143,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta seção reúne as opções ausentes no meshcore_open original';
 
   @override
-  String get settings_modSettingsGeneral => 'General';
+  String get settings_modSettingsGeneral => 'Geral';
 
   @override
   String get settings_modSettingsVisual => 'Aparência';

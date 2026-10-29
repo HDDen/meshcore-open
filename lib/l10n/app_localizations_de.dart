@@ -6162,7 +6162,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Bereich enthält Optionen, die im ursprünglichen meshcore_open fehlen';
 
   @override
-  String get settings_modSettingsGeneral => 'General';
+  String get settings_modSettingsGeneral => 'Allgemein';
 
   @override
   String get settings_modSettingsVisual => 'Darstellung';
