@@ -41,6 +41,7 @@ import '../helpers/reaction_helper.dart';
 import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_image_replay.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
@@ -1683,6 +1684,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final secondary = _sharedChannelSecondaryMessages[channel.index];
     if (secondary == null || secondary.isEmpty) return primary;
     return _mergeChannelMessages(primary, secondary);
+  }
+
+  /// Saved incoming AEIC images use a separate byte store, not channel rows.
+  /// Rebuild their existing transport chunks without invoking the image model.
+  Future<List<ChannelImageReplay>> loadChannelImageReplay(int channelIndex) async {
+    final channel = _channels.where((c) => c.index == channelIndex).firstOrNull;
+    final store = _receivedImageStore;
+    if (channel == null || channel.isEmpty || store == null) return const [];
+    final images = store.entriesForChannelIds(
+      _imageChannelIdsOf(channel),
+      unstampedSlot: channelIndex,
+    );
+    return loadSavedChannelImageReplay(
+      images: images,
+      readBitstream: store.blobs.readBitstream,
+      channelIndex: channelIndex,
+    );
   }
 
   /// Contact-chat counterpart of [getLoadedChannelMessagesWithShared].

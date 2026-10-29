@@ -1806,6 +1806,14 @@ A v4 figure can also be **text** (`MCOImageV4Text`, extended sub-opcode `15` use
 
 ### AEIC image store: pictures are paged in lazily
 
+`helpers/channel_image_replay.dart` rebuilds transport frames from a retained
+incoming AEIC bitstream with the existing `buildImageChunks`, without PNG or
+neural inference. `MeshCoreConnector.loadChannelImageReplay` resolves the same
+channel identity group as the transcript; an old slot matches only an unstamped
+entry. Missing/truncated bytes and unknown metadata are skipped individually.
+The result keeps the image receipt time and groups its frames as one history
+item; frame 27 itself has no timestamp and cannot carry that original time.
+
 `ReceivedImageStore.load()` deliberately restores sizes, not bytes — reattaching a few hundred
 images must not read tens of MB of PNG on the startup path — so an entry comes back with
 `pngStored` / `receiverPreviewStored` re-derived from the files actually on disk and both byte

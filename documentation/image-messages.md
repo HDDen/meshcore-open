@@ -56,3 +56,15 @@ Tap a reconstructed image to inspect it. Long-press or right-click its chat bubb
 ## Implementation reference
 
 [image_chunk_transport.dart](../lib/services/image_chunk_transport.dart) defines the wire layout, capacities, metadata, and recovery algorithm. The current transport uses command 62, response 27, and data type `0xAE1C`. See the [protocol reference](ble-protocol.md#regions-and-image-data) and [fixture regeneration guide](../tools/aeic/README.md).
+
+
+### Сохранённый AEIC-битстрим и повтор передачи
+
+Сохранённую входящую картинку можно передать повторно без запуска нейросети:
+helper `channel_image_replay.dart` восстанавливает чанки из битстрима тем же
+сборщиком, что используется для отправки. PNG не перекодируется. Если битстрим
+уже удалён, картинка не получена целиком или её метаданные неизвестны, повтор
+не создаётся. Выбор канала учитывает его identity-группу, а не только номер слота.
+У бинарного кадра AEIC нет времени сообщения; исходное время получения и
+радиометрики в таком повторе клиенту не передаются. Эти изменения требуют обычной
+пересборки приложения; новые модели и нативные библиотеки не требуются.
