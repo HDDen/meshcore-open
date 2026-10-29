@@ -6233,7 +6233,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Visa avsändarens namn i kanalförhandsvisningen';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8790,66 +8790,67 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ställer in fläktens övre temperaturtröskel i °C: över fan.lo, högst 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Sök efter uppdateringar på GitHub';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Sök efter uppdateringar';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Söker efter uppdateringar…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => 'Uppdatering tillgänglig! Öppna utgåvor…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'En ny version finns tillgänglig! Tryck för att öppna sidan med utgåvor.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Inga uppdateringar hittades';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Kunde inte söka efter uppdateringar';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'inte angivet';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Det här bygget innehåller inte appens fullständiga commit-SHA.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'Committen för det installerade bygget finns inte i GitHub-arkivet.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'Historiken för det installerade bygget och utgåvan har gått isär; det går inte att avgöra vilket som är nyare.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'GitHub kan inte nås. Kontrollera din internetanslutning.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub svarade inte i tid.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub har tillfälligt begränsat förfrågningarna. Försök igen senare.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub returnerade HTTP-fel $code.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'GitHub returnerade ogiltiga uppgifter om utgåvan eller committen.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Kunde inte spara uppdateringskontrollens status.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Kunde inte öppna sidan med utgåvor i webbläsaren.';
 }

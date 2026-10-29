@@ -6245,7 +6245,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Zobraziť meno odosielateľa v náhľade kanála';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8800,66 +8800,67 @@ class AppLocalizationsSk extends AppLocalizations {
       'Nastavuje horný teplotný prah ventilátora v °C: nad fan.lo, najviac 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Kontrolovať aktualizácie na GitHube';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Skontrolovať aktualizácie';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Kontrolujú sa aktualizácie…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => 'Je dostupná aktualizácia! Otvoriť vydania…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'Je dostupná nová verzia! Ťuknutím otvoríte stránku vydaní.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Nenašli sa žiadne aktualizácie';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Nepodarilo sa skontrolovať aktualizácie';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'neuvedené';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Táto zostava neobsahuje úplný SHA commitu aplikácie.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'Commit nainštalovanej zostavy nie je dostupný v repozitári GitHub.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'Histórie nainštalovanej zostavy a vydania sa rozišli; nedá sa určiť, ktoré je novšie.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'GitHub je nedostupný. Skontrolujte internetové pripojenie.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub neodpovedal v stanovenom čase.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub dočasne obmedzil požiadavky. Skúste to neskôr.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub vrátil chybu HTTP $code.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'GitHub vrátil neplatné údaje vydania alebo commitu.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Nepodarilo sa uložiť stav kontroly aktualizácií.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Nepodarilo sa otvoriť stránku vydaní v prehliadači.';
 }

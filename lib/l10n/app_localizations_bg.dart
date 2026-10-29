@@ -6278,7 +6278,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Показване на името на подателя в прегледа на канала';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8864,66 +8864,67 @@ class AppLocalizationsBg extends AppLocalizations {
       'Задава горния температурен праг на вентилатора в °C: над fan.lo, не повече от 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Проверка за обновления в GitHub';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Проверка за обновления';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Проверка за обновления…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => 'Има обновление! Отворете изданията…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'Налична е нова версия! Натиснете, за да отворите страницата с изданията.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Не са намерени обновления';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Неуспешна проверка за обновления';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'не е посочен';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Компилацията не съдържа пълния SHA на комита на приложението.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'Комитът на инсталираната компилация не е достъпен в хранилището на GitHub.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'Историите на инсталираната компилация и изданието са се разклонили; не може да се определи коя е по-нова.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'GitHub е недостъпен. Проверете интернет връзката.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub не отговори навреме.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub временно ограничи заявките. Опитайте отново по-късно.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub върна HTTP грешка $code.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'GitHub върна невалидни данни за изданието или комита.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Състоянието на проверката за обновления не можа да бъде запазено.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Страницата с изданията не можа да бъде отворена в браузъра.';
 }

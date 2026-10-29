@@ -5847,8 +5847,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsHideChInd => '隐藏频道序号';
 
   @override
-  String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+  String get settings_modSettingsShowChannelPreviewSender => '在频道预览中显示发送者名称';
 
   @override
   String get settings_modSettingsHideRadioStats => '隐藏顶栏的无线电统计';
@@ -8229,66 +8228,58 @@ class AppLocalizationsZh extends AppLocalizations {
       '以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => '检查 GitHub 更新';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => '检查更新';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => '正在检查更新…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => '有可用更新！查看发布页面…';
 
   @override
-  String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+  String get updates_found => '发现新版本！点击前往发布页面。';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => '未发现更新';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => '无法检查更新';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => '未提供';
 
   @override
-  String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+  String get updates_errorMissingCommit => '此构建未包含应用提交的完整 SHA。';
 
   @override
-  String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+  String get updates_errorUnknownCommit => '已安装构建的提交在 GitHub 仓库中不可用。';
 
   @override
-  String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+  String get updates_errorDiverged => '已安装构建与发布版本的历史已分叉，无法判断哪个更新。';
 
   @override
-  String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+  String get updates_errorNetwork => '无法访问 GitHub。请检查网络连接。';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub 未在规定时间内响应。';
 
   @override
-  String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+  String get updates_errorRateLimit => 'GitHub 暂时限制了请求次数，请稍后重试。';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub 返回 HTTP 错误 $code。';
   }
 
   @override
-  String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+  String get updates_errorResponse => 'GitHub 返回了无效的发布版本或提交信息。';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage => '无法保存更新检查状态。';
 
   @override
-  String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+  String get updates_errorBrowser => '无法在浏览器中打开发布页面。';
 }

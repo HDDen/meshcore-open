@@ -6234,7 +6234,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Prikaži ime pošiljatelja v predogledu kanala';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8799,66 +8799,67 @@ class AppLocalizationsSl extends AppLocalizations {
       'Nastavi zgornji temperaturni prag ventilatorja v °C: nad fan.lo, največ 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Preverjaj posodobitve na GitHubu';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Preveri posodobitve';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Preverjanje posodobitev…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => 'Na voljo je posodobitev! Odpri izdaje…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'Na voljo je nova različica! Tapnite za odpiranje strani z izdajami.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Ni najdenih posodobitev';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Posodobitev ni bilo mogoče preveriti';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'ni navedeno';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Ta gradnja ne vsebuje celotnega SHA potrditve aplikacije.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'Potrditev nameščene gradnje ni na voljo v repozitoriju GitHub.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'Zgodovini nameščene gradnje in izdaje sta se razšli; ni mogoče določiti, katera je novejša.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'GitHub ni dosegljiv. Preverite internetno povezavo.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub se ni odzval pravočasno.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub je začasno omejil zahteve. Poskusite znova pozneje.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub je vrnil napako HTTP $code.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'GitHub je vrnil neveljavne podatke o izdaji ali potrditvi.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Stanja preverjanja posodobitev ni bilo mogoče shraniti.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Strani z izdajami ni bilo mogoče odpreti v brskalniku.';
 }

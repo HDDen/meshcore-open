@@ -5975,7 +5975,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      '채널 미리보기에 발신자 이름 표시';
 
   @override
   String get settings_modSettingsHideRadioStats => '헤더의 무선 통계 숨기기';
@@ -8415,66 +8415,60 @@ class AppLocalizationsKo extends AppLocalizations {
       '팬의 상한 온도 임계값을 °C 단위로 설정합니다: fan.lo보다 높게, 최대 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'GitHub에서 업데이트 확인';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => '업데이트 확인';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => '업데이트 확인 중…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => '업데이트가 있습니다! 릴리스 페이지 열기…';
 
   @override
-  String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+  String get updates_found => '새 버전이 있습니다! 눌러서 릴리스 페이지를 여세요.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => '업데이트가 없습니다';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => '업데이트를 확인하지 못했습니다';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => '지정되지 않음';
 
   @override
-  String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+  String get updates_errorMissingCommit => '이 빌드에는 앱 커밋의 전체 SHA가 포함되어 있지 않습니다.';
 
   @override
-  String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+  String get updates_errorUnknownCommit => '설치된 빌드의 커밋이 GitHub 저장소에 없습니다.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      '설치된 빌드와 릴리스의 이력이 갈라져 어느 쪽이 최신인지 확인할 수 없습니다.';
 
   @override
-  String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+  String get updates_errorNetwork => 'GitHub에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub가 제한 시간 내에 응답하지 않았습니다.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub가 일시적으로 요청을 제한했습니다. 나중에 다시 시도하세요.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub가 HTTP 오류 $code을(를) 반환했습니다.';
   }
 
   @override
-  String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+  String get updates_errorResponse => 'GitHub가 유효하지 않은 릴리스 또는 커밋 정보를 반환했습니다.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage => '업데이트 확인 상태를 저장하지 못했습니다.';
 
   @override
-  String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+  String get updates_errorBrowser => '브라우저에서 릴리스 페이지를 열지 못했습니다.';
 }

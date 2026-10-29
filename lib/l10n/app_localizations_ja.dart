@@ -5968,7 +5968,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'チャンネルのプレビューに送信者名を表示';
 
   @override
   String get settings_modSettingsHideRadioStats => 'ヘッダーの無線統計を非表示';
@@ -8410,66 +8410,61 @@ class AppLocalizationsJa extends AppLocalizations {
       'ファンの上限温度しきい値を ℃ で設定します：fan.lo より上、最大 120。';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'GitHubで更新を確認';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => '更新を確認';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => '更新を確認中…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => '更新があります！リリースページを開く…';
 
   @override
-  String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+  String get updates_found => '新しいバージョンが見つかりました！タップしてリリースページを開きます。';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => '更新は見つかりませんでした';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => '更新を確認できませんでした';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => '未指定';
 
   @override
-  String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+  String get updates_errorMissingCommit => 'このビルドにはアプリのコミットの完全なSHAが含まれていません。';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'インストール済みビルドのコミットがGitHubリポジトリに存在しません。';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'インストール済みビルドとリリースの履歴が分岐しているため、どちらが新しいか判断できません。';
 
   @override
-  String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+  String get updates_errorNetwork => 'GitHubに接続できません。インターネット接続を確認してください。';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHubが時間内に応答しませんでした。';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHubがリクエストを一時的に制限しています。後でもう一度お試しください。';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHubがHTTPエラー$codeを返しました。';
   }
 
   @override
-  String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+  String get updates_errorResponse => 'GitHubから無効なリリース情報またはコミット情報が返されました。';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage => '更新確認の状態を保存できませんでした。';
 
   @override
-  String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+  String get updates_errorBrowser => 'ブラウザーでリリースページを開けませんでした。';
 }

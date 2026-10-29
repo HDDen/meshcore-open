@@ -6265,7 +6265,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Feladó nevének megjelenítése a csatorna előnézetében';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8838,66 +8838,67 @@ class AppLocalizationsHu extends AppLocalizations {
       'Beállítja a ventilátor felső hőmérsékleti küszöbét °C-ban: a fan.lo felett, legfeljebb 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Frissítések keresése a GitHubon';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Frissítések keresése';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Frissítések keresése…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available => 'Frissítés érhető el! Kiadások megnyitása…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'Új verzió érhető el! Koppints a kiadások oldalának megnyitásához.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Nem található frissítés';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Nem sikerült frissítéseket keresni';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'nincs megadva';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Ez a build nem tartalmazza az alkalmazás commitjának teljes SHA-azonosítóját.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'A telepített build commitja nem érhető el a GitHub-tárolóban.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'A telepített build és a kiadás előzményei eltérő ágra kerültek; nem állapítható meg, melyik az újabb.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'A GitHub nem érhető el. Ellenőrizd az internetkapcsolatot.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'A GitHub nem válaszolt időben.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'A GitHub átmenetileg korlátozta a kéréseket. Próbáld újra később.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'A GitHub $code HTTP-hibát adott vissza.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'A GitHub érvénytelen kiadási vagy commitadatokat adott vissza.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Nem sikerült menteni a frissítéskeresés állapotát.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Nem sikerült megnyitni a kiadások oldalát a böngészőben.';
 }

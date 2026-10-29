@@ -6282,7 +6282,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_modSettingsShowChannelPreviewSender =>
-      'Show sender name in channel preview';
+      'Mostra il nome del mittente nell’anteprima del canale';
 
   @override
   String get settings_modSettingsHideRadioStats =>
@@ -8862,66 +8862,68 @@ class AppLocalizationsIt extends AppLocalizations {
       'Imposta la soglia di temperatura superiore della ventola in °C: sopra fan.lo, al massimo 120.';
 
   @override
-  String get updates_automaticCheck => 'Check for updates on GitHub';
+  String get updates_automaticCheck => 'Cerca aggiornamenti su GitHub';
 
   @override
-  String get updates_check => 'Check for updates';
+  String get updates_check => 'Cerca aggiornamenti';
 
   @override
-  String get updates_checking => 'Checking for updates…';
+  String get updates_checking => 'Ricerca aggiornamenti…';
 
   @override
-  String get updates_available => 'Update available! Open releases…';
+  String get updates_available =>
+      'Aggiornamento disponibile! Apri le versioni…';
 
   @override
   String get updates_found =>
-      'A new version is available! Tap to open the releases page.';
+      'È disponibile una nuova versione! Tocca per aprire la pagina delle versioni.';
 
   @override
-  String get updates_notFound => 'No updates found';
+  String get updates_notFound => 'Nessun aggiornamento trovato';
 
   @override
-  String get updates_failed => 'Could not check for updates';
+  String get updates_failed => 'Impossibile verificare gli aggiornamenti';
 
   @override
-  String get updates_commitUnknown => 'not supplied';
+  String get updates_commitUnknown => 'non indicato';
 
   @override
   String get updates_errorMissingCommit =>
-      'This build does not contain the full application commit SHA.';
+      'Questa build non contiene lo SHA completo del commit dell’applicazione.';
 
   @override
   String get updates_errorUnknownCommit =>
-      'The installed build commit is not available in the GitHub repository.';
+      'Il commit della build installata non è disponibile nel repository GitHub.';
 
   @override
   String get updates_errorDiverged =>
-      'The installed build and release histories have diverged; their order cannot be determined.';
+      'Le cronologie della build installata e della versione sono divergenti; non è possibile stabilire quale sia più recente.';
 
   @override
   String get updates_errorNetwork =>
-      'GitHub is unreachable. Check your internet connection.';
+      'GitHub non è raggiungibile. Controlla la connessione Internet.';
 
   @override
-  String get updates_errorTimeout => 'GitHub did not respond in time.';
+  String get updates_errorTimeout => 'GitHub non ha risposto in tempo.';
 
   @override
   String get updates_errorRateLimit =>
-      'GitHub has temporarily limited requests. Try again later.';
+      'GitHub ha temporaneamente limitato le richieste. Riprova più tardi.';
 
   @override
   String updates_errorHttp(int code) {
-    return 'GitHub returned HTTP error $code.';
+    return 'GitHub ha restituito l’errore HTTP $code.';
   }
 
   @override
   String get updates_errorResponse =>
-      'GitHub returned invalid release or commit data.';
+      'GitHub ha restituito dati della versione o del commit non validi.';
 
   @override
-  String get updates_errorStorage => 'Could not save the update check state.';
+  String get updates_errorStorage =>
+      'Impossibile salvare lo stato della verifica degli aggiornamenti.';
 
   @override
   String get updates_errorBrowser =>
-      'Could not open the releases page in your browser.';
+      'Impossibile aprire la pagina delle versioni nel browser.';
 }
