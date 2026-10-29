@@ -14,6 +14,7 @@ import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_group.dart';
 import 'package:meshcore_open/models/companion_cli_entry.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/screens/companion_cli_screen.dart';
 import 'package:meshcore_open/screens/contacts_screen.dart';
 import 'package:meshcore_open/screens/channels_screen.dart';
@@ -69,6 +70,21 @@ class _Connector extends MeshCoreConnector {
   bool supported = true;
   bool loaded = true;
   final contactData = <Contact>[];
+  final messagesByContact = <String, List<Message>>{};
+  final unreadByContact = <String, int>{};
+  int contactRowsRevision = 0;
+  @override
+  int get contactsRevision => contactRowsRevision;
+  void refreshContactRows() {
+    contactRowsRevision++;
+    notifyListeners();
+  }
+  @override
+  List<Message> getLoadedMessages(Contact contact) =>
+      messagesByContact[contact.publicKeyHex] ?? super.getLoadedMessages(contact);
+  @override
+  int getUnreadCountForContact(Contact contact) =>
+      unreadByContact[contact.publicKeyHex] ?? super.getUnreadCountForContact(contact);
   final channelData = <Channel>[
     Channel(index: 1, name: 'Alpha', psk: Uint8List.fromList(List.filled(16, 1))),
     Channel(index: 2, name: 'Beta', psk: Uint8List.fromList(List.filled(16, 2))),
@@ -345,6 +361,62 @@ void main() {
     expect(surface.bottom, lessThan(tester.getRect(find.text('Synthetic geometry contact')).top));
     expect(surface.left, 16);
     expect(surface.right, 984);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('CLI precedes favorites and each group keeps the selected sort', (tester) async {
+    final names = ['Zulu favorite', 'Beta favorite', 'Alpha regular', 'Gamma regular'];
+    final seenDays = [4, 1, 3, 2];
+    final messageDays = [1, 3, 2, 4];
+    for (var index = 0; index < names.length; index++) {
+      final contact = Contact(
+        publicKey: Uint8List.fromList(List.filled(32, index + 3)),
+        name: names[index], type: advTypeChat,
+        flags: index < 2 ? contactFlagFavorite : 0,
+        pathLength: -1, path: Uint8List(0),
+        lastSeen: DateTime.utc(2026, 1, seenDays[index]),
+      );
+      connector.contactData.add(contact);
+      connector.messagesByContact[contact.publicKeyHex] = [Message(
+        senderKey: contact.publicKey, text: 'Synthetic preview',
+        timestamp: DateTime.utc(2026, 1, messageDays[index]), isOutgoing: false,
+      )];
+    }
+    // An unread ordinary contact still stays below all matching favorites.
+    connector.unreadByContact[connector.contactData.last.publicKeyHex] = 1;
+    await show(tester, const ContactsScreen(hideBackButton: true));
+    final expected = {
+      ContactSortOption.name: [names[1], names[0], names[2], names[3]],
+      ContactSortOption.lastSeen: [names[0], names[1], names[2], names[3]],
+      ContactSortOption.recentMessages: [names[1], names[0], names[3], names[2]],
+    };
+    void expectOrder(List<String> order) {
+      var previous = cardSurface(tester, find.byType(CompanionCliTile)).bottom;
+      for (final name in order) {
+        final row = find.text(name);
+        expect(row, findsOneWidget);
+        final top = tester.getTopLeft(row).dy;
+        expect(top, greaterThan(previous));
+        previous = top;
+      }
+    }
+    for (final sort in ContactSortOption.values) {
+      view.setContactsSortOption(sort);
+      await tester.pumpAndSettle();
+      expectOrder(expected[sort]!);
+    }
+    view.setContactsSortOption(ContactSortOption.name);
+    connector.contactData[1] = connector.contactData[1].copyWith(flags: 0);
+    connector.refreshContactRows();
+    await tester.pumpAndSettle();
+    expectOrder([names[0], names[2], names[1], names[3]]);
+    view.setContactsSearchText('regular');
+    await tester.pumpAndSettle();
+    expect(find.text(names[0]), findsNothing);
+    expect(find.text(names[1]), findsNothing);
+    expectOrder([names[2], names[3]]);
+    expect(connector.writes, isEmpty);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

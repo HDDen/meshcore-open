@@ -15,6 +15,7 @@ import '../connector/meshcore_connector.dart';
 import '../review_mode/review_mode_banner.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
+import '../helpers/contact_favorite_order.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-paste
 import '../helpers/contact_link.dart';
@@ -1975,7 +1976,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         break;
     }
 
-    return filtered;
+    return favoriteContactsFirst(filtered);
   }
 
   List<Contact> _contactsMatchingBatchFilter(

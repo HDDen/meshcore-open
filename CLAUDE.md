@@ -3357,3 +3357,17 @@ launch.json itself is ignored/local; launch.example.json is the tracked recipe.
 A full Stop/F5 is required when compile-time metadata changes. SHA still must be
 published for GitHub ancestry comparison; missing metadata and an unknown remote
 commit are separate errors. Agent did not execute the generator or tests.
+
+
+### Favorites at the top of contacts
+
+`helpers/contact_favorite_order.dart` applies a stable favorites-first partition
+AFTER ContactsScreen's existing filters and selected comparator. CompanionCLI is
+still the separate first sliver; favorites follow it, then ordinary contacts.
+Each group retains its selected name/last-seen/recent-message order (including
+the existing unread-first rule within recent messages). No packets, flags,
+filter settings or discovery-list sort are changed. Favorite updates already
+bump connector.contactsRevision, invalidating the screen's derived-list cache.
+The companion_cli_screen_test fixture verifies all three sorts, a star removal
+without a sort change, search exclusion and CLI precedence. Agent did not run
+these tests or analyze. User guide: documentation/contacts.md.
