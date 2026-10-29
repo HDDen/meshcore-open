@@ -776,11 +776,16 @@ void main() {
     view.dispose();
     final prefs = PrefsManager.instance;
     final persisted = {for (final key in prefs.getKeys()) key: prefs.get(key)!};
-    SharedPreferences.setMockInitialValues(persisted);
-    PrefsManager.reset();
-    await PrefsManager.initialize();
-    view = UiViewStateService();
-    await view.initialize();
+    // Desktop initialization may do real backup/repair file I/O. It cannot
+    // complete reliably inside testWidgets' fake-async zone; keep only this
+    // simulated process restart in the real event loop, outside pump/expect.
+    await tester.runAsync(() async {
+      SharedPreferences.setMockInitialValues(persisted);
+      PrefsManager.reset();
+      await PrefsManager.initialize().timeout(const Duration(seconds: 10));
+      view = UiViewStateService();
+      await view.initialize();
+    });
     connector.nodeKey = nodeA;
     connector.testSession.connectionChanged();
     await show(tester, CompanionCliScreen(connector: connector));
