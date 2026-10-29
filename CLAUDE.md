@@ -344,6 +344,11 @@ toggle of the auto-add dialog is on, an app setting
 (`evictDiscoveredContactsEnabled`, off by default) that trims the list the
 moment it is switched on. A ping reaches them as they are, a trace needing no contact on the node. A login, a status or region request, a favourite or a share needs the node to hold the contact (the firmware answers ERR_CODE_NOT_FOUND otherwise, and a region request on a route writes the contact through `setContactPath`), so these go through `runWithContactOnNode` (`widgets/node_memory_prompt.dart`), which asks before `importDiscoveredContact` writes it and tells a full table (ERR_CODE_TABLE_FULL) apart from other failures. The map's actions on discovered nodes, opening a chat and joining a room included, ask the same way; they used to import silently. `deleteContact` removes a contact from the node when the node holds it and from the discovered list otherwise, so deleting such a repeater sends the node no removal it cannot perform; its next advert brings it back.
 
+The map path editor uses `contacts_requestRegions` and the travel-explore icon
+for its primary action while `regionRequestTarget` is set, including entry from
+the Contacts repeater menu. Ordinary traces keep `map_runTrace` and the forward
+arrow. Both callbacks and route/target validation retain their existing paths.
+
 ### Contact message summaries and channel-screen visibility
 
 `Contact.hasMessages` means that an actual direct-message history exists for the contact in either the current node's store or an enabled shared-history scope. Channel posts, adverts, and discovery activity must not set this flag. Missing `hasMessages` values in legacy `contact_store` / `contact_discovery_store` records are treated as `false`; `_refreshContactMessageSummaries()` rebuilds the flag from real local/shared message summaries and clears stale values. When summaries are merged, `lastMessageAt` remains monotonic and keeps the newest known timestamp.

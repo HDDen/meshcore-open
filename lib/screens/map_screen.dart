@@ -8160,8 +8160,12 @@ class _MapScreenState extends State<MapScreen>
                             : () => _openPathTraceResult(
                                 flipPathAround: false,
                               ),
-                        tooltip: l10n.map_runTrace,
-                        icon: const Icon(Icons.arrow_forward_outlined),
+                        tooltip: _isRegionRequestTrace
+                            ? l10n.contacts_requestRegions
+                            : l10n.map_runTrace,
+                        icon: Icon(_isRegionRequestTrace
+                            ? Icons.travel_explore
+                            : Icons.arrow_forward_outlined),
                       ),
                     if (_pathTrace.isNotEmpty && !_isRegionRequestTrace)
                       IconButton(

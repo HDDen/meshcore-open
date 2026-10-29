@@ -92,6 +92,7 @@ Groups are stored per radio identity (scoped by public key).
 | Ping | Repeater tap menu | Opens PathTraceMapScreen targeting the repeater |
 | Path Trace | Rooms (always); Chat/Sensor only if `pathLength > 0` | Opens PathTraceMapScreen. For rooms, label shows "Ping" when no path bytes are known, "Path Trace" when path bytes are available |
 | Manage Repeater | Repeater tap menu | Login dialog → RepeaterHubScreen |
+| Запросить регионы | Меню репитера в контактах и на карте | Открывает редактор маршрута; кнопка «Запросить регионы» запускает запрос по выбранному пути |
 | Room Login | Rooms only | Login dialog → ChatScreen |
 | Room Management | Rooms only | Login dialog → RepeaterHubScreen (management mode) |
 | Add/Remove Favorite | All types | Toggles the favorite flag |
