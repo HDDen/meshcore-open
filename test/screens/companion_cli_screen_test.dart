@@ -122,9 +122,16 @@ void main() {
     connector.dispose(); settings.dispose(); view.dispose(); PrefsManager.reset();
   });
 
-  Future<void> show(WidgetTester tester, Widget screen, {String locale = 'en', double textScale = 1}) async {
-    tester.view.physicalSize = const Size(1000, 1400);
-    tester.view.devicePixelRatio = 1;
+  Future<void> show(WidgetTester tester, Widget screen, {
+    String locale = 'en',
+    double textScale = 1,
+    double pixelRatio = 1,
+    Size logicalSize = const Size(1000, 1400),
+    TargetPlatform? platform,
+    double bottomPadding = 0,
+  }) async {
+    tester.view.physicalSize = logicalSize * pixelRatio;
+    tester.view.devicePixelRatio = pixelRatio;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(MultiProvider(providers: [
@@ -132,10 +139,14 @@ void main() {
       ChangeNotifierProvider<AppSettingsService>.value(value: settings),
       ChangeNotifierProvider<UiViewStateService>.value(value: view),
     ], child: MaterialApp(locale: Locale(locale),
+      theme: platform == null ? null : ThemeData(platform: platform),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(textScale),
+          padding: MediaQuery.paddingOf(context).copyWith(bottom: bottomPadding),
+        ),
         child: child!), home: screen)));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -143,6 +154,53 @@ void main() {
 
   Rect cardSurface(WidgetTester tester, Finder card) => tester.getRect(
     find.descendant(of: card, matching: find.byType(Material)).first);
+
+  for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+    for (final scenario in [
+      (dpr: 1.0, scale: 1.0),
+      (dpr: 3.0, scale: 1.0),
+      (dpr: 3.0, scale: 1.8),
+    ]) {
+      testWidgets('quick-command thumb stays below chips: $platform $scenario', (tester) async {
+        await show(tester, CompanionCliScreen(connector: connector),
+          locale: 'ru', platform: platform, pixelRatio: scenario.dpr,
+          textScale: scenario.scale, logicalSize: const Size(390, 844),
+          bottomPadding: platform == TargetPlatform.iOS ? 34 : 24);
+        await tester.pumpAndSettle();
+        final bar = find.byKey(const ValueKey('companion-cli-quick-commands'));
+        final viewport = find.descendant(of: bar,
+          matching: find.byType(SingleChildScrollView));
+        await tester.drag(viewport, const Offset(-220, 0));
+        await tester.pump(const Duration(milliseconds: 100));
+        final paint = find.descendant(of: bar, matching: find.byWidgetPredicate(
+          (widget) => widget is CustomPaint && widget.foregroundPainter is ScrollbarPainter,
+        ));
+        expect(paint, findsOneWidget);
+        final painter = tester.widget<CustomPaint>(paint).foregroundPainter! as ScrollbarPainter;
+        final padding = painter.padding.resolve(TextDirection.ltr);
+        expect(padding.bottom, 0);
+        final chips = find.descendant(of: bar, matching: find.byType(ActionChip));
+        final chipBottom = tester.getRect(chips.first).bottom;
+        // The painter places the horizontal thumb against its local bottom.
+        // Include the iOS enlarged 8px thumb, not just the idle 3px one.
+        final thickness = platform == TargetPlatform.iOS ? 8.0 : painter.thickness;
+        final thumbTop = tester.getRect(paint).bottom - padding.bottom -
+            painter.crossAxisMargin - thickness;
+        expect(thumbTop, greaterThanOrEqualTo(chipBottom));
+        final scroll = tester.widget<SingleChildScrollView>(viewport).controller!;
+        expect(scroll.offset, greaterThan(0));
+        await tester.pumpAndSettle();
+        final visibleChip = chips.hitTestable().first;
+        await tester.tap(visibleChip);
+        await tester.pump();
+        final input = tester.widget<TextField>(find.byKey(const ValueKey('companion-cli-input')));
+        expect(input.controller!.text, isNotEmpty);
+        expect(connector.writes, isEmpty);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+  }
 
   for (final locale in ['ru', 'en']) {
     testWidgets('Companion help searches categories and inserts a template without sending ($locale)', (tester) async {

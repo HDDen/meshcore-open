@@ -713,13 +713,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     } else {
       lastPreview = lastMessageText;
     }
-    final previewWithSender = formatChannelPreview(
+    final previewWithSender = buildChannelPreviewSpan(
       lastPreview,
       senderName: lastMessage?.senderName,
       showSender: context
           .read<AppSettingsService>()
           .settings
           .showChannelPreviewSender,
+      style: MeshTheme.mono(
+        fontSize: 11.5,
+        color: widgetTextColor ?? scheme.onSurfaceVariant,
+      ),
       blocked: lastBlocked,
     );
     final lastPreviewImage = lastMessage == null || lastBlocked
@@ -855,12 +859,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                     ] else if (lastPreview.isNotEmpty) ...[
                       const SizedBox(height: 2),
-                      Text(
+                      Text.rich(
                         previewWithSender,
-                        style: MeshTheme.mono(
-                          fontSize: 11.5,
-                          color: widgetTextColor ?? scheme.onSurfaceVariant,
-                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

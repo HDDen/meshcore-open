@@ -2643,6 +2643,16 @@ A failed load stays in Flutter's image cache as a completer that only repeats it
 
 ### Локальная консоль CompanionCLI
 
+Лента быстрых команд в `companion_cli_screen.dart` обёрнута в
+`MediaQuery.removePadding(removeTop: true, removeBottom: true)`: её локальный
+CupertinoScrollbar не должен вычитать screen-wide inset домашнего индикатора.
+На Android/iOS/desktop под chips оставлено 14 логических px для полосы, включая
+её утолщение при захвате на iOS; DPI масштабирует этот зазор вместе с thumb.
+Высота ленты следует за chips при изменении text scale. Нижняя SafeArea поля
+ввода остаётся самостоятельной. В companion_cli_screen_test.dart подготовлена
+матрица Android/iOS × (DPR 1, DPR 3, DPR 3 с textScale 1.8) с ненулевым нижним
+inset: геометрия painter относительно кнопок и вставка команды после прокрутки.
+
 `CompanionCliSession` использует локальные command 66 / response 29 при firmware
 code >=14 и распознанной версии прошивки >=1.18, независимо от app protocol 4;
 проверку обоих полей DEVICE_INFO выполняет `companion_cli_support.dart`.
@@ -3296,7 +3306,10 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 
 Mod settings → Visual includes `showChannelPreviewSender` (default true), after
 the hide-channel-index switch. `helpers/channel_preview_text.dart` prefixes the
-resolved text preview with the last message's `senderName`; disabled, empty or
+resolved text preview with the last message's `senderName`. Its TextSpan separator
+uses half the font size and letter spacing for just the normal space after `:`;
+the surrounding text retains its original style and plain-text semantics.
+Disabled, empty or
 blocked previews retain their existing body without an author. The choice is
 persisted as `show_channel_preview_sender` and defaults true for older settings.
 The channels screen watches AppSettingsService, so the list updates on return.

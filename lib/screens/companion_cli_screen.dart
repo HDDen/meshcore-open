@@ -222,9 +222,15 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
           Container(key: const ValueKey('companion-cli-quick-commands'),
             width: double.infinity, color: scheme.surfaceContainer,
             padding: EdgeInsets.fromLTRB(8, 6, 8, PlatformInfo.isDesktop ? 0 : 6),
-            child: Scrollbar(controller: _quickScroll, thumbVisibility: PlatformInfo.isDesktop,
+            // This local strip is not at the screen bottom. CupertinoScrollbar
+            // would subtract the home-indicator inset and paint over the chips.
+            child: MediaQuery.removePadding(context: context,
+              removeTop: true, removeBottom: true,
+              child: Scrollbar(controller: _quickScroll, thumbVisibility: PlatformInfo.isDesktop,
               child: SingleChildScrollView(controller: _quickScroll, scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.only(bottom: PlatformInfo.isDesktop ? 14 : 0),
+                // Logical pixels scale with DPI together with the scrollbar.
+                // Reserve a lane on Android too, even while its thumb fades.
+                padding: const EdgeInsets.only(bottom: 14),
                 child: Row(children: [for (final command in companionCliQuickCommands) Padding(
                   padding: const EdgeInsets.only(right: 6), child: ActionChip(
                     key: ValueKey('companion-cli-quick:$command'),
@@ -233,7 +239,7 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
                     side: BorderSide(color: scheme.primary.withValues(alpha: 0.5)),
                     onPressed: () => _applyCommand(command),
                   ))])),
-            )),
+            ))),
           Divider(height: 1, color: scheme.outlineVariant),
           Expanded(child: entries.isEmpty
             ? Center(child: Text(l10n.companionCli_empty, style: MeshTheme.mono(fontSize: 15, color: scheme.onSurface)))
