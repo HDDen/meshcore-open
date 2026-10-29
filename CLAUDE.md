@@ -3342,6 +3342,10 @@ User guide: `documentation/channel-preview.md`.
 `AppSettings.checkGitHubUpdates` (default true, JSON `check_github_updates`)
 управляется в ModSettingsScreen → Общее. После Donate в SettingsScreen стоит
 `AppUpdateSettingsTile`; известное обновление превращает её в ссылку на releases.
+Она и `_buildNavTileContent` экрана настроек используют общий
+`widgets/settings_nav_tile_content.dart`: bodyMedium/w600, иконка 20, промежуток
+12, шеврон 16 и стандартные padding MeshCard. Проверка меняет шеврон на spinner,
+сохраняя оформление соседних пунктов, включая «О программе».
 `AppUpdateService` хранит последнюю попытку и положительный результат для текущей
 сборки (SHA приложения/модуля и dirty flags) отдельно от app_settings в prefs
 (`github_update_check`). Ручная проверка

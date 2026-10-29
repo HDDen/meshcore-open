@@ -24,6 +24,7 @@ import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/settings_nav_tile_content.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'ble_debug_log_screen.dart';
@@ -241,40 +242,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? titleColor,
     Color? iconColor,
   }) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: iconColor ?? scheme.onSurfaceVariant),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
-                ),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: titleColor != null
-                        ? titleColor.withValues(alpha: 0.7)
-                        : scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        if (showChevron)
-          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant, size: 16),
-      ],
+    return SettingsNavTileContent(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      showChevron: showChevron,
+      titleColor: titleColor,
+      iconColor: iconColor,
     );
   }
 

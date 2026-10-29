@@ -10,6 +10,7 @@ import '../services/app_settings_service.dart';
 import '../services/app_update_service.dart';
 import '../services/github_release_check.dart';
 import 'mesh_ui.dart';
+import 'settings_nav_tile_content.dart';
 
 String _errorReason(BuildContext context, UpdateCheckException error) {
   final l10n = context.l10n;
@@ -99,20 +100,22 @@ class AppUpdateSettingsTile extends StatelessWidget {
     final service = context.watch<AppUpdateService>();
     return MeshCard(
       key: const ValueKey('github-update-check'),
-      padding: EdgeInsets.zero,
-      child: ListTile(
-        leading: Icon(service.updateAvailable ? Icons.system_update : Icons.update),
-        title: Text(service.updateAvailable ? context.l10n.updates_available :
-            service.checking ? context.l10n.updates_checking : context.l10n.updates_check),
-        trailing: service.checking ? const SizedBox(width: 20, height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.chevron_right),
-        onTap: service.checking ? null : () {
-          if (service.updateAvailable) {
-            unawaited(openGitHubReleases(context));
-          } else {
-            unawaited(service.check(manual: true));
-          }
-        },
+      onTap: service.checking ? null : () {
+        if (service.updateAvailable) {
+          unawaited(openGitHubReleases(context));
+        } else {
+          unawaited(service.check(manual: true));
+        }
+      },
+      child: SettingsNavTileContent(
+        icon: service.updateAvailable ? Icons.system_update : Icons.update,
+        title: service.updateAvailable ? context.l10n.updates_available :
+            service.checking ? context.l10n.updates_checking : context.l10n.updates_check,
+        trailing: service.checking ? const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ) : null,
       ),
     );
   }
