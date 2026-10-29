@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "mcoa: prepare Git build info",
+      "type": "shell",
+      "command": "dart",
+      "args": ["tool/write_build_info.dart"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": [],
+      "presentation": {"reveal": "silent", "panel": "dedicated"}
+    }
+  ]
+}

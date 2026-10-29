@@ -3314,3 +3314,46 @@ blocked previews retain their existing body without an author. The choice is
 persisted as `show_channel_preview_sender` and defaults true for older settings.
 The channels screen watches AppSettingsService, so the list updates on return.
 User guide: `documentation/channel-preview.md`.
+
+
+### Проверка обновлений GitHub
+
+`AppSettings.checkGitHubUpdates` (default true, JSON `check_github_updates`)
+управляется в ModSettingsScreen → Общее. После Donate в SettingsScreen стоит
+`AppUpdateSettingsTile`; известное обновление превращает её в ссылку на releases.
+`AppUpdateService` хранит последнюю попытку и положительный результат для текущей
+сборки (SHA приложения/модуля и dirty flags) отдельно от app_settings в prefs
+(`github_update_check`). Ручная проверка
+обходит суточный интервал и переносит deadline; ошибки тоже считаются попыткой.
+`AppUpdateBinding` под MaterialApp подписан на настройки/результаты, ставит таймер
+только в foreground и проверяет просрочку при resume. Результаты, пришедшие в фоне,
+показывает после resume; автоматический отрицательный результат молчит.
+Info-snackbar наследует штатные цвета SnackBarTheme (без inverseSurface).
+Нажатие в любой точке content/padding закрывает no-update; error копирует
+полный локализованный заголовок + newline + причину и закрывается; update
+закрывает snackbar и открывает фиксированный releases URL. Ошибка буфера
+обмена не оставляет необработанный async exception. Widget-тесты перехватывают
+Clipboard/URL launcher без реального браузера и проверяют эти действия.
+`GitHubReleaseCheck` читает HDDen/meshcore-open `/releases/latest`, разрешает
+`tag_name` через `/commits/{tag}`, затем compare `installed...release`:
+ahead=true, behind/identical=false, diverged/404=ошибка. Не сравнивает имена тегов,
+версии или даты, не принимает target_commitish за SHA; URL браузера фиксирован.
+`app_build_info.dart` получает полные SHA/dirty flags через compile-time defines,
+которые release_build.dart добавляет сам, сохраняя старые короткие пути symbols.
+AboutDialog выводит appGitCommit под версией. Прямой flutter build без defines
+имеет неизвестный SHA и понятную ошибку проверки. История публичного репозитория
+не определяет отдельное обновление lib_serv/нативного бинарника под тем же SHA.
+Инструкция и команды владельца: `documentation/app-updates.md`. Агент tests,
+analyze, gen-l10n, format и builds не запускал.
+
+
+Debug SHA: `.vscode/tasks.json` defines `mcoa: prepare Git build info`, running
+`dart tool/write_build_info.dart` before the root VSCode launch configurations.
+The script resolves its own app root, reads full Git SHAs/dirty flags (module
+only when lib_serv has its own .git directory/file), atomically writes ignored
+`.dart_tool/mco_build_info.json` and fails the task on Git errors. launch.json
+passes it through `--dart-define-from-file`; existing flags remain intact.
+launch.json itself is ignored/local; launch.example.json is the tracked recipe.
+A full Stop/F5 is required when compile-time metadata changes. SHA still must be
+published for GitHub ancestry comparison; missing metadata and an unknown remote
+commit are separate errors. Agent did not execute the generator or tests.

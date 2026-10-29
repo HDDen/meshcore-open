@@ -8824,4 +8824,69 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get companionCli_helpSetFanHigh =>
       'Задаёт верхний температурный порог вентилятора в °C: выше fan.lo, не более 120.';
+
+  @override
+  String get updates_automaticCheck => 'Проверять обновления с GitHub';
+
+  @override
+  String get updates_check => 'Проверить обновления';
+
+  @override
+  String get updates_checking => 'Проверяем обновления…';
+
+  @override
+  String get updates_available => 'Доступно обновление! Перейти к нему...';
+
+  @override
+  String get updates_found =>
+      'Обнаружена свежая версия! Нажмите, чтобы перейти к странице релизов.';
+
+  @override
+  String get updates_notFound => 'Обновления не найдены';
+
+  @override
+  String get updates_failed => 'Не удалось проверить обновления';
+
+  @override
+  String get updates_commitUnknown => 'не указан';
+
+  @override
+  String get updates_errorMissingCommit =>
+      'В сборку не встроен полный SHA коммита приложения.';
+
+  @override
+  String get updates_errorUnknownCommit =>
+      'Коммит установленной сборки недоступен в репозитории GitHub.';
+
+  @override
+  String get updates_errorDiverged =>
+      'Истории установленной сборки и релиза разошлись; определить свежесть нельзя.';
+
+  @override
+  String get updates_errorNetwork =>
+      'Нет доступа к GitHub. Проверьте подключение к интернету.';
+
+  @override
+  String get updates_errorTimeout => 'GitHub не ответил за отведённое время.';
+
+  @override
+  String get updates_errorRateLimit =>
+      'GitHub временно ограничил число запросов. Повторите проверку позже.';
+
+  @override
+  String updates_errorHttp(int code) {
+    return 'GitHub вернул ошибку HTTP $code.';
+  }
+
+  @override
+  String get updates_errorResponse =>
+      'GitHub вернул некорректные данные о релизе или коммите.';
+
+  @override
+  String get updates_errorStorage =>
+      'Не удалось сохранить состояние проверки обновлений.';
+
+  @override
+  String get updates_errorBrowser =>
+      'Не удалось открыть страницу релизов в браузере.';
 }

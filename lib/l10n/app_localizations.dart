@@ -14764,6 +14764,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sets the upper fan temperature threshold in degrees Celsius: above fan.lo, at most 120.'**
   String get companionCli_helpSetFanHigh;
+
+  /// No description provided for @updates_automaticCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates on GitHub'**
+  String get updates_automaticCheck;
+
+  /// No description provided for @updates_check.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get updates_check;
+
+  /// No description provided for @updates_checking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updates_checking;
+
+  /// No description provided for @updates_available.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available! Open releases…'**
+  String get updates_available;
+
+  /// No description provided for @updates_found.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is available! Tap to open the releases page.'**
+  String get updates_found;
+
+  /// No description provided for @updates_notFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No updates found'**
+  String get updates_notFound;
+
+  /// No description provided for @updates_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates'**
+  String get updates_failed;
+
+  /// No description provided for @updates_commitUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'not supplied'**
+  String get updates_commitUnknown;
+
+  /// No description provided for @updates_errorMissingCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'This build does not contain the full application commit SHA.'**
+  String get updates_errorMissingCommit;
+
+  /// No description provided for @updates_errorUnknownCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'The installed build commit is not available in the GitHub repository.'**
+  String get updates_errorUnknownCommit;
+
+  /// No description provided for @updates_errorDiverged.
+  ///
+  /// In en, this message translates to:
+  /// **'The installed build and release histories have diverged; their order cannot be determined.'**
+  String get updates_errorDiverged;
+
+  /// No description provided for @updates_errorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub is unreachable. Check your internet connection.'**
+  String get updates_errorNetwork;
+
+  /// No description provided for @updates_errorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub did not respond in time.'**
+  String get updates_errorTimeout;
+
+  /// No description provided for @updates_errorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub has temporarily limited requests. Try again later.'**
+  String get updates_errorRateLimit;
+
+  /// No description provided for @updates_errorHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub returned HTTP error {code}.'**
+  String updates_errorHttp(int code);
+
+  /// No description provided for @updates_errorResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub returned invalid release or commit data.'**
+  String get updates_errorResponse;
+
+  /// No description provided for @updates_errorStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the update check state.'**
+  String get updates_errorStorage;
+
+  /// No description provided for @updates_errorBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the releases page in your browser.'**
+  String get updates_errorBrowser;
 }
 
 class _AppLocalizationsDelegate

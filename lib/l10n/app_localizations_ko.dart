@@ -8413,4 +8413,68 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get companionCli_helpSetFanHigh =>
       '팬의 상한 온도 임계값을 °C 단위로 설정합니다: fan.lo보다 높게, 최대 120.';
+
+  @override
+  String get updates_automaticCheck => 'Check for updates on GitHub';
+
+  @override
+  String get updates_check => 'Check for updates';
+
+  @override
+  String get updates_checking => 'Checking for updates…';
+
+  @override
+  String get updates_available => 'Update available! Open releases…';
+
+  @override
+  String get updates_found =>
+      'A new version is available! Tap to open the releases page.';
+
+  @override
+  String get updates_notFound => 'No updates found';
+
+  @override
+  String get updates_failed => 'Could not check for updates';
+
+  @override
+  String get updates_commitUnknown => 'not supplied';
+
+  @override
+  String get updates_errorMissingCommit =>
+      'This build does not contain the full application commit SHA.';
+
+  @override
+  String get updates_errorUnknownCommit =>
+      'The installed build commit is not available in the GitHub repository.';
+
+  @override
+  String get updates_errorDiverged =>
+      'The installed build and release histories have diverged; their order cannot be determined.';
+
+  @override
+  String get updates_errorNetwork =>
+      'GitHub is unreachable. Check your internet connection.';
+
+  @override
+  String get updates_errorTimeout => 'GitHub did not respond in time.';
+
+  @override
+  String get updates_errorRateLimit =>
+      'GitHub has temporarily limited requests. Try again later.';
+
+  @override
+  String updates_errorHttp(int code) {
+    return 'GitHub returned HTTP error $code.';
+  }
+
+  @override
+  String get updates_errorResponse =>
+      'GitHub returned invalid release or commit data.';
+
+  @override
+  String get updates_errorStorage => 'Could not save the update check state.';
+
+  @override
+  String get updates_errorBrowser =>
+      'Could not open the releases page in your browser.';
 }

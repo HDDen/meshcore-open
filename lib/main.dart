@@ -33,6 +33,8 @@ import 'services/storage_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/app_settings_service.dart';
+import 'services/app_update_service.dart';
+import 'widgets/app_update_controls.dart';
 import 'services/network_map/network_map_availability.dart';
 import 'services/network_map/network_map_upload_service.dart';
 import 'services/notification_service.dart';
@@ -1064,6 +1066,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.retryService),
         ChangeNotifierProvider.value(value: widget.pathHistoryService),
         ChangeNotifierProvider.value(value: widget.appSettingsService),
+        ChangeNotifierProvider<AppUpdateService>(
+          create: (_) => AppUpdateService(preferences: PrefsManager.instance),
+        ),
         ChangeNotifierProvider.value(value: widget.bleDebugLogService),
         ChangeNotifierProvider.value(value: widget.appDebugLogService),
         ChangeNotifierProvider.value(value: widget.chatTextScaleService),
@@ -1152,7 +1157,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
                 child: content,
               );
 
-              return AppSystemUi(child: content);
+              return AppSystemUi(child: AppUpdateBinding(
+                messengerKey: MeshCoreApp._scaffoldMessengerKey,
+                child: content,
+              ));
             },
             home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)
                 ? const ChromeRequiredScreen()

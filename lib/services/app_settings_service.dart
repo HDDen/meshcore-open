@@ -401,6 +401,10 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(hideChannelIndexIndicator: value));
   }
 
+  Future<void> setCheckGitHubUpdates(bool value) async {
+    await updateSettings(_settings.copyWith(checkGitHubUpdates: value));
+  }
+
   Future<void> setShowChannelPreviewSender(bool value) async {
     await updateSettings(_settings.copyWith(showChannelPreviewSender: value));
   }

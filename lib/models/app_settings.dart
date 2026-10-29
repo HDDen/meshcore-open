@@ -198,6 +198,7 @@ class AppSettings {
   final bool showHops;
   final bool hideChannelIndexIndicator;
   final bool showChannelPreviewSender;
+  final bool checkGitHubUpdates;
 
   /// Hide the mute bell in the channel chat's app bar (mod settings).
   final bool hideChannelMuteButton;
@@ -716,6 +717,7 @@ class AppSettings {
     this.showHops = true,
     this.hideChannelIndexIndicator = true,
     this.showChannelPreviewSender = true,
+    this.checkGitHubUpdates = true,
     this.hideChannelMuteButton = false,
     this.hideRadioStatsButton = false,
     this.powerSaving = const PowerSavingSettings(),
@@ -877,6 +879,7 @@ class AppSettings {
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
       'show_channel_preview_sender': showChannelPreviewSender,
+      'check_github_updates': checkGitHubUpdates,
       'hide_channel_mute_button': hideChannelMuteButton,
       'hide_radio_stats_button': hideRadioStatsButton,
       'power_saving': powerSaving.toJson(),
@@ -1058,6 +1061,7 @@ class AppSettings {
           json['hide_channel_index_indicator'] as bool? ?? true,
       showChannelPreviewSender:
           json['show_channel_preview_sender'] as bool? ?? true,
+      checkGitHubUpdates: json['check_github_updates'] as bool? ?? true,
       hideChannelMuteButton:
           json['hide_channel_mute_button'] as bool? ?? false,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
@@ -1321,6 +1325,7 @@ class AppSettings {
     bool? showHops,
     bool? hideChannelIndexIndicator,
     bool? showChannelPreviewSender,
+    bool? checkGitHubUpdates,
     bool? hideChannelMuteButton,
     bool? hideRadioStatsButton,
     PowerSavingSettings? powerSaving,
@@ -1457,6 +1462,7 @@ class AppSettings {
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
       showChannelPreviewSender:
           showChannelPreviewSender ?? this.showChannelPreviewSender,
+      checkGitHubUpdates: checkGitHubUpdates ?? this.checkGitHubUpdates,
       hideChannelMuteButton:
           hideChannelMuteButton ?? this.hideChannelMuteButton,
       hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,

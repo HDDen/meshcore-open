@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MCOa debug with Git metadata",
+      "request": "launch",
+      "type": "dart",
+      "preLaunchTask": "mcoa: prepare Git build info",
+      "toolArgs": [
+        "--dart-define-from-file=${workspaceFolder}/.dart_tool/mco_build_info.json",
+        "--dart-define=MCO_SERV=true",
+        "--dart-define=MESHCORE_ENABLE_TRANSLATION=false"
+      ]
+    }
+  ]
+}

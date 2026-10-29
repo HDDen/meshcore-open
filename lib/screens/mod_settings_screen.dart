@@ -37,6 +37,15 @@ class ModSettingsScreen extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   child: PowerSavingSettingsTile(),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    secondary: const Icon(Icons.update),
+                    title: Text(context.l10n.updates_automaticCheck),
+                    value: settings.checkGitHubUpdates,
+                    onChanged: settingsService.setCheckGitHubUpdates,
+                  ),
+                ),
                 SectionHeader(context.l10n.settings_modSettingsVisual),
                 MeshCard(
                   padding: EdgeInsets.zero,

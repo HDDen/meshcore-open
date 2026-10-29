@@ -30,6 +30,8 @@ import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
 import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
+import '../widgets/app_update_controls.dart';
+import '../utils/app_build_info.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
 import 'telemetry_screen.dart';
@@ -220,6 +222,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     iconColor: MeshPalette.warn,
                   ),
                 ),
+                const AppUpdateSettingsTile(),
               ],
             );
           },
@@ -1377,9 +1380,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) => AboutDialog(
         applicationName: l10n.appTitle,
-        applicationVersion: _appVersion.isEmpty
-            ? l10n.common_loading
-            : _appVersion,
+        applicationVersion: '${_appVersion.isEmpty ? l10n.common_loading : _appVersion}'
+            '\nSHA: ${appGitCommit.isEmpty ? l10n.updates_commitUnknown : appGitCommit}',
         applicationLegalese: l10n.settings_aboutLegalese,
         children: [
           const SizedBox(height: 16),
