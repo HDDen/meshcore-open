@@ -48,6 +48,7 @@ import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
+import '../helpers/contact_settings_snapshot.dart';
 import '../helpers/connection_cleanup.dart';
 import '../helpers/connection_teardown_background_work.dart';
 import '../helpers/device_polling_intervals.dart';
@@ -751,6 +752,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   String? _defaultRegionScope;
   bool _hasLoadedDefaultRegionScope = false;
   Future<void>? _defaultRegionScopeRefreshFuture;
+  String? _contactSettingsCacheScope;
+  final _contactCompressionWrites = ContactCompressionWrites();
   final Map<String, bool> _contactMcmpEnabled = {};
   final Map<String, int> _contactMcmpVersion = {};
   final Map<String, bool> _contactMcmpUseSign = {};
@@ -2944,29 +2947,35 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   bool isContactMcmpEnabled(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactMcmpEnabled[contactKeyHex] ?? false;
   }
 
   /// Mirrors the store default (v3), as [channelMcmpVersion] does.
   int contactMcmpVersion(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactMcmpVersion[contactKeyHex] ?? 3;
   }
 
   /// Mirrors the store default (unsigned), as [channelMcmpUseSign] does.
   bool contactMcmpUseSign(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactMcmpUseSign[contactKeyHex] ?? false;
   }
 
   bool isContactMCOtxtEnabled(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactMCOtxtEnabled[contactKeyHex] ?? false;
   }
 
   /// Mirrors the store default (on), as [contactMcmpVersion] does.
   bool isContactMCOtxtPlainWhenSmaller(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactMCOtxtPlainWhenSmaller[contactKeyHex] ?? true;
   }
 
   bool isContactSmazEnabled(String contactKeyHex) {
+    _ensureContactSettingsLoaded(contactKeyHex);
     return _contactSmazEnabled[contactKeyHex] ?? false;
   }
 
@@ -3181,23 +3190,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<List<String>> loadContactQuickAnswerIds(String contactKeyHex) async {
-    final answerIds = await _contactSettingsStore.loadQuickAnswerIds(
-      contactKeyHex,
-    );
-    _contactQuickAnswerIds[contactKeyHex] = answerIds;
-    notifyListeners();
-    return List.unmodifiable(answerIds);
+    return getContactQuickAnswerIds(contactKeyHex);
   }
 
   Future<bool> loadContactSendingDelayEnabled(String contactKeyHex) async {
-    final cached = _contactSendingDelayEnabled[contactKeyHex];
-    if (cached != null) return cached;
-    final enabled = await _contactSettingsStore.loadSendingDelayEnabled(
-      contactKeyHex,
-    );
-    _contactSendingDelayEnabled[contactKeyHex] = enabled;
-    notifyListeners();
-    return enabled;
+    return isContactSendingDelayEnabled(contactKeyHex);
   }
 
   Future<void> loadUnreadState() async {
@@ -3664,45 +3661,49 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> setContactMcmpEnabled(String contactKeyHex, bool enabled) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     _contactMcmpEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
       _contactCyr2LatEnabled[contactKeyHex] = false;
-      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
-    await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, enabled);
+    await _contactCompressionWrites.run(() =>
+        store.saveCompressionSelection(contactKeyHex, 'mcmp_enabled', enabled));
     notifyListeners();
   }
 
   Future<void> setContactMcmpVersion(String contactKeyHex, int version) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     final normalized = version == 3 ? 3 : 2;
     if (_contactMcmpVersion[contactKeyHex] == normalized) return;
     _contactMcmpVersion[contactKeyHex] = normalized;
-    await _contactSettingsStore.saveMcmpVersion(contactKeyHex, normalized);
+    await store.saveMcmpVersion(contactKeyHex, normalized);
     notifyListeners();
   }
 
   Future<void> setContactMcmpUseSign(String contactKeyHex, bool useSign) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     if (_contactMcmpUseSign[contactKeyHex] == useSign) return;
     _contactMcmpUseSign[contactKeyHex] = useSign;
-    await _contactSettingsStore.saveMcmpUseSign(contactKeyHex, useSign);
+    await store.saveMcmpUseSign(contactKeyHex, useSign);
     notifyListeners();
   }
 
   Future<void> setContactSmazEnabled(String contactKeyHex, bool enabled) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     _contactSmazEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
       _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactCyr2LatEnabled[contactKeyHex] = false;
-      await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
-    await _contactSettingsStore.saveSmazEnabled(contactKeyHex, enabled);
+    await _contactCompressionWrites.run(() =>
+        store.saveCompressionSelection(contactKeyHex, 'smaz_enabled', enabled));
     notifyListeners();
   }
 
@@ -3710,16 +3711,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     bool enabled,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     _contactMCOtxtEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
       _contactCyr2LatEnabled[contactKeyHex] = false;
-      await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, false);
     }
-    await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, enabled);
+    await _contactCompressionWrites.run(() =>
+        store.saveCompressionSelection(contactKeyHex, 'mcotxt_enabled', enabled));
     notifyListeners();
   }
 
@@ -3727,9 +3728,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     bool enabled,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     if (_contactMCOtxtPlainWhenSmaller[contactKeyHex] == enabled) return;
     _contactMCOtxtPlainWhenSmaller[contactKeyHex] = enabled;
-    await _contactSettingsStore.saveMCOtxtPlainWhenSmaller(
+    await store.saveMCOtxtPlainWhenSmaller(
       contactKeyHex,
       enabled,
     );
@@ -3749,8 +3752,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     bool enabled,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     _contactUrlImagesEnabled[contactKeyHex] = enabled;
-    await _contactSettingsStore.saveUrlImagesEnabled(contactKeyHex, enabled);
+    await store.saveUrlImagesEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
@@ -3773,17 +3778,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     bool enabled,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
     _contactCyr2LatEnabled[contactKeyHex] = enabled;
     if (enabled) {
       _contactMcmpEnabled[contactKeyHex] = false;
       _contactMCOtxtEnabled[contactKeyHex] = false;
       _contactSmazEnabled[contactKeyHex] = false;
-      await _contactSettingsStore.saveMcmpEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveMCOtxtEnabled(contactKeyHex, false);
-      await _contactSettingsStore.saveSmazEnabled(contactKeyHex, false);
     }
-    await _contactSettingsStore.saveCyr2LatEnabled(contactKeyHex, enabled);
+    await _contactCompressionWrites.run(() =>
+        store.saveCompressionSelection(contactKeyHex, 'cyr2lat_enabled', enabled));
     notifyListeners();
   }
 
@@ -3801,9 +3806,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     bool enabled,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
     _contactSendingDelayEnabled[contactKeyHex] = enabled;
-    await _contactSettingsStore.saveSendingDelayEnabled(contactKeyHex, enabled);
+    await store.saveSendingDelayEnabled(contactKeyHex, enabled);
     notifyListeners();
   }
 
@@ -3822,10 +3829,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     List<String> answerIds,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     final normalized = AppSettings.normalizeQuickAnswerIds(answerIds);
     if (listEquals(_contactQuickAnswerIds[contactKeyHex], normalized)) return;
     _contactQuickAnswerIds[contactKeyHex] = normalized;
-    await _contactSettingsStore.saveQuickAnswerIds(contactKeyHex, normalized);
+    await store.saveQuickAnswerIds(contactKeyHex, normalized);
     notifyListeners();
   }
 
@@ -4359,7 +4368,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             loadGeneration != _contactCacheLoadGeneration)) {
       return;
     }
-    _contactUrlImagesEnabled.clear();
+    // Per-contact options are invalidated by their node scope, not this list.
     _knownContactKeys
       ..clear()
       ..addAll(cached.map((c) => c.publicKeyHex));
@@ -5813,6 +5822,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   @visibleForTesting
   int get selfLocationWaiterCountForTest => _selfInfoRefreshWaiters.length;
+
+  /// Bind only preferences; no transport, history database or sync is opened.
+  @visibleForTesting
+  void bindContactSettingsToNodeForTest(String publicKeyHex) {
+    _contactSettingsStore.setPublicKeyHex = publicKeyHex;
+  }
 
   /// Фикстура уже загруженного состояния: SELF_INFO не читает настоящую БД.
   @visibleForTesting
@@ -13938,108 +13953,87 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return frame.sublist(prefixOffset, prefixOffset + prefixLen);
   }
 
+  void _ensureContactSettingsLoaded(String contactKeyHex) {
+    final scope = _contactSettingsStore.publicKeyHex;
+    if (_contactSettingsCacheScope != scope) {
+      _contactSettingsCacheScope = scope;
+      for (final cache in <Map<String, Object?>>[
+        _contactMcmpEnabled,
+        _contactMcmpVersion,
+        _contactMcmpUseSign,
+        _contactSmazEnabled,
+        _contactMCOtxtEnabled,
+        _contactMCOtxtPlainWhenSmaller,
+        _contactCyr2LatEnabled,
+        _contactSendingDelayEnabled,
+        _contactQuickAnswerIds,
+        _contactUrlImagesEnabled,
+        _contactCyr2LatProfileId,
+      ]) {
+        cache.clear();
+      }
+    }
+    if (scope.isEmpty || _contactMcmpEnabled.containsKey(contactKeyHex)) return;
+    final settings = _contactSettingsStore.readSettings(contactKeyHex);
+    if (settings == null) return;
+    _contactMcmpEnabled[contactKeyHex] = settings.mcmpEnabled;
+    _contactMcmpVersion[contactKeyHex] = settings.mcmpVersion;
+    _contactMcmpUseSign[contactKeyHex] = settings.mcmpUseSign;
+    _contactSmazEnabled[contactKeyHex] = settings.smazEnabled;
+    _contactMCOtxtEnabled[contactKeyHex] = settings.mcotxtEnabled;
+    _contactMCOtxtPlainWhenSmaller[contactKeyHex] = settings.mcotxtPlainWhenSmaller;
+    _contactCyr2LatEnabled[contactKeyHex] = settings.cyr2LatEnabled;
+    _contactSendingDelayEnabled[contactKeyHex] = settings.sendingDelayEnabled;
+    _contactQuickAnswerIds[contactKeyHex] = settings.quickAnswerIds;
+    _contactUrlImagesEnabled[contactKeyHex] = settings.urlImagesEnabled;
+    _contactCyr2LatProfileId[contactKeyHex] = settings.cyr2LatProfileId;
+    // Preserve the existing one-time SMAZ legacy-key migration. Its async
+    // result never writes back into this cache, so it cannot undo a user edit.
+    unawaited(_contactSettingsStore.loadSmazEnabled(contactKeyHex));
+  }
+
   void _ensureContactMcmpSettingLoaded(String contactKeyHex) {
-    if (_contactMcmpEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMcmpEnabled(contactKeyHex).then((enabled) {
-      if (_contactMcmpEnabled[contactKeyHex] == enabled) return;
-      _contactMcmpEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactMcmpVersionLoaded(String contactKeyHex) {
-    if (_contactMcmpVersion.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMcmpVersion(contactKeyHex).then((version) {
-      final normalized = version == 3 ? 3 : 2;
-      if (_contactMcmpVersion[contactKeyHex] == normalized) return;
-      _contactMcmpVersion[contactKeyHex] = normalized;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactMcmpUseSignLoaded(String contactKeyHex) {
-    if (_contactMcmpUseSign.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMcmpUseSign(contactKeyHex).then((useSign) {
-      if (_contactMcmpUseSign[contactKeyHex] == useSign) return;
-      _contactMcmpUseSign[contactKeyHex] = useSign;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactSmazSettingLoaded(String contactKeyHex) {
-    if (_contactSmazEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadSmazEnabled(contactKeyHex).then((enabled) {
-      if (_contactSmazEnabled[contactKeyHex] == enabled) return;
-      _contactSmazEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactMCOtxtSettingLoaded(String contactKeyHex) {
-    if (_contactMCOtxtEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMCOtxtEnabled(contactKeyHex).then((enabled) {
-      if (_contactMCOtxtEnabled[contactKeyHex] == enabled) return;
-      _contactMCOtxtEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactMCOtxtPlainWhenSmallerLoaded(String contactKeyHex) {
-    if (_contactMCOtxtPlainWhenSmaller.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadMCOtxtPlainWhenSmaller(contactKeyHex).then((
-      enabled,
-    ) {
-      if (_contactMCOtxtPlainWhenSmaller[contactKeyHex] == enabled) return;
-      _contactMCOtxtPlainWhenSmaller[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactCyr2LatSettingLoaded(String contactKeyHex) {
-    if (_contactCyr2LatEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadCyr2LatEnabled(contactKeyHex).then((enabled) {
-      if (_contactCyr2LatEnabled[contactKeyHex] == enabled) return;
-      _contactCyr2LatEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactSendingDelaySettingLoaded(String contactKeyHex) {
-    if (_contactSendingDelayEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadSendingDelayEnabled(contactKeyHex).then((
-      enabled,
-    ) {
-      if (_contactSendingDelayEnabled[contactKeyHex] == enabled) return;
-      _contactSendingDelayEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactQuickAnswerIdsLoaded(String contactKeyHex) {
-    if (_contactQuickAnswerIds.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadQuickAnswerIds(contactKeyHex).then((answerIds) {
-      if (listEquals(_contactQuickAnswerIds[contactKeyHex], answerIds)) return;
-      _contactQuickAnswerIds[contactKeyHex] = answerIds;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactUrlImagesSettingLoaded(String contactKeyHex) {
-    if (_contactUrlImagesEnabled.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadUrlImagesEnabled(contactKeyHex).then((enabled) {
-      if (_contactUrlImagesEnabled[contactKeyHex] == enabled) return;
-      _contactUrlImagesEnabled[contactKeyHex] = enabled;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureContactCyr2LatProfileLoaded(String contactKeyHex) {
-    if (_contactCyr2LatProfileId.containsKey(contactKeyHex)) return;
-    _contactSettingsStore.loadCyr2LatProfileId(contactKeyHex).then((profileId) {
-      if (_contactCyr2LatProfileId[contactKeyHex] == profileId) return;
-      _contactCyr2LatProfileId[contactKeyHex] = profileId;
-      notifyListeners();
-    });
+    _ensureContactSettingsLoaded(contactKeyHex);
   }
 
   void _ensureChannelCyr2LatSettingLoaded(int channelIndex) {
@@ -14159,9 +14153,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String contactKeyHex,
     String? profileId,
   ) async {
+    _ensureContactSettingsLoaded(contactKeyHex);
+    final store = _contactSettingsStore.scopedCopy();
     if (_contactCyr2LatProfileId[contactKeyHex] == profileId) return;
     _contactCyr2LatProfileId[contactKeyHex] = profileId;
-    await _contactSettingsStore.saveCyr2LatProfileId(contactKeyHex, profileId);
+    await store.saveCyr2LatProfileId(contactKeyHex, profileId);
     notifyListeners();
   }
 

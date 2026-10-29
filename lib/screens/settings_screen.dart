@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/link_handler.dart';
+import '../helpers/contact_multi_ack_settings.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/radio_settings.dart';
@@ -1479,12 +1480,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     autoAddRoomServer = connector.autoAddRoomServers ?? false;
     autoAddSensor = connector.autoAddSensors ?? false;
     overwriteOldest = connector.autoAddOverwriteOldest ?? false;
+    final initialMultiAcks = connector.multiAcks;
+    var multiAcks = initialMultiAcks;
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(l10n.contactsSettings_autoAddTitle),
+          title: Text(l10n.contactsSettings_title),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1534,6 +1537,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
+                SwitchListTile(
+                  title: Text(l10n.settings_multiAck),
+                  subtitle: Text(l10n.settings_multiAckSubtitle),
+                  value: multiAcks == 1,
+                  onChanged: (value) {
+                    setDialogState(() => multiAcks = value ? 1 : 0);
+                  },
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 8),
                 // The app's own list, not the node's table: a shorter cap
                 // for the discovered contacts (upstream's toggle, cap 350).
                 FeatureToggleRow(
@@ -1558,13 +1571,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(l10n.common_cancel),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 // The app's own setting needs no node.
                 appSettingsService.setEvictDiscoveredContactsEnabled(
                   evictDiscoveredContactsEnabled,
                 );
                 if (!_ensureConnected(screenContext, connector)) return;
-                _sendSettings(
+                await _sendSettings(
                   connector,
                   autoAddChat,
                   autoAddRepeater,
@@ -1572,6 +1585,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   autoAddSensor,
                   overwriteOldest,
                 );
+                await saveContactMultiAcks(connector,
+                  initialValue: initialMultiAcks, selectedValue: multiAcks);
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 showDismissibleSnackBar(
                   screenContext,
@@ -1586,7 +1602,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _sendSettings(
+  Future<void> _sendSettings(
     MeshCoreConnector connector,
     bool autoAddChat,
     bool autoAddRepeater,
@@ -1614,7 +1630,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
   int telemetryLocMode = connector.telemetryModeLoc;
   int telemetryEnvMode = connector.telemetryModeEnv;
   bool advertLocPolicy = connector.advertLocationPolicy == 0 ? false : true;
-  int multiAcks = connector.multiAcks;
+
   bool autoZeroHopAdvertOnGpsUpdate =
       settingsService.settings.autoSendZeroHopAdvertOnGpsUpdate;
 
@@ -1681,16 +1697,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                     : null,
               ),
               const SizedBox(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settings_multiAck),
-                subtitle: Text(l10n.settings_multiAckSubtitle),
-                value: multiAcks == 1,
-                onChanged: (value) {
-                  setDialogState(() => multiAcks = value ? 1 : 0);
-                },
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 16),
+
               DropdownButtonFormField<int>(
                 initialValue: telemetryMode,
                 isExpanded: true,
@@ -1756,7 +1763,7 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                 telemetryLocMode,
                 telemetryEnvMode,
                 advertLocPolicy ? 1 : 0,
-                multiAcks,
+                connector.multiAcks,
               );
               await settingsService.setAutoSendZeroHopAdvertOnGpsUpdate(
                 autoZeroHopAdvertOnGpsUpdate,

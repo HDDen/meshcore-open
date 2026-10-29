@@ -1,385 +1,219 @@
+import '../helpers/contact_option_storage.dart';
+import '../helpers/contact_settings_snapshot.dart';
 import '../models/app_settings.dart';
-import '../utils/app_logger.dart';
 import 'legacy_key_migration.dart';
+import 'message_history_storage.dart';
 import 'prefs_manager.dart';
 
+/// App-side options in contact_settings, keyed by node/contact/option. Native
+/// startup migrates preferences and warms the SQL cache before this is used.
+/// Web has no history database and keeps the established preferences backend.
 class ContactSettingsStore {
-  static const String _keyPrefix = 'contact_smaz_';
-  static const String _mcmpKeyPrefix = 'contact_mcmp_';
-  static const String _mcmpVersionKeyPrefix = 'contact_mcmp_version_';
-  static const String _mcmpUseSignKeyPrefix = 'contact_mcmp_use_sign_';
-  static const String _mcotxtKeyPrefix = 'contact_mcotxt_';
-  static const String _mcotxtPlainWhenSmallerKeyPrefix =
-      'contact_mcotxt_plain_when_smaller_';
-  static const String _cyr2latKeyPrefix = 'contact_cyr2lat_';
-  static const String _sendingDelayKeyPrefix = 'contact_sending_delay_';
-  // Store quick answer ids, not text, so editing a reply keeps chat assignment.
-  static const String _quickAnswersKeyPrefix = 'contact_quick_answer_ids_';
-  static const String _urlImagesKeyPrefix = 'contact_url_images_';
-
   String publicKeyHex = '';
   set setPublicKeyHex(String value) =>
-      publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
+      publicKeyHex = value.length >= 10 ? value.substring(0, 10).toLowerCase() : '';
 
-  String get keyFor => '$_keyPrefix$publicKeyHex';
-  String get keyForMcmp => '$_mcmpKeyPrefix$publicKeyHex';
-  String get keyForMcmpVersion => '$_mcmpVersionKeyPrefix$publicKeyHex';
-  String get keyForMcmpUseSign => '$_mcmpUseSignKeyPrefix$publicKeyHex';
-  String get keyForMCOtxt => '$_mcotxtKeyPrefix$publicKeyHex';
-  String get keyForMCOtxtPlainWhenSmaller =>
-      '$_mcotxtPlainWhenSmallerKeyPrefix$publicKeyHex';
-  String get keyForCyr2Lat => '$_cyr2latKeyPrefix$publicKeyHex';
-  String get keyForSendingDelay => '$_sendingDelayKeyPrefix$publicKeyHex';
-  String get keyForQuickAnswerIds => '$_quickAnswersKeyPrefix$publicKeyHex';
-  String get keyForUrlImages => '$_urlImagesKeyPrefix$publicKeyHex';
+  String _legacyKey(String name, String contact) =>
+      contactOptionDefinitions[name]!.legacyKey(publicKeyHex, contact);
 
-  /// Copies every setting stored for [from] to [to] where [to] has none:
-  /// what attaching an old key's history gives the new key.
-  Future<void> copySettings({required String from, required String to}) async {
-    if (publicKeyHex.isEmpty || from == to) return;
-    final prefs = PrefsManager.instance;
-    for (final prefix in <String>[
-      keyFor,
-      keyForMcmp,
-      keyForMcmpVersion,
-      keyForMcmpUseSign,
-      keyForMCOtxt,
-      keyForMCOtxtPlainWhenSmaller,
-      keyForCyr2Lat,
-      '${keyForCyr2Lat}profile_',
-      keyForSendingDelay,
-      keyForQuickAnswerIds,
-      keyForUrlImages,
-    ]) {
-      final source = prefs.get('$prefix$from');
-      final target = '$prefix$to';
-      if (source == null || prefs.containsKey(target)) continue;
-      switch (source) {
-        case bool value:
-          await prefs.setBool(target, value);
-        case int value:
-          await prefs.setInt(target, value);
-        case String value:
-          await prefs.setString(target, value);
-        case List<Object?> value:
-          await prefs.setStringList(target, value.whereType<String>().toList());
-      }
-    }
-  }
-
-  Future<bool> loadSmazEnabled(String contactKeyHex) async {
+  Object? _read(String name, String contact) {
     if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyFor$contactKeyHex';
-    final oldKey = '$_keyPrefix$contactKeyHex';
-    bool? enabled = prefs.getBool(key);
-    if (enabled == null && canMigrateLegacyKeys(publicKeyHex)) {
-      // Attempt migration from legacy unscoped key on first load
-      enabled = prefs.getBool(oldKey);
-      if (prefs.containsKey(oldKey)) prefs.remove(oldKey);
-      if (enabled != null) {
-        appLogger.info(
-          'Migrating contact settings from legacy key $oldKey to scoped key $key',
-        );
-        await prefs.setBool(key, enabled);
-      }
-    }
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveSmazEnabled(String contactKeyHex, bool enabled) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyFor$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  Future<bool> loadMcmpEnabled(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact MCMP settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmp$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveMcmpEnabled(String contactKeyHex, bool enabled) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact MCMP settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmp$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  /// Default MCMP version for a channel or contact that never had one saved.
-  ///
-  /// v3 is the current container; v2 is kept only so existing conversations
-  /// that were pinned to it keep working. Applies to everything with no stored
-  /// value, not only to newly created entries — there is deliberately no
-  /// migration, so a channel or contact whose version was never written moves
-  /// to v3 on its own. `MeshCoreConnector` repeats this default in its
-  /// in-memory getters, for the window before the stored value is read back.
-  Future<int> loadMcmpVersion(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact MCMP version.',
-      );
-      return 3;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmpVersion$contactKeyHex';
-    return prefs.getInt(key) ?? 3;
-  }
-
-  Future<void> saveMcmpVersion(String contactKeyHex, int version) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact MCMP version.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmpVersion$contactKeyHex';
-    await prefs.setInt(key, version);
-  }
-
-  /// Whether v3 messages are signed, for a channel or contact that never had
-  /// the flag saved.
-  ///
-  /// Off: the v3 container is taken for its structure — timestamp, precise
-  /// reply anchor, compression — while a signature costs 64 body bytes and a
-  /// `CMD_SIGN_*` round trip through the node, which firmware without those
-  /// commands answers only by timing out. Signing is opted into per
-  /// conversation instead. Read only where it can apply: channels, and room
-  /// servers; a direct message is authenticated by its own transport.
-  Future<bool> loadMcmpUseSign(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact MCMP sign setting.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmpUseSign$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveMcmpUseSign(String contactKeyHex, bool useSign) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact MCMP sign setting.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMcmpUseSign$contactKeyHex';
-    await prefs.setBool(key, useSign);
-  }
-
-  Future<bool> loadMCOtxtEnabled(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact MCOtxt settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMCOtxt$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveMCOtxtEnabled(String contactKeyHex, bool enabled) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact MCOtxt settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMCOtxt$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  /// Default on: an MCOtxt contact or room sends a message as plain text
-  /// whenever that packet is the smaller of the two.
-  Future<bool> loadMCOtxtPlainWhenSmaller(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact MCOtxt settings.',
-      );
-      return true;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMCOtxtPlainWhenSmaller$contactKeyHex';
-    return prefs.getBool(key) ?? true;
-  }
-
-  Future<void> saveMCOtxtPlainWhenSmaller(
-    String contactKeyHex,
-    bool enabled,
-  ) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact MCOtxt settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForMCOtxtPlainWhenSmaller$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  Future<bool> loadCyr2LatEnabled(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact Cyr2Lat settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForCyr2Lat$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveCyr2LatEnabled(String contactKeyHex, bool enabled) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact Cyr2Lat settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForCyr2Lat$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  Future<bool> loadSendingDelayEnabled(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact sending delay settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForSendingDelay$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveSendingDelayEnabled(
-    String contactKeyHex,
-    bool enabled,
-  ) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact sending delay settings.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForSendingDelay$contactKeyHex';
-    await prefs.setBool(key, enabled);
-  }
-
-  Future<List<String>> loadQuickAnswerIds(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact quick answers.',
-      );
-      return const [];
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForQuickAnswerIds$contactKeyHex';
-    return AppSettings.normalizeQuickAnswerIds(prefs.getStringList(key));
-  }
-
-  Future<void> saveQuickAnswerIds(
-    String contactKeyHex,
-    List<String> answerIds,
-  ) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact quick answers.',
-      );
-      return;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForQuickAnswerIds$contactKeyHex';
-    await prefs.setStringList(
-      key,
-      AppSettings.normalizeQuickAnswerIds(answerIds),
-    );
-  }
-
-  Future<bool> loadUrlImagesEnabled(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact URL image settings.',
-      );
-      return false;
-    }
-    final prefs = PrefsManager.instance;
-    final key = '$keyForUrlImages$contactKeyHex';
-    return prefs.getBool(key) ?? false;
-  }
-
-  Future<void> saveUrlImagesEnabled(String contactKeyHex, bool enabled) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact URL image settings.',
-      );
-      return;
-    }
-    await PrefsManager.instance.setBool(
-      '$keyForUrlImages$contactKeyHex',
-      enabled,
-    );
-  }
-
-  Future<String?> loadCyr2LatProfileId(String contactKeyHex) async {
-    if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot load contact settings.',
-      );
       return null;
     }
-    final prefs = PrefsManager.instance;
-    final key = '${keyForCyr2Lat}profile_$contactKeyHex';
-    return prefs.getString(key);
+    final storage = MessageHistoryStorage.instance;
+    if (storage.hasDatabase) {
+      return contactOptionDefinitions[name]!.decode(
+        storage.contactOption(publicKeyHex, contact, name),
+      );
+    }
+    return PrefsManager.instance.get(_legacyKey(name, contact));
   }
 
-  Future<void> saveCyr2LatProfileId(
-    String contactKeyHex,
-    String? profileId,
-  ) async {
+  Future<void> _write(String name, String contact, Object? value) async {
     if (publicKeyHex.isEmpty) {
-      appLogger.warn(
-        'Public key hex is not set. Cannot save contact settings.',
-      );
+      return;
+    }
+    final storage = MessageHistoryStorage.instance;
+    if (storage.hasDatabase) {
+      final encoded = contactOptionDefinitions[name]!.encode(value);
+      if (value != null && encoded == null) {
+        throw ArgumentError('Invalid contact option $name');
+      }
+      await storage.writeContactOptions(publicKeyHex, contact, {name: encoded});
       return;
     }
     final prefs = PrefsManager.instance;
-    final key = '${keyForCyr2Lat}profile_$contactKeyHex';
-    if (profileId == null) {
-      if (prefs.containsKey(key)) await prefs.remove(key);
-    } else {
-      await prefs.setString(key, profileId);
+    final key = _legacyKey(name, contact);
+    switch (value) {
+      case null:
+        if (prefs.containsKey(key)) {
+          await prefs.remove(key);
+        }
+      case bool flag:
+        await prefs.setBool(key, flag);
+      case int number:
+        await prefs.setInt(key, number);
+      case String text:
+        await prefs.setString(key, text);
+      case List<String> list:
+        await prefs.setStringList(key, list);
+      default:
+        throw ArgumentError('Invalid contact option $name');
     }
   }
+
+  bool _smaz(String contact) =>
+      (_read('smaz_enabled', contact) as bool?) ??
+      (canMigrateLegacyKeys(publicKeyHex)
+          ? PrefsManager.instance.getBool('contact_smaz_$contact')
+          : null) ??
+      false;
+
+  /// Both SQL and preferences caches are ready synchronously before the UI.
+  ContactSettingsSnapshot? readSettings(String contactKeyHex) {
+    if (publicKeyHex.isEmpty) {
+      return null;
+    }
+    final version = _read('mcmp_version', contactKeyHex) as int? ?? 3;
+    return ContactSettingsSnapshot(
+      mcmpEnabled: _read('mcmp_enabled', contactKeyHex) as bool? ?? false,
+      mcmpVersion: version == 3 ? 3 : 2,
+      mcmpUseSign: _read('mcmp_use_sign', contactKeyHex) as bool? ?? false,
+      mcotxtEnabled: _read('mcotxt_enabled', contactKeyHex) as bool? ?? false,
+      mcotxtPlainWhenSmaller: _read('mcotxt_plain_when_smaller', contactKeyHex) as bool? ?? true,
+      smazEnabled: _smaz(contactKeyHex),
+      cyr2LatEnabled: _read('cyr2lat_enabled', contactKeyHex) as bool? ?? false,
+      cyr2LatProfileId: _read('cyr2lat_profile', contactKeyHex) as String?,
+      sendingDelayEnabled: _read('sending_delay_enabled', contactKeyHex) as bool? ?? false,
+      quickAnswerIds: AppSettings.normalizeQuickAnswerIds(_read('quick_answer_ids', contactKeyHex)),
+      urlImagesEnabled: _read('url_images_enabled', contactKeyHex) as bool? ?? false,
+    );
+  }
+
+  ContactSettingsStore scopedCopy() => ContactSettingsStore()..publicKeyHex = publicKeyHex;
+
+  Future<void> copySettings({required String from, required String to}) async {
+    if (publicKeyHex.isEmpty || from == to) {
+      return;
+    }
+    final storage = MessageHistoryStorage.instance;
+    if (storage.hasDatabase) {
+      await storage.copyContactOptions(publicKeyHex, from, to);
+      return;
+    }
+    for (final name in contactOptionDefinitions.keys) {
+      final source = _read(name, from);
+      if (source != null && _read(name, to) == null) {
+        await _write(name, to, source);
+      }
+    }
+  }
+
+  /// Preserve old unscoped SMAZ adoption, but remove its source only after the
+  /// SQL import commits. An existing SQL value (even false) always wins.
+  Future<bool> loadSmazEnabled(String contactKeyHex) async {
+    if (publicKeyHex.isEmpty) {
+      return false;
+    }
+    final captured = scopedCopy();
+    final scope = captured.publicKeyHex;
+    final legacyKey = 'contact_smaz_$contactKeyHex';
+    final prefs = PrefsManager.instance;
+    if (captured._read('smaz_enabled', contactKeyHex) == null &&
+        canMigrateLegacyKeys(scope) && prefs.get(legacyKey) is bool) {
+      final storage = MessageHistoryStorage.instance;
+      if (storage.hasDatabase) {
+        await storage.importLegacyContactSmaz(scope, contactKeyHex);
+      } else {
+        await captured._write('smaz_enabled', contactKeyHex, prefs.getBool(legacyKey));
+        await prefs.remove(legacyKey);
+      }
+    }
+    return captured._read('smaz_enabled', contactKeyHex) as bool? ?? false;
+  }
+
+  /// A selection is all four codec flags in one SQLite transaction.
+  Future<void> saveCompressionSelection(String contact, String selected, bool enabled) async {
+    const codecs = ['mcmp_enabled', 'mcotxt_enabled', 'smaz_enabled', 'cyr2lat_enabled'];
+    if (!codecs.contains(selected)) {
+      throw ArgumentError('Unknown codec');
+    }
+    if (publicKeyHex.isEmpty) {
+      return;
+    }
+    final values = <String, String?>{
+      if (enabled) for (final codec in codecs) codec: '0',
+      selected: enabled ? '1' : '0',
+    };
+    final storage = MessageHistoryStorage.instance;
+    if (storage.hasDatabase) {
+      await storage.writeContactOptions(publicKeyHex, contact, values);
+    } else {
+      for (final entry in values.entries) {
+        await _write(entry.key, contact, entry.value == '1');
+      }
+    }
+  }
+
+  Future<void> saveSmazEnabled(String contact, bool value) => _write('smaz_enabled', contact, value);
+
+  Future<bool> loadMcmpEnabled(String contact) async =>
+      _read('mcmp_enabled', contact) as bool? ?? false;
+
+  Future<void> saveMcmpEnabled(String contact, bool value) =>
+      _write('mcmp_enabled', contact, value);
+
+  Future<int> loadMcmpVersion(String contact) async =>
+      _read('mcmp_version', contact) as int? ?? 3;
+
+  Future<void> saveMcmpVersion(String contact, int value) =>
+      _write('mcmp_version', contact, value);
+
+  Future<bool> loadMcmpUseSign(String contact) async =>
+      _read('mcmp_use_sign', contact) as bool? ?? false;
+
+  Future<void> saveMcmpUseSign(String contact, bool value) =>
+      _write('mcmp_use_sign', contact, value);
+
+  Future<bool> loadMCOtxtEnabled(String contact) async =>
+      _read('mcotxt_enabled', contact) as bool? ?? false;
+
+  Future<void> saveMCOtxtEnabled(String contact, bool value) =>
+      _write('mcotxt_enabled', contact, value);
+
+  Future<bool> loadMCOtxtPlainWhenSmaller(String contact) async =>
+      _read('mcotxt_plain_when_smaller', contact) as bool? ?? true;
+
+  Future<void> saveMCOtxtPlainWhenSmaller(String contact, bool value) =>
+      _write('mcotxt_plain_when_smaller', contact, value);
+
+  Future<bool> loadCyr2LatEnabled(String contact) async =>
+      _read('cyr2lat_enabled', contact) as bool? ?? false;
+
+  Future<void> saveCyr2LatEnabled(String contact, bool value) =>
+      _write('cyr2lat_enabled', contact, value);
+
+  Future<bool> loadSendingDelayEnabled(String contact) async =>
+      _read('sending_delay_enabled', contact) as bool? ?? false;
+
+  Future<void> saveSendingDelayEnabled(String contact, bool value) =>
+      _write('sending_delay_enabled', contact, value);
+
+  Future<bool> loadUrlImagesEnabled(String contact) async =>
+      _read('url_images_enabled', contact) as bool? ?? false;
+
+  Future<void> saveUrlImagesEnabled(String contact, bool value) =>
+      _write('url_images_enabled', contact, value);
+
+  Future<List<String>> loadQuickAnswerIds(String contact) async =>
+      AppSettings.normalizeQuickAnswerIds(_read('quick_answer_ids', contact));
+
+  Future<void> saveQuickAnswerIds(String contact, List<String> ids) =>
+      _write('quick_answer_ids', contact, AppSettings.normalizeQuickAnswerIds(ids));
+
+  Future<String?> loadCyr2LatProfileId(String contact) async =>
+      _read('cyr2lat_profile', contact) as String?;
+
+  Future<void> saveCyr2LatProfileId(String contact, String? id) =>
+      _write('cyr2lat_profile', contact, id);
 }

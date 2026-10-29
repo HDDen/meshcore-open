@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../helpers/contact_option_storage.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
 import '../models/wardrive_sample.dart';
@@ -41,6 +42,8 @@ class MessageHistoryStorage {
   );
 
   MessageHistoryDatabase? _database;
+  final Map<(String, String, String), String> _contactOptions = {};
+  Future<void> _contactOptionWrites = Future<void>.value();
   bool _reduceDeliveryObservationWrites = false;
 
   void setReduceDeliveryObservationWrites(bool enabled) {
@@ -140,6 +143,12 @@ class MessageHistoryStorage {
       await _moveDiscoveredContacts(prefs, database);
       await _moveWardriveData(prefs, database);
       await _moveNodeCollections(prefs, database);
+      await _moveContactOptions(prefs, database);
+      _contactOptions
+        ..clear()
+        ..addEntries((await database.readContactOptionRows()).map(
+          (row) => MapEntry((row.nodeKey, row.contactKey, row.name), row.value),
+        ));
 
       // The moves are each one transaction, and the log they and the last
       // session leave behind is folded into the file now, before anything is
@@ -161,6 +170,116 @@ class MessageHistoryStorage {
       _database = null;
       rethrow;
     }
+  }
+
+  Future<void> _moveContactOptions(
+    SharedPreferences prefs,
+    MessageHistoryDatabase database,
+  ) async {
+    final candidates = contactOptionsFromPreferences({
+      for (final key in prefs.getKeys()) key: prefs.get(key),
+    });
+    if (candidates.isEmpty) return;
+    // A failed SQL transaction leaves every preference intact. If cleanup is
+    // interrupted after commit, INSERT DO NOTHING makes the next retry safe.
+    await database.importContactOptions(candidates.values);
+    for (final key in candidates.keys) {
+      await prefs.remove(key);
+    }
+  }
+
+  /// Ready before runApp: getters never return startup defaults while a SELECT
+  /// is still outstanding. Values change only after a successful SQL commit.
+  String? contactOption(String nodeKey, String contactKey, String name) {
+    _requireInitialized();
+    return _contactOptions[(nodeKey.toLowerCase(), contactKey.toLowerCase(), name)];
+  }
+
+  Future<void> _queueContactOptionWrite(Future<void> Function() write) =>
+      _persistenceWork.run(() {
+        final result = _contactOptionWrites.then((_) => write());
+        _contactOptionWrites = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+        return result;
+      });
+
+  Future<void> writeContactOptions(
+    String nodeKey,
+    String contactKey,
+    Map<String, String?> values,
+  ) {
+    _requireInitialized();
+    final database = _database;
+    if (database == null) {
+      throw StateError('Contact settings database is not open');
+    }
+    final scope = nodeKey.toLowerCase();
+    final contact = contactKey.toLowerCase();
+    final updates = Map<String, String?>.of(values);
+    if (updates.keys.any((name) => !contactOptionDefinitions.containsKey(name))) {
+      throw ArgumentError('Unknown contact option');
+    }
+    return _queueContactOptionWrite(() async {
+      await database.writeContactOptions(scope, contact, updates);
+      for (final entry in updates.entries) {
+        final key = (scope, contact, entry.key);
+        if (entry.value == null) {
+          _contactOptions.remove(key);
+        } else {
+          _contactOptions[key] = entry.value!;
+        }
+      }
+    });
+  }
+
+  /// The oldest SMAZ setting has no node in its preference key. Assign it only
+  /// when a real node first asks for it, retaining the old migration exclusion.
+  Future<void> importLegacyContactSmaz(String nodeKey, String contactKey) {
+    _requireInitialized();
+    final database = _database;
+    if (database == null) {
+      throw StateError('Contact settings database is not open');
+    }
+    final scope = nodeKey.toLowerCase();
+    final contact = contactKey.toLowerCase();
+    return _queueContactOptionWrite(() async {
+      final prefs = PrefsManager.instance;
+      final legacyKey = 'contact_smaz_$contact';
+      final value = prefs.get(legacyKey);
+      if (value is! bool) return;
+      final row = ContactOptionRow(
+        nodeKey: scope, contactKey: contact, name: 'smaz_enabled', value: value ? '1' : '0',
+      );
+      await database.importContactOptions([row]);
+      final saved = (await database.readContactSettings(scope, 'smaz_enabled'))[contact];
+      if (saved != null) {
+        _contactOptions[(scope, contact, 'smaz_enabled')] = saved;
+      }
+      await prefs.remove(legacyKey);
+    });
+  }
+
+  Future<void> copyContactOptions(String nodeKey, String from, String to) {
+    _requireInitialized();
+    final database = _database;
+    if (database == null) {
+      throw StateError('Contact settings database is not open');
+    }
+    final scope = nodeKey.toLowerCase();
+    final source = from.toLowerCase();
+    final target = to.toLowerCase();
+    return _queueContactOptionWrite(() async {
+      final rows = <ContactOptionRow>[
+        for (final name in contactOptionDefinitions.keys)
+          if (_contactOptions[(scope, source, name)] case final String value)
+            ContactOptionRow(nodeKey: scope, contactKey: target, name: name, value: value),
+      ];
+      await database.importContactOptions(rows);
+      for (final row in await database.readContactOptionRows()) {
+        if (row.nodeKey == scope && row.contactKey == target) {
+          _contactOptions[(scope, target, row.name)] = row.value;
+        }
+      }
+    });
   }
 
   List<LegacyMessageHistoryEntry> _readPreferenceHistories(
@@ -1225,6 +1344,9 @@ class MessageHistoryStorage {
   /// Closes the database and forgets every cache, for a test that
   /// initialises the storage more than once in one process.
   Future<void> resetForTesting() async {
+    await _contactOptionWrites;
+    _contactOptionWrites = Future<void>.value();
+    _contactOptions.clear();
     await _database?.close();
     _reduceDeliveryObservationWrites = false;
     _persistenceWork.detachAll();

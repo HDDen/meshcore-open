@@ -80,17 +80,22 @@ Opens a dialog pre-populated with the device's current coordinates (if known):
 - Validation: lat ±90, lon ±180
 
 ### Contact Settings
-Five toggles controlling which node types are auto-added when heard:
+Contact Settings opens a dialog titled Contacts Settings, containing:
 - Auto-add Chat Users
 - Auto-add Repeaters
 - Auto-add Room Servers
 - Auto-add Sensors
 - Overwrite Oldest (when contact list is full)
+- **Multi-Ack**: delivery confirmations, immediately after Overwrite Oldest
+
+Multi-Ack takes effect on Save; Cancel leaves it unchanged. Its firmware command
+also contains privacy settings, so the app preserves their current values when
+saving Multi-Ack. An unchanged setting is not rewritten, including firmware mode 2.
 
 ### Privacy
 Opens a dialog with controls for how the node shares telemetry and location data:
 - **Advert Location**: Toggle whether the node broadcasts its location in advertisements
-- **Multi-Ack**: Toggle multi-ack delivery confirmations
+Privacy saves preserve the current Multi-Ack value configured in Contact Settings.
 - **Telemetry Base Mode**: Deny All / Allow by Contact / Allow All
 - **Telemetry Location Mode**: Deny All / Allow by Contact / Allow All
 - **Telemetry Environment Mode**: Deny All / Allow by Contact / Allow All

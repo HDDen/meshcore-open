@@ -205,7 +205,7 @@ The stores in `lib/storage/` **scope their data by the first 10 hex chars of the
 | `channel_region_store`, `region_store` | Per-channel region tag + known regions / flood scopes (Advanced mod) |
 | `contact_region_store` | Per-contact flood region, a `contact_settings` row in the message-history database rather than a preference (Advanced mod) |
 | `community_store` | Communities (32-byte shared secrets), a `node_state` row |
-| `contact_group_store`, `contact_settings_store` | Groups (a `node_state` row); per-contact compression (MCMP/MCOtxt/Smaz/cyr2lat), sign, sending-delay, quick-answer, widget-color settings (preferences) |
+| `contact_group_store`, `contact_settings_store` | Groups (`node_state`); eleven per-contact app options (`contact_settings`, node/contact/name/value). Preferences only on web or without an initialized database |
 | `node_identity_store` | The node's own name, a `node_state` row read through a startup cache |
 | `connection_transport_preference_store` | Last-used transport (BLE/USB/TCP) per device |
 | `mco_image_gallery_store` | On-device MCO image gallery + bundled `.mcoimg.pack` index (Advanced mod) |
@@ -260,7 +260,7 @@ binding снимается при dispose, Web остаётся на прежн�
 | `history_message_marker` (kind, storageKey, containsMarker) | the map's marker sweep |
 | `legacy_rejected_location` (kind, storageKey, messageIndex) | quarantine listing |
 
-**Auxiliary tables** stay out of the drift table list, so adding one needs no regenerated `.g.dart` and no schema bump: `_ensureAuxiliaryTables` runs `CREATE TABLE IF NOT EXISTS` for `legacy_rejected_messages`, `contact_location_cache`, `heard_packets`, `contact_settings`, `discovered_contacts`, `wardrive_samples`, `wardrive_sessions`, `wardrive_uploads`, `node_contacts`, `node_channels`, `contact_path_history`, `delivery_observations` and `node_state` from `onCreate`, `onUpgrade` and `beforeOpen`, which is what gives a database that predates one of them the table on its next open, and they are read and written through `customSelect` / `customInsert` / `customUpdate`. `contact_settings` (`node_key`, `contact_key`, `name`, `value`, one primary key over the first three) holds per-contact settings of a node as text. The contact flood region (`ContactRegionStore`, name `flood_region`) is its first tenant; a setting moving out of preferences later takes a new `name`, not a new table.
+**Auxiliary tables** stay out of the drift table list, so adding one needs no regenerated `.g.dart` and no schema bump: `_ensureAuxiliaryTables` runs `CREATE TABLE IF NOT EXISTS` for `legacy_rejected_messages`, `contact_location_cache`, `heard_packets`, `contact_settings`, `discovered_contacts`, `wardrive_samples`, `wardrive_sessions`, `wardrive_uploads`, `node_contacts`, `node_channels`, `contact_path_history`, `delivery_observations` and `node_state` from `onCreate`, `onUpgrade` and `beforeOpen`, which is what gives a database that predates one of them the table on its next open, and they are read and written through `customSelect` / `customInsert` / `customUpdate`. `contact_settings` (`node_key`, `contact_key`, `name`, `value`, one primary key over the first three) holds per-contact settings of a node as text. The contact flood region (`ContactRegionStore`, name `flood_region`) and eleven app-side options share it under separate names; startup imports typed preference values before warming the SQL cache.
 
 `discovered_contacts` (`public_key_hex` primary key, `contact_json`) holds the app-wide list of discovered nodes, one row per node in the JSON `ContactDiscoveryStore` has always written, read back in rowid order, which is the list's own since an update keeps its row. The connector saves that whole list on every advert it hears, so the store writes only the contacts that are not the very objects it last loaded or wrote (an update always replaces a contact through `copyWith`), runs its writes one after another, copies the list it is handed before its turn comes (the connector hands in its live list, and a disconnect clears it), and deletes only against a list it has loaded. `initializeAndMigrate` moves the former preference key (`discovered_contacts`, one JSON array) into the table once: rows already there win, the key goes only after the commit, and a failure leaves the key for the next launch rather than stopping the app over a cache. The web build, and a process that never opened the database such as a unit test (`MessageHistoryStorage.hasDatabase` false), keep the list in that preference.
 
@@ -420,11 +420,21 @@ text once more, and the planner, which is the wire format and is untouched, runs
 (`MCOtxtCodec.debugPlannedEncodings` counts its runs for tests).
 
 The MCMP version and the sign flag are per channel and per contact (`channel_settings_store` /
-`contact_settings_store`, each mirrored by a `MeshCoreConnector` getter for the window before the
-stored value is read back). **The defaults are v3, unsigned**, and each of the two lives in four
-places at once — two stores, two getters — so keep them in step. There is deliberately no migration:
-a default reaches every channel and contact whose value was never written, not only new ones, and
-only entries set by hand stay where they were put.
+`contact_settings_store`). Contact getters hydrate all eleven options together, synchronously via
+`ContactSettingsSnapshot`, before the first composer/settings read. `MessageHistoryStorage` warms
+its SQL contact-option cache before `runApp`; web/preference-only tests keep the preferences path.
+Startup migration (`helpers/contact_option_storage.dart`) validates typed scoped keys, imports one
+row per option into existing `contact_settings` in a transaction, and removes source preferences only
+after commit. Existing SQL rows win on retry; unknown/malformed keys stay put. Old unscoped SMAZ is
+adopted only by the first eligible node, after SQL commit. Codec selections serialize through
+`ContactCompressionWrites` and use a single SQL transaction for all four codec flags; captured scopes
+prevent a pending write from following a node switch. SQL writes participate in persistence work
+tracking; the storage cache changes after commit. No schema bump/generated files are needed.
+See `documentation/contact-settings-storage.md` for the full table inventory and option names.
+The contact cache belongs to the node scope; an unknown node never caches defaults. Separate
+firmware-owned favorite/telemetry flags and channel option storage retain their existing mechanisms.
+**The defaults are v3, unsigned**: stores and getters must agree. Default changes do not overwrite
+explicitly saved choices; the storage migration preserves those choices too.
 
 Unsigned is the deliberate half of that. The v3 container is taken for its structure — timestamp,
 precise reply anchor, compression — while a signature costs 64 body bytes plus a `CMD_SIGN_*` round
@@ -3380,3 +3390,12 @@ without sending a radio command. Ordinary tap still routes through
 `_showRepeaterOptions`; management/login is an explicit action there. Regression
 cases in companion_cli_screen_test.dart send actual long-press and mouse secondary
 gestures and assert actions, no RepeaterLoginDialog, and no connector writes.
+
+
+Multi ACK is edited in SettingsScreen's Contact Settings dialog, after Overwrite
+Oldest, whose title is contactsSettings_title. `contact_multi_ack_settings.dart`
+writes changed values on Save using the CURRENT telemetry/adverts fields of the
+shared set-other-params command, then refreshes device info. Unchanged values,
+including firmware mode 2, cause no shared-parameter write. Privacy has no Multi
+ACK toggle and reads connector.multiAcks at Save to avoid overwriting a newer
+contact-settings choice. Cancel sends nothing. Existing localization keys reused.

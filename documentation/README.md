@@ -36,6 +36,7 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 21. [Хранилище истории](message-history-storage.md) — WAL/FULL, создание новой SQLite-базы и режим освобождения страниц
 22. [MCOtxt для браузера](mcotxt-js.md) — автономный ES6-кодек, размеры текста и демо с метаданными
 23. [CompanionCLI](companion-cli.md) — локальная консоль подключённой ноды, история по нодам и совместимость
+24. [Настройки контактов в SQLite](contact-settings-storage.md) — структура БД, параметры и перенос из SharedPreferences
 
 ## App Overview
 

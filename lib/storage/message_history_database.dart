@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../helpers/contact_option_storage.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
 import '../models/companion_cli_entry.dart';
@@ -776,6 +777,65 @@ WHERE node_key = ? AND name = ?
         row.read<String>('contact_key'): row.read<String>('value'),
     };
   }
+
+  /// Only app-owned options; flood_region and future unrelated tenants stay out
+  /// of the startup cache and out of codec-selection transactions.
+  Future<List<ContactOptionRow>> readContactOptionRows() async {
+    final names = contactOptionDefinitions.keys.toList();
+    final rows = await customSelect(
+      'SELECT node_key, contact_key, name, value FROM contact_settings '
+      'WHERE name IN (${List.filled(names.length, '?').join(', ')})',
+      variables: names.map((name) => Variable<String>(name)).toList(),
+    ).get();
+    return [
+      for (final row in rows)
+        ContactOptionRow(
+          nodeKey: row.read<String>('node_key'),
+          contactKey: row.read<String>('contact_key'),
+          name: row.read<String>('name'),
+          value: row.read<String>('value'),
+        ),
+    ];
+  }
+
+  /// Commit before deleting any source preferences. Existing SQL choices win
+  /// on retry, including explicit false and empty quick-answer lists.
+  Future<void> importContactOptions(Iterable<ContactOptionRow> rows) =>
+      transaction(() async {
+        for (final row in rows) {
+          await customInsert(
+            'INSERT INTO contact_settings (node_key, contact_key, name, value) '
+            'VALUES (?, ?, ?, ?) ON CONFLICT(node_key, contact_key, name) DO NOTHING',
+            variables: [
+              Variable<String>(row.nodeKey),
+              Variable<String>(row.contactKey),
+              Variable<String>(row.name),
+              Variable<String>(row.value),
+            ],
+          );
+        }
+      });
+
+  /// A codec selection is a single transaction, including disabling the other
+  /// codecs. A null value deletes an option (for example a custom profile).
+  Future<void> writeContactOptions(
+    String nodeKey,
+    String contactKey,
+    Map<String, String?> values,
+  ) => transaction(() async {
+    for (final entry in values.entries) {
+      if (entry.value == null) {
+        await deleteContactSetting(nodeKey: nodeKey, contactKey: contactKey, name: entry.key);
+      } else {
+        await upsertContactSetting(
+          nodeKey: nodeKey,
+          contactKey: contactKey,
+          name: entry.key,
+          value: entry.value!,
+        );
+      }
+    }
+  });
 
   Future<void> upsertContactSetting({
     required String nodeKey,
