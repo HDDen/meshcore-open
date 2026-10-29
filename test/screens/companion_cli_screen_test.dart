@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
+import 'package:mco_service/mco_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +30,16 @@ import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/contact_filter_types.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/companion_cli_tile.dart';
+import 'package:meshcore_open/widgets/repeater_login_dialog.dart';
 import 'package:meshcore_open/widgets/companion_cli_command_help_sheet.dart';
+
+class _ContactMenuSections extends ChangeNotifier implements SettingsSectionsService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #contactActionTiles) return <Widget>[];
+    return super.noSuchMethod(invocation);
+  }
+}
 
 class _History implements CompanionCliHistory {
   final rows = <String, CompanionCliEntry>{};
@@ -364,6 +376,36 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final secondaryClick in [false, true]) {
+    testWidgets('repeater ${secondaryClick ? 'right-click' : 'long press'} opens contact actions without login', (tester) async {
+      connector.contactData.add(Contact(
+        publicKey: Uint8List.fromList(List.filled(32, 7)),
+        name: 'Synthetic repeater actions', type: advTypeRepeater,
+        pathLength: -1, path: Uint8List(0), lastSeen: DateTime.utc(2026),
+      ));
+      await show(tester, ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
+        child: const ContactsScreen(hideBackButton: true),
+      ));
+      await tester.pumpAndSettle();
+      final row = find.text('Synthetic repeater actions');
+      if (secondaryClick) {
+        await tester.tap(row, kind: PointerDeviceKind.mouse, buttons: kSecondaryMouseButton);
+      } else {
+        await tester.longPress(row);
+      }
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+      expect(find.text(l10n.listFilter_addToFavorites), findsOneWidget);
+      expect(find.text(l10n.contacts_ShareContact), findsOneWidget);
+      expect(find.text(l10n.contacts_deleteContact), findsOneWidget);
+      expect(find.byType(RepeaterLoginDialog), findsNothing);
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }, skip: secondaryClick && !PlatformInfo.isDesktop);
+  }
 
   testWidgets('CLI precedes favorites and each group keeps the selected sort', (tester) async {
     final names = ['Zulu favorite', 'Beta favorite', 'Alpha regular', 'Gamma regular'];

@@ -3371,3 +3371,12 @@ bump connector.contactsRevision, invalidating the screen's derived-list cache.
 The companion_cli_screen_test fixture verifies all three sorts, a star removal
 without a sort change, search exclusion and CLI precedence. Agent did not run
 these tests or analyze. User guide: documentation/contacts.md.
+
+
+Contacts repeater gestures: `_showContactOptions` no longer special-cases a
+repeater by calling runWithContactOnNode/login. Long press and desktop secondary
+click open the generic contact actions sheet (favorite/share/delete/extensions)
+without sending a radio command. Ordinary tap still routes through
+`_showRepeaterOptions`; management/login is an explicit action there. Regression
+cases in companion_cli_screen_test.dart send actual long-press and mouse secondary
+gestures and assert actions, no RepeaterLoginDialog, and no connector writes.

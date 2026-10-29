@@ -2614,20 +2614,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     MeshCoreConnector connector,
     Contact contact,
   ) {
-    final isRepeater = contact.type == advTypeRepeater;
-    if (isRepeater) {
-      // Swapped with the tap on purpose: the sheet is the frequent action,
-      // the login the deliberate one.
-      unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          contact,
-          (stored) => _showRepeaterLogin(context, stored),
-        ),
-      );
-      return;
-    }
+    // Long press/right-click always opens contact actions, including repeaters.
+    // Repeater management/login remains an explicit action of the tap menu.
     final isRoom = contact.type == advTypeRoom;
     final isFavorite = contact.isFavorite;
     final appSettingsService = isRoom

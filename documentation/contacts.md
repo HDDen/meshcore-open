@@ -77,16 +77,21 @@ Groups are stored per radio identity (scoped by public key).
 | Contact Type | Action on Tap |
 |---|---|
 | Chat / Sensor | Opens ChatScreen for direct messaging |
-| Repeater | Shows password login dialog → opens RepeaterHubScreen |
+| Repeater | Opens the repeater actions sheet; Manage Repeater opens the login dialog |
 | Room | Shows password login dialog → opens ChatScreen for room chat |
 
 ## Long-Press / Right-Click Menu
 
+Долгое нажатие и правая кнопка мыши открывают общее меню действий с контактом,
+включая репитеры: избранное, экспорт/передача контакта, удаление и доступные
+дополнительные действия. Вход в репитер автоматически не запускается. Для
+управления репитером нажмите на карточку обычным нажатием и выберите управление.
+
 | Action | Availability | Description |
 |---|---|---|
-| Ping | Repeaters only | Opens PathTraceMapScreen targeting the repeater |
+| Ping | Repeater tap menu | Opens PathTraceMapScreen targeting the repeater |
 | Path Trace | Rooms (always); Chat/Sensor only if `pathLength > 0` | Opens PathTraceMapScreen. For rooms, label shows "Ping" when no path bytes are known, "Path Trace" when path bytes are available |
-| Manage Repeater | Repeaters only | Login dialog → RepeaterHubScreen |
+| Manage Repeater | Repeater tap menu | Login dialog → RepeaterHubScreen |
 | Room Login | Rooms only | Login dialog → ChatScreen |
 | Room Management | Rooms only | Login dialog → RepeaterHubScreen (management mode) |
 | Add/Remove Favorite | All types | Toggles the favorite flag |
