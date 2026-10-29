@@ -14,6 +14,7 @@ import '../models/app_settings.dart';
 import '../models/companion_cli_entry.dart';
 import '../services/app_settings_service.dart';
 import '../services/companion_cli_session.dart';
+import '../services/ui_view_state_service.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/platform_info.dart';
 import '../widgets/confirm_clear_dialog.dart';
@@ -37,7 +38,6 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
   bool _loaded = false;
   bool _loadFailed = false;
   bool _clearing = false;
-  bool? _shared;
   int _historyIndex = -1;
 
   void _applyCommand(String command) {
@@ -170,13 +170,14 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
   @override
   Widget build(BuildContext context) {
     final mode = context.watch<AppSettingsService?>()?.settings.sharedMessageHistoryMode;
-    final defaultShared = mode == SharedMessageHistoryMode.contacts ||
-      mode == SharedMessageHistoryMode.all || widget.connector.isOfflineSharedMode;
+    final viewState = context.watch<UiViewStateService>();
     return AnimatedBuilder(animation: _changes, builder: (context, _) {
       final connector = widget.connector;
       final scheme = Theme.of(context).colorScheme;
       final l10n = context.l10n;
-      final shared = _shared ?? defaultShared;
+      final shared = viewState.companionCliSharedHistory ??
+        (mode == SharedMessageHistoryMode.contacts ||
+          mode == SharedMessageHistoryMode.all || connector.isOfflineSharedMode);
       final entries = _session.entries(shared: shared);
       final canClear = _session.entries(shared: false).isNotEmpty && !_clearing;
       final canSend = _loaded && !_loadFailed && !_session.busy && !_clearing &&
@@ -189,7 +190,7 @@ class _CompanionCliScreenState extends State<CompanionCliScreen> {
             IconButton(key: const ValueKey('companion-cli-shared'),
               tooltip: l10n.companionCli_sharedHistory, isSelected: shared,
               icon: const Icon(Icons.hub_outlined), selectedIcon: const Icon(Icons.hub),
-              onPressed: () => setState(() => _shared = !shared)),
+              onPressed: () => unawaited(viewState.setCompanionCliSharedHistory(!shared))),
             IconButton(key: const ValueKey('companion-cli-help'),
               tooltip: l10n.repeater_commandHelp, icon: const Icon(Icons.help_outline),
               onPressed: () => unawaited(_showCommandHelp())),

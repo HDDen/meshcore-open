@@ -2685,7 +2685,13 @@ contains('1.18') больше нет; guard protocolCode >=14 выполняет
 `companion_cli_history` с полным node key и source label. Схема БД — 3;
 CLI-таблицы создаются существующим механизмом auxiliary raw SQL, без изменения
 Drift-generated файлов. Shared view
-объединяет чтение, а не адресатов команд. Чувствительный текст сохраняется в
+объединяет чтение, а не адресатов команд. Кнопка SharedHistory читает глобальный
+`UiViewStateService.companionCliSharedHistory` и сохраняет выбор в единственный
+preference `ui_companion_cli_shared_history`, без node key. Значение загружается
+при старте приложения и применяется при повторном открытии/смене ноды. Пока
+пользователь не переключал кнопку, nullable-флаг использует прежний fallback
+от общего SharedMessageHistoryMode и offline shared. Явное false сохраняется и
+не переопределяется этими значениями. История CLI при этом остаётся в SQLite. Чувствительный текст сохраняется в
 консоли по решению владельца; `BleDebugLogService` скрывает payload 66/29.
 Первое сохранение предшествует отправке, активная операция учитывается в
 `FrameBackgroundWork`; timeout не повторяет команду и запрашивает transport restart.

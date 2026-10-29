@@ -21,6 +21,7 @@ class UiViewStateService extends ChangeNotifier {
   static const _keyChannelsSortOption = 'ui_channels_sort_option';
   static const _keyChannelsSortIndexLegacy = 'ui_channels_sort_index';
   static const _keyMapSource = 'ui_map_source';
+  static const _keyCompanionCliSharedHistory = 'ui_companion_cli_shared_history';
 
   String _contactsSelectedGroupName = contactsAllGroupsValue;
   String _contactsSearchText = '';
@@ -32,6 +33,9 @@ class UiViewStateService extends ChangeNotifier {
   String _channelsSearchText = '';
   ChannelSortOption _channelsSortOption = ChannelSortOption.manual;
   MapSourceOption _mapSource = MapSourceOption.local;
+  // Null preserves the existing global-history default until the first choice.
+  // This preference belongs to the app, never to a particular radio or console.
+  bool? _companionCliSharedHistory;
 
   String get contactsSelectedGroupName => _contactsSelectedGroupName;
   String get contactsSearchText => _contactsSearchText;
@@ -42,9 +46,11 @@ class UiViewStateService extends ChangeNotifier {
   String get channelsSearchText => _channelsSearchText;
   ChannelSortOption get channelsSortOption => _channelsSortOption;
   MapSourceOption get mapSource => _mapSource;
+  bool? get companionCliSharedHistory => _companionCliSharedHistory;
 
   Future<void> initialize() async {
     final prefs = PrefsManager.instance;
+    _companionCliSharedHistory = prefs.getBool(_keyCompanionCliSharedHistory);
 
     final selectedGroupName = prefs.getString(_keyContactsSelectedGroupName);
     if (selectedGroupName != null && selectedGroupName.isNotEmpty) {
@@ -165,6 +171,13 @@ class UiViewStateService extends ChangeNotifier {
     unawaited(
       PrefsManager.instance.setString(_keyChannelsSortOption, value.name),
     );
+  }
+
+  Future<void> setCompanionCliSharedHistory(bool value) async {
+    if (_companionCliSharedHistory == value) return;
+    _companionCliSharedHistory = value;
+    notifyListeners();
+    await PrefsManager.instance.setBool(_keyCompanionCliSharedHistory, value);
   }
 
   void setMapSource(MapSourceOption value) {

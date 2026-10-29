@@ -13,6 +13,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/companion_cli_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
+import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_group.dart';
 import 'package:meshcore_open/models/companion_cli_entry.dart';
@@ -106,7 +107,8 @@ class _Connector extends MeshCoreConnector {
   @override
   bool get hasReadableSession => true;
   @override
-  String get selfPublicKeyHex => '01' * 32;
+  String get selfPublicKeyHex => nodeKey;
+  String nodeKey = '01' * 32;
   @override
   String? get selfName => 'Synthetic node A';
   @override
@@ -733,6 +735,58 @@ void main() {
     expect(find.byType(CompanionCliTile), findsNothing);
     await show(tester, const ContactsScreen(hideBackButton: true, batchOperationsMode: true));
     expect(find.byType(CompanionCliTile), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('shared CLI choice survives reopening, node switches and app view-state restart', (tester) async {
+    final nodeA = '01' * 32;
+    final nodeB = '02' * 32;
+    for (final node in [nodeA, nodeB]) {
+      connector.history.rows[node] = CompanionCliEntry(
+        id: node, nodeKey: node, nodeName: node == nodeA ? 'Saved node A' : 'Saved node B',
+        command: 'ver', response: 'Saved reply', status: CompanionCliStatus.replied,
+        createdAt: DateTime.utc(2026));
+    }
+    final toggle = find.byKey(const ValueKey('companion-cli-shared'));
+    await show(tester, CompanionCliScreen(connector: connector));
+    expect(tester.widget<IconButton>(toggle).isSelected, isFalse);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(toggle).isSelected, isTrue);
+    expect(find.textContaining('Saved node B'), findsOneWidget);
+
+    // A newly created console for another radio must use the same choice.
+    await tester.pumpWidget(const SizedBox.shrink());
+    connector.nodeKey = nodeB;
+    connector.testSession.connectionChanged();
+    await show(tester, CompanionCliScreen(connector: connector));
+    expect(tester.widget<IconButton>(toggle).isSelected, isTrue);
+    expect(find.textContaining('Saved node A'), findsOneWidget);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(toggle).isSelected, isFalse);
+    expect(find.textContaining('Saved node A'), findsNothing);
+
+    // An explicit false must survive even if the general default becomes true.
+    await settings.setSharedMessageHistoryMode(SharedMessageHistoryMode.all);
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(toggle).isSelected, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    view.dispose();
+    final prefs = PrefsManager.instance;
+    final persisted = {for (final key in prefs.getKeys()) key: prefs.get(key)!};
+    SharedPreferences.setMockInitialValues(persisted);
+    PrefsManager.reset();
+    await PrefsManager.initialize();
+    view = UiViewStateService();
+    await view.initialize();
+    connector.nodeKey = nodeA;
+    connector.testSession.connectionChanged();
+    await show(tester, CompanionCliScreen(connector: connector));
+    expect(tester.widget<IconButton>(toggle).isSelected, isFalse);
+    expect(find.textContaining('Saved node B'), findsNothing);
+    expect(connector.writes, isEmpty);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
