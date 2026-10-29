@@ -1819,6 +1819,29 @@ Bespoke ultra-compressed raster format so tiny images fit LoRa text/binary messa
 
 A v4 figure can also be **text** (`MCOImageV4Text`, extended sub-opcode `15` used as a second escape, command `0`). The glyphs are not transmitted: the string travels as an MCOtxt v1 stream embedded bit by bit after its bit count, and only the anchor, the area width in cells and the em height in cells are normative — rendering is up to the client, so the app pins its own through `MCOImageV4TextRendering` in `widgets/mco_image_v4_view.dart`. Alignment and font size are sticky across text figures the way style is, the area width is per figure and its default (anchor to the right canvas edge) costs no bits. In the editor that width is a cell count pinned to the layer: the slider runs in cells over the whole canvas width, moving a layer never changes it, and a default-width layer has its width pinned on its first horizontal move so the text does not re-wrap; crops and resizes clamp text widths and em heights to what the codec accepts. The editor tool lays an ordinary `TextField` over the canvas, scaled from canvas cells so it breaks lines exactly where the painter will, keeps the layer in the document while typing so the payload counter counts it, and hides that one layer from the painter meanwhile. Wire format in [`docs/mcoimg_v4_reference.md`](docs/mcoimg_v4_reference.md), fixed at tag `9.5.1-mod-1.9.0`; the JavaScript and C++ ports, and the steps that have to come first, are planned in [`docs/mcoimg_v4_porting_plan.md`](docs/mcoimg_v4_porting_plan.md).
 
+### Image attachment availability
+
+Preset readiness uses `helpers/image_codec_installation.dart`: a record alone
+is not a completed download. App Settings shows Download until the current
+bundle version and every declared asset are present in reconciled metadata.
+The shipping 3 MB decoder graph has an 873 MB external weights sibling; the
+958 MiB displayed total includes all five files. `installedBundle` withholds
+entropy paths if the registered decoder graph/weights are missing, blocking
+AEIC send/decode even if the entropy files survived. The existing disk scan
+rejects checksum-pinned assets of the wrong size; retrying the download reuses
+verified files. Regression tests use tiny synthetic files, not model inference.
+
+
+`ChannelChatScreen` keeps a visible image attachment action tappable instead of
+passing `sendImageEnabled=false` to an inert ListTile. Before native image picking,
+`helpers/image_send_availability.dart` checks the current service availability,
+shows `statusReason` (or backend/localized fallback) in a dialog if blocked, and
+records `ImageSend` diagnostics when logging is enabled. No picker/inference is
+started for a non-ready model. A ready model follows the existing selection and
+preview path. The feature/download visibility guards remain; no model/runtime or
+wire-format change is implied. `test/widgets/image_send_availability_test.dart`
+covers the actual action-menu closure and preflight explanation/continue paths.
+
 ### AEIC image store: pictures are paged in lazily
 
 `helpers/channel_image_replay.dart` rebuilds transport frames from a retained

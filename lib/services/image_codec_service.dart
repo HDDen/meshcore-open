@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../helpers/image_codec_installation.dart';
 import '../models/image_codec_support.dart';
 import '../utils/app_logger.dart';
 import '../widgets/image_send_codec_binding.dart';
@@ -287,6 +288,14 @@ class ImageCodecService extends ChangeNotifier implements ImageSendCodec {
       return null;
     }
     final spec = _specForId(model.id);
+    if (spec != null && !hasImageCodecDecoderAssets(spec, model)) {
+      // Entropy files alone cannot replace a missing decoder/weights sibling.
+      // Keep the graph record for repair, but block AEIC send and receive.
+      return ImageCodecBundle(
+        decoderGraphPath: model.localPath,
+        ratePoint: spec.ratePoint,
+      );
+    }
     final directory = _directoryOf(model.localPath);
 
     String? pathFor(

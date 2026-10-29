@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:meshcore_open/helpers/image_codec_installation.dart';
 import 'package:meshcore_open/models/image_codec_support.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/image_codec_file_store.dart';
@@ -561,6 +562,112 @@ void main() {
         large.length,
       );
     });
+  });
+
+  group('repairing a partial preset', () {
+    for (final scenario in ['graph only', 'missing weights', 'short weights']) {
+      test('$scenario is incomplete and can download the missing files', () async {
+        // Tiny files exercise the real disk scan/checksum/download path without
+        // allocating the shipping model or starting an inference session.
+        final assets = <String, Uint8List>{
+          'partial.onnx': _body(16, 1),
+          'partial.onnx.data': _body(32, 3),
+          'partial_entropy.onnx': _body(24, 5),
+          'partial_entropy_decode.onnx': _body(20, 7),
+          'partial_cdf.bin': _body(8, 9),
+        };
+        final preset = ImageCodecModelSpec(
+          id: 'partial-install-test',
+          label: 'Partial installation fixture',
+          assets: [
+            for (final entry in assets.entries)
+              ImageCodecModelAsset(
+                role: switch (entry.key) {
+                  'partial.onnx' => ImageCodecAssetRole.decoderGraph,
+                  'partial.onnx.data' => ImageCodecAssetRole.decoderWeights,
+                  'partial_entropy.onnx' => ImageCodecAssetRole.entropyGraph,
+                  'partial_entropy_decode.onnx' =>
+                    ImageCodecAssetRole.entropyDecodeGraph,
+                  _ => ImageCodecAssetRole.cdfTables,
+                },
+                fileName: entry.key,
+                sourceUrl: 'https://example.invalid/${entry.key}',
+                sizeBytes: entry.value.length,
+                sha256: _sha256(entry.value),
+              ),
+          ],
+        );
+        imageCodecPresetModels.add(preset);
+        addTearDown(() => imageCodecPresetModels.remove(preset));
+
+        for (final entry in assets.entries) {
+          if (scenario == 'graph only' && entry.key != 'partial.onnx') {
+            continue;
+          }
+          if (scenario == 'missing weights' &&
+              entry.key == 'partial.onnx.data') {
+            continue;
+          }
+          final bytes = scenario == 'short weights' &&
+                  entry.key == 'partial.onnx.data'
+              ? entry.value.sublist(0, 3)
+              : entry.value;
+          await File('${tempDir.path}/${entry.key}').writeAsBytes(bytes);
+        }
+        // Even a stale "complete" record must be corrected by the disk scan.
+        final recorded = ImageCodecModelRecord(
+          id: preset.id,
+          name: preset.fileName,
+          sourceUrl: preset.graph.sourceUrl,
+          localPath: '${tempDir.path}/${preset.fileName}',
+          downloadedAt: DateTime.utc(2026),
+          fileSizeBytes: preset.totalSizeBytes,
+          assetFileNames: assets.keys.toList(),
+          bundleVersion: kImageCodecBundleVersion,
+        );
+        final log = _Log();
+        final service = ImageCodecService(
+          AppSettingsService(),
+          fileStore: store,
+          settingsStore: InMemoryImageCodecSettingsStore(
+            ImageCodecPreferences(
+              enabled: true,
+              selectedModelId: preset.id,
+              downloadedModels: [recorded],
+            ),
+          ),
+          clientFactory: _server(assets, log),
+        );
+        addTearDown(service.dispose);
+
+        await service.refreshDownloadedModels();
+        final partial = service.selectedModel!;
+        expect(partial.bundleVersion, 0);
+        expect(isImageCodecPresetComplete(preset, partial), isFalse);
+        expect(service.installedBundle!.supportsDecode, isFalse);
+        expect(service.canEncode, isFalse);
+        expect(service.canDecode, isFalse);
+        expect(service.needsModelUpgrade, isTrue);
+        expect(
+          partial.fileSizeBytes,
+          scenario == 'graph only'
+              ? assets['partial.onnx']!.length
+              : preset.totalSizeBytes - assets['partial.onnx.data']!.length,
+        );
+
+        final repaired = await service.downloadPresetModel(preset);
+        expect(isImageCodecPresetComplete(preset, repaired), isTrue);
+        expect(service.installedBundle!.supportsDecode, isTrue);
+        expect(service.needsModelUpgrade, isFalse);
+        expect(repaired.fileSizeBytes, preset.totalSizeBytes);
+        // Already verified files, especially the 3 MB graph, are reused.
+        expect(log.headCount, scenario == 'graph only' ? 4 : 1);
+        expect(
+          await File('${tempDir.path}/partial.onnx.data').readAsBytes(),
+          orderedEquals(assets['partial.onnx.data']!),
+        );
+      });
+    }
   });
 
   group('installedBundle', () {

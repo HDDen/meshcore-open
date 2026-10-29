@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../config/build_features.dart';
+import '../helpers/image_codec_installation.dart';
 import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -928,7 +929,9 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final alreadyHave = codec.availableModels.any((m) => m.id == spec.id);
+    final alreadyHave = codec.availableModels.any(
+      (model) => isImageCodecPresetComplete(spec, model),
+    );
     // downloadPresetModel throws StateError on a placeholder URL, deliberately,
     // so the button must not be offerable until the weights are published.
     final blocked = spec.urlsArePlaceholders;

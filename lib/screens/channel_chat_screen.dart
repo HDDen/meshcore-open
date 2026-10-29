@@ -50,6 +50,7 @@ import '../helpers/reply_target_index.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/signal_reading_text.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/image_send_availability.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
@@ -3209,7 +3210,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// checks around each `await` are the ones that actually govern it.
   Future<void> _showImageSendPreview() async {
     final codec = _imageCodec;
-    if (codec == null) return;
+    final available = await ensureImageSendAvailable(
+      context,
+      codec: codec,
+      statusReason: codec?.statusReason,
+    );
+    if (!mounted || !available || codec == null) return;
     final connector = context.read<MeshCoreConnector>();
 
     // The picked bytes are kept past the preview on purpose: the sender's own
@@ -4363,9 +4369,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             !_imageCodecDownloading
                         ? _showImageSendPreview
                         : null,
-                    sendImageEnabled:
-                        _imageCodec?.availability ==
-                        ImageCodecAvailability.ready,
+                    // Readiness is checked on tap with a reason dialog. A
+                    // visible action must not silently ignore every tap.
                     onOpenCanvas: () => _showCanvasEditor(maxBytes),
                     onOpenMcoImageGallery: () => _showMcoImageGallery(maxBytes),
                   ),
