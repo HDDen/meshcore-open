@@ -53,6 +53,7 @@ import '../helpers/companion_cli_list_layout.dart';
 import '../helpers/companion_cli_group_members.dart';
 import '../widgets/companion_cli_tile.dart';
 import '../helpers/channel_group_helper.dart';
+import '../helpers/channel_preview_text.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-scan
 import '../helpers/gif_helper.dart';
 import '../helpers/offline_mode_helper.dart';
@@ -712,6 +713,15 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     } else {
       lastPreview = lastMessageText;
     }
+    final previewWithSender = formatChannelPreview(
+      lastPreview,
+      senderName: lastMessage?.senderName,
+      showSender: context
+          .read<AppSettingsService>()
+          .settings
+          .showChannelPreviewSender,
+      blocked: lastBlocked,
+    );
     final lastPreviewImage = lastMessage == null || lastBlocked
         ? null
         : MCOImageMessage.tryDecode(lastMessage.text);
@@ -846,7 +856,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ] else if (lastPreview.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        lastPreview,
+                        previewWithSender,
                         style: MeshTheme.mono(
                           fontSize: 11.5,
                           color: widgetTextColor ?? scheme.onSurfaceVariant,

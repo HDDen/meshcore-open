@@ -6267,6 +6267,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Скрыть индекс канала';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Отображать имя отправителя в превью канала';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Скрыть статистику радиовещания в шапке';
 

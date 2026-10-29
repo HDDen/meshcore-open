@@ -58,6 +58,21 @@ class ModSettingsScreen extends StatelessWidget {
                       horizontal: 16,
                       vertical: 4,
                     ),
+                    secondary: const Icon(Icons.person_outline, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsShowChannelPreviewSender,
+                    ),
+                    value: settings.showChannelPreviewSender,
+                    onChanged: settingsService.setShowChannelPreviewSender,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     secondary: const Icon(
                       Icons.notifications_off_outlined,
                       size: 20,

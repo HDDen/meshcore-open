@@ -5967,6 +5967,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'チャンネル番号を非表示';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats => 'ヘッダーの無線統計を非表示';
 
   @override

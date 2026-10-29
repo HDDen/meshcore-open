@@ -10640,6 +10640,12 @@ abstract class AppLocalizations {
   /// **'Hide channel index'**
   String get settings_modSettingsHideChInd;
 
+  /// No description provided for @settings_modSettingsShowChannelPreviewSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sender name in channel preview'**
+  String get settings_modSettingsShowChannelPreviewSender;
+
   /// No description provided for @settings_modSettingsHideRadioStats.
   ///
   /// In en, this message translates to:

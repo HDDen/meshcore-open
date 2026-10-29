@@ -6264,6 +6264,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'A csatorna indexének elrejtése';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'A rádióstatisztika elrejtése a fejlécben';
 

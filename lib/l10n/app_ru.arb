@@ -2421,6 +2421,7 @@
   "settings_modSettingsMCOimg_replacementsSharp": "Повысить резкость оригиналов в чатах",
   "settings_modSettingsMCOimg_replacementsSharpDscr": "Внимание! Отключает анимирование GIF!",
   "settings_modSettingsHideChInd": "Скрыть индекс канала",
+  "settings_modSettingsShowChannelPreviewSender": "Отображать имя отправителя в превью канала",
   "settings_modSettingsHideRadioStats": "Скрыть статистику радиовещания в шапке",
   "settings_modSettingsSNRindicatorAllRepActivity": "Индикатор SNR: срабатывать на все ответы репитеров, не только advert",
   "settings_modSettingsIncomingQuoteAsMentions": "Отображать цитаты во входящих сообщениях как упоминания",

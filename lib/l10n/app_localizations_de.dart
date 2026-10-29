@@ -6278,6 +6278,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Kanalindex ausblenden';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Funkstatistik in der Kopfzeile ausblenden';
 

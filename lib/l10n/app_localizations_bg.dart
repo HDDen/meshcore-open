@@ -6277,6 +6277,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Скриване на индекса на канала';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Скриване на радиостатистиката в заглавната лента';
 

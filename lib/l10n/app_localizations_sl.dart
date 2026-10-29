@@ -6233,6 +6233,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Skrij indeks kanala';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Skrij radijsko statistiko v glavi';
 

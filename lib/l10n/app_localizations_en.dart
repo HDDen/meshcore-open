@@ -6170,6 +6170,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Hide channel index';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats => 'Hide header radio stats';
 
   @override

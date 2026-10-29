@@ -197,6 +197,7 @@ class AppSettings {
   final bool canvasShowLockButton;
   final bool showHops;
   final bool hideChannelIndexIndicator;
+  final bool showChannelPreviewSender;
 
   /// Hide the mute bell in the channel chat's app bar (mod settings).
   final bool hideChannelMuteButton;
@@ -714,6 +715,7 @@ class AppSettings {
     this.canvasShowLockButton = true,
     this.showHops = true,
     this.hideChannelIndexIndicator = true,
+    this.showChannelPreviewSender = true,
     this.hideChannelMuteButton = false,
     this.hideRadioStatsButton = false,
     this.powerSaving = const PowerSavingSettings(),
@@ -874,6 +876,7 @@ class AppSettings {
       'canvas_show_lock_button': canvasShowLockButton,
       'show_hops': showHops,
       'hide_channel_index_indicator': hideChannelIndexIndicator,
+      'show_channel_preview_sender': showChannelPreviewSender,
       'hide_channel_mute_button': hideChannelMuteButton,
       'hide_radio_stats_button': hideRadioStatsButton,
       'power_saving': powerSaving.toJson(),
@@ -1053,6 +1056,8 @@ class AppSettings {
       showHops: json['show_hops'] as bool? ?? true,
       hideChannelIndexIndicator:
           json['hide_channel_index_indicator'] as bool? ?? true,
+      showChannelPreviewSender:
+          json['show_channel_preview_sender'] as bool? ?? true,
       hideChannelMuteButton:
           json['hide_channel_mute_button'] as bool? ?? false,
       hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
@@ -1315,6 +1320,7 @@ class AppSettings {
     bool? canvasShowLockButton,
     bool? showHops,
     bool? hideChannelIndexIndicator,
+    bool? showChannelPreviewSender,
     bool? hideChannelMuteButton,
     bool? hideRadioStatsButton,
     PowerSavingSettings? powerSaving,
@@ -1449,6 +1455,8 @@ class AppSettings {
       showHops: showHops ?? this.showHops,
       hideChannelIndexIndicator:
           hideChannelIndexIndicator ?? this.hideChannelIndexIndicator,
+      showChannelPreviewSender:
+          showChannelPreviewSender ?? this.showChannelPreviewSender,
       hideChannelMuteButton:
           hideChannelMuteButton ?? this.hideChannelMuteButton,
       hideRadioStatsButton: hideRadioStatsButton ?? this.hideRadioStatsButton,

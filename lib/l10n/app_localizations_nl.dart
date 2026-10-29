@@ -6246,6 +6246,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Kanaalindex verbergen';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Radiostatistieken in de koptekst verbergen';
 

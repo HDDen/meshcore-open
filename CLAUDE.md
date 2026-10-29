@@ -3290,3 +3290,14 @@ PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmod
 | `lib/screens/scanner_screen.dart` | Home screen — BLE scan and connect |
 | `lib/screens/mod_settings_screen.dart` | Advanced-mod feature toggles |
 | `pubspec.yaml` | Dependencies and project metadata; the `## Dependencies` section above quotes the same version |
+
+
+### Sender names in channel previews
+
+Mod settings → Visual includes `showChannelPreviewSender` (default true), after
+the hide-channel-index switch. `helpers/channel_preview_text.dart` prefixes the
+resolved text preview with the last message's `senderName`; disabled, empty or
+blocked previews retain their existing body without an author. The choice is
+persisted as `show_channel_preview_sender` and defaults true for older settings.
+The channels screen watches AppSettingsService, so the list updates on return.
+User guide: `documentation/channel-preview.md`.

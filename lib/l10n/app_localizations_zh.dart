@@ -5847,6 +5847,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsHideChInd => '隐藏频道序号';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats => '隐藏顶栏的无线电统计';
 
   @override

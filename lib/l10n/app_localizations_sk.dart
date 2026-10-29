@@ -6244,6 +6244,10 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Skryť index kanála';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Skryť rádiové štatistiky v hlavičke';
 

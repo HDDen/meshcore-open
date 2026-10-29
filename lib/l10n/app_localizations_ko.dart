@@ -5974,6 +5974,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_modSettingsHideChInd => '채널 번호 숨기기';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats => '헤더의 무선 통계 숨기기';
 
   @override

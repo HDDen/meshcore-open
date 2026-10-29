@@ -6280,6 +6280,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_modSettingsHideChInd => 'Приховати індекс каналу';
 
   @override
+  String get settings_modSettingsShowChannelPreviewSender =>
+      'Show sender name in channel preview';
+
+  @override
   String get settings_modSettingsHideRadioStats =>
       'Приховати статистику радіо в шапці';
 
