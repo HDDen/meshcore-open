@@ -3094,6 +3094,17 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
 - UI hint: `192.168.40.10` / port `5000`
 - Disabled on web (`PlatformInfo.isWeb`)
 - API: `MeshCoreConnector.connectTcp(host: ..., port: ...)`
+- `TcpScreen` observes completed SELF_INFO handshakes, so a later automatic retry
+  opens channels even after the initial button/autoconnect Future failed. It is
+  RouteAware and retries the handoff on `didPopNext` when a covering page closes.
+  `helpers/tcp_connection_navigation.dart` deduplicates preparation/navigation by
+  socket identity and revision, checking readiness/current route again after
+  awaited bookmark/iOS configuration work. The departure flag is set only at the
+  actual replacement and stays set through route disposal, so a disconnect during
+  the transition cannot make the old TCP route manually close a newer session.
+  Bookmarks use the active endpoint (preserving tailscale:// and IPv6), not edited
+  input fields. Tests: `test/screens/tcp_reconnect_navigation_test.dart` (four
+  real-screen scenarios plus endpoint parsing); existing tcp_flow baseline stays.
 - Optional TCP transports are selected through `helpers/companion_tcp_dialer.dart`; ordinary endpoints use `Socket.connect`.
 
 ### USB Serial (flserial)

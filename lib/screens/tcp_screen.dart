@@ -19,6 +19,8 @@ import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../helpers/tcp_connection_navigation.dart';
+import '../utils/app_route_observer.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
 
@@ -29,7 +31,8 @@ class TcpScreen extends StatefulWidget {
   State<TcpScreen> createState() => _TcpScreenState();
 }
 
-class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
+class _TcpScreenState extends State<TcpScreen>
+    with WidgetsBindingObserver, RouteAware {
   final ConnectionTransportPreferenceStore _transportPreferenceStore =
       ConnectionTransportPreferenceStore();
   late final TextEditingController _hostController;
@@ -39,7 +42,10 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   late final AppSettingsService _settingsService;
   late final AppDebugLogService _appDebugLogService;
   late final VoidCallback _connectionListener;
-  bool _navigatedToChannels = false;
+  final _connectionNavigation = TcpConnectionNavigation();
+  bool _tcpNavigationScheduled = false;
+  bool _handedOffToChannels = false;
+  PageRoute<dynamic>? _observedRoute;
   bool _autoconnectEnabled = false;
   bool _startupAutoconnectAttempted = false;
   bool _isAutoconnecting = false;
@@ -69,8 +75,9 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     _connectionListener = () {
       if (!mounted) return;
       if (_connector.state == MeshCoreConnectionState.disconnected) {
-        _navigatedToChannels = false;
+        _connectionNavigation.reset();
       }
+      _scheduleTcpNavigation();
     };
     _connector.addListener(_connectionListener);
     _autoconnectEnabled = _transportPreferenceStore.isAutoconnectEnabled(
@@ -85,10 +92,12 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _connector.removeListener(_connectionListener);
+    appRouteObserver.unsubscribe(this);
+    _connectionNavigation.dispose();
     _hostController.dispose();
     _portController.dispose();
     _wifiSsidController.dispose();
-    if (!_navigatedToChannels &&
+    if (!_handedOffToChannels &&
         _connector.activeTransport == MeshCoreTransportType.tcp &&
         _connector.state != MeshCoreConnectionState.disconnected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -105,57 +114,101 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _handleSuccessfulTcpConnection({String? wifiSsid}) async {
-    if (!mounted) return;
-    _navigatedToChannels = true;
-    final host = _hostController.text;
-    final port = int.tryParse(_portController.text) ?? 0;
-    final resolvedWifiSsid = (wifiSsid ?? _wifiSsidController.text).trim();
-    await _settingsService.recordTcpConnection(
-      host,
-      port,
-      wifiSsid: resolvedWifiSsid,
-    );
-    if (PlatformInfo.isIOS &&
-        _settingsService.settings.backgroundTcpEnabled &&
-        resolvedWifiSsid.isNotEmpty) {
-      try {
-        _appDebugLogService.info(
-          'Configuring iOS background TCP endpoint=$host:$port ssid=$resolvedWifiSsid',
-          tag: 'iOS TCP',
-        );
-        final configResult = await const IosBackgroundTcpService().configure(
-          host: host,
-          port: port,
-          wifiSsid: resolvedWifiSsid,
-          enabled: true,
-        );
-        if (configResult == null) {
-          _appDebugLogService.warn(
-            'iOS background TCP receiver was not configured',
-            tag: 'iOS TCP',
-          );
-        } else {
-          _appDebugLogService.info(
-            'iOS background TCP saved enabled=${configResult.enabled} active=${configResult.active} endpoint=${configResult.host}:${configResult.port} ssid=${configResult.wifiSsid}',
-            tag: 'iOS TCP',
-          );
-        }
-      } catch (error) {
-        _appDebugLogService.warn(
-          'Could not configure iOS background TCP receiver: $error',
-          tag: 'iOS TCP',
-        );
-        debugPrint('Could not configure iOS background TCP receiver: $error');
-      }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic> && _observedRoute != route) {
+      appRouteObserver.unsubscribe(this);
+      _observedRoute = route;
+      appRouteObserver.subscribe(this, route);
     }
-    if (!mounted) return;
-    // Only navigate while this route is on top; otherwise a reconnect would
-    // replace whatever screen the user has pushed above it.
-    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    _scheduleTcpNavigation();
+  }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ChannelsScreen()),
+  @override
+  void didPopNext() => _scheduleTcpNavigation();
+
+  void _scheduleTcpNavigation() {
+    if (!mounted || _tcpNavigationScheduled ||
+        _handedOffToChannels || _connectionNavigation.hasNavigated ||
+        !_connector.isTcpTransportConnected ||
+        !_connector.hasCompletedSelfInfoHandshake) {
+      return;
+    }
+    _tcpNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tcpNavigationScheduled = false;
+      if (!mounted) return;
+      unawaited(_handleSuccessfulTcpConnection().catchError((Object error, StackTrace _) {
+        _appDebugLogService.warn('Could not finish TCP navigation: $error', tag: 'TCP');
+      }));
+    });
+  }
+
+  Future<void> _handleSuccessfulTcpConnection() async {
+    if (!mounted) return;
+    final identity = _connector.activeTcpConnectionIdentity;
+    bool stillCurrent() => mounted &&
+        _connector.isTcpTransportConnected &&
+        _connector.hasCompletedSelfInfoHandshake &&
+        identical(identity, _connector.activeTcpConnectionIdentity) &&
+        (ModalRoute.of(context)?.isCurrent ?? true);
+    final endpoint = connectedTcpEndpoint(_connector.activeTcpEndpoint);
+    if (endpoint == null) return;
+    final host = endpoint.host;
+    final port = endpoint.port;
+    final resolvedWifiSsid = _wifiSsidController.text.trim();
+    await _connectionNavigation.open(
+      identity: identity,
+      stillCurrent: stillCurrent,
+      prepare: () async {
+        await _settingsService.recordTcpConnection(
+          host,
+          port,
+          wifiSsid: resolvedWifiSsid,
+        );
+        if (!stillCurrent()) return;
+        if (PlatformInfo.isIOS &&
+            _settingsService.settings.backgroundTcpEnabled &&
+            resolvedWifiSsid.isNotEmpty) {
+          try {
+            _appDebugLogService.info(
+              'Configuring iOS background TCP endpoint=$host:$port ssid=$resolvedWifiSsid',
+              tag: 'iOS TCP',
+            );
+            final configResult = await const IosBackgroundTcpService().configure(
+              host: host,
+              port: port,
+              wifiSsid: resolvedWifiSsid,
+              enabled: true,
+            );
+            if (configResult == null) {
+              _appDebugLogService.warn(
+                'iOS background TCP receiver was not configured',
+                tag: 'iOS TCP',
+              );
+            } else {
+              _appDebugLogService.info(
+                'iOS background TCP saved enabled=${configResult.enabled} active=${configResult.active} endpoint=${configResult.host}:${configResult.port} ssid=${configResult.wifiSsid}',
+                tag: 'iOS TCP',
+              );
+            }
+          } catch (error) {
+            _appDebugLogService.warn(
+              'Could not configure iOS background TCP receiver: $error',
+              tag: 'iOS TCP',
+            );
+            debugPrint('Could not configure iOS background TCP receiver: $error');
+          }
+        }
+      },
+      navigate: () {
+        _handedOffToChannels = true;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
+        );
+      },
     );
   }
 
@@ -811,13 +864,13 @@ class _TcpScreenState extends State<TcpScreen> with WidgetsBindingObserver {
       );
       if (!mounted) return;
 
-      await _connector.connectTcp(host: host, port: parsedPort);
-      if (!mounted ||
-          !_connector.isTcpTransportConnected ||
-          _connector.state != MeshCoreConnectionState.connected) {
-        return;
+      if (wifiSsid != null) {
+        _wifiSsidController.text = wifiSsid;
       }
-      await _handleSuccessfulTcpConnection(wifiSsid: wifiSsid);
+      await _connector.connectTcp(host: host, port: parsedPort);
+      // The state listener also handles successful automatic retries after
+      // this Future has already failed. Both paths share the same handoff.
+      _scheduleTcpNavigation();
     } catch (error) {
       if (!mounted) return;
       if (showErrors) _showError(_friendlyErrorMessage(error));
