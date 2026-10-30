@@ -683,7 +683,8 @@ message is stored, so nothing has to be undone afterwards.
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands
 over, so `_processPotentialQueuedMessage` sends the next request only after
-the delivered message is parsed, verified and written to the history. That
+the delivered message is parsed, verified and written to the history (or, for
+an unknown channel, durably retained for later processing). That
 order is the iOS sync fix (`806c51fe`): iOS kept the BLE link while the
 process was not really running, and the app had advanced the queue before
 the write. The notification for the message is enqueued in the same place
@@ -704,6 +705,34 @@ toast; Android and Linux take the bytes. The next MCOimg notification
 deletes the files older than `_notificationImageLifetime` (24 hours), since a
 toast can be shown again from the action centre well after `show`
 (`test/connector/queued_message_notifications_test.dart`).
+
+### Deferred channel history frames
+
+`helpers/deferred_channel_inbox.dart` retains incoming channel text responses
+(8/17) and binary channel-history data (27, including MCMP/MCOtxt) when a slot
+has no registered history name. `pending_channel_frames` is an auxiliary SQL
+table created on open, with full node key, frame UUID, original bytes, first
+receipt time and optional resolved name/key fingerprint. Native platforms do
+not put this inbox in preferences; Web uses per-frame preference records.
+A successful inbox commit permits the next queue request. Failed inbox writes
+propagate to the existing queue-stop handler. Guarded receive paths request
+strict `ChannelMessageStore.saveChannelMessage(requireBinding: true)` semantics;
+missing node/name can no longer masquerade as a successful history write.
+
+Channel-info completion and final channel sync replay retained rows through
+the original parsers and deduplication. Metadata is requested at most once per
+missing slot per connection outside an active channel sync; normal channel
+refresh/reconnect retries recovery. Replay is serialized, keeps first receipt
+time and removes a row only after processing completes. The resolved name/key
+is pinned before replay; a reused slot with a different identity leaves that
+row retained. Full node and sync-revision guards prevent a late replay from
+applying to another session. Unknown slots have no original name/key evidence:
+if reconfigured before their first resolution, the wire frame cannot identify
+which former channel was meant. Bound receive failures also retain their frame
+for retry. AEIC chunk assembly and local outgoing copies use their old paths.
+An empty-inbox cache avoids repeated normal-path SQL reads. Existing history
+schema/version and wire formats are unchanged; no generator/license update is
+needed. See `documentation/channels.md` and the iOS loss investigation.
 
 ### Channel messages under our own name
 

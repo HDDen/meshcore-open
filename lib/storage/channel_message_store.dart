@@ -81,14 +81,21 @@ class ChannelMessageStore with ChannelNameKeyedStore {
 
   Future<void> saveChannelMessage(
     int channelIndex,
-    ChannelMessage message,
-  ) async {
+    ChannelMessage message, {
+    bool requireBinding = false,
+  }) async {
     if (publicKeyHex.isEmpty) {
+      if (requireBinding) {
+        throw StateError('Channel history has no node identity');
+      }
       appLogger.warn('Public key hex is not set. Cannot save channel message.');
       return;
     }
     final key = channelStorageKey(keyFor, channelIndex);
     if (key == null) {
+      if (requireBinding) {
+        throw StateError('Channel $channelIndex has no registered history binding');
+      }
       appLogger.warn(
         'Channel name is not registered. Cannot save channel message.',
       );

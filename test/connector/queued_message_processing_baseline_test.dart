@@ -89,6 +89,26 @@ void main() {
     });
   }, timeout: timeout);
 
+  testWidgets('an old receive cannot advance or cancel a replacement session queue', (tester) async {
+    await _withQueue(tester, (c) async {
+      await c.syncQueuedMessages();
+      final held = c.holdProcessing();
+      final old = _Result(c.processQueuedMessageForTest(process: () => held.future));
+      await tester.pump();
+      c.resetSyncProgressForTest();
+      await c.syncQueuedMessages();
+      expect(c.storedAtRequest, hasLength(2));
+      held.complete();
+      await tester.pump();
+      expect(old.completed, isTrue);
+      expect(c.isSyncingQueuedMessages, isTrue);
+      c.handleFrameForTest([pushCodeMsgWaiting]);
+      await tester.pump();
+      expect(c.storedAtRequest, hasLength(2));
+      c.finishQueue();
+    });
+  }, timeout: timeout);
+
   testWidgets('baseline: processing outlives the transport deadline and holds tickles', (tester) async {
     await _withQueue(tester, (c) async {
       await c.syncQueuedMessages();

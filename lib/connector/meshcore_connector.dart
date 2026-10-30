@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
+import '../helpers/deferred_channel_inbox.dart';
 import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
 
@@ -670,6 +671,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Slots whose GET_CHANNEL timed out in the last sync with no cached copy:
   // their contents are unknown, so UI must not treat them as free.
   final Set<int> _unconfirmedChannelSlots = {};
+  late final DeferredChannelInbox _deferredChannelInbox =
+      DeferredChannelInbox(MessageHistoryStorage.instance);
+  final Set<int> _pendingChannelBindingRequests = {};
+  int _channelInboxRevision = 0;
   static const int _maxChannelSyncRetries = 3;
   static const int _channelSyncTimeoutMs = 2000; // 2 second timeout per channel
   DevicePollingIntervals _devicePollingIntervals = const DevicePollingIntervals();
@@ -7043,6 +7048,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _resetSyncProgressState() {
+    _channelInboxRevision++;
+    _pendingChannelBindingRequests.clear();
     _hasLoadedCachedChannelStorage = false;
     _pendingInitialChannelSync = false;
     _pendingInitialContactsSync = false;
@@ -11776,6 +11783,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _recalculateCachedChannelsUnreadTotal();
 
     _cleanupChannelSync(completed: true);
+    await _replayDeferredChannelFrames();
 
     // Apply ordering and notify UI
     _applyChannelOrder();
@@ -12821,6 +12829,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await process();
       return;
     }
+    final queueRevision = _channelInboxRevision;
 
     // The response arrived, so the transport timeout must no longer run while
     // parsing, signature verification, and durable history storage complete.
@@ -12837,6 +12846,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await process();
     } catch (error, stackTrace) {
+      if (queueRevision != _channelInboxRevision) {
+        return;
+      }
       _appDebugLogService?.error(
         'Could not process or persist queued $frameType frame; '
         'queue sync stopped: '
@@ -12854,6 +12866,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    if (queueRevision != _channelInboxRevision) {
+      return;
+    }
     if (!_isSyncingQueuedMessages || !isConnected) {
       _queuedMessageSyncInFlight = false;
       _queuedMessageRequestWork.finishCurrent();
@@ -15525,6 +15540,135 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  DeferredChannelBinding? _pendingChannelBinding(int index) {
+    final name = _channelMessageStore.channelNameForIndex(index);
+    if (name == null || name.isEmpty) {
+      return null;
+    }
+    return (
+      name: name,
+      key: _channelMessageStore.channelIdentityForIndex(index)?.pskId,
+    );
+  }
+
+  Future<void> _processChannelFrameWithInbox(
+    Uint8List frame, {
+    required String? localSourceLabel,
+    required Future<void> Function(Uint8List, DateTime?, bool Function()?) process,
+  }) async {
+    final data = frame.isNotEmpty && frame.first == respCodeChannelDataRecv
+        ? parseChannelDataReceivedFrame(frame)
+        : null;
+    // AEIC has its own chunk retention/lifetime; this inbox protects channel
+    // history messages, including binary MCMP/MCOtxt, not image reconstruction.
+    final int? index = frame.isEmpty
+        ? null
+        : switch (frame.first) {
+            respCodeChannelMsgRecv => frame.length >= 8 ? frame[1] : null,
+            respCodeChannelMsgRecvV3 => frame.length >= 11 ? frame[4] : null,
+            respCodeChannelDataRecv => data?.channelIndex,
+            _ => null,
+          };
+    if (localSourceLabel != null || index == null || data?.dataType == dataTypeAeicImage) {
+      await process(frame, null, null);
+      return;
+    }
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    final receivedAt = DateTime.now();
+    final binding = _pendingChannelBinding(index);
+    bool isCurrent() => !_disposed && revision == _channelInboxRevision &&
+        selfPublicKeyHex == nodeKey && _pendingChannelBinding(index) == binding;
+    if (binding == null) {
+      await _deferredChannelInbox.defer(
+        nodeKey: nodeKey, channelIndex: index, frame: frame, receivedAt: receivedAt,
+      );
+      _appDebugLogService?.info(
+        'Retained channel $index frame on disk until channel information arrives',
+        tag: 'Channel inbox',
+      );
+      if (revision == _channelInboxRevision && nodeKey == selfPublicKeyHex) {
+        if (_pendingChannelBinding(index) != null) {
+          await _replayDeferredChannelFrames();
+        } else {
+          unawaited(_requestMissingChannelBinding(index, revision, nodeKey));
+        }
+      }
+      return;
+    }
+    try {
+      if (!isCurrent()) {
+        throw StateError('Channel receive context changed');
+      }
+      await process(frame, null, isCurrent);
+    } catch (_) {
+      // A failed history write must retain this already received frame too.
+      await _deferredChannelInbox.defer(
+        nodeKey: nodeKey, channelIndex: index, frame: frame,
+        receivedAt: receivedAt, binding: binding,
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> _requestMissingChannelBinding(int index, int revision, String nodeKey) async {
+    if (!isConnected || _disposed || _isSyncingChannels ||
+        revision != _channelInboxRevision || selfPublicKeyHex != nodeKey ||
+        !_pendingChannelBindingRequests.add(index)) {
+      return;
+    }
+    try {
+      await sendFrame(buildGetChannelFrame(index));
+    } catch (error) {
+      _appDebugLogService?.warn('Cannot request retained channel $index: $error', tag: 'Channel inbox');
+    }
+  }
+
+  Future<void> _replayDeferredChannelFrames() => _packetBackgroundWork.replay(() async {
+    if (!MessageHistoryStorage.instance.hasDatabase && !kIsWeb) {
+      return;
+    }
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    if (nodeKey.isEmpty || _disposed) {
+      return;
+    }
+    bool isCurrent() => !_disposed && revision == _channelInboxRevision && selfPublicKeyHex == nodeKey;
+    try {
+      await _deferredChannelInbox.replay(
+        nodeKey: nodeKey,
+        isCurrent: isCurrent,
+        bindingFor: _pendingChannelBinding,
+        process: (pending, canApply) async {
+          if (pending.frame.first == respCodeChannelDataRecv) {
+            await _processIncomingChannelData(
+              pending.frame, retainedReceivedAt: pending.receivedAt, canApply: canApply,
+            );
+          } else {
+            await _processIncomingChannelMessage(
+              pending.frame, retainedReceivedAt: pending.receivedAt, canApply: canApply,
+            );
+          }
+        },
+      );
+      if (isCurrent() && !_isSyncingChannels &&
+          _deferredChannelInbox.mayHavePendingFrames(nodeKey)) {
+        for (final pending in await MessageHistoryStorage.instance.readPendingChannelFrames(nodeKey)) {
+          if (!isCurrent()) {
+            return;
+          }
+          if (_pendingChannelBinding(pending.channelIndex) == null) {
+            await _requestMissingChannelBinding(pending.channelIndex, revision, nodeKey);
+          }
+        }
+      }
+    } catch (error, stackTrace) {
+      _appDebugLogService?.error(
+        'Retained channel frames remain on disk: $error\n$stackTrace', tag: 'Channel inbox',
+      );
+    }
+  });
+
   Future<void> _handleIncomingChannelMessage(
     Uint8List frame, {
     String? localSourceLabel,
@@ -15532,9 +15676,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _processPotentialQueuedMessage(
       localSourceLabel: localSourceLabel,
       frameType: 'channel message',
-      process: () => _processIncomingChannelMessage(
+      process: () => _processChannelFrameWithInbox(
         frame,
         localSourceLabel: localSourceLabel,
+        process: (data, receivedAt, canApply) => _processIncomingChannelMessage(
+          data,
+          localSourceLabel: localSourceLabel,
+          retainedReceivedAt: receivedAt,
+          canApply: canApply,
+        ),
       ),
     );
   }
@@ -15542,14 +15692,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _processIncomingChannelMessage(
     Uint8List frame, {
     String? localSourceLabel,
+    DateTime? retainedReceivedAt,
+    bool Function()? canApply,
   }) async {
-    final parsed = ChannelMessage.fromFrame(
+    final decodedFrame = ChannelMessage.fromFrame(
       frame,
       includeSenderNameInCompressionRatio:
           _appSettingsService?.settings.compressionRatioWithSenderName == true,
       isOutgoing: localSourceLabel != null,
       sourceLabel: localSourceLabel,
     );
+    if (retainedReceivedAt != null && decodedFrame == null) {
+      throw const FormatException('Retained channel text frame cannot be decoded');
+    }
+    final parsed = retainedReceivedAt == null
+        ? decodedFrame
+        : decodedFrame?.copyWith(receivedAt: retainedReceivedAt);
     if (parsed != null && parsed.channelIndex != null) {
       _lastChannelMsgRxTime = parsed.receivedAt;
       final channelIndex = parsed.channelIndex!;
@@ -15574,6 +15732,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             pathHashWidth: parsed.pathHashWidth,
             snr: parsed.snr,
             sourceLabel: localSourceLabel,
+            canApply: canApply,
           )) {
         return;
       }
@@ -15586,7 +15745,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         packetHash: contentHash,
         // The packet timestamp remains sender metadata. Timeline position is
         // always based on this app's first receipt of the message.
-        receivedAt: _channelMessageReceivedAt(parsed.receivedAt),
+        receivedAt: retainedReceivedAt ?? _channelMessageReceivedAt(parsed.receivedAt),
       );
       final textReplyReference = _resolveChannelReplyAnchor(
         parsed.channelIndex!,
@@ -15601,6 +15760,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         );
       }
       message = await _verifyInboundChannelMessage(message);
+      if (canApply?.call() == false) {
+        throw StateError('Channel receive context changed');
+      }
       _updateContactLastMessageAtByName(
         message.senderName,
         message.receivedAt,
@@ -15615,6 +15777,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         message.channelIndex!,
         message,
         heardKey: heardKey,
+        canApply: canApply,
       );
       _maybeIncrementChannelUnread(message, isNew: isNew);
       notifyListeners();
@@ -15638,9 +15801,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _processPotentialQueuedMessage(
       localSourceLabel: localSourceLabel,
       frameType: 'channel data',
-      process: () => _processIncomingChannelData(
+      process: () => _processChannelFrameWithInbox(
         frame,
         localSourceLabel: localSourceLabel,
+        process: (data, receivedAt, canApply) => _processIncomingChannelData(
+          data,
+          localSourceLabel: localSourceLabel,
+          retainedReceivedAt: receivedAt,
+          canApply: canApply,
+        ),
       ),
     );
   }
@@ -15648,6 +15817,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _processIncomingChannelData(
     Uint8List frame, {
     String? localSourceLabel,
+    DateTime? retainedReceivedAt,
+    bool Function()? canApply,
   }) async {
 
     // AEIC and MCOimg both use GRP_DATA but have distinct content types. Give
@@ -15664,7 +15835,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     final dataFrame = parseChannelDataReceivedFrame(frame);
-    if (dataFrame == null) return;
+    if (dataFrame == null) {
+      if (retainedReceivedAt != null) {
+        throw const FormatException('Retained channel data frame cannot be decoded');
+      }
+      return;
+    }
 
     final contentHash = _computeChannelDataHash(
       dataFrame.channelIndex,
@@ -15683,6 +15859,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           pathHashWidth: dataFrame.pathHashWidth,
           snr: dataFrame.snr,
           sourceLabel: localSourceLabel,
+          canApply: canApply,
         )) {
       return;
     }
@@ -15708,6 +15885,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           dataFrame,
           localSourceLabel: localSourceLabel,
           heardKey: heardKey,
+          retainedReceivedAt: retainedReceivedAt,
+          canApply: canApply,
         );
       } else if (heardKey != null) {
         _heardChannelPackets.abandon(heardKey);
@@ -15719,7 +15898,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final channelName = _channelDisplayName(dataFrame.channelIndex);
     final senderName = decoded?.senderName ?? appData!.senderName;
 
-    final receivedAt = DateTime.now();
+    final receivedAt = retainedReceivedAt ?? DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
     final compression = decoded != null
         ? _incomingBinaryCompression(decoded)
@@ -15738,7 +15917,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : DateTime.fromMillisecondsSinceEpoch(
             (mcmpMessage?.timestamp ?? mcotxtMessage!.timestamp) * 1000,
           );
-    final storedReceivedAt = _channelMessageReceivedAt(receivedAt);
+    final storedReceivedAt = retainedReceivedAt ?? _channelMessageReceivedAt(receivedAt);
     var message = ChannelMessage(
       senderName: senderName,
       text: messageText,
@@ -15778,6 +15957,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       sourceLabel: localSourceLabel,
     );
     message = await _verifyInboundChannelMessage(message);
+    if (canApply?.call() == false) {
+      throw StateError('Channel receive context changed');
+    }
 
     _updateContactLastMessageAtByName(
       message.senderName,
@@ -15792,6 +15974,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       dataFrame.channelIndex,
       message,
       heardKey: heardKey,
+      canApply: canApply,
     );
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
@@ -15823,8 +16006,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ChannelDataReceivedFrame dataFrame, {
     String? localSourceLabel,
     String? heardKey,
+    DateTime? retainedReceivedAt,
+    bool Function()? canApply,
   }) async {
-    final receivedAt = DateTime.now();
+    final receivedAt = retainedReceivedAt ?? DateTime.now();
     _lastChannelMsgRxTime = receivedAt;
     final message = ChannelMessage(
       senderName: unknown.senderName ?? 'Unknown',
@@ -15833,7 +16018,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       binaryPacketBytes: dataFrame.payload.length,
       rawPayload: dataFrame.payload,
       timestamp: receivedAt,
-      receivedAt: _channelMessageReceivedAt(receivedAt),
+      receivedAt: retainedReceivedAt ?? _channelMessageReceivedAt(receivedAt),
       isOutgoing: localSourceLabel != null,
       status: ChannelMessageStatus.sent,
       pathLength: dataFrame.pathLength,
@@ -15856,6 +16041,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       dataFrame.channelIndex,
       message,
       heardKey: heardKey,
+      canApply: canApply,
     );
     _maybeIncrementChannelUnread(message, isNew: isNew);
     notifyListeners();
@@ -15916,6 +16102,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool packetRegionInfoAvailable = false,
     bool packetRegionNotMatched = false,
     String? sourceLabel,
+    bool Function()? canApply,
   }) async {
     final claimed = _heardChannelPackets.claim(key);
     if (claimed == null) return false;
@@ -15955,13 +16142,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           packetHash: existing.packetHash,
           sourceLabel: sourceLabel,
         );
+        if (canApply?.call() == false) {
+          throw StateError('Channel receive context changed');
+        }
         final merged = _mergeChannelRepeat(messages, index, copy);
         _wakeChannelHopCheck(existing.messageId);
         if (merged.receivedAt != existing.receivedAt) {
           messages.sort(_compareChannelMessages);
         }
         heardChannelCopiesMerged++;
-        await _channelMessageStore.saveChannelMessage(channelIndex, merged);
+        await _channelMessageStore.saveChannelMessage(
+          channelIndex, merged, requireBinding: canApply != null,
+        );
         notifyListeners();
         return true;
     }
@@ -17370,7 +17562,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _handleChannelInfo(Uint8List frame) =>
-      _channelSyncWork.run(() => _handleChannelInfoCore(frame));
+      _channelSyncWork.run(() async {
+        final revision = _channelInboxRevision;
+        final nodeKey = selfPublicKeyHex;
+        await _handleChannelInfoCore(frame);
+        if (revision == _channelInboxRevision && nodeKey == selfPublicKeyHex) {
+          await _replayDeferredChannelFrames();
+        }
+      });
 
   Future<void> _handleChannelInfoCore(Uint8List frame) async {
     final channel = Channel.fromFrame(frame);
@@ -18140,12 +18339,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ChannelMessage message, {
     bool awaitPersistence = true,
     String? heardKey,
+    bool Function()? canApply,
   }) async {
     if (heardKey == null) {
       return _storeChannelMessage(
         channelIndex,
         message,
         awaitPersistence: awaitPersistence,
+        canApply: canApply,
       );
     }
     final claim = HeardChannelClaim(_heardChannelPackets, heardKey);
@@ -18154,6 +18355,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         channelIndex,
         message,
         awaitPersistence: awaitPersistence,
+        canApply: canApply,
         claim: claim,
       );
     } finally {
@@ -18166,7 +18368,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ChannelMessage message, {
     bool awaitPersistence = true,
     HeardChannelClaim? claim,
+    bool Function()? canApply,
   }) async {
+    if (canApply?.call() == false) {
+      throw StateError('Channel receive context changed');
+    }
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 
@@ -18205,7 +18411,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         await _channelMessageStore.saveChannelMessage(
           channelIndex,
           changedMessage,
+          requireBinding: canApply != null,
         );
+        if (canApply?.call() == false) {
+          throw StateError('Channel receive context changed');
+        }
 
         // Mark as processed
         _processedChannelReactions[channelIndex]!.add(reactionIdentifier);
@@ -18406,9 +18616,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // must not wait behind an unrelated history-write backlog: its in-memory
     // state is already complete, so persist it in the background and let the
     // send path continue.
+    if (canApply?.call() == false) {
+      throw StateError('Channel receive context changed');
+    }
     final persistence = _channelMessageStore.saveChannelMessage(
       channelIndex,
       storedMessage,
+      requireBinding: canApply != null,
     );
     if (awaitPersistence) {
       await persistence;

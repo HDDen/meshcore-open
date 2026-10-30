@@ -11,6 +11,7 @@ import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
 import '../models/companion_cli_entry.dart';
 import '../models/repeater_cli_entry.dart';
+import '../models/pending_channel_frame.dart';
 
 part 'message_history_database.g.dart';
 
@@ -486,7 +487,69 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureChannelIdentitiesTable();
     await _ensureContactIdentitiesTable();
     await _ensureCliHistoryTables();
+    await _ensurePendingChannelFramesTable();
   }
+
+  // Auxiliary table: no history rewrite, schema version change or generator.
+  Future<void> _ensurePendingChannelFramesTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS pending_channel_frames (
+  node_key TEXT NOT NULL,
+  frame_id TEXT NOT NULL,
+  channel_index INTEGER NOT NULL,
+  frame BLOB NOT NULL,
+  received_at_ms INTEGER NOT NULL,
+  channel_name TEXT,
+  channel_key TEXT,
+  PRIMARY KEY (node_key, frame_id)
+)
+''');
+  }
+
+  Future<void> putPendingChannelFrame(PendingChannelFrame frame) async {
+    await customStatement(
+      'INSERT INTO pending_channel_frames '
+      '(node_key, frame_id, channel_index, frame, received_at_ms, channel_name, channel_key) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?) '
+      'ON CONFLICT(node_key, frame_id) DO UPDATE SET '
+      'channel_name = excluded.channel_name, channel_key = excluded.channel_key',
+      [
+        frame.nodeKey,
+        frame.id,
+        frame.channelIndex,
+        frame.frame,
+        frame.receivedAt.millisecondsSinceEpoch,
+        frame.channelName,
+        frame.channelKey,
+      ],
+    );
+  }
+
+  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) async {
+    final rows = await customSelect(
+      'SELECT * FROM pending_channel_frames WHERE node_key = ? '
+      'ORDER BY received_at_ms, rowid',
+      variables: [Variable<String>(nodeKey)],
+    ).get();
+    return [
+      for (final row in rows)
+        PendingChannelFrame(
+          id: row.read<String>('frame_id'),
+          nodeKey: row.read<String>('node_key'),
+          channelIndex: row.read<int>('channel_index'),
+          frame: row.read<Uint8List>('frame'),
+          receivedAt: DateTime.fromMillisecondsSinceEpoch(row.read<int>('received_at_ms')),
+          channelName: row.readNullable<String>('channel_name'),
+          channelKey: row.readNullable<String>('channel_key'),
+        ),
+    ];
+  }
+
+  Future<void> removePendingChannelFrame(String nodeKey, String id) =>
+      customStatement(
+        'DELETE FROM pending_channel_frames WHERE node_key = ? AND frame_id = ?',
+        [nodeKey, id],
+      );
 
   Future<void> _ensureCliHistoryTables() async {
     await customStatement('''

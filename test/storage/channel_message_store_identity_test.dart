@@ -208,4 +208,21 @@ Future<void> main() async {
       0,
     );
   }, skip: skip);
+  test('strict channel writes cannot succeed without a channel name', () async {
+    store.replaceChannels(const []);
+    await expectLater(
+      store.saveChannelMessage(2, _message('pending', 1), requireBinding: true),
+      throwsStateError,
+    );
+  }, skip: skip);
+
+  test('strict channel writes cannot succeed without a node scope', () async {
+    final unscoped = ChannelMessageStore();
+    unscoped.registerChannel(_channel(2, 'Test'));
+    await expectLater(
+      unscoped.saveChannelMessage(2, _message('pending', 1), requireBinding: true),
+      throwsStateError,
+    );
+  }, skip: skip);
+
 }

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/contact_option_storage.dart';
+import '../helpers/deferred_channel_inbox.dart';
+import '../models/pending_channel_frame.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
 import '../models/wardrive_sample.dart';
@@ -17,7 +19,7 @@ import 'prefs_manager.dart';
 
 enum MessageHistoryKind { direct, channel }
 
-class MessageHistoryStorage {
+class MessageHistoryStorage implements PendingChannelFrameRepository {
   MessageHistoryStorage._();
 
   static final MessageHistoryStorage instance = MessageHistoryStorage._();
@@ -63,6 +65,71 @@ class MessageHistoryStorage {
         ),
       );
   bool _initialized = false;
+
+  static const _pendingChannelPrefix = 'pending_channel_frame_';
+
+  @override
+  Future<void> putPendingChannelFrame(PendingChannelFrame frame) =>
+      _persistenceWork.run(() async {
+        _requireInitialized();
+        if (!kIsWeb) {
+          await _database!.putPendingChannelFrame(frame);
+          return;
+        }
+        final saved = await PrefsManager.instance.setString(
+          '$_pendingChannelPrefix${frame.nodeKey}_${frame.id}',
+          jsonEncode({
+            'id': frame.id,
+            'nodeKey': frame.nodeKey,
+            'channelIndex': frame.channelIndex,
+            'frame': base64Encode(frame.frame),
+            'receivedAtMs': frame.receivedAt.millisecondsSinceEpoch,
+            'channelName': frame.channelName,
+            'channelKey': frame.channelKey,
+          }),
+        );
+        if (!saved) {
+          throw StateError('Could not retain a pending channel frame');
+        }
+      });
+
+  @override
+  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) async {
+    _requireInitialized();
+    if (!kIsWeb) {
+      return _database!.readPendingChannelFrames(nodeKey);
+    }
+    final prefs = PrefsManager.instance;
+    final prefix = '$_pendingChannelPrefix${nodeKey}_';
+    final frames = <PendingChannelFrame>[];
+    for (final key in prefs.getKeys().where((key) => key.startsWith(prefix))) {
+      final value = jsonDecode(prefs.getString(key)!) as Map<String, dynamic>;
+      frames.add(PendingChannelFrame(
+        id: value['id'] as String,
+        nodeKey: value['nodeKey'] as String,
+        channelIndex: value['channelIndex'] as int,
+        frame: base64Decode(value['frame'] as String),
+        receivedAt: DateTime.fromMillisecondsSinceEpoch(value['receivedAtMs'] as int),
+        channelName: value['channelName'] as String?,
+        channelKey: value['channelKey'] as String?,
+      ));
+    }
+    frames.sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
+    return frames;
+  }
+
+  @override
+  Future<void> removePendingChannelFrame(String nodeKey, String id) =>
+      _persistenceWork.run(() async {
+        _requireInitialized();
+        if (!kIsWeb) {
+          await _database!.removePendingChannelFrame(nodeKey, id);
+          return;
+        }
+        if (!await PrefsManager.instance.remove('$_pendingChannelPrefix${nodeKey}_$id')) {
+          throw StateError('Could not acknowledge a pending channel frame');
+        }
+      });
 
   Future<bool> initializeAndMigrate({
     Future<void> Function()? onMigrationStarted,

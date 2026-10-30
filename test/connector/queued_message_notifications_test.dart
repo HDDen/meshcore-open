@@ -11,10 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/mcoimg_codec.dart';
+import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
+import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
+import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
@@ -233,6 +236,7 @@ class _QueueConnector extends MeshCoreConnector {
   /// history is stored at that moment.
   int Function()? countStored;
   final List<int> storedAtSyncNext = [];
+  Future<void> Function()? beforeQueueRequest;
 
   @override
   bool get isConnected => true;
@@ -246,6 +250,7 @@ class _QueueConnector extends MeshCoreConnector {
   }) async {
     sent.add(Uint8List.fromList(data));
     if (data.isNotEmpty && data[0] == cmdSyncNextMessage) {
+      await beforeQueueRequest?.call();
       storedAtSyncNext.add(countStored?.call() ?? -1);
     }
   }
@@ -313,6 +318,7 @@ Future<void> main() async {
   final tempDir = Directory.systemTemp.createTempSync('mco_queue_notify_');
   final plugin = _NotificationPlugin();
   final aliceKey = _key(2);
+  late MessageHistoryDatabase historyDatabase;
 
   setUpAll(() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -336,7 +342,7 @@ Future<void> main() async {
     await PrefsManager.initialize();
     await MessageHistoryStorage.instance.resetForTesting();
     await MessageHistoryStorage.instance.initializeAndMigrate(
-      databaseFactory: () =>
+      databaseFactory: () => historyDatabase =
           MessageHistoryDatabase.withExecutor(NativeDatabase.memory()),
     );
     NotificationService().resetForTest();
@@ -353,6 +359,136 @@ Future<void> main() async {
   });
 
   group('the node\'s queue', () {
+    Future<void> waitForInboxEmpty(String nodeKey) async {
+      final deadline = DateTime.now().add(const Duration(seconds: 5));
+      while ((await MessageHistoryStorage.instance.readPendingChannelFrames(nodeKey)).isNotEmpty) {
+        if (DateTime.now().isAfter(deadline)) {
+          fail('retained channel inbox did not finish');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    }
+
+    test('a failed inbox commit stops the destructive queue', () async {
+      final harness = await _Harness.start(notifications: false);
+      final connector = harness.connector;
+      addTearDown(connector.dispose);
+      await historyDatabase.customStatement(
+        "CREATE TRIGGER reject_pending BEFORE INSERT ON pending_channel_frames "
+        "BEGIN SELECT RAISE(ABORT, 'synthetic inbox failure'); END",
+      );
+      await connector.syncQueuedMessages();
+      expect(connector.syncRequests, 1);
+      connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: 2, timestampSeconds: _timestamp,
+        senderName: 'Alice', text: 'cannot retain',
+      ));
+      await _waitFor(() => !connector.isSyncingQueuedMessages, 'the failed queue to stop');
+      expect(connector.syncRequests, 1);
+      expect(await MessageHistoryStorage.instance.readPendingChannelFrames(connector.selfPublicKeyHex), isEmpty);
+    });
+
+    for (final format in ['legacy text', 'binary MCOtxt']) {
+      test('$format is retained and replayed through its original parser', () async {
+        final harness = await _Harness.start(notifications: false);
+        final connector = harness.connector;
+        addTearDown(connector.dispose);
+        final Uint8List frame;
+        if (format == 'legacy text') {
+          final time = ByteData(4)..setUint32(0, _timestamp, Endian.little);
+          frame = Uint8List.fromList([
+            respCodeChannelMsgRecv, 2, 0xFF, txtTypePlain,
+            ...time.buffer.asUint8List(), ...utf8.encode('Alice: retained text'), 0,
+          ]);
+        } else {
+          final body = MCOtxtAppCodec.encodeBody(text: 'retained text', timestamp: _timestamp);
+          final payload = ChannelAppDataHelper.encodeEnvelope(
+            senderName: 'Alice', subtypeId: MCOtxtAppCodec.subtypeId,
+            version: MCOtxtAppCodec.wireVersion, body: body,
+          );
+          final type = ChannelAppDataHelper.appDataType;
+          frame = Uint8List.fromList([
+            respCodeChannelDataRecv, 32, 0, 0, 2, 0xFF,
+            type & 0xFF, type >> 8, payload.length, ...payload,
+          ]);
+        }
+        await connector.syncQueuedMessages();
+        connector.handleFrameForTest(frame);
+        await _waitFor(() => connector.syncRequests == 2, 'the next request');
+        connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+        expect(await MessageHistoryStorage.instance.readPendingChannelFrames(connector.selfPublicKeyHex), hasLength(1));
+        await harness.addChannel(2, 'Recovered', _psk(1));
+        await waitForInboxEmpty(connector.selfPublicKeyHex);
+        final channel = connector.channels.singleWhere((channel) => channel.index == 2);
+        expect(connector.getLoadedChannelMessages(channel).single.text, 'retained text');
+      });
+    }
+
+    test('unknown channel is on disk before the next destructive request and replays once', () async {
+      final harness = await _Harness.start(notifications: false);
+      final connector = harness.connector;
+      addTearDown(connector.dispose);
+      final scope = connector.selfPublicKeyHex;
+      final pendingAtRequest = <int>[];
+      connector.beforeQueueRequest = () async {
+        pendingAtRequest.add(
+          (await MessageHistoryStorage.instance.readPendingChannelFrames(scope)).length,
+        );
+      };
+      await connector.syncQueuedMessages();
+      final frame = _channelMessageFrame(
+        channelIndex: 2, timestampSeconds: _timestamp,
+        senderName: 'Alice', text: 'retained text',
+      );
+      connector.handleFrameForTest(frame);
+      await _waitFor(() => connector.syncRequests == 2, 'the next request after retention');
+      expect(pendingAtRequest, [0, 1]);
+      final retained = (await MessageHistoryStorage.instance.readPendingChannelFrames(scope)).single;
+      expect(retained.frame, orderedEquals(frame));
+      expect(connector.sent.where((frame) => frame.first == cmdGetChannel && frame[1] == 2), hasLength(1));
+      connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+
+      await harness.addChannel(2, 'Recovered', _psk(1));
+      await waitForInboxEmpty(scope);
+      final channel = connector.channels.singleWhere((channel) => channel.index == 2);
+      final loaded = connector.getLoadedChannelMessages(channel);
+      expect(loaded.single.text, 'retained text');
+      expect(loaded.single.receivedAt.millisecondsSinceEpoch, retained.receivedAt.millisecondsSinceEpoch);
+      final history = ChannelMessageStore()..setPublicKeyHex = scope;
+      history.registerChannel(channel);
+      expect((await history.loadChannelMessages(2)).single.text, 'retained text');
+
+      // Ordinary repeated delivery follows existing deduplication, not a second row.
+      connector.handleFrameForTest(frame);
+      await _settle();
+      expect(await history.loadChannelMessages(2), hasLength(1));
+      expect(plugin.shown, isEmpty);
+    });
+
+    test('a replacement connector recovers an unresolved channel from the same node', () async {
+      final first = await _Harness.start(notifications: false);
+      final scope = first.connector.selfPublicKeyHex;
+      try {
+        await first.connector.syncQueuedMessages();
+        first.connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 2, timestampSeconds: _timestamp,
+          senderName: 'Alice', text: 'survives reconnect',
+        ));
+        await _waitFor(() => first.connector.syncRequests == 2, 'the retained frame');
+        first.connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+        await _settle();
+      } finally {
+        first.connector.dispose();
+      }
+      final restored = await _Harness.start(notifications: false);
+      addTearDown(restored.connector.dispose);
+      expect(await MessageHistoryStorage.instance.readPendingChannelFrames(scope), hasLength(1));
+      await restored.addChannel(2, 'Recovered', _psk(1));
+      await waitForInboxEmpty(scope);
+      final channel = restored.connector.channels.singleWhere((channel) => channel.index == 2);
+      expect(restored.connector.getLoadedChannelMessages(channel).single.text, 'survives reconnect');
+    });
+
     test('a queued direct message is in the history before the next request '
         'goes out, and the end of the queue asks for nothing more', () async {
       final harness = await _Harness.start();
