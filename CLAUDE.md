@@ -3562,6 +3562,28 @@ published for GitHub ancestry comparison; missing metadata and an unknown remote
 commit are separate errors. Agent did not execute the generator or tests.
 
 
+### Set node coordinates from path maps (U06b1)
+
+`widgets/set_my_location_dialog.dart` owns the shared confirmation, one node
+write plus the existing refreshDeviceInfo flow, and SELF_INFO coordinate
+comparison (2e-6 tolerance). The confirmation wait remains six seconds after
+refresh returns, with local checks every 250 ms (previously 100 ms on the main
+map); these checks send no frames. No idle timer or new background work.
+The main map keeps its own overlay via onResult; path maps use a dismissible
+snackbar, with the error colour on failure. Both path maps bind long press and
+secondary tap on their existing MapOptions without replacing cameras/playback.
+
+Display priority is independent from writing node coordinates. MapLocationHelper
+reports a successful phone fix via its optional onPhoneLocation callback. Path
+maps cache only that phone fix, and otherwise read current node coordinates;
+they do not cache a stale node fallback or promote the selected point above
+the phone. SELF_INFO exposes one node position, not separate GPS/fixed fields.
+After a successful write the trace's display paths/fallback points/distance
+are rebuilt, and the channel map redraws its endpoint; neither retransmits a
+trace. Tests in map_screen_state_test cover the main-map baseline and both
+path maps/gestures with phone and node fallback. map_location_helper_test
+covers source selection and the disabled setting. The agent did not run tests.
+
 ### Routing-key prefix on contact cards (U06a2)
 
 `Contact.publicKeyPrefixHex(width)` formats the first 1-3 public-key bytes as

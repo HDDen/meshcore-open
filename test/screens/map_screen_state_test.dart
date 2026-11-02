@@ -13,6 +13,9 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/screens/channel_message_path_screen.dart';
+import 'package:meshcore_open/screens/path_trace_map.dart';
 import 'package:meshcore_open/screens/map_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
@@ -83,6 +86,91 @@ class _FakeConnector extends MeshCoreConnector {
   }
 }
 
+/// Controls only device replies; setNodeLocation still uses the real frame
+/// builder and the inherited sendFrame recorder.
+class _LocationConnector extends _FakeConnector {
+  bool connected = true;
+  bool failRefresh = false;
+  int refreshCount = 0;
+  LatLng? reportedPosition;
+
+  @override
+  bool get isConnected => connected;
+
+  @override
+  double? get selfLatitude => reportedPosition?.latitude;
+
+  @override
+  double? get selfLongitude => reportedPosition?.longitude;
+
+  void publishPosition(LatLng position) {
+    reportedPosition = position;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> refreshDeviceInfo() async {
+    refreshCount++;
+    if (failRefresh) {
+      throw StateError('Synthetic SELF_INFO request failure');
+    }
+  }
+}
+
+class _PathLocationConnector extends _LocationConnector {
+  final _frames = StreamController<Uint8List>.broadcast();
+  int positionRefreshCount = 0;
+
+  @override
+  Stream<Uint8List> get receivedFrames => _frames.stream;
+
+  @override
+  Future<({double latitude, double longitude})?> refreshSelfLocation({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    positionRefreshCount++;
+    final position = reportedPosition;
+    return position == null
+        ? null
+        : (latitude: position.latitude, longitude: position.longitude);
+  }
+
+  void completeTrace() {
+    final request = sentFrames.singleWhere((frame) => frame[0] == cmdSendTracePath);
+    // TRACE request: [cmd][tag x4][auth x4][flags][path]. The SENT
+    // response has a reserved byte before the tag; the request does not.
+    final tag = request.sublist(1, 5);
+    _frames.add(Uint8List.fromList([
+      respCodeSent, 0, ...tag, 0x88, 0x13, 0, 0,
+    ]));
+    _frames.add(Uint8List.fromList([
+      pushCodeTraceData, 0, 1, 0,
+      ...tag, 0, 0, 0, 0,
+      0x12, 12, 16,
+    ]));
+  }
+
+  @override
+  void dispose() {
+    unawaited(_frames.close());
+    super.dispose();
+  }
+}
+
+class _PhoneLocationWardrive extends WardriveService {
+  _PhoneLocationWardrive(super.connector, this.phonePosition);
+
+  final LatLng? phonePosition;
+
+  @override
+  Future<({double latitude, double longitude})?> requestPhoneLocation() async {
+    final position = phonePosition;
+    return position == null
+        ? null
+        : (latitude: position.latitude, longitude: position.longitude);
+  }
+}
+
 Contact _node(int seed, String name, double latitude, double longitude) =>
     Contact(
       publicKey: Uint8List.fromList(
@@ -148,17 +236,22 @@ class _Harness {
     WidgetTester tester, {
     required List<Contact> nodes,
     required double zoom,
+    _FakeConnector? connectorOverride,
+    Widget? screenOverride,
+    bool requestPhoneLocation = false,
+    WardriveService Function(MeshCoreConnector)? wardriveFactory,
   }) async {
     MapSessionZoom.remember(zoom);
-    final connector = _FakeConnector()..nodes.addAll(nodes);
+    final connector = connectorOverride ?? _FakeConnector();
+    connector.nodes.addAll(nodes);
     final settings = AppSettingsService();
     // The phone location request notifies the wardrive service from inside
     // the map's first build, which the test framework reports as an error;
     // the map centres on its nodes instead.
     await settings.updateSettings(
-      settings.settings.copyWith(alwaysRequestMapLocation: false),
+      settings.settings.copyWith(alwaysRequestMapLocation: requestPhoneLocation),
     );
-    final wardrive = WardriveService(connector);
+    final wardrive = wardriveFactory?.call(connector) ?? WardriveService(connector);
     final sections = SettingsSectionsService();
     final paths = PathHistoryService(StorageService());
     addTearDown(() {
@@ -187,7 +280,7 @@ class _Harness {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           navigatorObservers: [appRouteObserver],
-          home: const MapScreen(),
+          home: screenOverride ?? const MapScreen(),
         ),
       ),
     );
@@ -225,6 +318,234 @@ void main() {
       tempDir.deleteSync(recursive: true);
     } on FileSystemException {
       // A tile cache file may still be open; the directory is temporary.
+    }
+  });
+
+  group('U06b1 baseline: setting my location on the main map', () {
+    const position = LatLng(55.762345, 37.654321);
+
+    Future<AppLocalizations> openConfirmation(WidgetTester tester) async {
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(MapScreen)),
+      );
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+      expect(map.options.onLongPress, isNotNull);
+      // Exercise the current map callback with a deterministic coordinate;
+      // tile loading and camera projection are outside this baseline.
+      map.options.onLongPress!(
+        const TapPosition(Offset(200, 200), Offset(200, 200)),
+        position,
+      );
+      await _pumpFrames(tester);
+      await tester.tap(find.text(l10n.map_setAsMyLocation));
+      await _pumpFrames(tester);
+      expect(find.text(l10n.map_setLocationConfirmTitle), findsOneWidget);
+      expect(
+        find.text(l10n.map_setLocationConfirmBody('55.762345', '37.654321')),
+        findsOneWidget,
+      );
+      return l10n;
+    }
+
+    for (final scenario in ['cancel', 'confirmed', 'refresh error', 'disconnect']) {
+      testWidgets(scenario, (tester) async {
+        try {
+          final connector = _LocationConnector();
+          await _Harness.pump(
+            tester,
+            nodes: [_node(1, 'Synthetic location anchor', 55.75, 37.62)],
+            zoom: 15,
+            connectorOverride: connector,
+          );
+          final writesBefore = connector.sentFrames.length;
+          final refreshesBefore = connector.refreshCount;
+          final l10n = await openConfirmation(tester);
+          // Opening menus and the confirmation must never send coordinates.
+          expect(connector.sentFrames, hasLength(writesBefore));
+          expect(connector.refreshCount, refreshesBefore);
+
+          if (scenario == 'cancel') {
+            await tester.tap(find.widgetWithText(TextButton, l10n.common_cancel));
+            await _pumpFrames(tester);
+            expect(connector.sentFrames, hasLength(writesBefore));
+            expect(connector.refreshCount, refreshesBefore);
+          } else {
+            connector.connected = scenario != 'disconnect';
+            connector.failRefresh = scenario == 'refresh error';
+            await tester.tap(
+              find.widgetWithText(FilledButton, l10n.map_setLocationAction),
+            );
+            await tester.pump();
+
+            if (scenario == 'disconnect') {
+              await _pumpFrames(tester);
+              expect(connector.sentFrames, hasLength(writesBefore));
+              expect(connector.refreshCount, refreshesBefore);
+              expect(find.text(l10n.map_locationSetSuccess), findsNothing);
+            } else {
+              expect(
+                connector.sentFrames.skip(writesBefore).toList(),
+                [buildSetAdvertLatLonFrame(position.latitude, position.longitude)],
+              );
+              expect(connector.refreshCount, refreshesBefore + 1);
+
+              if (scenario == 'confirmed') {
+                // A successful write or unrelated SELF_INFO is insufficient.
+                expect(find.text(l10n.map_locationSetSuccess), findsNothing);
+                connector.publishPosition(const LatLng(55.70, 37.60));
+                await tester.pump(const Duration(milliseconds: 300));
+                expect(find.text(l10n.map_locationSetSuccess), findsNothing);
+                // Keep the existing micro-degree rounding tolerance.
+                connector.publishPosition(
+                  LatLng(
+                    position.latitude + 1e-6,
+                    position.longitude - 1e-6,
+                  ),
+                );
+                await _pumpFrames(tester);
+                expect(find.text(l10n.map_locationSetSuccess), findsOneWidget);
+                expect(find.text(l10n.map_locationSetFailed), findsNothing);
+                expect(connector.refreshCount, refreshesBefore + 1);
+              } else {
+                await _pumpFrames(tester);
+                final failure = find.text(l10n.map_locationSetFailed);
+                expect(failure, findsOneWidget);
+                expect(find.text(l10n.map_locationSetSuccess), findsNothing);
+                final surface = find.ancestor(
+                  of: failure,
+                  matching: find.byType(Material),
+                ).first;
+                expect(
+                  tester.widget<Material>(surface).color,
+                  Theme.of(tester.element(find.byType(MapScreen))).colorScheme.error,
+                );
+              }
+            }
+          }
+          expect(tester.takeException(), isNull);
+        } finally {
+          // Dispose the map before its services and its overlay timeout.
+          await _Harness.unmount(tester);
+        }
+      });
+    }
+  });
+
+  group('U06b1: path map location actions and phone-first display', () {
+    const nodePosition = LatLng(54.50, 36.50);
+    const phonePosition = LatLng(55.70, 37.60);
+    const selectedPosition = LatLng(55.762345, 37.654321);
+
+    for (final trace in [false, true]) {
+      for (final secondaryTap in [false, true]) {
+        for (final hasPhone in [false, true]) {
+          testWidgets(
+            '${trace ? 'trace' : 'channel'} map ${secondaryTap ? 'right click' : 'long press'}, phone=$hasPhone',
+            (tester) async {
+              try {
+                final connector = _PathLocationConnector()
+                  ..reportedPosition = nodePosition;
+                final path = Uint8List.fromList([0x12]);
+                final screen = trace
+                    ? PathTraceMapScreen(title: 'Synthetic trace', path: path)
+                    : ChannelMessagePathMapScreen(
+                        message: ChannelMessage(
+                          senderName: 'Synthetic sender',
+                          text: 'Synthetic path message',
+                          timestamp: DateTime.utc(2026),
+                          receivedAt: DateTime.utc(2026),
+                          isOutgoing: false,
+                          pathLength: 1,
+                          pathBytes: path,
+                          pathHashWidth: 1,
+                        ),
+                        channelMessage: true,
+                      );
+                await _Harness.pump(
+                  tester,
+                  nodes: [
+                    _node(0x12, 'Synthetic path hop', 55.75, 37.62)
+                        .copyWith(type: advTypeRepeater),
+                  ],
+                  zoom: 15,
+                  connectorOverride: connector,
+                  screenOverride: screen,
+                  requestPhoneLocation: true,
+                  wardriveFactory: (connector) => _PhoneLocationWardrive(
+                    connector,
+                    hasPhone ? phonePosition : null,
+                  ),
+                );
+                if (trace) {
+                  connector.completeTrace();
+                  await _pumpFrames(tester);
+                }
+                expect(
+                  find.byType(FlutterMap),
+                  findsOneWidget,
+                  reason: 'A matching trace reply must reveal the map before testing its actions',
+                );
+                final l10n = AppLocalizations.of(
+                  tester.element(find.byType(FlutterMap)),
+                );
+                expect(
+                  _markerPoints(tester),
+                  contains(hasPhone ? phonePosition : nodePosition),
+                );
+                final writesBefore = connector.sentFrames.length;
+                final positionRefreshes = connector.positionRefreshCount;
+
+                Future<void> openConfirmation() async {
+                  final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+                  final callback = secondaryTap
+                      ? map.options.onSecondaryTap
+                      : map.options.onLongPress;
+                  expect(callback, isNotNull);
+                  callback!(
+                    const TapPosition(Offset(200, 200), Offset(200, 200)),
+                    selectedPosition,
+                  );
+                  await _pumpFrames(tester);
+                  expect(find.text(l10n.map_setLocationConfirmTitle), findsOneWidget);
+                  expect(connector.sentFrames, hasLength(writesBefore));
+                }
+
+                await openConfirmation();
+                await tester.tap(find.widgetWithText(TextButton, l10n.common_cancel));
+                await _pumpFrames(tester);
+                expect(connector.sentFrames, hasLength(writesBefore));
+
+                await openConfirmation();
+                await tester.tap(
+                  find.widgetWithText(FilledButton, l10n.map_setLocationAction),
+                );
+                await tester.pump();
+                expect(find.text(l10n.map_locationSetSuccess), findsNothing);
+                connector.publishPosition(selectedPosition);
+                await _pumpFrames(tester);
+                expect(find.text(l10n.map_locationSetSuccess), findsOneWidget);
+                expect(
+                  connector.sentFrames.skip(writesBefore).toList(),
+                  [buildSetAdvertLatLonFrame(
+                    selectedPosition.latitude,
+                    selectedPosition.longitude,
+                  )],
+                );
+                // No extra location reads or trace requests after setting it.
+                expect(connector.positionRefreshCount, positionRefreshes);
+                expect(
+                  _markerPoints(tester),
+                  contains(hasPhone ? phonePosition : selectedPosition),
+                );
+                expect(_markerPoints(tester), isNot(contains(nodePosition)));
+                expect(tester.takeException(), isNull);
+              } finally {
+                await _Harness.unmount(tester);
+              }
+            },
+          );
+        }
+      }
     }
   });
 

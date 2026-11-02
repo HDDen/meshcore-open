@@ -41,7 +41,6 @@ import '../storage/contact_location_estimate_store.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
-import '../utils/app_logger.dart';
 import '../utils/disconnect_navigation_mixin.dart';
 import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';
@@ -76,6 +75,7 @@ import '../widgets/node_memory_prompt.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/repeater_options_sheet.dart';
 import '../widgets/room_login_dialog.dart';
+import '../widgets/set_my_location_dialog.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 import 'line_of_sight_map_screen.dart';
@@ -6675,70 +6675,23 @@ class _MapScreenState extends State<MapScreen>
     _showMapSnackBar(content: Text(context.l10n.map_markersRestored(count)));
   }
 
-  /// Asks before the node's advertised position changes, then waits for the
-  /// SELF_INFO that confirms it: the firmware stores micro-degrees, so the
-  /// comparison allows that rounding.
+  /// Keep the map's overlay feedback above its floating controls.
   Future<void> _confirmAndSetMyLocation(
     MeshCoreConnector connector,
     LatLng position,
   ) async {
-    if (!connector.isConnected) return;
-    final l10n = context.l10n;
-    final latText = position.latitude.toStringAsFixed(6);
-    final lonText = position.longitude.toStringAsFixed(6);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.map_setLocationConfirmTitle),
-        content: Text(l10n.map_setLocationConfirmBody(latText, lonText)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.map_setLocationAction),
-          ),
-        ],
+    await confirmAndSetMyLocation(
+      context,
+      connector,
+      position,
+      onResult: (ok) => _showMapSnackBar(
+        content: Text(
+          ok
+              ? context.l10n.map_locationSetSuccess
+              : context.l10n.map_locationSetFailed,
+        ),
+        backgroundColor: ok ? null : Theme.of(context).colorScheme.error,
       ),
-    );
-    if (confirmed != true || !mounted || !connector.isConnected) return;
-    bool matches() {
-      final lat = connector.selfLatitude;
-      final lon = connector.selfLongitude;
-      return lat != null &&
-          lon != null &&
-          (lat - position.latitude).abs() < 2e-6 &&
-          (lon - position.longitude).abs() < 2e-6;
-    }
-
-    var ok = false;
-    try {
-      await connector.setNodeLocation(
-        lat: position.latitude,
-        lon: position.longitude,
-      );
-      await connector.refreshDeviceInfo();
-      // SELF_INFO arrives on its own after the query; wait for it.
-      final deadline = DateTime.now().add(const Duration(seconds: 6));
-      while (mounted && connector.isConnected) {
-        if (matches()) {
-          ok = true;
-          break;
-        }
-        if (DateTime.now().isAfter(deadline)) break;
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-      }
-    } catch (e) {
-      appLogger.warn('Setting the node location failed: $e', tag: 'Map');
-    }
-    if (!mounted) return;
-    _showMapSnackBar(
-      content: Text(
-        ok ? l10n.map_locationSetSuccess : l10n.map_locationSetFailed,
-      ),
-      backgroundColor: ok ? null : Theme.of(context).colorScheme.error,
     );
   }
 

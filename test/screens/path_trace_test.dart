@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -150,8 +151,8 @@ void main() {
     final sentFrame = connector.sentFrames.first;
     expect(sentFrame[0], cmdSendTracePath);
 
-    // Extract the tag sent in the request (bytes 2-5)
-    final tag = sentFrame.sublist(2, 6);
+    // Extract the tag sent in the request (bytes 1-4; byte 0 is the command)
+    final tag = sentFrame.sublist(1, 5);
 
     // Emit respCodeSent (6)
     final respCodeSentFrame = Uint8List(10);
@@ -195,6 +196,7 @@ void main() {
 
     // Verify it doesn't show "Path trace not available" or similar
     expect(find.text('Path trace not available.'), findsNothing);
+    expect(find.byType(FlutterMap), findsOneWidget);
   });
 
   testWidgets(
@@ -218,8 +220,8 @@ void main() {
       final sentFrame = connector.sentFrames.first;
       expect(sentFrame[0], cmdSendTracePath);
 
-      // Extract the tag sent in the request (bytes 2-5)
-      final tag = sentFrame.sublist(2, 6);
+      // Extract the tag sent in the request (bytes 1-4; byte 0 is the command)
+      final tag = sentFrame.sublist(1, 5);
 
       // Emit respCodeSent (6)
       final respCodeSentFrame = Uint8List(10);
@@ -260,6 +262,7 @@ void main() {
 
       // Verify it parsed correctly (should not show the unavailable message)
       expect(find.text('Path trace not available.'), findsNothing);
+      expect(find.byType(FlutterMap), findsOneWidget);
     },
   );
 
@@ -410,8 +413,8 @@ void main() {
 
     expect(connector.sentFrames.length, 1);
     final sentFrame = connector.sentFrames.first;
-    // Extract the tag sent in the request (bytes 2-5)
-    final tag = sentFrame.sublist(2, 6);
+    // Extract the tag sent in the request (bytes 1-4; byte 0 is the command)
+    final tag = sentFrame.sublist(1, 5);
 
     // Emit respCodeSent (6)
     final respCodeSentFrame = Uint8List(10);
@@ -446,5 +449,6 @@ void main() {
 
     // Verify it parsed correctly (should not show the unavailable message)
     expect(find.text('Path trace not available.'), findsNothing);
+    expect(find.byType(FlutterMap), findsOneWidget);
   });
 }

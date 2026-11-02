@@ -13,7 +13,12 @@ The Map feature is a full-featured node-location visualization and radio-plannin
 ## What the Map Displays
 
 ### Self Location (Teal Circle)
-Your own node's position, obtained from the device firmware. Displayed as a teal `person_pin_circle` icon. Only appears if the device has GPS data or a manually-set location.
+With phone-location requests enabled, an available phone fix takes priority
+for map display. Otherwise the app uses the node's reported position: its GPS
+or fixed coordinates, as selected by the firmware. SELF_INFO carries one node
+coordinate pair, without separate GPS/fixed source fields. Setting coordinates
+from a map writes to the node; it never changes the phone's location or gives
+the chosen point priority over an available phone fix.
 
 ### Contact / Node Markers (Color-Coded)
 All contacts with known GPS coordinates are plotted:
@@ -91,7 +96,7 @@ Opens a dialog showing: type, path (hop chain), coordinates, last-seen time, and
 ### Long-Press on Empty Map Area
 Shows a bottom sheet with:
 - **Share marker here**: Prompts for a label (default: "Point of interest"), then pick a DM contact or channel to send the location to. Wire format: `m:<lat>,<lon>|<label>|poi`; a `|` in the label is replaced with `/` and line breaks with spaces. The label field shows a live byte counter so the whole pin fits in one message, and a hint that reusing a previous label updates that marker for MeshCore Open recipients. To share your radio's own position, use **Share my location** from the ⊕ menu in chat (see [Chat & Messaging](chat-and-messaging.md#input-bar))
-- **Set as my location**: Updates your device's advertised location
+- **Set as my location**: Opens a confirmation showing the selected coordinates. Only after confirmation does the app update the node's advertised location; success requires the node to report matching coordinates.
 
 ### Filter Dialog (FAB)
 Toggle visibility of: chat nodes, repeaters, other nodes, guessed locations, discovery contacts, overlapping markers (stacked markers at similar coordinates), and shared map pins (flag markers).
@@ -115,6 +120,18 @@ automatically after four seconds. Informational notifications use the regular
 surface colour, while failed or unavailable actions retain the error colour.
 
 ---
+
+### Setting Node Coordinates from a Path Map
+
+On the channel-message path map or path-trace map, long-press (phone) or
+right-click (desktop) a point to open the coordinate confirmation directly.
+Cancel sends nothing. After confirmation the app writes to the connected node,
+refreshes its information, and waits up to six seconds after that refresh
+returns for matching coordinates. Failure uses the error notification colour.
+
+The path's self endpoint follows the normal source priority after the write:
+an available phone fix remains first; without it, the updated node position
+is used. This action does not request another trace or start GPS tracking.
 
 ## Path Trace Map
 

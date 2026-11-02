@@ -33,6 +33,7 @@ import '../theme/mesh_theme.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/path_map_ui.dart';
+import '../widgets/set_my_location_dialog.dart';
 
 class ChannelMessagePathScreen extends StatelessWidget {
   final ChannelMessage message;
@@ -1036,7 +1037,7 @@ class _ChannelMessagePathMapScreenState
   bool _didReceivePositionUpdate = false;
   int? _focusedHopIndex;
   late final Future<LatLng?> _preferredSelfPositionFuture;
-  LatLng? _preferredSelfPosition;
+  LatLng? _preferredPhonePosition;
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -1062,18 +1063,31 @@ class _ChannelMessagePathMapScreenState
           .alwaysRequestMapLocation,
       wardrive: context.read<WardriveService>(),
       connector: context.read<MeshCoreConnector>(),
+      onPhoneLocation: (position) => _preferredPhonePosition = position,
     );
     unawaited(_applyPreferredSelfPosition());
   }
 
   Future<void> _applyPreferredSelfPosition() async {
-    final position = await _preferredSelfPositionFuture;
+    await _preferredSelfPositionFuture;
     if (!mounted) return;
-    setState(() => _preferredSelfPosition = position);
+    setState(() {});
   }
 
+  // A phone fix always wins. Node coordinates stay live so GPS updates or
+  // a confirmed manual node position do not reuse an old cached fallback.
   LatLng? _selfPosition(MeshCoreConnector connector) =>
-      _preferredSelfPosition ?? MapLocationHelper.nodeLocation(connector);
+      _preferredPhonePosition ?? MapLocationHelper.nodeLocation(connector);
+
+  Future<void> _setMyLocation(LatLng point) async {
+    final connector = context.read<MeshCoreConnector>();
+    final ok = await confirmAndSetMyLocation(context, connector, point);
+    if (!ok || !mounted) {
+      return;
+    }
+    // Rebuild from the live node fallback; keep a phone fix first.
+    setState(() {});
+  }
 
   /// Keeps the camera centered on the packet while the follow lock is on.
   void _followPacketCamera() {
@@ -1571,6 +1585,8 @@ class _ChannelMessagePathMapScreenState
                 FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
+                    onLongPress: (_, point) => _setMyLocation(point),
+                    onSecondaryTap: (_, point) => _setMyLocation(point),
                     initialCenter: initialCenter,
                     initialZoom: initialZoom,
                     onMapReady: () {

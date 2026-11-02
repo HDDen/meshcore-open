@@ -27,6 +27,7 @@ import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:meshcore_open/widgets/snr_indicator.dart';
+import 'package:meshcore_open/widgets/set_my_location_dialog.dart';
 import 'package:provider/provider.dart';
 import '../theme/mesh_theme.dart';
 
@@ -141,7 +142,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   PathTraceProgressTracker? _traceProgressTracker;
   List<PathTraceObservation> _traceObservations = const [];
   late final Future<LatLng?> _preferredSelfPositionFuture;
-  LatLng? _preferredSelfPosition;
+  LatLng? _preferredPhonePosition;
 
   // Packet-flow animation + multi-path view state.
   late final PathPlaybackController _playback;
@@ -259,6 +260,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           .alwaysRequestMapLocation,
       wardrive: context.read<WardriveService>(),
       connector: context.read<MeshCoreConnector>(),
+      onPhoneLocation: (position) => _preferredPhonePosition = position,
     );
     _setupFrameListener();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -276,6 +278,39 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     _frameSubscription?.cancel();
     _timeoutTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _setMyLocation(LatLng point) async {
+    final connector = context.read<MeshCoreConnector>();
+    final previousSelfPosition = _selfPosition(connector);
+    final ok = await confirmAndSetMyLocation(context, connector, point);
+    if (!ok || !mounted || !_hasData) {
+      return;
+    }
+    // Writing to the node must not replace an available phone position.
+    final displayPosition = _selfPosition(connector);
+    if (displayPosition == null) {
+      return;
+    }
+    setState(() {
+      _points = List<LatLng>.of(_points);
+      if (_points.isNotEmpty && _points.first == previousSelfPosition) {
+        _points[0] = displayPosition;
+      } else {
+        _points.insert(0, displayPosition);
+      }
+      _polylines = _points.length > 1
+          ? [
+              Polyline(
+                points: _points,
+                strokeWidth: 4,
+                color: Colors.blueAccent,
+              ),
+            ]
+          : <Polyline>[];
+      _pathDistanceMeters = getPathDistanceMeters(_points);
+      _rebuildDisplayPaths(connector);
+    });
   }
 
   void _onPathHistoryChanged() {
@@ -760,7 +795,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   Future<void> _handleTraceResponse(Uint8List frame) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    _preferredSelfPosition = await _preferredSelfPositionFuture;
+    await _preferredSelfPositionFuture;
     if (!mounted) return;
 
     final buffer = BufferReader(frame);
@@ -1598,8 +1633,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     }
   }
 
+  // A phone fix always wins. Node coordinates stay live so GPS updates or
+  // a confirmed manual node position do not reuse an old cached fallback.
   LatLng? _selfPosition(MeshCoreConnector connector) =>
-      _preferredSelfPosition ?? MapLocationHelper.nodeLocation(connector);
+      _preferredPhonePosition ?? MapLocationHelper.nodeLocation(connector);
 
   /// Markers for the union of hops across all visible paths, with a badge on
   /// repeaters used by more than one path.
@@ -1848,6 +1885,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                 )
               : const KeyboardOptions.disabled(),
         ),
+        onLongPress: (_, point) => _setMyLocation(point),
+        onSecondaryTap: (_, point) => _setMyLocation(point),
         initialCenter: _initialCenter!,
         initialZoom: _initialZoom,
         onMapReady: () {

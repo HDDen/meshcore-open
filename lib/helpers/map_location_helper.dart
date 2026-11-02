@@ -11,12 +11,16 @@ class MapLocationHelper {
     required bool enabled,
     required WardriveService wardrive,
     required MeshCoreConnector connector,
+    void Function(LatLng position)? onPhoneLocation,
   }) async {
     if (!enabled) return null;
 
     final phoneLocation = await wardrive.requestPhoneLocation();
     if (phoneLocation != null) {
-      return LatLng(phoneLocation.latitude, phoneLocation.longitude);
+      final position = LatLng(phoneLocation.latitude, phoneLocation.longitude);
+      // Let path maps cache only a phone fix, never a stale node fallback.
+      onPhoneLocation?.call(position);
+      return position;
     }
 
     final nodeLocation = await connector.refreshSelfLocation();
