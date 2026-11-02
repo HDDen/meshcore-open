@@ -8939,4 +8939,21 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Радионастройките са приложени, но устройството не потвърди новия размер на хеша на маршрута';
+
+  @override
+  String get channels_notificationSettings => 'Настройки за известия';
+
+  @override
+  String get channels_notifyAll => 'Всички съобщения';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Само споменавания';
+
+  @override
+  String get channels_notifyNone => 'Заглушено';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Известия: $mode';
+  }
 }

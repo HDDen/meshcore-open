@@ -8936,4 +8936,21 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Ustawienia radia zostały zastosowane, ale węzeł nie potwierdził nowego rozmiaru skrótu trasy';
+
+  @override
+  String get channels_notificationSettings => 'Ustawienia powiadomień';
+
+  @override
+  String get channels_notifyAll => 'Wszystkie wiadomości';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Tylko wzmianki';
+
+  @override
+  String get channels_notifyNone => 'Wyciszone';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Powiadomienia: $mode';
+  }
 }

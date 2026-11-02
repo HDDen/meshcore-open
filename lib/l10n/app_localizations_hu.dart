@@ -8913,4 +8913,21 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'A rádióbeállítások érvénybe léptek, de a csomópont nem erősítette meg az útvonalhash új méretét';
+
+  @override
+  String get channels_notificationSettings => 'Értesítési beállítások';
+
+  @override
+  String get channels_notifyAll => 'Összes üzenet';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Csak említések';
+
+  @override
+  String get channels_notifyNone => 'Némít';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Értesítések: $mode';
+  }
 }

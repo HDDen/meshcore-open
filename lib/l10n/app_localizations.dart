@@ -14890,6 +14890,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Radio settings were applied, but the radio did not confirm the new path hash size'**
   String get settings_pathHashModeNotApplied;
+
+  /// No description provided for @channels_notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get channels_notificationSettings;
+
+  /// No description provided for @channels_notifyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All messages'**
+  String get channels_notifyAll;
+
+  /// No description provided for @channels_notifyMentionsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentions only'**
+  String get channels_notifyMentionsOnly;
+
+  /// No description provided for @channels_notifyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully muted'**
+  String get channels_notifyNone;
+
+  /// No description provided for @channels_notificationModeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications: {mode}'**
+  String channels_notificationModeTooltip(String mode);
 }
 
 class _AppLocalizationsDelegate

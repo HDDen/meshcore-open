@@ -8293,4 +8293,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_pathHashModeNotApplied => '无线电设置已应用，但节点未确认新的路径哈希大小';
+
+  @override
+  String get channels_notificationSettings => '通知设置';
+
+  @override
+  String get channels_notifyAll => '所有消息';
+
+  @override
+  String get channels_notifyMentionsOnly => '仅提及';
+
+  @override
+  String get channels_notifyNone => '静音';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return '通知: $mode';
+  }
 }

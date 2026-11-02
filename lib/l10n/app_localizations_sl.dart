@@ -8874,4 +8874,21 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Radijske nastavitve so bile uporabljene, vendar vozlišče ni potrdilo nove velikosti zgoščene vrednosti poti';
+
+  @override
+  String get channels_notificationSettings => 'Nastavitve obvestil';
+
+  @override
+  String get channels_notifyAll => 'Vsa sporočila';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Samo omembe';
+
+  @override
+  String get channels_notifyNone => 'Utišano';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Obvestila: $mode';
+  }
 }

@@ -8921,4 +8921,21 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Налаштування радіо застосовано, але вузол не підтвердив новий розмір хешу маршруту';
+
+  @override
+  String get channels_notificationSettings => 'Налаштування сповіщень';
+
+  @override
+  String get channels_notifyAll => 'Усі повідомлення';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Лише згадки';
+
+  @override
+  String get channels_notifyNone => 'Вимкнено';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Сповіщення: $mode';
+  }
 }

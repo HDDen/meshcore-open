@@ -8935,4 +8935,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Die Funkeinstellungen wurden übernommen, aber das Gerät hat die neue Pfad-Hash-Größe nicht bestätigt';
+
+  @override
+  String get channels_notificationSettings => 'Benachrichtigungseinstellungen';
+
+  @override
+  String get channels_notifyAll => 'Alle Nachrichten';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Nur Erwähnungen';
+
+  @override
+  String get channels_notifyNone => 'Stummgeschaltet';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Benachrichtigungen: $mode';
+  }
 }

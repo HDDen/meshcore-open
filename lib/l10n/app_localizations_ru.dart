@@ -8901,4 +8901,21 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Настройки радио применены, но нода не подтвердила новый размер хэша маршрута';
+
+  @override
+  String get channels_notificationSettings => 'Настройки уведомлений';
+
+  @override
+  String get channels_notifyAll => 'Все сообщения';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Только упоминания';
+
+  @override
+  String get channels_notifyNone => 'Полностью без уведомлений';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Уведомления: $mode';
+  }
 }

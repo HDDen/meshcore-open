@@ -8908,4 +8908,21 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'As configurações de rádio foram aplicadas, mas o nó não confirmou o novo tamanho do hash da rota';
+
+  @override
+  String get channels_notificationSettings => 'Configurações de notificação';
+
+  @override
+  String get channels_notifyAll => 'Todas as mensagens';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Apenas menções';
+
+  @override
+  String get channels_notifyNone => 'Silenciado';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Notificações: $mode';
+  }
 }

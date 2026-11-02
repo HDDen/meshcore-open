@@ -8890,4 +8890,21 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'De radio-instellingen zijn toegepast, maar de node heeft de nieuwe pad-hashgrootte niet bevestigd';
+
+  @override
+  String get channels_notificationSettings => 'Meldingsinstellingen';
+
+  @override
+  String get channels_notifyAll => 'Alle berichten';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Alleen vermeldingen';
+
+  @override
+  String get channels_notifyNone => 'Gedempt';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Meldingen: $mode';
+  }
 }

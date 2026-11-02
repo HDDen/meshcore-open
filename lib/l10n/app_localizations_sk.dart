@@ -8875,4 +8875,21 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Nastavenia rádia boli použité, ale uzol nepotvrdil novú veľkosť hashu trasy';
+
+  @override
+  String get channels_notificationSettings => 'Nastavenia notifikácií';
+
+  @override
+  String get channels_notifyAll => 'Všetky správy';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Iba zmienky';
+
+  @override
+  String get channels_notifyNone => 'Stíšené';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Upozornenia: $mode';
+  }
 }

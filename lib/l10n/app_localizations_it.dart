@@ -8938,4 +8938,21 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Le impostazioni radio sono state applicate, ma il nodo non ha confermato la nuova dimensione dell’hash del percorso';
+
+  @override
+  String get channels_notificationSettings => 'Impostazioni notifiche';
+
+  @override
+  String get channels_notifyAll => 'Tutti i messaggi';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Solo menzioni';
+
+  @override
+  String get channels_notifyNone => 'Silenziato';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Notifiche: $mode';
+  }
 }

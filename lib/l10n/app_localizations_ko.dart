@@ -8483,4 +8483,21 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       '무선 설정은 적용되었지만 노드가 새 경로 해시 크기를 확인하지 않았습니다';
+
+  @override
+  String get channels_notificationSettings => '알림 설정';
+
+  @override
+  String get channels_notifyAll => '모든 메시지';
+
+  @override
+  String get channels_notifyMentionsOnly => '언급만';
+
+  @override
+  String get channels_notifyNone => '음소거';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return '알림: $mode';
+  }
 }

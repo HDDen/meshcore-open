@@ -8959,4 +8959,21 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Les paramètres radio ont été appliqués, mais le nœud n’a pas confirmé la nouvelle taille du hachage du chemin';
+
+  @override
+  String get channels_notificationSettings => 'Paramètres des notifications';
+
+  @override
+  String get channels_notifyAll => 'Tous les messages';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Mentions uniquement';
+
+  @override
+  String get channels_notifyNone => 'Désactivé';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Notifications: $mode';
+  }
 }

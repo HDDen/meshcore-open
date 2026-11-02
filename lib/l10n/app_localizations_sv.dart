@@ -8865,4 +8865,21 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       'Radioinställningarna tillämpades, men noden bekräftade inte den nya storleken på sökvägshashen';
+
+  @override
+  String get channels_notificationSettings => 'Aviseringsinställningar';
+
+  @override
+  String get channels_notifyAll => 'Alla meddelanden';
+
+  @override
+  String get channels_notifyMentionsOnly => 'Endast omnämnanden';
+
+  @override
+  String get channels_notifyNone => 'Tyst';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return 'Aviseringar: $mode';
+  }
 }

@@ -8479,4 +8479,21 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settings_pathHashModeNotApplied =>
       '無線設定は適用されましたが、ノードが新しい経路ハッシュのサイズを確認しませんでした';
+
+  @override
+  String get channels_notificationSettings => '通知設定';
+
+  @override
+  String get channels_notifyAll => 'すべてのメッセージ';
+
+  @override
+  String get channels_notifyMentionsOnly => 'メンションのみ';
+
+  @override
+  String get channels_notifyNone => 'ミュート';
+
+  @override
+  String channels_notificationModeTooltip(String mode) {
+    return '通知: $mode';
+  }
 }
