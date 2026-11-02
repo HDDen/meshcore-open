@@ -141,3 +141,17 @@ Add emoji reactions to incoming messages (not your own):
 ## Image and translation setup
 
 Enable URL images in the contact’s chat settings to preview supported image links; see [URL images](additional-features.md#url-image-previews). Mesh image packets are currently sent through channel chat, not this direct-message composer. Set up translation and download a model in [App Settings](settings.md#translation) before using incoming or pre-send translation.
+
+
+## Reaction and GIF picker spacing
+
+In direct and channel chats, reaction and GIF panels keep their content above
+the system navigation area and the keyboard. The shared sheet reserves the
+larger bottom inset once, so a child SafeArea does not add the same gap again.
+The reaction picker keeps the Advanced mod's categories, quick reactions and
+scrollable header. The GIF panel can shrink when the keyboard is visible;
+empty results and error/retry content can scroll in a short window.
+
+Choosing a GIF still inserts it into the composer for review before sending.
+Typing in GIF search does not make requests until submitting the search.
+Closing either picker makes no selection and sends no message.

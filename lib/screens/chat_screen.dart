@@ -1789,9 +1789,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _showGifPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    showMeshSheet<void>(
+      context,
       builder: (context) => GifPicker(
         onGifSelected: (gifId) {
           _textController.text = GifHelper.encodeGif(gifId);
@@ -3417,9 +3416,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _showEmojiPicker(Message message, Contact senderContact) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    showMeshSheet<void>(
+      context,
       builder: (context) => EmojiPicker(
         onEmojiSelected: (emoji) {
           _sendReaction(message, senderContact, emoji);

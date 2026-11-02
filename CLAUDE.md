@@ -2779,6 +2779,22 @@ A GIF in a message travels as its Giphy id (`g:<id>`, `helpers/gif_helper.dart`)
 
 A failed load stays in Flutter's image cache as a completer that only repeats its error, and resolving the same provider again returns that completer. `GifMessage._retryLoad` therefore evicts the provider before the retry; before, a GIF that failed once kept failing for the rest of the session. The GIF picker's previews are not cached: they are search results, and a year of them would crowd out the GIFs that were actually sent.
 
+U06a1 (2026-11-02): direct/channel _showEmojiPicker and _showGifPicker use
+showMeshSheet. Its bottom padding is max(viewInsets.bottom, viewPadding.bottom),
+then the already consumed bottom insets/padding are removed from the child's
+MediaQuery through a Builder. This keeps nested SafeArea from doubling the gap.
+The fork's 75% EmojiPicker, LayoutBuilder/header scrolling and styles remain
+byte-identical. GifPicker uses maxHeight rather than fixed height; only its
+empty/error panels gain scrolling at short heights. Search, request count,
+selection/send callbacks and image/energy policies stay unchanged. The deleted
+upstream chat_composer.dart is not restored; its change is adapted in our
+existing chats. The incidental TCP-test formatting commit adds no behavior
+and its original file is retained. Regression fixture:
+test/widgets/chat_picker_merge_baseline_test.dart (baseline accepted; new
+inset/keyboard/result-state checks pending). Repeat the notification mode
+sheet tests too because showMeshSheet is shared. No ARB/pubspec/native changes.
+
+
 ### Локальная консоль CompanionCLI
 
 Лента быстрых команд в `companion_cli_screen.dart` обёрнута в

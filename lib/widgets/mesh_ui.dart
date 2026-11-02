@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -547,10 +549,21 @@ Future<T?> showMeshSheet<T>(
     isScrollControlled: isScrollControlled,
     useSafeArea: true,
     showDragHandle: false,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: builder(context),
-    ),
+    builder: (sheetContext) {
+      final media = MediaQuery.of(sheetContext);
+      // Navigation and keyboard overlap: reserve the larger inset once.
+      final bottom = math.max(media.viewInsets.bottom, media.viewPadding.bottom);
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: MediaQuery(
+          data: media
+              .removeViewInsets(removeBottom: true)
+              .removeViewPadding(removeBottom: true)
+              .removePadding(removeBottom: true),
+          child: Builder(builder: builder),
+        ),
+      );
+    },
   );
 }
 
