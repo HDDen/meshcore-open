@@ -4015,5 +4015,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Radioinställningarna tillämpades, men noden bekräftade inte den nya storleken på sökvägshashen"
+  "settings_pathHashModeNotApplied": "Radioinställningarna tillämpades, men noden bekräftade inte den nya storleken på sökvägshashen",
+  "channels_notificationSettings": "Aviseringsinställningar",
+  "channels_notifyAll": "Alla meddelanden",
+  "channels_notifyMentionsOnly": "Endast omnämnanden",
+  "channels_notifyNone": "Tyst",
+  "channels_notificationModeTooltip": "Aviseringar: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

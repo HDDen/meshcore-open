@@ -8,6 +8,7 @@ import 'review_radio.dart';
 /// Muted channel names as they were when review mode started. Persisted so an
 /// interrupted session (crash, app killed) is still undone on the next launch.
 const _savedMutedChannelsKey = 'review_mode_saved_muted_channels';
+const _savedSilencedChannelsKey = 'review_mode_saved_silenced_channels';
 
 /// Prefix for snapshots of app-wide repeater keys (saved passwords, clock sync
 /// toggles) taken when review mode starts. An empty snapshot means the key did
@@ -46,6 +47,9 @@ Future<void> beginReviewModeSession(AppSettingsService? settings) async {
     if (prefs.containsKey(savedKey)) continue;
     await prefs.setString(savedKey, prefs.getString(key) ?? '');
   }
+  if (settings != null && !prefs.containsKey(_savedSilencedChannelsKey)) {
+    await prefs.setStringList(_savedSilencedChannelsKey, settings.settings.silencedChannels.toList());
+  }
   // An earlier interrupted session's record holds the real pre-review state.
   if (settings != null && !prefs.containsKey(_savedMutedChannelsKey)) {
     await prefs.setStringList(
@@ -76,7 +80,11 @@ Future<void> endReviewModeSession(AppSettingsService? settings) async {
   final savedMutes = prefs.getStringList(_savedMutedChannelsKey);
   if (savedMutes == null || settings == null) return;
   await settings.updateSettings(
-    settings.settings.copyWith(mutedChannels: savedMutes.toSet()),
+    settings.settings.copyWith(
+      mutedChannels: savedMutes.toSet(),
+      silencedChannels: prefs.getStringList(_savedSilencedChannelsKey)?.toSet(),
+    ),
   );
   await prefs.remove(_savedMutedChannelsKey);
+  await prefs.remove(_savedSilencedChannelsKey);
 }

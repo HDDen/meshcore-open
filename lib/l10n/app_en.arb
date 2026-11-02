@@ -4563,5 +4563,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Radio settings were applied, but the radio did not confirm the new path hash size"
+  "settings_pathHashModeNotApplied": "Radio settings were applied, but the radio did not confirm the new path hash size",
+  "channels_notificationSettings": "Notification settings",
+  "channels_notifyAll": "All messages",
+  "channels_notifyMentionsOnly": "Mentions only",
+  "channels_notifyNone": "Fully muted",
+  "channels_notificationModeTooltip": "Notifications: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

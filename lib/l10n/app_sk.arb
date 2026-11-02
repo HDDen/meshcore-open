@@ -4205,5 +4205,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Nastavenia rádia boli použité, ale uzol nepotvrdil novú veľkosť hashu trasy"
+  "settings_pathHashModeNotApplied": "Nastavenia rádia boli použité, ale uzol nepotvrdil novú veľkosť hashu trasy",
+  "channels_notificationSettings": "Nastavenia notifikácií",
+  "channels_notifyAll": "Všetky správy",
+  "channels_notifyMentionsOnly": "Iba zmienky",
+  "channels_notifyNone": "Stíšené",
+  "channels_notificationModeTooltip": "Upozornenia: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

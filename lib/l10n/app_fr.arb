@@ -4338,5 +4338,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Les paramètres radio ont été appliqués, mais le nœud n’a pas confirmé la nouvelle taille du hachage du chemin"
+  "settings_pathHashModeNotApplied": "Les paramètres radio ont été appliqués, mais le nœud n’a pas confirmé la nouvelle taille du hachage du chemin",
+  "channels_notificationSettings": "Paramètres des notifications",
+  "channels_notifyAll": "Tous les messages",
+  "channels_notifyMentionsOnly": "Mentions uniquement",
+  "channels_notifyNone": "Désactivé",
+  "channels_notificationModeTooltip": "Notifications: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

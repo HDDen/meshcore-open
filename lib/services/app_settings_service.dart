@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
+import '../storage/channel_identity_store.dart';
 import '../models/cpu_sleep_options.dart';
 import '../models/power_saving_settings.dart';
 import '../models/ble_power_options.dart';
@@ -13,6 +14,8 @@ import '../utils/app_logger.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
+
+export '../models/app_settings.dart' show ChannelNotificationMode;
 
 class AppSettingsService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
@@ -832,20 +835,73 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(unitSystem: value));
   }
 
-  bool isChannelMuted(String channelName) {
-    return _settings.mutedChannels.contains(channelName);
+  Set<String>? _notificationMentionsSource;
+  Set<String>? _notificationSilenceSource;
+  int _notificationIdentityRevision = -1;
+  final Map<String, ChannelNotificationMode> _notificationModes = {};
+  Set<String> _restrictedChannelNames = const {};
+
+  void _refreshNotificationModeCache() {
+    final identities = ChannelIdentities.instance;
+    if (identical(_notificationMentionsSource, _settings.mutedChannels) &&
+        identical(_notificationSilenceSource, _settings.silencedChannels) &&
+        _notificationIdentityRevision == identities.revision) {
+      return;
+    }
+    _notificationMentionsSource = _settings.mutedChannels;
+    _notificationSilenceSource = _settings.silencedChannels;
+    _notificationIdentityRevision = identities.revision;
+    _notificationModes.clear();
+    for (final name in _settings.mutedChannels) {
+      for (final alias in identities.namesLinkedTo(name)) {
+        _notificationModes[alias] = ChannelNotificationMode.mentionsOnly;
+      }
+    }
+    for (final name in _settings.silencedChannels) {
+      for (final alias in identities.namesLinkedTo(name)) {
+        _notificationModes[alias] = ChannelNotificationMode.muted;
+      }
+    }
+    _restrictedChannelNames = Set.unmodifiable(_notificationModes.keys);
   }
 
-  Future<void> muteChannel(String channelName) async {
-    final updated = Set<String>.from(_settings.mutedChannels)..add(channelName);
-    await updateSettings(_settings.copyWith(mutedChannels: updated));
+  // Build aliases only when restrictions or identities change, not on every
+  // received message or channel card rebuild. Lookups afterwards are O(1).
+  Set<String> get restrictedChannelNames {
+    _refreshNotificationModeCache();
+    return _restrictedChannelNames;
   }
 
-  Future<void> unmuteChannel(String channelName) async {
-    final updated = Set<String>.from(_settings.mutedChannels)
-      ..remove(channelName);
-    await updateSettings(_settings.copyWith(mutedChannels: updated));
+  ChannelNotificationMode getChannelNotificationMode(String name) {
+    _refreshNotificationModeCache();
+    return _notificationModes[name] ?? ChannelNotificationMode.all;
   }
+
+  bool isChannelMuted(String name) =>
+      getChannelNotificationMode(name) != ChannelNotificationMode.all;
+
+  Future<void> setChannelNotificationMode(String name, ChannelNotificationMode mode) async {
+    if (getChannelNotificationMode(name) == mode) {
+      return;
+    }
+    // Clear aliases too: selecting All must also undo an inherited restriction.
+    final aliases = ChannelIdentities.instance.namesLinkedTo(name);
+    final mentions = Set<String>.of(_settings.mutedChannels)..removeAll(aliases);
+    final silenced = Set<String>.of(_settings.silencedChannels)..removeAll(aliases);
+    if (mode == ChannelNotificationMode.mentionsOnly) {
+      mentions.add(name);
+    }
+    if (mode == ChannelNotificationMode.muted) {
+      silenced.add(name);
+    }
+    await updateSettings(_settings.copyWith(mutedChannels: mentions, silencedChannels: silenced));
+  }
+
+  // Existing notification-shade action retains its mentions exception.
+  Future<void> muteChannel(String name) =>
+      setChannelNotificationMode(name, ChannelNotificationMode.mentionsOnly);
+  Future<void> unmuteChannel(String name) =>
+      setChannelNotificationMode(name, ChannelNotificationMode.all);
 
   Future<void> setTcpServerAddress(String value) async {
     await updateSettings(_settings.copyWith(tcpServerAddress: value));

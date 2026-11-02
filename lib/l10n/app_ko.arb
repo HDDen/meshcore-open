@@ -4369,5 +4369,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "무선 설정은 적용되었지만 노드가 새 경로 해시 크기를 확인하지 않았습니다"
+  "settings_pathHashModeNotApplied": "무선 설정은 적용되었지만 노드가 새 경로 해시 크기를 확인하지 않았습니다",
+  "channels_notificationSettings": "알림 설정",
+  "channels_notifyAll": "모든 메시지",
+  "channels_notifyMentionsOnly": "언급만",
+  "channels_notifyNone": "음소거",
+  "channels_notificationModeTooltip": "알림: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

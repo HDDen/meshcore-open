@@ -3514,5 +3514,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Настройки радио применены, но нода не подтвердила новый размер хэша маршрута"
+  "settings_pathHashModeNotApplied": "Настройки радио применены, но нода не подтвердила новый размер хэша маршрута",
+  "channels_notificationSettings": "Настройки уведомлений",
+  "channels_notifyAll": "Все сообщения",
+  "channels_notifyMentionsOnly": "Только упоминания",
+  "channels_notifyNone": "Полностью без уведомлений",
+  "channels_notificationModeTooltip": "Уведомления: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

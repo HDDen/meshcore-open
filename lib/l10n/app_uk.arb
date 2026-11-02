@@ -4212,5 +4212,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Налаштування радіо застосовано, але вузол не підтвердив новий розмір хешу маршруту"
+  "settings_pathHashModeNotApplied": "Налаштування радіо застосовано, але вузол не підтвердив новий розмір хешу маршруту",
+  "channels_notificationSettings": "Налаштування сповіщень",
+  "channels_notifyAll": "Усі повідомлення",
+  "channels_notifyMentionsOnly": "Лише згадки",
+  "channels_notifyNone": "Вимкнено",
+  "channels_notificationModeTooltip": "Сповіщення: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

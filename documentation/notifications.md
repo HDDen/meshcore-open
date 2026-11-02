@@ -15,7 +15,7 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 - **Android style**: conversation (MessagingStyle) showing the last few messages, with **Reply** and a hidden **Mark as read** action. When URL images are enabled, an image preview appears as the notification's thumbnail
 
 ### 2. Channel Message Notifications
-- **Triggered when**: A new message arrives on a non-muted channel
+- **Triggered when**: An incoming message is allowed by the channel notification mode
 - **Title**: Channel name (or "Channel N" if unnamed)
 - **Body**: `"<senderName>: <message text>"`
 - **Priority**: High
@@ -77,7 +77,7 @@ Message notifications can be answered without opening the app, from the notifica
 - **Reply** sends through the connected radio exactly like the chat screen: same length limits, SMAZ and Cyr2Lat handling, and retries. Your reply is then added to the notification.
 - **Replies over the message limit** are split at word boundaries into up to 3 messages. Longer replies are not sent; a "Reply not sent" notification asks you to open the app.
 - **Mark as read** clears the unread count on the phone only. MeshCore has no read receipts, so nothing is sent over the mesh.
-- **Mute channel** (phone and watch) mutes that channel, the same as the bell icon in the channel chat.
+- **Mute channel** (phone and watch) selects Mentions only, retaining the fork's existing mention exception. The chat bell also offers Fully muted.
 - If the radio is disconnected, the conversation is no longer on the radio, the radio reports a send error, or the app isn't running, a "Reply not sent" notification explains why. The reply is not queued. If a split reply fails partway, earlier parts may already have been sent.
 - Replies are sent as typed; composer translation is not applied.
 
@@ -171,10 +171,10 @@ Access via **App Settings → Notifications**:
 
 ### Per-Channel Muting
 
-Mute or unmute a channel from any of these places. Muted channels do not generate OS notifications.
+Choose All messages, Mentions only or Fully muted from the channel controls. Existing muted channels retain their mentions exception.
 
 - The bell icon in the channel chat app bar
-- Long-press a channel in the channels list → "Mute channel" / "Unmute channel"
+- Long-press a channel in the channels list → "Notification settings"
 - **Mute channel** on a channel notification (Android)
 
 There is no per-contact muting.
@@ -205,3 +205,27 @@ Automatic incoming translation can also translate notification text when enabled
 | macOS | Yes | No | — | Yes (dock badge) | No |
 | Windows | Yes | No | — | No | No |
 | Linux | Yes (if D-Bus available) | No | — | No | No |
+
+
+## Per-channel notification modes (Advanced mod)
+
+The bell in a channel chat and the notification entry in the channel's context
+menu open a three-choice picker:
+
+- **All messages**: notify for incoming channel messages allowed by the global settings.
+- **Mentions only**: notify for `@[name]` or plain `@name`, matching either the
+  node's name or its configured sender name in this channel. Matching ignores
+  case; bracketed mentions retain support for spaces inside the brackets.
+  Plain mentions require the full name and word boundaries.
+- **Fully muted**: suppress channel notifications, including mentions.
+
+Existing muted channels keep their prior **Mentions only** behavior. Full
+silence is an explicit new choice. The modes affect notifications; incoming
+messages remain in history and keep the existing unread behavior. Blocked
+senders remain suppressed, and received translations do not create mentions.
+Settings follow linked previous names when a channel is renamed. Selecting
+All clears inherited restrictions under those linked names too. The existing
+Mute action in a system notification retains the mentions exception.
+
+The modification setting that hides the chat's bell still applies. The channel
+list shows different icons for mentions-only and fully muted channels.

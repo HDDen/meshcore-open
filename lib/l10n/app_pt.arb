@@ -4021,5 +4021,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "As configurações de rádio foram aplicadas, mas o nó não confirmou o novo tamanho do hash da rota"
+  "settings_pathHashModeNotApplied": "As configurações de rádio foram aplicadas, mas o nó não confirmou o novo tamanho do hash da rota",
+  "channels_notificationSettings": "Configurações de notificação",
+  "channels_notifyAll": "Todas as mensagens",
+  "channels_notifyMentionsOnly": "Apenas menções",
+  "channels_notifyNone": "Silenciado",
+  "channels_notificationModeTooltip": "Notificações: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

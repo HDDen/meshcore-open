@@ -4237,5 +4237,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "无线电设置已应用，但节点未确认新的路径哈希大小"
+  "settings_pathHashModeNotApplied": "无线电设置已应用，但节点未确认新的路径哈希大小",
+  "channels_notificationSettings": "通知设置",
+  "channels_notifyAll": "所有消息",
+  "channels_notifyMentionsOnly": "仅提及",
+  "channels_notifyNone": "静音",
+  "channels_notificationModeTooltip": "通知: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

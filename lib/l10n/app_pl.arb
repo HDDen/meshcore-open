@@ -4272,5 +4272,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Ustawienia radia zostały zastosowane, ale węzeł nie potwierdził nowego rozmiaru skrótu trasy"
+  "settings_pathHashModeNotApplied": "Ustawienia radia zostały zastosowane, ale węzeł nie potwierdził nowego rozmiaru skrótu trasy",
+  "channels_notificationSettings": "Ustawienia powiadomień",
+  "channels_notifyAll": "Wszystkie wiadomości",
+  "channels_notifyMentionsOnly": "Tylko wzmianki",
+  "channels_notifyNone": "Wyciszone",
+  "channels_notificationModeTooltip": "Powiadomienia: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

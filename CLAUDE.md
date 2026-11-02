@@ -679,6 +679,31 @@ comparison therefore also requires an equal `fourByteRoomContactKey`, the author
 server stamps on every post. Only incoming messages are considered, and the check runs before the
 message is stored, so nothing has to be undone afterwards.
 
+### Channel notification modes (U05, 2026-11-02)
+
+The fork keeps `mutedChannels`/`muted_channels` as mentions-only and adds
+`silencedChannels`/`silenced_channels` for explicit full silence. Defaults,
+copyWith and JSON retain old mute behavior. AppSettingsService exposes the
+three-mode API and caches effective names by restriction-set identity and
+ChannelIdentities revision; receive/card lookups do not rescan all aliases.
+Selecting a mode clears restrictions under linked names in one settings save.
+The existing notification-shade Mute action stays mentions-only.
+
+The receive path keeps outgoing/master/blocked-sender gates, initial summary,
+awaited history and independent background show/CPU work. Fully muted messages
+still persist. Mentions use the fork's node and channel-sender names, its
+bracket whitespace, plus upstream plain @name Unicode boundaries. The helper
+`channel_mention_matcher.dart` caches at most 32 patterns without timers; only
+mentions-only delivery invokes matching, on untranslated message text.
+
+Chat bell visibility retains hideChannelMuteButton; bell and channel context
+menu use channel_notification_mode_sheet.dart, and cards distinguish restricted
+modes. Review mode stays unavailable; its restoration snapshots both sets and
+still understands an old interrupted mentions-only snapshot. No SQL migration,
+licensing, polling or dependency change. Baseline and the matcher/receive rerun
+after the regex fix are accepted by the owner; hardware verification remains
+pending. New ARB keys only; generation by owner.
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands

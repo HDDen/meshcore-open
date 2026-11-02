@@ -14,6 +14,7 @@ import 'package:meshcore_open/helpers/mcoimg_codec.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
@@ -260,9 +261,10 @@ class _QueueConnector extends MeshCoreConnector {
 
 /// A connector past its handshake, with notifications on.
 class _Harness {
-  _Harness(this.connector);
+  _Harness(this.connector, this.settings);
 
   final _QueueConnector connector;
+  final AppSettingsService settings;
 
   static Future<_Harness> start({bool notifications = true}) async {
     final connector = _QueueConnector();
@@ -282,7 +284,7 @@ class _Harness {
     connector.handleFrameForTest(_selfInfoFrame(_key(1), 'Me'));
     await _settle();
     expect(connector.selfPublicKeyHex, isNotEmpty);
-    return _Harness(connector);
+    return _Harness(connector, settings);
   }
 
   Future<Contact> addContact(
@@ -345,6 +347,8 @@ Future<void> main() async {
       databaseFactory: () => historyDatabase =
           MessageHistoryDatabase.withExecutor(NativeDatabase.memory()),
     );
+    ChannelIdentities.instance.resetForTesting();
+    await ChannelIdentities.instance.load();
     NotificationService().resetForTest();
     plugin.shown.clear();
     plugin.hold = null;
@@ -354,6 +358,7 @@ Future<void> main() async {
   });
 
   tearDown(() async {
+    ChannelIdentities.instance.resetForTesting();
     await MessageHistoryStorage.instance.resetForTesting();
     PrefsManager.reset();
   });
@@ -569,6 +574,114 @@ Future<void> main() async {
       );
       await _settle();
       expect(connector.syncRequests, 2);
+    });
+  }, skip: skip);
+
+  group('U05 baseline: fork channel mute and mentions', () {
+    for (final sample in [
+      (label: 'unmuted ordinary text', muted: false, text: 'hello', shown: true),
+      (label: 'muted ordinary text', muted: true, text: 'hello', shown: false),
+      (label: 'muted inline self mention', muted: true, text: 'hello @[Me]', shown: true),
+      (label: 'muted mention with spaces and case', muted: true, text: 'hello @[ mE ]', shown: true),
+      (label: 'muted different full name', muted: true, text: 'hello @[Member]', shown: false),
+      (label: 'muted plain at-name now has the mention exception', muted: true, text: 'hello @Me', shown: true),
+    ]) {
+      test(sample.label, () async {
+        final harness = await _Harness.start();
+        addTearDown(harness.connector.dispose);
+        addTearDown(harness.settings.dispose);
+        await harness.addChannel(0, 'Test', _psk(1));
+        if (sample.muted) {
+          await harness.settings.muteChannel('Test');
+        }
+        harness.connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 0, timestampSeconds: _timestamp,
+          senderName: 'Alice', text: sample.text,
+        ));
+        final channel = harness.connector.channels.singleWhere((c) => c.index == 0);
+        await _waitFor(
+          () => harness.connector.getLoadedChannelMessages(channel).length == 1,
+          'the persisted channel message',
+        );
+        if (sample.shown) {
+          await _waitFor(() => plugin.shown.length == 1, 'the mention notification');
+        } else {
+          await _settle();
+          expect(plugin.shown, isEmpty);
+        }
+        expect(plugin.shown, hasLength(sample.shown ? 1 : 0));
+        // Notification filtering must not discard the received history row.
+        expect(harness.connector.getLoadedChannelMessages(channel), hasLength(1));
+      });
+    }
+
+    for (final text in ['hello', 'hello @[Me]', 'hello @Me']) {
+      test('fully muted channel suppresses even mentions: $text', () async {
+        final harness = await _Harness.start();
+        addTearDown(harness.connector.dispose);
+        addTearDown(harness.settings.dispose);
+        await harness.addChannel(0, 'Test', _psk(1));
+        await harness.settings.setChannelNotificationMode('Test', ChannelNotificationMode.muted);
+        harness.connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 0, timestampSeconds: _timestamp,
+          senderName: 'Alice', text: text,
+        ));
+        final channel = harness.connector.channels.singleWhere((c) => c.index == 0);
+        await _waitFor(
+          () => harness.connector.getLoadedChannelMessages(channel).length == 1,
+          'the silenced channel history row',
+        );
+        await _settle();
+        expect(plugin.shown, isEmpty);
+      });
+    }
+
+    test('muted channel accepts its configured sender name', () async {
+      final harness = await _Harness.start();
+      addTearDown(harness.connector.dispose);
+      addTearDown(harness.settings.dispose);
+      await harness.addChannel(0, 'Test', _psk(1));
+      await harness.connector.setChannelSenderName(0, 'Alias');
+      await harness.settings.muteChannel('Test');
+      harness.connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: 0, timestampSeconds: _timestamp,
+        senderName: 'Alice', text: 'hello @[ Alias ]',
+      ));
+      await _waitFor(() => plugin.shown.length == 1, 'the channel alias mention');
+      expect(_NotificationPlugin.argumentsOf(plugin.shown.single)['payload'], 'channel:0');
+    });
+
+    test('completed channel sync links a rename and keeps the old name mute', () async {
+      final harness = await _Harness.start();
+      addTearDown(harness.connector.dispose);
+      addTearDown(harness.settings.dispose);
+      await harness.addChannel(0, 'Before', _psk(1));
+      final before = harness.connector.channels.singleWhere((c) => c.index == 0);
+      final beforeIdentity = ChannelIdentity.of(before)!;
+      await harness.settings.muteChannel('Before');
+      // External renames are reconciled from complete channel lists, not
+      // isolated unsolicited slot frames (which may be part of a slot move).
+      await harness.connector.getChannels(maxChannels: 1, force: true);
+      await harness.addChannel(0, 'After', _psk(1));
+      await _waitFor(
+        () => !harness.connector.isSyncingChannels,
+        'the completed channel sync and identity reconciliation',
+      );
+      final after = harness.connector.channels.singleWhere((c) => c.index == 0);
+      final afterIdentity = ChannelIdentity.of(after)!;
+      expect(ChannelIdentities.instance.sameChannel(beforeIdentity, afterIdentity), isTrue);
+      expect(ChannelIdentities.instance.namesOf(afterIdentity), contains('Before'));
+      harness.connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: 0, timestampSeconds: _timestamp,
+        senderName: 'Alice', text: 'ordinary text after rename',
+      ));
+      final channel = harness.connector.channels.singleWhere((c) => c.index == 0);
+      await _waitFor(
+        () => harness.connector.getLoadedChannelMessages(channel).length == 1,
+        'the renamed channel message',
+      );
+      await _settle();
+      expect(plugin.shown, isEmpty);
     });
   }, skip: skip);
 

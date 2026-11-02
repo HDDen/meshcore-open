@@ -5,6 +5,8 @@ import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
 
+enum ChannelNotificationMode { all, mentionsOnly, muted }
+
 enum SharedMessageHistoryMode { disabled, channels, contacts, all }
 
 extension UnitSystemValue on UnitSystem {
@@ -359,7 +361,14 @@ class AppSettings {
   final Map<String, double> batteryCustomMinVoltsByDeviceId;
   final Map<String, double> batteryCustomMaxVoltsByDeviceId;
   final UnitSystem unitSystem;
+  // Legacy mute keeps its existing mentions-only meaning.
   final Set<String> mutedChannels;
+  final Set<String> silencedChannels;
+
+  ChannelNotificationMode channelNotificationModeFor(String name) =>
+      silencedChannels.contains(name) ? ChannelNotificationMode.muted :
+      mutedChannels.contains(name) ? ChannelNotificationMode.mentionsOnly :
+      ChannelNotificationMode.all;
   final bool mapShowDiscoveryContacts;
   final String tcpServerAddress;
   final int tcpServerPort;
@@ -794,6 +803,7 @@ class AppSettings {
     Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     this.unitSystem = UnitSystem.metric,
     Set<String>? mutedChannels,
+    Set<String>? silencedChannels,
     this.mapShowDiscoveryContacts = true,
     this.tcpServerAddress = '',
     this.tcpServerPort = 0,
@@ -832,6 +842,7 @@ class AppSettings {
        batteryCustomMinVoltsByDeviceId = batteryCustomMinVoltsByDeviceId ?? {},
        batteryCustomMaxVoltsByDeviceId = batteryCustomMaxVoltsByDeviceId ?? {},
        mutedChannels = mutedChannels ?? {},
+       silencedChannels = silencedChannels ?? {},
        tcpConnectionBookmarks = tcpConnectionBookmarks ?? const [],
        imageCodecDownloadedModels = imageCodecDownloadedModels ?? const [],
        translationDownloadedModels = translationDownloadedModels ?? const [],
@@ -961,6 +972,7 @@ class AppSettings {
       'battery_custom_max_volts_by_device_id': batteryCustomMaxVoltsByDeviceId,
       'unit_system': unitSystem.value,
       'muted_channels': mutedChannels.toList(),
+      'silenced_channels': silencedChannels.toList(),
       'map_show_discovery_contacts': mapShowDiscoveryContacts,
       'tcp_server_address': tcpServerAddress,
       'tcp_server_port': tcpServerPort,
@@ -1199,6 +1211,7 @@ class AppSettings {
           ) ??
           {},
       unitSystem: parseUnitSystem(json['unit_system']),
+      silencedChannels: (json['silenced_channels'] as List?)?.map((e) => e.toString()).toSet() ?? {},
       mutedChannels:
           ((json['muted_channels'] as List?)
               ?.map((e) => e.toString())
@@ -1402,6 +1415,7 @@ class AppSettings {
     Map<String, double>? batteryCustomMaxVoltsByDeviceId,
     UnitSystem? unitSystem,
     Set<String>? mutedChannels,
+    Set<String>? silencedChannels,
     bool? mapShowDiscoveryContacts,
     String? tcpServerAddress,
     int? tcpServerPort,
@@ -1594,6 +1608,7 @@ class AppSettings {
           this.batteryCustomMaxVoltsByDeviceId,
       unitSystem: unitSystem ?? this.unitSystem,
       mutedChannels: mutedChannels ?? this.mutedChannels,
+      silencedChannels: silencedChannels ?? this.silencedChannels,
       mapShowDiscoveryContacts:
           mapShowDiscoveryContacts ?? this.mapShowDiscoveryContacts,
       tcpServerAddress: tcpServerAddress ?? this.tcpServerAddress,

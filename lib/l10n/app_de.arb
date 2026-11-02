@@ -4367,5 +4367,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Die Funkeinstellungen wurden übernommen, aber das Gerät hat die neue Pfad-Hash-Größe nicht bestätigt"
+  "settings_pathHashModeNotApplied": "Die Funkeinstellungen wurden übernommen, aber das Gerät hat die neue Pfad-Hash-Größe nicht bestätigt",
+  "channels_notificationSettings": "Benachrichtigungseinstellungen",
+  "channels_notifyAll": "Alle Nachrichten",
+  "channels_notifyMentionsOnly": "Nur Erwähnungen",
+  "channels_notifyNone": "Stummgeschaltet",
+  "channels_notificationModeTooltip": "Benachrichtigungen: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

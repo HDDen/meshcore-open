@@ -4022,5 +4022,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "De radio-instellingen zijn toegepast, maar de node heeft de nieuwe pad-hashgrootte niet bevestigd"
+  "settings_pathHashModeNotApplied": "De radio-instellingen zijn toegepast, maar de node heeft de nieuwe pad-hashgrootte niet bevestigd",
+  "channels_notificationSettings": "Meldingsinstellingen",
+  "channels_notifyAll": "Alle berichten",
+  "channels_notifyMentionsOnly": "Alleen vermeldingen",
+  "channels_notifyNone": "Gedempt",
+  "channels_notificationModeTooltip": "Meldingen: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

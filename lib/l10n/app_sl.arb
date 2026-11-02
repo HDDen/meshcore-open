@@ -4205,5 +4205,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Radijske nastavitve so bile uporabljene, vendar vozlišče ni potrdilo nove velikosti zgoščene vrednosti poti"
+  "settings_pathHashModeNotApplied": "Radijske nastavitve so bile uporabljene, vendar vozlišče ni potrdilo nove velikosti zgoščene vrednosti poti",
+  "channels_notificationSettings": "Nastavitve obvestil",
+  "channels_notifyAll": "Vsa sporočila",
+  "channels_notifyMentionsOnly": "Samo omembe",
+  "channels_notifyNone": "Utišano",
+  "channels_notificationModeTooltip": "Obvestila: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

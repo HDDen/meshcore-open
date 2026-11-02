@@ -57,6 +57,7 @@ import '../helpers/radio_stats_send_polling.dart';
 import '../helpers/reconnect_backoff.dart';
 import '../helpers/reconnect_power_settings.dart';
 import '../helpers/ui_notification_batcher.dart';
+import '../helpers/channel_mention_matcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
@@ -15563,14 +15564,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _channelMessageMentionsSelf(int channelIndex, String text) {
     final names = {?_selfName?.trim(), ?channelSenderName(channelIndex)}
       ..removeWhere((name) => name.isEmpty);
-    for (final name in names) {
-      final mention = RegExp(
-        '@\\[\\s*${RegExp.escape(name)}\\s*\\]',
-        caseSensitive: false,
-      );
-      if (mention.hasMatch(text)) return true;
-    }
-    return false;
+    return names.any((name) => ChannelMentionMatcher.mentions(text, name));
   }
 
   /// Shows a notification off the receive path. The message it names is in
@@ -15591,15 +15585,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// A mute is kept by name, so a channel renamed under the same key keeps
   /// the mute its former name holds.
-  bool _isChannelMutedUnderAnyName(String label, int channelIndex) {
+  ChannelNotificationMode _channelNotificationModeUnderAnyName(String label, int channelIndex) {
     final settings = _appSettingsService!;
-    if (settings.isChannelMuted(label)) return true;
+    final labelMode = settings.getChannelNotificationMode(label);
     final channel = _findChannelByIndex(channelIndex);
-    final identity = channel == null ? null : ChannelIdentity.of(channel);
-    if (identity == null) return false;
-    return ChannelIdentities.instance
-        .namesOf(identity)
-        .any(settings.isChannelMuted);
+    final channelMode = channel == null ? labelMode :
+        settings.getChannelNotificationMode(channel.muteKey);
+    if (labelMode == ChannelNotificationMode.muted || channelMode == ChannelNotificationMode.muted) {
+      return ChannelNotificationMode.muted;
+    }
+    if (labelMode == ChannelNotificationMode.mentionsOnly || channelMode == ChannelNotificationMode.mentionsOnly) {
+      return ChannelNotificationMode.mentionsOnly;
+    }
+    return ChannelNotificationMode.all;
   }
 
   Future<void> _maybeNotifyChannelMessage(
@@ -15620,8 +15618,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // The chat will hide this body; a notification would put it straight back
     // on screen, so it is not raised at all.
     if (BlockedSenders.instance.isSenderBlocked(message, label)) return;
-    final isMuted = _isChannelMutedUnderAnyName(label, channelIndex);
-    if (isMuted && !_channelMessageMentionsSelf(channelIndex, message.text)) {
+    final mode = _channelNotificationModeUnderAnyName(label, channelIndex);
+    if (mode == ChannelNotificationMode.muted) {
+      return;
+    }
+    if (mode == ChannelNotificationMode.mentionsOnly &&
+        !_channelMessageMentionsSelf(channelIndex, message.text)) {
       return;
     }
     if (_recordInitialSyncChannelMessageNotification()) return;

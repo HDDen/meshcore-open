@@ -95,6 +95,7 @@ import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_chip.dart';
+import '../widgets/channel_notification_mode_sheet.dart';
 import '../widgets/formatted_message_text.dart';
 import '../widgets/mention_suggestions_panel.dart';
 import '../widgets/channel_resend_shortfall_indicator.dart';
@@ -1066,19 +1067,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   return const SizedBox.shrink();
                 }
                 final muteKey = widget.channel.muteKey;
-                final muted = settings.isChannelMuted(muteKey);
+                final mode = settings.getChannelNotificationMode(muteKey);
                 return IconButton(
-                  tooltip: muted
-                      ? context.l10n.channels_unmuteChannel
-                      : context.l10n.channels_muteChannel,
-                  icon: Icon(
-                    muted
-                        ? Icons.notifications_off_outlined
-                        : Icons.notifications_outlined,
+                  tooltip: context.l10n.channels_notificationModeTooltip(
+                    channelNotificationModeLabel(context, mode),
                   ),
-                  onPressed: () => muted
-                      ? settings.unmuteChannel(muteKey)
-                      : settings.muteChannel(muteKey),
+                  icon: Icon(channelNotificationModeIcon(mode)),
+                  onPressed: () => showChannelNotificationModeSheet(context, muteKey),
                 );
               },
             ),

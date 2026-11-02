@@ -4204,5 +4204,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Радионастройките са приложени, но устройството не потвърди новия размер на хеша на маршрута"
+  "settings_pathHashModeNotApplied": "Радионастройките са приложени, но устройството не потвърди новия размер на хеша на маршрута",
+  "channels_notificationSettings": "Настройки за известия",
+  "channels_notifyAll": "Всички съобщения",
+  "channels_notifyMentionsOnly": "Само споменавания",
+  "channels_notifyNone": "Заглушено",
+  "channels_notificationModeTooltip": "Известия: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

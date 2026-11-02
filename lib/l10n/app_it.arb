@@ -4202,5 +4202,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "Le impostazioni radio sono state applicate, ma il nodo non ha confermato la nuova dimensione dell’hash del percorso"
+  "settings_pathHashModeNotApplied": "Le impostazioni radio sono state applicate, ma il nodo non ha confermato la nuova dimensione dell’hash del percorso",
+  "channels_notificationSettings": "Impostazioni notifiche",
+  "channels_notifyAll": "Tutti i messaggi",
+  "channels_notifyMentionsOnly": "Solo menzioni",
+  "channels_notifyNone": "Silenziato",
+  "channels_notificationModeTooltip": "Notifiche: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }

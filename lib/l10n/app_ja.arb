@@ -4337,5 +4337,18 @@
       }
     }
   },
-  "settings_pathHashModeNotApplied": "無線設定は適用されましたが、ノードが新しい経路ハッシュのサイズを確認しませんでした"
+  "settings_pathHashModeNotApplied": "無線設定は適用されましたが、ノードが新しい経路ハッシュのサイズを確認しませんでした",
+  "channels_notificationSettings": "通知設定",
+  "channels_notifyAll": "すべてのメッセージ",
+  "channels_notifyMentionsOnly": "メンションのみ",
+  "channels_notifyNone": "ミュート",
+  "channels_notificationModeTooltip": "通知: {mode}",
+  "@channels_notificationModeTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
+
 }
