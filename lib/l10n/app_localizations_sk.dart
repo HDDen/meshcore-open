@@ -8094,6 +8094,11 @@ class AppLocalizationsSk extends AppLocalizations {
   String get contacts_manageGroups => 'Spravovať skupiny';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Predpona kľúča $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }

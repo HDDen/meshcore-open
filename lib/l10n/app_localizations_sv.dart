@@ -8085,6 +8085,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contacts_manageGroups => 'Hantera grupper';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Nyckelprefix $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }

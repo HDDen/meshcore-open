@@ -8147,6 +8147,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contacts_manageGroups => 'Gestisci gruppi';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Prefisso della chiave $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }

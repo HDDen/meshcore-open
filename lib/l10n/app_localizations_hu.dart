@@ -8124,6 +8124,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get contacts_manageGroups => 'Csoportok kezelése';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Kulcselőtag: $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }

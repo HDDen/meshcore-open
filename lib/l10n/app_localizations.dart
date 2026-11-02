@@ -13619,6 +13619,12 @@ abstract class AppLocalizations {
   /// **'Manage groups'**
   String get contacts_manageGroups;
 
+  /// No description provided for @contacts_keyPrefixSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Key prefix {prefix}'**
+  String contacts_keyPrefixSemantics(String prefix);
+
   /// No description provided for @community_shortId.
   ///
   /// In en, this message translates to:

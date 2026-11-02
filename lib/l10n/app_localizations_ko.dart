@@ -7753,6 +7753,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contacts_manageGroups => '그룹 관리';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return '키 접두사 $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }

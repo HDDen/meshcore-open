@@ -8168,6 +8168,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contacts_manageGroups => 'Gérer les groupes';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Préfixe de clé $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID : $id…';
   }

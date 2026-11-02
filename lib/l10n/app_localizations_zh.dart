@@ -7591,6 +7591,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_manageGroups => '管理分组';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return '密钥前缀 $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID:$id…';
   }

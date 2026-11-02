@@ -8009,6 +8009,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contacts_manageGroups => 'Manage groups';
 
   @override
+  String contacts_keyPrefixSemantics(String prefix) {
+    return 'Key prefix $prefix';
+  }
+
+  @override
   String community_shortId(Object id) {
     return 'ID: $id…';
   }
