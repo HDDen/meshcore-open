@@ -16,6 +16,10 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    # Reference checkouts for upstream comparison are separate packages.
+    # Analyze the working app here; do not use its dependencies for snapshots.
+    - meshcore-open---dev/**
+    - meshcore-open---rename-mco-adv-alfa/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

@@ -189,6 +189,22 @@ void main() {
     expect(rest['full'], rest['lite-aeic']);
   });
 
+  test('every profile uses the vendored flserial USB fixes', () {
+    for (final profile in _profiles) {
+      final dependencies = _section(
+        _read('pubspec.$profile.yaml'),
+        'dependencies',
+      );
+      expect(
+        dependencies['flserial']?.trim(),
+        'path: third_party/flserial',
+        reason: 'Switching to $profile must retain the native USB fixes',
+      );
+    }
+    expect(File('third_party/flserial/LICENSE').existsSync(), isTrue);
+    expect(File('third_party/flserial/PATCHES.md').existsSync(), isTrue);
+  });
+
   test('both image codec templates declare the same backend API', () {
     final onnx = _read(_onnxTemplate);
     final disabled = _read(_disabledCodecTemplate);

@@ -3171,6 +3171,13 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
 - Optional TCP transports are selected through `helpers/companion_tcp_dialer.dart`; ordinary endpoints use `Socket.connect`.
 
 ### USB Serial (flserial)
+- All build profiles use `path: third_party/flserial` (MeshEnvy e1864de API,
+  vendored by upstream `24743890`). The Linux reader waits for its callback,
+  with FIFO mutexes initialized before the thread. The GLIBC_2.2.5 baud-symbol
+  binding is limited to x86-64; other architectures keep their normal calls.
+  App-side handshake/close and CPU-work tracking are unchanged. Provenance:
+  `third_party/flserial/PATCHES.md`; native PTY check:
+  `python3 -B tool/test_linux_usb_native.py --library <libflserial.so>`.
 - Default baud rate: `115200`
 - Port enumeration: `MeshCoreConnector.listUsbPorts()`
 - Marker-and-length framed packets via `usb_serial_frame_codec.dart`: `0x3C`
@@ -3178,6 +3185,15 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
   payload length
 - macOS device-name resolution via `ioreg` (`utils/macos_usb_device_names.dart`)
 - API: `MeshCoreConnector.connectUsb(portName: ..., baudRate: 115200)`
+
+Linux packaging (`linux/CMakeLists.txt`) keeps `USE_SYSTEM_ONNXRUNTIME=OFF`.
+The ONNX plugin's build RPATH includes `$ORIGIN` and the bundled runtime's
+source directory so the application can link; the executable retains
+`$ORIGIN/lib` and uses DT_RPATH for indirect dependencies. ONNX names and
+provider libraries are installed as regular files with symlink targets
+resolved, preserving archive transport through Windows/WSL. `lite` remains
+independent of ONNX. U01's baseline and post-merge Flutter checks are accepted
+by the owner; native Linux/device checks remain pending.
 
 ## Dependencies
 
@@ -3194,7 +3210,7 @@ was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
 |---------|---------|---------|
 | flutter_blue_plus | ^2.1.0 | BLE scanning, connecting, and UART data transfer |
 | flutter_blue_plus_platform_interface | ^9.0.2 | Platform-interface layer required by flutter_blue_plus |
-| flserial | git (MeshEnvy fork) | USB serial transport for wired device connections (TODO: upstream pending) |
+| flserial | path: third_party/flserial (0.3.5) | Vendored MeshEnvy backend with upstream Linux USB/GLIBC fixes |
 
 **State / Storage**
 

@@ -81,16 +81,24 @@ set(USE_SYSTEM_ONNXRUNTIME OFF CACHE BOOL
   "Bundle ONNX Runtime with the application" FORCE)
 include(flutter/generated_plugins.cmake)
 
-# The executable is installed in the bundle root and correctly uses
-# $ORIGIN/lib. The ONNX plugin itself is installed inside lib/, so its
-# dependency on libonnxruntime.so.1 must be resolved relative to that directory
-# instead. RUNPATH is not inherited from the executable for indirect
-# dependencies.
+# Installed plugins live in lib/, so resolve ONNX next to the plugin. Keep
+# its download directory as well while building: the executable's linker
+# needs that location to resolve the plugin's libonnxruntime.so.1 dependency.
 if(TARGET flutter_onnxruntime_plugin)
+  set(_onnx_build_rpath "$ORIGIN")
+  foreach(_library IN LISTS PLUGIN_BUNDLED_LIBRARIES)
+    if("${_library}" MATCHES "/libonnxruntime\\.so$")
+      get_filename_component(_onnx_lib_dir "${_library}" DIRECTORY)
+      list(APPEND _onnx_build_rpath "${_onnx_lib_dir}")
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES _onnx_build_rpath)
   set_target_properties(flutter_onnxruntime_plugin PROPERTIES
-    BUILD_RPATH "$ORIGIN"
+    BUILD_RPATH "${_onnx_build_rpath}"
     INSTALL_RPATH "$ORIGIN")
 endif()
+# Use the executable's existing $ORIGIN/lib for indirect dependencies too.
+target_link_options(${BINARY_NAME} PRIVATE "-Wl,--disable-new-dtags")
 
 # Work around tinycthread/glibc 2.43+ conflict: glibc 2.43 (with Clang 21's
 # C23 default) exports once_flag from stdlib.h bt tinycthread in flserial
@@ -127,19 +135,36 @@ install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
-  if("${bundled_library}" MATCHES "libonnxruntime\\.so$")
-    # The ONNX Runtime archive provides a symlink chain:
-    # libonnxruntime.so -> libonnxruntime.so.1 -> versioned ELF library.
-    # Resolve it while configuring and install a regular file. Besides avoiding
-    # a broken chain, this keeps bundles archivable through \\wsl.localhost,
-    # where Windows tools cannot reliably follow Linux symlinks.
-    get_filename_component(ONNXRUNTIME_LIBRARY_REAL
-      "${bundled_library}" REALPATH)
-    if(NOT EXISTS "${ONNXRUNTIME_LIBRARY_REAL}")
+  if("${bundled_library}" MATCHES "/libonnxruntime\\.so$")
+    # Bundle the SONAME, the unversioned name, the versioned library and the
+    # shared provider. Install regular files under each name: symlink chains
+    # do not survive every Windows/WSL archive workflow.
+    get_filename_component(_onnx_lib_dir "${bundled_library}" DIRECTORY)
+    file(GLOB _onnx_runtime_libraries
+      "${_onnx_lib_dir}/libonnxruntime.so*"
+      "${_onnx_lib_dir}/libonnxruntime_providers_shared.so")
+    if(NOT _onnx_runtime_libraries)
+      message(FATAL_ERROR
+        "ONNX Runtime libraries were not found: ${bundled_library}")
+    endif()
+    foreach(_library IN LISTS _onnx_runtime_libraries)
+      get_filename_component(_real_library "${_library}" REALPATH)
+      if(NOT EXISTS "${_real_library}")
+        message(FATAL_ERROR "ONNX Runtime library was not found: ${_library}")
+      endif()
+      get_filename_component(_library_name "${_library}" NAME)
+      install(FILES "${_real_library}"
+        DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+        RENAME "${_library_name}"
+        COMPONENT Runtime)
+    endforeach()
+    # Some archives omit the SONAME link; the plugin still needs this name.
+    get_filename_component(_real_onnx_library "${bundled_library}" REALPATH)
+    if(NOT EXISTS "${_real_onnx_library}")
       message(FATAL_ERROR
         "ONNX Runtime library was not found: ${bundled_library}")
     endif()
-    install(FILES "${ONNXRUNTIME_LIBRARY_REAL}"
+    install(FILES "${_real_onnx_library}"
       DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
       RENAME "libonnxruntime.so.1"
       COMPONENT Runtime)

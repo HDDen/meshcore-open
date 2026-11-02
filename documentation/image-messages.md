@@ -11,6 +11,20 @@ MeshCore Open can send a highly compressed image as channel GRP_DATA packets. Un
 
 Downloads use the configured Hugging Face model bundle, support resume, and verify file checksums. Download the model while internet is available. Once installed, encoding and reconstruction run locally; photos are not uploaded for inference. Compatible recipients need the same supported codec/model format.
 
+## Linux release bundle
+
+The `lite-aeic` and `full` profiles bundle ONNX Runtime beside the image plugin.
+The plugin keeps `$ORIGIN` and the runtime download directory in its build RPATH
+so the application can link; the shipped bundle resolves the runtime from its
+own `lib/` directory. ONNX library names, including `libonnxruntime.so.1` and
+the shared provider when supplied by the runtime archive, are installed as
+regular files so Windows/WSL archive tools do not break symlink chains.
+Several names can therefore hold copies of the same runtime binary.
+
+The `lite` profile has no ONNX backend and keeps building without these files.
+A Linux release still needs testing outside the build directory, including
+`ldd` on the executable/plugin and an actual AEIC encode/decode.
+
 ## Android: сбой при открытии отправки или обработке AEIC
 
 Если приложение полностью закрывается при обработке AEIC на Android, причиной

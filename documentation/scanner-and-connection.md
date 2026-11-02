@@ -116,6 +116,19 @@ From the Scanner screen, tap the **USB** icon button in the app bar.
 - On connection failure, the port list automatically refreshes
 - Platform-specific error messages for common USB failures (permission denied, device missing, device detached, device busy, driver missing, port invalid, timeout, and more)
 
+### Linux USB backend
+
+Desktop USB uses the vendored `third_party/flserial` package. On Linux its
+reader waits for the Dart callback before delivering bytes received immediately
+after opening a port. FIFO mutexes are initialized before the reader starts.
+The existing handshake and close/reconnect ordering are unchanged.
+
+After updating from a build that used the Git dependency, developers must run
+`flutter pub get` and rebuild the Linux app. A Dart hot reload does not replace
+the native library. The GLIBC baud-symbol compatibility patch applies to x86-64;
+other architectures retain their previous libc bindings. See
+[vendored backend notes](../third_party/flserial/PATCHES.md) for the native test.
+
 ---
 
 ## TCP Connection
