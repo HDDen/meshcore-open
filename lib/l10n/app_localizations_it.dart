@@ -8926,4 +8926,12 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Impossibile aprire la pagina delle versioni nel browser.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Batteria scarica';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Batteria di $deviceName: $percent%';
+  }
 }

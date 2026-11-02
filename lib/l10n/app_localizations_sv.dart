@@ -8853,4 +8853,12 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Kunde inte öppna sidan med utgåvor i webbläsaren.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Låg batterinivå';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Batterinivå för $deviceName: $percent%';
+  }
 }

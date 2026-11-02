@@ -8878,4 +8878,12 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'De releasepagina kon niet in de browser worden geopend.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Batterij bijna leeg';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Batterijniveau van $deviceName: $percent%';
+  }
 }

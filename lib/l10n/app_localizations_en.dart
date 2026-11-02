@@ -8771,4 +8771,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Could not open the releases page in your browser.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Low battery';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return '$deviceName battery is at $percent%';
+  }
 }

@@ -8282,4 +8282,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updates_errorBrowser => '无法在浏览器中打开发布页面。';
+
+  @override
+  String get notification_lowBatteryTitle => '电量不足';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return '$deviceName 的电池电量为 $percent%';
+  }
 }

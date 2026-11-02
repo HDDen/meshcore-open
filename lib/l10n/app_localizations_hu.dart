@@ -8901,4 +8901,12 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Nem sikerült megnyitni a kiadások oldalát a böngészőben.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Alacsony töltöttség';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return '$deviceName akkumulátorának töltöttsége: $percent%';
+  }
 }

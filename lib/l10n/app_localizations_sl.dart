@@ -8862,4 +8862,12 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Strani z izdajami ni bilo mogoče odpreti v brskalniku.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Nizka raven baterije';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Baterija naprave $deviceName: $percent%';
+  }
 }

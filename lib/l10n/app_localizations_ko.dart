@@ -8471,4 +8471,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get updates_errorBrowser => '브라우저에서 릴리스 페이지를 열지 못했습니다.';
+
+  @override
+  String get notification_lowBatteryTitle => '배터리 부족';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return '$deviceName 배터리 잔량: $percent%';
+  }
 }

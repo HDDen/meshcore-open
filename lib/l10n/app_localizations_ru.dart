@@ -8889,4 +8889,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Не удалось открыть страницу релизов в браузере.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Низкий заряд батареи';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Заряд батареи ноды «$deviceName»: $percent%';
+  }
 }

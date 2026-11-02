@@ -8909,4 +8909,12 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Не вдалося відкрити сторінку релізів у браузері.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Низький заряд батареї';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Заряд батареї ноди «$deviceName»: $percent%';
+  }
 }

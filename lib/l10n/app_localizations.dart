@@ -14872,6 +14872,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the releases page in your browser.'**
   String get updates_errorBrowser;
+
+  /// Title of the low battery notification
+  ///
+  /// In en, this message translates to:
+  /// **'Low battery'**
+  String get notification_lowBatteryTitle;
+
+  /// Body of the low battery notification; deviceName is the connected radio's node name
+  ///
+  /// In en, this message translates to:
+  /// **'{deviceName} battery is at {percent}%'**
+  String notification_lowBatteryBody(String deviceName, int percent);
 }
 
 class _AppLocalizationsDelegate

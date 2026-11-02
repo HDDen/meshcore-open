@@ -8927,4 +8927,12 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Страницата с изданията не можа да бъде отворена в браузъра.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Нисък заряд на батерията';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Зарядът на батерията на $deviceName е $percent%';
+  }
 }

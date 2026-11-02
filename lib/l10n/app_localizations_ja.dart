@@ -8467,4 +8467,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updates_errorBrowser => 'ブラウザーでリリースページを開けませんでした。';
+
+  @override
+  String get notification_lowBatteryTitle => 'バッテリー残量低下';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return '$deviceName のバッテリー残量: $percent%';
+  }
 }

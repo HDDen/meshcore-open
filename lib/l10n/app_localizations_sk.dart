@@ -8863,4 +8863,12 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Nepodarilo sa otvoriť stránku vydaní v prehliadači.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Nízka úroveň batérie';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Batéria zariadenia $deviceName: $percent%';
+  }
 }

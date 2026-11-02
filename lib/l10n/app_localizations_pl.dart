@@ -8924,4 +8924,12 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get updates_errorBrowser =>
       'Nie udało się otworzyć strony wydań w przeglądarce.';
+
+  @override
+  String get notification_lowBatteryTitle => 'Niski poziom baterii';
+
+  @override
+  String notification_lowBatteryBody(String deviceName, int percent) {
+    return 'Poziom baterii $deviceName: $percent%';
+  }
 }
