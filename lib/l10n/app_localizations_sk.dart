@@ -8871,4 +8871,8 @@ class AppLocalizationsSk extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Batéria zariadenia $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Nastavenia rádia boli použité, ale uzol nepotvrdil novú veľkosť hashu trasy';
 }

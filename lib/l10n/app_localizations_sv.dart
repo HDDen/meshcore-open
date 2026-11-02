@@ -8861,4 +8861,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Batterinivå för $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Radioinställningarna tillämpades, men noden bekräftade inte den nya storleken på sökvägshashen';
 }

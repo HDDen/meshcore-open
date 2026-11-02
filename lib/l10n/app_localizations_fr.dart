@@ -8955,4 +8955,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Batterie de $deviceName : $percent %';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Les paramètres radio ont été appliqués, mais le nœud n’a pas confirmé la nouvelle taille du hachage du chemin';
 }

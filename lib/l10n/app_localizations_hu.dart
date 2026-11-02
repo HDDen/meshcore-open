@@ -8909,4 +8909,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return '$deviceName akkumulátorának töltöttsége: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'A rádióbeállítások érvénybe léptek, de a csomópont nem erősítette meg az útvonalhash új méretét';
 }

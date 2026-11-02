@@ -8924,4 +8924,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Batería de $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Se aplicaron los ajustes de radio, pero el nodo no confirmó el nuevo tamaño del hash de ruta';
 }

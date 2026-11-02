@@ -8870,4 +8870,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Baterija naprave $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Radijske nastavitve so bile uporabljene, vendar vozlišče ni potrdilo nove velikosti zgoščene vrednosti poti';
 }

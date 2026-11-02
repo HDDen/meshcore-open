@@ -14884,6 +14884,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{deviceName} battery is at {percent}%'**
   String notification_lowBatteryBody(String deviceName, int percent);
+
+  /// No description provided for @settings_pathHashModeNotApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio settings were applied, but the radio did not confirm the new path hash size'**
+  String get settings_pathHashModeNotApplied;
 }
 
 class _AppLocalizationsDelegate

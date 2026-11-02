@@ -8931,4 +8931,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Akkustand von $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Die Funkeinstellungen wurden übernommen, aber das Gerät hat die neue Pfad-Hash-Größe nicht bestätigt';
 }

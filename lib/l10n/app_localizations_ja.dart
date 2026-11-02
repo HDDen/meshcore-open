@@ -8475,4 +8475,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return '$deviceName のバッテリー残量: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      '無線設定は適用されましたが、ノードが新しい経路ハッシュのサイズを確認しませんでした';
 }

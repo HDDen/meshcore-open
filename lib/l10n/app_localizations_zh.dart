@@ -8290,4 +8290,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return '$deviceName 的电池电量为 $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied => '无线电设置已应用，但节点未确认新的路径哈希大小';
 }

@@ -8886,4 +8886,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Batterijniveau van $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'De radio-instellingen zijn toegepast, maar de node heeft de nieuwe pad-hashgrootte niet bevestigd';
 }

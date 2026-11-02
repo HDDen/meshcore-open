@@ -8897,4 +8897,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Заряд батареи ноды «$deviceName»: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Настройки радио применены, но нода не подтвердила новый размер хэша маршрута';
 }

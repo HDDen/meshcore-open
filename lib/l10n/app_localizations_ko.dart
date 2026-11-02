@@ -8479,4 +8479,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return '$deviceName 배터리 잔량: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      '무선 설정은 적용되었지만 노드가 새 경로 해시 크기를 확인하지 않았습니다';
 }

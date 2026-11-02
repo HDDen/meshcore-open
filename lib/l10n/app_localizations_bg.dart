@@ -8935,4 +8935,8 @@ class AppLocalizationsBg extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Зарядът на батерията на $deviceName е $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Радионастройките са приложени, но устройството не потвърди новия размер на хеша на маршрута';
 }

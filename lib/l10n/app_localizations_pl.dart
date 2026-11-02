@@ -8932,4 +8932,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String notification_lowBatteryBody(String deviceName, int percent) {
     return 'Poziom baterii $deviceName: $percent%';
   }
+
+  @override
+  String get settings_pathHashModeNotApplied =>
+      'Ustawienia radia zostały zastosowane, ale węzeł nie potwierdził nowego rozmiaru skrótu trasy';
 }
