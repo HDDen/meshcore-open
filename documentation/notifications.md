@@ -60,6 +60,24 @@ iOS notifications do not have reply actions yet.
 
 MeshCore Open works in Android Auto as a notification-based messaging app. There is no MeshCore screen in the car; Android Auto provides the interface.
 
+Android Auto support is **enabled by default** in this fork, in all three build
+profiles. To omit it from a build, pass the `androidAuto=false` Gradle property:
+
+```bash
+flutter build apk --release --android-project-arg=androidAuto=false
+```
+
+Omit the property or pass `androidAuto=true` to include support. Only `true` and
+`false` are accepted; another value fails the build configuration.
+
+When enabled, the build merges `android/app/src/androidAuto/` (the car manifest
+metadata and `automotive_app_desc.xml`). With `false`, those entries/resources
+are absent and Android Auto does not list the app. Phone/watch notification
+replies and the app's common services remain available in either variant.
+The property is a build option, not an in-app switch. Upstream uses default-off
+to separate builds distributed for Android Auto through Google Play; this fork
+retains its existing default-on behavior.
+
 - New direct and channel messages appear on the car display and can be read aloud.
 - Reply by voice or with a suggested reply; replies follow the rules above (splitting, failure notifications, no translation).
 - Android Auto shows **Reply** and **Mark as read**. **Mute channel** is marked as a mute action, but Android Auto only documents reply and mark-as-read for messaging apps, so mute may not appear in the car; use the phone, a watch, or the bell icon.
@@ -72,6 +90,23 @@ Limitations:
 - Sideloaded or debug builds only appear in Android Auto when its developer setting **Unknown sources** is on.
 
 Testing with the Desktop Head Unit (DHU): enable Android Auto developer mode (tap **Version** about 10 times in Android Auto settings), turn on **Unknown sources**, choose **Start head unit server**, run `adb forward tcp:5277 tcp:5277`, then start `desktop-head-unit` from the SDK's `extras/google/auto` package. Use DHU 2.1 or newer; version 2.0 disconnects from current Android Auto releases.
+
+### Checking Android Auto build variants
+
+After generating the merged manifests for a default build, `androidAuto=true`
+and `androidAuto=false`, save each XML under a different name and compare them:
+
+```sh
+python -B tool/check_android_auto_manifests.py --default default.xml --enabled enabled.xml --disabled disabled.xml
+```
+
+Use Gradle's actual `processDebugMainManifest` outputs, not the source manifests.
+The checker requires default and true to match, and false to differ only by the
+car metadata. It also checks that the notification action receiver and backup
+references remain common. It does not build APKs, validate packaged resources,
+or test an Android Auto head unit; both build variants still need Android
+build/device verification. For the current AGP, the debug XML is under
+`build/app/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml`.
 
 ### Notification Tap Behavior
 

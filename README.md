@@ -512,6 +512,19 @@ flutter build windows --release
 flutter build linux --release
 ```
 
+### Android Auto build option
+
+Android Auto messaging support is enabled by default in every Android build
+profile. To build without the car declaration and descriptor, use:
+
+```bash
+flutter build apk --release --android-project-arg=androidAuto=false
+```
+
+Omit the property or set `androidAuto=true` to retain Android Auto. Replies from
+phone notifications and watches work in both variants. This option is applied
+at build time; see the [notification guide](documentation/notifications.md#android-auto).
+
 ### Build profiles: lite / lite-aeic / full
 
 The app can be built in three profiles:

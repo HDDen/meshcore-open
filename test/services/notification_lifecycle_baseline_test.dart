@@ -195,6 +195,101 @@ void main() {
     }, timeout: timeout);
 
     for (final type in ['direct', 'channel']) {
+      testWidgets(
+        '$type keeps the Android Auto and watch notification contract',
+        (tester) async {
+          await _withNotification(tester, (h) async {
+            h.service.setSelfName('local radio');
+            final result = _Result(h.emit(type));
+            await tester.pump();
+            expect(result.completed, isTrue);
+            expect(result.error, isNull);
+            expect(h.plugin.shown, hasLength(1));
+
+            final details = h.plugin.android(h.plugin.shown.single);
+            expect(details['category'], 'msg');
+            expect(details['style'], AndroidNotificationStyle.messaging.index);
+            final style = details['styleInformation'] as Map<Object?, Object?>;
+            expect(style['groupConversation'], type == 'channel');
+            expect(
+              style['conversationTitle'],
+              type == 'channel' ? 'synthetic channel' : null,
+            );
+            final person = style['person'] as Map<Object?, Object?>;
+            expect(person['name'], 'local radio');
+            final messages = style['messages'] as List<Object?>;
+            expect(messages, hasLength(1));
+            final message = messages.single as Map<Object?, Object?>;
+            expect(message['text'], 'synthetic text');
+            final sender = message['person'] as Map<Object?, Object?>;
+            expect(sender['name'], 'synthetic sender');
+
+            final actions = (details['actions'] as List<Object?>)
+                .cast<Map<Object?, Object?>>();
+            expect(actions.map((action) => action['id']), [
+              notificationReplyActionId,
+              notificationMarkReadActionId,
+              if (type == 'channel') notificationMuteActionId,
+            ]);
+            final reply = actions.first;
+            expect(reply['semanticAction'], SemanticAction.reply.value);
+            expect(reply['allowGeneratedReplies'], isTrue);
+            expect(reply['showsUserInterface'], isFalse);
+            expect(reply['cancelNotification'], isFalse);
+            final inputs = reply['inputs'] as List<Object?>;
+            expect(inputs, hasLength(1));
+            final input = inputs.single as Map<Object?, Object?>;
+            expect(input['allowFreeFormInput'], isTrue);
+            expect(actions[1]['semanticAction'], SemanticAction.markAsRead.value);
+            expect(actions[1]['invisible'], isTrue);
+            if (type == 'channel') {
+              expect(actions[2]['semanticAction'], SemanticAction.mute.value);
+            }
+          });
+        },
+        timeout: timeout,
+      );
+
+      testWidgets(
+        '$type voice reply retains the conversation and remote reply action',
+        (tester) async {
+          await _withNotification(tester, (h) async {
+            final initial = _Result(h.emit(type));
+            await tester.pump();
+            expect(initial.completed, isTrue);
+            expect(initial.error, isNull);
+            final payload = type == 'channel'
+                ? 'channel:2'
+                : 'message:synthetic-contact';
+            final reply = NotificationReply.parse(
+              actionId: notificationReplyActionId,
+              payload: payload,
+              input: 'voice reply',
+            )!;
+            final repost = _Result(h.service.showOwnReply(reply, reply.text));
+            await tester.pump();
+            expect(repost.completed, isTrue);
+            expect(repost.error, isNull);
+            expect(h.plugin.shown, hasLength(2));
+            final call = h.plugin.shown.last;
+            expect(h.plugin.args(call)['payload'], payload);
+            final details = h.plugin.android(call);
+            expect(details['style'], AndroidNotificationStyle.messaging.index);
+            final style = details['styleInformation'] as Map<Object?, Object?>;
+            final messages = style['messages'] as List<Object?>;
+            expect(
+              messages.map((item) => (item as Map<Object?, Object?>)['text']),
+              ['synthetic text', 'voice reply'],
+            );
+            final actions = (details['actions'] as List<Object?>)
+                .cast<Map<Object?, Object?>>();
+            expect(actions.first['id'], notificationReplyActionId);
+            expect(actions.first['semanticAction'], SemanticAction.reply.value);
+          });
+        },
+        timeout: timeout,
+      );
+
       testWidgets('$type public Future returns before native show completes', (tester) async {
         await _withNotification(tester, (h) async {
           final gate = h.plugin.hold('show');

@@ -129,6 +129,28 @@ android {
     // }
 }
 
+// Keep Android Auto enabled by default in this fork. Disable its declaration
+// and resources with --android-project-arg=androidAuto=false (or -PandroidAuto=false).
+// Ordinary phone/watch notification actions stay registered in either build.
+val androidAutoEnabled = providers.gradleProperty("androidAuto")
+    .map { value ->
+        value.toBooleanStrictOrNull()
+            ?: throw GradleException("androidAuto must be 'true' or 'false'.")
+    }
+    .getOrElse(true)
+
+if (androidAutoEnabled) {
+    android.sourceSets.getByName("main").res.srcDir("src/androidAuto/res")
+}
+
+androidComponents {
+    onVariants { variant ->
+        if (androidAutoEnabled) {
+            variant.sources.manifests.addStaticManifestFile("src/androidAuto/AndroidManifest.xml")
+        }
+    }
+}
+
 flutter {
     source = "../.."
 }

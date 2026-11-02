@@ -3323,6 +3323,18 @@ was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
 
 **Build config (`android/app/build.gradle.kts`)**: `applicationId = com.meshcore.mcoadvanced`, NDK `29.0.14206865`, Java/Kotlin 17 with core-library desugaring (`desugar_jdk_libs:2.1.4`), release signing via `key.properties` (debug fallback).
 
+**Android Auto build selection (U02).** `android/app/build.gradle.kts` reads
+Gradle property `androidAuto`, defaults to true, and rejects values other than
+true/false. With Auto enabled it adds `src/androidAuto/res` to main resources
+and the optional manifest through `variant.sources.manifests`. With
+`--android-project-arg=androidAuto=false` both additions are omitted. The
+ActionBroadcastReceiver, common services and backup XML rules stay in main;
+notification replies from the phone/watches do not depend on this property.
+The four pubspec profiles and Dart notifications are unchanged. Guide:
+`documentation/notifications.md`; actual merged-artifact check:
+`tool/check_android_auto_manifests.py`. The owner accepted the pre-change
+notification baseline; post-merge Flutter/Gradle/device checks are pending.
+
 ### iOS (`ios/Runner/Info.plist`)
 Deployment target is owned by the build profile, not edited by hand: `tool/use_translation_profile.dart` writes it into `ios/Podfile` and all three `IPHONEOS_DEPLOYMENT_TARGET` entries in `project.pbxproj` — 13.0 for **lite**, 16.0 for **lite-aeic** and **full**, where `flutter_onnxruntime` forces it. The two files must agree: CocoaPods fails the build outright when the Podfile platform is lower than a plugin needs. Switching a profile requires dropping `ios/Pods` and `ios/Podfile.lock` before `pod install`. The Podfile also declares `onnxruntime-objc` with `:modular_headers => true`, guarded by a check for `flutter_onnxruntime` in `.flutter-plugins-dependencies`: that pod ships no module map, so CocoaPods refuses to link the Swift plugin statically without one, and the guard keeps the lite profile from pulling a runtime it does not use.
 - Display name `MCO Advanced`
