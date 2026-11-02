@@ -3497,5 +3497,21 @@
   "@updates_errorHttp": {"placeholders": {"code": {"type": "int"}}},
   "updates_errorResponse": "GitHub вернул некорректные данные о релизе или коммите.",
   "updates_errorStorage": "Не удалось сохранить состояние проверки обновлений.",
-  "updates_errorBrowser": "Не удалось открыть страницу релизов в браузере."
+  "updates_errorBrowser": "Не удалось открыть страницу релизов в браузере.",
+  "notification_lowBatteryTitle": "Низкий заряд батареи",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Заряд батареи ноды «{deviceName}»: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

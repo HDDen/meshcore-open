@@ -4004,5 +4004,21 @@
   "updates_errorHttp": "O GitHub retornou o erro HTTP {code}.",
   "updates_errorResponse": "O GitHub retornou dados inválidos da versão ou do commit.",
   "updates_errorStorage": "Não foi possível salvar o estado da verificação de atualizações.",
-  "updates_errorBrowser": "Não foi possível abrir a página de versões no navegador."
+  "updates_errorBrowser": "Não foi possível abrir a página de versões no navegador.",
+  "notification_lowBatteryTitle": "Bateria fraca",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Bateria de {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -33,6 +33,9 @@ class NotificationService {
   NotificationService._internal();
 
   final _backgroundWork = NotificationBackgroundWork();
+  // Serialize only battery show/cancel calls. A recovery/disconnect cancel
+  // must run after an earlier native show, even when that show completes late.
+  Future<void> _lowBatteryQueue = Future<void>.value();
 
   void attachBackgroundWorkTracker(BackgroundWorkTracker tracker) =>
       _backgroundWork.attach(tracker);
@@ -147,6 +150,9 @@ class NotificationService {
     _pendingTapPayload = null;
     _lastNotificationTime = null;
     _rateLimitNow = DateTime.now;
+    // A completed Future retains its zone. Start a fresh queue in this
+    // test zone, rather than scheduling work in a previous FakeAsync zone.
+    _lowBatteryQueue = Future<void>.value();
     _pendingNotifications.clear();
     _isBatchingActive = false;
     _suppressNotifications = false;
@@ -928,6 +934,58 @@ class NotificationService {
     }
   }
 
+  /// Posts a low-battery alert for the connected device.
+  ///
+  /// Uses a per-device, per-threshold notification id so each alert level
+  /// updates its own notification instead of stacking, and alerts for
+  /// different radios don't overwrite each other. Bypasses the rate-limit
+  /// queue, which only handles message and advert notifications.
+  Future<void> showLowBatteryNotification({
+    required String deviceKey,
+    required String deviceName,
+    required int batteryPercent,
+    required int threshold,
+  }) => _backgroundWork.run(() {
+    final operation = _lowBatteryQueue.then<void>((_) async {
+      try {
+        if (!await _ensureCanNotify()) {
+          return;
+        }
+        const notificationDetails = NotificationDetails(
+          android: AndroidNotificationDetails(
+            'low_battery',
+            'Low Battery',
+            channelDescription: 'Low battery alerts for the connected device',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: true,
+          ),
+          macOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: false,
+            presentSound: true,
+          ),
+        );
+        await _notifications.show(
+          id: _lowBatteryNotificationId(deviceKey, threshold),
+          title: _l10n.notification_lowBatteryTitle,
+          body: _l10n.notification_lowBatteryBody(deviceName, batteryPercent),
+          notificationDetails: notificationDetails,
+          payload: 'low_battery',
+        );
+      } catch (error) {
+        debugPrint('Failed to show low battery notification: $error');
+      }
+    });
+    _lowBatteryQueue = operation;
+    return operation;
+  });
+
   /// Returns a privacy-safe identifier for debug logging.
   /// - advert: shows device name (body contains contactName)
   /// - message: shows "from: sender" (avoids logging message content)
@@ -1022,6 +1080,39 @@ class NotificationService {
     await _notifications.cancel(id: channelIndex.hashCode);
     await _updateBadge(totalUnreadCount);
   });
+
+  static int _lowBatteryNotificationId(String deviceKey, int threshold) =>
+      'low_battery:$deviceKey:$threshold'.hashCode;
+
+  /// Cancel a device's low-battery notifications for the given thresholds.
+  Future<void> clearLowBatteryNotifications(
+    String deviceKey,
+    Iterable<int> thresholds,
+  ) {
+    final toClear = thresholds.toList(growable: false);
+    return _backgroundWork.run(() {
+      final operation = _lowBatteryQueue.then<void>((_) async {
+        try {
+          if (!await _ensureInitialized()) {
+            return;
+          }
+          for (final threshold in toClear) {
+            try {
+              await _notifications.cancel(
+                id: _lowBatteryNotificationId(deviceKey, threshold),
+              );
+            } catch (error) {
+              debugPrint('Failed to clear low battery notification: $error');
+            }
+          }
+        } catch (error) {
+          debugPrint('Failed to prepare low battery cleanup: $error');
+        }
+      });
+      _lowBatteryQueue = operation;
+      return operation;
+    });
+  }
 
   /// Cancel advert notifications for the given contact public key hexes.
   Future<void> clearAdvertNotifications(List<String> contactIds) => _backgroundWork.run(() async {

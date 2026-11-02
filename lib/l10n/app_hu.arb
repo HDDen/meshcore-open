@@ -4219,5 +4219,21 @@
   "updates_errorHttp": "A GitHub {code} HTTP-hibát adott vissza.",
   "updates_errorResponse": "A GitHub érvénytelen kiadási vagy commitadatokat adott vissza.",
   "updates_errorStorage": "Nem sikerült menteni a frissítéskeresés állapotát.",
-  "updates_errorBrowser": "Nem sikerült megnyitni a kiadások oldalát a böngészőben."
+  "updates_errorBrowser": "Nem sikerült megnyitni a kiadások oldalát a böngészőben.",
+  "notification_lowBatteryTitle": "Alacsony töltöttség",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "{deviceName} akkumulátorának töltöttsége: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

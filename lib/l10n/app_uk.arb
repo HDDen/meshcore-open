@@ -4195,5 +4195,21 @@
   "updates_errorHttp": "GitHub повернув помилку HTTP {code}.",
   "updates_errorResponse": "GitHub повернув некоректні дані про реліз або коміт.",
   "updates_errorStorage": "Не вдалося зберегти стан перевірки оновлень.",
-  "updates_errorBrowser": "Не вдалося відкрити сторінку релізів у браузері."
+  "updates_errorBrowser": "Не вдалося відкрити сторінку релізів у браузері.",
+  "notification_lowBatteryTitle": "Низький заряд батареї",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Заряд батареї ноди «{deviceName}»: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

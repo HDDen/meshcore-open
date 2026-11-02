@@ -43,6 +43,33 @@ Notification text states:
 - **Reconnecting**: `app_connectionLostReconnect`, retained while BLE automatic reconnect continues
 - **Engine/process unavailable**: `app_connectionLostBreaked`
 
+### 5. Connected Radio Low-Battery Alerts
+
+With **Enable Notifications** on, the app alerts at **25%** and **10%** remaining
+on the connected radio. Each threshold needs two consecutive valid battery
+readings at or below it. If both thresholds are confirmed together, only the
+more urgent alert is shown. The body names the radio and its estimated charge.
+OS notification permission is required; there is no separate battery toggle.
+
+The percentage uses the same per-radio chemistry or custom voltage range as
+the battery indicator. A zero reading or, for ordinary profiles, a reading below
+2 V does not trigger an alert and breaks the confirmation sequence. An explicit
+custom/additional profile whose minimum is below 2 V remains supported. The
+raw voltage and battery indicator are not changed by this notification filter.
+
+A threshold alerts once per connection session until charge rises strictly
+above it by five percentage points: above **30%** or **15%**, respectively.
+Recharging past that boundary clears the corresponding notification and allows
+another alert after two new low readings. Disconnecting, resetting the
+connection handshake or changing radio identity clears the previous radio's
+alert state. These alerts use existing battery responses; they add no polling
+requests or timers, so power-saving battery intervals still apply.
+
+Android uses a separate high-priority `low_battery` notification channel.
+Other supported native platforms use their existing notification backend.
+Battery show/cancel operations run in order, independently of message alerts;
+a delayed show is followed by its cleanup if the radio disconnects meanwhile.
+
 ### Replying from Notifications, Watches, and Android Auto (Android)
 
 Message notifications can be answered without opening the app, from the notification shade, a paired Wear OS or Galaxy watch, or Android Auto (which reads messages aloud and takes voice replies).

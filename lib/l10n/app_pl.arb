@@ -4255,5 +4255,21 @@
   "updates_errorHttp": "GitHub zwrócił błąd HTTP {code}.",
   "updates_errorResponse": "GitHub zwrócił nieprawidłowe dane wydania lub commitu.",
   "updates_errorStorage": "Nie udało się zapisać stanu sprawdzania aktualizacji.",
-  "updates_errorBrowser": "Nie udało się otworzyć strony wydań w przeglądarce."
+  "updates_errorBrowser": "Nie udało się otworzyć strony wydań w przeglądarce.",
+  "notification_lowBatteryTitle": "Niski poziom baterii",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Poziom baterii {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -4320,5 +4320,21 @@
   "updates_errorHttp": "GitHubがHTTPエラー{code}を返しました。",
   "updates_errorResponse": "GitHubから無効なリリース情報またはコミット情報が返されました。",
   "updates_errorStorage": "更新確認の状態を保存できませんでした。",
-  "updates_errorBrowser": "ブラウザーでリリースページを開けませんでした。"
+  "updates_errorBrowser": "ブラウザーでリリースページを開けませんでした。",
+  "notification_lowBatteryTitle": "バッテリー残量低下",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "{deviceName} のバッテリー残量: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

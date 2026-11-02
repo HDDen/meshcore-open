@@ -4352,5 +4352,21 @@
   "updates_errorHttp": "GitHub가 HTTP 오류 {code}을(를) 반환했습니다.",
   "updates_errorResponse": "GitHub가 유효하지 않은 릴리스 또는 커밋 정보를 반환했습니다.",
   "updates_errorStorage": "업데이트 확인 상태를 저장하지 못했습니다.",
-  "updates_errorBrowser": "브라우저에서 릴리스 페이지를 열지 못했습니다."
+  "updates_errorBrowser": "브라우저에서 릴리스 페이지를 열지 못했습니다.",
+  "notification_lowBatteryTitle": "배터리 부족",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "{deviceName} 배터리 잔량: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

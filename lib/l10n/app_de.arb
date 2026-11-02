@@ -4350,5 +4350,21 @@
   "updates_errorHttp": "GitHub hat den HTTP-Fehler {code} zurückgegeben.",
   "updates_errorResponse": "GitHub hat ungültige Release- oder Commit-Daten zurückgegeben.",
   "updates_errorStorage": "Der Status der Update-Prüfung konnte nicht gespeichert werden.",
-  "updates_errorBrowser": "Die Release-Seite konnte nicht im Browser geöffnet werden."
+  "updates_errorBrowser": "Die Release-Seite konnte nicht im Browser geöffnet werden.",
+  "notification_lowBatteryTitle": "Niedriger Akkustand",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Akkustand von {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

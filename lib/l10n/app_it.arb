@@ -4185,5 +4185,21 @@
   "updates_errorHttp": "GitHub ha restituito l’errore HTTP {code}.",
   "updates_errorResponse": "GitHub ha restituito dati della versione o del commit non validi.",
   "updates_errorStorage": "Impossibile salvare lo stato della verifica degli aggiornamenti.",
-  "updates_errorBrowser": "Impossibile aprire la pagina delle versioni nel browser."
+  "updates_errorBrowser": "Impossibile aprire la pagina delle versioni nel browser.",
+  "notification_lowBatteryTitle": "Batteria scarica",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Batteria di {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

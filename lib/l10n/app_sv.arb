@@ -3998,5 +3998,21 @@
   "updates_errorHttp": "GitHub returnerade HTTP-fel {code}.",
   "updates_errorResponse": "GitHub returnerade ogiltiga uppgifter om utgåvan eller committen.",
   "updates_errorStorage": "Kunde inte spara uppdateringskontrollens status.",
-  "updates_errorBrowser": "Kunde inte öppna sidan med utgåvor i webbläsaren."
+  "updates_errorBrowser": "Kunde inte öppna sidan med utgåvor i webbläsaren.",
+  "notification_lowBatteryTitle": "Låg batterinivå",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Batterinivå för {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

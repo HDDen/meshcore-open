@@ -4188,5 +4188,21 @@
   "updates_errorHttp": "GitHub je vrnil napako HTTP {code}.",
   "updates_errorResponse": "GitHub je vrnil neveljavne podatke o izdaji ali potrditvi.",
   "updates_errorStorage": "Stanja preverjanja posodobitev ni bilo mogoče shraniti.",
-  "updates_errorBrowser": "Strani z izdajami ni bilo mogoče odpreti v brskalniku."
+  "updates_errorBrowser": "Strani z izdajami ni bilo mogoče odpreti v brskalniku.",
+  "notification_lowBatteryTitle": "Nizka raven baterije",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Baterija naprave {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

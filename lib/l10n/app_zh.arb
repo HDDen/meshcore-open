@@ -4220,5 +4220,21 @@
   "updates_errorHttp": "GitHub 返回 HTTP 错误 {code}。",
   "updates_errorResponse": "GitHub 返回了无效的发布版本或提交信息。",
   "updates_errorStorage": "无法保存更新检查状态。",
-  "updates_errorBrowser": "无法在浏览器中打开发布页面。"
+  "updates_errorBrowser": "无法在浏览器中打开发布页面。",
+  "notification_lowBatteryTitle": "电量不足",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "{deviceName} 的电池电量为 {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

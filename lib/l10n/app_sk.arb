@@ -4188,5 +4188,21 @@
   "updates_errorHttp": "GitHub vrátil chybu HTTP {code}.",
   "updates_errorResponse": "GitHub vrátil neplatné údaje vydania alebo commitu.",
   "updates_errorStorage": "Nepodarilo sa uložiť stav kontroly aktualizácií.",
-  "updates_errorBrowser": "Nepodarilo sa otvoriť stránku vydaní v prehliadači."
+  "updates_errorBrowser": "Nepodarilo sa otvoriť stránku vydaní v prehliadači.",
+  "notification_lowBatteryTitle": "Nízka úroveň batérie",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Batéria zariadenia {deviceName}: {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

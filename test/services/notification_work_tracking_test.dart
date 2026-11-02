@@ -125,6 +125,10 @@ class _Harness {
       contactName: 'synthetic repeater', contactType: 'Repeater', contactId: 'synthetic-advert',
     ),
     'summary' => service.showSyncSummaryNotification(messagesCount: 1, channelMessagesCount: 2),
+    'lowBattery' => service.showLowBatteryNotification(
+      deviceKey: 'synthetic-device', deviceName: 'Synthetic radio',
+      batteryPercent: 20, threshold: 25,
+    ),
     _ => throw ArgumentError.value(type),
   };
 
@@ -211,6 +215,87 @@ void main() {
   tearDown(PrefsManager.reset);
 
   group('notification work tracking', () {
+    testWidgets('denied OS permission skips the battery show and releases work', (tester) async {
+      await _withNotification(tester, (h) async {
+        h.plugin.allowed = false;
+        final result = _Result(h.emit('lowBattery'));
+        await tester.pump();
+        expect(result.completed, isTrue);
+        expect(result.error, isNull);
+        expect(h.plugin.shown, isEmpty);
+        h.expectCount(0);
+      });
+    }, timeout: timeout);
+
+    testWidgets('battery show and later clear retain work in native order', (tester) async {
+      await _withNotification(tester, (h) async {
+        final gate = h.plugin.hold('show');
+        final show = _Result(h.emit('lowBattery'));
+        await tester.pump();
+        h.expectCount(1);
+        expect(show.completed, isFalse);
+        final clear = _Result(h.service.clearLowBatteryNotifications('synthetic-device', [25]));
+        await tester.pump();
+        h.expectCount(2);
+        expect(h.plugin.calls.map((c) => c.method), ['show']);
+        gate.complete();
+        await tester.pump();
+        expect(h.plugin.calls.map((c) => c.method), ['show', 'cancel']);
+        expect(show.completed && clear.completed, isTrue);
+        expect(show.error, isNull);
+        expect(clear.error, isNull);
+        final shownId = h.plugin.args(h.plugin.calls[0])['id'];
+        expect(h.plugin.args(h.plugin.calls[1])['id'], shownId);
+        h.expectCount(0);
+      });
+    }, timeout: timeout);
+
+    testWidgets('battery cancellation holds work and snapshots its thresholds', (tester) async {
+      await _withNotification(tester, (h) async {
+        final gate = h.plugin.hold('cancel');
+        final thresholds = [25, 10];
+        final clear = _Result(h.service.clearLowBatteryNotifications('synthetic-device', thresholds));
+        thresholds.clear();
+        await tester.pump();
+        h.expectCount(1);
+        expect(clear.completed, isFalse);
+        expect(h.plugin.calls, hasLength(1));
+        gate.complete();
+        await tester.pump();
+        expect(h.plugin.calls.map((c) => c.method), ['cancel', 'cancel']);
+        expect(clear.completed, isTrue);
+        expect(clear.error, isNull);
+        h.expectCount(0);
+      });
+    }, timeout: timeout);
+
+    for (final failing in ['show', 'cancel']) {
+      testWidgets('battery $failing failure does not poison the next operation', (tester) async {
+        await _withNotification(tester, (h) async {
+          h.plugin.action = (call) async {
+            if (call.method == failing) {
+              throw StateError('Synthetic native failure');
+            }
+          };
+          final failed = _Result(failing == 'show'
+              ? h.emit('lowBattery')
+              : h.service.clearLowBatteryNotifications('synthetic-device', [25]));
+          await tester.pump();
+          expect(failed.completed, isTrue);
+          expect(failed.error, isNull);
+          h.expectCount(0);
+          h.plugin.action = null;
+          final next = _Result(h.emit('lowBattery'));
+          await tester.pump();
+          expect(next.completed, isTrue);
+          expect(next.error, isNull);
+          expect(h.plugin.shown.last.arguments, isNotNull);
+          h.expectCount(0);
+        });
+      }, timeout: timeout);
+    }
+
+
     for (final type in ['direct', 'channel', 'advert', 'summary']) {
       testWidgets('$type tracks native show beyond the existing public boundary', (tester) async {
         await _withNotification(tester, (h) async {

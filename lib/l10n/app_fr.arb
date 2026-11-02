@@ -4321,5 +4321,21 @@
   "updates_errorHttp": "GitHub a renvoyé l’erreur HTTP {code}.",
   "updates_errorResponse": "GitHub a renvoyé des données de version ou de commit invalides.",
   "updates_errorStorage": "Impossible d’enregistrer l’état de la recherche de mises à jour.",
-  "updates_errorBrowser": "Impossible d’ouvrir la page des versions dans le navigateur."
+  "updates_errorBrowser": "Impossible d’ouvrir la page des versions dans le navigateur.",
+  "notification_lowBatteryTitle": "Batterie faible",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Batterie de {deviceName} : {percent} %",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

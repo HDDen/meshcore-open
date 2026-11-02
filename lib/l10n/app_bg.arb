@@ -4187,5 +4187,21 @@
   "updates_errorHttp": "GitHub върна HTTP грешка {code}.",
   "updates_errorResponse": "GitHub върна невалидни данни за изданието или комита.",
   "updates_errorStorage": "Състоянието на проверката за обновления не можа да бъде запазено.",
-  "updates_errorBrowser": "Страницата с изданията не можа да бъде отворена в браузъра."
+  "updates_errorBrowser": "Страницата с изданията не можа да бъде отворена в браузъра.",
+  "notification_lowBatteryTitle": "Нисък заряд на батерията",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "Зарядът на батерията на {deviceName} е {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -4546,5 +4546,21 @@
   "@updates_errorHttp": {"placeholders": {"code": {"type": "int"}}},
   "updates_errorResponse": "GitHub returned invalid release or commit data.",
   "updates_errorStorage": "Could not save the update check state.",
-  "updates_errorBrowser": "Could not open the releases page in your browser."
+  "updates_errorBrowser": "Could not open the releases page in your browser.",
+  "notification_lowBatteryTitle": "Low battery",
+  "@notification_lowBatteryTitle": {
+    "description": "Title of the low battery notification"
+  },
+  "notification_lowBatteryBody": "{deviceName} battery is at {percent}%",
+  "@notification_lowBatteryBody": {
+    "description": "Body of the low battery notification; deviceName is the connected radio's node name",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }
