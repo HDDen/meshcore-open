@@ -4224,6 +4224,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Префікс ключа {prefix}"
 }

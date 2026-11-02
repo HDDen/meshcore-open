@@ -29,11 +29,19 @@ Each contact is displayed as a list tile showing:
 - **Avatar**: Color-coded circle with type icon (or first emoji of the contact's name if it starts with one)
 - **Name**: Contact name (single line)
 - **Path label**: "Direct", "N hops", or "Flood" (with forced variants if a path override is active)
-- **Public key**: Shortened hex format `<XXXXXXXX...XXXXXXXX>`
+- **Public key**: Full uppercase hex key; the middle is elided when it does not fit
+- **Routing prefix**: A small badge before the path label, showing the first 1-3 key bytes according to the connected radio's path hash width
 - **Unread badge**: Red pill with count (if unread messages exist)
 - **Last seen**: Relative timestamp ("Now", "5 mins ago", "2 hours ago", "3 days ago"). For chat contacts, this shows whichever is more recent: the last advertisement time or the last message time
 - **Favorite star**: Amber star icon if favorited
 - **Location pin**: Grey pin icon if the contact has GPS coordinates
+
+For a key beginning `A30FB2`, the routing badge shows `A3`, `A30F`, or
+`A30FB2` with a one-, two-, or three-byte radio setting. Use it as a hint when
+matching contacts to routing hops: prefixes can collide and are not unique
+contact identities. Saved paths retain their own hash width, which may differ
+from the radio's current setting. The full public key remains available above
+the badge.
 
 Pull-to-refresh re-fetches the full contact list from the device.
 

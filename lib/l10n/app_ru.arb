@@ -3526,6 +3526,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Префикс ключа {prefix}"
 }

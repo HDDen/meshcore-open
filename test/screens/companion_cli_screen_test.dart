@@ -31,6 +31,7 @@ import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/contact_filter_types.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/companion_cli_tile.dart';
+import 'package:meshcore_open/widgets/middle_ellipsis_text.dart';
 import 'package:meshcore_open/widgets/repeater_login_dialog.dart';
 import 'package:meshcore_open/widgets/companion_cli_command_help_sheet.dart';
 
@@ -82,6 +83,9 @@ class _Connector extends MeshCoreConnector {
   late final CompanionCliSession testSession;
   bool supported = true;
   bool loaded = true;
+  int radioHashWidth = 1;
+  @override
+  int get pathHashByteWidth => radioHashWidth;
   final contactData = <Contact>[];
   final messagesByContact = <String, List<Message>>{};
   final unreadByContact = <String, int>{};
@@ -350,6 +354,79 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });
+  }
+
+  for (final scale in [1.0, 1.5]) {
+    testWidgets(
+      'U06a2: routing badge follows radio width and keeps full key and stored route (scale=$scale)',
+      (tester) async {
+        final contact = Contact(
+          publicKey: Uint8List.fromList([
+            0xA3, 0x0F, 0xB2, ...List<int>.filled(29, 0x44),
+          ]),
+          name: 'Synthetic routing contact',
+          type: advTypeRepeater,
+          flags: contactFlagFavorite,
+          pathLength: 1,
+          path: Uint8List.fromList([0xAA, 0xBB, 0xCC]),
+          pathHashWidth: 3,
+          lastSeen: DateTime.utc(2026),
+        );
+        connector.contactData.add(contact);
+        await show(
+          tester,
+          const ContactsScreen(hideBackButton: true),
+          textScale: scale,
+          logicalSize: const Size(390, 844),
+        );
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(ContactsScreen)),
+        );
+        final fullKey = 'A30FB2${'44' * 29}';
+        // testWidgets enables semantics and disposes its handle itself.
+        // Changing the radio width must not truncate contact identity or
+        // reinterpret an already stored three-byte route as three hops.
+        for (final width in [1, 2, 3, 1]) {
+          connector.radioHashWidth = width;
+          connector.refreshContactRows();
+          await tester.pump(const Duration(milliseconds: 100));
+          expect(find.text(contact.name), findsOneWidget);
+          expect(
+            tester.widget<MiddleEllipsisText>(
+              find.byType(MiddleEllipsisText),
+            ).text,
+            fullKey,
+          );
+          final prefix = {1: 'A3', 2: 'A30F', 3: 'A30FB2'}[width]!;
+          final badge = find.text(prefix);
+          expect(badge, findsOneWidget);
+          // InkWell merges the badge into the contact's accessible label.
+          // Verify the real node still speaks the complete prefix, without
+          // requiring a separate accessibility focus stop for the badge.
+          final spokenPrefix = l10n.contacts_keyPrefixSemantics(
+            prefix.split('').join(' '),
+          );
+          expect(
+            tester.getSemantics(badge).label.split('\n'),
+            contains(spokenPrefix),
+          );
+          final path = find.text(l10n.chat_hopsCount(1));
+          expect(path, findsOneWidget);
+          expect(
+            tester.getRect(badge).right,
+            lessThan(tester.getRect(path).left),
+          );
+          expect(find.byIcon(Icons.star), findsOneWidget);
+          expect(
+            tester.getRect(find.byType(CompanionCliTile)).bottom,
+            lessThan(tester.getRect(find.text(contact.name)).top),
+          );
+          expect(connector.writes, isEmpty);
+          expect(tester.takeException(), isNull);
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
   testWidgets('compact contacts CLI starts below filters and above contact rows', (tester) async {

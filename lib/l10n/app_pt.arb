@@ -4033,6 +4033,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Prefixo da chave {prefix}"
 }

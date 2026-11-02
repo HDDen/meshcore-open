@@ -4027,6 +4027,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Nyckelprefix {prefix}"
 }

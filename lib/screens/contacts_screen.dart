@@ -3203,6 +3203,7 @@ class _ContactListItemData {
   final String lastSeenText;
   final String? emoji;
   final String publicKeyLabel;
+  final String publicKeyPrefixLabel;
 
   /// A repeater the app has heard whose advert the node did not keep.
   final bool notOnNode;
@@ -3215,6 +3216,7 @@ class _ContactListItemData {
     required this.lastSeenText,
     required this.emoji,
     required this.publicKeyLabel,
+    required this.publicKeyPrefixLabel,
     required this.notOnNode,
   });
 
@@ -3234,6 +3236,8 @@ class _ContactListItemData {
       lastSeenText: lastSeenText,
       emoji: firstEmoji(contact.name),
       publicKeyLabel: contact.publicKeyHex.toUpperCase(),
+      // Format once per derived row, not on every tile rebuild.
+      publicKeyPrefixLabel: contact.publicKeyPrefixHex(pathHashByteWidth),
       notOnNode: notOnNode,
     );
   }
@@ -3363,10 +3367,11 @@ class _ContactTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  // Path / subtitle row, then location marker and last-seen
-                  // time (right-aligned).
+                  // Routing prefix and path, followed by location/last seen.
                   Row(
                     children: [
+                      _KeyPrefixBadge(prefix: item.publicKeyPrefixLabel),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           item.pathLabel,
@@ -3389,15 +3394,20 @@ class _ContactTile extends StatelessWidget {
                         ),
                       ],
                       const SizedBox(width: 6),
-                      Text(
-                        item.lastSeenText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: MeshTheme.mono(
-                          fontSize: 11,
-                          color: item.unreadCount > 0
-                              ? MeshPalette.blue
-                              : scheme.onSurfaceVariant,
+                      // Bound the timestamp too: a three-byte prefix and
+                      // large text can otherwise exhaust this row's width.
+                      Expanded(
+                        child: Text(
+                          item.lastSeenText,
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: MeshTheme.mono(
+                            fontSize: 11,
+                            color: item.unreadCount > 0
+                                ? MeshPalette.blue
+                                : scheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -3426,6 +3436,42 @@ class _ContactTile extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Short routing hint; full public keys remain the contact identity.
+class _KeyPrefixBadge extends StatelessWidget {
+  final String prefix;
+
+  const _KeyPrefixBadge({required this.prefix});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      label: context.l10n.contacts_keyPrefixSemantics(
+        prefix.split('').join(' '),
+      ),
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(MeshRadii.xs),
+          border: Border.all(color: scheme.outline),
+        ),
+        child: Text(
+          prefix,
+          maxLines: 1,
+          style: MeshTheme.mono(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
+            letterSpacing: 0.6,
+          ),
         ),
       ),
     );

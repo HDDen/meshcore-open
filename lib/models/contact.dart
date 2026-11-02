@@ -48,6 +48,17 @@ class Contact {
   /// string on each access used to dominate the contacts screen.
   late final String publicKeyHex = pubKeyToHex(publicKey);
 
+  /// Uppercase hex of the first [byteWidth] public-key bytes: the hash this
+  /// node appears as in routing paths.
+  String publicKeyPrefixHex(int byteWidth) {
+    final width = byteWidth.clamp(1, 3).toInt();
+    return publicKey
+        .take(width)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase();
+  }
+
   /// Non-localized type label, intended for logs and non-UI exports
   /// (e.g. GPX). For UI use the `typeLabel(l10n)` extension in
   /// `lib/l10n/contact_localization.dart`.

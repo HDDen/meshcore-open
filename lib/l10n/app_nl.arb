@@ -4034,6 +4034,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Sleutelprefix {prefix}"
 }

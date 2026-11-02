@@ -4217,6 +4217,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Predpona kľúča {prefix}"
 }

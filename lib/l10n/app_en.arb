@@ -4318,6 +4318,8 @@
   "repeater_prvKeyLengthError": "Private key must be exactly {length} hex characters",
   "contacts_advertFailed": "Couldn't send advertisement",
   "contacts_manageGroups": "Manage groups",
+  "contacts_keyPrefixSemantics": "Key prefix {prefix}",
+  "@contacts_keyPrefixSemantics": {"placeholders": {"prefix": {"type": "String"}}},
   "community_shortId": "ID: {id}…",
   "tcpSectionTitle": "TCP / IP",
   "tcpConnectedToHeader": "Connected to",

@@ -4381,6 +4381,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "키 접두사 {prefix}"
 }

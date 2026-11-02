@@ -4284,6 +4284,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Prefiks klucza {prefix}"
 }

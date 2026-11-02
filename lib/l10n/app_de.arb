@@ -4379,6 +4379,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Schlüsselpräfix {prefix}"
 }

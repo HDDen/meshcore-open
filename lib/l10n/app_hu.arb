@@ -4248,6 +4248,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Kulcselőtag: {prefix}"
 }

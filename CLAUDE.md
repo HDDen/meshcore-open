@@ -3562,6 +3562,24 @@ published for GitHub ancestry comparison; missing metadata and an unknown remote
 commit are separate errors. Agent did not execute the generator or tests.
 
 
+### Routing-key prefix on contact cards (U06a2)
+
+`Contact.publicKeyPrefixHex(width)` formats the first 1-3 public-key bytes as
+uppercase hex, preserving leading zeros. The full `publicKeyHex` remains cached
+and remains the identity used by equality, hashCode, sorting and row keys.
+ContactsScreen computes `publicKeyPrefixLabel` in `_ContactListItemData` as part
+of its existing derived-list cache; `pathHashByteWidth` already invalidates that
+cache. `_KeyPrefixBadge` displays it before the existing path/last-seen row,
+with localized, individually spoken hex digits. Both path and last-seen labels
+have bounded flex widths; the timestamp remains end-aligned and ellipsizes
+instead of overflowing beside a three-byte prefix at large text scales.
+The full MiddleEllipsisText key,
+favorites, CLI sliver and gestures stay intact. No new timers, I/O or protocol
+changes. Prefixes may collide; historical routes keep their own hash width.
+Baseline identity/path tests and companion_cli_screen_test protect the existing
+behavior; contact_key_prefix_test plus badge geometry/semantics checks cover
+this addition. User guide: documentation/contacts.md. Agent did not run tests.
+
 ### Favorites at the top of contacts
 
 `helpers/contact_favorite_order.dart` applies a stable favorites-first partition

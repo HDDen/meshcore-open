@@ -4322,6 +4322,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "Prefijo de clave {prefix}"
 }

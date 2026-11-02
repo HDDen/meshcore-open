@@ -4349,6 +4349,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "contacts_keyPrefixSemantics": "キーのプレフィックス {prefix}"
 }
