@@ -4366,5 +4366,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Die Funkeinstellungen wurden übernommen, aber das Gerät hat die neue Pfad-Hash-Größe nicht bestätigt"
 }

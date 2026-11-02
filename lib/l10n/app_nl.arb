@@ -4021,5 +4021,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "De radio-instellingen zijn toegepast, maar de node heeft de nieuwe pad-hashgrootte niet bevestigd"
 }

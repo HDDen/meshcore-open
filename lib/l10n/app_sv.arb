@@ -4014,5 +4014,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Radioinställningarna tillämpades, men noden bekräftade inte den nya storleken på sökvägshashen"
 }

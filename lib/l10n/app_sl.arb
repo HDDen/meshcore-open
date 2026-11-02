@@ -4204,5 +4204,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Radijske nastavitve so bile uporabljene, vendar vozlišče ni potrdilo nove velikosti zgoščene vrednosti poti"
 }

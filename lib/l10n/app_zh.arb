@@ -4236,5 +4236,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "无线电设置已应用，但节点未确认新的路径哈希大小"
 }

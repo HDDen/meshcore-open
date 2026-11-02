@@ -4020,5 +4020,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "As configurações de rádio foram aplicadas, mas o nó não confirmou o novo tamanho do hash da rota"
 }

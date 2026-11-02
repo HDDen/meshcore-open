@@ -4271,5 +4271,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Ustawienia radia zostały zastosowane, ale węzeł nie potwierdził nowego rozmiaru skrótu trasy"
 }

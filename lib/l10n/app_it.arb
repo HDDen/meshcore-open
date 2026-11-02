@@ -4201,5 +4201,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Le impostazioni radio sono state applicate, ma il nodo non ha confermato la nuova dimensione dell’hash del percorso"
 }

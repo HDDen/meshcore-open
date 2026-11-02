@@ -4309,5 +4309,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Se aplicaron los ajustes de radio, pero el nodo no confirmó el nuevo tamaño del hash de ruta"
 }

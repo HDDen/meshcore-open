@@ -4337,5 +4337,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Les paramètres radio ont été appliqués, mais le nœud n’a pas confirmé la nouvelle taille du hachage du chemin"
 }

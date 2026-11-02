@@ -48,3 +48,18 @@ Short prefixes can match several known nodes. An unresolved or ambiguous hop is 
 Contacts/messages persist hop count, path bytes, and width. Legacy contact records without width infer it from consistent hop and byte counts, falling back to one byte. `PathHistoryService` scores recent routes using delivery observations; automatic route rotation can select another route on retry when no manual override is active. Rotation follows the App Settings **Auto Route Rotation** toggle (`autoRouteRotationEnabled`, on by default).
 
 For message-path actions, trace maps, and retry behavior, see [chat](chat-and-messaging.md), [channels](channels.md), and [map](map-and-location.md).
+
+
+## Path hash size in radio settings
+
+On companions with protocol version code 10 or newer (firmware v1.14+),
+Settings → Radio settings also offers the path hash size: 1, 2 or 3 bytes
+per hop. The existing separate path-size selector remains available.
+Selecting a radio preset does not change the requested path hash size.
+
+When a changed size is saved in the radio editor, the app sends the mode and
+refreshes device information. It waits up to five seconds for DEVICE_INFO to
+confirm the stored size. A missing or different confirmation leaves the editor
+open with a specific warning: radio parameters and TX power may already have
+been applied. Retry still requires confirmation, even if the locally cached
+size already matches the request. Older firmware does not show this control.

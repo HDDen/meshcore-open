@@ -4204,5 +4204,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Nastavenia rádia boli použité, ale uzol nepotvrdil novú veľkosť hashu trasy"
 }

@@ -4562,5 +4562,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "Radio settings were applied, but the radio did not confirm the new path hash size"
 }

@@ -4235,5 +4235,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settings_pathHashModeNotApplied": "A rádióbeállítások érvénybe léptek, de a csomópont nem erősítette meg az útvonalhash új méretét"
 }

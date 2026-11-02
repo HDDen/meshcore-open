@@ -1248,6 +1248,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// CMD_GET/SET_AUTOADD_CONFIG exist from companion v1.12.0 (ver code 8).
   bool get supportsAutoAddConfig => (_firmwareVerCode ?? 0) >= 8;
 
+  /// CMD_SET_PATH_HASH_MODE exists from protocol code 10 (v1.14.0).
+  bool get supportsPathHashMode => (_firmwareVerCode ?? 0) >= 10;
+
   /// CMD_GET_ALLOWED_REPEAT_FREQ exists from ver code 9 (client repeat).
   bool get supportsAllowedRepeatFreq => (_firmwareVerCode ?? 0) >= 9;
 
