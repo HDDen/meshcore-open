@@ -7881,6 +7881,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get networkMap_sourceBoth => '모두';
 
   @override
+  String get networkMap_sourceLocalHint => '무전기가 수신한 노드';
+
+  @override
+  String get networkMap_sourceOnlineHint => '온라인 네트워크 지도의 중계기';
+
+  @override
+  String get networkMap_sourceBothHint => '무전기의 노드와 온라인 네트워크 지도';
+
+  @override
   String get networkMap_zoomInHint => '온라인 네트워크 지도를 보려면 확대하세요';
 
   @override

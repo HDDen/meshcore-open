@@ -8276,6 +8276,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get networkMap_sourceBoth => 'Beides';
 
   @override
+  String get networkMap_sourceLocalHint =>
+      'Von deinem Funkgerät gehörte Knoten';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repeater aus der Online-Netzwerkkarte';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Knoten deines Funkgeräts und die Online-Netzwerkkarte';
+
+  @override
   String get networkMap_zoomInHint =>
       'Zoome hinein, um die Online-Netzwerkkarte zu sehen';
 

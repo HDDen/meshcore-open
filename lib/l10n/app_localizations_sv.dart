@@ -8214,6 +8214,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String get networkMap_sourceBoth => 'Båda';
 
   @override
+  String get networkMap_sourceLocalHint => 'Noder som din radio har hört';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repeatrar från nätverkskartan online';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Din radios noder och nätverkskartan online';
+
+  @override
   String get networkMap_zoomInHint =>
       'Zooma in för att se nätverkskartan online';
 

@@ -8235,6 +8235,17 @@ class AppLocalizationsNl extends AppLocalizations {
   String get networkMap_sourceBoth => 'Beide';
 
   @override
+  String get networkMap_sourceLocalHint => 'Nodes die je radio heeft ontvangen';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repeaters van de online netwerkkaart';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Nodes van je radio en de online netwerkkaart';
+
+  @override
   String get networkMap_zoomInHint =>
       'Zoom in om de online netwerkkaart te zien';
 

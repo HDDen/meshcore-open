@@ -8222,6 +8222,18 @@ class AppLocalizationsSl extends AppLocalizations {
   String get networkMap_sourceBoth => 'Oboje';
 
   @override
+  String get networkMap_sourceLocalHint =>
+      'Vozlišča, ki jih je sprejel vaš radio';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repetitorji s spletnega zemljevida omrežja';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Vozlišča vašega radia in spletni zemljevid omrežja';
+
+  @override
   String get networkMap_zoomInHint =>
       'Povečajte, da vidite spletni omrežni zemljevid';
 

@@ -8255,6 +8255,17 @@ class AppLocalizationsHu extends AppLocalizations {
   String get networkMap_sourceBoth => 'Mindkettő';
 
   @override
+  String get networkMap_sourceLocalHint => 'A rádiód által hallott csomópontok';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Átjátszók az online hálózati térképről';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'A rádiód csomópontjai és az online hálózati térkép';
+
+  @override
   String get networkMap_zoomInHint =>
       'Nagyíts rá az online hálózati térkép megtekintéséhez';
 

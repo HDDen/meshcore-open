@@ -8272,6 +8272,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get networkMap_sourceBoth => 'Обидві';
 
   @override
+  String get networkMap_sourceLocalHint => 'Ноди, виявлені вашим пристроєм';
+
+  @override
+  String get networkMap_sourceOnlineHint => 'Репітери з онлайн-карти мережі';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Ноди вашого пристрою та онлайн-карта мережі';
+
+  @override
   String get networkMap_zoomInHint =>
       'Наблизьте, щоб побачити онлайн-карту мережі';
 

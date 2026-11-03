@@ -8285,6 +8285,17 @@ class AppLocalizationsBg extends AppLocalizations {
   String get networkMap_sourceBoth => 'И двете';
 
   @override
+  String get networkMap_sourceLocalHint => 'Възли, чути от вашето радио';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Ретранслатори от онлайн картата на мрежата';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Възлите на радиото и онлайн картата на мрежата';
+
+  @override
   String get networkMap_zoomInHint =>
       'Увеличете, за да видите онлайн мрежовата карта';
 

@@ -8300,6 +8300,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get networkMap_sourceBoth => 'Les deux';
 
   @override
+  String get networkMap_sourceLocalHint => 'Nœuds reçus par votre radio';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Répéteurs de la carte du réseau en ligne';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Nœuds de votre radio et carte du réseau en ligne';
+
+  @override
   String get networkMap_zoomInHint =>
       'Zoomez pour voir la carte du réseau en ligne';
 

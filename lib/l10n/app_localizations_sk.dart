@@ -8224,6 +8224,16 @@ class AppLocalizationsSk extends AppLocalizations {
   String get networkMap_sourceBoth => 'Obe';
 
   @override
+  String get networkMap_sourceLocalHint => 'Uzly zachytené vašou rádiostanicou';
+
+  @override
+  String get networkMap_sourceOnlineHint => 'Opakovače z online mapy siete';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Uzly vašej rádiostanice a online mapa siete';
+
+  @override
   String get networkMap_zoomInHint =>
       'Priblížte, aby ste videli online sieťovú mapu';
 

@@ -8268,6 +8268,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get networkMap_sourceBoth => 'Ambos';
 
   @override
+  String get networkMap_sourceLocalHint => 'Nodos que ha recibido tu radio';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repetidores del mapa de red en línea';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Nodos de tu radio y el mapa de red en línea';
+
+  @override
   String get networkMap_zoomInHint =>
       'Acerca el zoom para ver el mapa de la red en línea';
 

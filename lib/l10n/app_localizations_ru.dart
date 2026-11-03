@@ -8253,6 +8253,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get networkMap_sourceBoth => 'Обе';
 
   @override
+  String get networkMap_sourceLocalHint =>
+      'Ноды, обнаруженные вашим устройством';
+
+  @override
+  String get networkMap_sourceOnlineHint => 'Репитеры с онлайн-карты сети';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Ноды вашего устройства и онлайн-карта сети';
+
+  @override
   String get networkMap_zoomInHint =>
       'Приблизьте, чтобы увидеть онлайн-карту сети';
 

@@ -7715,6 +7715,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkMap_sourceBoth => '两者';
 
   @override
+  String get networkMap_sourceLocalHint => '无线电设备接收过的节点';
+
+  @override
+  String get networkMap_sourceOnlineHint => '在线网络地图中的中继器';
+
+  @override
+  String get networkMap_sourceBothHint => '设备接收的节点与在线网络地图';
+
+  @override
   String get networkMap_zoomInHint => '放大以查看在线网络地图';
 
   @override

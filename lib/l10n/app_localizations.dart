@@ -13835,6 +13835,24 @@ abstract class AppLocalizations {
   /// **'Both'**
   String get networkMap_sourceBoth;
 
+  /// No description provided for @networkMap_sourceLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nodes your radio has heard'**
+  String get networkMap_sourceLocalHint;
+
+  /// No description provided for @networkMap_sourceOnlineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeaters from the online network map'**
+  String get networkMap_sourceOnlineHint;
+
+  /// No description provided for @networkMap_sourceBothHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your radio\'s nodes plus the online network map'**
+  String get networkMap_sourceBothHint;
+
   /// No description provided for @networkMap_zoomInHint.
   ///
   /// In en, this message translates to:

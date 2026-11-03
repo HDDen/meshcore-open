@@ -8286,6 +8286,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get networkMap_sourceBoth => 'Obie';
 
   @override
+  String get networkMap_sourceLocalHint => 'Węzły odebrane przez twoje radio';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Przekaźniki z internetowej mapy sieci';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Węzły twojego radia i internetowa mapa sieci';
+
+  @override
   String get networkMap_zoomInHint =>
       'Przybliż, aby zobaczyć mapę sieci online';
 

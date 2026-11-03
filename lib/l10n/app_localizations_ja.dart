@@ -7873,6 +7873,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get networkMap_sourceBoth => '両方';
 
   @override
+  String get networkMap_sourceLocalHint => '無線機が受信したノード';
+
+  @override
+  String get networkMap_sourceOnlineHint => 'オンラインのネットワーク地図上のリピーター';
+
+  @override
+  String get networkMap_sourceBothHint => '無線機のノードとオンラインのネットワーク地図';
+
+  @override
   String get networkMap_zoomInHint => 'ズームインするとオンラインのネットワークマップが表示されます';
 
   @override

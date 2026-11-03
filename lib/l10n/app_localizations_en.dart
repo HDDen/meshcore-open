@@ -8138,6 +8138,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get networkMap_sourceBoth => 'Both';
 
   @override
+  String get networkMap_sourceLocalHint => 'Nodes your radio has heard';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Repeaters from the online network map';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Your radio\'s nodes plus the online network map';
+
+  @override
   String get networkMap_zoomInHint => 'Zoom in to see the online network map';
 
   @override

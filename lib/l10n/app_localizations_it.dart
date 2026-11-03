@@ -8278,6 +8278,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get networkMap_sourceBoth => 'Entrambi';
 
   @override
+  String get networkMap_sourceLocalHint => 'Nodi ricevuti dalla tua radio';
+
+  @override
+  String get networkMap_sourceOnlineHint =>
+      'Ripetitori dalla mappa di rete online';
+
+  @override
+  String get networkMap_sourceBothHint =>
+      'Nodi della tua radio e mappa di rete online';
+
+  @override
   String get networkMap_zoomInHint =>
       'Ingrandisci per vedere la mappa della rete online';
 
