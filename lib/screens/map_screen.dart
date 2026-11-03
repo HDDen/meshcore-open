@@ -72,6 +72,7 @@ import 'contacts_screen.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/node_info_sheet.dart';
 import '../widgets/node_memory_prompt.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/repeater_options_sheet.dart';
@@ -6455,59 +6456,14 @@ class _MapScreenState extends State<MapScreen>
             ),
           );
         }
-        return SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                BottomSheetHeader(
-                  title: contact.name,
-                  subtitle: contact.typeLabel(context.l10n),
-                  trailing: Icon(
-                    _getNodeIcon(contact.type),
-                    color: _getNodeColor(contact.type),
-                    size: 20,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildInfoRow(
-                        context.l10n.map_path,
-                        contact.pathLabel(
-                          context.l10n,
-                          pathHashByteWidth: connector.pathHashByteWidth,
-                        ),
-                      ),
-                      if (contact.hasLocation)
-                        _buildInfoRow(
-                          context.l10n.map_location,
-                          '${contact.latitude!.toStringAsFixed(6)}, ${contact.longitude!.toStringAsFixed(6)}',
-                        )
-                      else if (guessedPosition != null)
-                        _buildInfoRow(
-                          context.l10n.map_estLocation,
-                          '~${guessedPosition.latitude.toStringAsFixed(6)}, ${guessedPosition.longitude.toStringAsFixed(6)}',
-                        ),
-                      _buildInfoRow(
-                        context.l10n.map_lastSeen,
-                        _formatLastSeen(contact.lastSeen),
-                      ),
-                      _buildInfoRow(
-                        context.l10n.map_publicKey,
-                        contact.publicKeyHex,
-                      ),
-                      const SizedBox(height: 16),
-                      ...actions,
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return NodeInfoSheet(
+          contact: contact,
+          pathHashByteWidth: connector.pathHashByteWidth,
+          guessedPosition: guessedPosition,
+          icon: _getNodeIcon(contact.type),
+          color: _getNodeColor(contact.type),
+          lastSeenText: _formatLastSeen(contact.lastSeen),
+          actions: actions,
         );
       },
     );

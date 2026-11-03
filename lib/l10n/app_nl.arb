@@ -4057,5 +4057,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Onbekende repeater",
+  "snrIndicator_unknownRepeaterHint": "Deze repeater staat nog niet in je contacten. Naam, locatie en opties verschijnen zodra je radio de aankondiging ontvangt.",
+  "snrIndicator_ambiguousRepeaterHint": "Meerdere contacten delen dit voorvoegsel. De naam is slechts een vermoeden; contactacties zijn voor dit item niet beschikbaar."
 }

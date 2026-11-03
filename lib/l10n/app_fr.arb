@@ -4373,5 +4373,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Répéteur inconnu",
+  "snrIndicator_unknownRepeaterHint": "Ce répéteur ne figure pas encore dans vos contacts. Son nom, sa position et ses options apparaîtront lorsque votre radio recevra son annonce.",
+  "snrIndicator_ambiguousRepeaterHint": "Plusieurs contacts partagent ce préfixe. Le nom n'est qu'une supposition ; les actions de contact sont indisponibles pour cette entrée."
 }

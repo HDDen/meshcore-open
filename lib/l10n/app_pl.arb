@@ -4307,5 +4307,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Nieznany przemiennik",
+  "snrIndicator_unknownRepeaterHint": "Tego przemiennika nie ma jeszcze w kontaktach. Jego nazwa, lokalizacja i opcje pojawią się, gdy radio odbierze jego ogłoszenie.",
+  "snrIndicator_ambiguousRepeaterHint": "Kilka kontaktów ma ten sam prefiks. Nazwa jest tylko przypuszczeniem; działania na kontakcie są niedostępne dla tego wpisu."
 }

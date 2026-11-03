@@ -4050,5 +4050,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Okänd repeater",
+  "snrIndicator_unknownRepeaterHint": "Den här repeatern finns inte i dina kontakter än. Namn, plats och alternativ visas när radion tar emot dess annonsering.",
+  "snrIndicator_ambiguousRepeaterHint": "Flera kontakter delar detta prefix. Namnet är bara en gissning; kontaktåtgärder är inte tillgängliga för denna post."
 }

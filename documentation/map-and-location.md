@@ -254,3 +254,25 @@ Each waypoint includes: name, lat/lon, type label, and public key hex.
 ## Regions and offline use
 
 A [message region](regions.md) is a forwarding scope, not a coordinate or GPS boundary. The map does not establish that a sender is physically inside that region. Cached tiles can be used offline; uncached tiles and uncached LOS elevation lookups require internet.
+
+## Heard Repeater Details
+
+Tap either signal indicator, then a row in its repeater list to open details.
+The direct-reception indicator retains its ranking; the activity indicator
+lists the most recently heard entries first. Both lists preserve multi-byte
+routing prefixes and the existing `(?)` indication for ambiguous names.
+
+For a contact the app can resolve, the details show its route, available
+coordinates, last advertisement time and full public key. Management or room
+login requires a separate action. A contact known only to the app is added to
+the radio only after confirmation when an action needs it.
+
+For an unknown prefix, the sheet shows the received prefix, SNR and reception
+time. If several contacts share the prefix and the observation has no matching
+full key, the suggested name is marked as a guess and contact actions are
+unavailable for that entry. Viewing details does not request advertisements,
+poll status, start GPS or transmit packets.
+
+The map uses the same details layout and retains its existing repeater action
+menu and wardrive coverage controls. Offline details remain readable; radio
+actions are blocked.

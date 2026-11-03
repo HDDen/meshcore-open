@@ -4240,5 +4240,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Neznan repetitor",
+  "snrIndicator_unknownRepeaterHint": "Tega repetitorja še ni med stiki. Njegovo ime, lokacija in možnosti se prikažejo, ko radio prejme njegovo objavo.",
+  "snrIndicator_ambiguousRepeaterHint": "To predpono ima več stikov. Ime je le domneva; dejanja stika za ta vnos niso na voljo."
 }

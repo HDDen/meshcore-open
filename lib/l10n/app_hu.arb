@@ -4271,5 +4271,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Ismeretlen átjátszó",
+  "snrIndicator_unknownRepeaterHint": "Ez az átjátszó még nincs a névjegyek között. Neve, helyzete és műveletei akkor jelennek meg, amikor a rádió megkapja a hirdetését.",
+  "snrIndicator_ambiguousRepeaterHint": "Több névjegynek azonos az előtagja. A név csak feltételezés; a névjegyműveletek ennél a bejegyzésnél nem érhetők el."
 }

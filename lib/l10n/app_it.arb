@@ -4237,5 +4237,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Ripetitore sconosciuto",
+  "snrIndicator_unknownRepeaterHint": "Questo ripetitore non è ancora tra i contatti. Nome, posizione e opzioni appariranno quando la radio riceverà il suo annuncio.",
+  "snrIndicator_ambiguousRepeaterHint": "Più contatti condividono questo prefisso. Il nome è solo un'ipotesi; le azioni sul contatto non sono disponibili per questa voce."
 }

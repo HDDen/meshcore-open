@@ -4056,5 +4056,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Repetidor desconhecido",
+  "snrIndicator_unknownRepeaterHint": "Este repetidor ainda não está nos seus contactos. O nome, a localização e as opções aparecem quando o rádio receber o seu anúncio.",
+  "snrIndicator_ambiguousRepeaterHint": "Vários contactos partilham este prefixo. O nome é apenas uma suposição; as ações de contacto não estão disponíveis para esta entrada."
 }

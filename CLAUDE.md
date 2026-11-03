@@ -1643,6 +1643,29 @@ writes nothing and moves no `updated_at_ms`
 
 The map screen (`map_screen.dart`) rebuilds on every notification of the connector, up to twenty a second under live radio, and on those of the path history, the settings and the wardrive service, and each build derives everything from scratch: signatures, filters, guessed positions, markers, coverage. Two things cut that down without touching what is drawn. Under another page (a chat, the settings) the build hands back the tree it built last (`_lastBuiltBody`) and computes nothing, since nobody sees the map; `didPopNext` calls `setState`, so the return builds anew once with everything that changed meanwhile. A dialog or a bottom sheet over the map is no page to `appRouteObserver`, which is typed on `PageRoute`, so the map under one keeps updating live. And the caches key on less. The node marker cache (`_NodeMarkersCacheKey`, its inputs listed above the class) no longer includes a signature of every contact, so an advert from a node off the map leaves the markers as they are, and it includes the node's hash width, which the overlap prefixes are cut at. The guessed-position key is a hash of the same inputs it used to join into a string of a hundred kilobytes per build. `allContacts` is built once per build and handed to the snapshot, and the repeater search candidates are built only while that search is on. The wardrive derivations (the selected coverage samples, the coverage polygons, the repeater coverage samples and polygons, the sample points) go through `LastValueMemo` (`helpers/last_value_memo.dart`), keyed on the samples list itself, which `WardriveService` replaces whole at every change, plus the settings each reads, so a build that changes nothing about the samples reuses the polygons; the samples themselves are collected and kept exactly as before. The search field waits `_searchDelay` (300 ms) for the typing to pause before it sets `_searchQuery`, which rebuilds the whole map. Every marker carries a key (`node:`, `label:`, `cluster:`, `guess:` or `shared:` and the identity), so the marker layer moves subtrees instead of recreating them when the list changes order. Left as it was, on purpose: the centre and zoom of all nodes are computed every build because the centre-map button uses them live; clustering of guessed markers, cheaper marker shadows and the dark-theme tile filter change the look and wait for a decision; the marker signature still hashes every loaded marker message, which is exact, and a connector-side messages revision would be a change of its own (`test/screens/map_screen_state_test.dart`, `test/helpers/last_value_memo_test.dart`).
 
+### Heard repeater details (U06a3)
+
+Both `SNRIndicator` and `SNRActivityIndicator` use `_RepeaterDialogList` in
+`widgets/snr_indicator.dart`. Tapping a row opens `NodeInfoSheet` for a
+resolved contact or a read-only prefix/SNR/reception-time sheet. Existing
+ranking, activity recency, multi-byte prefix matching, favorite/distance/full
+key preference, `(?)` labels, owned scroll controller and local
+`repeaterActivity` listeners remain. The tap closure reuses the row's match;
+it adds no subscriptions, periodic age updates, database scans or radio calls.
+With colliding prefixes and no matching `contactKeyHex`, only the observed
+prefix/signal/time and the explicitly tentative name are displayed; no full
+contact key or contact actions are exposed for the guess.
+
+`widgets/node_info_sheet.dart` separates presentation from actions. The map
+passes its original action widgets, colors/icons and last-seen text, retaining
+the repeater options sheet, wardrive coverage toggle and offline guards.
+The nearby entrypoint offers explicit repeater/room login actions, guarded by
+`blockIfOffline` and `runWithContactOnNode`; simply viewing a contact never
+imports it or logs in. Map action callbacks and login implementations remain
+unchanged. Tests: `nearby_repeaters_merge_baseline_test.dart`,
+`repeater_activity_test.dart`, `map_screen_state_test.dart`. User guide:
+`documentation/map-and-location.md`.
+
 ### Shared markers on the map
 
 A marker shared into a chat is the text `m:<lat>,<lon>|<label>|<flags>`, parsed by

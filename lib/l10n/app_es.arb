@@ -4345,5 +4345,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "Repetidor desconocido",
+  "snrIndicator_unknownRepeaterHint": "Este repetidor aún no está en tus contactos. Su nombre, ubicación y opciones aparecerán cuando tu radio reciba su anuncio.",
+  "snrIndicator_ambiguousRepeaterHint": "Varios contactos comparten este prefijo. El nombre es solo una suposición; las acciones de contacto no están disponibles para esta entrada."
 }

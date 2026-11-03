@@ -2995,6 +2995,8 @@
   "snrIndicator_nearByRepeaters": "Nearby Repeaters",
   "snrIndicator_lastSeen": "Last seen",
   "snrIndicator_nearByRepeatersDescription": "Repeaters your radio heard directly, most recently heard first.",
+  "snrIndicator_unknownRepeater": "Unknown repeater",
+  "snrIndicator_unknownRepeaterHint": "This repeater isn't in your contacts yet. Its name, location and options appear once your radio receives its advert.",
   "contactsSettings_title": "Contacts settings",
   "contactsSettings_autoAddTitle": "Automatic Discovery",
   "contactsSettings_otherTitle": "Other contact related settings",
@@ -4599,6 +4601,6 @@
         "type": "String"
       }
     }
-  }
-
+  },
+  "snrIndicator_ambiguousRepeaterHint": "Several contacts share this prefix. The name is only a guess; contact actions are unavailable for this entry."
 }

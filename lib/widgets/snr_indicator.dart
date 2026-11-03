@@ -9,6 +9,7 @@ import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../theme/mesh_theme.dart';
 import 'mesh_ui.dart';
+import 'node_info_sheet.dart';
 import 'signal_ui.dart';
 
 ({Contact? contact, bool ambiguous}) _getRepeaterPrefixMatchNearLocation(
@@ -337,57 +338,90 @@ class _RepeaterDialogListState extends State<_RepeaterDialogList> {
                   ? repeater.pubkeyPrefixHex
                   : null;
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children: [
-                    AvatarCircle(
-                      name: contact?.name ?? prefixLabel,
-                      size: 36,
-                      color: snrColor,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              return Semantics(
+                button: true,
+                hint: context.l10n.map_details,
+                child: InkWell(
+                  onTap: () {
+                    if (contact != null &&
+                        (!match.ambiguous ||
+                            repeater.contactKeyHex == contact.publicKeyHex)) {
+                      showNodeInfoSheet(
+                        context,
+                        contact,
+                        connector: widget.connector,
+                      );
+                    } else {
+                      showHeardRepeaterInfoSheet(
+                        context,
+                        prefix: prefixLabel,
+                        snr: repeater.snr,
+                        lastUpdated: repeater.lastUpdated,
+                        candidateName: contact?.name,
+                      );
+                    }
+                  },
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 56),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
                         children: [
-                          Text(name ?? prefixLabel, style: nameStyle),
-                          Row(
-                            children: [
-                              Text(
-                                '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
-                                style: MeshTheme.mono(
-                                  fontSize: 11,
-                                  color: snrColor,
+                          AvatarCircle(
+                            name: contact?.name ?? prefixLabel,
+                            size: 36,
+                            color: snrColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name ?? prefixLabel,
+                                  style: nameStyle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              if (keyPrefix != null) ...[
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    keyPrefix,
-                                    style: MeshTheme.mono(
-                                      fontSize: 11,
-                                      color:
-                                          nameStyle?.color ??
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '${repeater.snr.toStringAsFixed(1)} dB • ${_formatLastUpdated(repeater.lastUpdated)}',
+                                        style: MeshTheme.mono(fontSize: 11, color: snrColor),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                    if (keyPrefix != null) ...[
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          keyPrefix,
+                                          style: MeshTheme.mono(
+                                            fontSize: 11,
+                                            color: nameStyle?.color ?? Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
-                            ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 24,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               );
             },

@@ -4372,5 +4372,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "snrIndicator_unknownRepeater": "不明なリピーター",
+  "snrIndicator_unknownRepeaterHint": "このリピーターはまだ連絡先にありません。無線機が広告を受信すると、名前、位置、操作が表示されます。",
+  "snrIndicator_ambiguousRepeaterHint": "このプレフィックスは複数の連絡先に一致します。名前は推測のため、この項目では連絡先の操作を利用できません。"
 }
