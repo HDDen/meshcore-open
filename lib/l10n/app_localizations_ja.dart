@@ -5045,6 +5045,13 @@ class AppLocalizationsJa extends AppLocalizations {
       'ラジオが直接受信したリピータ（最近受信した順）';
 
   @override
+  String get snrIndicator_unknownRepeater => '不明なリピーター';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'このリピーターはまだ連絡先にありません。無線機が広告を受信すると、名前、位置、操作が表示されます。';
+
+  @override
   String get contactsSettings_title => '連絡先設定';
 
   @override
@@ -8529,4 +8536,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return '通知: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'このプレフィックスは複数の連絡先に一致します。名前は推測のため、この項目では連絡先の操作を利用できません。';
 }

@@ -5313,6 +5313,13 @@ class AppLocalizationsBg extends AppLocalizations {
       'Повторители, чути от вашето радио пряко, първо най-скорошните.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Неизвестен ретранслатор';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Този ретранслатор още не е в контактите ви. Името, местоположението и действията му ще се появят, когато радиото получи обявата му.';
+
+  @override
   String get contactsSettings_title => 'Настройки на контактите';
 
   @override
@@ -8991,4 +8998,8 @@ class AppLocalizationsBg extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Известия: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Няколко контакта имат този префикс. Името е само предположение; действията с контакт не са достъпни за този запис.';
 }

@@ -5223,6 +5223,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Repeaters your radio heard directly, most recently heard first.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Unknown repeater';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'This repeater isn\'t in your contacts yet. Its name, location and options appear once your radio receives its advert.';
+
+  @override
   String get contactsSettings_title => 'Contacts settings';
 
   @override
@@ -8835,4 +8842,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Notifications: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Several contacts share this prefix. The name is only a guess; contact actions are unavailable for this entry.';
 }

@@ -5269,6 +5269,13 @@ class AppLocalizationsSv extends AppLocalizations {
       'Repeatrar som din radio hörde direkt, senast hörda först.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Okänd repeater';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Den här repeatern finns inte i dina kontakter än. Namn, plats och alternativ visas när radion tar emot dess annonsering.';
+
+  @override
   String get contactsSettings_title => 'Kontaktinställningar';
 
   @override
@@ -8917,4 +8924,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Aviseringar: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Flera kontakter delar detta prefix. Namnet är bara en gissning; kontaktåtgärder är inte tillgängliga för denna post.';
 }

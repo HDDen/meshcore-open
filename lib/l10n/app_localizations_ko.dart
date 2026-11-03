@@ -5051,6 +5051,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 라디오가 직접 들은 리피터입니다. 가장 최근에 들은 순으로 표시됩니다.';
 
   @override
+  String get snrIndicator_unknownRepeater => '알 수 없는 리피터';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      '이 리피터는 아직 연락처에 없습니다. 무전기가 알림 패킷을 수신하면 이름, 위치 및 옵션이 표시됩니다.';
+
+  @override
   String get contactsSettings_title => '연락처 설정';
 
   @override
@@ -8533,4 +8540,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return '알림: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      '여러 연락처가 이 접두사를 공유합니다. 이름은 추정일 뿐이므로 이 항목에서는 연락처 작업을 사용할 수 없습니다.';
 }

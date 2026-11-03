@@ -5286,6 +5286,13 @@ class AppLocalizationsSk extends AppLocalizations {
       'Opakovače, ktoré vaše rádio počulo priamo, najskôr tie naposledy počuté.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Neznámy opakovač';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Tento opakovač ešte nie je v kontaktoch. Jeho názov, poloha a možnosti sa zobrazia, keď rádio prijme jeho oznámenie.';
+
+  @override
   String get contactsSettings_title => 'Nastavenia kontaktov';
 
   @override
@@ -8926,4 +8933,8 @@ class AppLocalizationsSk extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Upozornenia: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Túto predponu zdieľa viacero kontaktov. Názov je iba odhad; akcie kontaktu pre tento záznam nie sú dostupné.';
 }

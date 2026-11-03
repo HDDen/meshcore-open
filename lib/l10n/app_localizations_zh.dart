@@ -4940,6 +4940,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '你的无线电直接听到的中继器，最近听到的排在前面。';
 
   @override
+  String get snrIndicator_unknownRepeater => '未知中继器';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      '此中继器尚未加入联系人。无线电收到其广播通告后，将显示名称、位置和操作选项。';
+
+  @override
   String get contactsSettings_title => '联系人设置';
 
   @override
@@ -8343,4 +8350,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return '通知: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      '多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。';
 }

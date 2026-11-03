@@ -5307,6 +5307,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Repeater, die Ihr Funkgerät direkt gehört hat, zuletzt gehört zuerst.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Unbekannter Repeater';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Dieser Repeater ist noch nicht in deinen Kontakten. Name, Standort und Aktionen erscheinen, sobald dein Funkgerät seine Ankündigung empfängt.';
+
+  @override
   String get contactsSettings_title => 'Kontakteinstellungen';
 
   @override
@@ -8988,4 +8995,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Benachrichtigungen: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Mehrere Kontakte haben dieses Präfix. Der Name ist nur eine Vermutung; Kontaktaktionen sind für diesen Eintrag nicht verfügbar.';
 }

@@ -5302,6 +5302,13 @@ class AppLocalizationsHu extends AppLocalizations {
       'Azok az átjátszók, amelyeket a rádió közvetlenül hallott, a legutóbb hallottak elöl.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Ismeretlen átjátszó';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Ez az átjátszó még nincs a névjegyek között. Neve, helyzete és műveletei akkor jelennek meg, amikor a rádió megkapja a hirdetését.';
+
+  @override
   String get contactsSettings_title => 'Névjegyek beállításai';
 
   @override
@@ -8965,4 +8972,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Értesítések: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Több névjegynek azonos az előtagja. A név csak feltételezés; a névjegyműveletek ennél a bejegyzésnél nem érhetők el.';
 }

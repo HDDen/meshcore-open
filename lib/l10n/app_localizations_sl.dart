@@ -5272,6 +5272,13 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ponovitelji, ki jih je vaše radio slišalo neposredno, najprej nazadnje slišani.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Neznan repetitor';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Tega repetitorja še ni med stiki. Njegovo ime, lokacija in možnosti se prikažejo, ko radio prejme njegovo objavo.';
+
+  @override
   String get contactsSettings_title => 'Nastavitve stikov';
 
   @override
@@ -8927,4 +8934,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Obvestila: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'To predpono ima več stikov. Ime je le domneva; dejanja stika za ta vnos niso na voljo.';
 }

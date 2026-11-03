@@ -5284,6 +5284,13 @@ class AppLocalizationsNl extends AppLocalizations {
       'Repeaters die je radio rechtstreeks heeft gehoord, meest recent gehoord eerst.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Onbekende repeater';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Deze repeater staat nog niet in je contacten. Naam, locatie en opties verschijnen zodra je radio de aankondiging ontvangt.';
+
+  @override
   String get contactsSettings_title => 'Instellingen voor contacten';
 
   @override
@@ -8942,4 +8949,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Meldingen: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Meerdere contacten delen dit voorvoegsel. De naam is slechts een vermoeden; contactacties zijn voor dit item niet beschikbaar.';
 }

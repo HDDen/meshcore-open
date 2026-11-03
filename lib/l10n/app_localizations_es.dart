@@ -5303,6 +5303,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Repetidores que tu radio ha oído directamente, del más reciente al más antiguo.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Repetidor desconocido';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Este repetidor aún no está en tus contactos. Su nombre, ubicación y opciones aparecerán cuando tu radio reciba su anuncio.';
+
+  @override
   String get contactsSettings_title => 'Configuración de contactos';
 
   @override
@@ -8980,4 +8987,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Notificaciones: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Varios contactos comparten este prefijo. El nombre es solo una suposición; las acciones de contacto no están disponibles para esta entrada.';
 }

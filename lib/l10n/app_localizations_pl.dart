@@ -5326,6 +5326,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Przekaźniki usłyszane bezpośrednio przez Twoje radio, najpierw te ostatnio usłyszane.';
 
   @override
+  String get snrIndicator_unknownRepeater => 'Nieznany przemiennik';
+
+  @override
+  String get snrIndicator_unknownRepeaterHint =>
+      'Tego przemiennika nie ma jeszcze w kontaktach. Jego nazwa, lokalizacja i opcje pojawią się, gdy radio odbierze jego ogłoszenie.';
+
+  @override
   String get contactsSettings_title => 'Ustawienia kontaktów';
 
   @override
@@ -8988,4 +8995,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String channels_notificationModeTooltip(String mode) {
     return 'Powiadomienia: $mode';
   }
+
+  @override
+  String get snrIndicator_ambiguousRepeaterHint =>
+      'Kilka kontaktów ma ten sam prefiks. Nazwa jest tylko przypuszczeniem; działania na kontakcie są niedostępne dla tego wpisu.';
 }
