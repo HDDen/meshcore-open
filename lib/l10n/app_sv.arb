@@ -4028,5 +4028,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Nyckelprefix {prefix}"
+  "contacts_keyPrefixSemantics": "Nyckelprefix {prefix}",
+  "networkMap_sourceLocalHint": "Noder som din radio har hört",
+  "networkMap_sourceOnlineHint": "Repeatrar från nätverkskartan online",
+  "networkMap_sourceBothHint": "Din radios noder och nätverkskartan online"
 }

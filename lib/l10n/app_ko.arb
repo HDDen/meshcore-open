@@ -4382,5 +4382,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "키 접두사 {prefix}"
+  "contacts_keyPrefixSemantics": "키 접두사 {prefix}",
+  "networkMap_sourceLocalHint": "무전기가 수신한 노드",
+  "networkMap_sourceOnlineHint": "온라인 네트워크 지도의 중계기",
+  "networkMap_sourceBothHint": "무전기의 노드와 온라인 네트워크 지도"
 }

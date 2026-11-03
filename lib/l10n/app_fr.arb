@@ -4351,5 +4351,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Préfixe de clé {prefix}"
+  "contacts_keyPrefixSemantics": "Préfixe de clé {prefix}",
+  "networkMap_sourceLocalHint": "Nœuds reçus par votre radio",
+  "networkMap_sourceOnlineHint": "Répéteurs de la carte du réseau en ligne",
+  "networkMap_sourceBothHint": "Nœuds de votre radio et carte du réseau en ligne"
 }

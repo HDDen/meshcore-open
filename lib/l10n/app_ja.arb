@@ -4350,5 +4350,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "キーのプレフィックス {prefix}"
+  "contacts_keyPrefixSemantics": "キーのプレフィックス {prefix}",
+  "networkMap_sourceLocalHint": "無線機が受信したノード",
+  "networkMap_sourceOnlineHint": "オンラインのネットワーク地図上のリピーター",
+  "networkMap_sourceBothHint": "無線機のノードとオンラインのネットワーク地図"
 }

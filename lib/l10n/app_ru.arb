@@ -3527,5 +3527,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Префикс ключа {prefix}"
+  "contacts_keyPrefixSemantics": "Префикс ключа {prefix}",
+  "networkMap_sourceLocalHint": "Ноды, обнаруженные вашим устройством",
+  "networkMap_sourceOnlineHint": "Репитеры с онлайн-карты сети",
+  "networkMap_sourceBothHint": "Ноды вашего устройства и онлайн-карта сети"
 }

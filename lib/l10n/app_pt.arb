@@ -4034,5 +4034,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Prefixo da chave {prefix}"
+  "contacts_keyPrefixSemantics": "Prefixo da chave {prefix}",
+  "networkMap_sourceLocalHint": "Nós recebidos pelo seu rádio",
+  "networkMap_sourceOnlineHint": "Repetidores do mapa de rede online",
+  "networkMap_sourceBothHint": "Nós do seu rádio e o mapa de rede online"
 }

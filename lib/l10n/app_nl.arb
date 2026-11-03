@@ -4035,5 +4035,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Sleutelprefix {prefix}"
+  "contacts_keyPrefixSemantics": "Sleutelprefix {prefix}",
+  "networkMap_sourceLocalHint": "Nodes die je radio heeft ontvangen",
+  "networkMap_sourceOnlineHint": "Repeaters van de online netwerkkaart",
+  "networkMap_sourceBothHint": "Nodes van je radio en de online netwerkkaart"
 }

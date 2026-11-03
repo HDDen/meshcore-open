@@ -4285,5 +4285,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Prefiks klucza {prefix}"
+  "contacts_keyPrefixSemantics": "Prefiks klucza {prefix}",
+  "networkMap_sourceLocalHint": "Węzły odebrane przez twoje radio",
+  "networkMap_sourceOnlineHint": "Przekaźniki z internetowej mapy sieci",
+  "networkMap_sourceBothHint": "Węzły twojego radia i internetowa mapa sieci"
 }

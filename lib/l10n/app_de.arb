@@ -4380,5 +4380,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Schlüsselpräfix {prefix}"
+  "contacts_keyPrefixSemantics": "Schlüsselpräfix {prefix}",
+  "networkMap_sourceLocalHint": "Von deinem Funkgerät gehörte Knoten",
+  "networkMap_sourceOnlineHint": "Repeater aus der Online-Netzwerkkarte",
+  "networkMap_sourceBothHint": "Knoten deines Funkgeräts und die Online-Netzwerkkarte"
 }

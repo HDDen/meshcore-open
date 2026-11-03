@@ -3562,6 +3562,21 @@ published for GitHub ancestry comparison; missing metadata and an unknown remote
 commit are separate errors. Agent did not execute the generator or tests.
 
 
+### Active map-filter indicator (U06b2)
+
+Keep the fork's collapsible quick-filter row and map_node_filters_expanded_v1
+persistence; upstream ed5884e2 removes a row that our fork already makes
+optional. Adopt its Badge.count on the filter FAB and source-segment tooltips.
+networkMapAvailable stays false. `_activeFilterCount` is O(1), evaluated once
+per action-column build, without contact scans or temporary lists. It counts
+freshness, a positive time limit, a nonempty enabled key prefix, and hidden
+chat/repeater/other/shared/guessed/discovery layers (0-9). Grouping and overlap
+are view modes and do not count. No new timers, I/O, GPS or radio work.
+The existing quick/sheet/settings pipeline and derived-map caches are intact.
+map_screen_state_test retains baseline collapse/reopen and marker visibility,
+and checks badge updates, blank prefixes, all nine restrictions and reset.
+Agent did not run Flutter/Dart checks. User guide: map-and-location.md.
+
 ### Set node coordinates from path maps (U06b1)
 
 `widgets/set_my_location_dialog.dart` owns the shared confirmation, one node

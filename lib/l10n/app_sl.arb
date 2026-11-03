@@ -4218,5 +4218,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Predpona ključa {prefix}"
+  "contacts_keyPrefixSemantics": "Predpona ključa {prefix}",
+  "networkMap_sourceLocalHint": "Vozlišča, ki jih je sprejel vaš radio",
+  "networkMap_sourceOnlineHint": "Repetitorji s spletnega zemljevida omrežja",
+  "networkMap_sourceBothHint": "Vozlišča vašega radia in spletni zemljevid omrežja"
 }

@@ -4217,5 +4217,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Префикс на ключа {prefix}"
+  "contacts_keyPrefixSemantics": "Префикс на ключа {prefix}",
+  "networkMap_sourceLocalHint": "Възли, чути от вашето радио",
+  "networkMap_sourceOnlineHint": "Ретранслатори от онлайн картата на мрежата",
+  "networkMap_sourceBothHint": "Възлите на радиото и онлайн картата на мрежата"
 }

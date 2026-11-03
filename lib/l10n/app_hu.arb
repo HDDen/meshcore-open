@@ -4249,5 +4249,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Kulcselőtag: {prefix}"
+  "contacts_keyPrefixSemantics": "Kulcselőtag: {prefix}",
+  "networkMap_sourceLocalHint": "A rádiód által hallott csomópontok",
+  "networkMap_sourceOnlineHint": "Átjátszók az online hálózati térképről",
+  "networkMap_sourceBothHint": "A rádiód csomópontjai és az online hálózati térkép"
 }

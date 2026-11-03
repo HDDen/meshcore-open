@@ -22,6 +22,7 @@ import 'package:meshcore_open/services/map_tile_cache_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/services/wardrive_service.dart';
+import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/app_route_observer.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
@@ -547,6 +548,247 @@ void main() {
         }
       }
     }
+  });
+
+  group('U06b2: fork map filters and active badge', () {
+    void expectFilterCount(WidgetTester tester, int count) {
+      final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+      final finder = find.descendant(
+        of: find.byTooltip(l10n.map_filterNodes),
+        matching: find.byType(Badge),
+      );
+      expect(finder, findsOneWidget);
+      final badge = tester.widget<Badge>(finder);
+      expect(badge.isLabelVisible, count > 0);
+      expect((badge.label! as Text).data, '$count');
+    }
+
+    testWidgets('quick filters collapse, persist and reopen without radio work', (tester) async {
+      try {
+        final nodes = [_node(1, 'Synthetic filter contact', 55.75, 37.62)];
+        final harness = await _Harness.pump(tester, nodes: nodes, zoom: 15);
+        final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+        final writes = harness.connector.sentFrames.length;
+        expect(find.byType(SegmentedButton<MapSourceOption>), findsNothing);
+        expect(find.text(l10n.time_allTime), findsOneWidget);
+        expect(find.text(l10n.map_repeaters), findsOneWidget);
+        expect(find.text(l10n.map_chatNodes), findsOneWidget);
+        expect(find.text(l10n.map_groupChip), findsOneWidget);
+
+        await tester.tap(find.text(l10n.listFilter_filters));
+        await _pumpFrames(tester);
+        expect(find.text(l10n.time_allTime), findsNothing);
+        expect(find.text(l10n.map_repeaters), findsNothing);
+        expect(find.text(l10n.map_chatNodes), findsNothing);
+        expect(PrefsManager.instance.getBool('map_node_filters_expanded_v1'), isFalse);
+        expect(harness.connector.sentFrames, hasLength(writes));
+        expect(harness.wardrive.isRunning, isFalse);
+        expect(harness.wardrive.lastPhoneLocationAt, isNull);
+
+        await _Harness.unmount(tester);
+        final reopened = await _Harness.pump(tester, nodes: nodes, zoom: 15);
+        final reopenedWrites = reopened.connector.sentFrames.length;
+        expect(find.text(l10n.time_allTime), findsNothing);
+        await tester.tap(find.text(l10n.listFilter_filters));
+        await _pumpFrames(tester);
+        expect(find.text(l10n.time_allTime), findsOneWidget);
+        expect(find.text(l10n.map_groupChip), findsOneWidget);
+        expect(PrefsManager.instance.getBool('map_node_filters_expanded_v1'), isTrue);
+        expect(reopened.connector.sentFrames, hasLength(reopenedWrites));
+        expect(find.byType(SegmentedButton<MapSourceOption>), findsNothing);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('quick type filters and sheet switches share visibility and settings', (tester) async {
+      try {
+        const chatPoint = LatLng(55.75, 37.62);
+        const repeaterPoint = LatLng(55.80, 37.70);
+        const roomPoint = LatLng(55.90, 37.85);
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [
+            _node(1, 'Synthetic chat', chatPoint.latitude, chatPoint.longitude),
+            _node(2, 'Synthetic repeater', repeaterPoint.latitude, repeaterPoint.longitude)
+                .copyWith(type: advTypeRepeater),
+            _node(3, 'Synthetic room', roomPoint.latitude, roomPoint.longitude)
+                .copyWith(type: advTypeRoom),
+          ],
+          zoom: 15,
+        );
+        final mapContext = tester.element(find.byType(MapScreen));
+        final settings = mapContext.read<AppSettingsService>();
+        final l10n = AppLocalizations.of(mapContext);
+        final writes = harness.connector.sentFrames.length;
+        expect(_markerPoints(tester), containsAll([chatPoint, repeaterPoint, roomPoint]));
+        expectFilterCount(tester, 1);
+
+        final repeaterChip = find.text(l10n.map_repeaters);
+        await tester.ensureVisible(repeaterChip);
+        await tester.pump();
+        expect(repeaterChip.hitTestable(), findsOneWidget);
+        await tester.tap(repeaterChip);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), isNot(contains(repeaterPoint)));
+        expect(_markerPoints(tester), containsAll([chatPoint, roomPoint]));
+        expectFilterCount(tester, 2);
+        final chatChip = find.text(l10n.map_chatNodes);
+        await tester.ensureVisible(chatChip);
+        await tester.pump();
+        expect(chatChip.hitTestable(), findsOneWidget);
+        await tester.tap(chatChip);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), isNot(contains(chatPoint)));
+        expect(_markerPoints(tester), contains(roomPoint));
+        expectFilterCount(tester, 3);
+
+        await tester.tap(find.byTooltip(l10n.map_filterNodes));
+        await _pumpFrames(tester);
+        final chatSwitch = find.widgetWithText(SwitchListTile, l10n.map_chatNodes);
+        final repeaterSwitch = find.widgetWithText(SwitchListTile, l10n.map_repeaters);
+        expect(chatSwitch, findsOneWidget);
+        expect(repeaterSwitch, findsOneWidget);
+        expect(tester.widget<SwitchListTile>(chatSwitch).value, isFalse);
+        expect(tester.widget<SwitchListTile>(repeaterSwitch).value, isFalse);
+        await tester.ensureVisible(chatSwitch);
+        await tester.tap(chatSwitch);
+        await _pumpFrames(tester);
+        expect(settings.settings.mapShowChatNodes, isTrue);
+        expect(settings.settings.mapShowRepeaters, isFalse);
+        Navigator.of(tester.element(chatSwitch)).pop();
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), containsAll([chatPoint, roomPoint]));
+        expect(_markerPoints(tester), isNot(contains(repeaterPoint)));
+        expectFilterCount(tester, 2);
+        expect(harness.connector.sentFrames, hasLength(writes));
+        expect(harness.wardrive.isRunning, isFalse);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('badge counts restrictions, ignores view modes and survives collapsing', (tester) async {
+      try {
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [_node(0x0A, 'Synthetic badge contact', 55.75, 37.62)],
+          zoom: 15,
+        );
+        final mapContext = tester.element(find.byType(MapScreen));
+        final settings = mapContext.read<AppSettingsService>();
+        final l10n = AppLocalizations.of(mapContext);
+        final writes = harness.connector.sentFrames.length;
+        // The fork defaults to a seven-day limit. It is already an active
+        // restriction; zero means all limits have actually been cleared.
+        expectFilterCount(tester, 1);
+        await settings.setMapTimeFilterHours(0);
+        await _pumpFrames(tester);
+        final initial = settings.settings;
+        expectFilterCount(tester, 0);
+
+        await settings.setMapClusterNodes(!initial.mapClusterNodes);
+        await settings.setMapShowOverlaps(!initial.mapShowOverlaps);
+        await settings.setMapKeyPrefix('   ');
+        await settings.setMapKeyPrefixEnabled(true);
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 0);
+        await settings.setMapKeyPrefix('0A');
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 1);
+        await settings.setMapTimeFilterHours(6);
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 2);
+
+        await settings.updateSettings(settings.settings.copyWith(
+          mapShowChatNodes: false,
+          mapShowRepeaters: false,
+          mapShowOtherNodes: false,
+          mapShowMarkers: false,
+          mapShowGuessedLocations: false,
+          mapShowDiscoveryContacts: false,
+        ));
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 8);
+        final recent = find.text(l10n.map_recent);
+        await tester.ensureVisible(recent);
+        await tester.pump();
+        expect(recent.hitTestable(), findsOneWidget);
+        await tester.tap(recent);
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 9);
+
+        final filters = find.text(l10n.listFilter_filters);
+        await tester.ensureVisible(filters);
+        await tester.pump();
+        await tester.tap(filters);
+        await _pumpFrames(tester);
+        expect(find.text(l10n.map_recent), findsNothing);
+        expectFilterCount(tester, 9);
+        await tester.tap(filters);
+        await _pumpFrames(tester);
+        final allTime = find.text(l10n.time_allTime);
+        await tester.ensureVisible(allTime);
+        await tester.pump();
+        expect(allTime.hitTestable(), findsOneWidget);
+        await tester.tap(allTime);
+        await settings.updateSettings(initial);
+        await _pumpFrames(tester);
+        expectFilterCount(tester, 0);
+        expect(find.byType(SegmentedButton<MapSourceOption>), findsNothing);
+        expect(harness.connector.sentFrames, hasLength(writes));
+        expect(harness.wardrive.isRunning, isFalse);
+        expect(harness.wardrive.lastPhoneLocationAt, isNull);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
+    testWidgets('time and trimmed case-insensitive key prefix keep their current effects', (tester) async {
+      try {
+        const first = LatLng(55.75, 37.62);
+        const second = LatLng(55.80, 37.70);
+        const old = LatLng(55.90, 37.85);
+        final harness = await _Harness.pump(
+          tester,
+          nodes: [
+            _node(0x0A, 'Synthetic A', first.latitude, first.longitude),
+            _node(0x0B, 'Synthetic B', second.latitude, second.longitude),
+            _node(0x0C, 'Synthetic old', old.latitude, old.longitude).copyWith(
+              lastSeen: DateTime.now().subtract(const Duration(days: 2)),
+            ),
+          ],
+          zoom: 15,
+        );
+        final settings = tester.element(find.byType(MapScreen)).read<AppSettingsService>();
+        final writes = harness.connector.sentFrames.length;
+        await settings.setMapTimeFilterHours(6);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), containsAll([first, second]));
+        expect(_markerPoints(tester), isNot(contains(old)));
+        await settings.setMapKeyPrefix(' 0A ');
+        await settings.setMapKeyPrefixEnabled(true);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), contains(first));
+        expect(_markerPoints(tester), isNot(contains(second)));
+        await settings.setMapKeyPrefixEnabled(false);
+        await settings.setMapTimeFilterHours(0);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), containsAll([first, second, old]));
+        await settings.setMapKeyPrefix('   ');
+        await settings.setMapKeyPrefixEnabled(true);
+        await _pumpFrames(tester);
+        expect(_markerPoints(tester), containsAll([first, second, old]));
+        expect(harness.connector.sentFrames, hasLength(writes));
+        expect(harness.wardrive.lastPhoneLocationAt, isNull);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
   });
 
   const alicePoint = LatLng(55.75, 37.62);

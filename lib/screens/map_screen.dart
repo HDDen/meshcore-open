@@ -1684,6 +1684,7 @@ class _MapScreenState extends State<MapScreen>
     required LatLng center,
     required double zoom,
   }) {
+    final activeFilters = _activeFilterCount(settingsService.settings);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1729,7 +1730,11 @@ class _MapScreenState extends State<MapScreen>
         FloatingActionButton(
           onPressed: () => _showFilterDialog(context, settingsService),
           tooltip: context.l10n.map_filterNodes,
-          child: const Icon(Icons.filter_list),
+          child: Badge.count(
+            count: activeFilters,
+            isLabelVisible: activeFilters > 0,
+            child: const Icon(Icons.filter_list),
+          ),
         ),
       ],
     );
@@ -4853,6 +4858,21 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  /// Count restrictions, not display modes such as clustering or overlaps.
+  /// This uses only settings: no contact scans, timers or persistence writes.
+  int _activeFilterCount(AppSettings settings) =>
+      (_freshness != _Freshness.all ? 1 : 0) +
+      (settings.mapTimeFilterHours > 0 ? 1 : 0) +
+      (settings.mapKeyPrefixEnabled && settings.mapKeyPrefix.trim().isNotEmpty
+          ? 1
+          : 0) +
+      (!settings.mapShowChatNodes ? 1 : 0) +
+      (!settings.mapShowRepeaters ? 1 : 0) +
+      (!settings.mapShowOtherNodes ? 1 : 0) +
+      (!settings.mapShowMarkers ? 1 : 0) +
+      (!settings.mapShowGuessedLocations ? 1 : 0) +
+      (!settings.mapShowDiscoveryContacts ? 1 : 0);
+
   Widget _buildMapSourceSwitch(BuildContext context, MapSourceOption source) {
     final l10n = context.l10n;
     final brightness = Theme.of(context).brightness;
@@ -4877,16 +4897,19 @@ class _MapScreenState extends State<MapScreen>
             value: MapSourceOption.local,
             icon: const Icon(Icons.radio, size: 20),
             label: Text(l10n.networkMap_sourceLocal),
+            tooltip: l10n.networkMap_sourceLocalHint,
           ),
           ButtonSegment(
             value: MapSourceOption.online,
             icon: const Icon(Icons.public, size: 20),
             label: Text(l10n.networkMap_sourceOnline),
+            tooltip: l10n.networkMap_sourceOnlineHint,
           ),
           ButtonSegment(
             value: MapSourceOption.both,
             icon: const Icon(Icons.layers, size: 20),
             label: Text(l10n.networkMap_sourceBoth),
+            tooltip: l10n.networkMap_sourceBothHint,
           ),
         ],
         selected: {source},

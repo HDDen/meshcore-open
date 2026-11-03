@@ -4323,5 +4323,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Prefijo de clave {prefix}"
+  "contacts_keyPrefixSemantics": "Prefijo de clave {prefix}",
+  "networkMap_sourceLocalHint": "Nodos que ha recibido tu radio",
+  "networkMap_sourceOnlineHint": "Repetidores del mapa de red en línea",
+  "networkMap_sourceBothHint": "Nodos de tu radio y el mapa de red en línea"
 }

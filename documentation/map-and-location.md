@@ -98,6 +98,22 @@ Shows a bottom sheet with:
 - **Share marker here**: Prompts for a label (default: "Point of interest"), then pick a DM contact or channel to send the location to. Wire format: `m:<lat>,<lon>|<label>|poi`; a `|` in the label is replaced with `/` and line breaks with spaces. The label field shows a live byte counter so the whole pin fits in one message, and a hint that reusing a previous label updates that marker for MeshCore Open recipients. To share your radio's own position, use **Share my location** from the ⊕ menu in chat (see [Chat & Messaging](chat-and-messaging.md#input-bar))
 - **Set as my location**: Opens a confirmation showing the selected coordinates. Only after confirmation does the app update the node's advertised location; success requires the node to report matching coordinates.
 
+### Quick Filters and Active Filter Count
+
+The quick-filter row can be collapsed with **Filters**. Its expanded/collapsed
+state is remembered when the map is reopened; collapsing it does not reset
+active filters. The same type/activity settings remain available in the filter
+sheet.
+
+The filter button shows a badge with the number of active restrictions:
+activity mode, a last-seen time limit, a nonempty enabled key prefix, hidden
+chat/repeater/other node types, and hidden shared/guessed/discovery layers.
+The existing default last-seen limit is seven days, so it contributes one
+even before additional filters are selected. The badge disappears when the
+count is zero. Clustering and overlap display
+modes do not add to the count. Changing filters never sends a radio command
+or starts wardrive/location tracking.
+
 ### Filter Dialog (FAB)
 Toggle visibility of: chat nodes, repeaters, other nodes, guessed locations, discovery contacts, overlapping markers (stacked markers at similar coordinates), and shared map pins (flag markers).
 Additional filters:

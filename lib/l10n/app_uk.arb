@@ -4225,5 +4225,8 @@
       }
     }
   },
-  "contacts_keyPrefixSemantics": "Префікс ключа {prefix}"
+  "contacts_keyPrefixSemantics": "Префікс ключа {prefix}",
+  "networkMap_sourceLocalHint": "Ноди, виявлені вашим пристроєм",
+  "networkMap_sourceOnlineHint": "Репітери з онлайн-карти мережі",
+  "networkMap_sourceBothHint": "Ноди вашого пристрою та онлайн-карта мережі"
 }
