@@ -4053,5 +4053,11 @@
   },
   "snrIndicator_unknownRepeater": "Okänd repeater",
   "snrIndicator_unknownRepeaterHint": "Den här repeatern finns inte i dina kontakter än. Namn, plats och alternativ visas när radion tar emot dess annonsering.",
-  "snrIndicator_ambiguousRepeaterHint": "Flera kontakter delar detta prefix. Namnet är bara en gissning; kontaktåtgärder är inte tillgängliga för denna post."
+  "snrIndicator_ambiguousRepeaterHint": "Flera kontakter delar detta prefix. Namnet är bara en gissning; kontaktåtgärder är inte tillgängliga för denna post.",
+  "map_pathTraceAddMoreHint": "Tryck på fler noder för att lägga till hopp, välj hur spårningen returneras och tryck sedan på Kör ruttspårning.",
+  "map_pathTraceModeRoundTrip": "Tur och retur",
+  "map_pathTraceModeRoundTripHint": "Spårningen går ut via dessa hopp och kommer tillbaka samma väg.",
+  "map_pathTraceModeAsEntered": "Som inmatat",
+  "map_pathTraceModeAsEnteredHint": "Spårningen följer exakt dessa hopp. Lägg själv till hoppen tillbaka till dig.",
+  "map_pathTraceViewLast": "Visa senaste resultat"
 }

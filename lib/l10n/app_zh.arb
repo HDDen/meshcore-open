@@ -4275,5 +4275,11 @@
   },
   "snrIndicator_unknownRepeater": "未知中继器",
   "snrIndicator_unknownRepeaterHint": "此中继器尚未加入联系人。无线电收到其广播通告后，将显示名称、位置和操作选项。",
-  "snrIndicator_ambiguousRepeaterHint": "多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。"
+  "snrIndicator_ambiguousRepeaterHint": "多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。",
+  "map_pathTraceAddMoreHint": "点击更多节点以添加跳数，选择追踪的返回方式，然后点击“运行路径追踪”。",
+  "map_pathTraceModeRoundTrip": "往返",
+  "map_pathTraceModeRoundTripHint": "追踪经由这些跳发出，并沿原路返回。",
+  "map_pathTraceModeAsEntered": "按输入顺序",
+  "map_pathTraceModeAsEnteredHint": "追踪严格按这些跳进行。请自行添加返回你的跳。",
+  "map_pathTraceViewLast": "查看上次结果"
 }

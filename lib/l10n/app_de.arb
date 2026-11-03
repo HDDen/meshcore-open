@@ -4405,5 +4405,11 @@
   },
   "snrIndicator_unknownRepeater": "Unbekannter Repeater",
   "snrIndicator_unknownRepeaterHint": "Dieser Repeater ist noch nicht in deinen Kontakten. Name, Standort und Aktionen erscheinen, sobald dein Funkgerät seine Ankündigung empfängt.",
-  "snrIndicator_ambiguousRepeaterHint": "Mehrere Kontakte haben dieses Präfix. Der Name ist nur eine Vermutung; Kontaktaktionen sind für diesen Eintrag nicht verfügbar."
+  "snrIndicator_ambiguousRepeaterHint": "Mehrere Kontakte haben dieses Präfix. Der Name ist nur eine Vermutung; Kontaktaktionen sind für diesen Eintrag nicht verfügbar.",
+  "map_pathTraceAddMoreHint": "Tippen Sie auf weitere Knoten, um Hops hinzuzufügen, wählen Sie den Rückweg der Verfolgung und tippen Sie dann auf Pfadverfolgung starten.",
+  "map_pathTraceModeRoundTrip": "Hin und zurück",
+  "map_pathTraceModeRoundTripHint": "Die Verfolgung geht über diese Hops hinaus und kommt auf demselben Weg zurück.",
+  "map_pathTraceModeAsEntered": "Wie eingegeben",
+  "map_pathTraceModeAsEnteredHint": "Die Verfolgung folgt genau diesen Hops. Fügen Sie die Hops zurück zu Ihnen selbst hinzu.",
+  "map_pathTraceViewLast": "Letztes Ergebnis anzeigen"
 }

@@ -12,6 +12,7 @@ import 'package:meshcore_open/helpers/path_hop_resolver.dart';
 import 'package:meshcore_open/helpers/map_location_helper.dart';
 import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
+import 'package:meshcore_open/helpers/saved_path_trace_result.dart';
 import 'package:meshcore_open/helpers/signal_reading_text.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
@@ -73,6 +74,10 @@ class PathTraceMapScreen extends StatefulWidget {
   /// When false, a target trace uses [path] exactly as supplied instead of
   /// refreshing the target contact's saved route from the connector.
   final bool useLiveTargetPath;
+  final Uint8List? initialTraceFrame;
+  final List<PathTraceObservation> initialTraceObservations;
+  final ValueChanged<Uint8List>? onTraceFrame;
+  final ValueChanged<SavedPathTraceResult>? onTraceResult;
 
   const PathTraceMapScreen({
     super.key,
@@ -86,6 +91,10 @@ class PathTraceMapScreen extends StatefulWidget {
     this.pathContacts,
     this.revealMapManually = false,
     this.useLiveTargetPath = true,
+    this.initialTraceFrame,
+    this.initialTraceObservations = const [],
+    this.onTraceFrame,
+    this.onTraceResult,
   });
 
   @override
@@ -118,6 +127,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   /// True between sending the trace command and receiving its RESP_CODE_SENT.
   bool _awaitingTraceSent = false;
+  bool _isReplayingResult = false;
+  int _traceRunRevision = 0;
   bool _hasData = false;
   bool _mapRevealed = false;
   PathTraceData? _traceData;
@@ -262,11 +273,26 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       connector: context.read<MeshCoreConnector>(),
       onPhoneLocation: (position) => _preferredPhonePosition = position,
     );
-    _setupFrameListener();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _doPathTrace();
-    });
+    final initialFrame = widget.initialTraceFrame;
+    if (initialFrame == null) {
+      _setupFrameListener();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _doPathTrace();
+      });
+    } else {
+      // Replay subscribes to no radio frames and arms no send/timeout timer.
+      // A later explicit rerun creates the ordinary live listener instead.
+      _isReplayingResult = true;
+      final (path, width) = _resolveLivePath(context.read<MeshCoreConnector>());
+      _tracedPath = Uint8List.fromList(path);
+      _tracedPathHashWidth = width;
+      _isLoading = true;
+      _traceObservations = List.unmodifiable(widget.initialTraceObservations);
+      final frame = Uint8List.fromList(initialFrame);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_handleTraceResponse(frame));
+      });
+    }
   }
 
   @override
@@ -571,6 +597,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   }
 
   Future<void> _doPathTrace() async {
+    _traceRunRevision++;
+    _isReplayingResult = false;
+    if (_frameSubscription == null) _setupFrameListener();
     _playback.stop();
     _timeoutTimer?.cancel();
     if (_traceObservationScrollController.hasClients) {
@@ -794,9 +823,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   }
 
   Future<void> _handleTraceResponse(Uint8List frame) async {
+    final runRevision = _traceRunRevision;
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     await _preferredSelfPositionFuture;
-    if (!mounted) return;
+    if (!mounted || runRevision != _traceRunRevision) return;
 
     final buffer = BufferReader(frame);
     try {
@@ -1025,6 +1055,24 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         _primaryOutboundHops = _outboundHops(pathData);
         _rebuildDisplayPaths(connector);
       });
+      final tag = _sentTagBytes;
+      final tracker = _traceProgressTracker;
+      if (!_isReplayingResult &&
+          tag != null &&
+          tracker != null &&
+          SavedPathTraceResult.matchesRequest(
+            frame,
+            tag: tag,
+            route: tracker.route,
+            hashWidth: tracker.hashWidth,
+          )) {
+        final result = SavedPathTraceResult(
+          frame: frame,
+          observations: _traceObservations,
+        );
+        widget.onTraceFrame?.call(Uint8List.fromList(result.frame));
+        widget.onTraceResult?.call(result);
+      }
     } catch (e) {
       appLogger.error(
         'Error handling trace response: $e',

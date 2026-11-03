@@ -4060,5 +4060,11 @@
   },
   "snrIndicator_unknownRepeater": "Onbekende repeater",
   "snrIndicator_unknownRepeaterHint": "Deze repeater staat nog niet in je contacten. Naam, locatie en opties verschijnen zodra je radio de aankondiging ontvangt.",
-  "snrIndicator_ambiguousRepeaterHint": "Meerdere contacten delen dit voorvoegsel. De naam is slechts een vermoeden; contactacties zijn voor dit item niet beschikbaar."
+  "snrIndicator_ambiguousRepeaterHint": "Meerdere contacten delen dit voorvoegsel. De naam is slechts een vermoeden; contactacties zijn voor dit item niet beschikbaar.",
+  "map_pathTraceAddMoreHint": "Tik op meer nodes om hops toe te voegen, kies hoe de trace terugkomt en tik dan op Padtrace uitvoeren.",
+  "map_pathTraceModeRoundTrip": "Heen en terug",
+  "map_pathTraceModeRoundTripHint": "De trace gaat via deze hops heen en komt op dezelfde weg terug.",
+  "map_pathTraceModeAsEntered": "Zoals ingevoerd",
+  "map_pathTraceModeAsEnteredHint": "De trace volgt precies deze hops. Voeg zelf de hops terug naar jou toe.",
+  "map_pathTraceViewLast": "Laatste resultaat bekijken"
 }

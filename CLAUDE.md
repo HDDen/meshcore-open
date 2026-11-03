@@ -1643,6 +1643,33 @@ writes nothing and moves no `updated_at_ms`
 
 The map screen (`map_screen.dart`) rebuilds on every notification of the connector, up to twenty a second under live radio, and on those of the path history, the settings and the wardrive service, and each build derives everything from scratch: signatures, filters, guessed positions, markers, coverage. Two things cut that down without touching what is drawn. Under another page (a chat, the settings) the build hands back the tree it built last (`_lastBuiltBody`) and computes nothing, since nobody sees the map; `didPopNext` calls `setState`, so the return builds anew once with everything that changed meanwhile. A dialog or a bottom sheet over the map is no page to `appRouteObserver`, which is typed on `PageRoute`, so the map under one keeps updating live. And the caches key on less. The node marker cache (`_NodeMarkersCacheKey`, its inputs listed above the class) no longer includes a signature of every contact, so an advert from a node off the map leaves the markers as they are, and it includes the node's hash width, which the overlap prefixes are cut at. The guessed-position key is a hash of the same inputs it used to join into a string of a hundred kilobytes per build. `allContacts` is built once per build and handed to the snapshot, and the repeater search candidates are built only while that search is on. The wardrive derivations (the selected coverage samples, the coverage polygons, the repeater coverage samples and polygons, the sample points) go through `LastValueMemo` (`helpers/last_value_memo.dart`), keyed on the samples list itself, which `WardriveService` replaces whole at every change, plus the settings each reads, so a build that changes nothing about the samples reuses the polygons; the samples themselves are collected and kept exactly as before. The search field waits `_searchDelay` (300 ms) for the typing to pause before it sets `_searchQuery`, which rebuilds the whole map. Every marker carries a key (`node:`, `label:`, `cluster:`, `guess:` or `shared:` and the identity), so the marker layer moves subtrees instead of recreating them when the list changes order. Left as it was, on purpose: the centre and zoom of all nodes are computed every build because the centre-map button uses them live; clustering of guessed markers, cheaper marker shadows and the dark-theme tile filter change the look and wait for a decision; the marker signature still hashes every loaded marker message, which is exact, and a connector-side messages revision would be a change of its own (`test/screens/map_screen_state_test.dart`, `test/helpers/last_value_memo_test.dart`).
 
+### Map path-trace session draft (U06b3)
+
+`UiViewStateService.mapPathTrace` holds a memory-only `MapPathTraceDraft`.
+Map editing keeps the fork's local route/width/contact/estimated-position
+derivations and snapshots them on route actions. Raw editor text invalidates
+the saved result without rebuilding the map or writing preferences. Close/back
+hide the builder, Clear removes hops, and a recreated map restores the draft
+only for the same known radio. An explicit initial route takes precedence;
+region-request map instances use a separate local draft. Existing region
+target placement, route slicing, manual normalization, whole-hop undo,
+3-to-4-byte TRACE expansion and `revealMapManually` stay in place.
+
+Labeled controls expose round-trip/as-entered mode and the last completed
+result. Each edit/new run advances a revision; callbacks also check radio,
+route, width and mode, so A-to-B-to-A edits cannot accept an old completion.
+`SavedPathTraceResult.matchesRequest` additionally verifies the response tag,
+route, flags and complete SNR tail before caching. This does not replace the
+legacy live display parser. The saved frame is copied; direct-echo observations
+and the run's contact snapshot are retained for replay.
+
+`PathTraceMapScreen.initialTraceFrame` reuses the ordinary result renderer
+with a cached-result title but no radio listener/send/timeout timer. An explicit
+rerun attaches the live listener. `onTraceFrame` and `onTraceResult` fire only
+after parsing a complete matching live result. Tests: map_screen_state_test,
+path_trace_test, map_path_trace_draft_test and saved_path_trace_result_test.
+User guide: `documentation/map-and-location.md`.
+
 ### Heard repeater details (U06a3)
 
 Both `SNRIndicator` and `SNRActivityIndicator` use `_RepeaterDialogList` in

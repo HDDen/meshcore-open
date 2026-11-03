@@ -4376,5 +4376,11 @@
   },
   "snrIndicator_unknownRepeater": "Répéteur inconnu",
   "snrIndicator_unknownRepeaterHint": "Ce répéteur ne figure pas encore dans vos contacts. Son nom, sa position et ses options apparaîtront lorsque votre radio recevra son annonce.",
-  "snrIndicator_ambiguousRepeaterHint": "Plusieurs contacts partagent ce préfixe. Le nom n'est qu'une supposition ; les actions de contact sont indisponibles pour cette entrée."
+  "snrIndicator_ambiguousRepeaterHint": "Plusieurs contacts partagent ce préfixe. Le nom n'est qu'une supposition ; les actions de contact sont indisponibles pour cette entrée.",
+  "map_pathTraceAddMoreHint": "Touchez d'autres nœuds pour ajouter des sauts, choisissez le retour de la trace, puis touchez Lancer le traçage de chemin.",
+  "map_pathTraceModeRoundTrip": "Aller-retour",
+  "map_pathTraceModeRoundTripHint": "La trace passe par ces sauts et revient par le même chemin.",
+  "map_pathTraceModeAsEntered": "Tel que saisi",
+  "map_pathTraceModeAsEnteredHint": "La trace suit exactement ces sauts. Ajoutez vous-même les sauts du retour.",
+  "map_pathTraceViewLast": "Voir le dernier résultat"
 }

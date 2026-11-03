@@ -4059,5 +4059,11 @@
   },
   "snrIndicator_unknownRepeater": "Repetidor desconhecido",
   "snrIndicator_unknownRepeaterHint": "Este repetidor ainda não está nos seus contactos. O nome, a localização e as opções aparecem quando o rádio receber o seu anúncio.",
-  "snrIndicator_ambiguousRepeaterHint": "Vários contactos partilham este prefixo. O nome é apenas uma suposição; as ações de contacto não estão disponíveis para esta entrada."
+  "snrIndicator_ambiguousRepeaterHint": "Vários contactos partilham este prefixo. O nome é apenas uma suposição; as ações de contacto não estão disponíveis para esta entrada.",
+  "map_pathTraceAddMoreHint": "Toque em mais nós para adicionar saltos, escolha como o rastreamento retorna e toque em Executar rastreamento de caminho.",
+  "map_pathTraceModeRoundTrip": "Ida e volta",
+  "map_pathTraceModeRoundTripHint": "O rastreamento sai por estes saltos e volta pelo mesmo caminho.",
+  "map_pathTraceModeAsEntered": "Como inserido",
+  "map_pathTraceModeAsEnteredHint": "O rastreamento segue exatamente estes saltos. Adicione você mesmo os saltos de volta até si.",
+  "map_pathTraceViewLast": "Ver último resultado"
 }

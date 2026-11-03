@@ -4274,5 +4274,11 @@
   },
   "snrIndicator_unknownRepeater": "Ismeretlen átjátszó",
   "snrIndicator_unknownRepeaterHint": "Ez az átjátszó még nincs a névjegyek között. Neve, helyzete és műveletei akkor jelennek meg, amikor a rádió megkapja a hirdetését.",
-  "snrIndicator_ambiguousRepeaterHint": "Több névjegynek azonos az előtagja. A név csak feltételezés; a névjegyműveletek ennél a bejegyzésnél nem érhetők el."
+  "snrIndicator_ambiguousRepeaterHint": "Több névjegynek azonos az előtagja. A név csak feltételezés; a névjegyműveletek ennél a bejegyzésnél nem érhetők el.",
+  "map_pathTraceAddMoreHint": "Koppints további csomópontokra ugrások hozzáadásához, válaszd ki a nyomkövetés visszatérését, majd koppints az Útvonal-nyomkövetés indítása gombra.",
+  "map_pathTraceModeRoundTrip": "Oda-vissza",
+  "map_pathTraceModeRoundTripHint": "A nyomkövetés ezeken az ugrásokon át megy ki, és ugyanazon az úton jön vissza.",
+  "map_pathTraceModeAsEntered": "Megadott sorrendben",
+  "map_pathTraceModeAsEnteredHint": "A nyomkövetés pontosan ezeket az ugrásokat követi. A hozzád visszavezető ugrásokat magadnak kell hozzáadnod.",
+  "map_pathTraceViewLast": "Utolsó eredmény megtekintése"
 }

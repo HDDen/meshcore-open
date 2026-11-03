@@ -4243,5 +4243,11 @@
   },
   "snrIndicator_unknownRepeater": "Neznan repetitor",
   "snrIndicator_unknownRepeaterHint": "Tega repetitorja še ni med stiki. Njegovo ime, lokacija in možnosti se prikažejo, ko radio prejme njegovo objavo.",
-  "snrIndicator_ambiguousRepeaterHint": "To predpono ima več stikov. Ime je le domneva; dejanja stika za ta vnos niso na voljo."
+  "snrIndicator_ambiguousRepeaterHint": "To predpono ima več stikov. Ime je le domneva; dejanja stika za ta vnos niso na voljo.",
+  "map_pathTraceAddMoreHint": "Tapnite več vozlišč za dodajanje skokov, izberite, kako se sledenje vrne, nato tapnite Zaženi sledenje poti.",
+  "map_pathTraceModeRoundTrip": "Povratna pot",
+  "map_pathTraceModeRoundTripHint": "Sledenje gre skozi te skoke in se vrne po isti poti.",
+  "map_pathTraceModeAsEntered": "Kot vneseno",
+  "map_pathTraceModeAsEnteredHint": "Sledenje sledi tem skokom natančno. Skoke nazaj k sebi dodajte sami.",
+  "map_pathTraceViewLast": "Poglej zadnji rezultat"
 }

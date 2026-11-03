@@ -21,6 +21,7 @@ import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
+import '../models/map_path_trace_draft.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
@@ -172,6 +173,13 @@ class _MapScreenState extends State<MapScreen>
   final Map<String, DateTime> _hiddenMarkerIds = {};
   Map<String, DateTime> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
+  bool _traceDraftRestored = false;
+  bool _traceReturnPath = true;
+  int? _pathTraceHashWidth;
+  // Region-request routes never overwrite the ordinary map's session draft.
+  late final MapPathTraceDraft _traceDraft = widget.regionRequestTarget != null
+      ? MapPathTraceDraft()
+      : context.read<UiViewStateService>().mapPathTrace;
   Contact? _regionRequestTarget;
   bool _isSelectingPoi = false;
   bool _hasInitializedMap = false;
@@ -356,6 +364,7 @@ class _MapScreenState extends State<MapScreen>
       );
       unawaited(_applyPreferredMapLocation());
     }
+    _restorePathTraceDraft();
     final route = ModalRoute.of(context);
     if (route is PageRoute<dynamic> && _observedRoute != route) {
       if (_observedRoute != null) {
@@ -681,6 +690,10 @@ class _MapScreenState extends State<MapScreen>
   Widget build(BuildContext context) {
     return Consumer3<MeshCoreConnector, AppSettingsService, PathHistoryService>(
       builder: (context, connector, settingsService, pathHistory, child) {
+        if (!_traceDraftRestored) {
+          _restorePathTraceDraft();
+        }
+        _resetTraceForChangedRadio(connector);
         if (!checkConnectionAndNavigate(connector)) {
           return const SizedBox.shrink();
         }
@@ -1199,7 +1212,12 @@ class _MapScreenState extends State<MapScreen>
             .length;
 
         final built = PopScope(
-          canPop: allowBack,
+          canPop: allowBack && !_isBuildingPathTrace,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _isBuildingPathTrace) {
+              _closePathTrace();
+            }
+          },
           child: Scaffold(
             appBar: AppBar(
               title: AppBarTitle(context.l10n.map_title),
@@ -7603,26 +7621,151 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _startPath(LatLng position) {
+    final connector = context.read<MeshCoreConnector>();
+    _resetTraceForChangedRadio(connector);
     setState(() {
       _isBuildingPathTrace = true;
       _regionRequestTarget = null;
+      _pathTraceHashWidth ??= connector.pathHashByteWidth;
       _pathTraceStart = position;
+      _rebuildPathTraceAuxiliary();
+      _syncPathEditText();
+    });
+  }
+
+  void _savePathTraceDraft() {
+    final connector = context.read<MeshCoreConnector>();
+    final draft = _traceDraft;
+    final key = connector.selfPublicKey;
+    if (key == null && draft.radioKey != null) return;
+    final width = _activePathHashWidth(connector);
+    if (!listEquals(draft.radioKey, key) ||
+        !listEquals(draft.pathBytes, _pathTrace) ||
+        draft.hashByteWidth != width || draft.returnPath != _traceReturnPath) {
+      draft.invalidateResult();
+    }
+    draft.radioKey = key == null ? null : Uint8List.fromList(key);
+    draft.active = _isBuildingPathTrace;
+    draft.returnPath = _traceReturnPath;
+    draft.hashByteWidth = width;
+    draft.start = _pathTraceStart;
+    draft.pathBytes
+      ..clear()
+      ..addAll(_pathTrace);
+    draft.hopWidths
+      ..clear()
+      ..addAll(_pathTraceHopWidths);
+    draft.contacts
+      ..clear()
+      ..addAll(_pathTraceContacts);
+    draft.points
+      ..clear()
+      ..addAll(_points);
+    draft.positionOverrides
+      ..clear()
+      ..addAll(_pathTracePositionOverrides);
+    draft.editorText = _pathEditController.text;
+  }
+
+  void _restorePathTraceDraft() {
+    if (_traceDraftRestored) return;
+    final connector = context.read<MeshCoreConnector>();
+    final draft = _traceDraft;
+    if (widget.initialTracePath?.isNotEmpty ?? false) {
+      _traceDraftRestored = true;
+      return;
+    }
+    // A reconnect can temporarily clear SELF_INFO. Keep the previous radio's
+    // draft until an actual identity is available; never restore it unbound.
+    if (connector.selfPublicKey == null && draft.hasHops) return;
+    _traceDraftRestored = true;
+    if (!draft.belongsTo(connector.selfPublicKey)) {
+      draft.clear();
+      draft.active = false;
+      return;
+    }
+    if (!draft.hasHops && (draft.editorText?.isEmpty ?? true) && !draft.active) {
+      return;
+    }
+    final editorText = draft.editorText;
+    _traceReturnPath = draft.returnPath;
+    _isBuildingPathTrace = draft.active;
+    _pathTraceHashWidth = draft.hashByteWidth;
+    _pathTraceStart = MapLocationHelper.nodeLocation(connector);
+    _pathTrace.addAll(draft.pathBytes);
+    _pathTraceHopWidths.addAll(draft.hopWidths);
+    _pathTracePositionOverrides.addAll(draft.positionOverrides);
+    _rebuildPathTraceAuxiliary();
+    _syncPathEditText();
+    if (editorText != null) {
+      _pathEditController.text = editorText;
+      draft.editorText = editorText;
+    }
+  }
+
+  void _resetTraceForChangedRadio(MeshCoreConnector connector) {
+    if (!_traceDraftRestored ||
+        connector.selfPublicKey == null ||
+        _traceDraft.radioKey == null ||
+        _traceDraft.belongsTo(connector.selfPublicKey)) {
+      return;
+    }
+    // Before deriving the map body: no notifications, IO or radio commands.
+    _traceDraft.clear();
+    _traceDraft.active = false;
+    final key = connector.selfPublicKey;
+    _traceDraft.radioKey = key == null ? null : Uint8List.fromList(key);
+    _isBuildingPathTrace = false;
+    _regionRequestTarget = null;
+    _pathTrace.clear();
+    _pathTraceHopWidths.clear();
+    _pathTraceContacts.clear();
+    _pathTracePositionOverrides.clear();
+    _pathTraceSegmentEstimated.clear();
+    _points.clear();
+    _polylines.clear();
+    _pathTraceHashWidth = null;
+    _pathEditController.clear();
+  }
+
+  void _closePathTrace() {
+    _commitPathEdit();
+    _pathEditFocus.unfocus();
+    setState(() {
+      _isBuildingPathTrace = false;
+      _savePathTraceDraft();
+    });
+  }
+
+  void _clearPathTrace() {
+    _pathEditFocus.unfocus();
+    setState(() {
       _pathTrace.clear();
       _pathTraceHopWidths.clear();
-      _pathTraceContacts.clear();
-      _points.clear();
-      _pathTraceSegmentEstimated.clear();
       _pathTracePositionOverrides.clear();
-      _polylines.clear();
-      _points.add(position);
-      _syncPathEditText();
+      _rebuildPathTraceAuxiliary();
+      _pathEditController.clear();
+      _savePathTraceDraft();
+    });
+  }
+
+  void _setTraceReturnPath(bool value) {
+    _commitPathEdit();
+    _pathEditFocus.unfocus();
+    if (_traceReturnPath == value) return;
+    setState(() {
+      _traceReturnPath = value;
+      _savePathTraceDraft();
     });
   }
 
   /// Mirrors the current [_pathTrace] into the editable hop field, unless the
   /// user is actively editing it.
   void _syncPathEditText() {
-    if (_pathEditFocus.hasFocus) return;
+    if (_pathEditFocus.hasFocus) {
+      _savePathTraceDraft();
+      return;
+    }
     final width = _activePathHashWidth(context.read<MeshCoreConnector>());
     final hopText = PathHelper.splitPathBytes(
       _pathTrace,
@@ -7631,6 +7774,7 @@ class _MapScreenState extends State<MapScreen>
     if (_pathEditController.text != hopText) {
       _pathEditController.text = hopText;
     }
+    _savePathTraceDraft();
   }
 
   /// Commits a manual edit of the hop list (on focus loss). Uppercases, strips
@@ -7670,6 +7814,7 @@ class _MapScreenState extends State<MapScreen>
         ..addAll(widths);
       _rebuildPathTraceAuxiliary();
       _pathEditController.text = canonicalHops.join(',');
+      _savePathTraceDraft();
     });
   }
 
@@ -7766,6 +7911,12 @@ class _MapScreenState extends State<MapScreen>
         .clamp(1, pubKeySize)
         .toInt();
     setState(() {
+      _traceDraft.clear();
+      final key = connector.selfPublicKey;
+      _traceDraft.radioKey = key == null ? null : Uint8List.fromList(key);
+      _pathTraceHashWidth = width;
+      _traceReturnPath = _traceDraft.returnPath;
+      _pathTracePositionOverrides.clear();
       _isBuildingPathTrace = true;
       _pathTrace
         ..clear()
@@ -7799,6 +7950,13 @@ class _MapScreenState extends State<MapScreen>
     setState(() {
       _preferredMapLocation = location;
       _mapLocationResolutionReady = true;
+      if (_isBuildingPathTrace && widget.initialTracePath == null) {
+        _pathTraceStart = location ?? MapLocationHelper.nodeLocation(
+          context.read<MeshCoreConnector>(),
+        );
+        _rebuildPathTraceAuxiliary();
+        _savePathTraceDraft();
+      }
     });
   }
 
@@ -7875,7 +8033,8 @@ class _MapScreenState extends State<MapScreen>
       final first = _pathTraceHopWidths.first.clamp(1, pubKeySize).toInt();
       if (_pathTraceHopWidths.every((width) => width == first)) return first;
     }
-    return connector.pathHashByteWidth.clamp(1, pubKeySize).toInt();
+    return (_pathTraceHashWidth ?? connector.pathHashByteWidth)
+        .clamp(1, pubKeySize).toInt();
   }
 
   void _removePath() {
@@ -7902,20 +8061,57 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-  void _openPathTraceResult({required bool flipPathAround}) {
-    final hashW = _activePathHashWidth(context.read<MeshCoreConnector>());
-    // Keep the path editor active behind the result screen, so returning from
-    // the trace map restores the selected repeaters for quick adjustments.
+  void _openPathTraceResult({
+    required bool flipPathAround,
+    bool reuseLastResult = false,
+  }) {
+    _commitPathEdit();
+    _pathEditFocus.unfocus();
+    final connector = context.read<MeshCoreConnector>();
+    final draft = _traceDraft;
+    _savePathTraceDraft();
+    final saved = reuseLastResult ? draft.lastResult : null;
+    if (_pathTrace.isEmpty ||
+        (reuseLastResult &&
+            (saved == null || !draft.belongsTo(connector.selfPublicKey)))) {
+      return;
+    }
+    if (!reuseLastResult) draft.invalidateResult();
+    final hashW = _activePathHashWidth(connector);
+    final path = Uint8List.fromList(_pathTrace);
+    final key = connector.selfPublicKey;
+    final radio = key == null ? null : Uint8List.fromList(key);
+    final revision = draft.revision;
+    final contacts = List<Contact>.of(
+      reuseLastResult ? draft.resultContacts : _pathTraceContacts,
+      growable: false,
+    );
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PathTraceMapScreen(
-          title: context.l10n.contacts_pathTrace,
-          path: Uint8List.fromList(_pathTrace),
+          title: reuseLastResult
+              ? '${context.l10n.contacts_pathTrace} / ${context.l10n.map_pathTraceViewLast}'
+              : context.l10n.contacts_pathTrace,
+          path: path,
           flipPathAround: flipPathAround,
           pathHashByteWidth: hashW,
-          pathContacts: _pathTraceContacts,
+          pathContacts: contacts,
           revealMapManually: true,
+          initialTraceFrame: saved?.frame,
+          initialTraceObservations: saved?.observations ?? const [],
+          onTraceResult: (result) {
+            // A -> B -> A edits must still reject a late result from A.
+            if (radio == null || draft.revision != revision ||
+                !listEquals(radio, connector.selfPublicKey) ||
+                !listEquals(draft.pathBytes, path) ||
+                draft.hashByteWidth != hashW || draft.returnPath != flipPathAround) {
+              return;
+            }
+            draft.lastResult = result;
+            draft.resultContacts = List.unmodifiable(contacts);
+            if (mounted) setState(() {});
+          },
         ),
       ),
     );
@@ -7998,6 +8194,80 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  Widget _buildPathTraceControls() {
+    final l10n = context.l10n;
+    final hasHops = _pathTrace.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (hasHops && !_isRegionRequestTrace) ...[
+          Text(l10n.map_pathTraceAddMoreHint),
+          const SizedBox(height: 6),
+          // Wrapping choices also fit narrow screens and larger text sizes.
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(l10n.map_pathTraceModeRoundTrip),
+                selected: _traceReturnPath,
+                onSelected: (_) => _setTraceReturnPath(true),
+              ),
+              ChoiceChip(
+                label: Text(l10n.map_pathTraceModeAsEntered),
+                selected: !_traceReturnPath,
+                onSelected: (_) => _setTraceReturnPath(false),
+              ),
+            ],
+          ),
+          Text(_traceReturnPath
+              ? l10n.map_pathTraceModeRoundTripHint
+              : l10n.map_pathTraceModeAsEnteredHint),
+        ],
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            if (hasHops) TextButton.icon(
+              onPressed: _removePath,
+              icon: const Icon(Icons.undo),
+              label: Text(l10n.map_removeLast),
+            ),
+            if (hasHops && !_isRegionRequestTrace) TextButton.icon(
+              onPressed: _clearPathTrace,
+              icon: const Icon(Icons.delete_outline),
+              label: Text(l10n.common_clear),
+            ),
+            TextButton.icon(
+              onPressed: _closePathTrace,
+              icon: const Icon(Icons.close),
+              label: Text(l10n.common_close),
+            ),
+            if (hasHops && !_isRegionRequestTrace) OutlinedButton.icon(
+              onPressed: _openCurrentPathRegionRequest,
+              icon: const Icon(Icons.travel_explore),
+              label: Text(l10n.contacts_requestRegions),
+            ),
+            if (hasHops && !_isRegionRequestTrace && _traceDraft.lastResult != null)
+              OutlinedButton.icon(
+                onPressed: () => _openPathTraceResult(
+                  flipPathAround: _traceReturnPath, reuseLastResult: true,
+                ),
+                icon: const Icon(Icons.history),
+                label: Text(l10n.map_pathTraceViewLast),
+              ),
+            if (hasHops) FilledButton.icon(
+              onPressed: _isRegionRequestTrace
+                  ? () => _openRegionRequestResult()
+                  : () => _openPathTraceResult(flipPathAround: _traceReturnPath),
+              icon: Icon(_isRegionRequestTrace ? Icons.travel_explore : Icons.radar),
+              label: Text(_isRegionRequestTrace ? l10n.contacts_requestRegions : l10n.map_runTrace),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildPathTraceOverlay() {
     final l10n = context.l10n;
     final brightness = Theme.of(context).brightness;
@@ -8062,6 +8332,11 @@ class _MapScreenState extends State<MapScreen>
                   // and commits the edit.
                   onTapOutside: (_) => _pathEditFocus.unfocus(),
                   onSubmitted: (_) => _pathEditFocus.unfocus(),
+                  onChanged: (value) {
+                    if (_traceDraft.editorText == value) return;
+                    _traceDraft.editorText = value;
+                    _traceDraft.invalidateResult();
+                  },
                   decoration: InputDecoration(
                     isDense: true,
                     filled: false,
@@ -8081,67 +8356,7 @@ class _MapScreenState extends State<MapScreen>
                     color: MapPalette.selected,
                   ),
                 ),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 1,
-                  runSpacing: 1,
-                  children: [
-                    if (_pathTrace.isNotEmpty)
-                      IconButton(
-                        onPressed: _isRegionRequestTrace
-                            ? () => _openRegionRequestResult()
-                            : () => _openPathTraceResult(
-                                flipPathAround: false,
-                              ),
-                        tooltip: _isRegionRequestTrace
-                            ? l10n.contacts_requestRegions
-                            : l10n.map_runTrace,
-                        icon: Icon(_isRegionRequestTrace
-                            ? Icons.travel_explore
-                            : Icons.arrow_forward_outlined),
-                      ),
-                    if (_pathTrace.isNotEmpty && !_isRegionRequestTrace)
-                      IconButton(
-                        onPressed: () =>
-                            _openPathTraceResult(flipPathAround: true),
-                        tooltip: l10n.map_runTraceWithReturnPath,
-                        icon: const Icon(Icons.replay),
-                      ),
-                    if (_pathTrace.isNotEmpty)
-                      IconButton(
-                        onPressed: _removePath,
-                        tooltip: l10n.map_removeLast,
-                        icon: const Icon(Icons.undo),
-                      ),
-                    if (_pathTrace.isNotEmpty && !_isRegionRequestTrace)
-                      IconButton(
-                        onPressed: _openCurrentPathRegionRequest,
-                        tooltip: l10n.contacts_requestRegions,
-                        icon: const Icon(Icons.travel_explore),
-                      ),
-                    if (_pathTrace.isEmpty)
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _isBuildingPathTrace = false;
-                            _regionRequestTarget = null;
-                            _pathTrace.clear();
-                            _pathTraceHopWidths.clear();
-                            _pathTraceContacts.clear();
-                            _points.clear();
-                            _pathTraceSegmentEstimated.clear();
-                            _pathTracePositionOverrides.clear();
-                            _polylines.clear();
-                          });
-                          _showMapSnackBar(
-                            content: Text(l10n.map_pathTraceCancelled),
-                          );
-                        },
-                        tooltip: l10n.common_cancel,
-                        icon: const Icon(Icons.close),
-                      ),
-                  ],
-                ),
+                _buildPathTraceControls(),
               ],
             ),
           ),

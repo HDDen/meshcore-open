@@ -4348,5 +4348,11 @@
   },
   "snrIndicator_unknownRepeater": "Repetidor desconocido",
   "snrIndicator_unknownRepeaterHint": "Este repetidor aún no está en tus contactos. Su nombre, ubicación y opciones aparecerán cuando tu radio reciba su anuncio.",
-  "snrIndicator_ambiguousRepeaterHint": "Varios contactos comparten este prefijo. El nombre es solo una suposición; las acciones de contacto no están disponibles para esta entrada."
+  "snrIndicator_ambiguousRepeaterHint": "Varios contactos comparten este prefijo. El nombre es solo una suposición; las acciones de contacto no están disponibles para esta entrada.",
+  "map_pathTraceAddMoreHint": "Toca más nodos para añadir saltos, elige cómo vuelve la traza y toca Ejecutar traza de ruta.",
+  "map_pathTraceModeRoundTrip": "Ida y vuelta",
+  "map_pathTraceModeRoundTripHint": "La traza sale por estos saltos y vuelve por el mismo camino.",
+  "map_pathTraceModeAsEntered": "Tal como se introdujo",
+  "map_pathTraceModeAsEnteredHint": "La traza sigue estos saltos exactamente. Añade tú mismo los saltos de vuelta hacia ti.",
+  "map_pathTraceViewLast": "Ver último resultado"
 }

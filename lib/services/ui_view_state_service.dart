@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/map_path_trace_draft.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 
@@ -36,6 +37,8 @@ class UiViewStateService extends ChangeNotifier {
   // Null preserves the existing global-history default until the first choice.
   // This preference belongs to the app, never to a particular radio or console.
   bool? _companionCliSharedHistory;
+
+  final MapPathTraceDraft mapPathTrace = MapPathTraceDraft();
 
   String get contactsSelectedGroupName => _contactsSelectedGroupName;
   String get contactsSearchText => _contactsSearchText;

@@ -4240,5 +4240,11 @@
   },
   "snrIndicator_unknownRepeater": "Ripetitore sconosciuto",
   "snrIndicator_unknownRepeaterHint": "Questo ripetitore non è ancora tra i contatti. Nome, posizione e opzioni appariranno quando la radio riceverà il suo annuncio.",
-  "snrIndicator_ambiguousRepeaterHint": "Più contatti condividono questo prefisso. Il nome è solo un'ipotesi; le azioni sul contatto non sono disponibili per questa voce."
+  "snrIndicator_ambiguousRepeaterHint": "Più contatti condividono questo prefisso. Il nome è solo un'ipotesi; le azioni sul contatto non sono disponibili per questa voce.",
+  "map_pathTraceAddMoreHint": "Tocca altri nodi per aggiungere salti, scegli come ritorna la traccia, poi tocca Avvia tracciamento del percorso.",
+  "map_pathTraceModeRoundTrip": "Andata e ritorno",
+  "map_pathTraceModeRoundTripHint": "La traccia passa per questi salti e torna indietro nello stesso modo.",
+  "map_pathTraceModeAsEntered": "Come inserito",
+  "map_pathTraceModeAsEnteredHint": "La traccia segue esattamente questi salti. Aggiungi tu i salti del ritorno.",
+  "map_pathTraceViewLast": "Vedi ultimo risultato"
 }

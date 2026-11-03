@@ -4375,5 +4375,11 @@
   },
   "snrIndicator_unknownRepeater": "不明なリピーター",
   "snrIndicator_unknownRepeaterHint": "このリピーターはまだ連絡先にありません。無線機が広告を受信すると、名前、位置、操作が表示されます。",
-  "snrIndicator_ambiguousRepeaterHint": "このプレフィックスは複数の連絡先に一致します。名前は推測のため、この項目では連絡先の操作を利用できません。"
+  "snrIndicator_ambiguousRepeaterHint": "このプレフィックスは複数の連絡先に一致します。名前は推測のため、この項目では連絡先の操作を利用できません。",
+  "map_pathTraceAddMoreHint": "ノードをタップしてホップを追加し、トレースの戻り方を選んでから「経路トレースを実行」をタップします。",
+  "map_pathTraceModeRoundTrip": "往復",
+  "map_pathTraceModeRoundTripHint": "トレースはこれらのホップを経由して送信され、同じ経路で戻ってきます。",
+  "map_pathTraceModeAsEntered": "入力どおり",
+  "map_pathTraceModeAsEnteredHint": "トレースはこれらのホップをそのとおりにたどります。自分へ戻るホップは自分で追加してください。",
+  "map_pathTraceViewLast": "前回の結果を表示"
 }
