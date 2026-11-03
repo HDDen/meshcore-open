@@ -5205,6 +5205,25 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notification_receivedNewMessage => 'Otrzymano nową wiadomość';
 
   @override
+  String get notification_sharedLocation => 'Udostępniono lokalizację';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Udostępniono lokalizację: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Reakcja $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Wysłano GIF';
+
+  @override
+  String get notification_sentImage => 'Wysłano obraz';
+
+  @override
   String get notification_actionReply => 'Odpowiedz';
 
   @override

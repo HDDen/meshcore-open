@@ -5147,6 +5147,25 @@ class AppLocalizationsSv extends AppLocalizations {
   String get notification_receivedNewMessage => 'Nytt meddelande mottaget';
 
   @override
+  String get notification_sharedLocation => 'Delade en plats';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Delade en plats: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Reagerade med $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Skickade en GIF';
+
+  @override
+  String get notification_sentImage => 'Skickade en bild';
+
+  @override
   String get notification_actionReply => 'Svara';
 
   @override

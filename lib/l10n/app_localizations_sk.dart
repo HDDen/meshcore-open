@@ -5166,6 +5166,25 @@ class AppLocalizationsSk extends AppLocalizations {
   String get notification_receivedNewMessage => 'Prijatá nová správa';
 
   @override
+  String get notification_sharedLocation => 'Zdieľaná poloha';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Zdieľaná poloha: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Reakcia $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Odoslaný GIF';
+
+  @override
+  String get notification_sentImage => 'Odoslaný obrázok';
+
+  @override
   String get notification_actionReply => 'Odpovedať';
 
   @override

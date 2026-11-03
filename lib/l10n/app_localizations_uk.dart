@@ -5189,6 +5189,25 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notification_receivedNewMessage => 'Отримано нове повідомлення';
 
   @override
+  String get notification_sharedLocation => 'Надіслано геопозицію';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Надіслано геопозицію: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Реакція $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Надіслано GIF';
+
+  @override
+  String get notification_sentImage => 'Надіслано зображення';
+
+  @override
   String get notification_actionReply => 'Відповісти';
 
   @override

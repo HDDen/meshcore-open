@@ -5181,6 +5181,25 @@ class AppLocalizationsHu extends AppLocalizations {
   String get notification_receivedNewMessage => 'Új üzenet érkezett';
 
   @override
+  String get notification_sharedLocation => 'Helyzet megosztva';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Helyzet megosztva: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Reakció: $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'GIF elküldve';
+
+  @override
+  String get notification_sentImage => 'Kép elküldve';
+
+  @override
   String get notification_actionReply => 'Válasz';
 
   @override

@@ -5179,6 +5179,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notification_receivedNewMessage => 'Получено новое сообщение';
 
   @override
+  String get notification_sharedLocation => 'Отправлена геопозиция';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Отправлена геопозиция: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Реакция $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Отправлен GIF';
+
+  @override
+  String get notification_sentImage => 'Отправлено изображение';
+
+  @override
   String get notification_actionReply => 'Ответить';
 
   @override

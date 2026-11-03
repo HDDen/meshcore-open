@@ -4937,6 +4937,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notification_receivedNewMessage => '새로운 메시지를 받았습니다';
 
   @override
+  String get notification_sharedLocation => '위치를 공유했습니다';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return '위치를 공유했습니다: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return '$emoji로 반응했습니다';
+  }
+
+  @override
+  String get notification_sentGif => 'GIF를 보냈습니다';
+
+  @override
+  String get notification_sentImage => '이미지를 보냈습니다';
+
+  @override
   String get notification_actionReply => '답장';
 
   @override

@@ -5151,6 +5151,25 @@ class AppLocalizationsSl extends AppLocalizations {
   String get notification_receivedNewMessage => 'Prejeto novo sporočilo';
 
   @override
+  String get notification_sharedLocation => 'Lokacija v skupni rabi';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Lokacija v skupni rabi: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Odziv $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'Poslan GIF';
+
+  @override
+  String get notification_sentImage => 'Poslana slika';
+
+  @override
   String get notification_actionReply => 'Odgovori';
 
   @override

@@ -8798,6 +8798,36 @@ abstract class AppLocalizations {
   /// **'Received new message'**
   String get notification_receivedNewMessage;
 
+  /// No description provided for @notification_sharedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared a location'**
+  String get notification_sharedLocation;
+
+  /// No description provided for @notification_sharedLocationNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared a location: {label}'**
+  String notification_sharedLocationNamed(String label);
+
+  /// No description provided for @notification_reacted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reacted {emoji}'**
+  String notification_reacted(String emoji);
+
+  /// No description provided for @notification_sentGif.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent a GIF'**
+  String get notification_sentGif;
+
+  /// No description provided for @notification_sentImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent an image'**
+  String get notification_sentImage;
+
   /// No description provided for @notification_actionReply.
   ///
   /// In en, this message translates to:

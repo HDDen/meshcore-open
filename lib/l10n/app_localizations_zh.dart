@@ -4828,6 +4828,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notification_receivedNewMessage => '收到新消息';
 
   @override
+  String get notification_sharedLocation => '分享了位置';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return '分享了位置：$label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return '回应了 $emoji';
+  }
+
+  @override
+  String get notification_sentGif => '发送了 GIF';
+
+  @override
+  String get notification_sentImage => '发送了图片';
+
+  @override
   String get notification_actionReply => '回复';
 
   @override

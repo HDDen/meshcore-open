@@ -5164,6 +5164,25 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notification_receivedNewMessage => 'Nieuw bericht ontvangen';
 
   @override
+  String get notification_sharedLocation => 'Locatie gedeeld';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Locatie gedeeld: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'Gereageerd met $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'GIF verzonden';
+
+  @override
+  String get notification_sentImage => 'Afbeelding verzonden';
+
+  @override
   String get notification_actionReply => 'Reageren';
 
   @override

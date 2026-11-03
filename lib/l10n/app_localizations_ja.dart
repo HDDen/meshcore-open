@@ -4930,6 +4930,25 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notification_receivedNewMessage => '新しいメッセージを受信';
 
   @override
+  String get notification_sharedLocation => '位置情報を共有しました';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return '位置情報を共有しました: $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return '$emojiでリアクションしました';
+  }
+
+  @override
+  String get notification_sentGif => 'GIFを送信しました';
+
+  @override
+  String get notification_sentImage => '画像を送信しました';
+
+  @override
   String get notification_actionReply => '返信';
 
   @override

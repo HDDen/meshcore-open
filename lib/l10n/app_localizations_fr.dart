@@ -5202,6 +5202,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notification_receivedNewMessage => 'Nouveau message reçu';
 
   @override
+  String get notification_sharedLocation => 'Position partagée';
+
+  @override
+  String notification_sharedLocationNamed(String label) {
+    return 'Position partagée : $label';
+  }
+
+  @override
+  String notification_reacted(String emoji) {
+    return 'A réagi avec $emoji';
+  }
+
+  @override
+  String get notification_sentGif => 'A envoyé un GIF';
+
+  @override
+  String get notification_sentImage => 'A envoyé une image';
+
+  @override
   String get notification_actionReply => 'Répondre';
 
   @override
