@@ -8999,4 +8999,25 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Kilka kontaktów ma ten sam prefiks. Nazwa jest tylko przypuszczeniem; działania na kontakcie są niedostępne dla tego wpisu.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Dotknij kolejnych węzłów, aby dodać skoki, wybierz sposób powrotu śledzenia, a potem dotknij Uruchom śledzenie ścieżki.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Tam i z powrotem';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Śledzenie idzie przez te skoki i wraca tą samą drogą.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Jak wprowadzono';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Śledzenie przechodzi dokładnie przez te skoki. Skoki powrotne do siebie dodaj samodzielnie.';
+
+  @override
+  String get map_pathTraceViewLast => 'Zobacz ostatni wynik';
 }

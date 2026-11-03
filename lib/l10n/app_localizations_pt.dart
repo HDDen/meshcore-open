@@ -8971,4 +8971,25 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Vários contactos partilham este prefixo. O nome é apenas uma suposição; as ações de contacto não estão disponíveis para esta entrada.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Toque em mais nós para adicionar saltos, escolha como o rastreamento retorna e toque em Executar rastreamento de caminho.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Ida e volta';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'O rastreamento sai por estes saltos e volta pelo mesmo caminho.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Como inserido';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'O rastreamento segue exatamente estes saltos. Adicione você mesmo os saltos de volta até si.';
+
+  @override
+  String get map_pathTraceViewLast => 'Ver último resultado';
 }

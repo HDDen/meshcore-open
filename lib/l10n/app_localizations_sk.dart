@@ -8937,4 +8937,25 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Túto predponu zdieľa viacero kontaktov. Názov je iba odhad; akcie kontaktu pre tento záznam nie sú dostupné.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Ťuknutím na ďalšie uzly pridajte skoky, vyberte, ako sa sledovanie vráti, a potom ťuknite na Spustiť sledovanie cesty.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Tam a späť';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Sledovanie prejde cez tieto skoky a vráti sa rovnakou cestou.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Podľa zadania';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Sledovanie presne prejde cez tieto skoky. Skoky späť k sebe pridajte sami.';
+
+  @override
+  String get map_pathTraceViewLast => 'Zobraziť posledný výsledok';
 }

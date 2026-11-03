@@ -14992,6 +14992,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Several contacts share this prefix. The name is only a guess; contact actions are unavailable for this entry.'**
   String get snrIndicator_ambiguousRepeaterHint;
+
+  /// No description provided for @map_pathTraceAddMoreHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap more nodes to add hops, choose how the trace returns, then tap Run path trace.'**
+  String get map_pathTraceAddMoreHint;
+
+  /// No description provided for @map_pathTraceModeRoundTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Round trip'**
+  String get map_pathTraceModeRoundTrip;
+
+  /// No description provided for @map_pathTraceModeRoundTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The trace goes out through these hops and comes back the same way.'**
+  String get map_pathTraceModeRoundTripHint;
+
+  /// No description provided for @map_pathTraceModeAsEntered.
+  ///
+  /// In en, this message translates to:
+  /// **'As entered'**
+  String get map_pathTraceModeAsEntered;
+
+  /// No description provided for @map_pathTraceModeAsEnteredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The trace follows these hops exactly. Add the hops back to you yourself.'**
+  String get map_pathTraceModeAsEnteredHint;
+
+  /// No description provided for @map_pathTraceViewLast.
+  ///
+  /// In en, this message translates to:
+  /// **'View last result'**
+  String get map_pathTraceViewLast;
 }
 
 class _AppLocalizationsDelegate

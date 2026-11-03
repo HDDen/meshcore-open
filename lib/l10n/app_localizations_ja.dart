@@ -8540,4 +8540,25 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'このプレフィックスは複数の連絡先に一致します。名前は推測のため、この項目では連絡先の操作を利用できません。';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'ノードをタップしてホップを追加し、トレースの戻り方を選んでから「経路トレースを実行」をタップします。';
+
+  @override
+  String get map_pathTraceModeRoundTrip => '往復';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'トレースはこれらのホップを経由して送信され、同じ経路で戻ってきます。';
+
+  @override
+  String get map_pathTraceModeAsEntered => '入力どおり';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'トレースはこれらのホップをそのとおりにたどります。自分へ戻るホップは自分で追加してください。';
+
+  @override
+  String get map_pathTraceViewLast => '前回の結果を表示';
 }

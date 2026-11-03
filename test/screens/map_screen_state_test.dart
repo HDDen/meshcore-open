@@ -23,7 +23,6 @@ import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/services/wardrive_service.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
-import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/app_route_observer.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';

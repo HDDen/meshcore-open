@@ -8354,4 +8354,22 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       '多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。';
+
+  @override
+  String get map_pathTraceAddMoreHint => '点击更多节点以添加跳数，选择追踪的返回方式，然后点击“运行路径追踪”。';
+
+  @override
+  String get map_pathTraceModeRoundTrip => '往返';
+
+  @override
+  String get map_pathTraceModeRoundTripHint => '追踪经由这些跳发出，并沿原路返回。';
+
+  @override
+  String get map_pathTraceModeAsEntered => '按输入顺序';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint => '追踪严格按这些跳进行。请自行添加返回你的跳。';
+
+  @override
+  String get map_pathTraceViewLast => '查看上次结果';
 }

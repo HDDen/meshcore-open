@@ -8938,4 +8938,25 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'To predpono ima več stikov. Ime je le domneva; dejanja stika za ta vnos niso na voljo.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Tapnite več vozlišč za dodajanje skokov, izberite, kako se sledenje vrne, nato tapnite Zaženi sledenje poti.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Povratna pot';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Sledenje gre skozi te skoke in se vrne po isti poti.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Kot vneseno';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Sledenje sledi tem skokom natančno. Skoke nazaj k sebi dodajte sami.';
+
+  @override
+  String get map_pathTraceViewLast => 'Poglej zadnji rezultat';
 }

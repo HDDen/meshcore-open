@@ -8964,4 +8964,25 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Этому префиксу соответствуют несколько контактов. Имя указано предположительно; действия с контактом для этой записи недоступны.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Нажимайте на другие ноды, чтобы добавить хопы, выберите способ возврата трассировки и нажмите «Запустить трассировку пути».';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Туда и обратно';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Трассировка проходит через эти хопы и возвращается тем же путём.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Как введено';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Трассировка проходит строго через эти хопы. Хопы обратно к себе добавьте сами.';
+
+  @override
+  String get map_pathTraceViewLast => 'Показать последний результат';
 }

@@ -8544,4 +8544,25 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       '여러 연락처가 이 접두사를 공유합니다. 이름은 추정일 뿐이므로 이 항목에서는 연락처 작업을 사용할 수 없습니다.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      '노드를 더 탭해 홉을 추가하고, 추적이 돌아오는 방식을 선택한 뒤 경로 추적 실행을 탭하세요.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => '왕복';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      '추적이 이 홉들을 거쳐 나갔다가 같은 경로로 돌아옵니다.';
+
+  @override
+  String get map_pathTraceModeAsEntered => '입력한 대로';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      '추적이 이 홉들을 그대로 따라갑니다. 나에게 돌아오는 홉은 직접 추가하세요.';
+
+  @override
+  String get map_pathTraceViewLast => '마지막 결과 보기';
 }

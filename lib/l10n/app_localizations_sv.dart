@@ -8928,4 +8928,25 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Flera kontakter delar detta prefix. Namnet är bara en gissning; kontaktåtgärder är inte tillgängliga för denna post.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Tryck på fler noder för att lägga till hopp, välj hur spårningen returneras och tryck sedan på Kör ruttspårning.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Tur och retur';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Spårningen går ut via dessa hopp och kommer tillbaka samma väg.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Som inmatat';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Spårningen följer exakt dessa hopp. Lägg själv till hoppen tillbaka till dig.';
+
+  @override
+  String get map_pathTraceViewLast => 'Visa senaste resultat';
 }

@@ -8983,4 +8983,25 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Цьому префіксу відповідають кілька контактів. Ім\'я вказане приблизно; дії з контактом для цього запису недоступні.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Торкніться інших вузлів, щоб додати хопи, виберіть, як повертається трасування, потім торкніться Запустити трасування шляху.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Туди й назад';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Трасування проходить через ці хопи й повертається тим самим шляхом.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Як введено';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Трасування точно йде цими хопами. Додайте хопи назад до себе самостійно.';
+
+  @override
+  String get map_pathTraceViewLast => 'Переглянути останній результат';
 }

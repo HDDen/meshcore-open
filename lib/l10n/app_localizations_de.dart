@@ -8999,4 +8999,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Mehrere Kontakte haben dieses Präfix. Der Name ist nur eine Vermutung; Kontaktaktionen sind für diesen Eintrag nicht verfügbar.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Tippen Sie auf weitere Knoten, um Hops hinzuzufügen, wählen Sie den Rückweg der Verfolgung und tippen Sie dann auf Pfadverfolgung starten.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Hin und zurück';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Die Verfolgung geht über diese Hops hinaus und kommt auf demselben Weg zurück.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Wie eingegeben';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Die Verfolgung folgt genau diesen Hops. Fügen Sie die Hops zurück zu Ihnen selbst hinzu.';
+
+  @override
+  String get map_pathTraceViewLast => 'Letztes Ergebnis anzeigen';
 }

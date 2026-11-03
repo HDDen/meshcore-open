@@ -8953,4 +8953,25 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Meerdere contacten delen dit voorvoegsel. De naam is slechts een vermoeden; contactacties zijn voor dit item niet beschikbaar.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Tik op meer nodes om hops toe te voegen, kies hoe de trace terugkomt en tik dan op Padtrace uitvoeren.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Heen en terug';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'De trace gaat via deze hops heen en komt op dezelfde weg terug.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Zoals ingevoerd';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'De trace volgt precies deze hops. Voeg zelf de hops terug naar jou toe.';
+
+  @override
+  String get map_pathTraceViewLast => 'Laatste resultaat bekijken';
 }

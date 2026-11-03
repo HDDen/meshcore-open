@@ -8976,4 +8976,25 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Több névjegynek azonos az előtagja. A név csak feltételezés; a névjegyműveletek ennél a bejegyzésnél nem érhetők el.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Koppints további csomópontokra ugrások hozzáadásához, válaszd ki a nyomkövetés visszatérését, majd koppints az Útvonal-nyomkövetés indítása gombra.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Oda-vissza';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'A nyomkövetés ezeken az ugrásokon át megy ki, és ugyanazon az úton jön vissza.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Megadott sorrendben';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'A nyomkövetés pontosan ezeket az ugrásokat követi. A hozzád visszavezető ugrásokat magadnak kell hozzáadnod.';
+
+  @override
+  String get map_pathTraceViewLast => 'Utolsó eredmény megtekintése';
 }

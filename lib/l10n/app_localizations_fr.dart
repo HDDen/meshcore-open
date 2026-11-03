@@ -9022,4 +9022,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Plusieurs contacts partagent ce préfixe. Le nom n\'est qu\'une supposition ; les actions de contact sont indisponibles pour cette entrée.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Touchez d\'autres nœuds pour ajouter des sauts, choisissez le retour de la trace, puis touchez Lancer le traçage de chemin.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Aller-retour';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'La trace passe par ces sauts et revient par le même chemin.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Tel que saisi';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'La trace suit exactement ces sauts. Ajoutez vous-même les sauts du retour.';
+
+  @override
+  String get map_pathTraceViewLast => 'Voir le dernier résultat';
 }

@@ -9002,4 +9002,25 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Няколко контакта имат този префикс. Името е само предположение; действията с контакт не са достъпни за този запис.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Докоснете още възли, за да добавите хопове, изберете как се връща трасето, след което докоснете Пусни трасиране на пътя.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Отиване и връщане';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'Трасето минава през тези хопове и се връща по същия път.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Както е въведено';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'Трасето следва точно тези хопове. Добавете сами хоповете обратно към вас.';
+
+  @override
+  String get map_pathTraceViewLast => 'Преглед на последния резултат';
 }

@@ -8991,4 +8991,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get snrIndicator_ambiguousRepeaterHint =>
       'Varios contactos comparten este prefijo. El nombre es solo una suposición; las acciones de contacto no están disponibles para esta entrada.';
+
+  @override
+  String get map_pathTraceAddMoreHint =>
+      'Toca más nodos para añadir saltos, elige cómo vuelve la traza y toca Ejecutar traza de ruta.';
+
+  @override
+  String get map_pathTraceModeRoundTrip => 'Ida y vuelta';
+
+  @override
+  String get map_pathTraceModeRoundTripHint =>
+      'La traza sale por estos saltos y vuelve por el mismo camino.';
+
+  @override
+  String get map_pathTraceModeAsEntered => 'Tal como se introdujo';
+
+  @override
+  String get map_pathTraceModeAsEnteredHint =>
+      'La traza sigue estos saltos exactamente. Añade tú mismo los saltos de vuelta hacia ti.';
+
+  @override
+  String get map_pathTraceViewLast => 'Ver último resultado';
 }
