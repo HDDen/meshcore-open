@@ -4354,5 +4354,24 @@
   "contacts_keyPrefixSemantics": "Préfixe de clé {prefix}",
   "networkMap_sourceLocalHint": "Nœuds reçus par votre radio",
   "networkMap_sourceOnlineHint": "Répéteurs de la carte du réseau en ligne",
-  "networkMap_sourceBothHint": "Nœuds de votre radio et carte du réseau en ligne"
+  "networkMap_sourceBothHint": "Nœuds de votre radio et carte du réseau en ligne",
+  "notification_sharedLocation": "Position partagée",
+  "notification_sharedLocationNamed": "Position partagée : {label}",
+  "notification_reacted": "A réagi avec {emoji}",
+  "notification_sentGif": "A envoyé un GIF",
+  "notification_sentImage": "A envoyé une image",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

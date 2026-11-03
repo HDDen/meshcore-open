@@ -4253,5 +4253,24 @@
   "contacts_keyPrefixSemantics": "密钥前缀 {prefix}",
   "networkMap_sourceLocalHint": "无线电设备接收过的节点",
   "networkMap_sourceOnlineHint": "在线网络地图中的中继器",
-  "networkMap_sourceBothHint": "设备接收的节点与在线网络地图"
+  "networkMap_sourceBothHint": "设备接收的节点与在线网络地图",
+  "notification_sharedLocation": "分享了位置",
+  "notification_sharedLocationNamed": "分享了位置：{label}",
+  "notification_reacted": "回应了 {emoji}",
+  "notification_sentGif": "发送了 GIF",
+  "notification_sentImage": "发送了图片",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

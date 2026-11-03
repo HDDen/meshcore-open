@@ -731,6 +731,32 @@ deletes the files older than `_notificationImageLifetime` (24 hours), since a
 toast can be shown again from the action centre well after `show`
 (`test/connector/queued_message_notifications_test.dart`).
 
+### Structured message notification summaries (U06c1)
+
+`NotificationService.formatNotificationText(text, l10n)` uses the chat's
+reaction/GIF parsers, `ReceivedImageRef.parse` and the shared marker helper
+to produce localized reaction, GIF, AEIC and location summaries. Existing
+MCOimg detection (including a sender prefix), PNG attachments, MessagingStyle
+conversation history and reply actions remain unchanged. Both direct and
+channel entrypoints use the same conversation notifier; only its display text
+changes. Original chat/SQL message contents, destructive queue ordering,
+notification background work and CPU leases are untouched.
+
+`MarkerPayload` and `parseMarkerText` now live in `helpers/marker_message.dart`,
+imported by map, chat and notification code. The existing grammar, including
+sender prefixes, labels, flags and coordinate bounds, is preserved. A cached
+regular expression and a cheap `m:` check avoid per-call regexp construction
+and matching ordinary text. Other map helpers (free-form coordinates, marker
+deduplication/deletion and styling) stay in place. Summary formatting neither
+fetches URLs nor reads image files or runs AEIC inference. Existing URL-picture
+settings/timeouts and the MCOimg attachment lifetime remain in effect.
+
+Tests: `notification_summary_merge_baseline_test.dart`, `notification_text_test.dart`,
+`map_marker_parse_test.dart`, and the existing notification lifecycle, queue and
+background-work suites. Locale checks cover English and Russian, while ARB keys
+are provided for all 18 locales. Generated Dart localization files are regenerated
+by the owner. User guide: `documentation/notifications.md`.
+
 ### Connected-radio low-battery alerts (U03)
 
 `_handleBatteryAndStorage` checks the existing `batteryPercent` after parsing

@@ -9,7 +9,7 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 ### 1. Direct Message Notifications
 - **Triggered when**: A new incoming message arrives from a Chat or Room contact
 - **Title**: Contact's name
-- **Body**: Message text (reactions show "Reacted [emoji]", GIFs show "Sent a GIF")
+- **Body**: Message text, with localized summaries for structured messages (see below)
 - **Priority**: High
 - **Android channel**: `messages`
 - **Android style**: conversation (MessagingStyle) showing the last few messages, with **Reply** and a hidden **Mark as read** action. When URL images are enabled, an image preview appears as the notification's thumbnail
@@ -21,6 +21,24 @@ MeshCore Open provides both **system notifications** (push-style OS alerts) and 
 - **Priority**: High
 - **Android channel**: `channel_messages`
 - **Android style**: group conversation with each sender shown by name, with **Reply**, **Mute channel**, and a hidden **Mark as read** action
+
+### Message Summaries
+
+Direct and channel notifications summarize structured messages in the app's
+language, rather than displaying their encoded contents:
+
+- Reactions show the emoji, for example "Reacted 👍".
+- Compact GIF messages and supported Giphy links show "Sent a GIF".
+- AEIC image references show "Sent an image", including while the image is
+  not decoded. Generating the summary does not start the image decoder.
+- Shared map markers show "Shared a location", followed by the marker's label
+  when present. The notification does not show the encoded coordinates.
+- MCOimg retains its `MCOimg` label and existing picture attachment support.
+
+Channel notifications retain the sender's name before the summary. The
+original message stays unchanged in chat history and in the database.
+Formatting these summaries does not fetch media or load image files. Existing
+URL-image preview settings still control separate thumbnail loading.
 
 ### 3. Advertisement Notifications
 - **Triggered when**: A new node is discovered on the mesh for the first time

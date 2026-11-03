@@ -4288,5 +4288,24 @@
   "contacts_keyPrefixSemantics": "Prefiks klucza {prefix}",
   "networkMap_sourceLocalHint": "Węzły odebrane przez twoje radio",
   "networkMap_sourceOnlineHint": "Przekaźniki z internetowej mapy sieci",
-  "networkMap_sourceBothHint": "Węzły twojego radia i internetowa mapa sieci"
+  "networkMap_sourceBothHint": "Węzły twojego radia i internetowa mapa sieci",
+  "notification_sharedLocation": "Udostępniono lokalizację",
+  "notification_sharedLocationNamed": "Udostępniono lokalizację: {label}",
+  "notification_reacted": "Reakcja {emoji}",
+  "notification_sentGif": "Wysłano GIF",
+  "notification_sentImage": "Wysłano obraz",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -4220,5 +4220,24 @@
   "contacts_keyPrefixSemantics": "Префикс на ключа {prefix}",
   "networkMap_sourceLocalHint": "Възли, чути от вашето радио",
   "networkMap_sourceOnlineHint": "Ретранслатори от онлайн картата на мрежата",
-  "networkMap_sourceBothHint": "Възлите на радиото и онлайн картата на мрежата"
+  "networkMap_sourceBothHint": "Възлите на радиото и онлайн картата на мрежата",
+  "notification_sharedLocation": "Споделено местоположение",
+  "notification_sharedLocationNamed": "Споделено местоположение: {label}",
+  "notification_reacted": "Реакция {emoji}",
+  "notification_sentGif": "Изпратен GIF",
+  "notification_sentImage": "Изпратено изображение",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

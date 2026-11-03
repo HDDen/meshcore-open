@@ -4383,5 +4383,24 @@
   "contacts_keyPrefixSemantics": "Schlüsselpräfix {prefix}",
   "networkMap_sourceLocalHint": "Von deinem Funkgerät gehörte Knoten",
   "networkMap_sourceOnlineHint": "Repeater aus der Online-Netzwerkkarte",
-  "networkMap_sourceBothHint": "Knoten deines Funkgeräts und die Online-Netzwerkkarte"
+  "networkMap_sourceBothHint": "Knoten deines Funkgeräts und die Online-Netzwerkkarte",
+  "notification_sharedLocation": "Standort geteilt",
+  "notification_sharedLocationNamed": "Standort geteilt: {label}",
+  "notification_reacted": "Mit {emoji} reagiert",
+  "notification_sentGif": "GIF gesendet",
+  "notification_sentImage": "Bild gesendet",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' show File, Platform;
+import 'dart:ui' show Locale;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -131,6 +132,7 @@ Future<void> _withNotification(WidgetTester tester,
   final service = NotificationService();
   service.resetForTest();
   service.setSelfName(null);
+  service.setLocale(const Locale('en'));
   service.setRateLimitClockForTest(tester.binding.clock.now);
   try {
     // portable identity могла бы запустить настоящий registry cleanup.
@@ -184,6 +186,70 @@ void main() {
   tearDown(PrefsManager.reset);
 
   group('notification lifecycle baseline', () {
+    for (final language in ['en', 'ru']) {
+      for (final type in ['direct', 'channel']) {
+        testWidgets('U06c1: $type posts localized summaries ($language)', (
+          tester,
+        ) async {
+          await _withNotification(tester, (h) async {
+            h.service.setLocale(Locale(language));
+            final cases = language == 'ru'
+                ? const [
+                    ('m:45.5,-122.6|Лагерь|poi', 'Отправлена геопозиция: Лагерь'),
+                    ('m:45.5,-122.6||poi', 'Отправлена геопозиция'),
+                    ('👍\nabcd2345', 'Реакция 👍'),
+                    ('g:xT9IgG50Fb7Mi0prBC', 'Отправлен GIF'),
+                    (
+                      'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif',
+                      'Отправлен GIF',
+                    ),
+                    ('aeic:1:0a1b2c3d4e5f60', 'Отправлено изображение'),
+                  ]
+                : const [
+                    ('m:45.5,-122.6|Лагерь|poi', 'Shared a location: Лагерь'),
+                    ('m:45.5,-122.6||poi', 'Shared a location'),
+                    ('👍\nabcd2345', 'Reacted 👍'),
+                    ('g:xT9IgG50Fb7Mi0prBC', 'Sent a GIF'),
+                    (
+                      'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif',
+                      'Sent a GIF',
+                    ),
+                    ('aeic:1:0a1b2c3d4e5f60', 'Sent an image'),
+                  ];
+            for (final (input, expected) in cases) {
+              final operation = type == 'channel'
+                  ? h.service.showChannelMessageNotification(
+                      channelName: 'synthetic channel',
+                      channelIndex: 2,
+                      senderName: 'Alice',
+                      message: input,
+                      urlImagesEnabled: false,
+                    )
+                  : h.service.showMessageNotification(
+                      contactName: 'Alice',
+                      contactId: 'synthetic-contact',
+                      message: input,
+                      urlImagesEnabled: false,
+                    );
+              final result = _Result(operation);
+              await tester.pump();
+              expect(result.completed, isTrue);
+              expect(result.error, isNull);
+              expect(h.plugin.shown, hasLength(1));
+              final call = h.plugin.shown.single;
+              final args = h.plugin.args(call);
+              expect(args['body'], type == 'channel' ? 'Alice: $expected' : expected);
+              expect(args['payload'], type == 'channel' ? 'channel:2' : 'message:synthetic-contact');
+              final style = h.plugin.android(call)['styleInformation'] as Map<Object?, Object?>;
+              final messages = style['messages'] as List<Object?>;
+              expect((messages.last as Map<Object?, Object?>)['text'], expected);
+              h.plugin.clear();
+            }
+          });
+        }, timeout: timeout);
+      }
+    }
+
     testWidgets('suppression skips every show entrypoint', (tester) async {
       await _withNotification(tester, (h) async {
         h.service.suppressNotifications(true);

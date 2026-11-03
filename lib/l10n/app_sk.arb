@@ -4221,5 +4221,24 @@
   "contacts_keyPrefixSemantics": "Predpona kľúča {prefix}",
   "networkMap_sourceLocalHint": "Uzly zachytené vašou rádiostanicou",
   "networkMap_sourceOnlineHint": "Opakovače z online mapy siete",
-  "networkMap_sourceBothHint": "Uzly vašej rádiostanice a online mapa siete"
+  "networkMap_sourceBothHint": "Uzly vašej rádiostanice a online mapa siete",
+  "notification_sharedLocation": "Zdieľaná poloha",
+  "notification_sharedLocationNamed": "Zdieľaná poloha: {label}",
+  "notification_reacted": "Reakcia {emoji}",
+  "notification_sentGif": "Odoslaný GIF",
+  "notification_sentImage": "Odoslaný obrázok",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

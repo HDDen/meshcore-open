@@ -4221,5 +4221,24 @@
   "contacts_keyPrefixSemantics": "Predpona ključa {prefix}",
   "networkMap_sourceLocalHint": "Vozlišča, ki jih je sprejel vaš radio",
   "networkMap_sourceOnlineHint": "Repetitorji s spletnega zemljevida omrežja",
-  "networkMap_sourceBothHint": "Vozlišča vašega radia in spletni zemljevid omrežja"
+  "networkMap_sourceBothHint": "Vozlišča vašega radia in spletni zemljevid omrežja",
+  "notification_sharedLocation": "Lokacija v skupni rabi",
+  "notification_sharedLocationNamed": "Lokacija v skupni rabi: {label}",
+  "notification_reacted": "Odziv {emoji}",
+  "notification_sentGif": "Poslan GIF",
+  "notification_sentImage": "Poslana slika",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

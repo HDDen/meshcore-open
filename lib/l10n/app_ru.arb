@@ -3530,5 +3530,24 @@
   "contacts_keyPrefixSemantics": "Префикс ключа {prefix}",
   "networkMap_sourceLocalHint": "Ноды, обнаруженные вашим устройством",
   "networkMap_sourceOnlineHint": "Репитеры с онлайн-карты сети",
-  "networkMap_sourceBothHint": "Ноды вашего устройства и онлайн-карта сети"
+  "networkMap_sourceBothHint": "Ноды вашего устройства и онлайн-карта сети",
+  "notification_sharedLocation": "Отправлена геопозиция",
+  "notification_sharedLocationNamed": "Отправлена геопозиция: {label}",
+  "notification_reacted": "Реакция {emoji}",
+  "notification_sentGif": "Отправлен GIF",
+  "notification_sentImage": "Отправлено изображение",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

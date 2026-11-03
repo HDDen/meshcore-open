@@ -4228,5 +4228,24 @@
   "contacts_keyPrefixSemantics": "Префікс ключа {prefix}",
   "networkMap_sourceLocalHint": "Ноди, виявлені вашим пристроєм",
   "networkMap_sourceOnlineHint": "Репітери з онлайн-карти мережі",
-  "networkMap_sourceBothHint": "Ноди вашого пристрою та онлайн-карта мережі"
+  "networkMap_sourceBothHint": "Ноди вашого пристрою та онлайн-карта мережі",
+  "notification_sharedLocation": "Надіслано геопозицію",
+  "notification_sharedLocationNamed": "Надіслано геопозицію: {label}",
+  "notification_reacted": "Реакція {emoji}",
+  "notification_sentGif": "Надіслано GIF",
+  "notification_sentImage": "Надіслано зображення",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

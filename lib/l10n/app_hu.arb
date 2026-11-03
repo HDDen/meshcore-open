@@ -4252,5 +4252,24 @@
   "contacts_keyPrefixSemantics": "Kulcselőtag: {prefix}",
   "networkMap_sourceLocalHint": "A rádiód által hallott csomópontok",
   "networkMap_sourceOnlineHint": "Átjátszók az online hálózati térképről",
-  "networkMap_sourceBothHint": "A rádiód csomópontjai és az online hálózati térkép"
+  "networkMap_sourceBothHint": "A rádiód csomópontjai és az online hálózati térkép",
+  "notification_sharedLocation": "Helyzet megosztva",
+  "notification_sharedLocationNamed": "Helyzet megosztva: {label}",
+  "notification_reacted": "Reakció: {emoji}",
+  "notification_sentGif": "GIF elküldve",
+  "notification_sentImage": "Kép elküldve",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

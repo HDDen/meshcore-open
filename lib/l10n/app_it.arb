@@ -4218,5 +4218,24 @@
   "contacts_keyPrefixSemantics": "Prefisso della chiave {prefix}",
   "networkMap_sourceLocalHint": "Nodi ricevuti dalla tua radio",
   "networkMap_sourceOnlineHint": "Ripetitori dalla mappa di rete online",
-  "networkMap_sourceBothHint": "Nodi della tua radio e mappa di rete online"
+  "networkMap_sourceBothHint": "Nodi della tua radio e mappa di rete online",
+  "notification_sharedLocation": "Posizione condivisa",
+  "notification_sharedLocationNamed": "Posizione condivisa: {label}",
+  "notification_reacted": "Ha reagito con {emoji}",
+  "notification_sentGif": "Ha inviato una GIF",
+  "notification_sentImage": "Ha inviato un'immagine",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

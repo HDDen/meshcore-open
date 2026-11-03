@@ -4031,5 +4031,24 @@
   "contacts_keyPrefixSemantics": "Nyckelprefix {prefix}",
   "networkMap_sourceLocalHint": "Noder som din radio har hört",
   "networkMap_sourceOnlineHint": "Repeatrar från nätverkskartan online",
-  "networkMap_sourceBothHint": "Din radios noder och nätverkskartan online"
+  "networkMap_sourceBothHint": "Din radios noder och nätverkskartan online",
+  "notification_sharedLocation": "Delade en plats",
+  "notification_sharedLocationNamed": "Delade en plats: {label}",
+  "notification_reacted": "Reagerade med {emoji}",
+  "notification_sentGif": "Skickade en GIF",
+  "notification_sentImage": "Skickade en bild",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

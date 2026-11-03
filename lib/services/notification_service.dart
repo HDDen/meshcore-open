@@ -11,6 +11,8 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../widgets/mco_image_message.dart';
 import '../helpers/background_work_tracker.dart';
+import '../helpers/gif_helper.dart';
+import '../helpers/marker_message.dart';
 import '../helpers/notification_background_work.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
@@ -24,6 +26,7 @@ import '../utils/app_logger.dart';
 import '../storage/prefs_manager.dart';
 import '../utils/platform_info.dart';
 import 'notification_reply.dart';
+import 'received_image_store.dart' show ReceivedImageRef;
 
 typedef NotificationTapHandler = FutureOr<void> Function(String payload);
 
@@ -417,18 +420,28 @@ class NotificationService {
     await requestPermissions();
   }
 
-  /// Format special message types for human-readable notifications.
-  static String formatNotificationText(String text) {
+  /// Summarize structured messages using the same parsers as the chat.
+  /// This does not load image bytes, resolve URLs or initialize a decoder.
+  static String formatNotificationText(String text, AppLocalizations l10n) {
     final trimmed = text.trim();
     final reaction = ReactionHelper.parseReaction(trimmed);
     if (reaction != null) {
-      return 'Reacted ${reaction.emoji}';
+      return l10n.notification_reacted(reaction.emoji);
     }
-    if (RegExp(r'^g:[A-Za-z0-9_-]+$').hasMatch(trimmed)) {
-      return 'Sent a GIF';
+    if (ReceivedImageRef.parse(trimmed) != null) {
+      return l10n.notification_sentImage;
+    }
+    if (GifHelper.parseGif(trimmed) != null) {
+      return l10n.notification_sentGif;
     }
     if (isMcoImageNotificationText(trimmed)) {
       return 'MCOimg';
+    }
+    final marker = parseMarkerText(trimmed);
+    if (marker != null) {
+      return marker.label.isEmpty
+          ? l10n.notification_sharedLocation
+          : l10n.notification_sharedLocationNamed(marker.label);
     }
     return text;
   }
@@ -729,7 +742,7 @@ class NotificationService {
           ).timeout(_notificationImageTimeout, onTimeout: () => null)
         : null;
     final preview = mcoAttachment == null
-        ? formatNotificationText(message.trim())
+        ? formatNotificationText(message.trim(), _l10n)
         : 'MCOimg';
     final body = preview.isEmpty
         ? _l10n.notification_receivedNewMessage

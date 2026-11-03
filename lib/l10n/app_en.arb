@@ -2947,6 +2947,25 @@
     }
   },
   "notification_receivedNewMessage": "Received new message",
+  "notification_sharedLocation": "Shared a location",
+  "notification_sharedLocationNamed": "Shared a location: {label}",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "notification_reacted": "Reacted {emoji}",
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "notification_sentGif": "Sent a GIF",
+  "notification_sentImage": "Sent an image",
   "notification_actionReply": "Reply",
   "notification_actionMarkRead": "Mark as read",
   "notification_actionMuteChannel": "Mute channel",

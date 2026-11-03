@@ -4353,5 +4353,24 @@
   "contacts_keyPrefixSemantics": "キーのプレフィックス {prefix}",
   "networkMap_sourceLocalHint": "無線機が受信したノード",
   "networkMap_sourceOnlineHint": "オンラインのネットワーク地図上のリピーター",
-  "networkMap_sourceBothHint": "無線機のノードとオンラインのネットワーク地図"
+  "networkMap_sourceBothHint": "無線機のノードとオンラインのネットワーク地図",
+  "notification_sharedLocation": "位置情報を共有しました",
+  "notification_sharedLocationNamed": "位置情報を共有しました: {label}",
+  "notification_reacted": "{emoji}でリアクションしました",
+  "notification_sentGif": "GIFを送信しました",
+  "notification_sentImage": "画像を送信しました",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

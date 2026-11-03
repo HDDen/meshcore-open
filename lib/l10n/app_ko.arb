@@ -4385,5 +4385,24 @@
   "contacts_keyPrefixSemantics": "키 접두사 {prefix}",
   "networkMap_sourceLocalHint": "무전기가 수신한 노드",
   "networkMap_sourceOnlineHint": "온라인 네트워크 지도의 중계기",
-  "networkMap_sourceBothHint": "무전기의 노드와 온라인 네트워크 지도"
+  "networkMap_sourceBothHint": "무전기의 노드와 온라인 네트워크 지도",
+  "notification_sharedLocation": "위치를 공유했습니다",
+  "notification_sharedLocationNamed": "위치를 공유했습니다: {label}",
+  "notification_reacted": "{emoji}로 반응했습니다",
+  "notification_sentGif": "GIF를 보냈습니다",
+  "notification_sentImage": "이미지를 보냈습니다",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

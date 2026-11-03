@@ -4326,5 +4326,24 @@
   "contacts_keyPrefixSemantics": "Prefijo de clave {prefix}",
   "networkMap_sourceLocalHint": "Nodos que ha recibido tu radio",
   "networkMap_sourceOnlineHint": "Repetidores del mapa de red en línea",
-  "networkMap_sourceBothHint": "Nodos de tu radio y el mapa de red en línea"
+  "networkMap_sourceBothHint": "Nodos de tu radio y el mapa de red en línea",
+  "notification_sharedLocation": "Ubicación compartida",
+  "notification_sharedLocationNamed": "Ubicación compartida: {label}",
+  "notification_reacted": "Reaccionó con {emoji}",
+  "notification_sentGif": "Envió un GIF",
+  "notification_sentImage": "Envió una imagen",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

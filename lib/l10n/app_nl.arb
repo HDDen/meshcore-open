@@ -4038,5 +4038,24 @@
   "contacts_keyPrefixSemantics": "Sleutelprefix {prefix}",
   "networkMap_sourceLocalHint": "Nodes die je radio heeft ontvangen",
   "networkMap_sourceOnlineHint": "Repeaters van de online netwerkkaart",
-  "networkMap_sourceBothHint": "Nodes van je radio en de online netwerkkaart"
+  "networkMap_sourceBothHint": "Nodes van je radio en de online netwerkkaart",
+  "notification_sharedLocation": "Locatie gedeeld",
+  "notification_sharedLocationNamed": "Locatie gedeeld: {label}",
+  "notification_reacted": "Gereageerd met {emoji}",
+  "notification_sentGif": "GIF verzonden",
+  "notification_sentImage": "Afbeelding verzonden",
+  "@notification_sharedLocationNamed": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@notification_reacted": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  }
 }

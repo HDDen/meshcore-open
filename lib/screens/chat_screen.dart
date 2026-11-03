@@ -16,6 +16,7 @@ import '../utils/app_logger.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../config/build_features.dart';
+import '../helpers/marker_message.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';

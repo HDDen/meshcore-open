@@ -686,6 +686,30 @@ Future<void> main() async {
   }, skip: skip);
 
   group('what a notification says', () {
+    test('U06c1: a location summary keeps the original channel text in SQL', () async {
+      const original = 'm:45.5,-122.6|Camp|poi';
+      final harness = await _Harness.start();
+      await harness.addChannel(0, 'Test', _psk(1));
+      harness.connector.handleFrameForTest(
+        _channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: original,
+        ),
+      );
+      await _waitFor(() => plugin.shown.length == 1, 'the location notification');
+      final args = _NotificationPlugin.argumentsOf(plugin.shown.single);
+      expect(args['body'], 'Alice: Shared a location: Camp');
+      expect(args['payload'], 'channel:0');
+      final channel = harness.connector.channels.singleWhere((c) => c.index == 0);
+      expect(harness.connector.getLoadedChannelMessages(channel).single.text, original);
+      final history = ChannelMessageStore()
+        ..setPublicKeyHex = harness.connector.selfPublicKeyHex;
+      history.registerChannel(channel);
+      expect((await history.loadChannelMessages(0)).single.text, original);
+    });
+
     test('a direct message names the contact, quotes the text and opens '
         'the chat', () async {
       final harness = await _Harness.start();

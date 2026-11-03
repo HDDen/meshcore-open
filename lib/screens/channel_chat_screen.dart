@@ -20,6 +20,7 @@ import '../connector/meshcore_connector.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
 import '../utils/platform_info.dart';
+import '../helpers/marker_message.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_echo_recovery.dart';
