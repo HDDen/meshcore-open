@@ -26,7 +26,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "de": [
@@ -56,7 +61,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "es": [
@@ -86,7 +96,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "fr": [
@@ -116,7 +131,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "hu": [
@@ -146,7 +166,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "it": [
@@ -176,7 +201,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "ja": [
@@ -206,7 +236,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "ko": [
@@ -236,7 +271,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "nl": [
@@ -266,7 +306,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "pl": [
@@ -296,7 +341,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "pt": [
@@ -326,7 +376,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "sk": [
@@ -356,7 +411,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "sl": [
@@ -386,7 +446,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "sv": [
@@ -416,7 +481,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "uk": [
@@ -446,7 +516,12 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ],
 
   "zh": [
@@ -476,6 +551,11 @@
     "chat_ipfsFilebaseTokenMissing",
     "chat_ipfsKuboPathInvalid",
     "chat_ipfsLinkNoRoom",
-    "chat_ipfsLinkOverLimit"
+    "chat_ipfsLinkOverLimit",
+    "urlImage_disabledInAppSettings",
+    "appSettings_loadLinkImages",
+    "appSettings_loadLinkImagesSubtitle",
+    "appSettings_showLinkImagesByDefault",
+    "appSettings_showLinkImagesByDefaultSubtitle"
   ]
 }

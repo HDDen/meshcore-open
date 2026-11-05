@@ -9086,4 +9086,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get chat_ipfsLinkOverLimit =>
       'Ссылка добавлена, но сообщение слишком длинное. Сократите его перед отправкой.';
+
+  @override
+  String get urlImage_disabledInAppSettings =>
+      'Отключено в настройках приложения';
+
+  @override
+  String get appSettings_loadLinkImages => 'Загружать изображения по ссылкам';
+
+  @override
+  String get appSettings_loadLinkImagesSubtitle =>
+      'Показывать изображения по ссылкам в сообщениях. При загрузке сайт-источник получает ваш IP-адрес.';
+
+  @override
+  String get appSettings_showLinkImagesByDefault =>
+      'Показывать изображения по ссылкам во всех чатах по умолчанию';
+
+  @override
+  String get appSettings_showLinkImagesByDefaultSubtitle =>
+      'Применять к чатам без собственной настройки. Явно отключённые изображения останутся отключёнными. При загрузке сайты-источники получают ваш IP-адрес.';
 }

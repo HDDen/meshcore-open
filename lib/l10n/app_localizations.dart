@@ -15202,6 +15202,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image link added, but the message is now too long. Shorten it before sending.'**
   String get chat_ipfsLinkOverLimit;
+
+  /// No description provided for @urlImage_disabledInAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off in app settings'**
+  String get urlImage_disabledInAppSettings;
+
+  /// No description provided for @appSettings_loadLinkImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Load images from links'**
+  String get appSettings_loadLinkImages;
+
+  /// No description provided for @appSettings_loadLinkImagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show pictures from links in messages. Loading an image shares your IP address with the site that hosts it.'**
+  String get appSettings_loadLinkImagesSubtitle;
+
+  /// No description provided for @appSettings_showLinkImagesByDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Show link images in all chats by default'**
+  String get appSettings_showLinkImagesByDefault;
+
+  /// No description provided for @appSettings_showLinkImagesByDefaultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.'**
+  String get appSettings_showLinkImagesByDefaultSubtitle;
 }
 
 class _AppLocalizationsDelegate
