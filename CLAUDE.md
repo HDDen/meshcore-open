@@ -135,6 +135,14 @@ All screens are fully implemented (no remaining placeholders).
 
 ### State Management
 
+`pubKeyToHex` uses a fixed lowercase hex-digit table and one byte buffer for
+the resulting character codes (U10a, upstream 603172b3). Each input byte still
+emits exactly two characters; empty inputs and buffer views are supported.
+`Contact.publicKeyHex` retains the fork's existing per-instance cache.
+`test/connector/pub_key_hex_merge_baseline_test.dart` fixes every byte value,
+prefix widths and contact identity; `tool/benchmark_pub_key_hex.dart` measures
+the actual extracted conversion function before/after on the same corpus.
+
 `Provider` with `ChangeNotifier`. `main.dart` wires a `MultiProvider` with the following:
 
 | Provider | Role |
