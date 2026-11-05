@@ -49,6 +49,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
+import '../helpers/channel_deletion_snapshot.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../helpers/contact_settings_snapshot.dart';
 import '../helpers/contact_removal_guard.dart';
@@ -5889,6 +5890,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Future<void> Function(Map<int, String> slotIds)? stamp,
   ) {
     _stampImageChannelIds = stamp;
+  }
+
+  /// Await the actual slot handler and SQL loads without a physical radio.
+  @visibleForTesting
+  Future<void> handleChannelInfoForTest(Uint8List frame) =>
+      _handleChannelInfo(frame);
+
+  /// Finish a synthetic full slot list through real identity reconciliation.
+  @visibleForTesting
+  Future<void> completeChannelSyncForTest() => _completeChannelSync();
+
+  @visibleForTesting
+  void setChannelImageDeleteForTest(
+    Future<void> Function(int, Set<String>)? remove,
+  ) {
+    _deleteImagesForChannel = remove;
   }
 
   /// Настоящее продолжение очереди; подменяется лишь обработка/сохранение кадра.
@@ -11786,38 +11803,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  /// What a manual deletion does beyond this node's scope. With [allNodes]
-  /// the channel's history, settings and region go under every name of its
-  /// group in every other node's scope, and the group with them. Otherwise
-  /// the group stays while another node still holds a channel of it, since
-  /// that node reads its older names through it.
-  Future<void> _clearChannelIdentityData(
-    ChannelIdentity identity, {
-    required bool allNodes,
-  }) async {
-    final names = ChannelIdentities.instance.namesOf(identity);
-    if (allNodes) {
-      for (final scope in _otherNodeScopes) {
-        await (ChannelMessageStore()..setPublicKeyHex = scope)
-            .clearMessagesForNames(names);
-        await (ChannelSettingsStore()..setPublicKeyHex = scope)
-            .clearSettingsForNames(names);
-        await (ChannelRegionStore()..setPublicKeyHex = scope)
-            .clearRegionsForNames(names);
-      }
-      await ChannelIdentities.instance.forget(identity);
-      return;
-    }
-    for (final scope in _otherNodeScopes) {
-      final channels = await (ChannelStore()..setPublicKeyHex = scope)
-          .loadChannels(allowLegacyMigration: false);
-      if (ChannelIdentities.instance.findInGroup(channels, identity) != null) {
-        return;
-      }
-    }
-    await ChannelIdentities.instance.forget(identity);
-  }
-
   Future<void> _clearChannelMessagesOnOtherNodes(List<String> names) async {
     for (final scope in _otherNodeScopes) {
       await (ChannelMessageStore()..setPublicKeyHex = scope)
@@ -11989,23 +11974,64 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!isConnected) return;
 
     final channel = _findChannelByIndex(index);
-    final identity = channel == null ? null : ChannelIdentity.of(channel);
+    final deletion = ChannelDeletionSnapshot(
+      nodeKey: selfPublicKeyHex,
+      index: index,
+      channel: channel,
+      otherScopes: _otherNodeScopes,
+    );
+    // During a partial sync some siblings exist only in the pre-sync cache.
+    // A missing response does not prove that their shared data can be erased.
+    final siblings = [
+      ..._channels,
+      ..._cachedChannels,
+      ..._previousChannelsCache,
+    ].where((entry) => entry.index != index).toList();
+    final wasStillHeld = deletion.heldByAnotherSlot(siblings);
     // Delete by setting empty name and zero PSK
     await sendFrame(buildSetChannelFrame(index, '', Uint8List(16)));
-    // Explicit deletion clears all persisted data for this channel name,
-    // the names it had before included.
-    await _channelMessageStore.clearChannelMessages(index);
-    await _channelSettingsStore.clearChannelSettings(index);
-    await _channelRegionStore.clearRegion(index);
-    await _deleteImagesForChannel?.call(index, _imageChannelIdsOf(channel));
-    if (identity != null) {
-      await _clearChannelIdentityData(identity, allNodes: allNodes);
+    if (selfPublicKeyHex == deletion.nodeKey &&
+        deletion.matches(_findChannelByIndex(index))) {
+      _channelMessages.remove(index);
+      _processedChannelReactions.remove(index);
     }
-    // Clear in-memory messages for this channel
-    _channelMessages.remove(index);
-    _processedChannelReactions.remove(index);
-    // Refresh channels after deleting
-    await getChannels(force: true);
+    try {
+      if (selfPublicKeyHex == deletion.nodeKey) {
+        await getChannels(force: true);
+      }
+    } finally {
+      // getChannels starts a refresh; it does not await every slot response.
+      // Cleanup must not depend on that refresh completing or clearing the
+      // deleted slot's binding, and must never use a newly rebound node store.
+      final liveSiblings = selfPublicKeyHex == deletion.nodeKey
+          ? [..._channels, ..._cachedChannels, ..._previousChannelsCache]
+          : const <Channel>[];
+      final replacement = selfPublicKeyHex == deletion.nodeKey
+          ? _findChannelByIndex(index)
+          : null;
+      final keepLocalData =
+          wasStillHeld ||
+          deletion.heldByAnotherSlot(liveSiblings) ||
+          (replacement != null &&
+              !deletion.matches(replacement) &&
+              deletion.sharesDataWith(replacement));
+      await deletion.clear(allNodes: allNodes, keepLocalData: keepLocalData);
+      final current = _findChannelByIndex(index);
+      final sharedImage = [...siblings, ...liveSiblings].any(
+        (entry) =>
+            entry.index != index &&
+            deletion.imageIds.contains(entry.storageId),
+      );
+      // The image callback also clears legacy images by slot. If this slot or
+      // the connection changed, keep those images rather than erase a new
+      // channel's data. IDs are captured before alias cleanup forgets a group.
+      if (!keepLocalData &&
+          !sharedImage &&
+          selfPublicKeyHex == deletion.nodeKey &&
+          (current == null || deletion.matches(current))) {
+        await _deleteImagesForChannel?.call(index, deletion.imageIds);
+      }
+    }
   }
 
   void _handleFrame(List<int> data) {

@@ -72,6 +72,15 @@ Name limits count the `#` and any community prefix, so the name stored on the ra
 
 Channel history and settings belong to the channel's name, not its slot on the radio. A slot reused for another channel (here or in another app) starts empty, adding a channel again under its name brings its history back, and a channel with the same name on another node of yours shares it. Renaming a channel under the same key, or giving it a new key under the same name, keeps its history, settings and region: the app records the names and keys a channel has had, here and when another app changed them on the radio. Changing both at once is a new channel. Deleting a channel while the shared channel history is on asks whether its data goes for this node only or in the merged history of every node.
 
+If another slot on the current node still uses the same channel history
+(the same name or a linked former name), deleting one slot preserves that
+history, its settings and region. This also applies to the “all nodes” choice:
+removing a duplicate slot does not erase a channel that is still in use.
+Deletion cleanup remains tied to the original node and channel names if
+refresh fails or the connection changes. If the slot is replaced during
+deletion, image cleanup by the old slot number is skipped to protect the
+replacement; some old images may therefore remain stored.
+
 ## Channel Chat
 
 Tap a channel card to open the channel chat screen.

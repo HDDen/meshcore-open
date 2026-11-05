@@ -2752,7 +2752,17 @@ channel's data goes for this node or in the merged history of every node:
 this node clears its own scope under every name of the group and keeps the
 group while another node's cached channel list holds a channel of it, all
 nodes clears every scope and forgets the group. A slot emptied by another
-app clears nothing, as before. Contact history is keyed by the full public
+app clears nothing, as before. `ChannelDeletionSnapshot` captures the original
+node scope, names and image IDs before writing the empty slot. Cleanup runs
+after starting refresh, in `finally`, using those captured names even if the
+binding disappeared, the slot was replaced or the live stores changed nodes.
+Another local slot sharing the name/alias group keeps its data and group,
+including with `allNodes`; matching is by storage names rather than PSK alone.
+Image cleanup is skipped if the original slot now belongs to another channel
+or connection, or another local slot still uses the image ID, because its
+callback can also remove legacy images by slot. A full RX/SQL drain barrier
+is not introduced: `getChannels` starts synchronization rather than awaiting
+all replies. Contact history is keyed by the full public
 key and loses nothing on a rename; linking a contact's new key to an old
 history is its own, manual change
 (`test/storage/channel_identities_test.dart`,
