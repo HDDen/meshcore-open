@@ -60,6 +60,32 @@ void main() {
       StorageService()..setPublicKeyHex = node;
 
   group('path history', () {
+    test('U10c: a started preference save captures the original node before rebinding', () async {
+      final storage = forNode(nodeA);
+      final savedA = history(contact1, [record(1)]);
+      final savedB = history(contact1, [record(2)]);
+      final saveA = storage.savePathHistory(contact1, savedA);
+      storage.setPublicKeyHex = nodeB;
+      final saveB = storage.savePathHistory(contact1, savedB);
+      await Future.wait([saveA, saveB]);
+
+      expect((await forNode(nodeA).loadPathHistory(contact1))!.toJson(), savedA.toJson());
+      expect((await forNode(nodeB).loadPathHistory(contact1))!.toJson(), savedB.toJson());
+    });
+
+    test('U10c: a completed preference save survives another store without a flush API', () async {
+      final storage = forNode(nodeA);
+      final first = history(contact1, [record(1)]);
+      await storage.savePathHistory(contact1, first);
+      expect((await forNode(nodeA).loadPathHistory(contact1))!.toJson(), first.toJson());
+      await storage.clearPathHistory(contact1);
+      expect(await forNode(nodeA).loadPathHistory(contact1), isNull);
+      // There is no queued five-second snapshot that may resurrect the clear.
+      // Saving the same value again is a new explicit write and must succeed.
+      await storage.savePathHistory(contact1, first);
+      expect((await forNode(nodeA).loadPathHistory(contact1))!.toJson(), first.toJson());
+    });
+
     test('a saved history is read back with every record field', () async {
       final storage = forNode(nodeA);
       final saved = history(contact1, [

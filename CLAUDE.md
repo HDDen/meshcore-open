@@ -289,6 +289,18 @@ The node collections follow the same pattern once more. `node_contacts` (`node_k
 
 **Reads are windowed and cursor-paginated.** Opening a conversation asks for `_initialContactHistorySize` / `_initialChannelHistorySize` (300 each); offline shared mode merges up to `_offlineSharedHistoryWindowSize` (1000) per scope. Older pages come from `loadMessagesBefore` / `loadChannelMessagesBefore`, anchored on the pair `(timelineAtMs, messageId)` — the second half of the key is what keeps ordering stable when several messages share a millisecond. `loadNewerMessages` / `loadNewerChannelMessages` are the forward half of the same cursor and are implemented but not yet called by any screen.
 
+U10 integration keeps the fork's active RAM window rather than upstream's
+1000-message receive cap: an open chat may contain pages deliberately loaded
+by the user. `setActiveChannel` trims the previous channel to the latest 300;
+`trimInactiveMessageHistoryWindows` applies the same rule under memory pressure
+while retaining the active window. These trims only change RAM lists. SQL
+cursor pagination remains available for persisted messages. Upstream's generic
+750 ms / 5 s `CoalescedWrites` buffers and their lifecycle flush hooks are not
+introduced: native stores already use SQL point writes, and the preferences
+fallback retains its existing save/clear/node-binding contract. Existing SQL
+Futures retain their asynchronous completion semantics. The incoming destructive queue continues
+to await its message/inbox commits before requesting the next frame.
+
 **Writes are per row.** Receiving a message upserts one row (`saveMessage` / `saveChannelMessage`); before, every incoming message re-serialized the whole conversation and rewrote the entire preferences file. `saveMessages` / `saveChannelMessages` still exist but their meaning changed from *replace* to *upsert*, so the four remaining call sites are all blocked-sender sweeps that genuinely touch several rows. Deleting is `deleteMessage`, clearing a conversation is `clearMessages` / `clearChannelMessages` — passing a shortened list no longer removes anything. The upsert names the identity index's columns as its conflict target on purpose: drift's default target is the autoincrement primary key, which an insert never collides on, so a repeated save of one message used to trip the unique index and fail — status promotions, merged paths and translations never reached the disk, and any reload from storage (the channel sheet's `setChannel` re-sync, a restart) showed the first insert again.
 
 **Two in-memory caches** are filled by one `SELECT DISTINCT` each at startup and maintained on write: the set of known `storageKey`s per kind, and the keys whose history contains a marker. The marker cache is deliberately **add-only** on point upserts — a stale positive costs one wasted history read, while `replaceString` and `deleteMessage` recompute it exactly. That asymmetry is intentional and commented in place; it keeps `mayContainMarker` synchronous, which the map's sweep over every contact depends on.
