@@ -3282,9 +3282,19 @@ where it had private copies. The decision is the fork's: what its users'
 packet records should feed, if anything, is not settled, and an upload
 nobody can switch on would still cost a listener on every connector
 notification. The node-purchase banner of the connect screen is gated the
-same way (`getNodeBannerAvailable` in `get_node_banner.dart`; it would sit
-above the offline-history row, not replace the bottom bar as upstream's
-does) and kept so the fork can point it at a project of its own. Left out:
+same way (`getNodeBannerAvailable=false` in
+`helpers/node_banner_availability.dart`, re-exported by `get_node_banner.dart`;
+it would sit above the offline-history row, not replace the bottom bar as
+upstream's does) and kept so the fork can point it at a project of its own.
+U07 imports upstream's DNS TXT configuration parser and TTL cache as dormant
+code. The scanner never creates the banner; direct default widget use also
+skips loading. `NodeBannerService.load()` checks the same gate before reading
+preferences, allocating an HTTP client, or starting a request/timeout. Cached
+`on=1` cannot enable it. Only the `@visibleForTesting` constructor with an
+explicit synthetic client exercises the active service in tests. Clients
+created by the normal service on an enabled cache miss are closed in `finally`;
+injected clients belong to their caller. No polling timer was added. Existing
+review-mode/network-map gates remain off and unchanged. Left out:
 the version bump (ours stays as **Dependencies** says), the `BETA` suffix on
 the settings screen's version, the README link to the map and the
 privacy-policy paragraphs about uploads and the affiliate link, since

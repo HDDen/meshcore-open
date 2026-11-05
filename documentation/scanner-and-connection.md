@@ -38,6 +38,11 @@ The TCP cleanup applies to Android, iOS, Windows, Linux and macOS; the shared BL
 - **Offline** - Opens saved history without connecting to a radio
 - **BLE Scan** - Toggles BLE scanning on/off; shows a spinner when scanning. **Disabled** (greyed out, not tappable) when Bluetooth is off
 
+The upstream node-purchase banner is disabled in this fork. Its retained DNS
+configuration code does not perform banner-related network requests, read or
+write its cache, or schedule refresh timers while disabled. There is no setting
+to enable it; a DNS record or previously cached configuration cannot turn it on.
+
 ### Device Tile
 
 Each discovered device is displayed as a list tile showing:
