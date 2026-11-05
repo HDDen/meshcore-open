@@ -1159,11 +1159,15 @@ WHERE contact_key = ? AND node_key IN (?, '')
     required String contactKey,
     required String historyJson,
   }) async {
+    // Compare with the row inside SQLite, not with an in-memory last-save
+    // cache: another writer, a deletion or a rollback may have changed it.
+    // Changed snapshots still commit immediately; identical ones do no update.
     await customInsert(
       '''
 INSERT INTO contact_path_history (node_key, contact_key, history_json)
 VALUES (?, ?, ?)
 ON CONFLICT(node_key, contact_key) DO UPDATE SET history_json = excluded.history_json
+WHERE contact_path_history.history_json IS NOT excluded.history_json
 ''',
       variables: [
         Variable<String>(nodeKey),

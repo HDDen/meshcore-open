@@ -5,10 +5,13 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/delivery_observation.dart';
 import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
+import 'package:meshcore_open/storage/channel_store.dart';
+import 'package:meshcore_open/storage/contact_discovery_store.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -144,7 +147,7 @@ Future<void> main() async {
     report('contactsEqualReplacements', rows);
   }, skip: sqliteProblem, timeout: timeout);
 
-  test('baseline: an unchanged path snapshot still executes an upsert', () async {
+  test('U10b: identical path snapshots do not update the SQL row', () async {
     final history = _path(0);
     await service.savePathHistory(_contactKey, history);
     final before = await changes();
@@ -152,7 +155,7 @@ Future<void> main() async {
       await service.savePathHistory(_contactKey, history);
     }
     final rows = await changes() - before;
-    expect(rows, _saves);
+    expect(rows, 0);
     expect((await service.loadPathHistory(_contactKey))!.toJson(), history.toJson());
     report('pathUnchanged', rows);
   }, skip: sqliteProblem, timeout: timeout);
@@ -160,11 +163,174 @@ Future<void> main() async {
   test('baseline: changing paths are immediately readable without crossing nodes', () async {
     final other = StorageService()..setPublicKeyHex = 'cd' * 32;
     await other.savePathHistory(_contactKey, _path(100));
+    final before = await changes();
     for (var i = 0; i < _saves; i++) {
       await service.savePathHistory(_contactKey, _path(i));
       expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(i).toJson());
     }
     expect((await other.loadPathHistory(_contactKey))!.toJson(), _path(100).toJson());
+    final rows = await changes() - before;
+    expect(rows, _saves);
+    report('pathChanged', rows);
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: equal channel snapshots already skip SQL and one unread change updates one row', () async {
+    final channels = ChannelStore()..setPublicKeyHex = _node;
+    List<Channel> snapshot() => [
+      for (var i = 0; i < 17; i++)
+        Channel(index: i, name: 'Channel $i', psk: Uint8List(16)..[0] = i + 1),
+    ];
+    await channels.saveChannels(snapshot());
+    final before = await changes();
+    for (var i = 0; i < _saves; i++) {
+      // Distinct model objects: this store compares the persisted content.
+      await channels.saveChannels(snapshot());
+    }
+    final unchangedRows = await changes() - before;
+    expect(unchangedRows, 0);
+    report('U10bChannelListUnchanged', unchangedRows);
+
+    final updated = snapshot();
+    updated[3].unreadCount = 9;
+    await channels.saveChannels(updated);
+    expect(await changes() - before, 1);
+    final loaded = await channels.loadChannels();
+    expect(loaded, hasLength(17));
+    expect(loaded.singleWhere((channel) => channel.index == 3).unreadCount, 9);
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: discovered contacts skip identical instances and update only a replaced row', () async {
+    final discovered = ContactDiscoveryStore();
+    final contacts = [_contact(0), _contact(1), _contact(2)];
+    await discovered.saveContacts(contacts);
+    final before = await changes();
+    for (var i = 0; i < _saves; i++) {
+      await discovered.saveContacts(contacts);
+    }
+    final unchangedRows = await changes() - before;
+    expect(unchangedRows, 0);
+    report('U10bDiscoveryUnchanged', unchangedRows);
+
+    await discovered.saveContacts([contacts[0], _contact(1), contacts[2]]);
+    expect(await changes() - before, 1);
+    expect((await discovered.loadContacts()).map((contact) => contact.name),
+        unorderedEquals(contacts.map((contact) => contact.name)));
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: queued channel saves capture node and mutable unread count at entry', () async {
+    final channels = ChannelStore()..setPublicKeyHex = _node;
+    final first = Channel(index: 2, name: 'First', psk: Uint8List(16)..[0] = 1,
+        unreadCount: 3);
+    final saveFirst = channels.saveChannels([first]);
+    first.unreadCount = 99;
+    channels.setPublicKeyHex = 'cd' * 32;
+    final second = Channel(index: 2, name: 'Second', psk: Uint8List(16)..[0] = 2);
+    final saveSecond = channels.saveChannels([second]);
+    await Future.wait([saveFirst, saveSecond]);
+
+    final original = await (ChannelStore()..setPublicKeyHex = _node).loadChannels();
+    final other = await channels.loadChannels();
+    expect(original.single.name, 'First');
+    expect(original.single.unreadCount, 3);
+    expect(other.single.name, 'Second');
+    expect(other.single.unreadCount, 0);
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: an already started path save stays with its original node', () async {
+    final other = StorageService()..setPublicKeyHex = 'cd' * 32;
+    await other.savePathHistory(_contactKey, _path(100));
+    final save = service.savePathHistory(_contactKey, _path(1));
+    service.setPublicKeyHex = 'cd' * 32;
+    await save;
+
+    final original = StorageService()..setPublicKeyHex = _node;
+    expect((await original.loadPathHistory(_contactKey))!.toJson(), _path(1).toJson());
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(100).toJson());
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: clearing a path removes the local and shared rows, preserving another node', () async {
+    final shared = StorageService();
+    final other = StorageService()..setPublicKeyHex = 'cd' * 32;
+    await shared.savePathHistory(_contactKey, _path(0));
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+    await other.savePathHistory(_contactKey, _path(100));
+    await service.savePathHistory(_contactKey, _path(1));
+    await service.clearPathHistory(_contactKey);
+
+    expect(await service.loadPathHistory(_contactKey), isNull);
+    expect(await shared.loadPathHistory(_contactKey), isNull);
+    expect((await other.loadPathHistory(_contactKey))!.toJson(), _path(100).toJson());
+    // An identical value after a clear must insert again, never be swallowed
+    // by a cache claiming that it had already been saved.
+    await service.savePathHistory(_contactKey, _path(1));
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(1).toJson());
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b baseline: a rolled-back path save does not suppress the following committed save', () async {
+    await service.savePathHistory(_contactKey, _path(0));
+    final failure = StateError('synthetic path transaction rollback');
+    await expectLater(database.transaction(() async {
+      await service.savePathHistory(_contactKey, _path(1));
+      throw failure;
+    }), throwsA(same(failure)));
+
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+    await service.savePathHistory(_contactKey, _path(1));
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(1).toJson());
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b: equivalent new path objects also avoid SQL updates', () async {
+    await service.savePathHistory(_contactKey, _path(0));
+    final before = await changes();
+    for (var i = 0; i < _saves; i++) {
+      await service.savePathHistory(_contactKey, _path(0));
+    }
+    final rows = await changes() - before;
+    expect(rows, 0);
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+    report('pathEqualNewObjects', rows);
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b: another writer invalidates an earlier same-value save', () async {
+    await service.savePathHistory(_contactKey, _path(0));
+    final independent = StorageService()..setPublicKeyHex = _node;
+    await independent.savePathHistory(_contactKey, _path(1));
+    final before = await changes();
+    // The same caller saved this value before, but the current row differs.
+    await service.savePathHistory(_contactKey, _path(0));
+    expect(await changes() - before, 1);
+    expect((await independent.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b: equality with a shared fallback still inserts the node-specific row', () async {
+    final shared = StorageService();
+    await shared.savePathHistory(_contactKey, _path(0));
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+    final before = await changes();
+    await service.savePathHistory(_contactKey, _path(0));
+    expect(await changes() - before, 1);
+
+    // The explicit local snapshot must survive a later change of the shared
+    // fallback, even though the initial read returned the same JSON.
+    await shared.savePathHistory(_contactKey, _path(100));
+    expect((await service.loadPathHistory(_contactKey))!.toJson(), _path(0).toJson());
+    expect((await shared.loadPathHistory(_contactKey))!.toJson(), _path(100).toJson());
+  }, skip: sqliteProblem, timeout: timeout);
+
+  test('U10b: an empty path snapshot remains a saved local value', () async {
+    await service.savePathHistory(_contactKey, _path(0));
+    final empty = ContactPathHistory(contactPubKeyHex: _contactKey, recentPaths: []);
+    final before = await changes();
+    await service.savePathHistory(_contactKey, empty);
+    expect(await changes() - before, 1);
+    final afterFirst = await changes();
+    for (var i = 0; i < _saves; i++) {
+      await service.savePathHistory(_contactKey, empty);
+    }
+    expect(await changes() - afterFirst, 0);
+    final loaded = await service.loadPathHistory(_contactKey);
+    expect(loaded, isNotNull);
+    expect(loaded!.recentPaths, isEmpty);
   }, skip: sqliteProblem, timeout: timeout);
 
   for (final sliding in [false, true]) {

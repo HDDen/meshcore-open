@@ -203,6 +203,15 @@ The copy runs in a background isolate and counts bytes. The two databases go as 
 
 ### Storage / Persistence
 
+`MessageHistoryDatabase.writePathHistory` conditionally updates a conflicting
+`(node_key, contact_key)` row only when `history_json IS NOT excluded.history_json`
+(U10b). SQLite compares the current row inside the same statement, so an
+identical snapshot makes no row change while updates remain immediately
+awaitable. There is no delayed flush or last-saved cache to invalidate after
+another writer, a clear or rollback. Shared fallback reads do not prevent a
+first node-specific insert; an empty saved history remains distinct from a
+missing row. The preferences fallback and message/inbox commits are unchanged.
+
 The stores in `lib/storage/` **scope their data by the first 10 hex chars of the connected device's public key**, so per-radio data is isolated. What is written on traffic lives in SQLite (see the next section): the message history, the node's contacts and channels, the path histories and the delivery observations, each one row per item, and the small per-node collections as one JSON row each in `node_state`. Settings stay in `PrefsManager` (a `SharedPreferences` singleton initialized in `main()`): `app_settings`, the per-channel and per-contact setting keys, marker styles, unread counts, blocked senders, the MCOimg gallery index and single flags. On Windows and Linux the plugin rewrites the whole preferences file on every `set` and `remove`, absent keys included, which is why the heavy collections left it and why a load never writes there (`ChannelRegionStore.loadRegion` reads only, the legacy-key removals check `containsKey` first, `NodeIdentityStore.saveName` writes only a changed name). Every store keeps its preference form for the web build and for a process without the database, such as a unit test (`MessageHistoryStorage.hasDatabase` false).
 
 | Store | Persists |
