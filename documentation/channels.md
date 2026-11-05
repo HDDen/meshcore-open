@@ -81,6 +81,20 @@ refresh fails or the connection changes. If the slot is replaced during
 deletion, image cleanup by the old slot number is skipped to protect the
 replacement; some old images may therefore remain stored.
 
+## Import safety
+
+Channel QR codes, pasted links and links in messages are imported only after
+the radio's channel list has finished loading. Retry after synchronization if
+the app asks you to wait. Slots without a confirmed response are reserved.
+After scanning or confirming a link, the app checks the current list again:
+an occupied pre-scan slot is replaced with a currently free slot, and a
+changed connection or update target requires a new import. Confirming a new
+channel never silently authorizes replacing an existing one.
+
+The fork keeps `region_scope`, gallery scanning and its separate channel and
+community scanners. Updating an existing channel keeps its name and history;
+omitting `region_scope` from the link clears its region after confirmation.
+
 ## Channel Chat
 
 Tap a channel card to open the channel chat screen.

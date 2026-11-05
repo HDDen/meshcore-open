@@ -4061,5 +4061,23 @@
   "map_pathTraceModeAsEnteredHint": "Spårningen följer exakt dessa hopp. Lägg själv till hoppen tillbaka till dig.",
   "map_pathTraceViewLast": "Visa senaste resultat",
   "contacts_removeFailed": "Radion bekräftade inte borttagningen. Kontakten togs inte bort.",
-  "contacts_removeAutoAddNote": "Din radio lägger automatiskt till den här kontakttypen, så den kommer tillbaka nästa gång den skickar en annons. Stäng av automatisk tillägg i kontaktinställningarna för att behålla den borttagen."
+  "contacts_removeAutoAddNote": "Din radio lägger automatiskt till den här kontakttypen, så den kommer tillbaka nästa gång den skickar en annons. Stäng av automatisk tillägg i kontaktinställningarna för att behålla den borttagen.",
+  "channels_scanQrCodeDesc": "Gå med i en kanal eller community med dess QR-kod.",
+  "channels_joinChannelTitle": "Gå med i kanal",
+  "channels_joinChannelConfirm": "Lägga till \"{name}\" på din radio?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" finns redan på din radio",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

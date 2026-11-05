@@ -4383,5 +4383,23 @@
   "map_pathTraceModeAsEnteredHint": "トレースはこれらのホップをそのとおりにたどります。自分へ戻るホップは自分で追加してください。",
   "map_pathTraceViewLast": "前回の結果を表示",
   "contacts_removeFailed": "ラジオが削除を確認しませんでした。連絡先は削除されていません。",
-  "contacts_removeAutoAddNote": "このタイプの連絡先はラジオが自動追加するため、次回アドバートを送信すると再び追加されます。削除したままにするには、連絡先設定で自動追加をオフにしてください。"
+  "contacts_removeAutoAddNote": "このタイプの連絡先はラジオが自動追加するため、次回アドバートを送信すると再び追加されます。削除したままにするには、連絡先設定で自動追加をオフにしてください。",
+  "channels_scanQrCodeDesc": "QRコードからチャンネルまたはコミュニティに参加します。",
+  "channels_joinChannelTitle": "チャンネルに参加",
+  "channels_joinChannelConfirm": "「{name}」をラジオに追加しますか？",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "「{name}」はすでにラジオにあります",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

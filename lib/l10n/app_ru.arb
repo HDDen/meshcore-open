@@ -3605,5 +3605,24 @@
   "appSettings_loadLinkImages": "Загружать изображения по ссылкам",
   "appSettings_loadLinkImagesSubtitle": "Показывать изображения по ссылкам в сообщениях. При загрузке сайт-источник получает ваш IP-адрес.",
   "appSettings_showLinkImagesByDefault": "Показывать изображения по ссылкам во всех чатах по умолчанию",
-  "appSettings_showLinkImagesByDefaultSubtitle": "Применять к чатам без собственной настройки. Явно отключённые изображения останутся отключёнными. При загрузке сайты-источники получают ваш IP-адрес."
+  "appSettings_showLinkImagesByDefaultSubtitle": "Применять к чатам без собственной настройки. Явно отключённые изображения останутся отключёнными. При загрузке сайты-источники получают ваш IP-адрес.",
+  "channels_scanQrCodeDesc": "Присоединитесь к каналу или сообществу по QR-коду.",
+  "channels_joinChannelTitle": "Присоединиться к каналу",
+  "channels_joinChannelConfirm": "Добавить «{name}» на ваше радио?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "«{name}» уже есть на вашем радио",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_qrImportChanged": "Подключение или каналы изменились. Повторите импорт."
 }

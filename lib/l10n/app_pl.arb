@@ -4318,5 +4318,23 @@
   "map_pathTraceModeAsEnteredHint": "Śledzenie przechodzi dokładnie przez te skoki. Skoki powrotne do siebie dodaj samodzielnie.",
   "map_pathTraceViewLast": "Zobacz ostatni wynik",
   "contacts_removeFailed": "Radio nie potwierdziło usunięcia. Kontakt nie został usunięty.",
-  "contacts_removeAutoAddNote": "Twoje radio automatycznie dodaje ten typ kontaktu, więc wróci przy następnym rozgłoszeniu. Wyłącz automatyczne dodawanie w ustawieniach Kontaktów, aby go usunąć na stałe."
+  "contacts_removeAutoAddNote": "Twoje radio automatycznie dodaje ten typ kontaktu, więc wróci przy następnym rozgłoszeniu. Wyłącz automatyczne dodawanie w ustawieniach Kontaktów, aby go usunąć na stałe.",
+  "channels_scanQrCodeDesc": "Dołącz do kanału lub społeczności za pomocą kodu QR.",
+  "channels_joinChannelTitle": "Dołącz do kanału",
+  "channels_joinChannelConfirm": "Dodać \"{name}\" do Twojego radia?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" jest już w Twoim radiu",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

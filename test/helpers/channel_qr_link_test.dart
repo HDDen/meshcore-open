@@ -40,6 +40,19 @@ void main() {
   });
 
   group('ChannelQrLink.tryParse', () {
+    test('U09 baseline: malformed query UTF-8 is rejected without throwing', () {
+      const secret = '8b3387e9c5cdea6ac9e5edbaa115cd72';
+      for (final query in [
+        'name=%FF&secret=$secret',
+        'name=%C3%28&secret=$secret',
+        'name=Public&secret=$secret&region_scope=%FF',
+      ]) {
+        final raw = 'meshcore://channel/add?$query';
+        expect(ChannelQrLink.tryParse(raw), isNull, reason: query);
+        expect(ChannelQrLink.isValid(raw), isFalse, reason: query);
+      }
+    });
+
     test('reads the example from MeshCore docs/qr_codes.md', () {
       final link = ChannelQrLink.tryParse(
         'meshcore://channel/add?name=Public&secret=8b3387e9c5cdea6ac9e5edbaa115cd72',

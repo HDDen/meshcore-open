@@ -4356,5 +4356,23 @@
   "map_pathTraceModeAsEnteredHint": "La traza sigue estos saltos exactamente. Añade tú mismo los saltos de vuelta hacia ti.",
   "map_pathTraceViewLast": "Ver último resultado",
   "contacts_removeFailed": "La radio no confirmó la eliminación. El contacto no se eliminó.",
-  "contacts_removeAutoAddNote": "Tu radio añade automáticamente este tipo de contacto, así que volverá la próxima vez que envíe un anuncio. Desactiva la adición automática en los ajustes de Contactos para mantenerlo eliminado."
+  "contacts_removeAutoAddNote": "Tu radio añade automáticamente este tipo de contacto, así que volverá la próxima vez que envíe un anuncio. Desactiva la adición automática en los ajustes de Contactos para mantenerlo eliminado.",
+  "channels_scanQrCodeDesc": "Únete a un canal o comunidad con su código QR.",
+  "channels_joinChannelTitle": "Unirse al canal",
+  "channels_joinChannelConfirm": "¿Añadir \"{name}\" a tu radio?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" ya está en tu radio",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

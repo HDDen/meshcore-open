@@ -4415,5 +4415,23 @@
   "map_pathTraceModeAsEnteredHint": "추적이 이 홉들을 그대로 따라갑니다. 나에게 돌아오는 홉은 직접 추가하세요.",
   "map_pathTraceViewLast": "마지막 결과 보기",
   "contacts_removeFailed": "라디오가 삭제를 확인하지 않았습니다. 연락처가 삭제되지 않았습니다.",
-  "contacts_removeAutoAddNote": "라디오가 이 연락처 유형을 자동으로 추가하므로 다음에 어드버트를 보내면 다시 추가됩니다. 삭제된 상태로 두려면 연락처 설정에서 자동 추가를 끄세요."
+  "contacts_removeAutoAddNote": "라디오가 이 연락처 유형을 자동으로 추가하므로 다음에 어드버트를 보내면 다시 추가됩니다. 삭제된 상태로 두려면 연락처 설정에서 자동 추가를 끄세요.",
+  "channels_scanQrCodeDesc": "QR 코드로 채널이나 커뮤니티에 참여합니다.",
+  "channels_joinChannelTitle": "채널 참여",
+  "channels_joinChannelConfirm": "\"{name}\" 채널을 라디오에 추가할까요?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\"은(는) 이미 라디오에 있습니다",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

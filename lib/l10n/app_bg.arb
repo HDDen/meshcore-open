@@ -4250,5 +4250,23 @@
   "map_pathTraceModeAsEnteredHint": "Трасето следва точно тези хопове. Добавете сами хоповете обратно към вас.",
   "map_pathTraceViewLast": "Преглед на последния резултат",
   "contacts_removeFailed": "Радиото не потвърди премахването. Контактът не беше премахнат.",
-  "contacts_removeAutoAddNote": "Радиото ви автоматично добавя този тип контакт, така че той ще се върне при следващия му advert. Изключете автоматичното добавяне в настройките на контактите, за да остане премахнат."
+  "contacts_removeAutoAddNote": "Радиото ви автоматично добавя този тип контакт, така че той ще се върне при следващия му advert. Изключете автоматичното добавяне в настройките на контактите, за да остане премахнат.",
+  "channels_scanQrCodeDesc": "Присъединете се към канал или общност чрез QR код.",
+  "channels_joinChannelTitle": "Присъединяване към канал",
+  "channels_joinChannelConfirm": "Да се добави ли \"{name}\" към радиото ви?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" вече е на радиото ви",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -18,13 +18,14 @@ import '../widgets/qr_scanner_widget.dart';
 class ChannelQrScannerScreen extends StatefulWidget {
   const ChannelQrScannerScreen({super.key});
 
-  /// Opens the scanner and puts the scanned channel into slot [index], or,
-  /// when the node already has a channel of that name, offers to update it.
+  /// Opens the scanner, then rechecks the node and preferred slot [index].
+  /// A channel whose name is already on the node is offered an update.
   static Future<void> scanAndAdd(
     BuildContext context, {
     required MeshCoreConnector connector,
     required int index,
   }) async {
+    final nodeKey = connector.selfPublicKeyHex;
     final link = await Navigator.push<ChannelQrLink>(
       context,
       MaterialPageRoute(builder: (_) => const ChannelQrScannerScreen()),
@@ -35,6 +36,7 @@ class ChannelQrScannerScreen extends StatefulWidget {
       connector: connector,
       link: link,
       index: index,
+      expectedNodeKey: nodeKey,
     );
   }
 

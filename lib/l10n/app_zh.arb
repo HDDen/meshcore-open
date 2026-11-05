@@ -4283,5 +4283,23 @@
   "map_pathTraceModeAsEnteredHint": "追踪严格按这些跳进行。请自行添加返回你的跳。",
   "map_pathTraceViewLast": "查看上次结果",
   "contacts_removeFailed": "无线电未确认移除。该联系人未被移除。",
-  "contacts_removeAutoAddNote": "你的无线电会自动添加此类联系人，因此它下次发送广播时会重新出现。如需保持移除，请在联系人设置中关闭自动添加。"
+  "contacts_removeAutoAddNote": "你的无线电会自动添加此类联系人，因此它下次发送广播时会重新出现。如需保持移除，请在联系人设置中关闭自动添加。",
+  "channels_scanQrCodeDesc": "通过二维码加入频道或社区。",
+  "channels_joinChannelTitle": "加入频道",
+  "channels_joinChannelConfirm": "将 \"{name}\" 添加到你的无线电？",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" 已在你的无线电上",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

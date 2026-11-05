@@ -4258,5 +4258,23 @@
   "map_pathTraceModeAsEnteredHint": "Трасування точно йде цими хопами. Додайте хопи назад до себе самостійно.",
   "map_pathTraceViewLast": "Переглянути останній результат",
   "contacts_removeFailed": "Радіо не підтвердило видалення. Контакт не видалено.",
-  "contacts_removeAutoAddNote": "Ваше радіо автоматично додає цей тип контакту, тож він повернеться, коли наступного разу надішле advert. Вимкніть автододавання в налаштуваннях контактів, щоб він залишився видаленим."
+  "contacts_removeAutoAddNote": "Ваше радіо автоматично додає цей тип контакту, тож він повернеться, коли наступного разу надішле advert. Вимкніть автододавання в налаштуваннях контактів, щоб він залишився видаленим.",
+  "channels_scanQrCodeDesc": "Приєднайтеся до каналу або спільноти за QR-кодом.",
+  "channels_joinChannelTitle": "Приєднатися до каналу",
+  "channels_joinChannelConfirm": "Додати \"{name}\" до вашого радіо?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" уже на вашому радіо",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

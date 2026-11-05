@@ -4068,5 +4068,23 @@
   "map_pathTraceModeAsEnteredHint": "De trace volgt precies deze hops. Voeg zelf de hops terug naar jou toe.",
   "map_pathTraceViewLast": "Laatste resultaat bekijken",
   "contacts_removeFailed": "De radio heeft de verwijdering niet bevestigd. Het contact is niet verwijderd.",
-  "contacts_removeAutoAddNote": "Je radio voegt dit contacttype automatisch toe, dus het komt terug zodra het weer een advert verstuurt. Zet automatisch toevoegen uit in de Contactinstellingen om het verwijderd te houden."
+  "contacts_removeAutoAddNote": "Je radio voegt dit contacttype automatisch toe, dus het komt terug zodra het weer een advert verstuurt. Zet automatisch toevoegen uit in de Contactinstellingen om het verwijderd te houden.",
+  "channels_scanQrCodeDesc": "Word lid van een kanaal of community via de QR-code.",
+  "channels_joinChannelTitle": "Lid worden van kanaal",
+  "channels_joinChannelConfirm": "\"{name}\" aan je radio toevoegen?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "\"{name}\" staat al op je radio",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

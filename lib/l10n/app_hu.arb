@@ -4282,5 +4282,23 @@
   "map_pathTraceModeAsEnteredHint": "A nyomkövetés pontosan ezeket az ugrásokat követi. A hozzád visszavezető ugrásokat magadnak kell hozzáadnod.",
   "map_pathTraceViewLast": "Utolsó eredmény megtekintése",
   "contacts_removeFailed": "A rádió nem erősítette meg az eltávolítást. A névjegy nem lett eltávolítva.",
-  "contacts_removeAutoAddNote": "A rádiód automatikusan hozzáadja ezt a névjegytípust, ezért a következő hirdetésekor visszakerül. Az eltávolítás megtartásához kapcsold ki az automatikus hozzáadást a Névjegyek beállításaiban."
+  "contacts_removeAutoAddNote": "A rádiód automatikusan hozzáadja ezt a névjegytípust, ezért a következő hirdetésekor visszakerül. Az eltávolítás megtartásához kapcsold ki az automatikus hozzáadást a Névjegyek beállításaiban.",
+  "channels_scanQrCodeDesc": "Csatlakozz csatornához vagy közösséghez a QR-kódja alapján.",
+  "channels_joinChannelTitle": "Csatlakozás csatornához",
+  "channels_joinChannelConfirm": "Hozzáadod a(z) \"{name}\" csatornát a rádiódhoz?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "A(z) \"{name}\" már a rádiódon van",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

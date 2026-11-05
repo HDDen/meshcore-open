@@ -4251,5 +4251,23 @@
   "map_pathTraceModeAsEnteredHint": "Sledenje sledi tem skokom natančno. Skoke nazaj k sebi dodajte sami.",
   "map_pathTraceViewLast": "Poglej zadnji rezultat",
   "contacts_removeFailed": "Radio ni potrdil odstranitve. Stik ni bil odstranjen.",
-  "contacts_removeAutoAddNote": "Vaš radio samodejno doda to vrsto stika, zato se bo vrnil, ko bo naslednjič poslal oglas. Izklopite samodejno dodajanje v nastavitvah stikov, da ostane odstranjen."
+  "contacts_removeAutoAddNote": "Vaš radio samodejno doda to vrsto stika, zato se bo vrnil, ko bo naslednjič poslal oglas. Izklopite samodejno dodajanje v nastavitvah stikov, da ostane odstranjen.",
+  "channels_scanQrCodeDesc": "Pridružite se kanalu ali skupnosti s kodo QR.",
+  "channels_joinChannelTitle": "Pridruži se kanalu",
+  "channels_joinChannelConfirm": "Dodam »{name}« na vaš radio?",
+  "@channels_joinChannelConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "channels_alreadyOnRadio": "»{name}« je že na vašem radiu",
+  "@channels_alreadyOnRadio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

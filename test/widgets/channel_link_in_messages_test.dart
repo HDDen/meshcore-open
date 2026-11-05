@@ -42,6 +42,12 @@ class _Node extends MeshCoreConnector {
   bool get isOfflineMode => offline;
 
   @override
+  bool get hasLoadedChannels => true;
+
+  @override
+  bool get isSyncingChannels => false;
+
+  @override
   List<Channel> get channels => List.unmodifiable(_held);
 
   @override
