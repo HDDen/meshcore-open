@@ -2848,6 +2848,33 @@ is active; saving the radio dialog cannot revert an externally changed width.
 
 An image link in an ordinary text message can be shown as a picture (`helpers/message_url_image_helper.dart`, from upstream): direct `.png` / `.jpg` / `.webp` links, `pyx.li`, `ibb.co` share pages and IPFS paths or CIDs, share pages being resolved over HTTP and every image checked before it is drawn. It is off by default and switched per contact (the contact settings dialog in `chat_screen.dart`) and per channel (`widgets/channel_edit_sheet.dart`), stored by `contact_settings_store` / `channel_settings_store` (`loadUrlImagesEnabled` / `saveUrlImagesEnabled`, the channel flag keyed by name like the other channel settings). With the flag off a bubble with such a link shows the `urlImage_possible` hint instead. Both bubbles read `bodyText`, so a blocked sender's message never fetches anything, and notifications attach the picture only where the flag is on, waiting at most five seconds for it. This is apart from the images sent over the mesh (MCOimg, AEIC), which never touch the network.
 
+### IPFS attachments (U08a)
+
+The IPFS settings dialog is `widgets/ipfs_image_links_dialog.dart`; its four
+values round-trip through `AppSettings`/`AppSettingsService.setIpfsImageSettings`.
+The upload endpoint/key/gateway default to empty, so no upload action or request
+is created on startup. The public gateway defaults to the previous ipfs.io;
+explicit empty stays disabled. URL previews remain per-chat opt-in. Gateway
+changes invalidate the relevant message-image cache and also reach notifications.
+
+`ChatAdditionalActionsButton` retains the fork's existing actions and adds IPFS
+only with a configured endpoint outside offline mode. AEIC/IPFS native pickers
+wait for the bottom-sheet route's `completed` future, not only its pop result.
+Both screens serialize their own upload and call `ipfs_link_attach_flow.dart`;
+it adds the link to the latest draft, preserves all whitespace and the editable
+reply header, never truncates or automatically sends a mesh message. Direct
+chat uses its existing composer encoder; channel chat supplies a fit callback
+using the existing binary/text byte limits and reply-aware encoding. No wire
+codec, retry engine, SQL contact option or channel cleanup was replaced.
+
+`ipfs_upload_helper.dart` keeps upstream Pinata/Filebase/Kubo and MFS behavior,
+validates configuration before network IO, and permits at most 32 MiB. File size
+is checked before reading it into memory. Each POST (headers and body) has a
+60-second timeout with no automatic retry; owned clients close in finally.
+Typed safe errors omit arbitrary server bodies/credentials and raw failures are
+not logged. Injected HTTP clients/file pickers allow synthetic integration tests.
+The API-key field is masked and only an actual edit changes the saved key.
+
 ### GIF cache
 
 Флаг энергосбережения `pauseHiddenGifs` (JSON `pause_hidden_gifs`) управляет

@@ -26,6 +26,7 @@ import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/message_url_image_helper.dart';
+import '../helpers/ipfs_link_attach_flow.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../helpers/inserted_text_limiter.dart';
@@ -167,6 +168,8 @@ class _ChatScreenState extends State<ChatScreen> {
   /// session.
   List<ContactHistoryCandidate> _historyCandidates = const [];
   bool _historyBannerDismissed = false;
+
+  bool _ipfsUploading = false;
 
   String get _composerDraftKey =>
       ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
@@ -1668,6 +1671,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     unawaited(_pickAndInsertLocationFromMap()),
                 onOpenQuickAnswers: () => _showQuickAnswersPicker(connector),
                 onSendGif: () => _showGifPicker(context),
+                onSendIpfs: settings.uploadIpfsEndpoint.trim().isNotEmpty && !_ipfsUploading
+                    ? () => unawaited(_attachIpfsLink(connector))
+                    : null,
                 onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
                 onOpenMcoImageGallery: () =>
                     _showMcoImageGallery(connector, maxBytes),
@@ -1895,6 +1901,31 @@ class _ChatScreenState extends State<ChatScreen> {
       skipTranslation: true,
       skipReplyContext: true,
     );
+  }
+
+  Future<void> _attachIpfsLink(MeshCoreConnector connector) async {
+    if (_ipfsUploading || connector.isOfflineMode || !connector.isConnected) return;
+    setState(() => _ipfsUploading = true);
+    try {
+      await attachIpfsLinkToDraft(
+        context: context,
+        controller: _textController,
+        focusNode: _textFieldFocusNode,
+        maxBytes: _maxContactInputBytes(connector),
+        encodeOutbound: (text) => _composerEncoder(connector)?.call(text) ?? text,
+        composeDraft: (link, draft) {
+          // Keep the editable exact-quote header at the beginning of the
+          // composer; only its body receives the uploaded link.
+          final prefix = _composerReply(draft)?.prefix ?? '';
+          return '$prefix${composeIpfsLinkDraft(
+            messageUrl: link,
+            existingText: draft.substring(prefix.length),
+          )}';
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _ipfsUploading = false);
+    }
   }
 
   Future<void> _showMcoImageGallery(
@@ -4046,6 +4077,7 @@ class _MessageBubble extends StatelessWidget {
                         else ...[
                           if (urlImagesEnabled)
                             MessageUrlImageFutureBuilder(
+                              publicGateway: context.read<AppSettingsService>().settings.publicIpfsGateway,
                               messageId: message.messageId,
                               text: bodyText,
                               builder: (context, snapshot) {

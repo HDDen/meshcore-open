@@ -3562,5 +3562,43 @@
   "settings_modSettingsBattery": "Батарея",
   "settings_lowBatteryAlerts": "Оповещать о низком заряде",
   "contacts_removeFailed": "Не удалось удалить контакт.",
-  "contacts_removeAutoAddNote": "На ноде включено автоматическое добавление контактов этого типа. При следующем анонсе контакт может появиться снова."
+  "contacts_removeAutoAddNote": "На ноде включено автоматическое добавление контактов этого типа. При следующем анонсе контакт может появиться снова.",
+  "appSettings_ipfsImageLinks": "Настройки IPFS",
+  "appSettings_ipfsImageLinksSubtitle": "Загрузка изображений и файлов в IPFS, шлюз для просмотра ссылок",
+  "appSettings_publicIpfsGateway": "Шлюз для просмотра",
+  "appSettings_ipfsGatewayDeactivated": "Отключено",
+  "appSettings_ipfsGatewayIpfsIo": "ipfs.io",
+  "appSettings_ipfsGatewayPinata": "Pinata",
+  "appSettings_ipfsGatewayFilebase": "Filebase",
+  "appSettings_ipfsGatewayCustom": "Свой (Kubo)",
+  "appSettings_uploadIpfsProvider": "Сервис загрузки",
+  "appSettings_uploadIpfsGateway": "Шлюз для отправляемых ссылок",
+  "appSettings_uploadIpfsGatewaySubtitle": "Формирует ссылку на загруженное изображение или файл. Оставьте пустым для формата ipfs:, который поддерживают не все клиенты.",
+  "appSettings_uploadIpfsEndpoint": "Адрес API загрузки",
+  "appSettings_uploadIpfsEndpointSubtitle": "Адрес API, на который будут загружаться файлы",
+  "appSettings_uploadIpfsApiKey": "Ключ API загрузки",
+  "appSettings_ipfsImageLinksDescription": "Шлюз для просмотра используется для изображений по ссылкам ipfs:. Шлюз для отправляемых ссылок формирует адреса загруженных изображений и файлов.",
+  "chat_sendImageIpfs": "Отправить изображение или файл через IPFS",
+  "chat_ipfsUploadFailed": "Не удалось загрузить в IPFS: {error}",
+  "@chat_ipfsUploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chat_ipfsUploadNotConfigured": "Сначала настройте сервис загрузки IPFS в настройках приложения.",
+  "chat_ipfsSelectedFileEmpty": "Выбранный файл пуст.",
+  "chat_ipfsEndpointInvalid": "Адрес API загрузки IPFS должен начинаться с http:// или https://. Проверьте его в настройках приложения.",
+  "chat_ipfsPinataTokenMissing": "Для Pinata нужен ключ API или JWT. Укажите его в настройках приложения.",
+  "chat_ipfsFilebaseTokenMissing": "Для Filebase нужен токен API. Укажите его в настройках приложения.",
+  "chat_ipfsKuboPathInvalid": "Адрес API загрузки Kubo должен оканчиваться на /api/v0/add. Проверьте его в настройках приложения.",
+  "chat_ipfsLinkNoRoom": "Для ссылки недостаточно места. Сократите сообщение и попробуйте снова.",
+  "@chat_ipfsLinkNoRoom": {
+    "description": "Shown before an IPFS upload when the link would push the draft over the message size limit"
+  },
+  "chat_ipfsLinkOverLimit": "Ссылка добавлена, но сообщение слишком длинное. Сократите его перед отправкой.",
+  "@chat_ipfsLinkOverLimit": {
+    "description": "Shown after an IPFS upload when the link plus the draft no longer fits the message size limit"
+  }
 }

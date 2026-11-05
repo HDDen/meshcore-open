@@ -337,6 +337,11 @@ Future<void> _startApplication() async {
   // Initialize notification service
   _setStartupStage('MCO-STARTUP-104', 'Desktop services');
   final notificationService = NotificationService();
+  void syncPublicIpfsGateway() => notificationService.setPublicIpfsGateway(
+    appSettingsService.settings.publicIpfsGateway,
+  );
+  syncPublicIpfsGateway();
+  appSettingsService.addListener(syncPublicIpfsGateway);
   await notificationService.initialize();
   settingsSectionsService.setLicenseExpiryNotifier(
     locale: () {

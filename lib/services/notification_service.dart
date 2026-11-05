@@ -21,6 +21,7 @@ import '../helpers/legacy_notification_registry.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/windows_notification_identity.dart';
 import '../l10n/app_localizations.dart';
+import '../models/app_settings.dart';
 import '../storage/data_root.dart';
 import '../utils/app_logger.dart';
 import '../storage/prefs_manager.dart';
@@ -34,6 +35,12 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  String _publicIpfsGateway = AppSettings.defaultPublicIpfsGateway;
+
+  void setPublicIpfsGateway(String gateway) {
+    _publicIpfsGateway = gateway.trim();
+  }
 
   final _backgroundWork = NotificationBackgroundWork();
   // Serialize only battery show/cancel calls. A recovery/disconnect cancel
@@ -633,7 +640,7 @@ class NotificationService {
   }) async {
     if (!urlImagesEnabled) return null;
 
-    final imageUrl = await MessageUrlImageHelper.parseVerified(text);
+    final imageUrl = await MessageUrlImageHelper.parseVerified(text, publicGateway: _publicIpfsGateway);
     if (imageUrl == null) return null;
 
     try {

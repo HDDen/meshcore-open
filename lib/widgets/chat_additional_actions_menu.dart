@@ -90,6 +90,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   final VoidCallback onSendGif;
   final VoidCallback? onSendImage;
   final bool sendImageEnabled;
+  final VoidCallback? onSendIpfs;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
 
@@ -105,6 +106,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
     required this.onSendGif,
     this.onSendImage,
     this.sendImageEnabled = true,
+    this.onSendIpfs,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
   });
@@ -119,8 +121,11 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   }
 
   Future<void> _showActions(BuildContext context) async {
-    final sendImage = await showModalBottomSheet<bool>(
-      context: context,
+    final navigator = Navigator.of(context);
+    final route = ModalBottomSheetRoute<String>(
+      capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      modalBarrierColor: Theme.of(context).bottomSheetTheme.modalBarrierColor ?? Colors.black54,
       isScrollControlled: true,
       builder: (sheetContext) => ChatAdditionalActionsMenu(
         canvasActive: canvasActive,
@@ -153,8 +158,11 @@ class ChatAdditionalActionsButton extends StatelessWidget {
         onSendImage: onSendImage == null || !sendImageEnabled
             ? null
             : () {
-                Navigator.pop(sheetContext, true);
+                Navigator.pop(sheetContext, 'aeic');
               },
+        onSendIpfs: onSendIpfs == null
+            ? null
+            : () => Navigator.pop(sheetContext, 'ipfs'),
         onOpenCanvas: () {
           Navigator.pop(sheetContext);
           onOpenCanvas();
@@ -165,10 +173,14 @@ class ChatAdditionalActionsButton extends StatelessWidget {
         },
       ),
     );
+    final action = await navigator.push(route);
 
     // iOS cannot reliably present its media picker while this bottom sheet is
     // still being dismissed. Wait for the route to finish closing first.
-    if (sendImage == true) onSendImage?.call();
+    await route.completed;
+    if (!context.mounted) return;
+    if (action == 'aeic') onSendImage?.call();
+    if (action == 'ipfs') onSendIpfs?.call();
   }
 }
 
@@ -182,6 +194,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
   final VoidCallback onOpenQuickAnswers;
   final VoidCallback onSendGif;
   final bool showSendImage;
+  final VoidCallback? onSendIpfs;
   final VoidCallback? onSendImage;
   final VoidCallback onOpenCanvas;
   final VoidCallback onOpenMcoImageGallery;
@@ -197,6 +210,7 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
     required this.onOpenQuickAnswers,
     required this.onSendGif,
     this.showSendImage = false,
+    this.onSendIpfs,
     this.onSendImage,
     required this.onOpenCanvas,
     required this.onOpenMcoImageGallery,
@@ -253,6 +267,12 @@ class ChatAdditionalActionsMenu extends StatelessWidget {
                       onTap: onSendImage,
                     ),
                 ],
+                if (!offlineMode && onSendIpfs != null)
+                  ListTile(
+                    leading: const Icon(Icons.cloud_upload_outlined),
+                    title: Text(context.l10n.chat_sendImageIpfs),
+                    onTap: onSendIpfs,
+                  ),
                 if (canvasActive) ...[
                   ListTile(
                     leading: const Icon(Icons.brush_outlined),

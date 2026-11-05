@@ -268,6 +268,26 @@ Enable URL images per contact in Chat → overflow → Contact Settings, or per 
 
 The message sends a reference; image retrieval needs internet access and makes requests to the relevant host or gateway. This differs from [image packets transmitted over the mesh](image-messages.md). With previews disabled, the chat may indicate that a message contains a possible image URL.
 
+## Share an Image via IPFS
+
+1. Configure **App Settings → IPFS provider configuration**. Choose Pinata, Filebase, or **Custom (Kubo)** for self hosted or other, then set the upload endpoint, upload gateway, and any required API key. See [IPFS provider configuration](settings.md#ipfs-provider-configuration).
+2. In a direct or channel chat, open the composer’s **+** menu and choose **Send image or file via IPFS**.
+3. Pick an image or file. The app uploads it to the configured provider and inserts the resulting link into the draft. When an upload gateway is configured, the link is `http://gateway/ipfs/CID`; otherwise it is `ipfs://CID`. Review or edit the draft, then send it as a normal text message; uploading does not send the chat message automatically.
+
+Uploads and image previews need internet access. The file is stored with the selected provider; the mesh carries only the text link, not the file bytes. IPFS content is publicly addressable, so only upload content suitable for sharing publicly. A recipient needs internet access and a working IPFS gateway to retrieve it.
+
+The app never shortens your draft to make room. If the estimated link does not
+fit, shorten the draft before selecting a file. If the draft or returned link
+changes during upload, the full text and link are kept with an over-limit warning.
+The editable quote header remains at the beginning of a reply. Review the draft
+and press Send yourself; the upload does not transmit a mesh message.
+
+Uploads accept files up to 32 MiB and run only from the attachment action.
+Each upload or Kubo MFS request has a 60-second timeout and is not automatically
+retried. Only one upload can be active in each chat screen. Opening settings,
+starting the app, or browsing messages does not upload files. Existing per-chat
+URL preview switches still control downloads; mesh AEIC/MCOimg are independent.
+
 ## Regions, Mesh Images, and Radio Statistics
 
 See [Regions](regions.md) for default scopes, per-message labels, and reply-region inheritance; [Image Messages](image-messages.md) for model installation and reconstruction; and [Companion Radio Statistics](radio-statistics.md) for connected-radio measurements.

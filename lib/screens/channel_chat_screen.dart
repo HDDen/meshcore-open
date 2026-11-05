@@ -43,6 +43,7 @@ import '../helpers/mention_autocomplete.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/message_url_image_helper.dart';
+import '../helpers/ipfs_link_attach_flow.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../helpers/quick_answers_helper.dart';
 import '../helpers/path_helper.dart';
@@ -229,6 +230,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   late DateFormat _hmFormat;
   late DateFormat _hmsFormat;
   late DateFormat _mdFormat;
+
+  bool _ipfsUploading = false;
 
   String get _composerDraftKey =>
       ComposerDraftCache.channelKey(widget.channel.index);
@@ -2143,6 +2146,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         else ...[
                           if (urlImagesEnabled)
                             MessageUrlImageFutureBuilder(
+                              publicGateway: context.read<AppSettingsService>().settings.publicIpfsGateway,
                               messageId: message.messageId,
                               text: bodyText,
                               builder: (context, snapshot) {
@@ -3909,6 +3913,44 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  Future<void> _attachIpfsLink(MeshCoreConnector connector) async {
+    if (_ipfsUploading || connector.isOfflineMode || !connector.isConnected) return;
+    setState(() => _ipfsUploading = true);
+    try {
+      final settings = context.read<AppSettingsService>().settings;
+      bool draftFits(String draft) {
+        // Reply/compression settings may change while the picker/upload is open.
+        _composerEncodingMemo = null;
+        final encoding = _composerEncoding(connector, draft.trim(), usesChannelEncoding: true);
+        final currentSettings = context.read<AppSettingsService>().settings;
+        final bytes = encoding.binaryPayloadBytes ?? utf8.encode(encoding.outboundText).length;
+        final limit = encoding.binaryPayloadBytes == null
+            ? _maxChannelInputBytes(connector, currentSettings)
+            : _maxChannelBinaryPayloadBytes(currentSettings);
+        return bytes <= limit;
+      }
+      await attachIpfsLinkToDraft(
+        context: context,
+        controller: _textController,
+        focusNode: _textFieldFocusNode,
+        maxBytes: _maxChannelInputBytes(connector, settings),
+        encodeOutbound: (text) => text,
+        draftFits: draftFits,
+        composeDraft: (link, draft) {
+          // Keep the editable exact-quote header at the beginning of the
+          // composer; only its body receives the uploaded link.
+          final prefix = _composerReply(draft)?.prefix ?? '';
+          return '$prefix${composeIpfsLinkDraft(
+            messageUrl: link,
+            existingText: draft.substring(prefix.length),
+          )}';
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _ipfsUploading = false);
+    }
+  }
+
   Future<void> _showMcoImageGallery(int maxTextChars) async {
     final result = await showModalBottomSheet<MCOImageGalleryResult>(
       context: context,
@@ -4358,6 +4400,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         unawaited(_pickAndInsertLocationFromMap()),
                     onOpenQuickAnswers: _showQuickAnswersPicker,
                     onSendGif: () => _showGifPicker(context),
+                    onSendIpfs: settings.uploadIpfsEndpoint.trim().isNotEmpty && !_ipfsUploading
+                        ? () => unawaited(_attachIpfsLink(connector))
+                        : null,
                     onSendImage:
                         kImageCodecFeatureAvailable &&
                             settings.imageMessagesEnabled &&

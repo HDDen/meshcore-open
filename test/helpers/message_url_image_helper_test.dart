@@ -48,28 +48,44 @@ void main() {
       );
     });
 
-    test('parses direct ipfs cid urls', () async {
-      final attachment = await MessageUrlImageHelper.parse(
-        'my picture: ipfs://bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly text',
-      );
-
-      expect(attachment, isNotNull);
+    test('resolves ipfs cid links with the default ipfs.io gateway', () async {
       expect(
-        attachment,
+        await MessageUrlImageHelper.parse(
+          'my picture: ipfs://bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly text',
+        ),
+        'https://ipfs.io/ipfs/bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
+      );
+      expect(
+        await MessageUrlImageHelper.parse(
+          'my picture: ipfs:bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly text',
+        ),
         'https://ipfs.io/ipfs/bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
       );
     });
 
-    test('parses direct ipfs cid urls without double slashes', () async {
+    test('uses the configured public gateway for direct ipfs cid urls', () async {
       final attachment = await MessageUrlImageHelper.parse(
-        'my picture: ipfs:bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly text',
+        'ipfs://bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
+        publicGateway: 'https://gateway.example.com',
       );
 
       expect(
         attachment,
-        'https://ipfs.io/ipfs/bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
+        'https://gateway.example.com/ipfs/bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
       );
     });
+
+    test(
+      'does not resolve ipfs cid links when the download gateway is empty',
+      () async {
+        final attachment = await MessageUrlImageHelper.parse(
+          'ipfs://bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly',
+          publicGateway: '',
+        );
+
+        expect(attachment, isNull);
+      },
+    );
 
     test('parses http image urls', () async {
       final attachment = await MessageUrlImageHelper.parse(

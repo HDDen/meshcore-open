@@ -487,6 +487,68 @@ Future<void> main() async {
       expect(settings.maxMessageRetries, equals(8));
     });
 
+    test('public IPFS gateway defaults to ipfs.io when never set', () {
+      expect(
+        AppSettings.fromJson({}).publicIpfsGateway,
+        'https://ipfs.io/ipfs/',
+      );
+      expect(AppSettings().publicIpfsGateway, 'https://ipfs.io/ipfs/');
+    });
+
+    test('IPFS settings survive a service restart and unrelated edits', () async {
+      final service = AppSettingsService();
+      final reopened = AppSettingsService();
+      addTearDown(service.dispose);
+      addTearDown(reopened.dispose);
+      await service.loadSettings();
+      final original = service.settings.toJson();
+      await service.setIpfsImageSettings(
+        publicGateway: ' chosen.example ',
+        uploadGateway: '',
+        uploadEndpoint: ' https://kubo.example/api/v0/add ',
+        uploadApiKey: ' synthetic-key ',
+      );
+      await reopened.loadSettings();
+      expect(reopened.settings.publicIpfsGateway, 'https://chosen.example/ipfs/');
+      expect(reopened.settings.uploadIpfsGateway, isEmpty);
+      expect(reopened.settings.uploadIpfsEndpoint, 'https://kubo.example/api/v0/add');
+      expect(reopened.settings.uploadIpfsApiKey, 'synthetic-key');
+      final saved = reopened.settings.toJson();
+      for (final entry in original.entries) {
+        if (!entry.key.contains('ipfs')) {
+          expect(saved[entry.key], entry.value, reason: entry.key);
+        }
+      }
+      final copied = reopened.settings.copyWith(jumpToOldestUnread: true);
+      expect(copied.uploadIpfsApiKey, 'synthetic-key');
+      expect(copied.publicIpfsGateway, reopened.settings.publicIpfsGateway);
+    });
+
+    test('public IPFS gateway keeps a saved empty value as deactivated', () {
+      final saved = AppSettings(publicIpfsGateway: '').toJson();
+      expect(AppSettings.fromJson(saved).publicIpfsGateway, isEmpty);
+    });
+
+    test('public IPFS gateway keeps saved ipfs.io and dweb.link values', () {
+      for (final gateway in [
+        'https://ipfs.io/ipfs/',
+        'https://dweb.link/ipfs/',
+        'https://gateway.example.com/ipfs/',
+      ]) {
+        final saved = AppSettings(publicIpfsGateway: gateway).toJson();
+        expect(AppSettings.fromJson(saved).publicIpfsGateway, gateway);
+      }
+    });
+
+    test('empty upload gateway does not fall back to the download gateway', () {
+      final settings = AppSettings(
+        publicIpfsGateway: 'https://gateway.example.com/ipfs/',
+        uploadIpfsGateway: '',
+      );
+
+      expect(settings.effectiveUploadIpfsGateway, isEmpty);
+    });
+
     test(
       'fromJson with missing new fields uses defaults (backward compat)',
       () {

@@ -11,6 +11,7 @@ import '../config/build_features.dart';
 import '../helpers/image_codec_installation.dart';
 import '../helpers/link_handler.dart';
 import '../l10n/l10n.dart';
+import '../widgets/ipfs_image_links_dialog.dart';
 import '../models/app_settings.dart';
 import '../models/image_codec_support.dart';
 import '../models/translation_support.dart';
@@ -805,6 +806,17 @@ class AppSettingsScreen extends StatelessWidget {
         _buildMcmpTextLimitCard(context, settingsService),
         const Divider(height: 1, indent: 16),
         _buildDoNotFilterChannelsCard(context, settingsService),
+        const Divider(height: 1, indent: 16),
+        ListTile(
+          leading: const Icon(Icons.cloud_upload_outlined),
+          title: Text(context.l10n.appSettings_ipfsImageLinks),
+          subtitle: Text(context.l10n.appSettings_ipfsImageLinksSubtitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (_) => IpfsImageLinksDialog(settingsService: settingsService),
+          ),
+        ),
         if (kImageCodecFeatureAvailable) ...[
           const Divider(height: 1, indent: 16),
           _ScrollIntoViewOnce(

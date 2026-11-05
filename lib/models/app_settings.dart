@@ -4,6 +4,20 @@ import 'power_saving_settings.dart';
 import 'low_battery_alert_settings.dart';
 import '../helpers/cyr2lat.dart';
 
+String normalizeIpfsGateway(String value) {
+  var gateway = value.trim();
+  if (gateway.isEmpty) return gateway;
+  if (!gateway.startsWith('http://') && !gateway.startsWith('https://')) {
+    gateway = 'https://$gateway';
+  }
+  gateway = gateway.replaceAll('{cid}', '');
+  if (gateway.endsWith('/ipfs')) gateway = '$gateway/';
+  if (!gateway.endsWith('/ipfs/')) {
+    gateway = '${gateway.endsWith('/') ? gateway : '$gateway/'}ipfs/';
+  }
+  return gateway;
+}
+
 enum UnitSystem { metric, imperial }
 
 enum ChannelNotificationMode { all, mentionsOnly, muted }
@@ -179,6 +193,7 @@ class AppSettings {
     'cyrillic_extended',
     'cyrillic_transliteration',
   ];
+  static const String defaultPublicIpfsGateway = 'https://ipfs.io/ipfs/';
   static const String stadiaDemo = '51bd0381-4685-4666-bae8-48940f6d77c0';
 
   final bool clearPathOnMaxRetry;
@@ -377,6 +392,10 @@ class AppSettings {
   final String tcpServerWifiSsid;
   final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
+  final String publicIpfsGateway;
+  final String uploadIpfsGateway;
+  final String uploadIpfsEndpoint;
+  final String uploadIpfsApiKey;
   final bool imageMessagesEnabled;
 
   /// Opt-in upload of header-only packet records to the network map.
@@ -688,6 +707,8 @@ class AppSettings {
     return apiKey;
   }
 
+  String get effectiveUploadIpfsGateway => uploadIpfsGateway.trim();
+
   bool get usesstadiaDemo => effectiveMapTileApiKey == stadiaDemo;
 
   /// Yandex ships no demo key — Tiles API answers nothing without one, so an
@@ -813,6 +834,10 @@ class AppSettings {
     this.tcpServerWifiSsid = '',
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
+    this.publicIpfsGateway = defaultPublicIpfsGateway,
+    this.uploadIpfsGateway = '',
+    this.uploadIpfsEndpoint = '',
+    this.uploadIpfsApiKey = '',
     this.imageMessagesEnabled = false,
     this.networkMapUploadEnabled = false,
     this.networkMapPromptShown = false,
@@ -985,6 +1010,10 @@ class AppSettings {
           .map((bookmark) => bookmark.toJson())
           .toList(),
       'jump_to_oldest_unread': jumpToOldestUnread,
+      'public_ipfs_gateway': publicIpfsGateway,
+      'upload_ipfs_gateway': uploadIpfsGateway,
+      'upload_ipfs_endpoint': uploadIpfsEndpoint,
+      'upload_ipfs_api_key': uploadIpfsApiKey,
       'image_messages_enabled': imageMessagesEnabled,
       'network_map_upload_enabled': networkMapUploadEnabled,
       'network_map_prompt_shown': networkMapPromptShown,
@@ -1240,6 +1269,10 @@ class AppSettings {
               .toList() ??
           const [],
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
+      publicIpfsGateway: json['public_ipfs_gateway'] as String? ?? defaultPublicIpfsGateway,
+      uploadIpfsGateway: json['upload_ipfs_gateway'] as String? ?? '',
+      uploadIpfsEndpoint: json['upload_ipfs_endpoint'] as String? ?? '',
+      uploadIpfsApiKey: json['upload_ipfs_api_key'] as String? ?? '',
       imageMessagesEnabled: json['image_messages_enabled'] as bool? ?? false,
       networkMapUploadEnabled:
           json['network_map_upload_enabled'] as bool? ?? false,
@@ -1428,6 +1461,10 @@ class AppSettings {
     String? tcpServerWifiSsid,
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
+    String? publicIpfsGateway,
+    String? uploadIpfsGateway,
+    String? uploadIpfsEndpoint,
+    String? uploadIpfsApiKey,
     bool? imageMessagesEnabled,
     bool? networkMapUploadEnabled,
     bool? networkMapPromptShown,
@@ -1624,6 +1661,10 @@ class AppSettings {
       tcpConnectionBookmarks:
           tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
+      publicIpfsGateway: publicIpfsGateway ?? this.publicIpfsGateway,
+      uploadIpfsGateway: uploadIpfsGateway ?? this.uploadIpfsGateway,
+      uploadIpfsEndpoint: uploadIpfsEndpoint ?? this.uploadIpfsEndpoint,
+      uploadIpfsApiKey: uploadIpfsApiKey ?? this.uploadIpfsApiKey,
       imageMessagesEnabled: imageMessagesEnabled ?? this.imageMessagesEnabled,
       networkMapUploadEnabled:
           networkMapUploadEnabled ?? this.networkMapUploadEnabled,
