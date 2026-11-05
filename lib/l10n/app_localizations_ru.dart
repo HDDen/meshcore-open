@@ -8998,4 +8998,92 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get contacts_removeAutoAddNote =>
       'На ноде включено автоматическое добавление контактов этого типа. При следующем анонсе контакт может появиться снова.';
+
+  @override
+  String get appSettings_ipfsImageLinks => 'Настройки IPFS';
+
+  @override
+  String get appSettings_ipfsImageLinksSubtitle =>
+      'Загрузка изображений и файлов в IPFS, шлюз для просмотра ссылок';
+
+  @override
+  String get appSettings_publicIpfsGateway => 'Шлюз для просмотра';
+
+  @override
+  String get appSettings_ipfsGatewayDeactivated => 'Отключено';
+
+  @override
+  String get appSettings_ipfsGatewayIpfsIo => 'ipfs.io';
+
+  @override
+  String get appSettings_ipfsGatewayPinata => 'Pinata';
+
+  @override
+  String get appSettings_ipfsGatewayFilebase => 'Filebase';
+
+  @override
+  String get appSettings_ipfsGatewayCustom => 'Свой (Kubo)';
+
+  @override
+  String get appSettings_uploadIpfsProvider => 'Сервис загрузки';
+
+  @override
+  String get appSettings_uploadIpfsGateway => 'Шлюз для отправляемых ссылок';
+
+  @override
+  String get appSettings_uploadIpfsGatewaySubtitle =>
+      'Формирует ссылку на загруженное изображение или файл. Оставьте пустым для формата ipfs:, который поддерживают не все клиенты.';
+
+  @override
+  String get appSettings_uploadIpfsEndpoint => 'Адрес API загрузки';
+
+  @override
+  String get appSettings_uploadIpfsEndpointSubtitle =>
+      'Адрес API, на который будут загружаться файлы';
+
+  @override
+  String get appSettings_uploadIpfsApiKey => 'Ключ API загрузки';
+
+  @override
+  String get appSettings_ipfsImageLinksDescription =>
+      'Шлюз для просмотра используется для изображений по ссылкам ipfs:. Шлюз для отправляемых ссылок формирует адреса загруженных изображений и файлов.';
+
+  @override
+  String get chat_sendImageIpfs => 'Отправить изображение или файл через IPFS';
+
+  @override
+  String chat_ipfsUploadFailed(String error) {
+    return 'Не удалось загрузить в IPFS: $error';
+  }
+
+  @override
+  String get chat_ipfsUploadNotConfigured =>
+      'Сначала настройте сервис загрузки IPFS в настройках приложения.';
+
+  @override
+  String get chat_ipfsSelectedFileEmpty => 'Выбранный файл пуст.';
+
+  @override
+  String get chat_ipfsEndpointInvalid =>
+      'Адрес API загрузки IPFS должен начинаться с http:// или https://. Проверьте его в настройках приложения.';
+
+  @override
+  String get chat_ipfsPinataTokenMissing =>
+      'Для Pinata нужен ключ API или JWT. Укажите его в настройках приложения.';
+
+  @override
+  String get chat_ipfsFilebaseTokenMissing =>
+      'Для Filebase нужен токен API. Укажите его в настройках приложения.';
+
+  @override
+  String get chat_ipfsKuboPathInvalid =>
+      'Адрес API загрузки Kubo должен оканчиваться на /api/v0/add. Проверьте его в настройках приложения.';
+
+  @override
+  String get chat_ipfsLinkNoRoom =>
+      'Для ссылки недостаточно места. Сократите сообщение и попробуйте снова.';
+
+  @override
+  String get chat_ipfsLinkOverLimit =>
+      'Ссылка добавлена, но сообщение слишком длинное. Сократите его перед отправкой.';
 }

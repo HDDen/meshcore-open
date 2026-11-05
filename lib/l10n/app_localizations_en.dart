@@ -8881,4 +8881,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contacts_removeAutoAddNote =>
       'Your radio auto-adds this contact type, so it will come back the next time it advertises. Turn off auto-add in Contacts settings to keep it removed.';
+
+  @override
+  String get appSettings_ipfsImageLinks => 'IPFS provider configuration';
+
+  @override
+  String get appSettings_ipfsImageLinksSubtitle =>
+      'Upload for url Images (or Files) via IPFS provider and default gateway to receive';
+
+  @override
+  String get appSettings_publicIpfsGateway => 'Public gateway';
+
+  @override
+  String get appSettings_ipfsGatewayDeactivated => 'Deactivated';
+
+  @override
+  String get appSettings_ipfsGatewayIpfsIo => 'ipfs.io';
+
+  @override
+  String get appSettings_ipfsGatewayPinata => 'Pinata';
+
+  @override
+  String get appSettings_ipfsGatewayFilebase => 'Filebase';
+
+  @override
+  String get appSettings_ipfsGatewayCustom => 'Custom (Kubo)';
+
+  @override
+  String get appSettings_uploadIpfsProvider => 'Upload provider';
+
+  @override
+  String get appSettings_uploadIpfsGateway => 'Upload gateway';
+
+  @override
+  String get appSettings_uploadIpfsGatewaySubtitle =>
+      'Gateway to share Image or File as url-link. Leave empty to use ipfs: format, which may not be opened by other clients.';
+
+  @override
+  String get appSettings_uploadIpfsEndpoint => 'Upload endpoint';
+
+  @override
+  String get appSettings_uploadIpfsEndpointSubtitle =>
+      'The API endpoint used to upload files';
+
+  @override
+  String get appSettings_uploadIpfsApiKey => 'Upload API key';
+
+  @override
+  String get appSettings_ipfsImageLinksDescription =>
+      'Public gateway downloads ipfs: format images. Upload gateway is used to generate share links for uploaded url images or files.';
+
+  @override
+  String get chat_sendImageIpfs => 'Send image or file via IPFS';
+
+  @override
+  String chat_ipfsUploadFailed(String error) {
+    return 'IPFS upload failed: $error';
+  }
+
+  @override
+  String get chat_ipfsUploadNotConfigured =>
+      'Configure an IPFS upload provider in App Settings first.';
+
+  @override
+  String get chat_ipfsSelectedFileEmpty => 'The selected file is empty.';
+
+  @override
+  String get chat_ipfsEndpointInvalid =>
+      'The IPFS upload endpoint must be a full http:// or https:// address. Check it in App Settings.';
+
+  @override
+  String get chat_ipfsPinataTokenMissing =>
+      'Pinata needs an API key or JWT. Add it in App Settings.';
+
+  @override
+  String get chat_ipfsFilebaseTokenMissing =>
+      'Filebase needs an API token. Add it in App Settings.';
+
+  @override
+  String get chat_ipfsKuboPathInvalid =>
+      'The Kubo upload endpoint must end with /api/v0/add. Check it in App Settings.';
+
+  @override
+  String get chat_ipfsLinkNoRoom =>
+      'Not enough room for the image link. Shorten your message, then try again.';
+
+  @override
+  String get chat_ipfsLinkOverLimit =>
+      'Image link added, but the message is now too long. Shorten it before sending.';
 }
