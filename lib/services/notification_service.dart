@@ -638,15 +638,15 @@ class NotificationService {
     String text, {
     required bool urlImagesEnabled,
   }) async {
-    if (!urlImagesEnabled) return null;
+    if (!urlImagesEnabled || !MessageUrlImageHelper.loadLinkImages.value) return null;
 
     final imageUrl = await MessageUrlImageHelper.parseVerified(text, publicGateway: _publicIpfsGateway);
-    if (imageUrl == null) return null;
+    if (imageUrl == null || !MessageUrlImageHelper.loadLinkImages.value) return null;
 
     try {
       // Cache the image so notification platforms can read it from disk.
       final imageFile = await DefaultCacheManager().getSingleFile(imageUrl);
-      if (!imageFile.existsSync()) return null;
+      if (!MessageUrlImageHelper.loadLinkImages.value || !imageFile.existsSync()) return null;
       return imageFile.path;
     } catch (e) {
       debugPrint('Failed to resolve notification image: $e');

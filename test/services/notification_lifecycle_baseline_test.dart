@@ -5,6 +5,9 @@ import 'dart:ui' show Locale;
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:meshcore_open/helpers/message_url_image_helper.dart';
 import 'package:meshcore_open/services/notification_reply.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/data_root.dart';
@@ -249,6 +252,43 @@ void main() {
         }, timeout: timeout);
       }
     }
+
+    testWidgets('master off keeps text notifications without link-image requests', (tester) async {
+      await _withNotification(tester, (h) async {
+        var requests = 0;
+        var verifications = 0;
+        final client = MockClient((_) async {
+          requests++;
+          return http.Response('', 503);
+        });
+        final oldPolicy = MessageUrlImageHelper.loadLinkImages.value;
+        final oldClient = MessageUrlImageHelper.httpClient;
+        final oldVerifier = MessageUrlImageHelper.verifyImageForTest;
+        MessageUrlImageHelper.httpClient = client;
+        MessageUrlImageHelper.verifyImageForTest = (_) async {
+          verifications++;
+          return true;
+        };
+        MessageUrlImageHelper.loadLinkImages.value = false;
+        try {
+          final result = _Result(h.service.showMessageNotification(
+            contactName: 'synthetic sender', contactId: 'synthetic-contact',
+            message: 'https://ibb.co/example', urlImagesEnabled: true,
+          ));
+          await tester.pump();
+          expect(result.completed, isTrue);
+          expect(result.error, isNull);
+          expect(h.plugin.shown, hasLength(1));
+          expect(requests, 0);
+          expect(verifications, 0);
+        } finally {
+          MessageUrlImageHelper.httpClient = oldClient;
+          MessageUrlImageHelper.verifyImageForTest = oldVerifier;
+          MessageUrlImageHelper.loadLinkImages.value = oldPolicy;
+          client.close();
+        }
+      });
+    }, timeout: timeout);
 
     testWidgets('suppression skips every show entrypoint', (tester) async {
       await _withNotification(tester, (h) async {

@@ -298,14 +298,18 @@ class ChannelSettingsStore with ChannelNameKeyedStore {
         write: PrefsManager.instance.setStringList,
       );
 
-  Future<bool> loadUrlImagesEnabled(int channelIndex) async =>
+  /// Includes the fork's name/alias/foreign-node inheritance. Only a genuinely
+  /// absent choice falls back to the app-wide default in the connector.
+  Future<bool?> loadUrlImagesChoice(int channelIndex) async =>
       await _loadValue<bool>(
         nameKeyPrefix: keyForUrlImages,
         channelIndex: channelIndex,
         read: PrefsManager.instance.getBool,
         write: PrefsManager.instance.setBool,
-      ) ??
-      false;
+      );
+
+  Future<bool> loadUrlImagesEnabled(int channelIndex) async =>
+      await loadUrlImagesChoice(channelIndex) ?? false;
 
   Future<void> saveUrlImagesEnabled(int channelIndex, bool enabled) =>
       _saveValue<bool>(

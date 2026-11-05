@@ -754,7 +754,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, bool> _channelMCOtxtPlainWhenSmaller = {};
   final Map<int, bool> _channelSmazEnabled = {};
   final Map<int, bool> _channelCyr2LatEnabled = {};
-  final Map<int, bool> _channelUrlImagesEnabled = {};
+  final Map<int, bool?> _channelUrlImagesEnabled = {};
   final Map<int, String?> _channelCyr2LatProfileId = {};
   final Map<int, int?> _channelWidgetColor = {};
   final Map<int, int?> _channelWidgetTextColor = {};
@@ -775,7 +775,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<String, bool> _contactMCOtxtPlainWhenSmaller = {};
   final Map<String, bool> _contactSmazEnabled = {};
   final Map<String, bool> _contactCyr2LatEnabled = {};
-  final Map<String, bool> _contactUrlImagesEnabled = {};
+  final Map<String, bool?> _contactUrlImagesEnabled = {};
   final Map<String, String?> _contactCyr2LatProfileId = {};
   final Map<String, bool> _contactSendingDelayEnabled = {};
   final Map<String, List<String>> _contactQuickAnswerIds = {};
@@ -2950,13 +2950,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         trimmed == channelSenderName(channelIndex);
   }
 
+  bool _lastShowLinkImagesByDefault = false;
+
+  bool get _showLinkImagesByDefault =>
+      _appSettingsService?.settings.showLinkImagesByDefault ?? false;
+
+  void _syncLinkImageDefaults() {
+    final next = _showLinkImagesByDefault;
+    if (next == _lastShowLinkImagesByDefault) return;
+    _lastShowLinkImagesByDefault = next;
+    notifyListeners();
+  }
+
   bool isChannelUrlImagesEnabled(int channelIndex) {
-    return _channelUrlImagesEnabled[channelIndex] ?? false;
+    return _channelUrlImagesEnabled[channelIndex] ?? _showLinkImagesByDefault;
   }
 
   bool isContactUrlImagesEnabled(String contactKeyHex) {
     _ensureContactUrlImagesSettingLoaded(contactKeyHex);
-    return _contactUrlImagesEnabled[contactKeyHex] ?? false;
+    return _contactUrlImagesEnabled[contactKeyHex] ?? _showLinkImagesByDefault;
   }
 
   bool isChannelMCOtxtEnabled(int channelIndex) {
@@ -4111,7 +4123,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _appSettingsService?.removeListener(_syncLowBatteryAlertOptions);
+    _appSettingsService?.removeListener(_syncLinkImageDefaults);
     _appSettingsService = appSettingsService;
+    _lastShowLinkImagesByDefault = _showLinkImagesByDefault;
     _appSettingsService?.addListener(_syncLowBatteryAlertOptions);
     _syncLowBatteryAlertOptions();
     _syncPowerSavingSettings();
@@ -4267,6 +4281,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleAppSettingsChanged() {
+    _syncLinkImageDefaults();
     _syncPowerSavingSettings();
     final settings = _appSettingsService?.settings;
     _syncBackgroundTcpService();
@@ -4544,7 +4559,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final cyr2LatEnabled = await channelSettingsStore.loadCyr2LatEnabled(
       channelIndex,
     );
-    final urlImagesEnabled = await channelSettingsStore.loadUrlImagesEnabled(
+    final urlImagesEnabled = await channelSettingsStore.loadUrlImagesChoice(
       channelIndex,
     );
     final sendingDelayEnabled = await channelSettingsStore
@@ -6012,7 +6027,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void attachAppSettingsServiceForTest(AppSettingsService service) {
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _appSettingsService?.removeListener(_syncLowBatteryAlertOptions);
+    _appSettingsService?.removeListener(_syncLinkImageDefaults);
     _appSettingsService = service;
+    _lastShowLinkImagesByDefault = _showLinkImagesByDefault;
+    service.addListener(_syncLinkImageDefaults);
     service.addListener(_syncLowBatteryAlertOptions);
     _syncLowBatteryAlertOptions();
     service.addListener(_syncPowerSavingSettings);
@@ -14134,7 +14152,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _contactCyr2LatEnabled[contactKeyHex] = settings.cyr2LatEnabled;
     _contactSendingDelayEnabled[contactKeyHex] = settings.sendingDelayEnabled;
     _contactQuickAnswerIds[contactKeyHex] = settings.quickAnswerIds;
-    _contactUrlImagesEnabled[contactKeyHex] = settings.urlImagesEnabled;
+    // Keep compatibility with old true snapshots without turning their false
+    // default into an explicit off. The store supplies the nullable SQL choice.
+    _contactUrlImagesEnabled[contactKeyHex] = settings.urlImagesChoice ??
+        (settings.urlImagesEnabled ? true : null);
     _contactCyr2LatProfileId[contactKeyHex] = settings.cyr2LatProfileId;
     // Preserve the existing one-time SMAZ legacy-key migration. Its async
     // result never writes back into this cache, so it cannot undo a user edit.
@@ -19354,6 +19375,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     _companionCli?.dispose();
+    _appSettingsService?.removeListener(_syncLinkImageDefaults);
     if (PlatformInfo.isIOS) {
       WidgetsBinding.instance.removeObserver(this);
     }

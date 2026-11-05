@@ -264,7 +264,13 @@ On Android, a foreground service (`background_service.dart`) keeps the BLE conne
 
 ## URL Image Previews
 
-Enable URL images per contact in Chat → overflow → Contact Settings, or per channel in Channels → long-press (right-click on desktop) → Edit. Supported references include direct PNG/JPEG/WebP URLs, pyx.li links, ibb.co sharing pages, and IPFS references/gateway URLs.
+First enable **App Settings → Load images from links**, then enable URL images per contact in Chat → overflow → Contact Settings, or per channel in Channels → long-press (right-click on desktop) → Edit. Supported references include direct PNG/JPEG/WebP URLs, pyx.li links, ibb.co sharing pages, and IPFS references/gateway URLs.
+
+App Settings → **Load images from links** can disable these downloads globally,
+including notification images. It starts off; saved individual choices are preserved.
+The optional **Show link images in all chats by default** applies only where no
+choice is saved. Explicit off stays off, including settings inherited through
+channel renames or other node scopes. See [Images from Links](settings.md#images-from-links).
 
 The message sends a reference; image retrieval needs internet access and makes requests to the relevant host or gateway. This differs from [image packets transmitted over the mesh](image-messages.md). With previews disabled, the chat may indicate that a message contains a possible image URL.
 

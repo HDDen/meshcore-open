@@ -2848,6 +2848,35 @@ is active; saving the radio dialog cannot revert an externally changed width.
 
 An image link in an ordinary text message can be shown as a picture (`helpers/message_url_image_helper.dart`, from upstream): direct `.png` / `.jpg` / `.webp` links, `pyx.li`, `ibb.co` share pages and IPFS paths or CIDs, share pages being resolved over HTTP and every image checked before it is drawn. It is off by default and switched per contact (the contact settings dialog in `chat_screen.dart`) and per channel (`widgets/channel_edit_sheet.dart`), stored by `contact_settings_store` / `channel_settings_store` (`loadUrlImagesEnabled` / `saveUrlImagesEnabled`, the channel flag keyed by name like the other channel settings). With the flag off a bubble with such a link shows the `urlImage_possible` hint instead. Both bubbles read `bodyText`, so a blocked sender's message never fetches anything, and notifications attach the picture only where the flag is on, waiting at most five seconds for it. This is apart from the images sent over the mesh (MCOimg, AEIC), which never touch the network.
 
+#### Global link-image policy (U08b1)
+
+`AppSettings.loadLinkImages` and `showLinkImagesByDefault` both default false.
+The helper also starts disabled before settings are applied. An absent JSON
+master key means false; an already saved true or false is preserved.
+The first blocks downloads globally;
+the second is a fallback only where no per-chat setting exists. Neither rewrites
+individual choices. Channel editor saves URL choice only after an actual edit,
+including a toggle back to its original value; unrelated saves preserve unset.
+
+Contact SQLite storage/schema remain unchanged. `loadUrlImagesChoice` and
+`ContactSettingsSnapshot.urlImagesChoice` carry null/false/true from the existing
+row/cache; the old bool loaders and snapshot member retain compatibility. Channel
+choice uses the existing name/alias/foreign-scope lookup. Connector caches retain
+null until resolving against the global default, with no SQL IO in getters.
+Its existing settings listener emits a batched update only when that default
+changes; the plugin-free test attachment removes its separate listener on dispose.
+
+Main mirrors the master switch into `MessageUrlImageHelper.loadLinkImages`.
+Switch changes clear the small lookup caches and advance a generation; async
+page/verification results from earlier generations cannot initiate further image
+verification or return a preview. Pending IO is not forcibly aborted. Active
+preview widgets listen only to policy changes, remove their listener on dispose,
+and hide old FutureBuilder snapshots immediately while disabled. Bubbles create
+these widgets only for supported URLs in their filtered bodyText, not every text
+row; channels reuse the existing parsed-content flag. Notification downloads
+check the master before and after async resolution/cache download. No polling
+was added, and explicit IPFS uploads and AEIC/MCOimg remain independent.
+
 ### IPFS attachments (U08a)
 
 The IPFS settings dialog is `widgets/ipfs_image_links_dialog.dart`; its four

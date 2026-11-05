@@ -184,6 +184,21 @@ Not shown on web. Controls on-device message translation powered by a locally-do
 
 The auto-translate and composer toggles are disabled until **Enable translation** is on.
 
+### Images from Links
+
+- **Load images from links** is the master switch, disabled by default. Turning
+  it off blocks new sharing-page and image downloads in chats and notifications.
+  Per-chat controls become disabled but keep their saved values.
+- **Show link images in all chats by default** starts off. When enabled, it
+  applies only to chats without a saved choice. Explicit on/off values keep
+  priority; channel aliases and inherited settings from other nodes also remain
+  effective. Merely opening/saving the channel editor does not create a choice.
+
+Changing the master switch does not clear the default or individual choices.
+A request that already started may finish, but its obsolete result is ignored.
+Image/file uploads explicitly requested through IPFS and mesh AEIC/MCOimg are
+independent of these download switches.
+
 ### IPFS Provider Configuration
 
 Open **App Settings → IPFS provider configuration** to configure IPFS uploads and previews:

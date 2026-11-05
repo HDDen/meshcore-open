@@ -17,6 +17,7 @@ import 'screens/chat_screen.dart';
 import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
+import 'helpers/message_url_image_helper.dart';
 import 'models/image_codec_support.dart';
 import 'screens/data_folder_problem_screen.dart';
 import 'screens/data_transfer_screen.dart';
@@ -337,11 +338,15 @@ Future<void> _startApplication() async {
   // Initialize notification service
   _setStartupStage('MCO-STARTUP-104', 'Desktop services');
   final notificationService = NotificationService();
-  void syncPublicIpfsGateway() => notificationService.setPublicIpfsGateway(
-    appSettingsService.settings.publicIpfsGateway,
-  );
-  syncPublicIpfsGateway();
-  appSettingsService.addListener(syncPublicIpfsGateway);
+  void syncLinkImageSettings() {
+    notificationService.setPublicIpfsGateway(
+      appSettingsService.settings.publicIpfsGateway,
+    );
+    MessageUrlImageHelper.loadLinkImages.value =
+        appSettingsService.settings.loadLinkImages;
+  }
+  syncLinkImageSettings();
+  appSettingsService.addListener(syncLinkImageSettings);
   await notificationService.initialize();
   settingsSectionsService.setLicenseExpiryNotifier(
     locale: () {

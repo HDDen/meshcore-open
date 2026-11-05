@@ -10,13 +10,16 @@ import 'package:provider/provider.dart';
 
 import 'package:meshcore_open/helpers/ipfs_link_attach_flow.dart';
 import 'package:meshcore_open/helpers/ipfs_upload_helper.dart';
+import 'package:meshcore_open/helpers/message_url_image_helper.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 
 class _Settings extends AppSettingsService {
+  bool loadImages = true;
   @override
   AppSettings get settings => AppSettings(
+    loadLinkImages: loadImages,
     uploadIpfsEndpoint: 'https://api.pinata.cloud/pinning/pinFileToIPFS',
     uploadIpfsApiKey: 'synthetic-token',
   );
@@ -56,6 +59,7 @@ void main() {
   });
 
   tearDown(() {
+    MessageUrlImageHelper.loadLinkImages.value = true;
     IpfsUploadHelper.httpClient = null;
     client.close();
     controller.dispose();
@@ -141,6 +145,19 @@ void main() {
     expect(controller.text, 'ipfs://bafytest\n  новый черновик\n  ');
     expect(controller.selection.baseOffset, controller.text.length);
     expect(requests, 1);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('explicit IPFS upload still works with link downloads disabled', (tester) async {
+    settings.loadImages = false;
+    MessageUrlImageHelper.loadLinkImages.value = false;
+    picker.pick = () async => file();
+    await show(tester);
+    await attach(tester);
+    await completion;
+    await tester.pump();
+    expect(requests, 1);
+    expect(controller.text, startsWith('ipfs://bafytest'));
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

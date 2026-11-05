@@ -4650,5 +4650,10 @@
   "chat_ipfsLinkOverLimit": "Image link added, but the message is now too long. Shorten it before sending.",
   "@chat_ipfsLinkOverLimit": {
     "description": "Shown after an IPFS upload when the link plus the draft no longer fits the message size limit"
-  }
+  },
+  "urlImage_disabledInAppSettings": "Turned off in app settings",
+  "appSettings_loadLinkImages": "Load images from links",
+  "appSettings_loadLinkImagesSubtitle": "Show pictures from links in messages. Loading an image shares your IP address with the site that hosts it.",
+  "appSettings_showLinkImagesByDefault": "Show link images in all chats by default",
+  "appSettings_showLinkImagesByDefaultSubtitle": "Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat."
 }

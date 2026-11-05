@@ -24,6 +24,21 @@ class MessageUrlImageHelper {
   @visibleForTesting
   static http.Client? httpClient;
 
+  @visibleForTesting
+  static Future<bool> Function(String url)? verifyImageForTest;
+
+  /// Mirrors [AppSettings.loadLinkImages]. When false, nothing is fetched
+  /// for link images and every parse returns null.
+  static final ValueNotifier<bool> loadLinkImages = ValueNotifier<bool>(false)
+    ..addListener(_loadingPolicyChanged);
+  static int _loadingGeneration = 0;
+
+  static void _loadingPolicyChanged() {
+    _loadingGeneration++;
+    _messageImageCache.clear();
+    _verifiedImageCache.clear();
+  }
+
   static final RegExp _pyxPattern = RegExp(
     r'''https?://pyx\.li/\?i=([A-Za-z0-9_-]+)''',
     caseSensitive: false,
@@ -63,6 +78,8 @@ class MessageUrlImageHelper {
     String text, {
     String publicGateway = AppSettings.defaultPublicIpfsGateway,
   }) async {
+    if (!loadLinkImages.value) return null;
+    final generation = _loadingGeneration;
     final trimmed = text.trim();
     if (trimmed.isEmpty) return null;
 
@@ -86,13 +103,16 @@ class MessageUrlImageHelper {
 
     final ibbMatch = _ibbSharePattern.firstMatch(trimmed);
     if (ibbMatch != null) {
-      return _extractFromUrl(
+      final imageUrl = await _extractFromUrl(
         _trimBoundary(ibbMatch.group(0)!),
         RegExp(
           r'''<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']''',
           caseSensitive: false,
         ),
       );
+      return loadLinkImages.value && generation == _loadingGeneration
+          ? imageUrl
+          : null;
     }
 
     final imageMatch = _imagePattern.firstMatch(trimmed);
@@ -107,11 +127,17 @@ class MessageUrlImageHelper {
     String text, {
     String publicGateway = AppSettings.defaultPublicIpfsGateway,
   }) async {
+    if (!loadLinkImages.value) return null;
+    final generation = _loadingGeneration;
     final imageUrl = await parse(text, publicGateway: publicGateway);
-    if (imageUrl == null) return null;
+    if (imageUrl == null || !loadLinkImages.value || generation != _loadingGeneration) {
+      return null;
+    }
 
     final verified = await _verifyImageUrl(imageUrl);
-    return verified ? imageUrl : null;
+    return verified && loadLinkImages.value && generation == _loadingGeneration
+        ? imageUrl
+        : null;
   }
 
   /// Caches successful URL-image parsing by stable message identity.
@@ -123,6 +149,7 @@ class MessageUrlImageHelper {
     String text, {
     String publicGateway = AppSettings.defaultPublicIpfsGateway,
   }) {
+    if (!loadLinkImages.value) return Future<String?>.value();
     final cacheKey = '$messageId|$publicGateway';
     final cached = _messageImageCache.remove(cacheKey);
     if (cached != null) {
@@ -174,7 +201,7 @@ class MessageUrlImageHelper {
     final cached = _verifiedImageCache[imageUrl];
     if (cached != null) return cached;
 
-    final verification = _tryLoadImage(imageUrl);
+    final verification = (verifyImageForTest ?? _tryLoadImage)(imageUrl);
     _verifiedImageCache[imageUrl] = verification;
     verification.then((verified) {
       if (!verified && identical(_verifiedImageCache[imageUrl], verification)) {
@@ -240,33 +267,52 @@ class _MessageUrlImageFutureBuilderState
   @override
   void initState() {
     super.initState();
-    _imageFuture = MessageUrlImageHelper.parseVerifiedForMessage(
+    _imageFuture = _parse();
+    MessageUrlImageHelper.loadLinkImages.addListener(_onLoadLinkImagesChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant MessageUrlImageFutureBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.messageId != widget.messageId ||
+        oldWidget.publicGateway != widget.publicGateway) {
+      _imageFuture = _parse();
+    }
+  }
+
+  @override
+  void dispose() {
+    MessageUrlImageHelper.loadLinkImages.removeListener(
+      _onLoadLinkImagesChanged,
+    );
+    super.dispose();
+  }
+
+  Future<String?> _parse() {
+    return MessageUrlImageHelper.parseVerifiedForMessage(
       widget.messageId,
       widget.text,
       publicGateway: widget.publicGateway,
     );
   }
 
-  @override
-  void didUpdateWidget(covariant MessageUrlImageFutureBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.messageId != widget.messageId) {
-      _imageFuture = MessageUrlImageHelper.parseVerifiedForMessage(
-        widget.messageId,
-        widget.text,
-        publicGateway: widget.publicGateway,
-      );
-    } else if (oldWidget.publicGateway != widget.publicGateway) {
-      _imageFuture = MessageUrlImageHelper.parseVerifiedForMessage(
-        widget.messageId,
-        widget.text,
-        publicGateway: widget.publicGateway,
-      );
-    }
+  void _onLoadLinkImagesChanged() {
+    final imageFuture = _parse();
+    setState(() {
+      _imageFuture = imageFuture;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!MessageUrlImageHelper.loadLinkImages.value) {
+      // FutureBuilder may retain old snapshot.data while its replacement
+      // future is waiting. Do not let that redraw a disabled image provider.
+      return widget.builder(
+        context,
+        const AsyncSnapshot<String?>.withData(ConnectionState.done, null),
+      );
+    }
     return FutureBuilder<String?>(
       future: _imageFuture,
       builder: widget.builder,

@@ -75,6 +75,7 @@ class ContactSettingsStore {
       return null;
     }
     final version = _read('mcmp_version', contactKeyHex) as int? ?? 3;
+    final urlImagesChoice = _read('url_images_enabled', contactKeyHex) as bool?;
     return ContactSettingsSnapshot(
       mcmpEnabled: _read('mcmp_enabled', contactKeyHex) as bool? ?? false,
       mcmpVersion: version == 3 ? 3 : 2,
@@ -86,7 +87,8 @@ class ContactSettingsStore {
       cyr2LatProfileId: _read('cyr2lat_profile', contactKeyHex) as String?,
       sendingDelayEnabled: _read('sending_delay_enabled', contactKeyHex) as bool? ?? false,
       quickAnswerIds: AppSettings.normalizeQuickAnswerIds(_read('quick_answer_ids', contactKeyHex)),
-      urlImagesEnabled: _read('url_images_enabled', contactKeyHex) as bool? ?? false,
+      urlImagesEnabled: urlImagesChoice ?? false,
+      urlImagesChoice: urlImagesChoice,
     );
   }
 
@@ -199,8 +201,13 @@ class ContactSettingsStore {
   Future<void> saveSendingDelayEnabled(String contact, bool value) =>
       _write('sending_delay_enabled', contact, value);
 
+  /// Preserve absence for the global fallback; the legacy bool loader below
+  /// retains its previous API for callers that need a raw off-by-default value.
+  Future<bool?> loadUrlImagesChoice(String contact) async =>
+      _read('url_images_enabled', contact) as bool?;
+
   Future<bool> loadUrlImagesEnabled(String contact) async =>
-      _read('url_images_enabled', contact) as bool? ?? false;
+      await loadUrlImagesChoice(contact) ?? false;
 
   Future<void> saveUrlImagesEnabled(String contact, bool value) =>
       _write('url_images_enabled', contact, value);

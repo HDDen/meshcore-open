@@ -42,6 +42,53 @@ void main() {
     PrefsManager.reset();
   });
 
+  test('U08b baseline: inherited URL true cannot override a saved false after rename', () async {
+    final a = ChannelSettingsStore()..setPublicKeyHex = _nodeA;
+    final b = ChannelSettingsStore()..setPublicKeyHex = _nodeB;
+    a.replaceChannels([_channel(1, 'Горы')]);
+    b.replaceChannels([_channel(5, 'Горы')]);
+    await a.saveUrlImagesEnabled(1, true);
+
+    final bKey = b.channelStorageKey(b.keyForUrlImages, 5)!;
+    expect(PrefsManager.instance.containsKey(bKey), isFalse);
+    expect(await b.loadUrlImagesEnabled(5), isTrue);
+    await b.saveUrlImagesEnabled(5, false);
+    expect(PrefsManager.instance.getBool(bKey), isFalse);
+    expect(await a.loadUrlImagesEnabled(1), isTrue);
+
+    await ChannelIdentities.instance.link(
+      ChannelIdentity(_id(1), 'Горы'),
+      ChannelIdentity(_id(1), 'Горы-2026'),
+    );
+    b.replaceChannels([_channel(5, 'Горы-2026')]);
+    expect(await b.loadUrlImagesEnabled(5), isFalse);
+
+    // Recreate the identity cache and store, with the channel in another slot.
+    // A physical slot number must not become the setting's identity.
+    ChannelIdentities.instance.resetForTesting();
+    await ChannelIdentities.instance.load();
+    final reopened = ChannelSettingsStore()..setPublicKeyHex = _nodeB;
+    reopened.replaceChannels([_channel(7, 'Горы-2026')]);
+    expect(await reopened.loadUrlImagesEnabled(7), isFalse);
+    expect(await a.loadUrlImagesEnabled(1), isTrue);
+  });
+
+  test('U08b baseline: URL choice never leaks into an unrelated channel name', () async {
+    final settings = ChannelSettingsStore()..setPublicKeyHex = _nodeA;
+    settings.replaceChannels([_channel(1, 'Горы')]);
+    await settings.saveUrlImagesEnabled(1, true);
+    final originalKey = settings.channelStorageKey(settings.keyForUrlImages, 1)!;
+    settings.replaceChannels([_channel(1, 'Море', fill: 2)]);
+    final otherKey = settings.channelStorageKey(settings.keyForUrlImages, 1)!;
+    expect(otherKey, isNot(originalKey));
+    expect(PrefsManager.instance.containsKey(otherKey), isFalse);
+    // Do not freeze the planned unset return value (false -> null); freeze
+    // that reading an unrelated empty choice never persists an explicit off.
+    await settings.loadUrlImagesEnabled(1);
+    expect(PrefsManager.instance.containsKey(otherKey), isFalse);
+    expect(PrefsManager.instance.getBool(originalKey), isTrue);
+  });
+
   test('a node without a setting takes the one another node keeps', () async {
     final a = ChannelSettingsStore()..setPublicKeyHex = _nodeA;
     a.replaceChannels([_channel(1, 'Горы')]);

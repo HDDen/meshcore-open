@@ -5,7 +5,12 @@ import 'package:meshcore_open/helpers/message_url_image_helper.dart';
 
 void main() {
   group('MessageUrlImageHelper', () {
-    tearDown(() => MessageUrlImageHelper.httpClient = null);
+    setUp(() => MessageUrlImageHelper.loadLinkImages.value = true);
+    tearDown(() {
+      MessageUrlImageHelper.httpClient = null;
+      MessageUrlImageHelper.verifyImageForTest = null;
+      MessageUrlImageHelper.loadLinkImages.value = true;
+    });
 
     void mockPyxPage(String id) {
       MessageUrlImageHelper.httpClient = MockClient((request) async {
@@ -113,12 +118,34 @@ void main() {
       );
     });
 
-    test('returns null for non-image ipfs gateway URL', () async {
+    test('returns null when a parsed IPFS URL fails image verification', () async {
+      MessageUrlImageHelper.verifyImageForTest = (_) async => false;
       final attachment = await MessageUrlImageHelper.parseVerified(
         'https://lime-famous-rat-748.mypinata.cloud/ipfs/bafybeih3jqv36rsxqx7yw3k3ixhganrevrk7xmcxgkr2zuzjegxdytb3nq',
       );
 
       expect(attachment, isNull);
+    });
+
+    test('fetches nothing when loading link images is off', () async {
+      MessageUrlImageHelper.loadLinkImages.value = false;
+      MessageUrlImageHelper.httpClient = MockClient((request) async {
+        fail('Unexpected request to ${request.url}');
+      });
+
+      for (final text in [
+        'https://pyx.li/?i=RzmdkTsE',
+        'https://ibb.co/abc123',
+        'ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi',
+        'https://example.com/photo.png',
+      ]) {
+        expect(await MessageUrlImageHelper.parse(text), isNull);
+        expect(await MessageUrlImageHelper.parseVerified(text), isNull);
+        expect(
+          await MessageUrlImageHelper.parseVerifiedForMessage('m1', text),
+          isNull,
+        );
+      }
     });
   });
 }

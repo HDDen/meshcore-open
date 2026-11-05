@@ -2767,14 +2767,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(context.l10n.urlImage_enable),
+                  subtitle: appSettingsService.settings.loadLinkImages
+                      ? null : Text(context.l10n.urlImage_disabledInAppSettings),
                   value: urlImagesEnabled,
-                  onChanged: (value) {
+                  onChanged: appSettingsService.settings.loadLinkImages ? (value) {
                     connector.setContactUrlImagesEnabled(
                       contact.publicKeyHex,
                       value,
                     );
                     setDialogState(() => urlImagesEnabled = value);
-                  },
+                  } : null,
                 ),
                 const Divider(height: 8),
                 SwitchListTile(
@@ -3592,6 +3594,8 @@ class _MessageBubble extends StatelessWidget {
     // afterwards.
     final blockedBody = message.wasBlocked ? message.text : null;
     final bodyText = blockedBody == null ? message.text : '';
+    // Ordinary text alone needs this check; reuse it for preview and hint.
+    late final hasPotentialImage = MessageUrlImageHelper.hasPotentialImageUrl(bodyText);
     final trimmedBodyText = bodyText.trim();
     final gifId = GifHelper.parseGif(bodyText);
     final mcoImageMetadata = MCOImageMessage.decodeMetadata(bodyText);
@@ -4075,7 +4079,7 @@ class _MessageBubble extends StatelessWidget {
                             ],
                           )
                         else ...[
-                          if (urlImagesEnabled)
+                          if (urlImagesEnabled && settingsService.settings.loadLinkImages && hasPotentialImage)
                             MessageUrlImageFutureBuilder(
                               publicGateway: context.read<AppSettingsService>().settings.publicIpfsGateway,
                               messageId: message.messageId,
@@ -4101,9 +4105,7 @@ class _MessageBubble extends StatelessWidget {
                                 );
                               },
                             )
-                          else if (MessageUrlImageHelper.hasPotentialImageUrl(
-                            bodyText,
-                          ))
+                          else if (hasPotentialImage)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Text(

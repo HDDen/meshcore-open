@@ -3600,5 +3600,10 @@
   "chat_ipfsLinkOverLimit": "Ссылка добавлена, но сообщение слишком длинное. Сократите его перед отправкой.",
   "@chat_ipfsLinkOverLimit": {
     "description": "Shown after an IPFS upload when the link plus the draft no longer fits the message size limit"
-  }
+  },
+  "urlImage_disabledInAppSettings": "Отключено в настройках приложения",
+  "appSettings_loadLinkImages": "Загружать изображения по ссылкам",
+  "appSettings_loadLinkImagesSubtitle": "Показывать изображения по ссылкам в сообщениях. При загрузке сайт-источник получает ваш IP-адрес.",
+  "appSettings_showLinkImagesByDefault": "Показывать изображения по ссылкам во всех чатах по умолчанию",
+  "appSettings_showLinkImagesByDefaultSubtitle": "Применять к чатам без собственной настройки. Явно отключённые изображения останутся отключёнными. При загрузке сайты-источники получают ваш IP-адрес."
 }

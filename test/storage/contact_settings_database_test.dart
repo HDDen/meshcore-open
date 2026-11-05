@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/contact_option_storage.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/contact_settings_store.dart';
 import 'package:meshcore_open/storage/legacy_key_migration.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
@@ -89,6 +90,69 @@ Future<void> main() async {
       PrefsManager.reset();
       PathProviderPlatform.instance = savedPaths;
       await directory.delete(recursive: true);
+    });
+
+    test('U08b baseline: missing URL option and explicit false stay distinct on disk', () async {
+      await open();
+      final a = store();
+      final b = store(_nodeB);
+      const option = 'url_images_enabled';
+
+      expect(storage.contactOption(a.publicKeyHex, _contact, option), isNull);
+      // Reading a whole snapshot must not create a saved choice for an unset
+      // option. The later global default needs to distinguish this from off.
+      a.readSettings(_contact);
+      expect(storage.contactOption(a.publicKeyHex, _contact, option), isNull);
+
+      await a.saveUrlImagesEnabled(_contact, false);
+      await b.saveUrlImagesEnabled(_contact, true);
+      expect(storage.contactOption(a.publicKeyHex, _contact, option), '0');
+      expect(storage.contactOption(b.publicKeyHex, _contact, option), '1');
+      expect(storage.contactOption(a.publicKeyHex, _other, option), isNull);
+      expect(PrefsManager.instance.getKeys(), isEmpty);
+
+      await reopen();
+      expect(storage.contactOption(a.publicKeyHex, _contact, option), '0');
+      expect(storage.contactOption(b.publicKeyHex, _contact, option), '1');
+      expect(await store().loadUrlImagesEnabled(_contact), isFalse);
+      expect(await store(_nodeB).loadUrlImagesEnabled(_contact), isTrue);
+      expect(storage.contactOption(a.publicKeyHex, _other, option), isNull);
+      expect(PrefsManager.instance.getKeys(), isEmpty);
+    });
+
+    test('U08b baseline: legacy URL false migrates as a saved SQL choice', () async {
+      await preferences({'contact_url_images_aaaaaaaaaa$_contact': false});
+      await open();
+      const option = 'url_images_enabled';
+      final scope = store().publicKeyHex;
+      expect(storage.contactOption(scope, _contact, option), '0');
+      expect(await store().loadUrlImagesEnabled(_contact), isFalse);
+      expect(PrefsManager.instance.containsKey('contact_url_images_aaaaaaaaaa$_contact'), isFalse);
+      await reopen();
+      expect(storage.contactOption(scope, _contact, option), '0');
+      expect(storage.contactOption(scope, _other, option), isNull);
+    });
+
+    test('U08b: SQL unset follows live default while explicit choices win', () async {
+      await open();
+      await store().saveUrlImagesEnabled(_contact, false);
+      await store().saveUrlImagesEnabled(_other, true);
+      final settings = AppSettingsService();
+      final connector = MeshCoreConnector();
+      addTearDown(settings.dispose);
+      addTearDown(connector.dispose);
+      connector.bindContactSettingsToNodeForTest(_nodeA);
+      connector.attachAppSettingsServiceForTest(settings);
+      const unknown = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+      await settings.setShowLinkImagesByDefault(true);
+      expect(connector.isContactUrlImagesEnabled(unknown), isTrue);
+      expect(connector.isContactUrlImagesEnabled(_contact), isFalse);
+      expect(connector.isContactUrlImagesEnabled(_other), isTrue);
+      await settings.setShowLinkImagesByDefault(false);
+      expect(connector.isContactUrlImagesEnabled(unknown), isFalse);
+      expect(connector.isContactUrlImagesEnabled(_other), isTrue);
+      expect(storage.contactOption(store().publicKeyHex, unknown, 'url_images_enabled'), isNull);
+      expect(await database.readContactOptionRows(), hasLength(2));
     });
 
     test('all eleven legacy options migrate, warm the first read and survive reopening', () async {

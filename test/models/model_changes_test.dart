@@ -487,12 +487,47 @@ Future<void> main() async {
       expect(settings.maxMessageRetries, equals(8));
     });
 
+    test('load link images defaults off and preserves saved choices', () {
+      expect(AppSettings().loadLinkImages, isFalse);
+      expect(AppSettings.fromJson({}).loadLinkImages, isFalse);
+      expect(AppSettings.fromJson({'load_link_images': null}).loadLinkImages, isFalse);
+      for (final enabled in [false, true]) {
+        final saved = AppSettings(loadLinkImages: enabled).toJson();
+        expect(AppSettings.fromJson(saved).loadLinkImages, enabled);
+      }
+    });
+
+    test('show link images by default is off and round-trips', () {
+      expect(AppSettings().showLinkImagesByDefault, isFalse);
+      expect(AppSettings.fromJson({}).showLinkImagesByDefault, isFalse);
+      final saved = AppSettings(showLinkImagesByDefault: true).toJson();
+      expect(AppSettings.fromJson(saved).showLinkImagesByDefault, isTrue);
+    });
+
     test('public IPFS gateway defaults to ipfs.io when never set', () {
       expect(
         AppSettings.fromJson({}).publicIpfsGateway,
         'https://ipfs.io/ipfs/',
       );
       expect(AppSettings().publicIpfsGateway, 'https://ipfs.io/ipfs/');
+    });
+
+    test('link policy switches persist independently and survive unrelated copies', () async {
+      final settings = AppSettingsService();
+      final reopened = AppSettingsService();
+      addTearDown(settings.dispose);
+      addTearDown(reopened.dispose);
+      await settings.loadSettings();
+      await settings.setShowLinkImagesByDefault(true);
+      await settings.setLoadLinkImages(false);
+      await reopened.loadSettings();
+      expect(reopened.settings.loadLinkImages, isFalse);
+      expect(reopened.settings.showLinkImagesByDefault, isTrue);
+      final copy = reopened.settings.copyWith(jumpToOldestUnread: true);
+      expect(copy.loadLinkImages, isFalse);
+      expect(copy.showLinkImagesByDefault, isTrue);
+      await settings.setLoadLinkImages(true);
+      expect(settings.settings.showLinkImagesByDefault, isTrue);
     });
 
     test('IPFS settings survive a service restart and unrelated edits', () async {

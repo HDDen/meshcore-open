@@ -392,6 +392,8 @@ class AppSettings {
   final String tcpServerWifiSsid;
   final List<TcpConnectionBookmark> tcpConnectionBookmarks;
   final bool jumpToOldestUnread;
+  final bool loadLinkImages;
+  final bool showLinkImagesByDefault;
   final String publicIpfsGateway;
   final String uploadIpfsGateway;
   final String uploadIpfsEndpoint;
@@ -834,6 +836,8 @@ class AppSettings {
     this.tcpServerWifiSsid = '',
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     this.jumpToOldestUnread = false,
+    this.loadLinkImages = false,
+    this.showLinkImagesByDefault = false,
     this.publicIpfsGateway = defaultPublicIpfsGateway,
     this.uploadIpfsGateway = '',
     this.uploadIpfsEndpoint = '',
@@ -1010,6 +1014,8 @@ class AppSettings {
           .map((bookmark) => bookmark.toJson())
           .toList(),
       'jump_to_oldest_unread': jumpToOldestUnread,
+      'load_link_images': loadLinkImages,
+      'show_link_images_by_default': showLinkImagesByDefault,
       'public_ipfs_gateway': publicIpfsGateway,
       'upload_ipfs_gateway': uploadIpfsGateway,
       'upload_ipfs_endpoint': uploadIpfsEndpoint,
@@ -1269,6 +1275,8 @@ class AppSettings {
               .toList() ??
           const [],
       jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
+      loadLinkImages: json['load_link_images'] as bool? ?? false,
+      showLinkImagesByDefault: json['show_link_images_by_default'] as bool? ?? false,
       publicIpfsGateway: json['public_ipfs_gateway'] as String? ?? defaultPublicIpfsGateway,
       uploadIpfsGateway: json['upload_ipfs_gateway'] as String? ?? '',
       uploadIpfsEndpoint: json['upload_ipfs_endpoint'] as String? ?? '',
@@ -1461,6 +1469,8 @@ class AppSettings {
     String? tcpServerWifiSsid,
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
     bool? jumpToOldestUnread,
+    bool? loadLinkImages,
+    bool? showLinkImagesByDefault,
     String? publicIpfsGateway,
     String? uploadIpfsGateway,
     String? uploadIpfsEndpoint,
@@ -1661,6 +1671,8 @@ class AppSettings {
       tcpConnectionBookmarks:
           tcpConnectionBookmarks ?? this.tcpConnectionBookmarks,
       jumpToOldestUnread: jumpToOldestUnread ?? this.jumpToOldestUnread,
+      loadLinkImages: loadLinkImages ?? this.loadLinkImages,
+      showLinkImagesByDefault: showLinkImagesByDefault ?? this.showLinkImagesByDefault,
       publicIpfsGateway: publicIpfsGateway ?? this.publicIpfsGateway,
       uploadIpfsGateway: uploadIpfsGateway ?? this.uploadIpfsGateway,
       uploadIpfsEndpoint: uploadIpfsEndpoint ?? this.uploadIpfsEndpoint,

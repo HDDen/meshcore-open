@@ -6,11 +6,16 @@ import 'package:meshcore_open/helpers/message_url_image_helper.dart';
 const _cid = 'bafybeibq75ws6nwk6wi473dch42wwy6woyj4dwdfy7nfz3buqx2caieoly';
 
 void main() {
+  final startupPolicy = MessageUrlImageHelper.loadLinkImages.value;
   late List<Uri> requests;
   late MockClient client;
+  late bool previousPolicy;
   late Future<http.Response> Function(http.Request) respond;
 
   setUp(() {
+    previousPolicy = MessageUrlImageHelper.loadLinkImages.value;
+    // Parsing cases explicitly simulate a user who enabled URL downloads.
+    MessageUrlImageHelper.loadLinkImages.value = true;
     requests = [];
     respond = (_) async => throw StateError('Unexpected sharing-page request');
     client = MockClient((request) {
@@ -21,8 +26,13 @@ void main() {
   });
 
   tearDown(() {
+    MessageUrlImageHelper.loadLinkImages.value = previousPolicy;
     MessageUrlImageHelper.httpClient = null;
     client.close();
+  });
+
+  test('URL loading starts disabled before app settings are applied', () {
+    expect(startupPolicy, isFalse);
   });
 
   test('U08 baseline: detecting every supported link stays entirely local', () {

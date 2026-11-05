@@ -13,6 +13,7 @@ class ContactSettingsSnapshot {
     this.sendingDelayEnabled = false,
     this.quickAnswerIds = const [],
     this.urlImagesEnabled = false,
+    this.urlImagesChoice,
   });
 
   final bool mcmpEnabled;
@@ -26,6 +27,9 @@ class ContactSettingsSnapshot {
   final bool sendingDelayEnabled;
   final List<String> quickAnswerIds;
   final bool urlImagesEnabled;
+  /// Null means no saved choice; the connector resolves it against the global
+  /// default. Keep urlImagesEnabled for existing snapshot consumers.
+  final bool? urlImagesChoice;
 }
 
 /// Codec switches write several preferences. Keep complete selections in order,

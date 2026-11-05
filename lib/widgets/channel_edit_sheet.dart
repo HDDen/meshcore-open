@@ -34,6 +34,7 @@ void showChannelEditSheet(
   bool smazEnabled = connector.isChannelSmazEnabled(channel.index);
   bool cyr2latEnabled = connector.isChannelCyr2LatEnabled(channel.index);
   bool urlImagesEnabled = connector.isChannelUrlImagesEnabled(channel.index);
+  bool urlImagesEdited = false;
   bool sendingDelayEnabled = connector.isChannelSendingDelayEnabled(
     channel.index,
   );
@@ -255,9 +256,15 @@ void showChannelEditSheet(
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(sheetContext.l10n.urlImage_enable),
+                    subtitle: appSettingsService.settings.loadLinkImages
+                        ? null : Text(sheetContext.l10n.urlImage_disabledInAppSettings),
                     value: urlImagesEnabled,
-                    onChanged: (value) =>
-                        setSheetState(() => urlImagesEnabled = value),
+                    onChanged: appSettingsService.settings.loadLinkImages
+                        ? (value) => setSheetState(() {
+                            urlImagesEnabled = value;
+                            urlImagesEdited = true;
+                          })
+                        : null,
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -387,10 +394,14 @@ void showChannelEditSheet(
                               channel.index,
                               selectedCyr2LatProfileId,
                             );
-                            await connector.setChannelUrlImagesEnabled(
-                              channel.index,
-                              urlImagesEnabled,
-                            );
+                            // Saving an unrelated field must keep an unset
+                            // choice unset, so future global defaults still apply.
+                            if (urlImagesEdited) {
+                              await connector.setChannelUrlImagesEnabled(
+                                channel.index,
+                                urlImagesEnabled,
+                              );
+                            }
                             await connector.setChannelSendingDelayEnabled(
                               channel.index,
                               sendingDelayEnabled,

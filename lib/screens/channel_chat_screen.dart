@@ -2144,7 +2144,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ],
                           )
                         else ...[
-                          if (urlImagesEnabled)
+                          if (urlImagesEnabled && settingsService.settings.loadLinkImages && parsedContent.potentialImageUrl)
                             MessageUrlImageFutureBuilder(
                               publicGateway: context.read<AppSettingsService>().settings.publicIpfsGateway,
                               messageId: message.messageId,
