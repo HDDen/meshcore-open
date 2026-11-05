@@ -15232,6 +15232,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.'**
   String get appSettings_showLinkImagesByDefaultSubtitle;
+
+  /// No description provided for @channels_scanQrCodeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a channel or community from its QR code.'**
+  String get channels_scanQrCodeDesc;
+
+  /// No description provided for @channels_joinChannelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Channel'**
+  String get channels_joinChannelTitle;
+
+  /// No description provided for @channels_joinChannelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add \"{name}\" to your radio?'**
+  String channels_joinChannelConfirm(String name);
+
+  /// No description provided for @channels_alreadyOnRadio.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is already on your radio'**
+  String channels_alreadyOnRadio(String name);
+
+  /// No description provided for @channels_qrImportChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection or channels changed. Start the import again.'**
+  String get channels_qrImportChanged;
 }
 
 class _AppLocalizationsDelegate

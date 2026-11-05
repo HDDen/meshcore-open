@@ -9069,4 +9069,25 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Gå med i en kanal eller community med dess QR-kod.';
+
+  @override
+  String get channels_joinChannelTitle => 'Gå med i kanal';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Lägga till \"$name\" på din radio?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" finns redan på din radio';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

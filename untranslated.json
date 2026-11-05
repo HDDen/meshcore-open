@@ -31,7 +31,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "de": [
@@ -66,7 +67,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "es": [
@@ -101,7 +103,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "fr": [
@@ -136,7 +139,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "hu": [
@@ -171,7 +175,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "it": [
@@ -206,7 +211,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "ja": [
@@ -241,7 +247,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "ko": [
@@ -276,7 +283,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "nl": [
@@ -311,7 +319,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "pl": [
@@ -346,7 +355,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "pt": [
@@ -381,7 +391,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "sk": [
@@ -416,7 +427,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "sl": [
@@ -451,7 +463,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "sv": [
@@ -486,7 +499,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "uk": [
@@ -521,7 +535,8 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ],
 
   "zh": [
@@ -556,6 +571,7 @@
     "appSettings_loadLinkImages",
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
-    "appSettings_showLinkImagesByDefaultSubtitle"
+    "appSettings_showLinkImagesByDefaultSubtitle",
+    "channels_qrImportChanged"
   ]
 }

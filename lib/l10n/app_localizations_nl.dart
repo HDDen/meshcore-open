@@ -9094,4 +9094,25 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Word lid van een kanaal of community via de QR-code.';
+
+  @override
+  String get channels_joinChannelTitle => 'Lid worden van kanaal';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return '\"$name\" aan je radio toevoegen?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" staat al op je radio';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

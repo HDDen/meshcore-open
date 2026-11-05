@@ -9078,4 +9078,25 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Pripojte sa ku kanálu alebo komunite pomocou QR kódu.';
+
+  @override
+  String get channels_joinChannelTitle => 'Pripojiť sa ku kanálu';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Pridať „$name“ do vášho rádia?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '„$name“ je už vo vašom rádiu';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

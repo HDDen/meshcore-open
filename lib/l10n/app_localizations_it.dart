@@ -9142,4 +9142,25 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Unisciti a un canale o a una community con il suo codice QR.';
+
+  @override
+  String get channels_joinChannelTitle => 'Unisciti al canale';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Aggiungere \"$name\" alla tua radio?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" è già sulla tua radio';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

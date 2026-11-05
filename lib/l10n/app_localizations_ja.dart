@@ -8680,4 +8680,24 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc => 'QRコードからチャンネルまたはコミュニティに参加します。';
+
+  @override
+  String get channels_joinChannelTitle => 'チャンネルに参加';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return '「$name」をラジオに追加しますか？';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '「$name」はすでにラジオにあります';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

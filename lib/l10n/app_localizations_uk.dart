@@ -9124,4 +9124,25 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Приєднайтеся до каналу або спільноти за QR-кодом.';
+
+  @override
+  String get channels_joinChannelTitle => 'Приєднатися до каналу';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Додати \"$name\" до вашого радіо?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" уже на вашому радіо';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

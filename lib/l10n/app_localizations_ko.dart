@@ -8684,4 +8684,24 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc => 'QR 코드로 채널이나 커뮤니티에 참여합니다.';
+
+  @override
+  String get channels_joinChannelTitle => '채널 참여';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return '\"$name\" 채널을 라디오에 추가할까요?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\"은(는) 이미 라디오에 있습니다';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

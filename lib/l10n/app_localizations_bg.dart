@@ -9143,4 +9143,25 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Присъединете се към канал или общност чрез QR код.';
+
+  @override
+  String get channels_joinChannelTitle => 'Присъединяване към канал';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Да се добави ли \"$name\" към радиото ви?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" вече е на радиото ви';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

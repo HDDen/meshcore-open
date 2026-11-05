@@ -9117,4 +9117,25 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Csatlakozz csatornához vagy közösséghez a QR-kódja alapján.';
+
+  @override
+  String get channels_joinChannelTitle => 'Csatlakozás csatornához';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Hozzáadod a(z) \"$name\" csatornát a rádiódhoz?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return 'A(z) \"$name\" már a rádiódon van';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

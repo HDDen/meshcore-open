@@ -8491,4 +8491,24 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc => '通过二维码加入频道或社区。';
+
+  @override
+  String get channels_joinChannelTitle => '加入频道';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return '将 \"$name\" 添加到你的无线电？';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" 已在你的无线电上';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

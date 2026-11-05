@@ -8987,4 +8987,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Join a channel or community from its QR code.';
+
+  @override
+  String get channels_joinChannelTitle => 'Join Channel';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Add \"$name\" to your radio?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '\"$name\" is already on your radio';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Connection or channels changed. Start the import again.';
 }

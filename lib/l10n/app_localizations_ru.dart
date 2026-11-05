@@ -9105,4 +9105,25 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appSettings_showLinkImagesByDefaultSubtitle =>
       'Применять к чатам без собственной настройки. Явно отключённые изображения останутся отключёнными. При загрузке сайты-источники получают ваш IP-адрес.';
+
+  @override
+  String get channels_scanQrCodeDesc =>
+      'Присоединитесь к каналу или сообществу по QR-коду.';
+
+  @override
+  String get channels_joinChannelTitle => 'Присоединиться к каналу';
+
+  @override
+  String channels_joinChannelConfirm(String name) {
+    return 'Добавить «$name» на ваше радио?';
+  }
+
+  @override
+  String channels_alreadyOnRadio(String name) {
+    return '«$name» уже есть на вашем радио';
+  }
+
+  @override
+  String get channels_qrImportChanged =>
+      'Подключение или каналы изменились. Повторите импорт.';
 }
