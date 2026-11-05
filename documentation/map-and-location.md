@@ -93,6 +93,10 @@ Opens a dialog showing: type, path (hop chain), coordinates, last-seen time, and
 
 После выбора узла через поиск внизу карты появляется карточка с действиями. Карточка отображается поверх правых кнопок карты: zero-hop discovery, wardrive, фильтра и управления масштабом. В перекрывающейся области нажатия получает карточка; после её закрытия правые кнопки снова доступны на прежних местах. У репитера из карточки можно открыть управление и включить либо скрыть блоки покрытия wardrive.
 
+Удаление контакта с карты ожидает ответ ноды и показывает ошибку при неудаче.
+Диалог предупреждает, если авто-добавление на ноде может вернуть контакт после
+следующего анонса. Подробнее: [удаление контактов](contacts.md#deleting-a-contact).
+
 ### Long-Press on Empty Map Area
 Shows a bottom sheet with:
 - **Share marker here**: Prompts for a label (default: "Point of interest"), then pick a DM contact or channel to send the location to. Wire format: `m:<lat>,<lon>|<label>|poi`; a `|` in the label is replaced with `/` and line breaks with spaces. The label field shows a live byte counter so the whole pin fits in one message, and a hint that reusing a previous label updates that marker for MeshCore Open recipients. To share your radio's own position, use **Share my location** from the ⊕ menu in chat (see [Chat & Messaging](chat-and-messaging.md#input-bar))

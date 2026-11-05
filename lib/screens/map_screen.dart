@@ -24,6 +24,7 @@ import '../models/channel.dart';
 import '../models/map_path_trace_draft.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
+import '../helpers/remove_contact_action.dart';
 import '../models/message.dart';
 import '../models/path_history.dart';
 import '../l10n/contact_localization.dart';
@@ -6323,7 +6324,23 @@ class _MapScreenState extends State<MapScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.contacts_deleteContact),
-        content: Text(context.l10n.contacts_removeConfirm(contact.name)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.l10n.contacts_removeConfirm(contact.name)),
+            if (connector.autoAddsContactType(contact.type)) ...[
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.contacts_removeAutoAddNote,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -6332,7 +6349,7 @@ class _MapScreenState extends State<MapScreen>
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              unawaited(connector.deleteContact(contact));
+              unawaited(deleteContactWithFeedback(context, connector, contact));
             },
             child: Text(
               context.l10n.common_delete,

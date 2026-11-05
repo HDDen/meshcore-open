@@ -3713,6 +3713,35 @@ Baseline identity/path tests and companion_cli_screen_test protect the existing
 behavior; contact_key_prefix_test plus badge geometry/semantics checks cover
 this addition. User guide: documentation/contacts.md. Agent did not run tests.
 
+### Confirmed contact removal (U06c2)
+
+`removeContact` and `deleteContact` default to waiting for the existing generic
+ACK queue. The fork keeps `CommandFailedException`: only `errCodeNotFound`
+counts as an already-completed removal; other ERR/write failures/timeouts leave
+local contacts and history intact. A radio-key check after the ACK prevents
+an old operation from cleaning another radio's rebound stores. The optional
+`waitForAck` argument is retained for source compatibility; UI actions explicitly
+request confirmation through `helpers/remove_contact_action.dart`. This shared
+helper catches failures for the contacts dialog, map deletion and discovery undo.
+Batch operations retain their per-contact failure reporting and cancellation.
+
+`ContactRemovalGuard` counts active removal futures by node/contact pair and
+releases them in `finally`, including overlapping removals. Path/reset/flag
+updates use the contact list's existing O(1) `byKey` index and skip absent or
+currently removing contacts. They recheck radio identity/membership after async
+lock/snapshot/write waits; flag updates no longer insert a missing local row.
+No SQL lookup, timer, polling or permanent deny list is added. Explicit imports
+still work. This does not quarantine all late incoming CONTACT frames.
+
+The existing discovered-only deletion path, `keepMessages`, linked-history
+handling, unread cleanup and native SQL `contact_settings` are preserved. No
+schema migration is needed. `autoAddsContactType` reads the reported auto-add
+flags for confirmation warnings. Only missing ARB keys `contacts_removeFailed`
+and `contacts_removeAutoAddNote` are added; the owner generates Dart localizations.
+Native ACK/SQL/race/import coverage uses `remove_contact_merge_baseline_test`;
+`remove_contact_test` covers auto-add flags and scoped guard lifetime. Existing
+pending-reply, persistence/history and UI baseline tests remain active.
+
 ### Favorites at the top of contacts
 
 `helpers/contact_favorite_order.dart` applies a stable favorites-first partition

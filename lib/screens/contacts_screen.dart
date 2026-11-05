@@ -26,6 +26,7 @@ import '../helpers/offline_mode_helper.dart';
 import '../l10n/l10n.dart';
 import '../connector/meshcore_protocol.dart';
 import '../models/contact.dart';
+import '../helpers/remove_contact_action.dart';
 import '../l10n/contact_localization.dart';
 import '../models/app_settings.dart';
 import '../models/contact_group.dart';
@@ -3161,6 +3162,16 @@ class _ContactsScreenState extends State<ContactsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(context.l10n.contacts_removeConfirm(contact.name)),
+              if (connector.autoAddsContactType(contact.type)) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context.l10n.contacts_removeAutoAddNote,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
               // The conversation stays in the database and comes back with
               // the contact; the node's own record goes either way.
               CheckboxListTile(
@@ -3181,7 +3192,9 @@ class _ContactsScreenState extends State<ContactsScreen>
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-                connector.deleteContact(contact, keepMessages: keepHistory);
+                unawaited(deleteContactWithFeedback(
+                  context, connector, contact, keepMessages: keepHistory,
+                ));
               },
               child: Text(
                 context.l10n.common_delete,

@@ -4316,5 +4316,7 @@
   "map_pathTraceModeRoundTripHint": "Śledzenie idzie przez te skoki i wraca tą samą drogą.",
   "map_pathTraceModeAsEntered": "Jak wprowadzono",
   "map_pathTraceModeAsEnteredHint": "Śledzenie przechodzi dokładnie przez te skoki. Skoki powrotne do siebie dodaj samodzielnie.",
-  "map_pathTraceViewLast": "Zobacz ostatni wynik"
+  "map_pathTraceViewLast": "Zobacz ostatni wynik",
+  "contacts_removeFailed": "Radio nie potwierdziło usunięcia. Kontakt nie został usunięty.",
+  "contacts_removeAutoAddNote": "Twoje radio automatycznie dodaje ten typ kontaktu, więc wróci przy następnym rozgłoszeniu. Wyłącz automatyczne dodawanie w ustawieniach Kontaktów, aby go usunąć na stałe."
 }

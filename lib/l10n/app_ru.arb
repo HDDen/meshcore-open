@@ -3560,5 +3560,7 @@
   "map_pathTraceModeAsEnteredHint": "Трассировка проходит строго через эти хопы. Хопы обратно к себе добавьте сами.",
   "map_pathTraceViewLast": "Показать последний результат",
   "settings_modSettingsBattery": "Батарея",
-  "settings_lowBatteryAlerts": "Оповещать о низком заряде"
+  "settings_lowBatteryAlerts": "Оповещать о низком заряде",
+  "contacts_removeFailed": "Не удалось удалить контакт.",
+  "contacts_removeAutoAddNote": "На ноде включено автоматическое добавление контактов этого типа. При следующем анонсе контакт может появиться снова."
 }

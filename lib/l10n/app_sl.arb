@@ -4249,5 +4249,7 @@
   "map_pathTraceModeRoundTripHint": "Sledenje gre skozi te skoke in se vrne po isti poti.",
   "map_pathTraceModeAsEntered": "Kot vneseno",
   "map_pathTraceModeAsEnteredHint": "Sledenje sledi tem skokom natančno. Skoke nazaj k sebi dodajte sami.",
-  "map_pathTraceViewLast": "Poglej zadnji rezultat"
+  "map_pathTraceViewLast": "Poglej zadnji rezultat",
+  "contacts_removeFailed": "Radio ni potrdil odstranitve. Stik ni bil odstranjen.",
+  "contacts_removeAutoAddNote": "Vaš radio samodejno doda to vrsto stika, zato se bo vrnil, ko bo naslednjič poslal oglas. Izklopite samodejno dodajanje v nastavitvah stikov, da ostane odstranjen."
 }

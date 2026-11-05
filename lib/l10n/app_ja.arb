@@ -4381,5 +4381,7 @@
   "map_pathTraceModeRoundTripHint": "トレースはこれらのホップを経由して送信され、同じ経路で戻ってきます。",
   "map_pathTraceModeAsEntered": "入力どおり",
   "map_pathTraceModeAsEnteredHint": "トレースはこれらのホップをそのとおりにたどります。自分へ戻るホップは自分で追加してください。",
-  "map_pathTraceViewLast": "前回の結果を表示"
+  "map_pathTraceViewLast": "前回の結果を表示",
+  "contacts_removeFailed": "ラジオが削除を確認しませんでした。連絡先は削除されていません。",
+  "contacts_removeAutoAddNote": "このタイプの連絡先はラジオが自動追加するため、次回アドバートを送信すると再び追加されます。削除したままにするには、連絡先設定で自動追加をオフにしてください。"
 }

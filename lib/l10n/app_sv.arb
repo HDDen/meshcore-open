@@ -4059,5 +4059,7 @@
   "map_pathTraceModeRoundTripHint": "Spårningen går ut via dessa hopp och kommer tillbaka samma väg.",
   "map_pathTraceModeAsEntered": "Som inmatat",
   "map_pathTraceModeAsEnteredHint": "Spårningen följer exakt dessa hopp. Lägg själv till hoppen tillbaka till dig.",
-  "map_pathTraceViewLast": "Visa senaste resultat"
+  "map_pathTraceViewLast": "Visa senaste resultat",
+  "contacts_removeFailed": "Radion bekräftade inte borttagningen. Kontakten togs inte bort.",
+  "contacts_removeAutoAddNote": "Din radio lägger automatiskt till den här kontakttypen, så den kommer tillbaka nästa gång den skickar en annons. Stäng av automatisk tillägg i kontaktinställningarna för att behålla den borttagen."
 }

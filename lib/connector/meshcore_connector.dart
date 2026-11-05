@@ -51,6 +51,7 @@ import '../helpers/channel_sender_name.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../helpers/contact_settings_snapshot.dart';
+import '../helpers/contact_removal_guard.dart';
 import '../helpers/connection_cleanup.dart';
 import '../helpers/connection_teardown_background_work.dart';
 import '../helpers/device_polling_intervals.dart';
@@ -654,6 +655,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Serializes path operations (setContactPath/clearContactPath) to prevent
   // interleaved async calls from leaving in-memory state inconsistent with device.
   Future<void> _pathOpLock = Future.value();
+  final _contactRemovalGuard = ContactRemovalGuard();
   // Flood scope is a global firmware setting, so scoped channel sends must not
   // overlap or a message may inherit another channel's region.
   Future<void> _channelScopedSendLock = Future.value();
@@ -1235,6 +1237,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool? get autoAddRoomServers => _autoAddRoomServers;
   bool? get autoAddSensors => _autoAddSensors;
   bool? get autoAddOverwriteOldest => _overwriteOldest;
+
+  /// A later advert can automatically re-add a deleted contact of this type.
+  bool autoAddsContactType(int type) => switch (type) {
+    advTypeChat => _autoAddUsers,
+    advTypeRepeater => _autoAddRepeaters,
+    advTypeRoom => _autoAddRoomServers,
+    advTypeSensor => _autoAddSensors,
+    _ => false,
+  };
 
   /// autoadd_max_hops from GET_AUTOADD_CONFIG (0 = no limit), null when the
   /// firmware did not report it (pre-v1.13).
@@ -8517,6 +8528,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     int? pathHashWidth,
     bool waitForAck = false,
   }) async {
+    final nodeKey = selfPublicKeyHex;
     // Serialize path operations to prevent interleaved async calls from
     // leaving in-memory state inconsistent with the device.
     final prev = _pathOpLock;
@@ -8524,7 +8536,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _pathOpLock = completer.future;
     await prev;
     try {
-      if (!isConnected) return;
+      if (!_canUpdateContactOnNode(contact, nodeKey)) return;
 
       final width =
           pathHashWidth ??
@@ -8552,6 +8564,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (_activeTransport == MeshCoreTransportType.usb) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
+      if (!_canUpdateContactOnNode(contact, nodeKey)) return;
       final idx = _contacts.indexWhere(
         (c) => c.publicKeyHex == contact.publicKeyHex,
       );
@@ -8568,6 +8581,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  bool _canUpdateContactOnNode(Contact contact, String nodeKey) =>
+      isConnected && selfPublicKeyHex == nodeKey &&
+      _contacts.byKey(contact.publicKeyHex) != null &&
+      !_contactRemovalGuard.isRemoving(nodeKey, contact.publicKeyHex);
+
   /// The advert timestamp the firmware holds for [contact] (Contact.lastSeen
   /// is parsed from that field); the stored copy is freshest.
   DateTime _deviceLastAdvert(Contact contact) =>
@@ -8580,9 +8598,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool? teleLoc,
     bool? teleEnv,
   }) async {
-    if (!isConnected) return;
+    final nodeKey = selfPublicKeyHex;
+    if (!_canUpdateContactOnNode(contact, nodeKey)) return;
     final latestContact =
         await _fetchContactSnapshotFromDevice(contact.publicKey) ?? contact;
+    if (!_canUpdateContactOnNode(contact, nodeKey)) return;
     int updatedFlags = isFavorite != null
         ? (isFavorite
               ? (latestContact.flags | contactFlagFavorite)
@@ -8622,6 +8642,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       ),
     );
 
+    // A deletion can finish while the transport writer is still completing.
+    // In that case do not re-create the row locally after a successful write.
+    if (!_canUpdateContactOnNode(contact, nodeKey)) return;
     final updatedContact = latestContact.copyWith(flags: updatedFlags);
     final index = _contacts.indexWhere(
       (c) => c.publicKeyHex == contact.publicKeyHex,
@@ -8640,9 +8663,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         pathHashWidth: latestContact.pathHashWidth,
         flags: updatedFlags,
       );
-    } else {
-      _contacts.add(updatedContact.copyWith(isActive: true));
-      _knownContactKeys.add(updatedContact.publicKeyHex);
     }
     final discoveredIndex = _discoveredContacts.indexWhere(
       (c) => c.publicKeyHex == contact.publicKeyHex,
@@ -10977,7 +10997,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// history comes back if the contact is added again.
   Future<void> removeContact(
     Contact contact, {
-    bool waitForAck = false,
+    bool waitForAck = true,
     bool keepMessages = false,
   }) async {
     if (!isConnected) {
@@ -10987,6 +11007,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    final nodeKey = selfPublicKeyHex;
+    return _contactRemovalGuard.run(
+      nodeKey: nodeKey,
+      contactKey: contact.publicKeyHex,
+      operation: () => _removeContactCore(
+        contact,
+        nodeKey: nodeKey,
+        waitForAck: waitForAck,
+        keepMessages: keepMessages,
+      ),
+    );
+  }
+
+  Future<void> _removeContactCore(
+    Contact contact, {
+    required String nodeKey,
+    required bool waitForAck,
+    required bool keepMessages,
+  }) async {
     try {
       await sendFrame(
         buildRemoveContactFrame(contact.publicKey),
@@ -10997,6 +11036,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // for, so the removal is finished here. A contact only the app listed
       // could otherwise never be deleted in a batch.
       if (error.errCode != errCodeNotFound) rethrow;
+    }
+    // The stores may have been rebound while the ACK was in flight. Never
+    // clear another radio's list or history using an old screen's operation.
+    if (!isConnected || selfPublicKeyHex != nodeKey) {
+      throw StateError('Connection changed while removing contact');
     }
     _contactsStorageFull = false;
 
@@ -11144,7 +11188,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// node the app has merely heard takes up.
   Future<void> deleteContact(
     Contact contact, {
-    bool waitForAck = false,
+    bool waitForAck = true,
     bool keepMessages = false,
   }) {
     if (_contacts.byKey(contact.publicKeyHex) != null) {
@@ -11278,13 +11322,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Contact contact, {
     bool waitForAck = false,
   }) async {
+    final nodeKey = selfPublicKeyHex;
     // Serialize path operations to prevent interleaved async calls.
     final prev = _pathOpLock;
     final completer = Completer<void>();
     _pathOpLock = completer.future;
     await prev;
     try {
-      if (!isConnected) return;
+      if (!_canUpdateContactOnNode(contact, nodeKey)) return;
 
       // The only path reset the app sends on its own. Logged because the node
       // changes routes by itself too and announces it with
@@ -11302,6 +11347,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (_activeTransport == MeshCoreTransportType.usb) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
+      if (!_canUpdateContactOnNode(contact, nodeKey)) return;
       final existingIndex = _contacts.indexWhere(
         (c) => c.publicKeyHex == contact.publicKeyHex,
       );

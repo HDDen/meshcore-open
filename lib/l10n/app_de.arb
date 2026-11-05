@@ -4411,5 +4411,7 @@
   "map_pathTraceModeRoundTripHint": "Die Verfolgung geht über diese Hops hinaus und kommt auf demselben Weg zurück.",
   "map_pathTraceModeAsEntered": "Wie eingegeben",
   "map_pathTraceModeAsEnteredHint": "Die Verfolgung folgt genau diesen Hops. Fügen Sie die Hops zurück zu Ihnen selbst hinzu.",
-  "map_pathTraceViewLast": "Letztes Ergebnis anzeigen"
+  "map_pathTraceViewLast": "Letztes Ergebnis anzeigen",
+  "contacts_removeFailed": "Das Funkgerät hat das Entfernen nicht bestätigt. Der Kontakt wurde nicht entfernt.",
+  "contacts_removeAutoAddNote": "Ihr Funkgerät fügt diesen Kontakttyp automatisch hinzu, daher kommt er beim nächsten Advert zurück. Deaktivieren Sie in den Kontakteinstellungen das automatische Hinzufügen, um ihn entfernt zu lassen."
 }

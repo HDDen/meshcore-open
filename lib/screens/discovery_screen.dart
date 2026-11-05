@@ -16,6 +16,7 @@ import '../helpers/zero_hop_device_discovery.dart';
 import '../l10n/l10n.dart';
 import '../l10n/contact_localization.dart';
 import '../models/contact.dart';
+import '../helpers/remove_contact_action.dart';
 import '../theme/mesh_theme.dart';
 import '../utils/contact_filter_types.dart';
 import '../utils/platform_info.dart';
@@ -523,7 +524,9 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         content: Text(context.l10n.discoveredContacts_contactAdded),
         action: SnackBarAction(
           label: context.l10n.common_undo,
-          onPressed: () => connector.removeContact(contact),
+          onPressed: () => unawaited(
+            deleteContactWithFeedback(context, connector, contact),
+          ),
         ),
       );
     } catch (_) {

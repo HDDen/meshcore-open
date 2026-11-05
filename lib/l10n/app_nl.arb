@@ -4066,5 +4066,7 @@
   "map_pathTraceModeRoundTripHint": "De trace gaat via deze hops heen en komt op dezelfde weg terug.",
   "map_pathTraceModeAsEntered": "Zoals ingevoerd",
   "map_pathTraceModeAsEnteredHint": "De trace volgt precies deze hops. Voeg zelf de hops terug naar jou toe.",
-  "map_pathTraceViewLast": "Laatste resultaat bekijken"
+  "map_pathTraceViewLast": "Laatste resultaat bekijken",
+  "contacts_removeFailed": "De radio heeft de verwijdering niet bevestigd. Het contact is niet verwijderd.",
+  "contacts_removeAutoAddNote": "Je radio voegt dit contacttype automatisch toe, dus het komt terug zodra het weer een advert verstuurt. Zet automatisch toevoegen uit in de Contactinstellingen om het verwijderd te houden."
 }

@@ -4280,5 +4280,7 @@
   "map_pathTraceModeRoundTripHint": "A nyomkövetés ezeken az ugrásokon át megy ki, és ugyanazon az úton jön vissza.",
   "map_pathTraceModeAsEntered": "Megadott sorrendben",
   "map_pathTraceModeAsEnteredHint": "A nyomkövetés pontosan ezeket az ugrásokat követi. A hozzád visszavezető ugrásokat magadnak kell hozzáadnod.",
-  "map_pathTraceViewLast": "Utolsó eredmény megtekintése"
+  "map_pathTraceViewLast": "Utolsó eredmény megtekintése",
+  "contacts_removeFailed": "A rádió nem erősítette meg az eltávolítást. A névjegy nem lett eltávolítva.",
+  "contacts_removeAutoAddNote": "A rádiód automatikusan hozzáadja ezt a névjegytípust, ezért a következő hirdetésekor visszakerül. Az eltávolítás megtartásához kapcsold ki az automatikus hozzáadást a Névjegyek beállításaiban."
 }

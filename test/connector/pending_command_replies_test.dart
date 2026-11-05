@@ -79,7 +79,9 @@ void main() {
       waitForReply: true,
     );
     queue.takeErr(6);
-    await expectLater(pending!.completer!.future, throwsException);
+    await expectLater(pending!.completer!.future, throwsA(
+      isA<CommandFailedException>().having((error) => error.errCode, 'errCode', 6),
+    ));
   });
 
   group('timed-out entries', () {

@@ -80,6 +80,21 @@ class _Connector extends MeshCoreConnector {
   final history = _History();
   final writes = <List<int>>[];
   final channelOrders = <List<int>>[];
+  final deletions = <({String key, bool keepMessages})>[];
+  final deletionAckChoices = <bool>[];
+  Object? deleteFailure;
+  @override
+  Future<void> deleteContact(Contact contact, {
+    bool waitForAck = true,
+    bool keepMessages = false,
+  }) async {
+    deletions.add((key: contact.publicKeyHex, keepMessages: keepMessages));
+    deletionAckChoices.add(waitForAck);
+    final failure = deleteFailure;
+    if (failure != null) throw failure;
+    contactData.removeWhere((entry) => entry.publicKeyHex == contact.publicKeyHex);
+    refreshContactRows();
+  }
   late final CompanionCliSession testSession;
   bool supported = true;
   bool loaded = true;
@@ -493,6 +508,75 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     }, skip: secondaryClick && !PlatformInfo.isDesktop);
+  }
+
+  for (final action in ['cancel', 'delete', 'keep history']) {
+    testWidgets('U06c2 baseline: contact deletion confirmation $action', (tester) async {
+      final contact = Contact(
+        publicKey: Uint8List.fromList(List<int>.filled(32, 0x55)),
+        name: 'Synthetic delete target', type: advTypeRepeater,
+        pathLength: -1, path: Uint8List(0), lastSeen: DateTime.utc(2026),
+      );
+      connector.contactData.add(contact);
+      await show(tester, ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
+        child: const ContactsScreen(hideBackButton: true),
+      ));
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+      await tester.longPress(find.text(contact.name));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.contacts_deleteContact));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(connector.deletions, isEmpty);
+      final checkbox = find.widgetWithText(CheckboxListTile, l10n.contacts_keepChatHistory);
+      expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
+      if (action == 'keep history') {
+        await tester.tap(checkbox);
+        await tester.pump();
+      }
+      await tester.tap(find.widgetWithText(TextButton,
+          action == 'cancel' ? l10n.common_cancel : l10n.common_delete));
+      await tester.pumpAndSettle();
+      expect(connector.deletions, action == 'cancel' ? isEmpty :
+          [(key: contact.publicKeyHex, keepMessages: action == 'keep history')]);
+      expect(connector.deletionAckChoices, action == 'cancel' ? isEmpty : [true]);
+      expect(connector.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  for (final autoAdd in [false, true]) {
+    testWidgets('U06c2: delete warning follows auto-add and errors remain visible ($autoAdd)', (tester) async {
+      final contact = Contact(
+        publicKey: Uint8List.fromList(List<int>.filled(32, 0x66)),
+        name: 'Synthetic failed deletion', type: advTypeRepeater,
+        pathLength: -1, path: Uint8List(0), lastSeen: DateTime.utc(2026),
+      );
+      connector.contactData.add(contact);
+      connector.deleteFailure = StateError('Synthetic remove failure');
+      connector.handleFrameForTest([respCodeAutoAddConfig, autoAdd ? autoAddRepeaterFlag : 0]);
+      await show(tester, ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
+        child: const ContactsScreen(hideBackButton: true),
+      ));
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+      await tester.longPress(find.text(contact.name));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.contacts_deleteContact));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.contacts_removeAutoAddNote), autoAdd ? findsOneWidget : findsNothing);
+      await tester.tap(find.widgetWithText(TextButton, l10n.common_delete));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.contacts_removeFailed), findsOneWidget);
+      expect(connector.contactData, contains(contact));
+      expect(connector.deletionAckChoices, [true]);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
   }
 
   testWidgets('CLI precedes favorites and each group keeps the selected sort', (tester) async {

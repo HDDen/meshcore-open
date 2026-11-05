@@ -4354,5 +4354,7 @@
   "map_pathTraceModeRoundTripHint": "La traza sale por estos saltos y vuelve por el mismo camino.",
   "map_pathTraceModeAsEntered": "Tal como se introdujo",
   "map_pathTraceModeAsEnteredHint": "La traza sigue estos saltos exactamente. Añade tú mismo los saltos de vuelta hacia ti.",
-  "map_pathTraceViewLast": "Ver último resultado"
+  "map_pathTraceViewLast": "Ver último resultado",
+  "contacts_removeFailed": "La radio no confirmó la eliminación. El contacto no se eliminó.",
+  "contacts_removeAutoAddNote": "Tu radio añade automáticamente este tipo de contacto, así que volverá la próxima vez que envíe un anuncio. Desactiva la adición automática en los ajustes de Contactos para mantenerlo eliminado."
 }

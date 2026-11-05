@@ -4249,5 +4249,7 @@
   "map_pathTraceModeRoundTripHint": "Sledovanie prejde cez tieto skoky a vráti sa rovnakou cestou.",
   "map_pathTraceModeAsEntered": "Podľa zadania",
   "map_pathTraceModeAsEnteredHint": "Sledovanie presne prejde cez tieto skoky. Skoky späť k sebe pridajte sami.",
-  "map_pathTraceViewLast": "Zobraziť posledný výsledok"
+  "map_pathTraceViewLast": "Zobraziť posledný výsledok",
+  "contacts_removeFailed": "Rádio odstránenie nepotvrdilo. Kontakt nebol odstránený.",
+  "contacts_removeAutoAddNote": "Vaše rádio tento typ kontaktu pridáva automaticky, preto sa vráti pri jeho ďalšom inzeráte. Ak ho chcete ponechať odstránený, vypnite automatické pridávanie v nastaveniach kontaktov."
 }

@@ -106,7 +106,26 @@ Groups are stored per radio identity (scoped by public key).
 | Add/Remove Favorite | All types | Toggles the favorite flag |
 | Share Contact | All types | Requests advert from device → copies `meshcore://<hex>` URI to clipboard |
 | Share Contact Zero-Hop | All types | Broadcasts the contact's advertisement one hop |
-| Delete Contact | All types | Confirmation dialog → removes from device and clears messages |
+| Delete Contact | All types | Confirmation → waits for the radio; optionally keeps chat history. Warns when radio auto-add can bring the contact back |
+
+### Deleting a Contact
+
+For a contact stored on the connected node, deletion waits for confirmation.
+Only success or the node's **contact not found** response removes it locally;
+other errors and timeouts keep the contact and its history and show a failure
+message. The contact list, map and discovery undo action use the same feedback.
+A contact present only in the app's discovered list is deleted locally.
+
+**Keep chat history** retains the conversation, including manually linked
+contact keys. Contact-specific app options such as MCMP and sending delay are
+preserved. This changes neither the database schema nor the existing history format.
+
+The confirmation warns when the node automatically adds that contact type:
+another advert can legitimately bring it back. Deletion is not a blacklist.
+An old open chat/admin screen cannot implicitly re-add a removed contact by
+updating its path or favorite/telemetry flags. An explicit confirmed import
+remains available. Path and flag updates are also suppressed while removal is
+awaiting its reply.
 
 ## App Bar Menus
 
