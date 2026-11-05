@@ -8985,4 +8985,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Показать последний результат';
+
+  @override
+  String get settings_modSettingsBattery => 'Батарея';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Оповещать о низком заряде';
 }

@@ -8959,4 +8959,10 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Poglej zadnji rezultat';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

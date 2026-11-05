@@ -9012,4 +9012,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Ver último resultado';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

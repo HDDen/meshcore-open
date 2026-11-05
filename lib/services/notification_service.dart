@@ -958,12 +958,14 @@ class NotificationService {
     required String deviceName,
     required int batteryPercent,
     required int threshold,
+    bool Function()? isStillAllowed,
   }) => _backgroundWork.run(() {
     final operation = _lowBatteryQueue.then<void>((_) async {
       try {
         if (!await _ensureCanNotify()) {
           return;
         }
+        if (!(isStillAllowed?.call() ?? true)) return;
         const notificationDetails = NotificationDetails(
           android: AndroidNotificationDetails(
             'low_battery',

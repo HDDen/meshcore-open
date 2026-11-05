@@ -1,6 +1,7 @@
 import 'image_codec_support.dart';
 import 'translation_support.dart';
 import 'power_saving_settings.dart';
+import 'low_battery_alert_settings.dart';
 import '../helpers/cyr2lat.dart';
 
 enum UnitSystem { metric, imperial }
@@ -324,6 +325,7 @@ class AppSettings {
   /// and cache size.
   final double mapYandexTileScale;
   final bool notificationsEnabled;
+  final LowBatteryAlertSettings lowBatteryAlerts;
   final bool notifyOnNewMessage;
   final bool notifyOnNewChannelMessage;
   final bool notifyOnNewAdvert;
@@ -775,6 +777,7 @@ class AppSettings {
     this.mapYandexSigningSecret,
     this.mapYandexTileScale = defaultMapYandexTileScale,
     this.notificationsEnabled = true,
+    this.lowBatteryAlerts = const LowBatteryAlertSettings(),
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
     this.notifyOnNewAdvert = true,
@@ -943,6 +946,7 @@ class AppSettings {
       'map_yandex_signing_secret': mapYandexSigningSecret,
       'map_yandex_tile_scale': mapYandexTileScale,
       'notifications_enabled': notificationsEnabled,
+      'low_battery_alerts': lowBatteryAlerts.toJson(),
       'notify_on_new_message': notifyOnNewMessage,
       'notify_on_new_channel_message': notifyOnNewChannelMessage,
       'notify_on_new_advert': notifyOnNewAdvert,
@@ -1153,6 +1157,7 @@ class AppSettings {
         json['map_yandex_tile_scale'],
       ),
       notificationsEnabled: json['notifications_enabled'] as bool? ?? true,
+      lowBatteryAlerts: LowBatteryAlertSettings.fromJson(json['low_battery_alerts']),
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
           json['notify_on_new_channel_message'] as bool? ?? true,
@@ -1387,6 +1392,7 @@ class AppSettings {
     Object? mapYandexSigningSecret = _unset,
     double? mapYandexTileScale,
     bool? notificationsEnabled,
+    LowBatteryAlertSettings? lowBatteryAlerts,
     bool? notifyOnNewMessage,
     bool? notifyOnNewChannelMessage,
     bool? notifyOnNewAdvert,
@@ -1560,6 +1566,7 @@ class AppSettings {
           ? this.mapTileApiKey
           : mapTileApiKey as String?,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      lowBatteryAlerts: lowBatteryAlerts ?? this.lowBatteryAlerts,
       notifyOnNewMessage: notifyOnNewMessage ?? this.notifyOnNewMessage,
       notifyOnNewChannelMessage:
           notifyOnNewChannelMessage ?? this.notifyOnNewChannelMessage,

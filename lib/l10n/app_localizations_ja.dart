@@ -8561,4 +8561,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => '前回の結果を表示';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

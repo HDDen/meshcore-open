@@ -8949,4 +8949,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Visa senaste resultat';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

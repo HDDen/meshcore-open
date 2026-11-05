@@ -15028,6 +15028,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View last result'**
   String get map_pathTraceViewLast;
+
+  /// No description provided for @settings_modSettingsBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get settings_modSettingsBattery;
+
+  /// No description provided for @settings_lowBatteryAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify on low battery'**
+  String get settings_lowBatteryAlerts;
 }
 
 class _AppLocalizationsDelegate

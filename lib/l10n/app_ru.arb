@@ -3558,5 +3558,7 @@
   "map_pathTraceModeRoundTripHint": "Трассировка проходит через эти хопы и возвращается тем же путём.",
   "map_pathTraceModeAsEntered": "Как введено",
   "map_pathTraceModeAsEnteredHint": "Трассировка проходит строго через эти хопы. Хопы обратно к себе добавьте сами.",
-  "map_pathTraceViewLast": "Показать последний результат"
+  "map_pathTraceViewLast": "Показать последний результат",
+  "settings_modSettingsBattery": "Батарея",
+  "settings_lowBatteryAlerts": "Оповещать о низком заряде"
 }

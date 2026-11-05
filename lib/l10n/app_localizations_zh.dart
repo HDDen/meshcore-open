@@ -8372,4 +8372,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => '查看上次结果';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

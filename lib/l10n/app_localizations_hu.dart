@@ -8997,4 +8997,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Utolsó eredmény megtekintése';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

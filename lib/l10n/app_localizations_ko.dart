@@ -8565,4 +8565,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => '마지막 결과 보기';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

@@ -761,8 +761,16 @@ by the owner. User guide: `documentation/notifications.md`.
 
 `_handleBatteryAndStorage` checks the existing `batteryPercent` after parsing
 the response. It does not change the chemistry/custom/provider range lookup,
-raw sensor state or effective polling interval. Thresholds 25/10 each require
-two consecutive valid readings; each re-arms strictly above threshold + 5.
+raw sensor state or effective polling interval. `LowBatteryAlertSettings` in
+AppSettings persists the app-wide switch (default true) and selected levels
+5/10/15/20/25/30 (default 10/25). Mod Settings → Battery contains these controls
+and the relocated power-saving tile. `helpers/low_battery_alert_tracker.dart`
+requires two consecutive valid readings per selected threshold; each re-arms
+strictly above threshold + 5. Rising voltage and its subsequent equal readings
+suppress alerts until voltage falls. This is an inference from raw millivolts,
+not a charger flag. Disabled/unselected thresholds cancel existing notifications
+and invalidate their queued shows with per-crossing tokens; changing another
+selected level does not invalidate an unchanged pending notification.
 Zero and implausible sub-2-V readings break confirmation, except an explicit
 profile with a lower minimum remains supported. Identity and app settings must
 be known, and disabled app notifications do not consume an unposted threshold.
@@ -1656,7 +1664,9 @@ target placement, route slicing, manual normalization, whole-hop undo,
 3-to-4-byte TRACE expansion and `revealMapManually` stay in place.
 
 Labeled controls expose round-trip/as-entered mode and the last completed
-result. Each edit/new run advances a revision; callbacks also check radio,
+result. The introductory `map_pathTraceAddMoreHint` is commented out per the
+2026-11-05 review; mode-specific hints and actions remain visible.
+Each edit/new run advances a revision; callbacks also check radio,
 route, width and mode, so A-to-B-to-A edits cannot accept an old completion.
 `SavedPathTraceResult.matchesRequest` additionally verifies the response tag,
 route, flags and complete SNR tail before caching. This does not replace the
@@ -2826,6 +2836,11 @@ after the synthetic ACK fix are accepted by the owner. Hardware verification
 remains pending. New messages are added only to ARB; the owner regenerates
 Dart localizations.
 
+2026-11-05 fork review: `_RadioSettingsDialogState._showPathHashSelector` is
+false. The upstream dropdown and width-confirmation code remain in place but
+neither render nor send mode changes. Only the existing standalone selector
+is active; saving the radio dialog cannot revert an externally changed width.
+
 
 `setRadioParams` sends SET_RADIO_PARAMS and waits for the node's OK, returning false on ERR or timeout, and the settings screen then shows `settings_radioSettingsNotApplied`. The coding rate travels as the node's own 5–8 (the app once sent 1–4), frequencies start at 150 MHz and TX power at −9 dBm, as the firmware accepts. The client-repeat check uses the frequency ranges the node allows (`allowedRepeatFreqRanges`, firmware version code 9+, falling back to 433, 869.495 and 918 MHz), and writing the auto-add settings keeps the node's max-hops value (`autoAddMaxHops`, 8+); `_maybeRequestDeviceConfig` asks for both once DEVICE_INFO and SELF_INFO are in. The path-hash mode is offered from version code 10. Sending an AEIC picture needs version code 11 (`supportsChannelData`, checked by `sendImageChunks` and the channel screen's `_sendImage`), where it used to wait for 13: `CMD_SEND_CHANNEL_DATA` arrived while the code was 10 (2026-03-05) and took its final framing on 03-18 and 03-23, so 11 (04-15) is the first code that guarantees it, while 13 (06-01) brought requests to non-contacts and nothing for channel data. The other binary channel sends, the MCMP and MCOtxt envelopes and MCOimg, check no version at all: a node without the command answers ERR and the message fails. Airtime estimates (`calculateLoRaAirtime`) use the firmware's preamble, 32 symbols up to SF8 and 16 above, and RadioLib's LDRO rule (symbol time over 16 ms), so timeouts and retry spacing came out longer than before.
 
@@ -3643,6 +3658,10 @@ commit are separate errors. Agent did not execute the generator or tests.
 Keep the fork's collapsible quick-filter row and map_node_filters_expanded_v1
 persistence; upstream ed5884e2 removes a row that our fork already makes
 optional. Adopt its Badge.count on the filter FAB and source-segment tooltips.
+2026-11-05: the badge is temporarily disabled by `_showMapFilterCountBadge`
+(a private getter returning false, keeping dormant code reachable to the analyzer);
+the counter implementation remains, but no counter is computed/rendered while
+disabled. The ordinary filter icon and all filtering controls stay active.
 networkMapAvailable stays false. `_activeFilterCount` is O(1), evaluated once
 per action-column build, without contact scans or temporary lists. It counts
 freshness, a positive time limit, a nonempty enabled key prefix, and hidden
@@ -3684,7 +3703,8 @@ ContactsScreen computes `publicKeyPrefixLabel` in `_ContactListItemData` as part
 of its existing derived-list cache; `pathHashByteWidth` already invalidates that
 cache. `_KeyPrefixBadge` displays it before the existing path/last-seen row,
 with localized, individually spoken hex digits. Both path and last-seen labels
-have bounded flex widths; the timestamp remains end-aligned and ellipsizes
+have bounded flex widths; location and timestamp share an end-aligned inner
+row so the icon stays beside the time at the right edge. The timestamp ellipsizes
 instead of overflowing beside a three-byte prefix at large text scales.
 The full MiddleEllipsisText key,
 favorites, CLI sliver and gestures stay intact. No new timers, I/O or protocol

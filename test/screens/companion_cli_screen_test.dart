@@ -365,6 +365,8 @@ void main() {
             0xA3, 0x0F, 0xB2, ...List<int>.filled(29, 0x44),
           ]),
           name: 'Synthetic routing contact',
+          latitude: 55.75,
+          longitude: 37.62,
           type: advTypeRepeater,
           flags: contactFlagFavorite,
           pathLength: 1,
@@ -417,6 +419,13 @@ void main() {
             lessThan(tester.getRect(path).left),
           );
           expect(find.byIcon(Icons.star), findsOneWidget);
+          final location = find.byIcon(Icons.location_on);
+          expect(location, findsOneWidget);
+          final trailingRow = find.ancestor(of: location, matching: find.byType(Row)).first;
+          final lastSeen = find.descendant(of: trailingRow, matching: find.byType(Text));
+          expect(lastSeen, findsOneWidget);
+          expect(tester.getRect(lastSeen).left - tester.getRect(location).right, closeTo(6, 0.01));
+          expect(tester.getRect(lastSeen).right, closeTo(tester.getRect(trailingRow).right, 0.01));
           expect(
             tester.getRect(find.byType(CompanionCliTile)).bottom,
             lessThan(tester.getRect(find.text(contact.name)).top),

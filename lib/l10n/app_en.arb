@@ -4608,5 +4608,7 @@
   "map_pathTraceModeRoundTripHint": "The trace goes out through these hops and comes back the same way.",
   "map_pathTraceModeAsEntered": "As entered",
   "map_pathTraceModeAsEnteredHint": "The trace follows these hops exactly. Add the hops back to you yourself.",
-  "map_pathTraceViewLast": "View last result"
+  "map_pathTraceViewLast": "View last result",
+  "settings_modSettingsBattery": "Battery",
+  "settings_lowBatteryAlerts": "Notify on low battery"
 }

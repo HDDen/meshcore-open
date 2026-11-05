@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import '../models/app_settings.dart';
+import '../models/low_battery_alert_settings.dart';
 import '../storage/channel_identity_store.dart';
 import '../models/cpu_sleep_options.dart';
 import '../models/power_saving_settings.dart';
@@ -654,6 +655,25 @@ class AppSettingsService extends ChangeNotifier {
         mapYandexTileScale: AppSettings.normalizeMapYandexTileScale(value),
       ),
     );
+  }
+
+  Future<void> setLowBatteryAlertsEnabled(bool enabled) async {
+    await updateSettings(_settings.copyWith(
+      lowBatteryAlerts: _settings.lowBatteryAlerts.copyWith(enabled: enabled),
+    ));
+  }
+
+  Future<void> setLowBatteryAlertThreshold(int threshold, bool selected) async {
+    if (!LowBatteryAlertSettings.supportedThresholds.contains(threshold)) return;
+    final values = _settings.lowBatteryAlerts.thresholds.toSet();
+    if (selected) {
+      values.add(threshold);
+    } else {
+      values.remove(threshold);
+    }
+    await updateSettings(_settings.copyWith(
+      lowBatteryAlerts: _settings.lowBatteryAlerts.copyWith(thresholds: values.toList()),
+    ));
   }
 
   Future<void> setNotificationsEnabled(bool value) async {

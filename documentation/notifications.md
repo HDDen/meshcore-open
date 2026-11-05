@@ -63,11 +63,21 @@ Notification text states:
 
 ### 5. Connected Radio Low-Battery Alerts
 
-With **Enable Notifications** on, the app alerts at **25%** and **10%** remaining
-on the connected radio. Each threshold needs two consecutive valid battery
-readings at or below it. If both thresholds are confirmed together, only the
-more urgent alert is shown. The body names the radio and its estimated charge.
-OS notification permission is required; there is no separate battery toggle.
+Open **Mod Settings → Battery → Notify on low battery**. The switch is enabled
+by default. Select any of **5%, 10%, 15%, 20%, 25%, 30%**; the initial selection
+is **10% and 25%**. An empty selection produces no battery alerts. The general
+**Enable Notifications** switch and OS notification permission must also allow
+notifications. Power-saving profiles are now reached from the same Battery section.
+
+Each selected threshold needs two consecutive valid readings at or below it.
+If several levels are confirmed together, only the lowest alert is shown.
+The body names the radio and its estimated charge. Changing options preserves
+the chosen levels; disabling alerts or deselecting a level cancels its existing
+notification and suppresses queued notifications for that level.
+
+Rising measured voltage suppresses alerts. Equal readings after a rise remain
+suppressed until a decline is observed. The protocol provides voltage, not a
+charger-connected flag: this is trend-based suppression, not charger detection.
 
 The percentage uses the same per-radio chemistry or custom voltage range as
 the battery indicator. A zero reading or, for ordinary profiles, a reading below
@@ -76,7 +86,7 @@ custom/additional profile whose minimum is below 2 V remains supported. The
 raw voltage and battery indicator are not changed by this notification filter.
 
 A threshold alerts once per connection session until charge rises strictly
-above it by five percentage points: above **30%** or **15%**, respectively.
+above it by five percentage points (for example, above **30%** for a **25%** alert).
 Recharging past that boundary clears the corresponding notification and allows
 another alert after two new low readings. Disconnecting, resetting the
 connection handshake or changing radio identity clears the previous radio's

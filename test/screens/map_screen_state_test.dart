@@ -419,6 +419,7 @@ void main() {
           ),
         );
         final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+        expect(find.text(l10n.map_pathTraceAddMoreHint), findsNothing);
         await tester.tap(find.text(l10n.map_pathTraceModeAsEntered));
         await _pumpFrames(tester);
         await tester.tap(find.text(l10n.common_close));
@@ -574,6 +575,7 @@ void main() {
             ),
           );
           final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+          expect(find.text(l10n.map_pathTraceAddMoreHint), findsNothing);
           addMarker(tester, middle);
           await _pumpFrames(tester);
           final expected = [hex(hop(width, 0x10)), hex(hop(width, 0x20)), hex(hop(width, 0x30))].join(',');
@@ -875,10 +877,10 @@ void main() {
         of: find.byTooltip(l10n.map_filterNodes),
         matching: find.byType(Badge),
       );
-      expect(finder, findsOneWidget);
-      final badge = tester.widget<Badge>(finder);
-      expect(badge.isLabelVisible, count > 0);
-      expect((badge.label! as Text).data, '$count');
+      expect(finder, findsNothing,
+          reason: 'The indicator stays hidden with $count active restrictions');
+      expect(find.descendant(of: find.byTooltip(l10n.map_filterNodes),
+          matching: find.byIcon(Icons.filter_list)), findsOneWidget);
     }
 
     testWidgets('quick filters collapse, persist and reopen without radio work', (tester) async {
@@ -988,7 +990,7 @@ void main() {
       }
     });
 
-    testWidgets('badge counts restrictions, ignores view modes and survives collapsing', (tester) async {
+    testWidgets('hidden badge leaves restrictions, view modes and collapsing functional', (tester) async {
       try {
         final harness = await _Harness.pump(
           tester,

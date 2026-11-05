@@ -1696,6 +1696,10 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  // Keep the dormant badge source reachable to the analyzer without a
+  // build flag or a user-facing option. The indicator remains hidden.
+  static bool get _showMapFilterCountBadge => false;
+
   Widget _buildMapActionButtons({
     required BuildContext context,
     required MeshCoreConnector connector,
@@ -1704,7 +1708,11 @@ class _MapScreenState extends State<MapScreen>
     required LatLng center,
     required double zoom,
   }) {
-    final activeFilters = _activeFilterCount(settingsService.settings);
+    // Indicator retained for a later decision; filtering itself stays active.
+    final showFilterCountBadge = _showMapFilterCountBadge;
+    final activeFilters = showFilterCountBadge
+        ? _activeFilterCount(settingsService.settings)
+        : 0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1750,11 +1758,13 @@ class _MapScreenState extends State<MapScreen>
         FloatingActionButton(
           onPressed: () => _showFilterDialog(context, settingsService),
           tooltip: context.l10n.map_filterNodes,
-          child: Badge.count(
-            count: activeFilters,
-            isLabelVisible: activeFilters > 0,
-            child: const Icon(Icons.filter_list),
-          ),
+          child: showFilterCountBadge
+              ? Badge.count(
+                  count: activeFilters,
+                  isLabelVisible: activeFilters > 0,
+                  child: const Icon(Icons.filter_list),
+                )
+              : const Icon(Icons.filter_list),
         ),
       ],
     );
@@ -8201,8 +8211,9 @@ class _MapScreenState extends State<MapScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (hasHops && !_isRegionRequestTrace) ...[
-          Text(l10n.map_pathTraceAddMoreHint),
-          const SizedBox(height: 6),
+          // Temporarily hidden: keep the upstream hint available for later.
+          // Text(l10n.map_pathTraceAddMoreHint),
+          // const SizedBox(height: 6),
           // Wrapping choices also fit narrow screens and larger text sizes.
           Wrap(
             spacing: 8,

@@ -9043,4 +9043,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Voir le dernier résultat';
+
+  @override
+  String get settings_modSettingsBattery => 'Battery';
+
+  @override
+  String get settings_lowBatteryAlerts => 'Notify on low battery';
 }

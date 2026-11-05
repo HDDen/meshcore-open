@@ -1,1 +1,81 @@
-{}
+{
+  "bg": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "de": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "es": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "fr": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "hu": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "it": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "ja": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "ko": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "nl": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "pl": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "pt": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "sk": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "sl": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "sv": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "uk": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ],
+
+  "zh": [
+    "settings_modSettingsBattery",
+    "settings_lowBatteryAlerts"
+  ]
+}

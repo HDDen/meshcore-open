@@ -1762,6 +1762,9 @@ class _RadioSettingsDialog extends StatefulWidget {
 }
 
 class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
+  // Temporarily disabled by fork policy. Keep the upstream editor and ACK
+  // confirmation code, but manage path width only via the standalone menu.
+  static const _showPathHashSelector = false;
   final _frequencyController = TextEditingController();
   LoRaBandwidth _bandwidth = LoRaBandwidth.bw125;
   LoRaSpreadingFactor _spreadingFactor = LoRaSpreadingFactor.sf7;
@@ -2158,7 +2161,8 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
       }
       await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
       // setPathHashMode is optimistic; presets leave the requested width alone.
-      final requestedPathHashWidth = widget.connector.supportsPathHashMode &&
+      final requestedPathHashWidth = _showPathHashSelector &&
+              widget.connector.supportsPathHashMode &&
               (_pathHashByteWidth != widget.connector.pathHashByteWidth ||
                   _unconfirmedPathHashWidth != null)
           ? _pathHashByteWidth
@@ -2429,7 +2433,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
               },
             ),
             const SizedBox(height: 16),
-            if (widget.connector.supportsPathHashMode) ...[
+            if (_showPathHashSelector && widget.connector.supportsPathHashMode) ...[
               DropdownButtonFormField<int>(
                 initialValue: (_pathHashByteWidth - 1).clamp(0, 2).toInt(),
                 decoration: InputDecoration(

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
+import 'package:meshcore_open/models/low_battery_alert_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -174,6 +175,75 @@ void main() {
   tearDown(PrefsManager.reset);
 
   group('low battery alerts', () {
+    for (final level in LowBatteryAlertSettings.supportedThresholds) {
+      testWidgets('configured $level percent reaches the native notification backend', (tester) async {
+        await _withAlerts(tester, (h) async {
+          final key = pubKeyToHex(_nodeA);
+          await h.settings.setBatteryCustomRangeForDevice(key, 3.0, 4.0);
+          await h.settings.setBatteryChemistryForDevice(key, 'custom');
+          await h.settings.updateSettings(h.settings.settings.copyWith(
+            lowBatteryAlerts: LowBatteryAlertSettings(thresholds: [level]),
+          ));
+          await h.reading(3000 + level * 10);
+          expect(h.plugin.shown, isEmpty);
+          await h.reading(3000 + level * 10);
+          expect(h.plugin.shown, hasLength(1));
+          expect(h.plugin.args(h.plugin.shown.single)['body'], contains('$level%'));
+        });
+      }, timeout: timeout);
+    }
+
+    testWidgets('battery toggle suppresses alerts and cancels an existing one', (tester) async {
+      await _withAlerts(tester, (h) async {
+        await h.settings.setLowBatteryAlertsEnabled(false);
+        await h.reading(3240);
+        await h.reading(3240);
+        expect(h.plugin.shown, isEmpty);
+        await h.settings.setLowBatteryAlertsEnabled(true);
+        await h.reading(3240);
+        expect(h.plugin.shown, isEmpty);
+        await h.reading(3240);
+        expect(h.plugin.shown, hasLength(1));
+        await h.settings.setLowBatteryAlertsEnabled(false);
+        await tester.pump();
+        expect(h.plugin.cancelled, hasLength(1));
+      });
+    }, timeout: timeout);
+
+    testWidgets('unselected thresholds and rising voltage with a plateau stay silent', (tester) async {
+      await _withAlerts(tester, (h) async {
+        await h.settings.updateSettings(h.settings.settings.copyWith(
+          lowBatteryAlerts: const LowBatteryAlertSettings(thresholds: [10]),
+        ));
+        await h.reading(3240);
+        await h.reading(3240);
+        expect(h.plugin.shown, isEmpty); // 25% is no longer selected.
+        await h.reading(3072);
+        await h.reading(3084);
+        await h.reading(3084);
+        expect(h.plugin.shown, isEmpty);
+        await h.reading(3072);
+        await h.reading(3072);
+        expect(h.plugin.shown, hasLength(1));
+      });
+    }, timeout: timeout);
+
+    testWidgets('deselecting a level cancels its queued show before native delivery', (tester) async {
+      await _withAlerts(tester, (h) async {
+        final gate = h.plugin.holdShow();
+        await h.reading(3240);
+        await h.reading(3240);
+        await h.reading(3108);
+        await h.reading(3108);
+        expect(h.plugin.shown, hasLength(1));
+        await h.settings.setLowBatteryAlertThreshold(10, false);
+        gate.complete();
+        await tester.pump();
+        expect(h.plugin.shown, hasLength(1));
+        expect(h.plugin.cancelled, hasLength(1));
+      });
+    }, timeout: timeout);
+
     testWidgets('25 percent needs two readings and does not repeat', (tester) async {
       await _withAlerts(tester, (h) async {
         await h.reading(3300);

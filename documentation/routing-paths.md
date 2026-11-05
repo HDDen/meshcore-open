@@ -53,13 +53,7 @@ For message-path actions, trace maps, and retry behavior, see [chat](chat-and-me
 ## Path hash size in radio settings
 
 On companions with protocol version code 10 or newer (firmware v1.14+),
-Settings → Radio settings also offers the path hash size: 1, 2 or 3 bytes
-per hop. The existing separate path-size selector remains available.
-Selecting a radio preset does not change the requested path hash size.
-
-When a changed size is saved in the radio editor, the app sends the mode and
-refreshes device information. It waits up to five seconds for DEVICE_INFO to
-confirm the stored size. A missing or different confirmation leaves the editor
-open with a specific warning: radio parameters and TX power may already have
-been applied. Retry still requires confirmation, even if the locally cached
-size already matches the request. Older firmware does not show this control.
+use the separate **Settings → Path hash size** item to select 1, 2 or 3 bytes
+per hop. The duplicate selector inside **Radio settings** is temporarily hidden;
+its upstream implementation is retained. Saving radio parameters or choosing
+a radio preset does not send a path-width command or overwrite the current width.

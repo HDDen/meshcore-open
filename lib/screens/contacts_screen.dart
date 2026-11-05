@@ -3383,31 +3383,35 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (contact.hasLocation) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.location_on,
-                          size: 13,
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: 0.55,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 6),
-                      // Bound the timestamp too: a three-byte prefix and
-                      // large text can otherwise exhaust this row's width.
+                      // Align the entire location/time group to the trailing
+                      // edge; the icon must not sit between two flex columns.
                       Expanded(
-                        child: Text(
-                          item.lastSeenText,
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: MeshTheme.mono(
-                            fontSize: 11,
-                            color: item.unreadCount > 0
-                                ? MeshPalette.blue
-                                : scheme.onSurfaceVariant,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (contact.hasLocation) ...[
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.location_on,
+                                size: 13,
+                                color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
+                              ),
+                            ],
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                item.lastSeenText,
+                                textAlign: TextAlign.end,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: MeshTheme.mono(
+                                  fontSize: 11,
+                                  color: item.unreadCount > 0
+                                      ? MeshPalette.blue : scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

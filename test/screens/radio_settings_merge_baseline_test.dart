@@ -265,95 +265,116 @@ void main() {
   });
 
   for (final version in [9, 10]) {
-    testWidgets('path hash control in radio editor requires protocol 10 (code=$version)', (tester) async {
+    testWidgets('radio editor hides the upstream path selector (code=$version)', (tester) async {
       await _withScreen(tester, (connector, l10n) async {
         await _openRadio(tester, l10n);
         final fields = find.descendant(
           of: find.byType(AlertDialog), matching: find.byType(DropdownButtonFormField<int>),
         );
-        expect(fields, findsNWidgets(version < 10 ? 1 : 2));
+        expect(fields, findsOneWidget);
         expect(connector.supportsPathHashMode, version >= 10);
       }, version: version);
     });
   }
 
-  for (final mode in [0, 1]) {
-    testWidgets('radio save confirms requested mode $mode from DEVICE_INFO', (tester) async {
-      await _withScreen(tester, (connector, l10n) async {
-        connector.reportedMode = mode;
-        await _openRadio(tester, l10n);
-        tester.widget<DropdownButtonFormField<int>>(
-          find.byType(DropdownButtonFormField<int>).last,
-        ).onChanged!(mode);
-        await tester.pump();
-        await _save(tester, l10n);
-        expect(connector.frames.where((f) => f.first == cmdSetPathHashMode).toList(), [[61, 0, mode]]);
-        expect(connector.pathHashByteWidth, mode + 1);
-        expect(find.byType(AlertDialog), findsNothing);
-      });
-    });
-  }
-
-  testWidgets('radio keeps the draft on mismatching path confirmation', (tester) async {
+  testWidgets('radio save never reverts path width changed outside its hidden selector', (tester) async {
     await _withScreen(tester, (connector, l10n) async {
-      connector.reportedMode = 2;
       await _openRadio(tester, l10n);
-      tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).last,
-      ).onChanged!(0);
-      await tester.pump();
+      final info = Uint8List(82)
+        ..[0] = respCodeDeviceInfo
+        ..[1] = 10
+        ..[81] = 1;
+      connector.handleFrameForTest(info);
+      expect(connector.pathHashByteWidth, 2);
       await _save(tester, l10n);
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text(l10n.settings_pathHashModeNotApplied), findsOneWidget);
-      expect(connector.pathHashByteWidth, 3);
-    });
-  });
-
-  testWidgets('missing DEVICE_INFO times out during held refresh and retry still requires confirmation', (tester) async {
-    await _withScreen(tester, (connector, l10n) async {
-      final gate = Completer<void>();
-      connector.refreshGate = gate;
-      await _openRadio(tester, l10n);
-      tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).last,
-      ).onChanged!(0);
-      await tester.pump();
-      await _save(tester, l10n);
-      expect(connector.pathHashByteWidth, 1); // Optimistic local update only.
-      // All setters were acknowledged; only the refreshed DEVICE_INFO is lost.
-      expect(connector.pendingCommandReplyCountForTest, 0);
-      await tester.pump(const Duration(seconds: 5));
-      expect(find.byType(AlertDialog), findsOneWidget);
-      gate.complete();
-      connector.refreshGate = null;
-      await tester.pump();
-      expect(find.text(l10n.settings_pathHashModeNotApplied), findsOneWidget);
-      // Retrying after timeout must not trust the optimistic width of 1.
-      connector.reportedMode = 0;
-      await _save(tester, l10n);
-      expect(connector.frames.where((f) => f.first == cmdSetPathHashMode), hasLength(2));
+      expect(connector.frames.where((frame) => frame.first == cmdSetPathHashMode), isEmpty);
+      expect(connector.pathHashByteWidth, 2);
       expect(find.byType(AlertDialog), findsNothing);
     });
   });
 
-  testWidgets('applying a radio preset preserves the drafted path hash mode', (tester) async {
-    await _withScreen(tester, (connector, l10n) async {
-      connector.reportedMode = 0;
-      await _openRadio(tester, l10n);
-      tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).last,
-      ).onChanged!(0);
-      tester.widget<DropdownButtonFormField<int>>(
-        find.byType(DropdownButtonFormField<int>).first,
-      ).onChanged!(0);
-      await tester.pump();
-      await _save(tester, l10n);
-      expect(connector.frames.where((f) => f.first == cmdSetPathHashMode).toList(), [[61, 0, 0]]);
-      // This fixture intentionally returns its old radio values, so retain
-      // the existing radio-mismatch behavior while checking the path request.
-      expect(find.byType(AlertDialog), findsOneWidget);
+  // Keep the upstream-specific tests beside its dormant implementation.
+  // Standalone selector tests below remain active and exercise real commands.
+  group('dormant upstream path selector in the radio editor', () {
+    for (final mode in [0, 1]) {
+      testWidgets('radio save confirms requested mode $mode from DEVICE_INFO', (tester) async {
+        await _withScreen(tester, (connector, l10n) async {
+          connector.reportedMode = mode;
+          await _openRadio(tester, l10n);
+          tester.widget<DropdownButtonFormField<int>>(
+            find.byType(DropdownButtonFormField<int>).last,
+          ).onChanged!(mode);
+          await tester.pump();
+          await _save(tester, l10n);
+          expect(connector.frames.where((f) => f.first == cmdSetPathHashMode).toList(), [[61, 0, mode]]);
+          expect(connector.pathHashByteWidth, mode + 1);
+          expect(find.byType(AlertDialog), findsNothing);
+        });
+      });
+    }
+
+    testWidgets('radio keeps the draft on mismatching path confirmation', (tester) async {
+      await _withScreen(tester, (connector, l10n) async {
+        connector.reportedMode = 2;
+        await _openRadio(tester, l10n);
+        tester.widget<DropdownButtonFormField<int>>(
+          find.byType(DropdownButtonFormField<int>).last,
+        ).onChanged!(0);
+        await tester.pump();
+        await _save(tester, l10n);
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text(l10n.settings_pathHashModeNotApplied), findsOneWidget);
+        expect(connector.pathHashByteWidth, 3);
+      });
     });
-  });
+
+    testWidgets('missing DEVICE_INFO times out during held refresh and retry still requires confirmation', (tester) async {
+      await _withScreen(tester, (connector, l10n) async {
+        final gate = Completer<void>();
+        connector.refreshGate = gate;
+        await _openRadio(tester, l10n);
+        tester.widget<DropdownButtonFormField<int>>(
+          find.byType(DropdownButtonFormField<int>).last,
+        ).onChanged!(0);
+        await tester.pump();
+        await _save(tester, l10n);
+        expect(connector.pathHashByteWidth, 1); // Optimistic local update only.
+        // All setters were acknowledged; only the refreshed DEVICE_INFO is lost.
+        expect(connector.pendingCommandReplyCountForTest, 0);
+        await tester.pump(const Duration(seconds: 5));
+        expect(find.byType(AlertDialog), findsOneWidget);
+        gate.complete();
+        connector.refreshGate = null;
+        await tester.pump();
+        expect(find.text(l10n.settings_pathHashModeNotApplied), findsOneWidget);
+        // Retrying after timeout must not trust the optimistic width of 1.
+        connector.reportedMode = 0;
+        await _save(tester, l10n);
+        expect(connector.frames.where((f) => f.first == cmdSetPathHashMode), hasLength(2));
+        expect(find.byType(AlertDialog), findsNothing);
+      });
+    });
+
+    testWidgets('applying a radio preset preserves the drafted path hash mode', (tester) async {
+      await _withScreen(tester, (connector, l10n) async {
+        connector.reportedMode = 0;
+        await _openRadio(tester, l10n);
+        tester.widget<DropdownButtonFormField<int>>(
+          find.byType(DropdownButtonFormField<int>).last,
+        ).onChanged!(0);
+        tester.widget<DropdownButtonFormField<int>>(
+          find.byType(DropdownButtonFormField<int>).first,
+        ).onChanged!(0);
+        await tester.pump();
+        await _save(tester, l10n);
+        expect(connector.frames.where((f) => f.first == cmdSetPathHashMode).toList(), [[61, 0, 0]]);
+        // This fixture intentionally returns its old radio values, so retain
+        // the existing radio-mismatch behavior while checking the path request.
+        expect(find.byType(AlertDialog), findsOneWidget);
+      });
+    });
+
+  }, skip: 'Path width is temporarily managed only by the standalone selector');
 
   for (final version in [9, 10]) {
     testWidgets('baseline: standalone path selector is gated at protocol code 10 (code=$version)', (tester) async {

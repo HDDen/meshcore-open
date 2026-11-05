@@ -10,6 +10,7 @@ import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_settings_tile.dart';
+import '../widgets/low_battery_settings_card.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'message_history_database_screen.dart';
 
@@ -33,10 +34,6 @@ class ModSettingsScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
               children: [
                 SectionHeader(context.l10n.settings_modSettingsGeneral),
-                const MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: PowerSavingSettingsTile(),
-                ),
                 MeshCard(
                   padding: EdgeInsets.zero,
                   child: SwitchListTile(
@@ -908,6 +905,12 @@ class ModSettingsScreen extends StatelessWidget {
                     trailing: const Icon(Icons.chevron_right),
                   ),
                 ),
+                SectionHeader(context.l10n.settings_modSettingsBattery),
+                const MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: PowerSavingSettingsTile(),
+                ),
+                const LowBatterySettingsCard(),
                 ...context.watch<SettingsSectionsService>().modSettingsSections(
                   context,
                 ),

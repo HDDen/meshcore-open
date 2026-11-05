@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/deferred_channel_inbox.dart';
+import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
 
@@ -498,15 +499,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _airtimeGrewInLastPoll = false;
 
   int? _batteryMillivolts;
-  // Thresholds (percent) that trigger a low-battery notification once per
-  // crossing, re-arming 5 points above the threshold after recharge.
-  static const List<int> _lowBatteryThresholds = [25, 10];
-  final Set<int> _batteryAlertedThresholds = {};
-  // Each threshold needs its own two consecutive readings. One low reading
-  // at 25% must not confirm 10% when the next reading suddenly falls further.
-  final Map<int, int> _lowBatteryReadingStreaks = {};
+  final _lowBatteryAlerts = LowBatteryAlertTracker();
   String? _lowBatteryAlertDeviceKey;
-  static const int _lowBatteryConfirmReadings = 2;
   // Default Li-cell plausibility floor; explicit lower-voltage profiles are
   // allowed, while a zero reading always means no usable sensor reading.
   static const int _minPlausibleBatteryMillivolts = 2000;
@@ -4105,7 +4099,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _pathHistoryService = pathHistoryService;
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
+    _appSettingsService?.removeListener(_syncLowBatteryAlertOptions);
     _appSettingsService = appSettingsService;
+    _appSettingsService?.addListener(_syncLowBatteryAlertOptions);
+    _syncLowBatteryAlertOptions();
     _syncPowerSavingSettings();
     _lastSharedMessageHistoryMode =
         appSettingsService?.settings.sharedMessageHistoryMode ??
@@ -6003,7 +6000,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void attachAppSettingsServiceForTest(AppSettingsService service) {
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
+    _appSettingsService?.removeListener(_syncLowBatteryAlertOptions);
     _appSettingsService = service;
+    service.addListener(_syncLowBatteryAlertOptions);
+    _syncLowBatteryAlertOptions();
     service.addListener(_syncPowerSavingSettings);
     _syncPowerSavingSettings();
   }
@@ -12947,14 +12947,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetLowBatteryAlerts() {
     final deviceKey = _lowBatteryAlertDeviceKey;
-    final thresholds = _batteryAlertedThresholds.toList();
-    _batteryAlertedThresholds.clear();
-    _lowBatteryReadingStreaks.clear();
+    final thresholds = _lowBatteryAlerts.alertedThresholds.toList();
+    _lowBatteryAlerts.reset();
     _lowBatteryAlertDeviceKey = null;
     if (deviceKey != null && thresholds.isNotEmpty) {
-      unawaited(
-        _notificationService.clearLowBatteryNotifications(deviceKey, thresholds),
-      );
+      unawaited(_notificationService.clearLowBatteryNotifications(deviceKey, thresholds));
+    }
+  }
+
+  void _syncLowBatteryAlertOptions() {
+    final settings = _appSettingsService?.settings;
+    if (settings == null) return;
+    final cancelled = _lowBatteryAlerts.configure(
+      settings.lowBatteryAlerts,
+      notificationsEnabled: settings.notificationsEnabled,
+    );
+    final deviceKey = _lowBatteryAlertDeviceKey;
+    if (deviceKey != null && cancelled.isNotEmpty) {
+      unawaited(_notificationService.clearLowBatteryNotifications(deviceKey, cancelled));
     }
   }
 
@@ -12969,67 +12979,39 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _resetLowBatteryAlerts();
       _lowBatteryAlertDeviceKey = deviceKey;
     }
-
+    _syncLowBatteryAlertOptions();
     final millivolts = _batteryMillivolts;
     final configuredRange = _batteryVoltageRangeForDevice();
-    final allowsLowVoltage =
-        configuredRange != null &&
+    final allowsLowVoltage = configuredRange != null &&
         configuredRange.minMv < _minPlausibleBatteryMillivolts;
-    if (millivolts == null ||
-        millivolts <= 0 ||
+    if (millivolts == null || millivolts <= 0 ||
         (!allowsLowVoltage && millivolts < _minPlausibleBatteryMillivolts)) {
-      _lowBatteryReadingStreaks.clear();
+      _lowBatteryAlerts.breakConfirmation();
       return;
     }
     final percent = batteryPercent;
     if (percent == null) {
-      _lowBatteryReadingStreaks.clear();
+      _lowBatteryAlerts.breakConfirmation();
       return;
     }
-
-    final newlyCrossed = <int>[];
-    final rearmed = <int>[];
-    final enabled = settings.settings.notificationsEnabled;
-    for (final threshold in _lowBatteryThresholds) {
-      if (percent > threshold + 5 &&
-          _batteryAlertedThresholds.remove(threshold)) {
-        rearmed.add(threshold);
-      }
-      if (!enabled ||
-          percent > threshold ||
-          _batteryAlertedThresholds.contains(threshold)) {
-        _lowBatteryReadingStreaks.remove(threshold);
-        continue;
-      }
-      final streak = (_lowBatteryReadingStreaks[threshold] ?? 0) + 1;
-      _lowBatteryReadingStreaks[threshold] = streak;
-      if (streak >= _lowBatteryConfirmReadings) {
-        newlyCrossed.add(threshold);
-      }
+    final decision = _lowBatteryAlerts.observe(millivolts: millivolts, percent: percent);
+    if (decision.rearmed.isNotEmpty) {
+      unawaited(_notificationService.clearLowBatteryNotifications(deviceKey, decision.rearmed));
     }
-    if (rearmed.isNotEmpty) {
-      unawaited(
-        _notificationService.clearLowBatteryNotifications(deviceKey, rearmed),
-      );
-    }
-    if (newlyCrossed.isEmpty) {
-      return;
-    }
-
-    // A reading can confirm both thresholds; show only the more urgent one.
-    _batteryAlertedThresholds.addAll(newlyCrossed);
-    for (final threshold in newlyCrossed) {
-      _lowBatteryReadingStreaks.remove(threshold);
-    }
-    final threshold = newlyCrossed.reduce((a, b) => a < b ? a : b);
-    unawaited(
-      _notificationService.showLowBatteryNotification(
-        deviceKey: deviceKey,
-        deviceName: deviceDisplayName,
-        batteryPercent: percent,
-        threshold: threshold,
-      ),
-    );
+    final threshold = decision.threshold;
+    if (threshold == null) return;
+    final token = _lowBatteryAlerts.notificationToken(threshold);
+    unawaited(_notificationService.showLowBatteryNotification(
+      deviceKey: deviceKey,
+      deviceName: deviceDisplayName,
+      batteryPercent: percent,
+      threshold: threshold,
+      // Recheck after the notification queue's awaits too: a pending native
+      // show must not outlive a disabled level, radio change or rising voltage.
+      isStillAllowed: () => _lowBatteryAlerts.notificationToken(threshold) == token &&
+          _lowBatteryAlertDeviceKey == deviceKey &&
+          _lowBatteryAlerts.allowsNotification(threshold),
+    ));
   }
 
   void _checkManualAddContacts() async {
@@ -19331,6 +19313,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     _appSettingsService?.removeListener(_handleAppSettingsChanged);
     _reconnectPowerSettings?.dispose();
+    _appSettingsService?.removeListener(_syncLowBatteryAlertOptions);
     _appSettingsService?.removeListener(_syncPowerSavingSettings);
     _retryService?.pendingMessageCount.removeListener(_syncRadioStatsSendPolling);
     _radioStatsSendPolling.dispose();

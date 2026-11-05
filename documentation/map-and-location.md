@@ -105,14 +105,10 @@ state is remembered when the map is reopened; collapsing it does not reset
 active filters. The same type/activity settings remain available in the filter
 sheet.
 
-The filter button shows a badge with the number of active restrictions:
-activity mode, a last-seen time limit, a nonempty enabled key prefix, hidden
-chat/repeater/other node types, and hidden shared/guessed/discovery layers.
-The existing default last-seen limit is seven days, so it contributes one
-even before additional filters are selected. The badge disappears when the
-count is zero. Clustering and overlap display
-modes do not add to the count. Changing filters never sends a radio command
-or starts wardrive/location tracking.
+The filter-count badge is temporarily hidden; its implementation is retained.
+All existing restrictions, including the default seven-day last-seen limit,
+continue to apply. Changing filters never sends a radio command or starts
+wardrive/location tracking.
 
 ### Filter Dialog (FAB)
 Toggle visibility of: chat nodes, repeaters, other nodes, guessed locations, discovery contacts, overlapping markers (stacked markers at similar coordinates), and shared map pins (flag markers).
