@@ -8965,4 +8965,12 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Radio ni potrdil odstranitve. Stik ni bil odstranjen.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Vaš radio samodejno doda to vrsto stika, zato se bo vrnil, ko bo naslednjič poslal oglas. Izklopite samodejno dodajanje v nastavitvah stikov, da ostane odstranjen.';
 }

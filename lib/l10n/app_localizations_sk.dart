@@ -8964,4 +8964,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Rádio odstránenie nepotvrdilo. Kontakt nebol odstránený.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Vaše rádio tento typ kontaktu pridáva automaticky, preto sa vráti pri jeho ďalšom inzeráte. Ak ho chcete ponechať odstránený, vypnite automatické pridávanie v nastaveniach kontaktov.';
 }

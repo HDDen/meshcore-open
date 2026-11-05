@@ -8378,4 +8378,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed => '无线电未确认移除。该联系人未被移除。';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      '你的无线电会自动添加此类联系人，因此它下次发送广播时会重新出现。如需保持移除，请在联系人设置中关闭自动添加。';
 }

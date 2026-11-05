@@ -9049,4 +9049,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'La radio n\'a pas confirmé la suppression. Le contact n\'a pas été supprimé.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Votre radio ajoute automatiquement ce type de contact, il reviendra donc à sa prochaine annonce. Désactivez l\'ajout automatique dans les paramètres des contacts pour le garder supprimé.';
 }

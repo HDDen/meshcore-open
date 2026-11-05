@@ -8998,4 +8998,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'O rádio não confirmou a remoção. O contato não foi removido.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'O seu rádio adiciona automaticamente este tipo de contacto, por isso ele voltará na próxima vez que enviar um anúncio. Desative a adição automática nas configurações de Contatos para mantê-lo removido.';
 }

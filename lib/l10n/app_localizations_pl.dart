@@ -9026,4 +9026,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Radio nie potwierdziło usunięcia. Kontakt nie został usunięty.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Twoje radio automatycznie dodaje ten typ kontaktu, więc wróci przy następnym rozgłoszeniu. Wyłącz automatyczne dodawanie w ustawieniach Kontaktów, aby go usunąć na stałe.';
 }

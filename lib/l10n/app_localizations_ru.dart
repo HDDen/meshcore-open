@@ -8991,4 +8991,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Оповещать о низком заряде';
+
+  @override
+  String get contacts_removeFailed => 'Не удалось удалить контакт.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'На ноде включено автоматическое добавление контактов этого типа. При следующем анонсе контакт может появиться снова.';
 }

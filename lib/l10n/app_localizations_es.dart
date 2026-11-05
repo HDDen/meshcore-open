@@ -9018,4 +9018,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'La radio no confirmó la eliminación. El contacto no se eliminó.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Tu radio añade automáticamente este tipo de contacto, así que volverá la próxima vez que envíe un anuncio. Desactiva la adición automática en los ajustes de Contactos para mantenerlo eliminado.';
 }

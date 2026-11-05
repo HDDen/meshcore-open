@@ -9028,4 +9028,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'La radio non ha confermato la rimozione. Il contatto non è stato rimosso.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'La tua radio aggiunge automaticamente questo tipo di contatto, quindi tornerà alla prossima volta che invierà un annuncio. Disattiva l\'aggiunta automatica nelle impostazioni dei contatti per mantenerlo rimosso.';
 }

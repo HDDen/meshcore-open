@@ -9003,4 +9003,12 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'A rádió nem erősítette meg az eltávolítást. A névjegy nem lett eltávolítva.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'A rádiód automatikusan hozzáadja ezt a névjegytípust, ezért a következő hirdetésekor visszakerül. Az eltávolítás megtartásához kapcsold ki az automatikus hozzáadást a Névjegyek beállításaiban.';
 }

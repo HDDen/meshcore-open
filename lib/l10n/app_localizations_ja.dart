@@ -8567,4 +8567,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed => 'ラジオが削除を確認しませんでした。連絡先は削除されていません。';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'このタイプの連絡先はラジオが自動追加するため、次回アドバートを送信すると再び追加されます。削除したままにするには、連絡先設定で自動追加をオフにしてください。';
 }

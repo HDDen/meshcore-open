@@ -8955,4 +8955,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Radion bekräftade inte borttagningen. Kontakten togs inte bort.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Din radio lägger automatiskt till den här kontakttypen, så den kommer tillbaka nästa gång den skickar en annons. Stäng av automatisk tillägg i kontaktinställningarna för att behålla den borttagen.';
 }

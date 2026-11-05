@@ -15040,6 +15040,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notify on low battery'**
   String get settings_lowBatteryAlerts;
+
+  /// No description provided for @contacts_removeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The radio did not confirm the removal. The contact was not removed.'**
+  String get contacts_removeFailed;
+
+  /// No description provided for @contacts_removeAutoAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your radio auto-adds this contact type, so it will come back the next time it advertises. Turn off auto-add in Contacts settings to keep it removed.'**
+  String get contacts_removeAutoAddNote;
 }
 
 class _AppLocalizationsDelegate

@@ -9029,4 +9029,12 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Радиото не потвърди премахването. Контактът не беше премахнат.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Радиото ви автоматично добавя този тип контакт, така че той ще се върне при следващия му advert. Изключете автоматичното добавяне в настройките на контактите, за да остане премахнат.';
 }

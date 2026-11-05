@@ -9010,4 +9010,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Радіо не підтвердило видалення. Контакт не видалено.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Ваше радіо автоматично додає цей тип контакту, тож він повернеться, коли наступного разу надішле advert. Вимкніть автододавання в налаштуваннях контактів, щоб він залишився видаленим.';
 }

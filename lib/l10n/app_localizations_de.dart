@@ -9026,4 +9026,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'Das Funkgerät hat das Entfernen nicht bestätigt. Der Kontakt wurde nicht entfernt.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Ihr Funkgerät fügt diesen Kontakttyp automatisch hinzu, daher kommt er beim nächsten Advert zurück. Deaktivieren Sie in den Kontakteinstellungen das automatische Hinzufügen, um ihn entfernt zu lassen.';
 }

@@ -8980,4 +8980,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_lowBatteryAlerts => 'Notify on low battery';
+
+  @override
+  String get contacts_removeFailed =>
+      'De radio heeft de verwijdering niet bevestigd. Het contact is niet verwijderd.';
+
+  @override
+  String get contacts_removeAutoAddNote =>
+      'Je radio voegt dit contacttype automatisch toe, dus het komt terug zodra het weer een advert verstuurt. Zet automatisch toevoegen uit in de Contactinstellingen om het verwijderd te houden.';
 }
