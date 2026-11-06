@@ -601,6 +601,33 @@ void main() {
   // Group 4: handlePathUpdated
   // -------------------------------------------------------------------------
   group('handlePathUpdated', () {
+    test('full history evicts the weakest path for a new one', () async {
+      final pubKey = _hex('full');
+      for (int i = 0; i < 100; i++) {
+        svc.handlePathUpdated(
+          _makeContact(publicKeyHex: pubKey, pathLength: 2, path: [i, 0xEE]),
+        );
+        await _flush();
+      }
+      const weak = PathSelection(
+        pathBytes: [7, 0xEE],
+        hopCount: 2,
+        useFlood: false,
+      );
+      svc.recordPathResult(pubKey, weak, success: false);
+      svc.recordPathResult(pubKey, weak, success: false);
+
+      svc.handlePathUpdated(
+        _makeContact(publicKeyHex: pubKey, pathLength: 2, path: [0xFF, 0xEE]),
+      );
+      await _flush();
+
+      final paths = svc.getRecentPaths(pubKey).map((p) => p.pathBytes);
+      expect(paths, hasLength(100));
+      expect(paths, contains(equals([0xFF, 0xEE])));
+      expect(paths, isNot(contains(equals([7, 0xEE]))));
+    });
+
     test(
       'pathLength >= 0 with path bytes → records path using pathLength',
       () async {
