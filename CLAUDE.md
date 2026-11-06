@@ -3311,6 +3311,9 @@ SET to clear and recognizes raw SF lists/`No extra SF configured` from LR2021.
 Unsupported or malformed replies do not unlock a field or overwrite its last
 valid value. Explicit Refresh All appends these six GETs after the legacy 20;
 opening the screen, rebuilding controls and editing values never fetches them.
+A prefixed empty `> ` reply for `owner.info` is also a successful GET, so a
+cleared operator field can be loaded and edited again. This exception does not
+unlock numeric settings on an empty reply and does not accept bare empty data.
 No new background timer or persistence path is introduced. Missing ARB keys
 are appended without replacing existing translations; the owner regenerates
 Dart localizations. Coverage also includes

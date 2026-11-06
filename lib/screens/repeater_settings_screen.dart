@@ -516,7 +516,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       });
       return true;
     }
-    final value = _extractGetValue(response);
+    final value = _extractGetValue(response, allowEmpty: key == 'owner.info');
     if (value == null) return false;
     setState(() {
       _applyGetValue(key, value);
@@ -528,13 +528,14 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   bool _loaded(String key) => _loadedKeys.contains(key);
 
   /// Firmware GET replies are always `> <value>` (CommonCLI.cpp `sprintf(reply, "> %s", ...)`).
-  /// Returns the first such value, trimmed; null if none found.
-  String? _extractGetValue(String response) {
+  /// Empty operator info is a valid value. Other settings retain their
+  /// existing nonempty guard; a bare empty/error reply never unlocks a field.
+  String? _extractGetValue(String response, {bool allowEmpty = false}) {
     for (final line in response.split('\n')) {
       final trimmed = line.trim();
       if (trimmed.startsWith('>')) {
         final value = trimmed.substring(1).trim();
-        if (value.isNotEmpty) return value;
+        if (value.isNotEmpty || allowEmpty) return value;
       }
     }
     return null;

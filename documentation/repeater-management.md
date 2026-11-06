@@ -275,6 +275,7 @@ Nine configuration cards, each with its own per-field refresh button(s):
 
 **7. Owner Info**
 - Multi-line text field for operator contact info (`set owner.info`); newlines sent as `|`
+- An empty `> ` GET reply is valid operator info: it unlocks the empty field for editing without inventing a value. Empty numeric GET replies remain invalid
 
 **8. Actions** (one-tap, no save needed)
 - Send Advertisement (`advert`)

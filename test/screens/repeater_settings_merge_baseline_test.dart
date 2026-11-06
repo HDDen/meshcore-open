@@ -936,6 +936,43 @@ void main() {
       });
     });
 
+    testWidgets('U13 closing: empty owner GET unlocks only owner info '
+        '($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        final owner = _textInput(l10n.repeater_ownerInfo);
+        await _reveal(tester, owner);
+        expect(tester.widget<TextField>(owner).enabled, isFalse);
+        await _read(tester, radio, l10n.repeater_refreshOwnerInfo,
+            'get owner.info', '');
+        await _reveal(tester, owner);
+        expect(tester.widget<TextField>(owner).enabled, isTrue);
+        expect(tester.widget<TextField>(owner).controller!.text, isEmpty);
+        expect(find.widgetWithText(TextButton, l10n.common_save), findsNothing);
+        await _editText(tester, l10n.repeater_ownerInfo, 'New operator info');
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands,
+            ['get owner.info', 'set owner.info New operator info']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13 closing: empty numeric GET stays disabled '
+        '($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        await _openAdvanced(tester, l10n);
+        await _read(tester, radio, l10n.repeater_txDelay, 'get txdelay', '');
+        final tx = _textInput(l10n.repeater_txDelay);
+        expect(tester.widget<TextField>(tx).enabled, isFalse);
+        expect(tester.widget<TextField>(tx).controller!.text, isEmpty);
+        expect(radio.commands, ['get txdelay']);
+        expect(find.widgetWithText(TextButton, l10n.common_save), findsNothing);
+      });
+    });
+
     testWidgets('U11b8 baseline: open and disconnected state never fetch settings ($locale)', (tester) async {
       await _withSettings(tester, locale, (radio, l10n) async {
         expect(find.text(l10n.repeater_settingsNotLoaded), findsOneWidget);
