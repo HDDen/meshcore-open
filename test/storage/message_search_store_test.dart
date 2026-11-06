@@ -1,36 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/channel.dart';
-import 'package:meshcore_open/storage/channel_order_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
+import 'package:meshcore_open/storage/channel_order_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
+import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/history_test_environment.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   const scope = '0011223344';
   const contactKey =
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const legacyKey = 'messages_$contactKey';
   const scopedKey = 'messages_$scope$contactKey';
-  const historyJson = '[{"text":"hello","timestamp":1}]';
+  // SQL stores a stable message id; seed it explicitly to compare full JSON.
+  const historyJson =
+      '[{"text":"hello","timestamp":1,"messageId":"synthetic-legacy"}]';
 
+  final environment = HistoryTestEnvironment();
+  final history = MessageHistoryStorage.instance;
   setUp(() async {
-    SharedPreferences.setMockInitialValues({legacyKey: historyJson});
-    PrefsManager.reset();
-    await PrefsManager.initialize();
+    await environment.setUp();
+    // Legacy scope/slot keys now live in SQL too. A read must not move them.
+    await history.setString(MessageHistoryKind.direct, legacyKey, historyJson);
   });
-
-  tearDown(PrefsManager.reset);
+  tearDown(environment.tearDown);
 
   test('search read does not migrate an unscoped contact history', () async {
     final store = MessageStore()..setPublicKeyHex = scope;
 
     expect(await store.loadMessagesJsonForSearch(contactKey), isNull);
-    expect(PrefsManager.instance.getString(legacyKey), historyJson);
-    expect(PrefsManager.instance.getString(scopedKey), isNull);
+    expect(
+      await history.getString(MessageHistoryKind.direct, legacyKey),
+      historyJson,
+    );
+    expect(
+      await history.getString(MessageHistoryKind.direct, scopedKey),
+      isNull,
+    );
   });
 
   test('current scope can read legacy history without modifying it', () async {
@@ -43,14 +55,20 @@ void main() {
       ),
       historyJson,
     );
-    expect(PrefsManager.instance.getString(legacyKey), historyJson);
-    expect(PrefsManager.instance.getString(scopedKey), isNull);
+    expect(
+      await history.getString(MessageHistoryKind.direct, legacyKey),
+      historyJson,
+    );
+    expect(
+      await history.getString(MessageHistoryKind.direct, scopedKey),
+      isNull,
+    );
   });
 
   test('channel search fallback does not migrate slot-based history', () async {
     const oldKey = 'channel_messages_1';
     const nameKey = 'channel_messages_0011223344name_VGVzdA';
-    await PrefsManager.instance.setString(oldKey, historyJson);
+    await history.setString(MessageHistoryKind.channel, oldKey, historyJson);
     final channel = Channel.fromHex(1, 'Test', Channel.publicChannelPsk);
     final store = ChannelMessageStore()
       ..setPublicKeyHex = scope
@@ -64,14 +82,20 @@ void main() {
       ),
       historyJson,
     );
-    expect(PrefsManager.instance.getString(oldKey), historyJson);
-    expect(PrefsManager.instance.getString(nameKey), isNull);
+    expect(
+      await history.getString(MessageHistoryKind.channel, oldKey),
+      historyJson,
+    );
+    expect(
+      await history.getString(MessageHistoryKind.channel, nameKey),
+      isNull,
+    );
   });
 
   test('read-only channel load does not migrate slot-based history', () async {
     const oldKey = 'channel_messages_1';
     const nameKey = 'channel_messages_0011223344name_VGVzdA';
-    await PrefsManager.instance.setString(oldKey, historyJson);
+    await history.setString(MessageHistoryKind.channel, oldKey, historyJson);
     final channel = Channel.fromHex(1, 'Test', Channel.publicChannelPsk);
     final store = ChannelMessageStore()
       ..setPublicKeyHex = scope
@@ -81,8 +105,14 @@ void main() {
       await store.loadChannelMessages(1, allowLegacyMigration: false),
       isEmpty,
     );
-    expect(PrefsManager.instance.getString(oldKey), historyJson);
-    expect(PrefsManager.instance.getString(nameKey), isNull);
+    expect(
+      await history.getString(MessageHistoryKind.channel, oldKey),
+      historyJson,
+    );
+    expect(
+      await history.getString(MessageHistoryKind.channel, nameKey),
+      isNull,
+    );
   });
 
   test('read-only contact cache load does not migrate legacy data', () async {

@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
@@ -12,8 +10,8 @@ import 'package:meshcore_open/helpers/channel_key_hash_cache.dart';
 import 'package:meshcore_open/helpers/reaction_helper.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
-import 'package:meshcore_open/storage/prefs_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/history_test_environment.dart';
 
 // What the connector promises about the copies of one channel packet, pinned
 // before the copies stop going through the whole receive path. The firmware
@@ -126,16 +124,48 @@ Uint8List _contactFrame(Uint8List key, String name) {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 150));
 
+// Only the synthetic handshake reports a live transport. Packet-copy tests
+// retain their previous disconnected state; no BLE/USB/network is opened.
+class _Connector extends MeshCoreConnector {
+  bool handshaking = true;
+
+  @override
+  bool get isConnected => handshaking;
+}
+
+Uint8List _selfInfoFrame() {
+  final data = ByteData(58);
+  final frame = data.buffer.asUint8List();
+  frame[0] = respCodeSelfInfo;
+  frame[1] = advTypeChat;
+  frame[2] = 20;
+  frame[3] = 22;
+  frame.setRange(4, 36, _key(0x71));
+  data.setUint32(48, 869525000, Endian.little);
+  data.setUint32(52, 250000, Endian.little);
+  frame[56] = 10;
+  frame[57] = 5;
+  return Uint8List.fromList([...frame, ...utf8.encode('Copy test'), 0]);
+}
+
 /// A connector with [channels] installed the way a channel sync installs
 /// them, each as (index, name, PSK).
 Future<MeshCoreConnector> _connectorWithChannels(
   List<(int, String, Uint8List)> channels,
 ) async {
-  final connector = MeshCoreConnector();
-  for (final (index, name, psk) in channels) {
-    connector.handleFrameForTest(_channelInfoFrame(index, name, psk));
-  }
+  final connector = _Connector();
+  addTearDown(connector.dispose);
+  connector.setFrameWriterForTest((_) async {});
+  // Incoming companion messages require a bound node and a durable history.
+  // Run the actual SELF_INFO binding before installing the synthetic slots.
+  await connector.refreshDeviceInfo();
+  connector.handleFrameForTest(_selfInfoFrame());
+  connector.handshaking = false;
   await _settle();
+  expect(connector.selfPublicKeyHex, hasLength(64));
+  for (final (index, name, psk) in channels) {
+    await connector.handleChannelInfoForTest(_channelInfoFrame(index, name, psk));
+  }
   expect(
     connector.channels.map((channel) => channel.index).toList(),
     channels.map((channel) => channel.$1).toList(),
@@ -145,28 +175,10 @@ Future<MeshCoreConnector> _connectorWithChannels(
 
 Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const pathProvider = MethodChannel('plugins.flutter.io/path_provider');
-  final tempDir = Directory.systemTemp.createTempSync('mco_channel_copies_');
   final psk = _psk(1);
-
-  setUpAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(pathProvider, (_) async => tempDir.path);
-  });
-
-  tearDownAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(pathProvider, null);
-    tempDir.deleteSync(recursive: true);
-  });
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    PrefsManager.reset();
-    await PrefsManager.initialize();
-  });
-
-  tearDown(PrefsManager.reset);
+  final environment = HistoryTestEnvironment();
+  setUp(environment.setUp);
+  tearDown(environment.tearDown);
 
   group('one packet, one message', () {
     for (final cached in [false, true]) {
@@ -200,7 +212,6 @@ Future<void> main() async {
           connector.attachAppSettingsServiceForTest(settings);
           addTearDown(settings.dispose);
         }
-        addTearDown(connector.dispose);
         Uint8List? frame;
         // У фикстуры первый ключ должен однозначно провалить двухбайтовый MAC.
         for (var attempt = 0; attempt < 16; attempt++) {
@@ -234,7 +245,6 @@ Future<void> main() async {
       await settings.loadSettings();
       addTearDown(settings.dispose);
       final connector = await _connectorWithChannels([(0, 'Test', psk)]);
-      addTearDown(connector.dispose);
       var calculations = 0;
       final cache = ChannelKeyHashCache(compute: (key) {
         calculations++;

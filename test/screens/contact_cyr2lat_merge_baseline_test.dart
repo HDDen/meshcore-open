@@ -273,6 +273,13 @@ Future<void> _open(WidgetTester tester, _Radio radio) async {
   await tester.pumpAndSettle();
   final item = find.byWidgetPredicate((widget) =>
       widget is PopupMenuItem<String> && widget.value == 'settings');
+  // The popup scrolls on a short landscape screen; settings is near its end.
+  // Reveal the real menu entry before asserting that the user can tap it.
+  await tester.scrollUntilVisible(
+    item, 100,
+    scrollable: find.ancestor(of: item, matching: find.byType(Scrollable)).first,
+  );
+  await tester.pumpAndSettle();
   expect(item.hitTestable(), findsOneWidget);
   await tester.tap(item);
   await tester.pumpAndSettle();

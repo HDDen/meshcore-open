@@ -107,6 +107,17 @@ Future<void> _withConnector(
 }) async {
   // Connector/Futures созданы внутри FakeAsync, а не во внешнем setUp.
   final c = _Connector(fragments: fragments);
+  // Queue frames must belong to a known slot. An unknown slot is now retained
+  // on disk before the final ACK, which is a different test (durable inbox).
+  // This unknown namespace is intentionally discarded by the binary decoder,
+  // so the GPS/FR01 test still needs no history writes or real database.
+  final channel = Uint8List(50)
+    ..[0] = respCodeChannelInfo
+    ..[1] = 0;
+  channel.setRange(2, 6, 'FR01'.codeUnits);
+  channel.setRange(34, 50, List<int>.filled(16, 1));
+  await c.handleChannelInfoForTest(channel);
+  await tester.pump();
   final received = <Uint8List>[];
   final subscription = c.receivedFrames.listen(received.add);
   try {
