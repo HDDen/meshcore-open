@@ -2972,6 +2972,21 @@ The picture comes from `helpers/qr_bitmap.dart`, which builds pixels straight fr
 
 To remove the whole feature, delete `helpers/channel_qr_link.dart`, `widgets/channel_link_import.dart`, both screens and their tests (`channel_qr_link_test.dart`, `channel_link_in_messages_test.dart`, `channel_share_screen_test.dart`), drop the channel branch of `MeshLinkLinkifier` (`helpers/mesh_link_linkifier.dart`) with the channel cases of its test, drop the lines marked `channel-qr-scan`, `channel-qr-share`, `channel-qr-chat` and `channel-qr-paste` together with the branches under the last two markers' comments in `LinkHandler.handleLinkTap` and the contacts screen's `_contactImport`, and remove the ARB keys `channels_scanQrInstructions`, `channels_invalidQrCode`, `channels_qrAlreadyAdded`, `channels_qrUpdateExisting` (en and ru only), `channels_shareQrHint`, `channels_shareSecretKey`, `channels_shareRegionScope`, `channels_shareKeyCopied`, `channels_shareLinkCopied`, `channels_shareQrTapToCopy`, `channels_shareQrTapToShare`, `channels_shareQrImageCopied`, `channels_shareQrImageFailed` and `channels_shareCopyLink` (en and ru only); `channels_scanQrCode`, `channels_addChannel`, `channels_regionSetTo`, `channels_regionNotSet`, `channels_noFreeSlots`, `scanner_notConnected`, `app_offline_unableToMessage`, `community_join` and `common_share` were there before and stay. `test/widgets/message_links_test.dart` stays too: it holds web links, not channel ones. `helpers/qr_bitmap.dart` and the three `helpers/image_clipboard*.dart` files go with it, tests included, unless something else has started to use them by then; the `suggestedName` parameter of `MCOImageFileSaver.savePngBytes` is harmless and can stay. `helpers/qr_gallery_scan.dart` and `helpers/qr_picture_decoder.dart`, their tests and the `zxing2` dependency stay as long as the contact scanner's gallery button goes through them.
 
+### QR confirmation layout
+
+`CommunityQrScannerScreen` wraps its existing already-member and join columns
+in `SingleChildScrollView`, keeping full names, short IDs, consent and actions
+reachable. The processing/cancel cooldown, existing-secret lookup, local store
+write, optional public-channel write and complete-sync/unconfirmed-slot guards
+are unchanged. The third upstream 979e1a7d QR hunk maps to this fork's separate
+`ChannelLinkImport._confirmAdd`, whose `AlertDialog` is now scrollable; region,
+node/session and slot rechecks remain in the same import flow. `_confirmUpdate`
+is unchanged. There are no extra camera starts, requests, timers or listeners.
+Tests: `community_qr_merge_baseline_test.dart` (real callbacks without a camera
+on Windows/Linux) and `channel_link_import_merge_baseline_test.dart` (real
+import/store flow with fake radio). Large-text modal tests leave the scanner
+placeholder/app bar at normal scale to isolate the target layout.
+
 ### Radio settings and device config
 
 U04 (2026-11-02): the fork keeps its inline `_RadioSettingsDialog` in

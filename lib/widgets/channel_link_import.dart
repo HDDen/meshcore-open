@@ -271,6 +271,8 @@ class ChannelLinkImport {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        // The full channel name and region remain readable with large text.
+        scrollable: true,
         title: Text(l10n.channels_addChannel),
         content: Column(
           mainAxisSize: MainAxisSize.min,

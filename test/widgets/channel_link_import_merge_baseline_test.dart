@@ -13,6 +13,8 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../support/wrapping_label_expectations.dart';
+
 const _nodeKey = 'aaaaaaaaaa000000000000000000000000000000000000000000000000000000';
 const _secret = 'cbf8c4bc9379ab17b216721171f3ba89';
 const _otherSecret = '00112233445566778899aabbccddeeff';
@@ -97,13 +99,22 @@ class _ImportHost {
     return pending!;
   }
 
-  Widget build(ChannelQrLink link, {int? scannedSlot, String? scannedNodeKey}) =>
+  Widget build(ChannelQrLink link, {
+    int? scannedSlot, String? scannedNodeKey,
+    String locale = 'en', double textScale = 1,
+  }) =>
       ChangeNotifierProvider<MeshCoreConnector>.value(
         value: node,
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('en'),
+          locale: Locale(locale),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(textScale),
+            ),
+            child: child!,
+          ),
           home: Scaffold(
             body: Builder(builder: (context) {
               strings = AppLocalizations.of(context);
@@ -478,4 +489,78 @@ void main() {
       expect(RegionStore().loadRegions(), isNot(contains('ru-kda')));
     });
   });
+
+  for (final locale in ['en', 'ru']) {
+    for (final (orientation, size) in [
+      ('phone', const Size(320, 568)),
+      ('landscape', const Size(568, 360)),
+    ]) {
+      testWidgets(
+        'U11b11: complete channel details and consent remain accessible ($locale, $orientation, scale=2)',
+        (tester) async {
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = size;
+          addTearDown(tester.view.resetDevicePixelRatio);
+          addTearDown(tester.view.resetPhysicalSize);
+          await _withImport(tester, (host) async {
+            // Valid radio/region limits, with wide characters to force wraps.
+            const name = 'Radio channel WWWWWWWWWWWWWWWWW';
+            const region = 'regional-scope-long-name-12345';
+            host.node.held.add(_channel(0, 'Existing', _otherSecret));
+            host.node.unconfirmed.add(2);
+            final prefs = PrefsManager.instance;
+            final before = {for (final key in prefs.getKeys()) key: prefs.get(key)};
+            await tester.pumpWidget(host.build(_link(name: name, region: region),
+                locale: locale, textScale: 2));
+
+            for (final add in [false, true]) {
+              await tester.tap(find.text('Import fixture'));
+              await tester.pumpAndSettle();
+              final dialog = find.byType(AlertDialog);
+              expect(dialog, findsOneWidget);
+              expect(MediaQuery.textScalerOf(tester.element(dialog)).scale(16), 32);
+              final label = find.descendant(of: dialog, matching: find.text(name));
+              expectCompleteWrappingLabel(tester, label, wraps: true);
+              expectCompleteWrappingLabel(tester, find.descendant(of: dialog,
+                  matching: find.text(host.strings.channels_regionSetTo(region))), wraps: false);
+              final vertical = find.descendant(of: dialog, matching:
+                  find.byWidgetPredicate((widget) => widget is Scrollable &&
+                      widget.axisDirection == AxisDirection.down));
+              expect(vertical, findsOneWidget);
+              if (orientation == 'landscape') {
+                expect(tester.state<ScrollableState>(vertical).position.maxScrollExtent,
+                    greaterThan(0));
+              }
+              await Scrollable.ensureVisible(tester.element(label), alignment: 0.5);
+              await tester.pumpAndSettle();
+              expect(label.hitTestable(), findsOneWidget);
+              expect(host.node.written, isEmpty);
+              expect(host.node.regionsBeforeRadioWrite, isEmpty);
+              expect({for (final key in prefs.getKeys()) key: prefs.get(key)}, before);
+
+              final action = find.descendant(of: dialog, matching: add
+                  ? find.widgetWithText(FilledButton, host.strings.common_add)
+                  : find.widgetWithText(TextButton, host.strings.common_cancel));
+              expect(action.hitTestable(), findsOneWidget);
+              await tester.tap(action);
+              await tester.pumpAndSettle();
+              await host.completion;
+              expect(dialog, findsNothing);
+              if (!add) {
+                expect(host.node.written, isEmpty);
+                expect({for (final key in prefs.getKeys()) key: prefs.get(key)}, before);
+              }
+            }
+            expect(host.node.written, ['channel 1 $name $_secret', 'region 1 $region']);
+            expect(host.node.regionsBeforeRadioWrite, [region]);
+            expect(host.node.regions, {1: region});
+            expect(RegionStore().loadRegions(), contains(region));
+            expect(host.node.held.single.name, 'Existing');
+            expect(host.node.unconfirmed, {2});
+            expect(tester.takeException(), isNull);
+          });
+        },
+      );
+    }
+  }
 }

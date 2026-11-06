@@ -91,6 +91,10 @@ an occupied pre-scan slot is replaced with a currently free slot, and a
 changed connection or update target requires a new import. Confirming a new
 channel never silently authorizes replacing an existing one.
 
+The new-channel confirmation scrolls on short screens or with large text,
+so the full channel name and region remain readable. Cancel and Add stay
+available below the details.
+
 The fork keeps `region_scope`, gallery scanning and its separate channel and
 community scanners. Updating an existing channel keeps its name and history;
 omitting `region_scope` from the link clears its region after confirmation.
@@ -229,6 +233,13 @@ Communities are shared via QR codes containing a JSON payload:
 ```json
 {"v": 1, "type": "meshcore_community", "name": "...", "k": "<base64url-secret>"}
 ```
+
+After scanning a community QR, scroll the confirmation panel if necessary to
+read its full name and ID and reach the public-channel checkbox, Cancel and
+Join. Unchecking the box joins locally without adding a channel to the radio.
+The already-member panel also scrolls, keeping its full details and OK/Close
+actions accessible. Closing a confirmation resumes scanning; cancelling a
+new membership does not save it.
 
 ### Managing Communities
 
