@@ -2704,6 +2704,36 @@ radio-quiet wait reads, is left as it was
 
 ### Answers to neighbour and telemetry requests
 
+Remote telemetry GPS also updates the stored contact and map position
+(U11a1). `helpers/contact_telemetry_location.dart` validates finite coordinates
+and preserves a fix across repeated/older adverts using the node's advert
+clock. `Contact.telemetryFixAt` is the phone receive time; `lastHeard` is for
+display, while `lastSeen` stays the advert timestamp used in radio writes.
+`ContactStore` persists the optional metadata in existing per-node SQL rows
+and the prefs fallback, with no schema migration. Full sync temporarily holds
+fixes across clearing the active list and restores them only when the radio
+returns that contact; END, explicit deletion and connection/node reset discard
+unused held fixes. TelemetryScreen passes the node key captured for its request
+to the updater, which rejects another node, an absent contact, invalid GPS or
+a closed connection. Existing estimate invalidation handles the new position.
+Raw RX advert copies retain the fix without allocating new contacts or
+bumping contactsRevision; a newer advert supersedes it. No new request,
+polling timer or phone GPS subscription is introduced. The map's explicit
+Update location action (U11a2, active companions/sensors only) uses a single
+TelemetryLocationRequest. It listens before path preparation, but starts
+RequestSentTags and the 10-second fallback only through sendContactFrame's
+onSending callback, after command locking and scope setup. SENT estimates may
+extend the deadline. The optional canSend hook is checked after the lock and
+again after setup; cancellation skips the payload but still clears an opened
+scope on the same node. Map disposal/route exit cancels the request; node
+changes, disconnect and removed contacts invalidate it. Frames already handed
+to the transport cannot be recalled. No automatic map polling/retries occur.
+Service-only tests fake radio I/O; telemetry_contact_send_baseline_test uses
+the real scoped send/ACK queue and verifies the callback/cancellation boundary.
+Regressions also include contact_telemetry_location_test,
+remove_contact_merge_baseline_test, contact_store_test and
+node_collections_database_test.
+
 The neighbours and telemetry screens learn their request's tag from the `RESP_CODE_SENT` the node gives for it, and the repeater's answer (`PUSH_CODE_BINARY_RESPONSE`) repeats that tag. The node answers every command in turn, so a direct message, a room post or another request written meanwhile brings its own SENT, before the request's or after it. Both screens used to keep the tag of the last SENT and dropped the answer whenever another send fell in between; the telemetry screen also armed its timeout on every SENT, a request pending or not, so a message sent while it was open ended in a false timeout. `RequestSentTags` (`helpers/request_sent_tags.dart`, tested in `test/helpers/request_sent_tags_test.dart`) keeps every tag seen while the request waits, which cannot mix answers up, because the companion passes on the answer to its latest binary request only (`pending_req`). The estimates those SENTs carry set the timeout: the first replaces the fallback, a later one can only push the deadline back. The 10-second fallback is armed once the request is out, not before, so waiting for the command lock does not use it up; the telemetry screen had none and without a SENT waited for good. A new request drops the tags while its route is being prepared, so nothing that arrives before it goes out counts, while an answer arriving after a timeout is still taken.
 
 The telemetry screen also shows a separate **Calculated power (V × I)** row

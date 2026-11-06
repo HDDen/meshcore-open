@@ -32,6 +32,33 @@ All contacts with known GPS coordinates are plotted:
 
 Node name labels appear automatically at zoom level 14 and above.
 
+Opening a remote contact's **Telemetry** screen also updates its map position
+when a received response contains a valid GPS fix. This uses the existing
+telemetry request; the map does not start a background location poll. A missing,
+zero/zero, non-finite or out-of-range GPS pair leaves the known position intact.
+
+The fix and its receive time are saved locally for the connected node and
+survive contact-list refreshes, full synchronizations and application restarts.
+A newer advert from the remote node supersedes that fix. Repeated copies of
+the same advert keep the fix. Display freshness includes the telemetry receive
+time, while contact writes to the radio retain the original advert timestamp.
+This does not change the phone-first priority for displaying your own position
+and does not write the received GPS coordinates back to the radio.
+
+Select an active Companion or Sensor marker and press **Update location**
+to request telemetry once from the map. The request uses that contact's
+selected route and flood region. Repeaters and room servers require an
+administrator session, so this unauthenticated map action is hidden for them;
+use their existing authenticated telemetry screens instead.
+
+While the request is pending, the location action is disabled and its button
+shows progress. The app reports whether coordinates arrived, the reply had
+no valid position, or the request failed. A successful request moves the
+selected marker and centers the map only if that node is still selected.
+Leaving/covering the map cancels the wait; connection changes also invalidate
+it. An already handed-off radio packet cannot be recalled. There are no
+automatic retries or periodic location requests from the map.
+
 ### Shared Map Pins (Flag Icons)
 Location pins shared in chat messages are displayed as flags:
 - **Blue flag**: From a direct message

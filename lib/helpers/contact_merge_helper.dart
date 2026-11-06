@@ -1,4 +1,5 @@
 import '../models/contact.dart';
+import 'contact_telemetry_location.dart';
 
 int findAndRepairContactIndex({
   required List<Contact> contacts,
@@ -57,7 +58,7 @@ Contact mergeDuplicateContacts(Contact existing, Contact incoming) {
     latestLastModified = incoming.lastModified;
   }
 
-  return preferred.copyWith(
+  final merged = preferred.copyWith(
     name: preferred.name.isNotEmpty ? preferred.name : fallback.name,
     pathOverride: pathOverride,
     pathOverrideBytes: pathOverrideBytes,
@@ -69,5 +70,10 @@ Contact mergeDuplicateContacts(Contact existing, Contact incoming) {
     hasMessages: existing.hasMessages || incoming.hasMessages,
     isActive: existing.isActive || incoming.isActive,
     rawPacket: preferred.rawPacket ?? fallback.rawPacket,
+    clearTelemetryFix: true,
+  );
+  return retainContactTelemetryFix(
+    incoming,
+    retainContactTelemetryFix(existing, merged),
   );
 }

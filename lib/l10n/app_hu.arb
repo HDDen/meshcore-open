@@ -4300,5 +4300,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Hely frissítése",
+  "map_locationUpdated": "Hely frissítve",
+  "map_locationNotShared": "{name} helyadat nélkül válaszolt",
+  "map_locationRequestFailed": "Nincs válasz tőle: {name}"
 }

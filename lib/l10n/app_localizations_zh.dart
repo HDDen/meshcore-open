@@ -8511,4 +8511,20 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Connection or channels changed. Start the import again.';
+
+  @override
+  String get map_requestLocation => '更新位置';
+
+  @override
+  String get map_locationUpdated => '位置已更新';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name 回复中未包含位置';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return '$name 没有回复';
+  }
 }

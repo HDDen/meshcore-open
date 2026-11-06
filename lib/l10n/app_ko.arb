@@ -4433,5 +4433,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "위치 업데이트",
+  "map_locationUpdated": "위치가 업데이트되었습니다",
+  "map_locationNotShared": "{name}이(가) 위치 없이 응답했습니다",
+  "map_locationRequestFailed": "{name}의 응답이 없습니다"
 }

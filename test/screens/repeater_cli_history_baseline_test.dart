@@ -63,7 +63,11 @@ class _Connector extends MeshCoreConnector {
   @override
   Future<void> sendContactFrame(Contact contact, Uint8List frame, {
     required bool useFlood,
+    bool Function()? canSend,
+    VoidCallback? onSending,
   }) async {
+    if (canSend?.call() == false) return;
+    onSending?.call();
     writes.add(Uint8List.fromList(frame));
     if (replyImmediately) {
       answer(_reply);

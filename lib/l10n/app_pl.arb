@@ -4336,5 +4336,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Zaktualizuj lokalizację",
+  "map_locationUpdated": "Lokalizacja zaktualizowana",
+  "map_locationNotShared": "{name} odpowiedział bez lokalizacji",
+  "map_locationRequestFailed": "Brak odpowiedzi od {name}"
 }

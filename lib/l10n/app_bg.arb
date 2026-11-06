@@ -4268,5 +4268,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Обнови местоположението",
+  "map_locationUpdated": "Местоположението е обновено",
+  "map_locationNotShared": "{name} отговори без местоположение",
+  "map_locationRequestFailed": "Няма отговор от {name}"
 }

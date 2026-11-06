@@ -4674,5 +4674,23 @@
       }
     }
   },
-  "channels_qrImportChanged": "Connection or channels changed. Start the import again."
+  "channels_qrImportChanged": "Connection or channels changed. Start the import again.",
+  "map_requestLocation": "Update location",
+  "map_locationUpdated": "Location updated",
+  "map_locationNotShared": "{name} replied without a location",
+  "@map_locationNotShared": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "map_locationRequestFailed": "No reply from {name}",
+  "@map_locationRequestFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

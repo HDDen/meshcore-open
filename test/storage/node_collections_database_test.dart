@@ -159,6 +159,32 @@ Future<void> main() async {
       StorageService()..setPublicKeyHex = node;
 
   group('contacts', () {
+    test('U11a: telemetry location persists across SQL close and reopen', () async {
+      final factory = fileDatabase();
+      await openStorage(factory: factory);
+      final advert = contact(1);
+      final fixAt = DateTime.utc(2026, 1, 2);
+      final positioned = advert.copyWith(
+        latitude: 1,
+        longitude: -2,
+        telemetryFixAt: fixAt,
+      );
+      await contactsOf(nodeA).saveContacts([positioned]);
+      await MessageHistoryStorage.instance.resetForTesting();
+      await openStorage(factory: factory);
+      final restored = (await contactsOf(nodeA).loadContacts()).single;
+      // Persisted timestamps are epoch milliseconds; UTC/local presentation
+      // must not turn the same instant into a failed round-trip assertion.
+      expect(restored.telemetryFixAt?.millisecondsSinceEpoch,
+          fixAt.millisecondsSinceEpoch);
+      expect(restored.latitude, 1);
+      expect(restored.longitude, -2);
+      expect(restored.lastSeen, advert.lastSeen);
+      expect(restored.lastMessageAt, advert.lastMessageAt);
+      expect(restored.lastHeard.millisecondsSinceEpoch, fixAt.millisecondsSinceEpoch);
+      expect(await contactsOf(nodeB).loadContacts(), isEmpty);
+    });
+
     test('contacts come back with their fields per node; a save replaces '
         'the list', () async {
       await openStorage();

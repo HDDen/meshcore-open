@@ -4276,5 +4276,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Оновити геопозицію",
+  "map_locationUpdated": "Геопозицію оновлено",
+  "map_locationNotShared": "{name} відповів без геопозиції",
+  "map_locationRequestFailed": "Немає відповіді від {name}"
 }

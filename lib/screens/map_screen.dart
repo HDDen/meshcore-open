@@ -32,6 +32,8 @@ import '../services/app_settings_service.dart';
 import '../services/path_history_service.dart';
 import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
+import '../services/telemetry_location_request.dart';
+import '../widgets/contact_location_request_button.dart';
 import '../services/network_map/network_map_api_client.dart';
 import '../services/network_map/network_map_availability.dart';
 import '../helpers/marker_message.dart';
@@ -211,6 +213,8 @@ class _MapScreenState extends State<MapScreen>
   bool _showNodeLabels = true;
   double _zoom = 10.0;
   String? _selectedKey;
+  TelemetryLocationRequest? _locationRequest;
+  String? _locatingKey;
   LatLng? _selectedGuessPos;
   _Freshness _freshness = _Freshness.all;
   bool _nodeFiltersExpanded = true;
@@ -396,6 +400,7 @@ class _MapScreenState extends State<MapScreen>
 
   @override
   void dispose() {
+    _locationRequest?.cancel();
     appRouteObserver.unsubscribe(this);
     _removeMapSnackBarOverlay();
     _searchDebounce?.cancel();
@@ -417,7 +422,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   _NodeAge _ageOf(Contact contact) {
-    final d = DateTime.now().difference(contact.lastSeen);
+    final d = DateTime.now().difference(contact.lastHeard);
     if (d.inMinutes <= 60) return _NodeAge.online;
     if (d.inHours <= 24) return _NodeAge.recent;
     return _NodeAge.stale;
@@ -471,12 +476,14 @@ class _MapScreenState extends State<MapScreen>
 
   @override
   void didPushNext() {
+    _locationRequest?.cancel();
     _isCurrentRouteActive = false;
     _syncWardriveScreenWakelock();
   }
 
   @override
   void didPop() {
+    _locationRequest?.cancel();
     _isCurrentRouteActive = false;
     _syncWardriveScreenWakelock();
   }
@@ -768,7 +775,7 @@ class _MapScreenState extends State<MapScreen>
         final filteredByTime = settings.mapTimeFilterHours == 0
             ? contacts
             : contacts.where((c) {
-                final hoursSinceLastSeen = now.difference(c.lastSeen).inHours;
+                final hoursSinceLastSeen = now.difference(c.lastHeard).inHours;
                 return hoursSinceLastSeen <= settings.mapTimeFilterHours;
               }).toList();
 
@@ -5048,7 +5055,7 @@ class _MapScreenState extends State<MapScreen>
             if (a.hasLocation != b.hasLocation) {
               return a.hasLocation ? -1 : 1;
             }
-            return b.lastSeen.compareTo(a.lastSeen);
+            return b.lastHeard.compareTo(a.lastHeard);
           });
     final results = matches.take(8).toList();
     final brightness = Theme.of(context).brightness;
@@ -5407,7 +5414,7 @@ class _MapScreenState extends State<MapScreen>
                 children: [
                   _miniMeta(
                     context.l10n.map_lastSeen,
-                    _formatLastSeen(contact.lastSeen),
+                    _formatLastSeen(contact.lastHeard),
                   ),
                   _miniMeta(
                     context.l10n.map_path,
@@ -5430,6 +5437,13 @@ class _MapScreenState extends State<MapScreen>
                 runSpacing: 8,
                 children: [
                   ..._selectedNodeActions(context, contact, connector),
+                  ContactLocationRequestButton(
+                    contact: contact,
+                    isConnected: connector.isConnected && connector.selfPublicKeyHex.isNotEmpty,
+                    busy: _locationRequest != null,
+                    locating: _locatingKey == contact.publicKeyHex,
+                    onPressed: () => _requestNodeLocation(contact, connector),
+                  ),
                   TextButton(
                     style: TextButton.styleFrom(
                       foregroundColor: MapPalette.selected,
@@ -5450,6 +5464,46 @@ class _MapScreenState extends State<MapScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _requestNodeLocation(
+    Contact contact,
+    MeshCoreConnector connector,
+  ) async {
+    if (_locationRequest != null) return;
+    final request = TelemetryLocationRequest();
+    setState(() {
+      _locationRequest = request;
+      _locatingKey = contact.publicKeyHex;
+    });
+    var result = TelemetryLocationResult.failed;
+    try {
+      result = await request.run(connector, contact);
+    } catch (_) {
+      result = TelemetryLocationResult.failed;
+    } finally {
+      if (mounted && identical(_locationRequest, request)) {
+        setState(() {
+          _locationRequest = null;
+          _locatingKey = null;
+        });
+      }
+    }
+    if (!mounted || !_isCurrentRouteActive || result == TelemetryLocationResult.cancelled) return;
+    final l10n = context.l10n;
+    final message = switch (result) {
+      TelemetryLocationResult.located => l10n.map_locationUpdated,
+      TelemetryLocationResult.noLocation => l10n.map_locationNotShared(contact.name),
+      TelemetryLocationResult.failed => l10n.map_locationRequestFailed(contact.name),
+      TelemetryLocationResult.cancelled => '',
+    };
+    _showMapSnackBar(content: Text(message));
+    final updated = connector.getContactByPubKeyHex(contact.publicKeyHex);
+    // Do not move the camera if the user selected another node meanwhile.
+    if (result == TelemetryLocationResult.located &&
+        _selectedKey == contact.publicKeyHex && updated != null && updated.hasLocation) {
+      _mapController.move(LatLng(updated.latitude!, updated.longitude!), _zoom);
+    }
   }
 
   Widget _miniMeta(String label, String value) {
@@ -6507,7 +6561,7 @@ class _MapScreenState extends State<MapScreen>
           guessedPosition: guessedPosition,
           icon: _getNodeIcon(contact.type),
           color: _getNodeColor(contact.type),
-          lastSeenText: _formatLastSeen(contact.lastSeen),
+          lastSeenText: _formatLastSeen(contact.lastHeard),
           actions: actions,
         );
       },
@@ -8506,7 +8560,7 @@ int _mapContactSignature(Contact contact) {
     _bytesSignature(contact.pathOverrideBytes),
     contact.latitude,
     contact.longitude,
-    contact.lastSeen.millisecondsSinceEpoch,
+    contact.lastHeard.millisecondsSinceEpoch,
     contact.lastMessageAt.millisecondsSinceEpoch,
     contact.isActive,
   );

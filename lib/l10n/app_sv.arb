@@ -4079,5 +4079,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Uppdatera plats",
+  "map_locationUpdated": "Platsen uppdaterad",
+  "map_locationNotShared": "{name} svarade utan plats",
+  "map_locationRequestFailed": "Inget svar från {name}"
 }

@@ -9008,4 +9008,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Connection or channels changed. Start the import again.';
+
+  @override
+  String get map_requestLocation => 'Update location';
+
+  @override
+  String get map_locationUpdated => 'Location updated';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name replied without a location';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return 'No reply from $name';
+  }
 }

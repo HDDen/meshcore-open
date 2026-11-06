@@ -142,6 +142,7 @@ class ContactStore {
       'latitude': contact.latitude,
       'longitude': contact.longitude,
       'lastSeen': contact.lastSeen.millisecondsSinceEpoch,
+      'telemetryFixAt': contact.telemetryFixAt?.millisecondsSinceEpoch,
       'lastModified': contact.lastModified?.millisecondsSinceEpoch,
       'lastMessageAt': contact.lastMessageAt.millisecondsSinceEpoch,
       'hasMessages': contact.hasMessages,
@@ -154,6 +155,7 @@ class ContactStore {
 
   Contact _fromJson(Map<String, dynamic> json) {
     final lastSeenMs = json['lastSeen'] as int? ?? 0;
+    final telemetryFixMs = json['telemetryFixAt'] as int?;
     final lastMessageMs = json['lastMessageAt'] as int?;
     final lastModifiedMs = json['lastModified'] as int?;
 
@@ -204,6 +206,9 @@ class ContactStore {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       lastSeen: DateTime.fromMillisecondsSinceEpoch(lastSeenMs),
+      telemetryFixAt: telemetryFixMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(telemetryFixMs),
       lastModified: lastModifiedMs == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastModifiedMs),

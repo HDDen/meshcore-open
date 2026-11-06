@@ -15,6 +15,7 @@ import '../services/repeater_command_service.dart';
 import '../utils/app_logger.dart';
 import '../widgets/routing_sheet.dart';
 import '../helpers/cayenne_lpp.dart';
+import '../helpers/contact_telemetry_location.dart';
 import '../helpers/telemetry_diagnostics.dart';
 import '../helpers/telemetry_power.dart';
 import '../helpers/request_sent_tags.dart';
@@ -70,6 +71,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
 
   static const Duration _sentResponseFallbackTimeout = Duration(seconds: 10);
   final RequestSentTags _sentTags = RequestSentTags();
+  String? _telemetryRequestNodeKey;
 
   bool _isLoading = false;
   bool _isLoaded = false;
@@ -198,6 +200,16 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
       );
     }
     if (!mounted) return;
+    final fix = telemetryGpsFix(parsedTelemetry);
+    final requestNodeKey = _telemetryRequestNodeKey;
+    if (!widget.isSelf && fix != null && requestNodeKey != null) {
+      context.read<MeshCoreConnector>().updateContactLocationFromTelemetry(
+        widget.contact.publicKeyHex,
+        fix.latitude,
+        fix.longitude,
+        expectedNodeKey: requestNodeKey,
+      );
+    }
     final isAutoRefreshRequest = _activeTelemetryRequestIsAutoRefresh;
     setState(() {
       _parsedTelemetry = parsedTelemetry;
@@ -259,6 +271,7 @@ class _TelemetryScreenState extends State<TelemetryScreen> {
     _sentTags.clear();
     try {
       final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+      _telemetryRequestNodeKey = connector.selfPublicKeyHex;
       Uint8List frame;
       PathSelection? selection;
       if (widget.isSelf) {

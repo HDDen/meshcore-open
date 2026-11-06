@@ -66,6 +66,10 @@ void expectSameContact(Contact actual, Contact expected) {
   expect(actual.latitude, expected.latitude);
   expect(actual.longitude, expected.longitude);
   expect(actual.lastSeen, expected.lastSeen);
+  // Storage retains epoch milliseconds, not the DateTime timezone flag or
+  // sub-millisecond precision of DateTime.now(). Null still means no fix.
+  expect(actual.telemetryFixAt?.millisecondsSinceEpoch,
+      expected.telemetryFixAt?.millisecondsSinceEpoch);
   expect(actual.lastModified, expected.lastModified);
   expect(actual.lastMessageAt, expected.lastMessageAt);
   expect(actual.hasMessages, expected.hasMessages);
@@ -84,6 +88,25 @@ void main() {
   tearDown(PrefsManager.reset);
 
   ContactStore forNode(String node) => ContactStore()..setPublicKeyHex = node;
+
+  test('U11a: telemetry time survives prefs reload; legacy contacts have none', () async {
+    final base = contact(1, latitude: 1, longitude: -2);
+    final fixAt = DateTime.utc(2026, 1, 2);
+    await forNode(nodeA).saveContacts([base.copyWith(telemetryFixAt: fixAt)]);
+    final restored = (await forNode(nodeA).loadContacts()).single;
+    expectSameContact(restored, base.copyWith(telemetryFixAt: fixAt));
+    expect(restored.lastHeard.millisecondsSinceEpoch, fixAt.millisecondsSinceEpoch);
+    expect(await forNode(nodeB).loadContacts(), isEmpty);
+
+    final store = forNode(nodeA);
+    final entries = jsonDecode(PrefsManager.instance.getString(store.keyFor)!) as List;
+    (entries.single as Map).remove('telemetryFixAt');
+    await PrefsManager.instance.setString(store.keyFor, jsonEncode(entries));
+    final legacy = (await forNode(nodeA).loadContacts()).single;
+    expect(legacy.telemetryFixAt, isNull);
+    expect(legacy.lastSeen, base.lastSeen);
+    expect(legacy.latitude, base.latitude);
+  });
 
   test('contacts come back with every field, in the order they were saved',
       () async {

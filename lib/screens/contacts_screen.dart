@@ -2060,10 +2060,10 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   DateTime _resolveLastSeen(Contact contact) {
-    if (contact.type != advTypeChat) return contact.lastSeen;
-    return contact.lastMessageAt.isAfter(contact.lastSeen)
+    if (contact.type != advTypeChat) return contact.lastHeard;
+    return contact.lastMessageAt.isAfter(contact.lastHeard)
         ? contact.lastMessageAt
-        : contact.lastSeen;
+        : contact.lastHeard;
   }
 
   String _formatLastSeen(BuildContext context, DateTime lastSeen) {

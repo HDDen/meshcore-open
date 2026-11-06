@@ -4266,5 +4266,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Aggiorna posizione",
+  "map_locationUpdated": "Posizione aggiornata",
+  "map_locationNotShared": "{name} ha risposto senza posizione",
+  "map_locationRequestFailed": "Nessuna risposta da {name}"
 }

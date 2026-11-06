@@ -18,6 +18,65 @@ Uint8List _reportedFields() => Uint8List.fromList([
 
 void main() {
   group('Cayenne LPP telemetry baseline', () {
+    test('U11a: GPS uses signed 24-bit fields and keeps adjacent sensors', () {
+      // Literal synthetic bytes, independent of addGps: latitude 1 degree,
+      // longitude -2 degrees and altitude 12.34 metres.
+      final payload = Uint8List.fromList([
+        2, 103, 0x01, 0x1C,
+        6, 136, 0x00, 0x27, 0x10, 0xFF, 0xB1, 0xE0, 0x00, 0x04, 0xD2,
+        4, 116, 0x01, 0x80,
+      ]);
+      expect(CayenneLpp.parse(payload), [
+        {'channel': 2, 'type': 103, 'value': 28.4},
+        {
+          'channel': 6,
+          'type': 136,
+          'value': {'latitude': 1.0, 'longitude': -2.0, 'altitude': 12.34},
+        },
+        {'channel': 4, 'type': 116, 'value': 3.84},
+      ]);
+      expect(CayenneLpp.parseByChannel(payload), [
+        {'channel': 2, 'values': {'temperature': 28.4}},
+        {'channel': 4, 'values': {'voltage': 3.84}},
+        {
+          'channel': 6,
+          'values': {
+            'gps': {'latitude': 1.0, 'longitude': -2.0, 'altitude': 12.34},
+          },
+        },
+      ]);
+    });
+
+    test('U11a: southern latitude and negative GPS altitude keep their sign', () {
+      final payload = Uint8List.fromList([
+        6, 136, 0xFF, 0xD8, 0xF0, 0x00, 0x4E, 0x20, 0xFF, 0xFB, 0x2E,
+      ]);
+      expect(CayenneLpp.parseByChannel(payload), [
+        {
+          'channel': 6,
+          'values': {
+            'gps': {'latitude': -1.0, 'longitude': 2.0, 'altitude': -12.34},
+          },
+        },
+      ]);
+    });
+
+    test('U11a: the decoder retains a zero fix for the caller to validate', () {
+      // Parsing the payload and deciding whether it is a usable map position
+      // are separate responsibilities. Do not silently change the wire parser.
+      final payload = Uint8List.fromList([
+        6, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ]);
+      expect(CayenneLpp.parseByChannel(payload), [
+        {
+          'channel': 6,
+          'values': {
+            'gps': {'latitude': 0.0, 'longitude': 0.0, 'altitude': 0.0},
+          },
+        },
+      ]);
+    });
+
     test('separate AHT, BMP and electrical channels retain all reported fields', () {
       expect(CayenneLpp.parseByChannel(_reportedFields()), [
         {

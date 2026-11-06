@@ -3624,5 +3624,9 @@
       }
     }
   },
-  "channels_qrImportChanged": "Подключение или каналы изменились. Повторите импорт."
+  "channels_qrImportChanged": "Подключение или каналы изменились. Повторите импорт.",
+  "map_requestLocation": "Обновить позицию",
+  "map_locationUpdated": "Местоположение обновлено",
+  "map_locationNotShared": "{name}: ответ без координат",
+  "map_locationRequestFailed": "Не удалось получить координаты от {name}"
 }

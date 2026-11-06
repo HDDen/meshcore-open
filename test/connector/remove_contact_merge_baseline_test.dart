@@ -64,6 +64,8 @@ Uint8List _contactFrame(Contact contact, {int code = respCodeContact}) {
     type: contact.type,
     flags: contact.flags,
     name: contact.name,
+    lat: contact.latitude,
+    lon: contact.longitude,
     lastAdvert: contact.lastSeen,
   );
   return Uint8List.fromList(frame)..[0] = code;
@@ -520,6 +522,156 @@ Future<void> main() async {
       expect(h.connector.contacts.single.publicKeyHex, h.targetHex);
       expect(await h.contacts.loadContacts(), hasLength(2));
       expect(await h.history.loadMessages(h.targetHex), hasLength(2));
+    });
+
+    test('U11a: a telemetry fix persists locally without a radio write', () async {
+      final original = h.target;
+      expect(h.connector.updateContactLocationFromTelemetry(
+        h.targetHex, 1, -2, expectedNodeKey: h.node,
+      ), isTrue);
+      expect(h.sent, isEmpty);
+      final positioned = h.target;
+      expect(positioned.latitude, 1);
+      expect(positioned.longitude, -2);
+      expect(positioned.telemetryFixAt, isNotNull);
+      expect(positioned.lastSeen, original.lastSeen);
+      expect(positioned.lastModified, original.lastModified);
+      expect(positioned.lastMessageAt, original.lastMessageAt);
+      expect(positioned.path, original.path);
+      expect(positioned.pathHashWidth, original.pathHashWidth);
+      expect(positioned.flags, original.flags);
+      await _until(() async {
+        final saved = await h.contacts.loadContacts();
+        return saved.any((c) => c.publicKeyHex == h.targetHex &&
+            c.telemetryFixAt?.millisecondsSinceEpoch ==
+                positioned.telemetryFixAt!.millisecondsSinceEpoch);
+      }, 'telemetry fix committed');
+      await h.connector.loadContactCache();
+      // SQL preserves milliseconds, whereas the original DateTime.now()
+      // may contain microseconds. Compare the actual storage contract.
+      expect(h.target.telemetryFixAt?.millisecondsSinceEpoch,
+          positioned.telemetryFixAt!.millisecondsSinceEpoch);
+      expect(h.target.lastSeen, original.lastSeen);
+      expect(h.target.latitude, 1);
+      expect(h.sent, isEmpty);
+    });
+
+    for (final preserve in [false, true]) {
+      test('U11a: GPS survives contact sync preserveExisting=$preserve; newer advert wins', () async {
+        final original = h.target;
+        expect(h.connector.updateContactLocationFromTelemetry(
+          h.targetHex, 1, -2, expectedNodeKey: h.node,
+        ), isTrue);
+        final fixAt = h.target.telemetryFixAt;
+        await h.settle();
+        await h.connector.getContacts(preserveExisting: preserve);
+        expect(h.target.telemetryFixAt, fixAt);
+        expect(h.target.latitude, 1);
+        expect(h.target.longitude, -2);
+        expect(h.target.lastSeen, original.lastSeen);
+        expect(h.connector.contacts, hasLength(2));
+
+        h.radioContacts[0] = original.copyWith(
+          latitude: 3,
+          longitude: -4,
+          lastSeen: original.lastSeen.add(const Duration(seconds: 1)),
+        );
+        await h.connector.getContacts(preserveExisting: true);
+        expect(h.target.telemetryFixAt, isNull);
+        expect(h.target.latitude, 3);
+        expect(h.target.longitude, -4);
+        expect(h.target.lastSeen, h.radioContacts[0].lastSeen);
+      });
+    }
+
+    test('U11a: flag writes keep the advert timestamp and local GPS metadata', () async {
+      final advertAt = h.target.lastSeen;
+      expect(h.connector.updateContactLocationFromTelemetry(
+        h.targetHex, 1, -2, expectedNodeKey: h.node,
+      ), isTrue);
+      final fixAt = h.target.telemetryFixAt;
+      await h.connector.setContactFlags(h.target, isFavorite: true);
+      final update = h.sent.singleWhere((frame) => frame.first == cmdAddUpdateContact);
+      expect(ByteData.sublistView(update, 132, 136).getUint32(0, Endian.little),
+          advertAt.millisecondsSinceEpoch ~/ 1000);
+      expect(h.target.telemetryFixAt, fixAt);
+      expect(h.target.latitude, 1);
+      expect(h.target.lastSeen, advertAt);
+      expect(h.target.isFavorite, isTrue);
+    });
+
+    test('U11a: held GPS cannot resurrect a contact omitted by the node', () async {
+      final original = h.target;
+      expect(h.connector.updateContactLocationFromTelemetry(
+        h.targetHex, 1, -2, expectedNodeKey: h.node,
+      ), isTrue);
+      await h.settle();
+      h.radioContacts.removeAt(0);
+      await h.connector.getContacts();
+      expect(h.connector.getContactByPubKeyHex(h.targetHex), isNull);
+      expect(h.connector.contacts.single.publicKeyHex, h.otherHex);
+      // The old fix must also be forgotten after END, even if the radio
+      // re-adds the very same contact and advert timestamp in another sync.
+      h.radioContacts.insert(0, original);
+      await h.connector.getContacts();
+      expect(h.target.telemetryFixAt, isNull);
+      expect(h.target.hasLocation, isFalse);
+    });
+
+    test('U11a: repeated raw adverts retain GPS without bumping contact revision', () async {
+      final original = h.target;
+      expect(h.connector.updateContactLocationFromTelemetry(
+        h.targetHex, 1, -2, expectedNodeKey: h.node,
+      ), isTrue);
+      final fixAt = h.target.telemetryFixAt;
+      final revision = h.connector.contactsRevision;
+      Uint8List advertFrame(DateTime at) {
+        final payload = BufferWriter()
+          ..writeBytes(original.publicKey)
+          ..writeUInt32LE(at.millisecondsSinceEpoch ~/ 1000)
+          ..writeBytes(Uint8List(64)) // Synthetic, not a verified signature.
+          ..writeByte(original.type | 0x10 | 0x80)
+          ..writeInt32LE(3000000)
+          ..writeInt32LE(-4000000)
+          ..writeCString(original.name, maxNameSize);
+        return Uint8List.fromList([
+          pushCodeLogRxData, 40, 196, (payloadTypeADVERT << 2) | 1, 0,
+          ...payload.toBytes(),
+        ]);
+      }
+      h.connector.handleFrameForTest(advertFrame(original.lastSeen));
+      h.connector.handleFrameForTest(advertFrame(
+        original.lastSeen.subtract(const Duration(seconds: 1)),
+      ));
+      expect(h.connector.contactsRevision, revision);
+      expect(h.target.telemetryFixAt, fixAt);
+      expect(h.target.latitude, 1);
+      expect(h.target.lastSeen, original.lastSeen);
+      h.connector.handleFrameForTest(advertFrame(
+        original.lastSeen.add(const Duration(seconds: 1)),
+      ));
+      expect(h.target.telemetryFixAt, isNull);
+      expect(h.target.latitude, 3);
+      expect(h.target.longitude, -4);
+      expect(h.target.path, original.path);
+      expect(h.target.pathHashWidth, original.pathHashWidth);
+    });
+
+    test('U11a: wrong node, absent contact and invalid GPS have no side effects', () async {
+      final original = h.target;
+      expect(h.connector.updateContactLocationFromTelemetry(
+        h.targetHex, 1, -2, expectedNodeKey: 'another-node',
+      ), isFalse);
+      expect(h.connector.updateContactLocationFromTelemetry(
+        pubKeyToHex(_linkedKey), 1, -2, expectedNodeKey: h.node,
+      ), isFalse);
+      for (final pair in [(0.0, 0.0), (91.0, 2.0), (1.0, double.nan)]) {
+        expect(h.connector.updateContactLocationFromTelemetry(
+          h.targetHex, pair.$1, pair.$2, expectedNodeKey: h.node,
+        ), isFalse);
+      }
+      expect(h.target, same(original));
+      expect(h.sent, isEmpty);
     });
 
     for (final width in [1, 2, 3]) {

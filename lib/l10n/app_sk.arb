@@ -4269,5 +4269,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Aktualizovať polohu",
+  "map_locationUpdated": "Poloha aktualizovaná",
+  "map_locationNotShared": "{name} odpovedal bez polohy",
+  "map_locationRequestFailed": "Žiadna odpoveď od {name}"
 }

@@ -17,6 +17,9 @@ class Contact {
   final double? latitude;
   final double? longitude;
   final DateTime lastSeen;
+  /// Phone receive time of a telemetry GPS fix. [lastSeen] remains the
+  /// advert timestamp sent back to the radio by contact/path/flag writes.
+  final DateTime? telemetryFixAt;
   final DateTime lastMessageAt;
   final bool hasMessages;
   final DateTime? lastModified;
@@ -36,6 +39,7 @@ class Contact {
     this.latitude,
     this.longitude,
     required this.lastSeen,
+    this.telemetryFixAt,
     this.lastModified,
     DateTime? lastMessageAt,
     this.hasMessages = false,
@@ -88,6 +92,12 @@ class Contact {
         lon <= 180.0;
   }
 
+  /// Display freshness without changing the firmware's advert clock.
+  DateTime get lastHeard {
+    final fixAt = telemetryFixAt;
+    return fixAt != null && fixAt.isAfter(lastSeen) ? fixAt : lastSeen;
+  }
+
   bool get isFavorite => (flags & contactFlagFavorite) != 0;
 
   Contact copyWith({
@@ -104,6 +114,8 @@ class Contact {
     double? latitude,
     double? longitude,
     DateTime? lastSeen,
+    DateTime? telemetryFixAt,
+    bool clearTelemetryFix = false,
     DateTime? lastMessageAt,
     bool? hasMessages,
     DateTime? lastModified,
@@ -127,6 +139,9 @@ class Contact {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       lastSeen: lastSeen ?? this.lastSeen,
+      telemetryFixAt: clearTelemetryFix
+          ? null
+          : (telemetryFixAt ?? this.telemetryFixAt),
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       hasMessages: hasMessages ?? this.hasMessages,
       lastModified: lastModified ?? this.lastModified,

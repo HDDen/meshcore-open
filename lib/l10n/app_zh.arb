@@ -4301,5 +4301,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "更新位置",
+  "map_locationUpdated": "位置已更新",
+  "map_locationNotShared": "{name} 回复中未包含位置",
+  "map_locationRequestFailed": "{name} 没有回复"
 }

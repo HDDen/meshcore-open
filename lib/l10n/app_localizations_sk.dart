@@ -9099,4 +9099,20 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Connection or channels changed. Start the import again.';
+
+  @override
+  String get map_requestLocation => 'Aktualizovať polohu';
+
+  @override
+  String get map_locationUpdated => 'Poloha aktualizovaná';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name odpovedal bez polohy';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return 'Žiadna odpoveď od $name';
+  }
 }

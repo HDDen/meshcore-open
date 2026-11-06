@@ -4402,5 +4402,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Actualiser la position",
+  "map_locationUpdated": "Position actualisée",
+  "map_locationNotShared": "{name} a répondu sans position",
+  "map_locationRequestFailed": "Aucune réponse de {name}"
 }

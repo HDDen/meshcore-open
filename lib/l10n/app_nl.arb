@@ -4086,5 +4086,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Locatie bijwerken",
+  "map_locationUpdated": "Locatie bijgewerkt",
+  "map_locationNotShared": "{name} antwoordde zonder locatie",
+  "map_locationRequestFailed": "Geen antwoord van {name}"
 }

@@ -69,6 +69,7 @@ import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
+import '../helpers/contact_telemetry_location.dart';
 import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
 import '../helpers/versioned_map.dart';
@@ -469,6 +470,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   String _selfPublicKeyHex = '';
 
   void _setSelfPublicKey(Uint8List? key) {
+    if (!listEquals(_selfPublicKey, key)) {
+      _telemetryFixesDuringSync.clear();
+    }
     _selfPublicKey = key;
     _selfPublicKeyHex = key == null ? '' : pubKeyToHex(key);
     _companionCli?.connectionChanged();
@@ -4792,8 +4796,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// resets.
   Future<DateTime?> _sendScopedContactFrame(
     Uint8List frame,
-    String region,
-  ) async {
+    String region, {
+    bool Function()? canSend,
+    VoidCallback? onSending,
+  }) async {
+    final nodeKey = selfPublicKeyHex;
     if (!ContactRegionStore.isUnscoped(region)) {
       await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(region));
     } else {
@@ -4801,6 +4808,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     final sentByRadioAt = DateTime.now();
     try {
+      if (canSend?.call() == false) return null;
+      onSending?.call();
       await _sendFrameAndWaitForCommandAck(frame);
     } on TimeoutException {
       // The frame was written; the retry service arms its timer on the SENT
@@ -4810,7 +4819,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         tag: 'Connector',
       );
     } finally {
-      if (isConnected) {
+      if (!_disposed && isConnected && selfPublicKeyHex == nodeKey) {
         try {
           await _sendFrameAndWaitForCommandAck(buildSetFloodScopeFrame(''));
         } catch (error) {
@@ -4838,13 +4847,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Contact contact,
     Uint8List frame, {
     required bool useFlood,
+    bool Function()? canSend,
+    VoidCallback? onSending,
   }) => _runChannelCommandLocked(() async {
     try {
+      // Optional lifecycle hooks for a one-shot request. Check again after
+      // region setup: either await may outlive its screen or connection.
+      if (canSend?.call() == false) return;
       final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
       if (region.isEmpty) {
+        onSending?.call();
         await sendFrame(frame);
       } else {
-        await _sendScopedContactFrame(frame, region);
+        await _sendScopedContactFrame(
+          frame, region, canSend: canSend, onSending: onSending,
+        );
       }
     } catch (e) {
       appLogger.error(
@@ -8127,6 +8144,50 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  // A full contact sync clears the active list before receiving its records.
+  // Retain only GPS fixes, not whole missing contacts to be added back later.
+  final Map<String, Contact> _telemetryFixesDuringSync = {};
+
+  void _stashTelemetryFixes() {
+    for (final contact in _contacts) {
+      if (contact.telemetryFixAt != null && contact.hasLocation) {
+        _telemetryFixesDuringSync[contact.publicKeyHex] = contact;
+      }
+    }
+  }
+
+  /// Applies an already received remote GPS fix without writing to the radio
+  /// or changing its advert clock. The screen supplies its request's node
+  /// key so a reply cannot modify the same contact under another node.
+  bool updateContactLocationFromTelemetry(
+    String contactKeyHex,
+    double latitude,
+    double longitude, {
+    required String expectedNodeKey,
+  }) {
+    if (_disposed ||
+        !isConnected ||
+        expectedNodeKey.isEmpty ||
+        selfPublicKeyHex != expectedNodeKey ||
+        !validTelemetryLocation(latitude, longitude)) {
+      return false;
+    }
+    final index = _contacts.indexWhere((c) => c.publicKeyHex == contactKeyHex);
+    if (index < 0) {
+      return false;
+    }
+    _contacts[index] = _contacts[index].copyWith(
+      latitude: latitude,
+      longitude: longitude,
+      telemetryFixAt: DateTime.now(),
+    );
+    notifyListeners();
+    // Uses the existing per-row SQL writer and estimate invalidation; no new
+    // timers, background requests or whole-database rewrite are introduced.
+    unawaited(_persistContacts());
+    return true;
+  }
+
   Future<void> getContacts({int? since, bool preserveExisting = false}) async {
     if (!isConnected) return;
     // The firmware answers ERR_BAD_STATE while an iteration is running, and
@@ -8166,6 +8227,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await _refreshContactMessageSummaries();
       _captureContactMessageSummarySnapshot();
       _hasLoadedContacts = false;
+      _stashTelemetryFixes();
       _contacts.clear();
     }
     notifyListeners();
@@ -8196,6 +8258,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Clears the contact-sync follow-up state. Call on connection teardown.
   void _resetSyncFlowState() {
+    _telemetryFixesDuringSync.clear();
     _appStartDeferredForContactSync = false;
     _unknownSenderMessageFrames.clear();
   }
@@ -11084,6 +11147,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       contact.rawPacket ?? Uint8List(0),
       noNotify: true,
     );
+    _telemetryFixesDuringSync.remove(contact.publicKeyHex);
     _contacts.removeWhere((c) => c.publicKeyHex == contact.publicKeyHex);
     _contactMessagePreviews.remove(contact.publicKeyHex);
     _knownContactKeys.remove(contact.publicKeyHex);
@@ -12129,6 +12193,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _captureContactMessageSummarySnapshot();
         }
         if (!_preserveContactsOnRefresh) {
+          _stashTelemetryFixes();
           _contacts.clear();
         }
         // A sync filtered by lastmod lists only what changed, so only a full
@@ -12213,6 +12278,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _contactSyncTimeout?.cancel();
         _contactSyncTimeout = null;
         _dropContactsMissingFromNode();
+        _telemetryFixesDuringSync.clear();
         _isLoadingContacts = false;
         if (_contactsStorageFull && _contacts.length < _maxContacts) {
           _contactsStorageFull = false; // capacity freed up since the warning
@@ -13294,6 +13360,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       'Firmware deleted contact ${keyHex.substring(0, 8)} to make room',
       tag: 'Connector',
     );
+    _telemetryFixesDuringSync.remove(keyHex);
     _contacts.removeWhere((c) => c.publicKeyHex == keyHex);
     _knownContactKeys.remove(keyHex);
     _contactsStorageFull = false;
@@ -13327,8 +13394,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         );
         return;
       }
+      final heldFix = _telemetryFixesDuringSync.remove(contactTmp.publicKeyHex);
       final contact = _withContactMessageSummarySnapshot(
-        getFromDiscovered(contactTmp),
+        getFromDiscovered(
+          heldFix == null
+              ? contactTmp
+              : retainContactTelemetryFix(heldFix, contactTmp),
+        ),
       );
       _handleDiscovery(
         contact,
@@ -13373,13 +13445,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
         // Preserve user-selected path settings and previously known GPS when
         // refreshed frames omit coordinates (lat/lon encoded as 0,0).
-        _contacts[existingIndex] = contact.copyWith(
-          lastMessageAt: messageSummary.lastMessageAt,
-          hasMessages: messageSummary.hasMessages,
-          pathOverride: existing.pathOverride, // Preserve user's path choice
-          pathOverrideBytes: existing.pathOverrideBytes,
-          latitude: contact.latitude ?? existing.latitude,
-          longitude: contact.longitude ?? existing.longitude,
+        _contacts[existingIndex] = retainContactTelemetryFix(
+          existing,
+          contact.copyWith(
+            lastMessageAt: messageSummary.lastMessageAt,
+            hasMessages: messageSummary.hasMessages,
+            pathOverride: existing.pathOverride, // Preserve user's path choice
+            pathOverrideBytes: existing.pathOverrideBytes,
+            latitude: contact.latitude ?? existing.latitude,
+            longitude: contact.longitude ?? existing.longitude,
+          ),
         );
         _registerContactInActiveSync(contact.publicKeyHex, existingIndex);
 
@@ -13468,11 +13543,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
 
       // CRITICAL: Preserve user's path override when contact is refreshed from device
-      _contacts[existingIndex] = contact.copyWith(
-        lastMessageAt: messageSummary.lastMessageAt,
-        hasMessages: messageSummary.hasMessages,
-        pathOverride: existing.pathOverride, // Preserve user's path choice
-        pathOverrideBytes: existing.pathOverrideBytes,
+      _contacts[existingIndex] = retainContactTelemetryFix(
+        existing,
+        contact.copyWith(
+          lastMessageAt: messageSummary.lastMessageAt,
+          hasMessages: messageSummary.hasMessages,
+          pathOverride: existing.pathOverride, // Preserve user's path choice
+          pathOverrideBytes: existing.pathOverrideBytes,
+        ),
       );
       _registerContactInActiveSync(contact.publicKeyHex, existingIndex);
 
@@ -19711,12 +19789,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // anyway bumped `contactsRevision` and rebuilt every contact row for
       // each copy; replacing only what changed keeps the revision, and the
       // notification that follows it, for a real change.
-      final nextLatitude = hasLocation ? latitude : existing.latitude;
-      final nextLongitude = hasLocation ? longitude : existing.longitude;
       final nextName = hasName ? name : existing.name;
-      final nextLastSeen = DateTime.fromMillisecondsSinceEpoch(
+      final advertAt = DateTime.fromMillisecondsSinceEpoch(
         timestamp * 1000,
       );
+      final newerAdvert = advertAt.isAfter(existing.lastSeen);
+      final keepTelemetryFix = existing.telemetryFixAt != null &&
+          existing.hasLocation && !newerAdvert;
+      // Do not allocate a replacement for each identical relayed advert.
+      // Its old GPS must not undo a later telemetry fix either.
+      final nextLatitude = keepTelemetryFix || !hasLocation
+          ? existing.latitude : latitude;
+      final nextLongitude = keepTelemetryFix || !hasLocation
+          ? existing.longitude : longitude;
+      final nextLastSeen = keepTelemetryFix ? existing.lastSeen : advertAt;
       final changed =
           nextName != existing.name ||
           nextLatitude != existing.latitude ||
@@ -19730,6 +19816,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           name: nextName,
           lastMessageAt: mergedLastMessageAt,
           lastSeen: nextLastSeen,
+          clearTelemetryFix: newerAdvert,
         );
         notifyListeners();
       }

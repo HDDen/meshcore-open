@@ -9126,4 +9126,20 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Подключение или каналы изменились. Повторите импорт.';
+
+  @override
+  String get map_requestLocation => 'Обновить позицию';
+
+  @override
+  String get map_locationUpdated => 'Местоположение обновлено';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name: ответ без координат';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return 'Не удалось получить координаты от $name';
+  }
 }

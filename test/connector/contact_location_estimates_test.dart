@@ -271,6 +271,25 @@ Future<void> main() async {
   });
 
   group('the node\'s contacts', () {
+    test('U11a: a telemetry fix clears the old estimated position', () async {
+      final harness = await _Harness.start();
+      addTearDown(harness.connector.dispose);
+      final original = await harness.contact(aliceKey, 'Alice');
+      await harness.plantEstimate(aliceKey, 'Alice');
+      expect(await harness.estimatedKeys(), {_hexOf(aliceKey)});
+      expect(harness.connector.updateContactLocationFromTelemetry(
+        _hexOf(aliceKey), 55.2, 37.2,
+        expectedNodeKey: harness.connector.selfPublicKeyHex,
+      ), isTrue);
+      await _waitUntil(
+        () async => (await harness.estimatedKeys()).isEmpty,
+        'the telemetry fix to invalidate the estimate',
+      );
+      final positioned = harness.connector.getContactByPubKeyHex(_hexOf(aliceKey))!;
+      expect(positioned.lastSeen, original.lastSeen);
+      expect(positioned.telemetryFixAt, isNotNull);
+    });
+
     test('a contact that reports coordinates loses its estimate', () async {
       final harness = await _Harness.start();
       await harness.contact(aliceKey, 'Alice');

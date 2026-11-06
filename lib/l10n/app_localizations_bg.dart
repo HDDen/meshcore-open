@@ -9164,4 +9164,20 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Connection or channels changed. Start the import again.';
+
+  @override
+  String get map_requestLocation => 'Обнови местоположението';
+
+  @override
+  String get map_locationUpdated => 'Местоположението е обновено';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name отговори без местоположение';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return 'Няма отговор от $name';
+  }
 }

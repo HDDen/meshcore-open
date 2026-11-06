@@ -4431,5 +4431,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Standort aktualisieren",
+  "map_locationUpdated": "Standort aktualisiert",
+  "map_locationNotShared": "{name} hat ohne Standort geantwortet",
+  "map_locationRequestFailed": "Keine Antwort von {name}"
 }

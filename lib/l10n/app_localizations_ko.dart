@@ -8704,4 +8704,20 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get channels_qrImportChanged =>
       'Connection or channels changed. Start the import again.';
+
+  @override
+  String get map_requestLocation => '위치 업데이트';
+
+  @override
+  String get map_locationUpdated => '위치가 업데이트되었습니다';
+
+  @override
+  String map_locationNotShared(String name) {
+    return '$name이(가) 위치 없이 응답했습니다';
+  }
+
+  @override
+  String map_locationRequestFailed(String name) {
+    return '$name의 응답이 없습니다';
+  }
 }

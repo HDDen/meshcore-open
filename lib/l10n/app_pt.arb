@@ -4085,5 +4085,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Atualizar localização",
+  "map_locationUpdated": "Localização atualizada",
+  "map_locationNotShared": "{name} respondeu sem localização",
+  "map_locationRequestFailed": "Sem resposta de {name}"
 }

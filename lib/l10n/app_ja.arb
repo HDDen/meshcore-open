@@ -4401,5 +4401,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "位置情報を更新",
+  "map_locationUpdated": "位置情報を更新しました",
+  "map_locationNotShared": "{name} は位置情報なしで応答しました",
+  "map_locationRequestFailed": "{name} から応答がありません"
 }

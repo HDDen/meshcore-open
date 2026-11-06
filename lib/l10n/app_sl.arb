@@ -4269,5 +4269,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "map_requestLocation": "Posodobi lokacijo",
+  "map_locationUpdated": "Lokacija posodobljena",
+  "map_locationNotShared": "{name} je odgovoril brez lokacije",
+  "map_locationRequestFailed": "Ni odgovora od {name}"
 }
