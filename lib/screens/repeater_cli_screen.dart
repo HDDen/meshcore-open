@@ -475,17 +475,6 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
       ),
       body: Column(
         children: [
-          const RadioDisconnectedBanner(),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Text('${widget.repeater.name} · ${_history.nodeName}',
-              style: Theme.of(context).textTheme.labelSmall)),
-          if (connector.selfPublicKeyHex != _history.nodeKey)
-            Padding(padding: const EdgeInsets.all(8), child: Text(l10n.companionCli_disconnected)),
-          if (PlatformInfo.isWeb) Padding(padding: const EdgeInsets.all(8),
-            child: Text(l10n.cliHistory_temporary)),
-          if (_historyFailed) ListTile(title: Text(l10n.companionCli_historyError),
-            trailing: IconButton(icon: const Icon(Icons.refresh), onPressed: _loadHistory)),
-          if (!_history.loaded && !_historyFailed) const LinearProgressIndicator(),
           // Quick commands bar
           Container(
             color: scheme.surfaceContainer,
@@ -534,10 +523,63 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
           Divider(height: 1, color: scheme.outlineVariant),
 
           // Output area
+          // Our node identity and history notices can also wrap to many lines
+          // (for example, a full key when the node has no name). Keep them and
+          // the warning in one scroll area, leaving room for the transcript
+          // and the command input without truncating any of their text.
           Expanded(
-            child: _commandHistory.isEmpty
-                ? _buildEmptyState()
-                : _buildCommandHistory(),
+            child: LayoutBuilder(
+              builder: (context, constraints) => Column(
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: constraints.maxHeight / 2,
+                    ),
+                    child: SingleChildScrollView(
+                      primary: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            child: Text(
+                              '${widget.repeater.name} · ${_history.nodeName}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                          if (connector.selfPublicKeyHex != _history.nodeKey)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(l10n.companionCli_disconnected),
+                            ),
+                          if (PlatformInfo.isWeb)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(l10n.cliHistory_temporary),
+                            ),
+                          if (_historyFailed)
+                            ListTile(
+                              title: Text(l10n.companionCli_historyError),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.refresh),
+                                onPressed: _loadHistory,
+                              ),
+                            ),
+                          if (!_history.loaded && !_historyFailed)
+                            const LinearProgressIndicator(),
+                          const RadioDisconnectedBanner(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: _commandHistory.isEmpty
+                        ? _buildEmptyState()
+                        : _buildCommandHistory(),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           Divider(height: 1, color: scheme.outlineVariant),
@@ -644,10 +686,11 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
+        primary: false,
         padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.terminal, size: 48, color: scheme.onSurfaceVariant),
             const SizedBox(height: 12),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
@@ -17,10 +18,18 @@ import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/repeater_cli_store.dart';
+import 'package:meshcore_open/widgets/radio_disconnected_banner.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _reply = 'SYNTHETIC_REPEATER_REPLY';
+
+class _NoPreferenceDirectory extends PathProviderPlatform {
+  @override
+  Future<String?> getApplicationSupportPath() async =>
+      throw MissingPluginException('Synthetic repeater CLI preferences');
+}
 
 // Настоящие экран, parser и RepeaterCommandService. Подменены только транспорт
 // и входящий stream: тест не подключает радио, не читает реальную историю.
@@ -38,9 +47,10 @@ class _Connector extends MeshCoreConnector {
   bool replyImmediately = true;
   String nodeKey = 'ab' * 32;
   int timeoutMs = 1000;
+  bool connected = true;
 
   @override
-  bool get isConnected => true;
+  bool get isConnected => connected;
   @override
   String get selfPublicKeyHex => nodeKey;
   @override
@@ -95,7 +105,10 @@ class _Connector extends MeshCoreConnector {
 
 void main() {
   late _Connector connector;
+  late PathProviderPlatform previousPaths;
   setUp(() async {
+    previousPaths = PathProviderPlatform.instance;
+    PathProviderPlatform.instance = _NoPreferenceDirectory();
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
@@ -108,6 +121,7 @@ void main() {
     connector.dispose();
     await MessageHistoryStorage.instance.resetForTesting();
     PrefsManager.reset();
+    PathProviderPlatform.instance = previousPaths;
   });
 
   // Native SQLite needs the real event loop. Flutter's fake clock alone
@@ -169,6 +183,222 @@ void main() {
     await tester.enterText(find.byType(TextField), command);
     await tester.tap(find.byTooltip(l10n.repeater_cliSend));
     await settleReply(tester);
+  }
+
+  Future<List<Map<String, Object>>> sqlSnapshot(WidgetTester tester) async {
+    final rows = await tester.runAsync(
+      () => RepeaterCliStore().load(
+        connector.selfPublicKeyHex,
+        connector.repeater.publicKeyHex,
+      ),
+    );
+    expect(rows, isNotNull);
+    return [
+      for (final row in rows!) {
+        'id': row.id,
+        'node': row.nodeKey,
+        'repeater': row.repeaterKey,
+        'nodeName': row.nodeName,
+        'repeaterName': row.repeaterName,
+        'at': row.createdAt.millisecondsSinceEpoch,
+        'type': row.type,
+        'text': row.text,
+      },
+    ];
+  }
+
+  Future<void> revealScrollEnd(
+    WidgetTester tester,
+    Finder scrollView,
+    Finder lastText,
+  ) async {
+    expect(scrollView, findsOneWidget);
+    final scrollable = find.descendant(
+      of: scrollView,
+      matching: find.byType(Scrollable),
+    );
+    expect(scrollable, findsOneWidget);
+    // Align the text itself, not trailing padding that may be taller than
+    // the viewport. Reaching maxScrollExtent can scroll the text past it.
+    await Scrollable.ensureVisible(tester.element(lastText), alignment: 1);
+    await tester.pump();
+    final viewport = tester.getRect(scrollView);
+    final text = tester.getRect(lastText);
+    final style = tester.widget<Text>(lastText).style;
+    final lineHeight = MediaQuery.textScalerOf(tester.element(lastText))
+        .scale(style?.fontSize ?? 14) * (style?.height ?? 1);
+    expect(viewport.height, greaterThanOrEqualTo(lineHeight),
+        reason: 'The scroll viewport must fit a full line, not just a sliver');
+    expect(text.bottom, lessThanOrEqualTo(viewport.bottom + 1));
+    expect(text.bottom, greaterThan(viewport.top));
+  }
+
+  for (final locale in ['en', 'ru']) {
+    for (final withHistory in [false, true]) {
+      for (final layout in [
+        (name: 'phone', size: const Size(320, 568), keyboard: 0.0),
+        (name: 'landscape', size: const Size(568, 360), keyboard: 0.0),
+        (name: 'keyboard', size: const Size(1000, 1400), keyboard: 1040.0),
+      ]) {
+        testWidgets(
+          'U11b5: warning and output scroll without displacing input '
+          '($locale, ${layout.name}, scale=2, history=$withHistory)',
+          (tester) async {
+            addTearDown(tester.view.resetViewInsets);
+            try {
+              final l10n = await show(tester, locale, textScale: 2);
+              if (withHistory) {
+                await send(tester, l10n);
+              }
+              final stored = await sqlSnapshot(tester);
+              await tester.enterText(find.byType(TextField), 'get name');
+              tester.view.physicalSize = layout.size;
+              tester.view.viewInsets = FakeViewPadding(bottom: layout.keyboard);
+              connector.connected = false;
+              connector.notifyListeners();
+              await settleReply(tester);
+              expect(tester.takeException(), isNull);
+
+              final field = find.byType(TextField);
+              final sendButton = find.widgetWithIcon(IconButton, Icons.send);
+              final availableBottom = layout.size.height - layout.keyboard;
+              expect(tester.getRect(field).top, greaterThanOrEqualTo(0));
+              expect(tester.getRect(field).bottom,
+                  lessThanOrEqualTo(availableBottom));
+              expect(tester.getRect(sendButton).bottom,
+                  lessThanOrEqualTo(availableBottom));
+              expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
+              expect(tester.widget<TextField>(field).controller!.text, 'get name');
+
+              // Read the end of the warning through its real scroll viewport;
+              // merely finding the text would not catch clipping.
+              final warningScroll = find.ancestor(
+                of: find.byType(RadioDisconnectedBanner),
+                matching: find.byType(SingleChildScrollView),
+              ).first;
+              final identity = find.text(
+                '${connector.repeater.name} · ${connector.selfPublicKeyHex}',
+              );
+              expect(identity, findsOneWidget);
+              expect(tester.widget<Text>(identity).maxLines, isNull);
+              await revealScrollEnd(tester, warningScroll,
+                  find.text(l10n.repeater_radioDisconnectedHint));
+              if (withHistory) {
+                final output = find.byType(ListView);
+                expect(output, findsOneWidget);
+                expect(tester.getSize(output).height, greaterThan(0));
+                // Resizing can leave a lazy list away from its last row.
+                // Build/reveal that row before asking for its element.
+                tester.widget<ListView>(output).controller!.jumpTo(0);
+                await tester.pump();
+                await tester.scrollUntilVisible(
+                  find.text(_reply),
+                  80,
+                  scrollable: find.descendant(
+                    of: output,
+                    matching: find.byType(Scrollable),
+                  ).first,
+                  maxScrolls: 30,
+                );
+                expect(find.text(_reply), findsOneWidget);
+                await Scrollable.ensureVisible(
+                  tester.element(find.text(_reply)),
+                  alignment: 1,
+                );
+                await tester.pump();
+                final transcript = tester.getRect(output);
+                final reply = tester.getRect(find.text(_reply));
+                expect(reply.bottom, lessThanOrEqualTo(transcript.bottom + 1));
+                expect(reply.bottom, greaterThan(transcript.top));
+              } else {
+                final emptyHint = find.text(l10n.repeater_typeCommandOrUseQuick);
+                final emptyScroll = find.ancestor(
+                  of: emptyHint,
+                  matching: find.byType(SingleChildScrollView),
+                ).first;
+                await revealScrollEnd(tester, emptyScroll, emptyHint);
+              }
+              expect(connector.writes, hasLength(withHistory ? 1 : 0));
+              expect(await sqlSnapshot(tester), stored);
+
+              connector.connected = true;
+              connector.notifyListeners();
+              await settleReply(tester);
+              expect(find.text(l10n.repeater_radioDisconnected), findsNothing);
+              expect(tester.widget<TextField>(field).controller!.text, 'get name');
+              expect(connector.writes, hasLength(withHistory ? 1 : 0));
+              expect(await sqlSnapshot(tester), stored);
+              expect(sendButton.hitTestable(), findsOneWidget);
+              await tester.tap(sendButton);
+              await settleReply(tester);
+              expect(connector.writes, hasLength(withHistory ? 2 : 1));
+              expect(connector.writes.last.first, cmdSendTxtMsg);
+              expect(connector.sentText, endsWith('|get name'));
+              expect(await sqlSnapshot(tester), hasLength(stored.length + 2));
+              expect(tester.takeException(), isNull);
+            } finally {
+              await tester.pumpWidget(const SizedBox.shrink());
+              await drainSql(tester);
+            }
+          },
+        );
+      }
+    }
+  }
+
+  for (final locale in ['en', 'ru']) {
+    for (final withHistory in [false, true]) {
+      testWidgets('U11b5 baseline: disconnection preserves draft and SQL history ($locale, history=$withHistory)', (tester) async {
+        try {
+          final l10n = await show(tester, locale);
+          if (withHistory) {
+            await send(tester, l10n);
+          }
+          final stored = await sqlSnapshot(tester);
+          expect(stored, withHistory ? isNotEmpty : isEmpty);
+          final sendButton = find.widgetWithIcon(IconButton, Icons.send);
+          expect(tester.widget<IconButton>(sendButton).onPressed, isNotNull);
+          expect(find.text(l10n.repeater_radioDisconnected), findsNothing);
+          await tester.enterText(find.byType(TextField), 'get name');
+
+          connector.connected = false;
+          connector.notifyListeners();
+          await settleReply(tester);
+          expect(find.text(l10n.repeater_radioDisconnected), findsOneWidget);
+          expect(find.text(l10n.repeater_radioDisconnectedHint), findsOneWidget);
+          expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
+          expect(
+            tester.widget<TextField>(find.byType(TextField)).controller!.text,
+            'get name',
+          );
+          expect(
+            find.text(withHistory ? _reply : l10n.repeater_noCommandsSent),
+            findsOneWidget,
+          );
+          // The keyboard Send action must obey the same connection guard.
+          await tester.testTextInput.receiveAction(TextInputAction.send);
+          await settleReply(tester);
+          expect(connector.writes, hasLength(withHistory ? 1 : 0));
+          expect(await sqlSnapshot(tester), stored);
+
+          connector.connected = true;
+          connector.notifyListeners();
+          await settleReply(tester);
+          expect(find.text(l10n.repeater_radioDisconnected), findsNothing);
+          expect(tester.widget<IconButton>(sendButton).onPressed, isNotNull);
+          expect(
+            tester.widget<TextField>(find.byType(TextField)).controller!.text,
+            'get name',
+          );
+          expect(connector.writes, hasLength(withHistory ? 1 : 0));
+          expect(await sqlSnapshot(tester), stored);
+          expect(tester.takeException(), isNull);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await drainSql(tester);
+        }
+      });
+    }
   }
 
   for (final locale in ['ru', 'en']) {

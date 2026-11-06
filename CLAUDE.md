@@ -3193,6 +3193,19 @@ pending консоли не создаёт второй parser или новый
 в `test/screens/repeater_cli_history_baseline_test.dart`; действия меню и
 формат команд этим исправлением не меняются.
 
+В `RepeaterCliScreen` имя репитера/ноды, notices истории и предупреждение
+`RadioDisconnectedBanner` находятся внутри `Expanded` области вывода:
+`LayoutBuilder` ограничивает их общий блок половиной доступной высоты, а
+`SingleChildScrollView(primary: false)` позволяет прочесть полный текст при
+крупном шрифте и открытой клавиатуре. Полный ключ вместо неизвестного имени
+ноды тоже прокручивается; он не вытесняет transcript и не обрезается.
+Пустая консоль также
+прокручивается с `mainAxisSize: MainAxisSize.min`; transcript остаётся отдельным
+`ListView`. Нижний ввод не входит в эти scroll views. SQL/history, guards,
+region load и transport не менялись, новых опросов и listeners нет. Baseline
+отключения/восстановления и en/ru phone/landscape/keyboard cases при text scale 2
+добавлены в `test/screens/repeater_cli_history_baseline_test.dart`.
+
 `RepeaterCommandService.sendCommand` turns `clock sync` into `time <epoch>` with the phone's clock (`normalizeRepeaterClockSyncCommand`), as meshcore-cli does: companion firmware since 2025-12-30 stamps a CLI frame with the node's own RTC, so a plain `clock sync` set the repeater to the node's time. The CLI screen knows the repeater's `region load` mode, in which the firmware takes every line before prefix stripping and answers none: lines go out verbatim through `sendUnansweredLine`, and a blank line commits the load, the only line of the mode that gets an answer. Like every CLI command they take `sendContactFrame`, so they carry the contact's region as the `region load` before them did.
 
 ### Other UX
