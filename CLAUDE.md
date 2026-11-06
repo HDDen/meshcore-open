@@ -1666,6 +1666,23 @@ payload. Retry routing, ACK matching, grace timers and CPU-work leases retain
 their existing behavior. Regression coverage is in
 `test/services/timeout_observation_merge_baseline_test.dart`.
 
+TimeoutPredictionService fits ordinary linear regression with pathLength,
+messageBytes and isFlood. Thresholds remain 10 observations to start, at most
+100 retained observations and retraining after five new observations. The old secSinceRx input and
+its DTO/JSON field are removed: legacy rows remain readable and are not rewritten
+on load. Fitting still runs synchronously on the Dart isolate; no UI/energy or
+accuracy result is claimed without device/held-out data. The connector keeps
+_lastRxTime for its RX watchdog and iOS resume probes; only the ML-only
+_lastRxBeforeFrame snapshot and elapsed-seconds calculations are gone.
+SQL schema, reduce-delivery-observation-writes, recordingSuspended, safety
+margin, per-contact blending and persistence debounce are unchanged.
+`timeout_prediction_merge_baseline_test.dart` covers legacy SQL/prefs,
+read-only initialization and RX independence; `tool/benchmark_timeout_learning.dart`
+compares only the ml_algo numerical core on 100 fixed synthetic rows, reading
+candidate feature names from the selected service source (working tree or
+`--ref bf7291f8`). It does not measure the Flutter wrapper, UI, radio, SQL,
+energy or prediction accuracy on real traffic.
+
 ### Stopping a direct send
 
 An outgoing direct or room message the retry service is still working on, attempts ahead or an acknowledgement awaited (`isSendInProgress`), carries a *stop sending* row at the bottom of its bubble: `widgets/stop_sending_bar.dart`, laid out as the scheduled send's cancel bar, divider included but without an icon, wrapped in the same `IntrinsicWidth`, and placed under the delivery progress bar, which joins the column while the row is shown instead of lying on the bubble's edge. It exists for the message that was read long ago while its ACK never came back: the app would otherwise retry it to the limit and hold the contact's queue meanwhile. `stopSending` hands the message to `MessageRetryService.untrack`, which cancels the timer, drops the message and frees the in-flight slot and the contact's queue; the message keeps what its attempts earned, `sent` once the node had taken it, `failed` when nothing had gone out; and when the contact has a flood choice the node's scope is cleared once more under the command lock, after any window an attempt still holds, so nothing of a cut-short window lingers. The ACK hashes the attempts waited for are remembered for the session (`_stoppedSendAcks`), so a confirmation that arrives after all still marks the message delivered from the `PUSH_CODE_SEND_CONFIRMED` handler, once the retry service has declined it.

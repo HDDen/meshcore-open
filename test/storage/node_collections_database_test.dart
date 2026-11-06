@@ -94,7 +94,6 @@ DeliveryObservation observation(int n) => DeliveryObservation(
   contactKey: 'contact_$n',
   pathLength: n,
   messageBytes: 20 * n,
-  secondsSinceLastRx: 60 * n,
   isFlood: n.isEven,
   deliveryMs: 1500 + n,
   timestamp: DateTime.utc(2026, 9, 1, 10, n % 60),

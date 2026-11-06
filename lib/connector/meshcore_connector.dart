@@ -545,12 +545,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// channel-data path, is where a repeat of our own packet shows up.
   void Function(Uint8List blob, int channelIndex)? _onImageChunkRepeat;
   void Function(int senderPrefix)? _onImageSenderPrefix;
-  // Intentionally global (not per-contact): tracks overall network activity.
-  // Frequent RX from any source indicates a busy network with more collisions.
+  // Any companion frame proves the transport is alive. This timestamp is
+  // used by the RX watchdog and iOS resume probe, independently of ML.
   DateTime _lastRxTime = DateTime.now();
-  // Snapshot of _lastRxTime taken before the ACK frame updates it, so that
-  // onDeliveryObserved records the pre-ACK elapsed time (matching prediction).
-  DateTime _lastRxBeforeFrame = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastRadioRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastContactMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastChannelMsgRxTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -4262,15 +4259,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               recentSelections: recentSelections,
             ),
     onDeliveryObserved: (contactKey, pathLength, messageBytes, tripTimeMs) {
-      final secSinceRx = DateTime.now()
-          .difference(_lastRxBeforeFrame)
-          .inSeconds;
       _timeoutPredictionService?.recordObservation(
         contactKey: contactKey,
         pathLength: pathLength,
         messageBytes: messageBytes,
         tripTimeMs: tripTimeMs,
-        secondsSinceLastRx: secSinceRx,
       );
     },
   );
@@ -12100,7 +12093,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _handleFrame(List<int> data) {
     if (data.isEmpty) return;
-    _lastRxBeforeFrame = _lastRxTime;
     _lastRxTime = DateTime.now();
     if (_activeTransport == MeshCoreTransportType.bluetooth &&
         PlatformInfo.isIOS) {
@@ -13274,12 +13266,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final physicsMax = _physicsMaxTimeout(pathLength, airtime);
 
     // Try ML-based prediction
-    final secSinceRx = DateTime.now().difference(_lastRxTime).inSeconds;
     final mlTimeout = _timeoutPredictionService?.predictTimeout(
       contactKey: contactKey,
       pathLength: pathLength,
       messageBytes: messageBytes,
-      secondsSinceLastRx: secSinceRx,
     );
     if (mlTimeout != null) {
       // Use device est_timeout as a baseline floor when available —

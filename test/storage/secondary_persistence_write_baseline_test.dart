@@ -56,7 +56,6 @@ DeliveryObservation _observation(int index) => DeliveryObservation(
   contactKey: _contactKey,
   pathLength: 1,
   messageBytes: 32,
-  secondsSinceLastRx: index,
   isFlood: false,
   deliveryMs: 200 + index,
   timestamp: DateTime.utc(2026, 1, 1).add(Duration(seconds: index)),

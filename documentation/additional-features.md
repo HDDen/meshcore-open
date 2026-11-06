@@ -177,15 +177,24 @@ Handles reliable delivery of outgoing direct messages:
 
 ## Timeout Prediction (ML)
 
-### What It Does (Background Service)
+### What It Does
 An ML-based service that predicts expected delivery timeouts:
-- Collects delivery observations (path length, message size, time since last RX, delivery time) in a sliding window of up to 100 observations (oldest evicted first)
+- Uses linear regression with path length, UTF-8 message size and a flood/direct flag; delivery time is the learned target. Keeps up to 100 observations (oldest evicted first)
 - Requires **10 minimum observations** before first training. After that, retrains every 5 new observations
 - Applies a **1.5x safety margin** to raw predictions (the actual timeout issued is 1.5× the model's predicted delivery time)
 - Features with zero variance are automatically excluded from training
 - Blends per-contact statistics with ML predictions
 - Falls back to `3000 + 3000 × pathLength` ms when insufficient data. Note: `pathLength` here refers to the stored hop count in the app's model/storage (number of hops), not the on-air encoded byte length.
 - Observations are persisted to storage via a 2-second debounced timer (observations within 2s of app termination may be lost)
+
+Training runs synchronously on the app's Dart isolate at startup when enough
+samples exist, then after each five new eligible deliveries. There is no
+continuous background training. Device-specific UI and battery impact requires
+measurement. Older observations with a `seconds_since_last_rx` field remain
+readable; that field is ignored, and loading does not rewrite stored rows.
+The connection's RX watchdog and iOS resume checks keep their activity timer.
+Removing this input does not establish an accuracy gain: compare real held-out
+deliveries to evaluate prediction error and premature retries.
 
 ---
 
