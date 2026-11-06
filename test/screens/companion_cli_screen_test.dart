@@ -3,10 +3,12 @@ import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:mco_service/mco_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
@@ -18,6 +20,7 @@ import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_group.dart';
 import 'package:meshcore_open/models/companion_cli_entry.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/screens/companion_cli_screen.dart';
 import 'package:meshcore_open/screens/contacts_screen.dart';
@@ -26,6 +29,7 @@ import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/companion_cli_session.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/channel_group_store.dart';
+import 'package:meshcore_open/storage/community_store.dart';
 import 'package:meshcore_open/storage/companion_cli_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/contact_filter_types.dart';
@@ -34,6 +38,13 @@ import 'package:meshcore_open/widgets/companion_cli_tile.dart';
 import 'package:meshcore_open/widgets/middle_ellipsis_text.dart';
 import 'package:meshcore_open/widgets/repeater_login_dialog.dart';
 import 'package:meshcore_open/widgets/companion_cli_command_help_sheet.dart';
+import '../support/wrapping_label_expectations.dart';
+
+class _NoPreferenceDirectory extends PathProviderPlatform {
+  @override
+  Future<String?> getApplicationSupportPath() async =>
+      throw MissingPluginException('Synthetic CLI and Community preferences');
+}
 
 class _ContactMenuSections extends ChangeNotifier implements SettingsSectionsService {
   @override
@@ -158,7 +169,10 @@ void main() {
   late _Connector connector;
   late AppSettingsService settings;
   late UiViewStateService view;
+  late PathProviderPlatform previousPaths;
   setUp(() async {
+    previousPaths = PathProviderPlatform.instance;
+    PathProviderPlatform.instance = _NoPreferenceDirectory();
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
@@ -169,6 +183,7 @@ void main() {
   });
   tearDown(() {
     connector.dispose(); settings.dispose(); view.dispose(); PrefsManager.reset();
+    PathProviderPlatform.instance = previousPaths;
   });
 
   Future<void> show(WidgetTester tester, Widget screen, {
@@ -556,6 +571,99 @@ void main() {
         await tester.pump();
       }
     });
+  }
+
+  for (final language in ['en', 'ru']) {
+    for (final layout in [
+      (name: 'baseline', size: const Size(1000, 1400), scale: 1.0),
+      (name: 'phone', size: const Size(320, 568), scale: 2.0),
+      (name: 'landscape', size: const Size(568, 360), scale: 2.0),
+    ]) {
+      testWidgets('U11b4 ${layout.name}: Community selection is local until channel creation ($language)', (tester) async {
+        final longLabels = layout.name != 'baseline';
+        final north = !longLabels ? 'North' : language == 'en'
+            ? 'North regional group' : 'Северное региональное сообщество';
+        final south = !longLabels ? 'South' : language == 'en'
+            ? 'South regional group' : 'Южное региональное сообщество';
+        // Fixed synthetic secrets; no random key generation or network source.
+        final communities = [
+          Community(id: 'north', name: north,
+              secret: Uint8List.fromList(List.filled(32, 0x11)),
+              createdAt: DateTime.utc(2026, 1, 1)),
+          Community(id: 'south', name: south,
+              secret: Uint8List.fromList(List.filled(32, 0x22)),
+              createdAt: DateTime.utc(2026, 1, 2)),
+        ];
+        final store = CommunityStore()..setPublicKeyHex = connector.selfPublicKeyHex;
+        await store.saveCommunities(communities);
+        final transportFrames = <List<int>>[];
+        connector.setFrameWriterForTest((frame) async {
+          transportFrames.add(frame.toList());
+        });
+        try {
+          await show(tester, const ChannelsScreen(hideBackButton: true),
+              locale: language, logicalSize: layout.size, textScale: layout.scale);
+          await tester.pumpAndSettle();
+          final l10n = AppLocalizations.of(tester.element(find.byType(ChannelsScreen)));
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pumpAndSettle();
+          final sheet = find.byType(DraggableScrollableSheet);
+          final scrollable = find.descendant(of: sheet, matching: find.byType(Scrollable)).first;
+          final hashtag = find.text(l10n.channels_joinHashtagChannel);
+          await tester.scrollUntilVisible(hashtag, 200,
+              scrollable: scrollable, maxScrolls: 30);
+          await tester.pumpAndSettle();
+          expect(hashtag.hitTestable(), findsOneWidget);
+          await tester.tap(hashtag);
+          await tester.pumpAndSettle();
+          final communityType = find.widgetWithText(RadioListTile<bool>, l10n.community_communityHashtag);
+          await tester.scrollUntilVisible(communityType, 160,
+              scrollable: scrollable, maxScrolls: 30);
+          await tester.pumpAndSettle();
+          expect(communityType.hitTestable(), findsOneWidget);
+          await tester.tap(communityType);
+          await tester.pumpAndSettle();
+          final field = find.byType(DropdownButtonFormField<Community>);
+          await tester.scrollUntilVisible(field, 160,
+              scrollable: scrollable, maxScrolls: 30);
+          await tester.pumpAndSettle();
+          final button = find.descendant(of: field, matching: find.byType(DropdownButton<Community>));
+          expect(tester.widget<DropdownButton<Community>>(button).value!.id, 'north');
+          final arrow = find.descendant(of: field, matching: find.byIcon(Icons.arrow_drop_down));
+          await tester.ensureVisible(arrow);
+          await tester.pump();
+          expect(arrow.hitTestable(), findsOneWidget);
+          await tester.tap(arrow);
+          await tester.pumpAndSettle();
+          final option = await revealDropdownOption(tester, south);
+          if (longLabels) {
+            expectCompleteWrappingLabel(tester, option, wraps: layout.name == 'phone');
+          }
+          await tester.tap(option);
+          await tester.pumpAndSettle();
+          expect(tester.widget<DropdownButton<Community>>(button).value!.id, 'south');
+          if (longLabels) {
+            expectCompleteWrappingLabel(tester,
+                find.descendant(of: field, matching: find.text(south)),
+                wraps: layout.name == 'phone');
+          }
+          expect(transportFrames, isEmpty);
+          expect(connector.writes, isEmpty);
+          expect(connector.channelData.map((channel) => channel.name), ['Alpha', 'Beta']);
+          await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+          expect(sheet, findsNothing);
+          expect(transportFrames, isEmpty);
+          expect((await store.loadCommunities()).map((item) => item.toJson()),
+              communities.map((item) => item.toJson()));
+          expect(tester.takeException(), isNull);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+          connector.setFrameWriterForTest(null);
+        }
+      });
+    }
   }
 
   testWidgets('compact contacts CLI starts below filters and above contact rows', (tester) async {

@@ -208,6 +208,11 @@ When loading older saved settings without a separate nearby-repeater target, the
 
 ## Communities
 
+Community names in the channel-creation selector wrap onto multiple lines
+when needed, both in the menu and after selection. The Cyr2Lat profile
+selector in channel settings shows long names the same way. Names remain
+complete when system text size is increased.
+
 Communities are a layer above channels that provide a private namespace.
 
 ### What is a Community?

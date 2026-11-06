@@ -208,6 +208,10 @@ void showChannelEditSheet(
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
                       child: DropdownButtonFormField<String>(
+                        // Grow with the full profile name, including large text.
+                        isExpanded: true,
+                        isDense: false,
+                        itemHeight: null,
                         initialValue: selectedCyr2LatProfileId,
                         decoration: InputDecoration(
                           labelText: sheetContext
@@ -220,7 +224,7 @@ void showChannelEditSheet(
                         ) {
                           return DropdownMenuItem(
                             value: profile.id,
-                            child: Text(profile.name),
+                            child: Text(profile.name, softWrap: true),
                           );
                         }).toList(),
                         onChanged: (value) => setSheetState(() {

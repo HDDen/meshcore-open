@@ -3443,12 +3443,16 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           vertical: 8,
                         ),
                         child: DropdownButtonFormField<Community>(
+                          // Preserve the whole name in the field and menu.
+                          isExpanded: true,
+                          isDense: false,
+                          itemHeight: null,
                           initialValue: selectedCommunity,
                           items: _communities
                               .map(
                                 (c) => DropdownMenuItem(
                                   value: c,
-                                  child: Text(c.name),
+                                  child: Text(c.name, softWrap: true),
                                 ),
                               )
                               .toList(),

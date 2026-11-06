@@ -773,6 +773,17 @@ companion_cli_screen_test and discovery_screen_test keep en/ru baseline and
 exercise short screens and a constrained keyboard viewport at scale 2,
 including first/last actions and local copying without a radio command.
 
+U11b4 adapts the two remaining dropdowns from historical 979e1a7d to the
+fork's current locations: Community in ChannelsScreen's add-channel sheet,
+and Cyr2Lat profiles in widgets/channel_edit_sheet.dart. Use isExpanded:true,
+isDense:false, itemHeight:null and softWrap:true labels so the selected field
+and popup grow with full names; do not copy upstream's ellipsis. Selection,
+Save/Cancel, local Community loading and unchanged-name/key save guards are
+untouched. No new service or network work is introduced. The existing en/ru
+baseline is extended with long-name phone/landscape cases at text scale 2;
+test/support/wrapping_label_expectations.dart checks actual rendered lines
+and clipping only in tests, not in application layout or packet handling.
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands
