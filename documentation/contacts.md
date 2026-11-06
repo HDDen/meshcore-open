@@ -160,6 +160,17 @@ When the radio hears an advertisement, the contact appears automatically if auto
 ### Import from Clipboard
 Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `meshcore://<hex>` URI from clipboard and imports it to the device.
 
+### Advertisement names and optional fields
+
+Raw adverts may include two optional 16-bit feature fields between GPS and the
+UTF-8 name. Reception and manual raw import skip these fields before decoding
+the name. Truncated declared GPS/feature fields are ignored rather than used
+as contact metadata. A nameless or blank advert retains an already learned
+name; a real new name still updates it. Removing a contact with a nameless
+snapshot also keeps its name in the discovered list. A repeated advert with
+no metadata change does not refresh the contact row or rewrite discovery.
+The route kept by the radio remains authoritative.
+
 ### Import from Discovered Contacts
 Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). Its overflow menu has **Export discovered contacts**, **Import discovered contacts**, and "Delete All".
 

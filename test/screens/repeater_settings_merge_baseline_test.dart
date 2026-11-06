@@ -973,6 +973,31 @@ void main() {
       });
     });
 
+    testWidgets('U14 baseline: unkeyed Advanced and Keys reopen their text '
+        'fields without storage errors ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        for (final (title, label) in [
+          (l10n.repeater_advancedSettings, l10n.repeater_txDelay),
+          (l10n.repeater_keySettings, l10n.repeater_prvKey),
+        ]) {
+          for (var round = 0; round < 2; round++) {
+            final heading = find.text(title);
+            await _reveal(tester, heading);
+            await tester.tap(heading);
+            await tester.pumpAndSettle();
+            final field = _textInput(label);
+            await _reveal(tester, field);
+            expect(field, findsOneWidget);
+            expect(tester.takeException(), isNull);
+            await _reveal(tester, heading);
+            await tester.tap(heading);
+            await tester.pumpAndSettle();
+          }
+        }
+        expect(radio.commands, isEmpty);
+      });
+    });
+
     testWidgets('U11b8 baseline: open and disconnected state never fetch settings ($locale)', (tester) async {
       await _withSettings(tester, locale, (radio, l10n) async {
         expect(find.text(l10n.repeater_settingsNotLoaded), findsOneWidget);

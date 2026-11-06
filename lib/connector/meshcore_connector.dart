@@ -69,6 +69,7 @@ import '../helpers/direct_message_progress_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
+import '../helpers/advert_feature_fields.dart';
 import '../helpers/contact_telemetry_location.dart';
 import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
@@ -19622,14 +19623,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final flags = packet.readByte();
       type = flags & 0x0F;
       hasLocation = (flags & 0x10) != 0;
-      // For future use:
-      //final hasFeature1 = (flags & 0x20) != 0;
-      //final hasFeature2 = (flags & 0x40) != 0;
       hasName = (flags & 0x80) != 0;
-      if (hasLocation && packet.remaining >= 8) {
+      if (hasLocation) {
         latitude = packet.readInt32LE() / 1e6;
         longitude = packet.readInt32LE() / 1e6;
       }
+      skipAdvertFeatureFields(packet, flags);
       if (hasName && packet.remaining > 0) {
         name = packet.readCString();
       }
@@ -19699,14 +19698,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final flags = advert.readByte();
       type = flags & 0x0F;
       hasLocation = (flags & 0x10) != 0;
-      // For future use:
-      //final hasFeature1 = (flags & 0x20) != 0;
-      //final hasFeature2 = (flags & 0x40) != 0;
       hasName = (flags & 0x80) != 0;
-      if (hasLocation && advert.remaining >= 8) {
+      if (hasLocation) {
         latitude = advert.readInt32LE() / 1e6;
         longitude = advert.readInt32LE() / 1e6;
       }
+      skipAdvertFeatureFields(advert, flags);
       // Validate location values if present
       hasLocation = hasValidLocation(latitude, longitude);
 
@@ -19780,7 +19777,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // anyway bumped `contactsRevision` and rebuilt every contact row for
       // each copy; replacing only what changed keeps the revision, and the
       // notification that follows it, for a real change.
-      final nextName = hasName ? name : existing.name;
+      final nextName = retainedAdvertName(existing.name, name);
       final advertAt = DateTime.fromMillisecondsSinceEpoch(
         timestamp * 1000,
       );
@@ -20125,11 +20122,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (existingIndex >= 0) {
       final existing = _discoveredContacts[existingIndex];
       final messageSummary = _mergedContactMessageSummary(existing, contact);
+      final nextName = retainedAdvertName(existing.name, contact.name);
       // A copy of an advert already recorded, heard again the same way,
       // changes nothing: replacing the entry would bump `discoveredRevision`,
       // wake every listener and rewrite the store for each copy.
       final unchanged =
-          existing.name == contact.name &&
+          existing.name == nextName &&
           existing.type == contact.type &&
           existing.pathLength == contact.pathLength &&
           listEquals(existing.path, contact.path) &&
@@ -20144,7 +20142,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (unchanged) return;
       _discoveredContacts[existingIndex] = existing.copyWith(
         rawPacket: rawPacket,
-        name: contact.name,
+        name: nextName,
         type: contact.type,
         pathLength: contact.pathLength,
         path: contact.path,

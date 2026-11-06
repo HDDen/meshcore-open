@@ -3276,6 +3276,40 @@ ARB; остальные языки переводит владелец, generate
 Подробнее: `documentation/companion-cli.md`, wire source of truth —
 `documentation/ble-protocol.md`. Аппаратная приёмка ещё требуется.
 
+### Advert names and shared UI contrast
+
+`helpers/advert_feature_fields.dart` provides the checked feature1/feature2
+skip shared by the RX advert parser and manual raw-frame import, after GPS and
+before the name. Declared GPS and features must be complete; existing parser
+error handling ignores truncated data before creating/updating a contact.
+`retainedAdvertName` keeps an existing name when the incoming name is blank,
+including a blank deletion snapshot, but permits real renames (including a
+literal "Unknown"). Discovery resolves this name before its unchanged-field
+comparison and copy, preserving the no-replacement/revision/persist fast path.
+The known-contact RX branch does the same while retaining the radio's route
+and existing telemetry/message metadata policy. Hashing, packet-copy caches,
+channel envelopes and signature-verification behavior are unchanged.
+
+`helpers/readable_accent.dart` supplies contrast correction to StatusChip and
+AvatarCircle; mesh_ui re-exports the upstream-compatible function names.
+Labels use onSurface. Marks/icons target 3:1 and initials 4.5:1 against the
+standard card's alpha-composited tint. The comparison accounts for translucent
+foreground paint and uses opaque black/white only if the accent cannot reach
+the target. A FIFO cache of at most 256 (accent, background, target) pairs
+bounds dynamic-palette memory and reuses warm results; background luminance is
+computed once per cold correction. Existing tints, borders, sizes, type icons,
+initials and PulseDot power-saving/ticker lifecycle are untouched. No polling,
+network, persistence or background timer is added. Device timings are unmeasured.
+
+The fork's discovery rows, channel region/sender header and zero-hop scanner
+are already broader than U14's alternatives and are preserved. Advanced/Keys
+remain unkeyed; baseline reopening both verifies that their text fields build
+without the upstream keyed-PageStorage collision. Coverage:
+`test/connector/remove_contact_merge_baseline_test.dart`,
+`test/helpers/advert_feature_fields_test.dart`,
+`test/helpers/readable_accent_test.dart`,
+`test/widgets/mesh_ui_merge_baseline_test.dart`, and existing screen suites.
+
 ### Managed repeater settings layout
 
 `RepeaterSettingsScreen` retains manual GETs, loaded/dirty guards and partial-save

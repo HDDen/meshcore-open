@@ -288,6 +288,25 @@ Uses Flutter `Provider` with `ChangeNotifier`. The central state holder is `Mesh
 6. `notifyListeners()` triggers UI rebuilds
 7. Screens read current state via getters
 
+## Advertisement application data
+
+After an advert's public key (32 bytes), timestamp (4 bytes) and signature
+(64 bytes), its application data starts with flags. The low four bits hold
+node type. The optional fields follow in this order:
+
+| Flag | Field | Size |
+|---|---|---|
+| 0x10 | Latitude and longitude, little-endian fixed point | 8 bytes |
+| 0x20 | Feature 1 | 2 bytes |
+| 0x40 | Feature 2 | 2 bytes |
+| 0x80 | UTF-8 node name | Remaining name bytes / NUL terminator |
+
+Both raw reception and manual raw import skip the declared feature fields
+before decoding the name; incomplete declared GPS/features reject that advert.
+These are existing wire fields, not a new format. Route metadata is decoded
+separately with its negotiated bytes per hop. An absent/blank name retains a
+locally known name without changing the node-owned route or frame hashing.
+
 ## CLI and application payloads
 
 Remote repeater CLI commands use the text-message command with `txtTypeCliData`, addressed to the repeater's public-key prefix:

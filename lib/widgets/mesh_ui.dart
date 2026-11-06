@@ -5,10 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/status_animation_playback.dart';
+import '../helpers/readable_accent.dart';
 import '../l10n/l10n.dart';
 import '../models/power_saving_settings.dart';
 import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
+
+export '../helpers/readable_accent.dart' show meshContrastRatio, readableAccent;
 
 /// MeshCore shared design kit.
 ///
@@ -125,6 +128,9 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final background = Color.alphaBlend(color.withValues(alpha: 0.12),
+        Theme.of(context).colorScheme.surfaceContainerLow);
+    final markColor = readableAccent(color, background, minContrast: 3);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -136,9 +142,9 @@ class StatusChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null)
-            Icon(icon, size: fontSize + 2, color: color)
+            Icon(icon, size: fontSize + 2, color: markColor)
           else
-            PulseDot(color: color, size: 7, animate: pulse),
+            PulseDot(color: markColor, size: 7, animate: pulse),
           const SizedBox(width: 5),
           Flexible(
             child: Text(
@@ -148,7 +154,7 @@ class StatusChip extends StatelessWidget {
               style: MeshTheme.mono(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -273,6 +279,8 @@ class AvatarCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = color ?? _colorFor(name);
     final initials = _initials(name);
+    final background = Color.alphaBlend(accent.withValues(alpha: 0.14),
+        Theme.of(context).colorScheme.surfaceContainerLow);
     return Container(
       width: size,
       height: size,
@@ -283,13 +291,14 @@ class AvatarCircle extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: icon != null
-          ? Icon(icon, size: size * 0.5, color: accent)
+          ? Icon(icon, size: size * 0.5,
+              color: readableAccent(accent, background, minContrast: 3))
           : Text(
               initials,
               style: MeshTheme.mono(
                 fontSize: size * 0.36,
                 fontWeight: FontWeight.w700,
-                color: accent,
+                color: readableAccent(accent, background),
               ),
             ),
     );

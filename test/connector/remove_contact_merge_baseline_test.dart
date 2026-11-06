@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
@@ -69,6 +70,39 @@ Uint8List _contactFrame(Contact contact, {int code = respCodeContact}) {
     lastAdvert: contact.lastSeen,
   );
   return Uint8List.fromList(frame)..[0] = code;
+}
+
+// A received advert and a manual raw import exercise two independent
+// connector parsers. Accepted baseline has no feature fields; regressions
+// below additionally exercise both optional 16-bit fields and truncation.
+Uint8List _rxAdvert(Uint8List key, String name, {
+  required Uint8List path,
+  required int width,
+  bool located = false,
+  int timestamp = 1700000000,
+  bool hasName = true,
+  int type = advTypeRoom,
+  int? feature1,
+  int? feature2,
+}) {
+  final stamp = ByteData(4)..setUint32(0, timestamp, Endian.little);
+  final position = ByteData(8)
+    ..setInt32(0, 55750000, Endian.little)
+    ..setInt32(4, 37625000, Endian.little);
+  return Uint8List.fromList([
+    pushCodeLogRxData, 20, (-70) & 0xFF,
+    (payloadTypeADVERT << 2) | 1, // flood route
+    ((width - 1) << 6) | (path.length ~/ width),
+    ...path, ...key, ...stamp.buffer.asUint8List(),
+    ...List<int>.filled(64, 0), // synthetic signature; parser does not verify it
+    type | (located ? 0x10 : 0) | (hasName ? 0x80 : 0) |
+        (feature1 != null ? 0x20 : 0) | (feature2 != null ? 0x40 : 0),
+    if (located) ...position.buffer.asUint8List(),
+    if (feature1 != null) ...[feature1 & 0xFF, (feature1 >> 8) & 0xFF],
+    if (feature2 != null) ...[feature2 & 0xFF, (feature2 >> 8) & 0xFF],
+    if (hasName) ...utf8.encode(name),
+    if (hasName) 0,
+  ]);
 }
 
 Uint8List _selfInfo() {
@@ -594,6 +628,248 @@ Future<void> main() async {
       ), isFalse);
       expect(h.sent, isEmpty);
       expect(h.connector.contacts, hasLength(2));
+    });
+
+    for (final width in [1, 2, 3]) {
+      for (final located in [false, true]) {
+        test('U14 baseline: plain RX advert and manual raw import preserve '
+            'name, GPS and hop order (width=$width, location=$located)', () async {
+          final route = Uint8List.fromList(
+            List<int>.generate(2 * width, (index) => 0x40 + index),
+          );
+          final reversed = [...route.skip(width), ...route.take(width)];
+          final frame = _rxAdvert(_linkedKey, 'Synthetic room',
+              path: route, width: width, located: located);
+          final keyHex = pubKeyToHex(_linkedKey);
+          h.sent.clear();
+          h.connector.handleFrameForTest(frame);
+          await _until(() => h.connector.discoveredContacts.any(
+            (contact) => contact.publicKeyHex == keyHex,
+          ), 'raw advert discovered');
+          final found = h.connector.discoveredContacts.singleWhere(
+            (contact) => contact.publicKeyHex == keyHex,
+          );
+          expect(found.name, 'Synthetic room');
+          expect(found.type, advTypeRoom);
+          expect(found.path, reversed);
+          expect(found.pathLength, 2);
+          expect(found.pathHashWidth, width);
+          expect(found.latitude, located ? 55.75 : null);
+          expect(found.longitude, located ? 37.625 : null);
+          expect(found.lastSeen.millisecondsSinceEpoch ~/ 1000, 1700000000);
+          expect(found.isActive, isFalse);
+          expect(h.connector.contacts, hasLength(2));
+          expect(h.sent, isEmpty);
+          final revision = h.connector.discoveredRevision;
+          h.connector.handleFrameForTest(frame);
+          expect(h.connector.discoveredRevision, revision);
+
+          h.connector.importContact(frame);
+          await _until(() => h.connector.contacts.any(
+            (contact) => contact.publicKeyHex == keyHex,
+          ), 'manual raw import acknowledged');
+          final saved = h.connector.contacts.singleWhere(
+            (contact) => contact.publicKeyHex == keyHex,
+          );
+          expect(saved.name, found.name);
+          expect(saved.path, reversed);
+          expect(saved.pathHashWidth, width);
+          expect(saved.latitude, found.latitude);
+          expect(saved.longitude, found.longitude);
+          expect(h.sent.map((bytes) => bytes.first), [cmdAddUpdateContact]);
+          expect(h.target.name, 'Target repeater');
+          expect(h.connector.contacts, hasLength(3));
+        });
+      }
+    }
+
+    test('U14 baseline: a real name change updates discovery with no radio write',
+        () async {
+      final keyHex = pubKeyToHex(_linkedKey);
+      final route = Uint8List.fromList([0x10]);
+      h.sent.clear();
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Before',
+          path: route, width: 1));
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'After',
+          path: route, width: 1, timestamp: 1700000001));
+      final found = h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == keyHex,
+      );
+      expect(found.name, 'After');
+      expect(found.lastSeen.millisecondsSinceEpoch ~/ 1000, 1700000001);
+      expect(found.path, [0x10]);
+      expect(h.sent, isEmpty);
+    });
+
+    test('U14 baseline: an unnamed node can acquire a real advertised name',
+        () async {
+      final keyHex = pubKeyToHex(_linkedKey);
+      final route = Uint8List.fromList([0x10]);
+      h.sent.clear();
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, '',
+          path: route, width: 1, hasName: false));
+      expect(h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == keyHex,
+      ).name, isEmpty);
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Now named',
+          path: route, width: 1, timestamp: 1700000001));
+      expect(h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == keyHex,
+      ).name, 'Now named');
+      expect(h.sent, isEmpty);
+    });
+
+    for (final features in [(0x1200, null), (null, 0x3400), (0x1200, 0x3400)]) {
+      for (final width in [1, 3]) {
+        test('U14: feature fields cannot become the name in RX or manual import '
+            '(features=$features, width=$width)', () async {
+          final route = Uint8List.fromList(
+            List<int>.generate(2 * width, (i) => 0x40 + i),
+          );
+          final frame = _rxAdvert(_linkedKey, 'Feature room',
+            path: route, width: width, located: width == 3,
+            feature1: features.$1, feature2: features.$2,
+          );
+          h.sent.clear();
+          h.connector.handleFrameForTest(frame);
+          final keyHex = pubKeyToHex(_linkedKey);
+          final found = h.connector.discoveredContacts.singleWhere(
+            (contact) => contact.publicKeyHex == keyHex,
+          );
+          expect(found.name, 'Feature room');
+          expect(found.type, advTypeRoom);
+          expect(found.path, [...route.skip(width), ...route.take(width)]);
+          expect(found.pathHashWidth, width);
+          expect(found.latitude, width == 3 ? 55.75 : null);
+          expect(found.longitude, width == 3 ? 37.625 : null);
+          expect(h.sent, isEmpty);
+          h.connector.importContact(frame);
+          await _until(() => h.connector.contacts.any(
+            (contact) => contact.publicKeyHex == keyHex,
+          ), 'feature advert manually imported');
+          final saved = h.connector.contacts.singleWhere(
+            (contact) => contact.publicKeyHex == keyHex,
+          );
+          expect(saved.name, 'Feature room');
+          expect(saved.path, found.path);
+          expect(saved.pathHashWidth, width);
+          expect(saved.latitude, found.latitude);
+          expect(h.sent.map((bytes) => bytes.first), [cmdAddUpdateContact]);
+        });
+      }
+    }
+
+    for (final features in [(0x1200, null), (null, 0x3400), (0x1200, 0x3400)]) {
+      test('U14: truncated declared feature fields are ignored by both parsers '
+          '(features=$features)', () async {
+        final complete = _rxAdvert(_linkedKey, '',
+          path: Uint8List(0), width: 1, hasName: false,
+          feature1: features.$1, feature2: features.$2,
+        );
+        final truncated = Uint8List.fromList(complete.sublist(0, complete.length - 1));
+        h.sent.clear();
+        h.connector.handleFrameForTest(truncated);
+        h.connector.importContact(truncated);
+        await Future<void>.delayed(Duration.zero);
+        expect(h.connector.discoveredContacts.any(
+          (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
+        ), isFalse);
+        expect(h.connector.contacts, hasLength(2));
+        expect(h.sent, isEmpty);
+      });
+    }
+
+    test('U14: truncated declared GPS is not interpreted as advert name', () async {
+      final complete = _rxAdvert(_linkedKey, '',
+        path: Uint8List(0), width: 1, located: true, hasName: false,
+      );
+      final truncated = Uint8List.fromList(complete.sublist(0, complete.length - 1));
+      h.sent.clear();
+      h.connector.handleFrameForTest(truncated);
+      h.connector.importContact(truncated);
+      await Future<void>.delayed(Duration.zero);
+      expect(h.connector.discoveredContacts.any(
+        (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
+      ), isFalse);
+      expect(h.sent, isEmpty);
+    });
+
+    test('U14: empty, missing and whitespace names keep discovery name and '
+        'the unchanged revision fast path', () async {
+      final route = Uint8List.fromList([0x10]);
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Known room',
+          path: route, width: 1));
+      final keyHex = pubKeyToHex(_linkedKey);
+      final known = h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == keyHex,
+      );
+      final revision = h.connector.discoveredRevision;
+      h.sent.clear();
+      for (final variant in [('', true), ('', false), ('  ', true)]) {
+        h.connector.handleFrameForTest(_rxAdvert(_linkedKey, variant.$1,
+          path: route, width: 1, hasName: variant.$2,
+        ));
+        final current = h.connector.discoveredContacts.singleWhere(
+          (contact) => contact.publicKeyHex == keyHex,
+        );
+        expect(current.name, 'Known room');
+        expect(identical(current, known), isTrue);
+        expect(h.connector.discoveredRevision, revision);
+      }
+      expect(h.sent, isEmpty);
+    });
+
+    test('U14: newer nameless discovery keeps its name and accepts new time',
+        () async {
+      final route = Uint8List.fromList([0x10]);
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Known room',
+          path: route, width: 1));
+      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, '',
+          path: route, width: 1, timestamp: 1700000001));
+      final current = h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
+      );
+      expect(current.name, 'Known room');
+      expect(current.lastSeen.millisecondsSinceEpoch ~/ 1000, 1700000001);
+    });
+
+    test('U14: an active contact keeps name and node-owned route on empty name',
+        () async {
+      final before = h.target;
+      h.sent.clear();
+      h.connector.handleFrameForTest(_rxAdvert(before.publicKey, '',
+        path: Uint8List.fromList([0x44, 0x45]), width: 1,
+        type: advTypeRepeater,
+        timestamp: _advertTime.millisecondsSinceEpoch ~/ 1000 + 1,
+      ));
+      expect(h.target.name, before.name);
+      expect(h.target.lastSeen.millisecondsSinceEpoch ~/ 1000,
+          _advertTime.millisecondsSinceEpoch ~/ 1000 + 1);
+      expect(h.target.path, before.path);
+      expect(h.target.pathHashWidth, before.pathHashWidth);
+      expect(h.target.flags, before.flags);
+      expect(h.sent, isEmpty);
+    });
+
+    test('U14: removing with a nameless snapshot keeps the discovered name',
+        () async {
+      h.connector.handleFrameForTest(_contactFrame(h.target, code: pushCodeNewAdvert));
+      final known = h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == h.targetHex,
+      );
+      expect(known.name, 'Target repeater');
+      h.sent.clear();
+      final removal = _Operation(h.connector.removeContact(
+        h.target.copyWith(name: ''), keepMessages: true,
+      ));
+      await _until(() => h.sent.any((frame) => frame.first == cmdRemoveContact),
+          'nameless snapshot remove written');
+      h.replyToRemove();
+      await removal.finish();
+      expect(h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == h.targetHex,
+      ).name, 'Target repeater');
+      expect(h.sent.map((frame) => frame.first), [cmdRemoveContact]);
     });
 
     test('explicit re-import after removal remains available and preserves local options', () async {
