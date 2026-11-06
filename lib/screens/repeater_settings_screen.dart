@@ -8,6 +8,7 @@ import '../models/contact.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/utf8_length_limiter.dart';
+import '../helpers/repeater_settings_validation.dart';
 import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
 import '../theme/mesh_theme.dart';
@@ -888,11 +889,6 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         l10n.repeater_repeaterName,
       );
       requireText(
-        _SettingField.radio,
-        _freqController,
-        l10n.repeater_frequencyMhz,
-      );
-      requireText(
         _SettingField.txPower,
         _txPowerController,
         l10n.repeater_txPower,
@@ -942,47 +938,62 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         ));
       }
 
-      // Radio parameters are bundled in a single command.
-      if (_dirtyFields.contains(_SettingField.radio) &&
-          _freqController.text.isNotEmpty &&
-          _bandwidth != null &&
-          _spreadingFactor != null &&
-          _codingRate != null) {
-        final freqText = _normalizeDecimal(_freqController.text);
-        final freq = double.tryParse(freqText);
-        final bwKHz = _bandwidth! / 1000;
-        if (freq == null || freq < 150 || freq > 2500) {
-          reject(_SettingField.radio, l10n.repeater_frequencyInvalid);
-        } else if (bwKHz < 7.8 || bwKHz > 500) {
-          reject(
-            _SettingField.radio,
-            l10n.repeater_invalidSettingValue(
-              l10n.repeater_bandwidth,
-              '$bwKHz',
-            ),
-          );
-        } else if (_spreadingFactor! < 5 || _spreadingFactor! > 12) {
-          reject(
-            _SettingField.radio,
-            l10n.repeater_invalidSettingValue(
+      // A dirty radio bundle must never be silently skipped. Report every
+      // absent value and keep the draft available for another manual GET.
+      if (_dirtyFields.contains(_SettingField.radio)) {
+        final missing = missingRepeaterRadioParameters(
+          frequency: _freqController.text,
+          bandwidth: _bandwidth,
+          spreadingFactor: _spreadingFactor,
+          codingRate: _codingRate,
+        );
+        for (final field in missing) {
+          final label = switch (field) {
+            RepeaterRadioParameter.frequency => l10n.repeater_frequencyMhz,
+            RepeaterRadioParameter.bandwidth => l10n.repeater_bandwidth,
+            RepeaterRadioParameter.spreadingFactor =>
               l10n.repeater_spreadingFactor,
-              '$_spreadingFactor',
-            ),
-          );
-        } else if (_codingRate! < 5 || _codingRate! > 8) {
-          reject(
-            _SettingField.radio,
-            l10n.repeater_invalidSettingValue(
-              l10n.repeater_codingRate,
-              '$_codingRate',
-            ),
-          );
-        } else {
-          pending.add((
-            field: _SettingField.radio,
-            command:
-                'set radio $freqText,$bwKHz,$_spreadingFactor,$_codingRate',
-          ));
+            RepeaterRadioParameter.codingRate => l10n.repeater_codingRate,
+          };
+          reject(_SettingField.radio, l10n.repeater_valueRequired(label));
+        }
+        if (missing.isEmpty) {
+          final freqText = _normalizeDecimal(_freqController.text);
+          final freq = double.tryParse(freqText);
+          final bwKHz = _bandwidth! / 1000;
+          if (freq == null || freq < 150 || freq > 2500) {
+            reject(_SettingField.radio, l10n.repeater_frequencyInvalid);
+          } else if (bwKHz < 7.8 || bwKHz > 500) {
+            reject(
+              _SettingField.radio,
+              l10n.repeater_invalidSettingValue(
+                l10n.repeater_bandwidth,
+                '$bwKHz',
+              ),
+            );
+          } else if (_spreadingFactor! < 5 || _spreadingFactor! > 12) {
+            reject(
+              _SettingField.radio,
+              l10n.repeater_invalidSettingValue(
+                l10n.repeater_spreadingFactor,
+                '$_spreadingFactor',
+              ),
+            );
+          } else if (_codingRate! < 5 || _codingRate! > 8) {
+            reject(
+              _SettingField.radio,
+              l10n.repeater_invalidSettingValue(
+                l10n.repeater_codingRate,
+                '$_codingRate',
+              ),
+            );
+          } else {
+            pending.add((
+              field: _SettingField.radio,
+              command:
+                  'set radio $freqText,$bwKHz,$_spreadingFactor,$_codingRate',
+            ));
+          }
         }
       }
 
@@ -1123,7 +1134,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
       if (_dirtyFields.contains(_SettingField.txDelay) &&
           _txDelayController.text.isNotEmpty) {
-        final v = double.tryParse(_normalizeDecimal(_txDelayController.text));
+        final v = parseRepeaterTxDelay(_txDelayController.text);
         if (v != null) {
           pending.add((
             field: _SettingField.txDelay,
@@ -1141,9 +1152,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       }
       if (_dirtyFields.contains(_SettingField.directTxDelay) &&
           _directTxDelayController.text.isNotEmpty) {
-        final v = double.tryParse(
-          _normalizeDecimal(_directTxDelayController.text),
-        );
+        final v = parseRepeaterTxDelay(_directTxDelayController.text);
         if (v != null) {
           pending.add((
             field: _SettingField.directTxDelay,
@@ -1418,6 +1427,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   padding: const EdgeInsets.only(bottom: 32),
                   children: [
                     const RadioDisconnectedBanner(),
+                    // Preserve every later card's list slot when this notice
+                    // hides, including an already expanded Advanced card.
                     if (_loadedKeys.isEmpty && !_loadingAll)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
@@ -1447,7 +1458,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                             ],
                           ),
                         ),
-                      ),
+                      )
+                    else
+                      const SizedBox.shrink(),
                     _buildBasicSettingsCard(),
                     _buildRadioSettingsCard(),
                     _buildLocationSettingsCard(),

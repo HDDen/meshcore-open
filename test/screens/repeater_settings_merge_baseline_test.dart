@@ -218,6 +218,25 @@ Future<void> _read(WidgetTester tester, _Radio radio,
   await tester.pumpAndSettle();
 }
 
+Finder _textInput(String label) => find.byWidgetPredicate(
+  (widget) => widget is TextField && widget.decoration?.labelText == label,
+);
+
+Future<void> _editText(WidgetTester tester, String label, String value) async {
+  final field = _textInput(label);
+  await _reveal(tester, field);
+  expect(tester.widget<TextField>(field).enabled, isTrue);
+  await tester.enterText(field, value);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openAdvanced(WidgetTester tester, AppLocalizations l10n) async {
+  final heading = find.text(l10n.repeater_advancedSettings);
+  await _reveal(tester, heading);
+  await tester.tap(heading);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   late PathProviderPlatform previousPaths;
   setUp(() async {
@@ -312,6 +331,283 @@ void main() {
           ]);
           expect(save, findsNothing);
         }, size: layout.size, textScale: 2);
+      });
+    }
+
+    testWidgets('U13b baseline: delays require GET and retry only the rejected '
+        'field ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        // Before the U13b fix, the first successful GET removed the
+        // unloaded hint and collapsed Advanced by shifting its list slot.
+        // Load only the name before opening Advanced so this baseline can
+        // isolate each delay's GET guard and partial-save behavior. Preserve
+        // expansion across the first GET in a separate U13b regression.
+        await _read(tester, radio, l10n.repeater_refreshBasicSettings,
+            'get name', 'Remote name');
+        await _openAdvanced(tester, l10n);
+        final tx = _textInput(l10n.repeater_txDelay);
+        final direct = _textInput(l10n.repeater_directTxDelay);
+        await _reveal(tester, tx);
+        expect(tester.widget<TextField>(tx).enabled, isFalse);
+        await _reveal(tester, direct);
+        expect(tester.widget<TextField>(direct).enabled, isFalse);
+        expect(radio.commands, ['get name']);
+
+        // An older firmware's unsupported response is not a loaded value.
+        await _reveal(tester, _icon(l10n.repeater_txDelay));
+        await tester.tap(_icon(l10n.repeater_txDelay));
+        await tester.pump();
+        await _answer(tester, radio, 'Error: unknown command');
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(tx).enabled, isFalse);
+        await _read(tester, radio, l10n.repeater_txDelay, 'get txdelay', '0');
+        expect(tester.widget<TextField>(direct).enabled, isFalse);
+        await _editText(tester, l10n.repeater_txDelay, '0,25');
+        await _read(tester, radio, l10n.repeater_directTxDelay,
+            'get direct.txdelay', '1');
+        await _editText(tester, l10n.repeater_directTxDelay, '2');
+        expect(radio.commands,
+            ['get name', 'get txdelay', 'get txdelay', 'get direct.txdelay']);
+
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        final beforeSave = radio.commands.length;
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(beforeSave), ['set txdelay 0.25']);
+        await _answer(tester, radio, 'OK');
+        expect(radio.commands.last, 'set direct.txdelay 2.0');
+        await _answer(tester, radio, 'Error rejected');
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        expect(tester.widget<TextField>(tx).controller!.text, '0,25');
+        expect(tester.widget<TextField>(direct).controller!.text, '2');
+
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(beforeSave), [
+          'set txdelay 0.25', 'set direct.txdelay 2.0',
+          'set direct.txdelay 2.0',
+        ]);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13b baseline: malformed delay stays dirty while a valid '
+        'field is saved ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        // Stabilize the list before expansion, as in the GET-guard case.
+        await _read(tester, radio, l10n.repeater_refreshBasicSettings,
+            'get name', 'Remote name');
+        await _openAdvanced(tester, l10n);
+        await _read(tester, radio, l10n.repeater_txDelay, 'get txdelay', '1');
+        await _read(tester, radio, l10n.repeater_directTxDelay,
+            'get direct.txdelay', '1');
+        await _editText(tester, l10n.repeater_txDelay, 'invalid');
+        await _editText(tester, l10n.repeater_directTxDelay, '1.5');
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        final beforeSave = radio.commands.length;
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(beforeSave), ['set direct.txdelay 1.5']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        expect(tester.widget<TextField>(
+          _textInput(l10n.repeater_txDelay),
+        ).controller!.text, 'invalid');
+
+        await _editText(tester, l10n.repeater_txDelay, '0');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(beforeSave),
+            ['set direct.txdelay 1.5', 'set txdelay 0.0']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13b baseline: incomplete radio GET does not write defaults '
+        'and a complete refresh supplies the bundle ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        await _read(tester, radio, l10n.repeater_refreshRadioSettings,
+            'get radio', '869.495');
+        for (final label in [l10n.repeater_bandwidth,
+          l10n.repeater_spreadingFactor, l10n.repeater_codingRate]) {
+          expect(_dropdown<int>(tester, label).value, isNull);
+        }
+        expect(find.widgetWithText(TextButton, l10n.common_save), findsNothing);
+        expect(radio.commands, ['get radio']);
+        await _read(tester, radio, l10n.repeater_refreshRadioSettings,
+            'get radio', '869.495,137.5,8,2');
+        // CR 1..4 returned by some firmware is normalized to UI 5..8.
+        expect(_dropdown<int>(tester, l10n.repeater_codingRate).value, 6);
+        await _editText(tester, l10n.repeater_frequencyMhz, '868,3');
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands,
+            ['get radio', 'get radio', 'set radio 868.3,137.5,8,6']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13b baseline: manual batch reads serially and continues '
+        'past an unsupported setting ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        // This is the accepted pre-U13c GET list, not an automatic query.
+        const replies = <(String, String)>[
+          ('get name', '> Remote name'),
+          ('get radio', '> 869.495,125,7,5'),
+          ('get tx', '> 14'),
+          ('get radio.rxgain', '> on'),
+          ('get lat', '> 55.75'),
+          ('get lon', '> 37.625'),
+          ('get repeat', '> on'),
+          ('get allow.read.only', '> on'),
+          ('get multi.acks', '> 1'),
+          ('get loop.detect', '> moderate'),
+          ('get dutycycle', '> 50.0%'),
+          ('get advert.interval', '> 120'),
+          ('get flood.advert.interval', '> 12'),
+          ('get flood.max', '> 64'),
+          ('get owner.info', '> Owner|Second line'),
+          ('get path.hash.mode', '> 1'),
+          ('get txdelay', 'Error: unknown command'),
+          ('get direct.txdelay', '> 0.5'),
+          ('get int.thresh', '> 0'),
+          ('get agc.reset.interval', '> 60'),
+        ];
+        final refresh = _icon(l10n.repeater_refreshAll);
+        await tester.tap(refresh);
+        await tester.pump();
+        expect(tester.widget<IconButton>(refresh).onPressed, isNull);
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+        for (var i = 0; i < replies.length; i++) {
+          expect(radio.commands, [
+            for (final item in replies.take(i + 1)) item.$1,
+          ]);
+          // No second request may start while this one awaits its reply.
+          await tester.pump(const Duration(milliseconds: 25));
+          expect(radio.commands, hasLength(i + 1));
+          await _answer(tester, radio, replies[i].$2);
+        }
+        await tester.pumpAndSettle();
+        expect(find.byType(LinearProgressIndicator), findsNothing);
+        expect(tester.widget<IconButton>(refresh).onPressed, isNotNull);
+        expect(find.widgetWithText(TextButton, l10n.common_save), findsNothing);
+        await _openAdvanced(tester, l10n);
+        final tx = _textInput(l10n.repeater_txDelay);
+        await _reveal(tester, tx);
+        expect(tester.widget<TextField>(tx).enabled, isFalse);
+        final direct = _textInput(l10n.repeater_directTxDelay);
+        await _reveal(tester, direct);
+        expect(tester.widget<TextField>(direct).enabled, isTrue);
+        expect(tester.widget<TextField>(direct).controller!.text, '0.5');
+        await tester.pump(const Duration(seconds: 5));
+        expect(radio.commands, [for (final item in replies) item.$1]);
+      });
+    });
+
+    testWidgets('U13b: Advanced stays open after the first successful GET '
+        '($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        await _openAdvanced(tester, l10n);
+        await _read(tester, radio, l10n.repeater_txDelay, 'get txdelay', '0.5');
+        // No second tap on the Advanced heading: its state must survive
+        // removal of the unloaded notice above the settings cards.
+        final tx = _textInput(l10n.repeater_txDelay);
+        final direct = _textInput(l10n.repeater_directTxDelay);
+        expect(tx, findsOneWidget);
+        expect(direct, findsOneWidget);
+        expect(tester.widget<TextField>(tx).enabled, isTrue);
+        expect(tester.widget<TextField>(tx).controller!.text, '0.5');
+        expect(tester.widget<TextField>(direct).enabled, isFalse);
+        await _read(tester, radio, l10n.repeater_directTxDelay,
+            'get direct.txdelay', '1');
+        await tester.pump(const Duration(seconds: 1));
+        expect(radio.commands, ['get txdelay', 'get direct.txdelay']);
+        expect(find.widgetWithText(TextButton, l10n.common_save), findsNothing);
+      });
+    });
+
+    testWidgets('U13b: both delays reject out-of-range and non-finite values '
+        'and preserve valid boundaries ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        await _openAdvanced(tester, l10n);
+        await _read(tester, radio, l10n.repeater_txDelay, 'get txdelay', '1');
+        await _read(tester, radio, l10n.repeater_directTxDelay,
+            'get direct.txdelay', '1');
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        final beforeSave = radio.commands.length;
+        for (final invalid in ['-0.1', '2.1', 'NaN', 'Infinity', '-Infinity']) {
+          await _editText(tester, l10n.repeater_txDelay, invalid);
+          await _editText(tester, l10n.repeater_directTxDelay, invalid);
+          await tester.tap(save);
+          await tester.pumpAndSettle();
+          expect(radio.commands, hasLength(beforeSave), reason: invalid);
+          expect(save, findsOneWidget);
+          expect(tester.widget<TextField>(
+            _textInput(l10n.repeater_txDelay),
+          ).controller!.text, invalid);
+          expect(tester.widget<TextField>(
+            _textInput(l10n.repeater_directTxDelay),
+          ).controller!.text, invalid);
+        }
+        await _editText(tester, l10n.repeater_txDelay, '0');
+        await _editText(tester, l10n.repeater_directTxDelay, '2');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(beforeSave), ['set txdelay 0.0']);
+        await _answer(tester, radio, 'OK');
+        expect(radio.commands.last, 'set direct.txdelay 2.0');
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    for (final partial in ['869.495', '869.495,125,7', ',125,7,5']) {
+      testWidgets('U13b: incomplete radio save stays dirty and sends no SET '
+          '($locale, reply=$partial)', (tester) async {
+        await _withSettings(tester, locale, (radio, l10n) async {
+          await _read(tester, radio, l10n.repeater_refreshRadioSettings,
+              'get radio', partial);
+          if (partial.startsWith(',')) {
+            // Mark the bundle dirty while its required frequency is empty.
+            await _choose<int>(tester, l10n.repeater_spreadingFactor, 'SF8');
+          } else {
+            await _editText(tester, l10n.repeater_frequencyMhz, '868,3');
+          }
+          // Let the preceding refresh snackbar expire so validation is shown.
+          await tester.pump(const Duration(seconds: 5));
+          await tester.pumpAndSettle();
+          final save = find.widgetWithText(TextButton, l10n.common_save);
+          await tester.tap(save);
+          await tester.pumpAndSettle();
+          expect(radio.commands, ['get radio']);
+          expect(save, findsOneWidget);
+          final missingLabel = partial.startsWith(',')
+              ? l10n.repeater_frequencyMhz
+              : l10n.repeater_codingRate;
+          expect(find.textContaining(l10n.repeater_valueRequired(missingLabel)),
+              findsOneWidget);
+
+          await _read(tester, radio, l10n.repeater_refreshRadioSettings,
+              'get radio', '869.495,125,7,5');
+          await _editText(tester, l10n.repeater_frequencyMhz, '868,3');
+          await tester.tap(save);
+          await tester.pump();
+          expect(radio.commands,
+              ['get radio', 'get radio', 'set radio 868.3,125.0,7,5']);
+          await _answer(tester, radio, 'OK');
+          await tester.pumpAndSettle();
+          expect(save, findsNothing);
+        });
       });
     }
 

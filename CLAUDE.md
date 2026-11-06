@@ -3285,8 +3285,17 @@ BW/SF/CR, loop detection and path hash dropdowns use `isExpanded: true`,
 is not used. On a toolbar whose width/text-scale ratio is below 600, Save uses
 an icon with the existing localized tooltip; wide toolbars retain the labeled
 button. Both share the previous loading/connection guards and save callback.
-No changes to command order, background work or storage. Baseline and en/ru
-small-screen checks: `test/screens/repeater_settings_merge_baseline_test.dart`.
+The unloaded notice retains its list slot when hidden, so the first GET does
+not collapse an already open Advanced card. Fields still require their own
+manual GET before editing. `helpers/repeater_settings_validation.dart` checks
+both TX delays against the firmware's finite 0..2 range and reports every
+missing part of a dirty frequency/BW/SF/CR bundle. Invalid or incomplete drafts
+stay dirty without sending their SET; other valid edits still save and failed
+commands remain available for retry. Successful command serialization/order,
+200 ms spacing, background work and storage are unchanged; validation adds no
+GETs, timers or automatic defaults. Baseline and en/ru small-screen/regression
+checks: `test/screens/repeater_settings_merge_baseline_test.dart`; pure
+validation checks: `test/helpers/repeater_settings_validation_test.dart`.
 
 ### App settings sheets and map key
 

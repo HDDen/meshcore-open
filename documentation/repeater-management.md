@@ -280,8 +280,8 @@ Nine configuration cards, each with its own per-field refresh button(s):
 
 **9. Advanced** (collapsed by default)
 - Path hash mode dropdown (0–2; `set path.hash.mode`)
-- TX delay field (`set txdelay`)
-- Direct TX delay field (`set direct.txdelay`)
+- TX delay field (`set txdelay`), finite values from 0 to 2 inclusive
+- Direct TX delay field (`set direct.txdelay`), finite values from 0 to 2 inclusive
 - Interference threshold field (`set int.thresh`)
 - AGC reset interval slider (0–240s in multiples of 4; `set agc.reset.interval`)
 
@@ -293,6 +293,9 @@ Nine configuration cards, each with its own per-field refresh button(s):
 - **Settings are NOT auto-fetched on open**. Name is pre-filled from cached contact data. Each section has its own refresh button to fetch live values from the repeater
 - TX Power, RX Gain, latitude, longitude, and advanced fields each have independent inline refresh buttons
 - Save button in app bar appears when any change is detected; failed commands keep those fields dirty for retry
+- Each field stays disabled until its manual GET succeeds. The first successful GET keeps an already expanded Advanced card open
+- TX delays accept a decimal point or comma. Values outside 0-2, non-numeric input and infinities are rejected locally; the draft remains available for correction
+- Radio frequency, bandwidth, spreading factor and coding rate are saved together. If any value is missing, Save names the missing fields and keeps the draft; it does not invent defaults or fetch them automatically. Other valid edits may still be saved
 - Settings are sent sequentially with 200ms delays between commands; firmware responses are checked and partial failures are reported in a snackbar
 - Some changes (e.g. radio frequency) require a reboot; the firmware response triggers an orange "reboot needed" snackbar
 - Advertisement interval sliders reset to defaults when re-enabled (local: 60 min, flood: 3 hours)
