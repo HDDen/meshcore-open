@@ -47,6 +47,13 @@ Short prefixes can match several known nodes. An unresolved or ambiguous hop is 
 
 Contacts/messages persist hop count, path bytes, and width. Legacy contact records without width infer it from consistent hop and byte counts, falling back to one byte. `PathHistoryService` scores recent routes using delivery observations; automatic route rotation can select another route on retry when no manual override is active. Rotation follows the App Settings **Auto Route Rotation** toggle (`autoRouteRotationEnabled`, on by default).
 
+A contact's path history retains up to 100 routes. Once full, a new route
+replaces the existing route with the lowest selection score, using the same
+reliability, latency, freshness and route-weight factors as automatic selection.
+Updating a known route preserves the other entries and its learned statistics.
+The complete hop bytes are retained for one-, two- and three-byte prefixes.
+This history replacement does not edit the contact's manual routing override.
+
 For message-path actions, trace maps, and retry behavior, see [chat](chat-and-messaging.md), [channels](channels.md), and [map](map-and-location.md).
 
 

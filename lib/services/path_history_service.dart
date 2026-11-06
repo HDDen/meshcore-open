@@ -380,7 +380,9 @@ class PathHistoryService extends ChangeNotifier {
     updatedPaths.removeWhere((p) => _pathsEqual(p.pathBytes, pathBytes));
 
     if (existing == null && updatedPaths.length >= _maxHistoryEntries) {
-      return;
+      // A full history must still accept a new discovery. Compare the existing
+      // routes using the same score as selection, then replace only the weakest.
+      updatedPaths.removeAt(_lowestScoredPathIndex(updatedPaths));
     }
 
     if (existing == null) _routesVersion++;
@@ -591,6 +593,28 @@ class PathHistoryService extends ChangeNotifier {
     });
 
     return ranked;
+  }
+
+  int _lowestScoredPathIndex(List<PathRecord> paths) {
+    final fastestTripMs = _getFastestKnownTripMs(paths);
+    final highestRouteWeight = _getHighestKnownRouteWeight(paths);
+    var lowestIndex = 0;
+    var lowestScore = double.infinity;
+    // Only used for a new route in a full history (at most 100 normal entries).
+    // Normalize once and score each entry once, without sorting the history.
+    for (var i = 0; i < paths.length; i++) {
+      final score = _scorePathRecord(
+        paths[i],
+        fastestTripMs: fastestTripMs,
+        highestRouteWeight: highestRouteWeight,
+      );
+      // Keep the first minimum on a tie, matching the upstream rule.
+      if (i == 0 || score < lowestScore) {
+        lowestIndex = i;
+        lowestScore = score;
+      }
+    }
+    return lowestIndex;
   }
 
   int? _getFastestKnownTripMs(List<PathRecord> paths) {
