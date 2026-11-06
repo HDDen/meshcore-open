@@ -210,7 +210,7 @@ independent of these download switches.
 
 Open **App Settings → IPFS provider configuration** to configure IPFS uploads and previews:
 
-- **Public IPFS gateway**: Select ipfs.io, Pinata, Filebase, a custom gateway, or deactivate it. This gateway lets the app load bare IPFS content IDs in image links. Existing full gateway URLs retain their original host.
+- **Public IPFS gateway**: New settings default to Filebase (`https://ipfs.filebase.io/ipfs/`). You can still select ipfs.io, Pinata, Filebase, a custom gateway, or deactivate it. Existing saved choices, including an empty value for deactivation, are preserved. This gateway lets the app load bare IPFS content IDs in image links. Existing full gateway URLs retain their original host. Changing the default does not enable link-image loading, which remains off until you enable it.
 - **Upload provider**: Select Pinata, Filebase, a custom provider, or deactivate uploads. Presets fill in the provider’s upload endpoint and upload gateway; custom setups can edit both.
 - **API key**: Enter the credential required by the selected provider. The value is masked in the settings dialog. Pinata and Filebase presets require provider credentials.
 

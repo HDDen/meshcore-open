@@ -504,12 +504,21 @@ Future<void> main() async {
       expect(AppSettings.fromJson(saved).showLinkImagesByDefault, isTrue);
     });
 
-    test('public IPFS gateway defaults to ipfs.io when never set', () {
+    test('public IPFS gateway defaults to Filebase when never set', () {
+      const gateway = 'https://ipfs.filebase.io/ipfs/';
+      expect(AppSettings().publicIpfsGateway, gateway);
+      expect(AppSettings.fromJson({}).publicIpfsGateway, gateway);
       expect(
-        AppSettings.fromJson({}).publicIpfsGateway,
-        'https://ipfs.io/ipfs/',
+        AppSettings.fromJson({'public_ipfs_gateway': null}).publicIpfsGateway,
+        gateway,
       );
-      expect(AppSettings().publicIpfsGateway, 'https://ipfs.io/ipfs/');
+      // A download host does not opt the user into network image loading.
+      final settings = AppSettings.fromJson({});
+      expect(settings.loadLinkImages, isFalse);
+      expect(settings.showLinkImagesByDefault, isFalse);
+      expect(settings.uploadIpfsGateway, isEmpty);
+      expect(settings.uploadIpfsEndpoint, isEmpty);
+      expect(settings.uploadIpfsApiKey, isEmpty);
     });
 
     test('link policy switches persist independently and survive unrelated copies', () async {
@@ -564,10 +573,12 @@ Future<void> main() async {
       expect(AppSettings.fromJson(saved).publicIpfsGateway, isEmpty);
     });
 
-    test('public IPFS gateway keeps saved ipfs.io and dweb.link values', () {
+    test('public IPFS gateway keeps saved legacy, preset and custom values', () {
       for (final gateway in [
         'https://ipfs.io/ipfs/',
         'https://dweb.link/ipfs/',
+        'https://ipfs.filebase.io/ipfs/',
+        'https://gateway.pinata.cloud/ipfs/',
         'https://gateway.example.com/ipfs/',
       ]) {
         final saved = AppSettings(publicIpfsGateway: gateway).toJson();

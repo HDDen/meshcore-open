@@ -3145,9 +3145,15 @@ was added, and explicit IPFS uploads and AEIC/MCOimg remain independent.
 The IPFS settings dialog is `widgets/ipfs_image_links_dialog.dart`; its four
 values round-trip through `AppSettings`/`AppSettingsService.setIpfsImageSettings`.
 The upload endpoint/key/gateway default to empty, so no upload action or request
-is created on startup. The public gateway defaults to the previous ipfs.io;
-explicit empty stays disabled. URL previews remain per-chat opt-in. Gateway
-changes invalidate the relevant message-image cache and also reach notifications.
+is created on startup. U17 defaults the public gateway to Filebase
+(`https://ipfs.filebase.io/ipfs/`) only when no address was saved. Existing
+ipfs.io, Pinata, custom URLs and explicit empty values retain their meaning.
+All five download presets remain available; their URLs are independent of the
+application default. Link-image loading still defaults off and retains its
+master/per-chat gates. Gateway changes invalidate the relevant message-image
+cache and also reach notifications. MessagingStyle with our MCOimg/URL large
+icons is retained; upstream BigPicture is intentionally not enabled, preserving
+the fork's Android Auto/conversation design and existing platform attachments.
 
 `ChatAdditionalActionsButton` retains the fork's existing actions and adds IPFS
 only with a configured endpoint outside offline mode. AEIC/IPFS native pickers

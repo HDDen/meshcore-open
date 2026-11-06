@@ -265,8 +265,8 @@ class _IpfsImageLinksDialogState extends State<IpfsImageLinksDialog> {
 
   String _gatewayPreset(String value) {
     if (value.isEmpty) return 'deactivated';
-    if (value == AppSettings.defaultPublicIpfsGateway ||
-        value == 'https://ipfs.io/ipfs') {
+    // Named presets identify their own host, independently of the default.
+    if (value == 'https://ipfs.io/ipfs/' || value == 'https://ipfs.io/ipfs') {
       return 'ipfsio';
     }
     if (value == 'https://gateway.pinata.cloud/ipfs/' ||
@@ -285,7 +285,7 @@ class _IpfsImageLinksDialogState extends State<IpfsImageLinksDialog> {
       case 'deactivated':
         return '';
       case 'ipfsio':
-        return AppSettings.defaultPublicIpfsGateway;
+        return 'https://ipfs.io/ipfs/';
       case 'pinata':
         return 'https://gateway.pinata.cloud/ipfs/';
       case 'filebase':

@@ -56,8 +56,12 @@ void main() {
           'https://example.com/photo.png?size=large',
       'https://example.com/photo.webp.': 'https://example.com/photo.webp',
       'https://pyx.li/?i=RzmdkTsE': 'https://pyx.li/i/RzmdkTsE.jpg',
-      'ipfs://$_cid': 'https://ipfs.io/ipfs/$_cid',
-      'ipfs:$_cid': 'https://ipfs.io/ipfs/$_cid',
+      'ipfs://$_cid': 'https://ipfs.filebase.io/ipfs/$_cid',
+      'ipfs:$_cid': 'https://ipfs.filebase.io/ipfs/$_cid',
+      // Explicit gateway links keep their original host after the default changes.
+      'https://ipfs.io/ipfs/$_cid': 'https://ipfs.io/ipfs/$_cid',
+      'https://gateway.pinata.cloud/ipfs/$_cid':
+          'https://gateway.pinata.cloud/ipfs/$_cid',
       'https://chosen.example/ipfs/$_cid,': 'https://chosen.example/ipfs/$_cid',
       'https://chosen.example/ipns/example-name':
           'https://chosen.example/ipns/example-name',

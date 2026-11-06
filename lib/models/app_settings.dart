@@ -193,7 +193,9 @@ class AppSettings {
     'cyrillic_extended',
     'cyrillic_transliteration',
   ];
-  static const String defaultPublicIpfsGateway = 'https://ipfs.io/ipfs/';
+  // Used only when no gateway was saved; existing addresses stay unchanged.
+  static const String defaultPublicIpfsGateway =
+      'https://ipfs.filebase.io/ipfs/';
   static const String stadiaDemo = '51bd0381-4685-4666-bae8-48940f6d77c0';
 
   final bool clearPathOnMaxRetry;
