@@ -11315,7 +11315,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         lat: contact.latitude,
         lon: contact.longitude,
         lastAdvert: contact.lastSeen,
-        lastModified: contact.lastSeen,
+        // Let the firmware stamp lastmod with its own RTC. Reusing an old
+        // advert time makes a newly saved contact an overwrite-oldest target.
       ),
       waitForGenericAck: true,
     );

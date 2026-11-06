@@ -123,6 +123,9 @@ class _Harness {
   ];
   final sent = <Uint8List>[];
   Object? removeWriteFailure;
+  // U13a can hold or reject an ADD independently of the removal fixture.
+  bool holdAddAck = false;
+  int? addError;
   Completer<void>? contactReadGate;
   Completer<void>? addWriteGate;
 
@@ -185,6 +188,12 @@ class _Harness {
         await contactReadGate?.future;
         break;
       case cmdAddUpdateContact:
+        if (holdAddAck) return;
+        final rejected = addError;
+        if (rejected != null) {
+          connector.handleFrameForTest([respCodeErr, rejected]);
+          return;
+        }
         final response = Uint8List.fromList(frame)..[0] = respCodeContact;
         final updated = Contact.fromFrame(response)!;
         final index = radioContacts.indexWhere((contact) => contact.publicKeyHex == updated.publicKeyHex);
@@ -427,6 +436,164 @@ Future<void> main() async {
       expect(h.sent, isEmpty);
       expect(h.connector.contacts.map((c) => c.publicKeyHex), [h.otherHex]);
       expect(await h.history.loadMessages(h.targetHex), hasLength(2));
+    });
+
+    // U13a invariants were accepted on the unchanged import implementation.
+    // Keep them when fixing the timestamp tail: the advert time and path
+    // belong to the discovered node, independent of its import time.
+    for (final width in [1, 2, 3]) {
+      for (final located in [false, true]) {
+        test('U13a baseline: manual discovery import preserves metadata '
+            '(width=$width, location=$located)', () async {
+          final route = Uint8List.fromList(
+            List<int>.generate(2 * width, (i) => 0x40 + i),
+          );
+          final found = Contact(
+            publicKey: _linkedKey,
+            name: 'Discovered room',
+            type: advTypeRoom,
+            flags: contactFlagTeleBase | contactFlagTeleLoc,
+            pathLength: 2,
+            path: route,
+            pathHashWidth: width,
+            latitude: located ? 55.75 : null,
+            longitude: located ? 37.625 : null,
+            lastSeen: _advertTime,
+            isActive: false,
+          );
+          h.connector.handleFrameForTest(
+            _contactFrame(found, code: pushCodeNewAdvert),
+          );
+          h.sent.clear();
+          expect(await h.connector.importDiscoveredContact(found), isTrue);
+          expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+          final frame = h.sent.single;
+          expect(frame.sublist(1, 33), found.publicKey);
+          expect(frame[33], advTypeRoom);
+          expect(frame[34], found.flags);
+          expect(frame[35], ((width - 1) << 6) | 2);
+          expect(frame.sublist(36, 36 + route.length), route);
+          expect(String.fromCharCodes(
+            frame.sublist(100, 132).takeWhile((byte) => byte != 0),
+          ), found.name);
+          expect(ByteData.sublistView(frame).getUint32(132, Endian.little),
+              _advertTime.millisecondsSinceEpoch ~/ 1000);
+          if (located) {
+            expect(ByteData.sublistView(frame).getInt32(136, Endian.little),
+                55750000);
+            expect(ByteData.sublistView(frame).getInt32(140, Endian.little),
+                37625000);
+          }
+          final stored = h.connector.contacts.singleWhere(
+            (contact) => contact.publicKeyHex == found.publicKeyHex,
+          );
+          expect(stored.path, route);
+          expect(stored.pathLength, 2);
+          expect(stored.pathHashWidth, width);
+          expect(stored.flags, found.flags);
+          expect(stored.latitude, found.latitude);
+          expect(stored.longitude, found.longitude);
+          expect(stored.lastSeen.isAtSameMomentAs(found.lastSeen), isTrue);
+          expect(h.connector.discoveredContacts.singleWhere(
+            (contact) => contact.publicKeyHex == found.publicKeyHex,
+          ).isActive, isTrue);
+          expect(h.connector.contacts, hasLength(3));
+        });
+      }
+    }
+
+    for (final located in [false, true]) {
+      test('U13a: discovery ADD lets firmware stamp lastmod '
+          '(location=$located)', () async {
+        final found = _contact(_linkedKey, 'Old advert').copyWith(
+          latitude: located ? 55.75 : null,
+          longitude: located ? 37.625 : null,
+          // Neither a cached lastmod nor a newer telemetry fix may replace
+          // the original advert timestamp or the radio's import clock.
+          lastModified: DateTime.utc(2025, 6, 1),
+          telemetryFixAt: DateTime.utc(2026, 2, 1),
+        );
+        h.sent.clear();
+        expect(await h.connector.importDiscoveredContact(found), isTrue);
+        expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+        final frame = h.sent.single;
+        // Firmware keeps its RTC fallback only when bytes 144..147 are
+        // absent. Without GPS there is no optional tail at all.
+        expect(frame, hasLength(located ? 144 : 136));
+        expect(ByteData.sublistView(frame).getUint32(132, Endian.little),
+            _advertTime.millisecondsSinceEpoch ~/ 1000);
+        if (located) {
+          expect(ByteData.sublistView(frame).getInt32(136, Endian.little),
+              55750000);
+          expect(ByteData.sublistView(frame).getInt32(140, Endian.little),
+              37625000);
+        }
+        final radioCopy = h.radioContacts.singleWhere(
+          (contact) => contact.publicKeyHex == found.publicKeyHex,
+        );
+        expect(radioCopy.lastSeen.isAtSameMomentAs(found.lastSeen), isTrue);
+        expect(radioCopy.latitude, found.latitude);
+        expect(radioCopy.longitude, found.longitude);
+        // The fixture parses the sent frame; it does not simulate an RTC.
+        // Absence here confirms no phone-chosen lastmod crossed the wire.
+        expect(radioCopy.lastModified, isNull);
+      });
+    }
+
+    test('U13a baseline: discovery import activates only after ADD ACK', () async {
+      final found = _contact(_linkedKey, 'Waiting for ACK');
+      h.connector.handleFrameForTest(
+        _contactFrame(found, code: pushCodeNewAdvert),
+      );
+      h.sent.clear();
+      h.holdAddAck = true;
+      final operation = _Operation(
+        h.connector.importDiscoveredContact(found).then<void>((ok) {
+          if (!ok) throw StateError('Import unexpectedly returned false');
+        }),
+      );
+      await _until(() => h.sent.isNotEmpty, 'ADD written');
+      expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+      expect(operation.done, isFalse);
+      expect(h.connector.contacts, hasLength(2));
+      expect(h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == found.publicKeyHex,
+      ).isActive, isFalse);
+      h.connector.handleFrameForTest([respCodeOk]);
+      await operation.finish();
+      expect(h.connector.contacts, hasLength(3));
+      expect(h.sent, hasLength(1));
+    });
+
+    test('U13a baseline: table-full ADD keeps discovery inactive', () async {
+      final found = _contact(_linkedKey, 'Rejected import');
+      h.connector.handleFrameForTest(
+        _contactFrame(found, code: pushCodeNewAdvert),
+      );
+      h.sent.clear();
+      h.addError = errCodeTableFull;
+      await expectLater(h.connector.importDiscoveredContact(found),
+          throwsA(isA<CommandFailedException>().having(
+            (error) => error.errCode, 'firmware error', errCodeTableFull,
+          )));
+      expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+      expect(h.connector.contacts, hasLength(2));
+      expect(h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == found.publicKeyHex,
+      ).isActive, isFalse);
+    });
+
+    test('U13a baseline: disconnected discovery import sends nothing', () async {
+      h.connector.setReconnectContextForTest(
+        transport: MeshCoreTransportType.tcp,
+        state: MeshCoreConnectionState.disconnected,
+      );
+      h.sent.clear();
+      expect(await h.connector.importDiscoveredContact(
+        _contact(_linkedKey, 'Offline import'),
+      ), isFalse);
+      expect(h.sent, isEmpty);
+      expect(h.connector.contacts, hasLength(2));
     });
 
     test('explicit re-import after removal remains available and preserves local options', () async {

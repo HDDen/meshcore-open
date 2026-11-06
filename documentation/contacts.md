@@ -163,6 +163,13 @@ Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `m
 ### Import from Discovered Contacts
 Overflow menu → "Discovered Contacts". Shows nodes heard passively that haven't been added yet. Tap to immediately import (no confirmation dialog), or long-press for more options (Copy URI, Delete). The Discovery screen has its own search bar, type filters (Users, Repeaters, Rooms), and sort options (Last Seen, A-Z). Its overflow menu has **Export discovered contacts**, **Import discovered contacts**, and "Delete All".
 
+Saving a discovered node preserves the original advert time and coordinates.
+The radio assigns the contact's modification time using its own clock, so an
+old advert does not make the newly saved contact the first candidate for
+replacement when overwrite-oldest is enabled. The app activates the contact
+only after the radio acknowledges the save; a full-table error leaves it in
+the discovered list. No extra clock request is sent.
+
 ### Scan for Nearby Nodes
 
 On the Discovered Contacts screen, tap the radar icon (**Scan for nearby nodes**) to ask nodes within direct radio range to identify themselves, instead of waiting for their next advert. The button appears only while connected to firmware with version code 8 or newer.

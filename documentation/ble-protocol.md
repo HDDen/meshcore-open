@@ -196,6 +196,16 @@ GPS-опрос пропускает тик при активной синхро�
 [144–147] = last_modified (uint32 LE)
 ```
 
+For outgoing `CMD_ADD_UPDATE_CONTACT` (9), bytes 0-135 are mandatory.
+The optional location occupies bytes 136-143; an explicit `lastmod` may follow
+at bytes 144-147. When `lastmod` is absent, companion firmware uses its own RTC
+for the contact's modification time. Manually saving a discovered contact
+sends 136 bytes without coordinates or 144 with coordinates, retains its
+original advert timestamp at bytes 132-135, and waits for the generic ACK.
+An old advert timestamp is not sent as `lastmod`, so a newly saved contact does
+not immediately look oldest to the firmware's overwrite-oldest policy.
+The incoming contact-response layout above is unchanged.
+
 ### Message (Direct)
 Sender key, text, timestamp, outgoing flag, status (pending/sent/delivered/failed), message ID (UUID), retry count, ACK hash, trip time, path data, reactions.
 

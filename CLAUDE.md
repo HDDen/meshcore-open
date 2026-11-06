@@ -366,6 +366,17 @@ The node owns its contact table and says what it did with each advert. `PUSH_COD
 
 **The contact list is the node's.** Every sync keeps the list on screen while it runs (`preserveExisting`), so a full one, without `since`, is what prunes it: `CONTACTS_START` notes the keys listed before it (`_contactsUnconfirmedBySync`), every CONTACT frame, a sync's or a GET_CONTACT_BY_KEY answer, strikes its key, and at `END_OF_CONTACTS` `_dropContactsMissingFromNode` removes what is left, a contact the node no longer holds or never did. Its conversation stays in the database and its unread count goes, nothing on screen being left to clear it. A sync filtered by lastmod lists only what changed and a sync that ended in the idle timeout proves nothing, so neither drops anything. Discovered entries never become contacts: `isActive` in the discovered list only mirrors membership (`updateKnownDiscovered`). `_loadDiscoveredContactCache` used to merge every entry flagged active, favourite or with messages into the list, and with NEW_ADVERT still routed through `_handleContact`, which recorded each node as an active discovered entry before the auto-add filter, every node a node with auto-add off declined came back as a contact at the next connection: contacts the node did not hold, which the official app did not show, which returned after deletion and failed a batch deletion. `removeContact` therefore takes the node's ERR_CODE_NOT_FOUND (`CommandFailedException.errCode == errCodeNotFound`) as a finished removal, so such an entry can still be deleted.
 
+**Saving a discovered contact.** `importDiscoveredContact` uses
+`CMD_ADD_UPDATE_CONTACT` and waits for its generic ACK before activation. It
+preserves the discovered advert's timestamp, path width, flags and coordinates,
+but omits the optional `lastmod` tail. Companion firmware initializes that
+value from its own RTC when the tail is absent; reusing an old advert timestamp
+made a newly saved contact immediately eligible as the oldest entry for
+`overwrite-oldest`. The ADD is 136 bytes without coordinates or 144 with them;
+no additional command or clock query is sent. The shared frame builder still
+supports explicit `lastModified` for callers that need it. Baseline and
+regression coverage: `test/connector/remove_contact_merge_baseline_test.dart`.
+
 **Repeaters only the app knows.** The contact list also shows the repeaters the app has heard whose adverts the node did not keep (`MeshCoreConnector.localRepeaters`: discovered entries of type repeater with no counterpart in `_contacts`), after the node's own contacts and with `contacts_notInNodeMemory` as the last line of the card; `_discoveredContacts` is a `KeyIndexedList` too, and the screen keys its snapshot and its derived rows on `discoveredRevision` as well. They stay in the app-wide discovered list, never in `_contacts`, up to
 `maxDiscoveredContacts` (1000, the stalest evicted), or
 `evictingDiscoveredContactsCap` (350) while the *evict discovered contacts*
