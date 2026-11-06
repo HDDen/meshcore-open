@@ -345,13 +345,8 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                   ),
-                  ExpansionTile(
-                    title: Text(l10n.login_advanced),
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: EdgeInsets.zero,
-                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                    shape: const Border(),
-                    collapsedShape: const Border(),
+                  const Divider(),
+                  Row(
                     children: [
                       Text(
                         l10n.login_routing,
@@ -442,30 +437,30 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        repeater.pathLabel(
-                          context.l10n,
-                          pathHashByteWidth: connector.pathHashByteWidth,
-                        ),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: () => ContactRoutingSheet.show(
-                            context,
-                            contact: repeater,
-                          ),
-                          icon: const Icon(Icons.timeline, size: 18),
-                          label: Text(l10n.login_managePaths),
-                        ),
-                      ),
                     ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    repeater.pathLabel(
+                      context.l10n,
+                      pathHashByteWidth: connector.pathHashByteWidth,
+                    ),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => ContactRoutingSheet.show(
+                        context,
+                        contact: repeater,
+                      ),
+                      icon: const Icon(Icons.timeline, size: 18),
+                      label: Text(l10n.login_managePaths),
+                    ),
                   ),
                 ],
               ),

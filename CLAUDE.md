@@ -3178,6 +3178,17 @@ ARB; остальные языки переводит владелец, generate
 Подробнее: `documentation/companion-cli.md`, wire source of truth —
 `documentation/ble-protocol.md`. Аппаратная приёмка ещё требуется.
 
+### Room login routing
+
+`RoomLoginDialog` uses the same always-visible routing section as the repeater
+login: divider, routing heading and mode popup in one `Row`, followed by the
+current path label and `ContactRoutingSheet` action. The old `ExpansionTile`
+is removed; its `Spacer` had been placed in an unbounded vertical list instead
+of the heading row. Modes still call `setPathOverride` on the resolved contact,
+and path labels retain the negotiated hash width. Password loading/saving,
+guest/admin callbacks and login retries are unchanged. Regression coverage:
+`test/widgets/room_login_routing_test.dart`.
+
 ### Managed node status layout
 
 `RepeaterStatusScreen._buildStatGrid` preserves our content-sized two-column
