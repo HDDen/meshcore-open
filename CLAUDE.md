@@ -784,6 +784,15 @@ baseline is extended with long-name phone/landscape cases at text scale 2;
 test/support/wrapping_label_expectations.dart checks actual rendered lines
 and clipping only in tests, not in application layout or packet handling.
 
+U11b10 applies the same wrapping layout to the contact Cyr2Lat dropdown in
+`ChatScreen` (direct and room contacts). Profile selection is saved immediately,
+including when the dialog is dismissed through its barrier; it is not a draft
+awaiting Save. Switching compression modes hides but retains the chosen profile.
+The existing Close callback still applies the three telemetry flags separately.
+Only `isExpanded`, `isDense`, `itemHeight` and label wrapping change; setters,
+storage and codecs remain unchanged. Baseline and full-name modal checks are in
+`test/screens/contact_cyr2lat_merge_baseline_test.dart`.
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands

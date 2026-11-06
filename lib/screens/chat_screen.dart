@@ -2649,6 +2649,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
                     child: DropdownButtonFormField<String>(
+                      // Keep full profile names readable in the field and menu.
+                      isExpanded: true,
+                      isDense: false,
+                      itemHeight: null,
                       initialValue: selectedCyr2LatProfileId,
                       decoration: InputDecoration(
                         labelText:
@@ -2660,7 +2664,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ) {
                         return DropdownMenuItem(
                           value: profile.id,
-                          child: Text(profile.name),
+                          child: Text(profile.name, softWrap: true),
                         );
                       }).toList(),
                       onChanged: (value) {
