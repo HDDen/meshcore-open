@@ -259,6 +259,11 @@ Settings → App Settings → Map Display → Offline Map Cache
 - **Download progress** bar (when downloading)
 - **Download Tiles** and **Clear Cache** buttons
 
+На узком экране и при крупном системном тексте подписи кнопок очистки области
+и кэша переносятся на несколько строк без сокращения. Очистка области сохраняет
+загруженные плитки и диапазон масштаба. Панель управления прокручивается;
+во время загрузки очистка недоступна, а кнопка отмены остаётся доступной.
+
 ### Key Interactions
 1. Pan/zoom the map to the desired area
 2. Tap "Use Current View" to capture the viewport as cache bounds

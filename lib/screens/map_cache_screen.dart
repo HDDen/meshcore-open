@@ -621,11 +621,18 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          TextButton(
-                            onPressed: _isDownloading || selectedBounds == null
-                                ? null
-                                : _clearBounds,
-                            child: Text(l10n.common_clear),
+                          // The area-clear label needs a bound too: otherwise
+                          // it can leave no room for the adjacent icon button.
+                          Flexible(
+                            child: TextButton(
+                              onPressed: _isDownloading || selectedBounds == null
+                                  ? null
+                                  : _clearBounds,
+                              child: Text(
+                                l10n.common_clear,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -764,15 +771,22 @@ class _MapCacheScreenState extends State<MapCacheScreen> {
                                   ),
                           ),
                           const SizedBox(width: 12),
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: MeshPalette.alert,
-                              side: const BorderSide(
-                                color: MeshPalette.alertLine,
+                          // Bound the label width so large text wraps without
+                          // pushing either action outside the panel.
+                          Flexible(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: MeshPalette.alert,
+                                side: const BorderSide(
+                                  color: MeshPalette.alertLine,
+                                ),
+                              ),
+                              onPressed: _isDownloading ? null : _clearCache,
+                              child: Text(
+                                l10n.mapCache_clearCacheButton,
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            onPressed: _isDownloading ? null : _clearCache,
-                            child: Text(l10n.mapCache_clearCacheButton),
                           ),
                         ],
                       ),
