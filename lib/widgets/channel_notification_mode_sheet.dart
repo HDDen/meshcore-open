@@ -36,28 +36,31 @@ void showChannelNotificationModeSheet(BuildContext context, String muteKey) {
     builder: (sheetContext) {
       final scheme = Theme.of(sheetContext).colorScheme;
       return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final mode in ChannelNotificationMode.values)
-              ListTile(
-                leading: Icon(
-                  channelNotificationModeIcon(mode),
-                  color: mode == currentMode
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
+        // A short viewport or keyboard must not hide notification choices.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final mode in ChannelNotificationMode.values)
+                ListTile(
+                  leading: Icon(
+                    channelNotificationModeIcon(mode),
+                    color: mode == currentMode
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
+                  ),
+                  title: Text(channelNotificationModeLabel(sheetContext, mode)),
+                  trailing: mode == currentMode ? const Icon(Icons.check) : null,
+                  onTap: () async {
+                    Navigator.pop(sheetContext);
+                    await settingsService.setChannelNotificationMode(
+                      muteKey,
+                      mode,
+                    );
+                  },
                 ),
-                title: Text(channelNotificationModeLabel(sheetContext, mode)),
-                trailing: mode == currentMode ? const Icon(Icons.check) : null,
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  await settingsService.setChannelNotificationMode(
-                    muteKey,
-                    mode,
-                  );
-                },
-              ),
-          ],
+            ],
+          ),
         ),
       );
     },

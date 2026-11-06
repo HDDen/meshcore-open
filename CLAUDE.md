@@ -733,6 +733,27 @@ licensing, polling or dependency change. Baseline and the matcher/receive rerun
 after the regex fix are accepted by the owner; hardware verification remains
 pending. New ARB keys only; generation by owner.
 
+### Shared empty states and short notification sheets
+
+U11b1 adapts the shared widgets from historical upstream 979e1a7d.
+EmptyState retains its finite 420ms entrance animation, colors, text and
+action; LayoutBuilder plus SingleChildScrollView/ConstrainedBox centers it
+when it fits and scrolls it when space is short. Unbounded height uses a
+zero minimum. Its scroll view is primary:false so an embedding contact list
+keeps its PrimaryScrollController. No IntrinsicHeight or extra ticker is used.
+Contact placeholders must also pass hasScrollBody:true to
+CompanionCliContactsList.placeholder when the child is EmptyState. The default
+false variant of SliverFillRemaining measures intrinsic height and cannot
+contain LayoutBuilder/scroll views; keep that default for plain loading
+content. Both empty-contact and filtered-empty branches use the scroll-body
+variant, including unsupported firmware where the CLI tile itself is hidden.
+The existing three-mode notification picker wraps its unchanged Column in
+SingleChildScrollView. Mode callbacks, persistence and checkmarks are unchanged;
+showMeshSheet still owns keyboard/safe-area insets. No new service listeners,
+polling, storage format, localization or network work is introduced. Coverage:
+empty_state_merge_baseline_test and channel_notification_mode_sheet_test
+(en/ru, normal phone/desktop, short screen, keyboard and text scale 2).
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands

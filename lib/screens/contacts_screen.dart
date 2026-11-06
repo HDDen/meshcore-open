@@ -1440,8 +1440,9 @@ class _ContactsScreenState extends State<ContactsScreen>
     final viewState = context.watch<UiViewStateService>();
     final showCompanionCli = !widget.selectionMode && !widget.batchOperationsMode &&
         connector.supportsCompanionCli;
-    Widget placeholder(Widget child) => showCompanionCli
-        ? CompanionCliContactsList.placeholder(connector: connector, child: child)
+    Widget placeholder(Widget child, {bool hasScrollBody = false}) => showCompanionCli
+        ? CompanionCliContactsList.placeholder(
+            connector: connector, hasScrollBody: hasScrollBody, child: child)
         : child;
     // Copied again only when a contact changed, not on every notification.
     // The node's contacts come first, then the repeaters the app has heard
@@ -1482,7 +1483,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           icon: const Icon(Icons.person_add_rounded),
           label: Text(context.l10n.discoveredContacts_Title),
         ),
-      ));
+      ), hasScrollBody: true);
     }
 
     final groupsByName = <String, ContactGroup>{};
@@ -1748,6 +1749,7 @@ class _ContactsScreenState extends State<ContactsScreen>
             child: filteredAndSorted.isEmpty
                 ? CompanionCliContactsList.placeholder(
                     connector: connector, showCli: showCompanionCli,
+                    hasScrollBody: true,
                     child: EmptyState(
                       icon: Icons.search_off,
                       title: viewState.contactsShowUnreadOnly

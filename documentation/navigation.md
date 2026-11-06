@@ -22,6 +22,12 @@ The QuickSwitchBar is a Material 3 `NavigationBar` with a frosted-glass visual t
 
 Tapping a tab replaces the current screen with a subtle fade + slight horizontal nudge transition (220ms forward, 200ms reverse). The back button is suppressed on all three main screens — navigation between them is flat, not stacked. All icons use outline variants (`people_outline`, `tag`, `map_outlined`) following Material 3 conventions.
 
+## Short screens and large text
+
+Shared empty-state messages remain centered when there is enough room. On a
+short screen or with the keyboard open, their content can be scrolled to reach
+the action button. System text scaling is preserved.
+
 ## Disconnection
 
 - The disconnect button (available in the overflow menu of each main screen) shows a confirmation dialog before disconnecting

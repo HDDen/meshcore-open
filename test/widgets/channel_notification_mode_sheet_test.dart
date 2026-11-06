@@ -40,37 +40,71 @@ void main() {
   });
 
   for (final locale in ['en', 'ru']) {
-    testWidgets('all three choices persist and reopen selected ($locale)', (tester) async {
-      await tester.pumpWidget(ChangeNotifierProvider.value(
-        value: settings,
-        child: MaterialApp(
-          locale: Locale(locale),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: Builder(builder: (context) => TextButton(
-            onPressed: () => showChannelNotificationModeSheet(context, 'Test'),
-            child: const Text('Modes'),
-          ))),
-        ),
-      ));
-      await tester.pump();
-      for (final mode in ChannelNotificationMode.values) {
-        await tester.tap(find.text('Modes'));
-        await tester.pumpAndSettle();
-        final context = tester.element(find.byType(ListTile).first);
-        final label = channelNotificationModeLabel(context, mode);
-        expect(find.byType(ListTile), findsNWidgets(3));
-        await tester.tap(find.widgetWithText(ListTile, label));
-        await tester.pumpAndSettle();
-        expect(settings.getChannelNotificationMode('Test'), mode);
-        await tester.tap(find.text('Modes'));
-        await tester.pumpAndSettle();
-        final selected = find.widgetWithText(ListTile, label);
-        expect(find.descendant(of: selected, matching: find.byIcon(Icons.check)), findsOneWidget);
-        Navigator.of(tester.element(selected)).pop();
-        await tester.pumpAndSettle();
-      }
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+    for (final layout in const [
+      (name: 'default', size: Size(800, 600), textScale: 1.0, bottomInset: 0.0, scrolls: false),
+      (name: 'phone', size: Size(320, 568), textScale: 1.0, bottomInset: 0.0, scrolls: false),
+      (name: 'desktop', size: Size(1280, 800), textScale: 2.0, bottomInset: 0.0, scrolls: false),
+      (name: 'short', size: Size(320, 220), textScale: 2.0, bottomInset: 0.0, scrolls: true),
+      (name: 'keyboard', size: Size(320, 568), textScale: 2.0, bottomInset: 360.0, scrolls: true),
+    ]) {
+      testWidgets('all three choices persist and reopen selected ($locale, ${layout.name})', (tester) async {
+        tester.view.physicalSize = layout.size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        try {
+          await tester.pumpWidget(ChangeNotifierProvider.value(
+            value: settings,
+            child: MaterialApp(
+              locale: Locale(locale),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(layout.textScale),
+                  viewInsets: EdgeInsets.only(bottom: layout.bottomInset),
+                ),
+                child: child!,
+              ),
+              home: Scaffold(body: Builder(builder: (context) => TextButton(
+                onPressed: () => showChannelNotificationModeSheet(context, 'Test'),
+                child: const Text('Modes'),
+              ))),
+            ),
+          ));
+          await tester.pump();
+          for (final mode in ChannelNotificationMode.values) {
+            await tester.tap(find.text('Modes'));
+            await tester.pumpAndSettle();
+            final context = tester.element(find.byType(ListTile).first);
+            final label = channelNotificationModeLabel(context, mode);
+            expect(find.byType(ListTile), findsNWidgets(3));
+            final choice = find.widgetWithText(ListTile, label);
+            if (layout.scrolls) {
+              final position = tester.state<ScrollableState>(find.byType(Scrollable)).position;
+              expect(position.maxScrollExtent, greaterThan(0));
+              await tester.ensureVisible(choice);
+              await tester.pumpAndSettle();
+            }
+            await tester.tap(choice);
+            await tester.pumpAndSettle();
+            expect(settings.getChannelNotificationMode('Test'), mode);
+            await tester.tap(find.text('Modes'));
+            await tester.pumpAndSettle();
+            final selected = find.widgetWithText(ListTile, label);
+            if (layout.scrolls) {
+              await tester.ensureVisible(selected);
+              await tester.pumpAndSettle();
+            }
+            expect(find.descendant(of: selected, matching: find.byIcon(Icons.check)), findsOneWidget);
+            Navigator.of(tester.element(selected)).pop();
+            await tester.pumpAndSettle();
+          }
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        }
+      });
+    }
   }
 }

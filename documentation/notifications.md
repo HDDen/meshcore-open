@@ -201,6 +201,10 @@ Access via **App Settings → Notifications**:
 
 Choose All messages, Mentions only or Fully muted from the channel controls. Existing muted channels retain their mentions exception.
 
+The mode picker scrolls when a short screen, large system text or the keyboard
+leaves too little room for all three choices. Scroll to a choice and tap it;
+the selected mode is still marked when you reopen the picker.
+
 - The bell icon in the channel chat app bar
 - Long-press a channel in the channels list → "Notification settings"
 - **Mute channel** on a channel notification (Android)

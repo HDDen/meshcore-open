@@ -9,8 +9,11 @@ class CompanionCliContactsList extends StatelessWidget {
     required this.sliver, required this.showCli}) : _placeholder = false;
 
   CompanionCliContactsList.placeholder({super.key, required this.connector,
-    required Widget child, this.showCli = true})
-    : sliver = SliverFillRemaining(hasScrollBody: false, child: child),
+    required Widget child, this.showCli = true, bool hasScrollBody = false})
+    // A scrollable placeholder (EmptyState) owns its bounded viewport.
+    // The false variant asks for intrinsic height, which LayoutBuilder and
+    // scrollable children cannot provide. Keep it for plain loading content.
+    : sliver = SliverFillRemaining(hasScrollBody: hasScrollBody, child: child),
       _placeholder = true;
 
   final MeshCoreConnector connector;
