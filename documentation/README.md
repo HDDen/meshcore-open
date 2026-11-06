@@ -9,6 +9,9 @@ MeshCore Open is an open-source Flutter client for MeshCore LoRa mesh networking
 3. For scoped floods, configure [regions](regions.md). For image packets, install the [image model](image-messages.md).
 4. If a device or feature is unavailable, use [troubleshooting](troubleshooting.md).
 
+For the optional Linux development environment and profiling tools, see
+[Linux builds and profiling with Nix](linux-nix.md).
+
 ## Table of Contents
 
 1. [Scanner & Connection](scanner-and-connection.md) - BLE scanning, USB serial, and TCP connection with automatic reconnect

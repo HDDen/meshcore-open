@@ -36,6 +36,14 @@ This checkout is the **"Advanced mod"** fork (app title `MeshCore Open (Advanced
 ~/flutter/bin/flutter run -d windows --dart-entrypoint-args=--data-dir=<absolute path>
 ```
 
+For an optional Linux development shell, use `nix develop`. The historical
+`flake.lock` pins the SDK; use Flutter's bundled Dart, wrapped Clang and the
+shell's native headers. The shell does not change build profiles, private
+module overrides or the desktop data root. Linux builds and Sysprof profiling
+are documented in [Linux with Nix](documentation/linux-nix.md); the bundle
+executable in this fork is `mco_advanced`. Nix evaluation and Linux/device
+acceptance must be reported separately from source-contract Flutter tests.
+
 ### Диагностические параметры сборки
 
 | Параметр | По умолчанию | Действие |

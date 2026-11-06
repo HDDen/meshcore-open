@@ -512,6 +512,14 @@ flutter build windows --release
 flutter build linux --release
 ```
 
+### Linux with Nix
+
+The optional `nix develop` environment pins Flutter and its matching Dart SDK,
+wrapped Clang, native build tools and Linux headers. It preserves the selected
+lite / lite-aeic / full profile and does not enable private modules.
+See [Linux builds and profiling with Nix](documentation/linux-nix.md) for checks,
+our `mco_advanced` bundle, native prerequisites and Sysprof instructions.
+
 ### Android Auto build option
 
 Android Auto messaging support is enabled by default in every Android build
