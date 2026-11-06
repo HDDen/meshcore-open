@@ -106,7 +106,7 @@ When a direct message is sent:
 3. **Timeout duration**: Preferably from the ML timeout prediction service; otherwise from the device's own `est_timeout` in `RESP_CODE_SENT` (clamped to the physics range); otherwise calculated from LoRa airtime physics: `500 + (airtime × 6 + 250) × (pathLength + 1)` ms for direct paths, `500 + 16 × airtime` ms for flood (airtime is estimated from the radio's current spreading factor, bandwidth, and coding rate). The result is capped at 45 seconds.
 4. On timeout, the message is retried with **exponential backoff**: `1000 × 2^retryCount` ms (1s, 2s, 4s, 8s, 16s...)
 5. **Max retries**: Configurable (default 5, range 2–10)
-6. After max retries, the message is marked "failed" — but a **30-second grace window** remains during which a late ACK can still resolve the message to "delivered"
+6. After max retries, the message is marked "failed" — but a **60-second grace window** remains during which a late ACK can still resolve the message to "delivered"
 7. If **Clear Path on Max Retry** is enabled (App Settings), the contact's stored routing path is automatically cleared when max retries are exhausted
 8. **Auto route rotation**: When enabled (and no manual path override is set), the retry service uses a diversity window to avoid re-using recently tried paths, cycling through known routes on each attempt
 
@@ -116,6 +116,13 @@ the direct route's delivery time. When the ACK does not identify a reliable rout
 it can still mark the message delivered, but it does not train the timeout model.
 The message size used for learning is the UTF-8 size of its prepared outgoing text,
 including a prepared compressed or signed container.
+
+If the node's `SENT` reply is lost but the recipient's valid ACK arrives,
+the ACK still marks the message delivered and cancels a scheduled retry. This
+also works during the failed-message grace window. Without a confirmed route,
+that delivery does not teach the timeout model or increase a route's score.
+If the original radio operation is still finishing, its CPU protection lasts
+until that operation completes.
 
 ### Manual Retry
 

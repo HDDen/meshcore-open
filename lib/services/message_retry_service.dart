@@ -46,9 +46,9 @@ typedef AckHashMapping = ({
 
 /// What a PUSH_CODE_SEND_CONFIRMED resolved to: the message it delivered,
 /// its recipient, and the route of the attempt whose ACK hash it carried,
-/// null when the hash matched the message but no attempt of it (a mapping
-/// that aged out). The route is what the attempt went by, as the node
-/// confirmed it: a flood is a flood whatever the plan was.
+/// null when matching relies on an unconfirmed attempt without a byte-identified
+/// confirmed route, or its mapping aged out. The route is what the attempt
+/// went by, as the node confirmed it: a flood is a flood whatever the plan was.
 typedef AcknowledgedAttempt = ({
   String messageId,
   String contactKeyHex,
@@ -57,7 +57,7 @@ typedef AcknowledgedAttempt = ({
 
 /// An attempt handed to the node, keyed by the ACK hash the app computed for
 /// it, until RESP_CODE_SENT confirms the hash: its message, its number and
-/// the route it went by, taken when the attempt was made. A SENT that
+/// its planned route, taken when the attempt was made. A SENT that
 /// arrives after the next attempt was planned still names its own attempt.
 typedef _ExpectedAttempt = ({
   String messageId,
@@ -193,7 +193,9 @@ class MessageRetryService extends ChangeNotifier {
   final Map<String, List<String>> _sendQueue = {};
   final Set<String> _activeMessages = {};
   final Set<String> _resolvedMessages = {};
-  final Map<String, _ExpectedAttempt> _expectedAttempts = {};
+  // Pending SENT replies, newest attempt first. Retain low-bit hash collisions
+  // so a lost reply for attempt N survives when N+4 is sent or confirmed.
+  final Map<String, List<_ExpectedAttempt>> _expectedAttempts = {};
   final Map<String, DirectMessageProgressTracker> _progressTrackers = {};
   DirectProgressRxParser<DirectMessageEcho> _rxProgressParser =
       DirectProgressRxParser(DirectMessageEcho.tryParse);
@@ -685,11 +687,21 @@ class MessageRetryService extends ChangeNotifier {
         selfPubKey,
       );
       final expectedHashHex = expectedHash.toRadixString(16).padLeft(8, '0');
-      _expectedAttempts[expectedHashHex] = (
+      final expectedAttempts = _expectedAttempts.putIfAbsent(
+        expectedHashHex,
+        () => [],
+      );
+      // Pause/resume may resend the same attempt. Replace its snapshot rather
+      // than growing an unbounded list across reconnects.
+      expectedAttempts.removeWhere(
+        (expected) =>
+            expected.messageId == messageId && expected.attempt == attempt,
+      );
+      expectedAttempts.insert(0, (
         messageId: messageId,
         attempt: attempt,
         selection: selection,
-      );
+      ));
 
       final shortText = message.text.length > 20
           ? '${message.text.substring(0, 20)}...'
@@ -787,7 +799,13 @@ class MessageRetryService extends ChangeNotifier {
     final ackHashHex = ackHash.toRadixString(16).padLeft(8, '0');
 
     // Try hash-based matching (fixes LoRa message drops causing mismatches)
-    final expected = _expectedAttempts.remove(ackHashHex);
+    final expectedAttempts = _expectedAttempts[ackHashHex];
+    final expected = expectedAttempts == null || expectedAttempts.isEmpty
+        ? null
+        : expectedAttempts.removeAt(0);
+    if (expectedAttempts != null && expectedAttempts.isEmpty) {
+      _expectedAttempts.remove(ackHashHex);
+    }
     String? messageId = expected?.messageId;
     Contact? contact;
 
@@ -1061,9 +1079,10 @@ class MessageRetryService extends ChangeNotifier {
       mappings.removeWhere((mapping) => mapping.messageId == messageId);
     }
     _ackHashToMessageId.removeWhere((_, mappings) => mappings.isEmpty);
-    _expectedAttempts.removeWhere(
-      (_, expected) => expected.messageId == messageId,
-    );
+    for (final attempts in _expectedAttempts.values) {
+      attempts.removeWhere((expected) => expected.messageId == messageId);
+    }
+    _expectedAttempts.removeWhere((_, attempts) => attempts.isEmpty);
     final contactKey = _pendingContacts[messageId]?.publicKeyHex;
     _pendingMessages.remove(messageId);
     _pendingContacts.remove(messageId);
@@ -1247,6 +1266,7 @@ class MessageRetryService extends ChangeNotifier {
 
     // Use direct O(1) lookup via ACK hash mapping
     final mappings = _ackHashToMessageId[ackHashHex];
+    final unconfirmedAttempts = _expectedAttempts[ackHashHex];
     if (mappings != null && mappings.isNotEmpty) {
       final mapping = mappings[acknowledgedAttemptIndex(
         [for (final entry in mappings) entry.attemptIndex],
@@ -1260,6 +1280,29 @@ class MessageRetryService extends ChangeNotifier {
             m.messageId != mapping.messageId ||
             !_sameSelection(m.pathSelection, mapping.pathSelection),
       );
+      if (unconfirmedAttempts != null && unconfirmedAttempts.isNotEmpty) {
+        // The same hash may acknowledge an attempt whose SENT was lost. Keep
+        // a known route only if the RX-log attempt byte identifies its confirmed
+        // attempt and excludes every unconfirmed candidate.
+        var routeUnconfirmed = true;
+        final byte = ackAttemptByte;
+        if (byte != null) {
+          final identifiesMapping = byte < 4
+              ? mapping.attemptIndex < 4
+              : mapping.attemptIndex == byte;
+          if (identifiesMapping) {
+            routeUnconfirmed = unconfirmedAttempts.any(
+              (attempt) => byte < 4
+                  ? attempt.attempt < 4
+                  : attempt.attempt == byte,
+            );
+          }
+        }
+        if (routeUnconfirmed) {
+          ambiguousPath = true;
+          matchedPathSelection = null;
+        }
+      }
     } else {
       config?.debugLogService?.warn(
         'PUSH_CODE_SEND_CONFIRMED: ACK hash $ackHashHex not found in direct mapping, trying fallback',
@@ -1278,6 +1321,30 @@ class MessageRetryService extends ChangeNotifier {
         }
 
         if (matchedMessageId != null) break;
+      }
+      if (matchedMessageId == null &&
+          unconfirmedAttempts != null &&
+          unconfirmedAttempts.isNotEmpty) {
+        // A valid delivery ACK can arrive without RESP_CODE_SENT. Match the
+        // hash prepared for the radio write, but do not infer its actual route
+        // from the plan: the node may have sent it by flood.
+        final expected = unconfirmedAttempts[acknowledgedAttemptIndex(
+          [for (final attempt in unconfirmedAttempts) attempt.attempt],
+          ackAttemptByte,
+        )];
+        if (_pendingMessages.containsKey(expected.messageId) &&
+            _pendingContacts.containsKey(expected.messageId)) {
+          matchedMessageId = expected.messageId;
+          matchedAttemptIndex = expected.attempt;
+          ambiguousPath = true;
+          // Preserve this observed hash in completed history so a duplicate
+          // remains recognizable after cleanup removes the pending attempts.
+          final hashes = _expectedAckHashes.putIfAbsent(
+            expected.messageId,
+            () => [],
+          );
+          if (!hashes.contains(ackHash)) hashes.add(ackHash);
+        }
       }
     }
 

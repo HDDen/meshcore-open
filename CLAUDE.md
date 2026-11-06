@@ -1662,8 +1662,8 @@ still resolves delivery through the existing matching/fallback rules but does
 not train the timeout model. Attempts sharing a hash on the same route remain
 eligible. The prepared wire-text reference is captured before `_cleanupMessage`
 removes it; measuring its UTF-8 length must not re-encode a signed/compressed
-payload. Retry routing, ACK matching, grace timers and CPU-work leases retain
-their existing behavior. Regression coverage is in
+payload. Retry routing, grace timers and CPU-work leases retain their existing
+behavior; the missing-SENT ACK matching extension is described below. Regression coverage is in
 `test/services/timeout_observation_merge_baseline_test.dart`.
 
 TimeoutPredictionService fits ordinary linear regression with pathLength,
@@ -1682,6 +1682,20 @@ compares only the ml_algo numerical core on 100 fixed synthetic rows, reading
 candidate feature names from the selected service source (working tree or
 `--ref bf7291f8`). It does not measure the Flutter wrapper, UI, radio, SQL,
 energy or prediction accuracy on real traffic.
+
+A delivery ACK may resolve an attempt even when its `RESP_CODE_SENT` was lost.
+`_expectedAttempts` retains pending replies as newest-first lists per hash, so
+attempts N and N+4 survive independently; resending the same message/attempt on
+resume replaces that snapshot. SENT still consumes the newest pending attempt.
+If no confirmed mapping/legacy expected hash matches, `handleAckReceived` also
+checks these pending attempts. Delivery cancels timers/backoff and preserves the
+observed hash in completed history, but without SENT the route remains null:
+no path credit or ML observation. A confirmed mapping sharing its hash with an
+unconfirmed attempt also keeps the route unknown, unless an RX-log attempt byte
+identifies the confirmed candidate and excludes the unconfirmed ones. Cleanup/cancellation remove
+all of that message's entries; an unfinished radio Future retains its CPU run
+lease until it settles. `message_retry_watchdog_test.dart` covers the missing-
+SENT cases, collisions in both orders, foreign hashes, cancellation and I/O.
 
 ### Stopping a direct send
 
