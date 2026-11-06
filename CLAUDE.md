@@ -1651,6 +1651,21 @@ A lost link is not a failure. The connector pauses sending (`pausePendingOutgoin
 
 From the fifth attempt on the firmware appends the attempt number after the text and refuses text over 158 bytes (`BaseChatMesh::composeMsgPacket`), so `_textFitsAttempt` ends the retries of a longer message after the fourth, and the direct composer shows `chat_longMessageRetryNote` next to its counter (`softLimitBytes` / `softLimitNote` of `ByteCountedTextField`) once the text passes that size.
 
+### Timeout learning from delivery acknowledgements
+
+`MessageRetryService.handleAckReceived` trains timeout prediction only when the
+ACK has an unambiguous per-attempt route snapshot and a positive round-trip time.
+It uses that snapshot's hop count (or -1 for a node-confirmed flood), so a late
+direct ACK after a flood retry is learned as the original direct attempt. A hash
+shared by attempts on different routes, or a snapshot aged out after 15 minutes,
+still resolves delivery through the existing matching/fallback rules but does
+not train the timeout model. Attempts sharing a hash on the same route remain
+eligible. The prepared wire-text reference is captured before `_cleanupMessage`
+removes it; measuring its UTF-8 length must not re-encode a signed/compressed
+payload. Retry routing, ACK matching, grace timers and CPU-work leases retain
+their existing behavior. Regression coverage is in
+`test/services/timeout_observation_merge_baseline_test.dart`.
+
 ### Stopping a direct send
 
 An outgoing direct or room message the retry service is still working on, attempts ahead or an acknowledgement awaited (`isSendInProgress`), carries a *stop sending* row at the bottom of its bubble: `widgets/stop_sending_bar.dart`, laid out as the scheduled send's cancel bar, divider included but without an icon, wrapped in the same `IntrinsicWidth`, and placed under the delivery progress bar, which joins the column while the row is shown instead of lying on the bubble's edge. It exists for the message that was read long ago while its ACK never came back: the app would otherwise retry it to the limit and hold the contact's queue meanwhile. `stopSending` hands the message to `MessageRetryService.untrack`, which cancels the timer, drops the message and frees the in-flight slot and the contact's queue; the message keeps what its attempts earned, `sent` once the node had taken it, `failed` when nothing had gone out; and when the contact has a flood choice the node's scope is cleared once more under the command lock, after any window an attempt still holds, so nothing of a cut-short window lingers. The ACK hashes the attempts waited for are remembered for the session (`_stoppedSendAcks`), so a confirmation that arrives after all still marks the message delivered from the `PUSH_CODE_SEND_CONFIRMED` handler, once the retry service has declined it.

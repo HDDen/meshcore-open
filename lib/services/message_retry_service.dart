@@ -898,6 +898,22 @@ class MessageRetryService extends ChangeNotifier {
           ),
   ];
 
+  /// Set only snapshot age: widget tests' pump does not advance DateTime.now.
+  /// The production pruning and fallback still run in handleAckReceived.
+  @visibleForTesting
+  void setAckMappingTimestampForTest(int ackHash, DateTime timestamp) {
+    final mappings = _mappingsOf(ackHash);
+    for (var i = 0; i < mappings.length; i++) {
+      final mapping = mappings[i];
+      mappings[i] = (
+        messageId: mapping.messageId,
+        timestamp: timestamp,
+        attemptIndex: mapping.attemptIndex,
+        pathSelection: mapping.pathSelection,
+      );
+    }
+  }
+
   List<AckHashMapping> _mappingsOf(int ackHash) =>
       _ackHashToMessageId[ackHash.toRadixString(16).padLeft(8, '0')] ??
       const [];
@@ -1296,6 +1312,10 @@ class MessageRetryService extends ChangeNotifier {
       );
 
       final wasAlreadyResolved = _resolvedMessages.contains(matchedMessageId);
+      // Cleanup removes the prepared payload. Keep its string reference so an
+      // ACK never re-encodes a signed/compressed message just to measure it.
+      final preparedOutboundText = _preparedOutboundTexts[matchedMessageId];
+      final observationSelection = matchedPathSelection;
 
       _cleanupMessage(matchedMessageId);
 
@@ -1311,11 +1331,15 @@ class MessageRetryService extends ChangeNotifier {
             tripTimeMs,
           );
         }
+        // Learn only from the known route of the acknowledged attempt. A late
+        // direct ACK can arrive after a flood retry; a shared hash or an expired
+        // snapshot must not teach the model the latest attempt's route.
         if (config?.onDeliveryObserved != null &&
             tripTimeMs > 0 &&
-            message.pathLength != null) {
+            observationSelection != null &&
+            !ambiguousPath) {
           final outboundTextForObserved =
-              _preparedOutboundTexts[matchedMessageId] ??
+              preparedOutboundText ??
               config!.prepareContactOutboundText?.call(contact, message.text) ??
               message.text;
           final messageBytesForObserved = utf8
@@ -1323,7 +1347,7 @@ class MessageRetryService extends ChangeNotifier {
               .length;
           config!.onDeliveryObserved!(
             contact.publicKeyHex,
-            message.pathLength!,
+            observationSelection.useFlood ? -1 : observationSelection.hopCount,
             messageBytesForObserved,
             tripTimeMs,
           );

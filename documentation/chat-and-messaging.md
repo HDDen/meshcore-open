@@ -110,6 +110,13 @@ When a direct message is sent:
 7. If **Clear Path on Max Retry** is enabled (App Settings), the contact's stored routing path is automatically cleared when max retries are exhausted
 8. **Auto route rotation**: When enabled (and no manual path override is set), the retry service uses a diversity window to avoid re-using recently tried paths, cycling through known routes on each attempt
 
+Timeout learning uses the route of the attempt confirmed by the ACK. For example,
+if a direct attempt is confirmed after a retry was sent by flood, the app learns
+the direct route's delivery time. When the ACK does not identify a reliable route,
+it can still mark the message delivered, but it does not train the timeout model.
+The message size used for learning is the UTF-8 size of its prepared outgoing text,
+including a prepared compressed or signed container.
+
 ### Manual Retry
 
 Long-press a failed message → "Retry" to re-send using the current routing settings.
