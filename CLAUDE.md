@@ -754,6 +754,14 @@ polling, storage format, localization or network work is introduced. Coverage:
 empty_state_merge_baseline_test and channel_notification_mode_sheet_test
 (en/ru, normal phone/desktop, short screen, keyboard and text scale 2).
 
+U11b2 applies historical 979e1a7d to the existing link confirmation and
+routing path-detail AlertDialogs with scrollable:true. Content (including
+full selectable URLs and per-record-width paths) scrolls; consent, trace and
+close actions remain outside that viewport. Link imports/launcher consent
+and route application are unchanged. merge_dialogs_baseline_test covers
+en/ru consent/cancel/error, short screens/keyboard, and constrained long-route
+details. No extra polling, external requests or service listeners are added.
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands
@@ -2944,6 +2952,19 @@ Dart localizations.
 false. The upstream dropdown and width-confirmation code remain in place but
 neither render nor send mode changes. Only the existing standalone selector
 is active; saving the radio dialog cannot revert an externally changed width.
+
+U11b2 keeps that split: the standalone path-hash AlertDialog is scrollable,
+its dropdown expands to the available width and wraps long labels in full.
+The inline radio editor does the same for presets, BW, SF and CR. It uses
+AlertDialog.scrollable:true for the title and contents together, with the
+previous nested content scroll view removed. A large translated title must
+not consume the height needed to reach fields above the fixed Save/Cancel
+actions. These dropdowns use isDense:false and
+itemHeight:null so both the selected field and popup items grow with their
+text; no maxLines/ellipsis is applied. The dormant
+embedded path selector and all save/ACK/refresh code remain unchanged.
+radio_settings_merge_baseline_test retains the accepted command checks and
+adds en/ru phone/landscape cases at text scale 2 with actual menu selections.
 
 
 `setRadioParams` sends SET_RADIO_PARAMS and waits for the node's OK, returning false on ERR or timeout, and the settings screen then shows `settings_radioSettingsNotApplied`. The coding rate travels as the node's own 5–8 (the app once sent 1–4), frequencies start at 150 MHz and TX power at −9 dBm, as the firmware accepts. The client-repeat check uses the frequency ranges the node allows (`allowedRepeatFreqRanges`, firmware version code 9+, falling back to 433, 869.495 and 918 MHz), and writing the auto-add settings keeps the node's max-hops value (`autoAddMaxHops`, 8+); `_maybeRequestDeviceConfig` asks for both once DEVICE_INFO and SELF_INFO are in. The path-hash mode is offered from version code 10. Sending an AEIC picture needs version code 11 (`supportsChannelData`, checked by `sendImageChunks` and the channel screen's `_sendImage`), where it used to wait for 13: `CMD_SEND_CHANNEL_DATA` arrived while the code was 10 (2026-03-05) and took its final framing on 03-18 and 03-23, so 11 (04-15) is the first code that guarantees it, while 13 (06-01) brought requests to non-contacts and nothing for channel data. The other binary channel sends, the MCMP and MCOtxt envelopes and MCOimg, check no version at all: a node without the command answers ERR and the message fails. Airtime estimates (`calculateLoRaAirtime`) use the firmware's preamble, 32 symbols up to SF8 and 16 above, and RadioLib's LDRO rule (symbol time over 16 ms), so timeouts and retry spacing came out longer than before.

@@ -57,3 +57,9 @@ use the separate **Settings → Path hash size** item to select 1, 2 or 3 bytes
 per hop. The duplicate selector inside **Radio settings** is temporarily hidden;
 its upstream implementation is retained. Saving radio parameters or choosing
 a radio preset does not send a path-width command or overwrite the current width.
+
+The separate path hash size dialog scrolls on short screens or with large
+text. Long option labels wrap onto multiple lines without shortening the
+text or changing their values. Full path details in the routing sheet also
+scroll, preserving the complete selectable path and repeater names above the
+trace/close buttons.

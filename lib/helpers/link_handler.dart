@@ -106,6 +106,8 @@ class LinkHandler {
     final shouldOpen = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        // Keep the full URL reachable without moving the consent buttons.
+        scrollable: true,
         title: Text(context.l10n.chat_openLink),
         content: Column(
           mainAxisSize: MainAxisSize.min,

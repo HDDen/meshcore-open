@@ -28,6 +28,16 @@ Shared empty-state messages remain centered when there is enough room. On a
 short screen or with the keyboard open, their content can be scrolled to reach
 the action button. System text scaling is preserved.
 
+External-link confirmations, full route details and the separate path hash
+size dialog also scroll their contents when space is limited. Their action
+buttons remain outside the scrolling content. Long radio dropdown labels
+wrap onto multiple lines in both the selected field and menu. Item heights
+grow with the text; labels are not shortened.
+
+In Radio Settings, the title scrolls together with the fields so a large
+translated heading does not block access to the controls. Save and Cancel
+remain outside the scrolling area.
+
 ## Disconnection
 
 - The disconnect button (available in the overflow menu of each main screen) shows a confirmation dialog before disconnecting

@@ -339,6 +339,8 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        // Long routes scroll independently of the trace/close actions.
+        scrollable: true,
         title: Text(l10n.chat_fullPath),
         content: Column(
           mainAxisSize: MainAxisSize.min,
