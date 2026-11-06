@@ -3178,6 +3178,18 @@ ARB; остальные языки переводит владелец, generate
 Подробнее: `documentation/companion-cli.md`, wire source of truth —
 `documentation/ble-protocol.md`. Аппаратная приёмка ещё требуется.
 
+### Managed repeater settings layout
+
+`RepeaterSettingsScreen` retains manual GETs, loaded/dirty guards and partial-save
+handling. The unloaded notice places Refresh All under its full explanation.
+BW/SF/CR, loop detection and path hash dropdowns use `isExpanded: true`,
+`isDense: false`, `itemHeight: null` and wrapping labels; the upstream ellipsis
+is not used. On a toolbar whose width/text-scale ratio is below 600, Save uses
+an icon with the existing localized tooltip; wide toolbars retain the labeled
+button. Both share the previous loading/connection guards and save callback.
+No changes to command order, background work or storage. Baseline and en/ru
+small-screen checks: `test/screens/repeater_settings_merge_baseline_test.dart`.
+
 ### Room login routing
 
 `RoomLoginDialog` uses the same always-visible routing section as the repeater

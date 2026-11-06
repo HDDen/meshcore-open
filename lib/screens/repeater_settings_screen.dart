@@ -1357,6 +1357,10 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
     final connected = connector.isConnected;
+    // Leave room for routing and refresh at large text sizes. The compact
+    // Save action keeps its full label in the tooltip and accessibility tree.
+    final compactActions = MediaQuery.sizeOf(context).width /
+        MediaQuery.textScalerOf(context).scale(1) < 600;
 
     return PopScope(
       canPop: !_hasChanges,
@@ -1382,13 +1386,22 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   : _refreshAll,
             ),
             if (_hasChanges)
-              TextButton.icon(
-                onPressed: _isLoading || _loadingAll || !connected
-                    ? null
-                    : _saveSettings,
-                icon: const Icon(Icons.save),
-                label: Text(l10n.common_save),
-              ),
+              if (compactActions)
+                IconButton(
+                  tooltip: l10n.common_save,
+                  icon: const Icon(Icons.save),
+                  onPressed: _isLoading || _loadingAll || !connected
+                      ? null
+                      : _saveSettings,
+                )
+              else
+                TextButton.icon(
+                  onPressed: _isLoading || _loadingAll || !connected
+                      ? null
+                      : _saveSettings,
+                  icon: const Icon(Icons.save),
+                  label: Text(l10n.common_save),
+                ),
           ],
           bottom: _loadingAll
               ? PreferredSize(
@@ -1409,14 +1422,21 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
                         child: MeshCard(
-                          child: Row(
+                          // Keep the full explanation above the action on
+                          // narrow screens instead of competing for one row.
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Icon(Icons.info_outline, size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  context.l10n.repeater_settingsNotLoaded,
-                                ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.info_outline, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      context.l10n.repeater_settingsNotLoaded,
+                                    ),
+                                  ),
+                                ],
                               ),
                               TextButton(
                                 onPressed: _isLoading || !connected
@@ -1624,12 +1644,15 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
+                isExpanded: true,
+                isDense: false,
+                itemHeight: null,
                 initialValue: _bandwidth,
                 decoration: InputDecoration(labelText: l10n.repeater_bandwidth),
                 items: _bandwidthOptions.map((bw) {
                   return DropdownMenuItem(
                     value: bw,
-                    child: Text(_formatBandwidthLabel(bw)),
+                    child: Text(_formatBandwidthLabel(bw), softWrap: true),
                   );
                 }).toList(),
                 onChanged: !_loaded('radio')
@@ -1645,12 +1668,15 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
+                isExpanded: true,
+                isDense: false,
+                itemHeight: null,
                 initialValue: _spreadingFactor,
                 decoration: InputDecoration(
                   labelText: l10n.repeater_spreadingFactor,
                 ),
                 items: _spreadingFactorOptions.map((sf) {
-                  return DropdownMenuItem(value: sf, child: Text('SF$sf'));
+                  return DropdownMenuItem(value: sf, child: Text('SF$sf', softWrap: true));
                 }).toList(),
                 onChanged: !_loaded('radio')
                     ? null
@@ -1665,12 +1691,15 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
+                isExpanded: true,
+                isDense: false,
+                itemHeight: null,
                 initialValue: _codingRate,
                 decoration: InputDecoration(
                   labelText: l10n.repeater_codingRate,
                 ),
                 items: _codingRateOptions.map((cr) {
-                  return DropdownMenuItem(value: cr, child: Text('4/$cr'));
+                  return DropdownMenuItem(value: cr, child: Text('4/$cr', softWrap: true));
                 }).toList(),
                 onChanged: !_loaded('radio')
                     ? null
@@ -2120,6 +2149,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      isDense: false,
+                      itemHeight: null,
                       initialValue: _loaded('loop.detect') ? _loopDetect : null,
                       decoration: InputDecoration(
                         labelText: l10n.repeater_loopDetect,
@@ -2129,19 +2161,19 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                       items: [
                         DropdownMenuItem(
                           value: 'off',
-                          child: Text(l10n.repeater_loopDetectOff),
+                          child: Text(l10n.repeater_loopDetectOff, softWrap: true),
                         ),
                         DropdownMenuItem(
                           value: 'minimal',
-                          child: Text(l10n.repeater_loopDetectMinimal),
+                          child: Text(l10n.repeater_loopDetectMinimal, softWrap: true),
                         ),
                         DropdownMenuItem(
                           value: 'moderate',
-                          child: Text(l10n.repeater_loopDetectModerate),
+                          child: Text(l10n.repeater_loopDetectModerate, softWrap: true),
                         ),
                         DropdownMenuItem(
                           value: 'strict',
-                          child: Text(l10n.repeater_loopDetectStrict),
+                          child: Text(l10n.repeater_loopDetectStrict, softWrap: true),
                         ),
                       ],
                       onChanged: !_loaded('loop.detect')
@@ -2320,6 +2352,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
+                  isExpanded: true,
+                  isDense: false,
+                  itemHeight: null,
                   initialValue: _loaded('path.hash.mode')
                       ? _pathHashMode
                       : null,
@@ -2331,15 +2366,15 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                   items: [
                     DropdownMenuItem(
                       value: 0,
-                      child: Text(l10n.repeater_pathHashModeOption0),
+                      child: Text(l10n.repeater_pathHashModeOption0, softWrap: true),
                     ),
                     DropdownMenuItem(
                       value: 1,
-                      child: Text(l10n.repeater_pathHashModeOption1),
+                      child: Text(l10n.repeater_pathHashModeOption1, softWrap: true),
                     ),
                     DropdownMenuItem(
                       value: 2,
-                      child: Text(l10n.repeater_pathHashModeOption2),
+                      child: Text(l10n.repeater_pathHashModeOption2, softWrap: true),
                     ),
                   ],
                   onChanged: !_loaded('path.hash.mode')
