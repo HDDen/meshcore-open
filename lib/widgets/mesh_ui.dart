@@ -167,6 +167,9 @@ class StatTile extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
 
+  /// Null lets detail screens show the full label; compact tiles keep two lines.
+  final int? maxLabelLines;
+
   const StatTile({
     super.key,
     required this.icon,
@@ -175,6 +178,7 @@ class StatTile extends StatelessWidget {
     this.unit,
     this.color,
     this.onTap,
+    this.maxLabelLines = 2,
   });
 
   @override
@@ -201,8 +205,10 @@ class StatTile extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                     fontSize: 11,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: maxLabelLines,
+                  overflow: maxLabelLines == null
+                      ? TextOverflow.clip
+                      : TextOverflow.ellipsis,
                 ),
               ),
             ],

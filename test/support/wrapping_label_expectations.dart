@@ -31,7 +31,8 @@ void expectCompleteWrappingLabel(
   expect(finder, findsOneWidget);
   final text = tester.widget<Text>(finder).data!;
   final paragraph = tester.renderObject<RenderParagraph>(finder);
-  expect(paragraph.didExceedMaxLines, isFalse);
+  expect(paragraph.didExceedMaxLines, isFalse,
+      reason: 'The complete label must remain readable: $text');
   final boxes = paragraph.getBoxesForSelection(TextSelection(
     baseOffset: 0,
     extentOffset: text.length,

@@ -49,6 +49,12 @@ The battery chemistry selector and CLI/Settings cards are hidden from guest user
 
 Three information cards:
 
+На узком экране и при крупном системном тексте показатели располагаются
+в одну колонку, на широком — в две. Подписи показателей переносятся целиком,
+без ограничения двумя строками. Высота плиток зависит от содержимого;
+остальные показатели доступны прокруткой. Изменение размера окна не запускает
+новый запрос статуса и не сбрасывает уже полученные значения.
+
 **System Information**:
 - Battery percentage and voltage (e.g. "85% / 3.95V"), using the battery chemistry set in the hub screen
 - Clock at login time

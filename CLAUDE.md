@@ -3178,6 +3178,20 @@ ARB; остальные языки переводит владелец, generate
 Подробнее: `documentation/companion-cli.md`, wire source of truth —
 `documentation/ble-protocol.md`. Аппаратная приёмка ещё требуется.
 
+### Managed node status layout
+
+`RepeaterStatusScreen._buildStatGrid` preserves our content-sized two-column
+rows on wide screens. A `LayoutBuilder` selects one column when available
+width divided by `MediaQuery.textScalerOf(context).scale(1)` is below 320.
+The single-column `Column` stretches each existing `StatTile` to full width
+and omits `IntrinsicHeight` and the unused right-hand cell. Paired rows retain
+their previous equal-height measurement and 8 px spacing. This screen passes
+`maxLabelLines: null` to `StatTile` so long labels wrap completely; the shared
+widget's default remains two lines for existing callers. Resizing changes
+only layout, without reloading status, altering fields or adding subscriptions.
+Baseline binary/legacy JSON, retry/lifecycle and en/ru scaled layout checks
+live in `test/screens/repeater_status_merge_baseline_test.dart`.
+
 ### Repeater clock sync and region load
 
 `RepeaterCliHistory` и `RepeaterCliStore` сохраняют transcript экрана в

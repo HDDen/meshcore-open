@@ -704,34 +704,53 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
   }
 
   Widget _buildStatGrid(List<_StatItem> items) {
-    // Two tiles a row, each row as tall as its taller tile, so a large text
-    // scale grows the rows instead of clipping a fixed grid extent.
+    // Keep the existing content-sized pairs on wide screens. At narrow
+    // widths or large text scales, one full-width tile needs no intrinsic
+    // measurement and gives labels and values more room to wrap.
     const spacing = 8.0;
     Widget tile(_StatItem item) => StatTile(
       icon: item.icon,
       label: item.label,
       value: item.value,
       color: item.color,
+      maxLabelLines: null,
     );
 
-    final rows = <Widget>[];
-    for (int i = 0; i < items.length; i += 2) {
-      if (rows.isNotEmpty) rows.add(const SizedBox(height: spacing));
-      final hasRight = i + 1 < items.length;
-      rows.add(
-        IntrinsicHeight(
-          child: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScaler = MediaQuery.textScalerOf(context);
+        if (constraints.maxWidth / textScaler.scale(1) < 320) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: tile(items[i])),
-              const SizedBox(width: spacing),
-              Expanded(child: hasRight ? tile(items[i + 1]) : const SizedBox()),
+              for (var i = 0; i < items.length; i++) ...[
+                if (i > 0) const SizedBox(height: spacing),
+                tile(items[i]),
+              ],
             ],
-          ),
-        ),
-      );
-    }
-    return Column(children: rows);
+          );
+        }
+
+        final rows = <Widget>[];
+        for (int i = 0; i < items.length; i += 2) {
+          if (rows.isNotEmpty) rows.add(const SizedBox(height: spacing));
+          final hasRight = i + 1 < items.length;
+          rows.add(
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: tile(items[i])),
+                  const SizedBox(width: spacing),
+                  Expanded(child: hasRight ? tile(items[i + 1]) : const SizedBox()),
+                ],
+              ),
+            ),
+          );
+        }
+        return Column(children: rows);
+      },
+    );
   }
 }
 
