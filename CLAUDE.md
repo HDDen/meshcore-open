@@ -2779,6 +2779,10 @@ Remote telemetry GPS also updates the stored contact and map position
 and preserves a fix across repeated/older adverts using the node's advert
 clock. `Contact.telemetryFixAt` is the phone receive time; `lastHeard` is for
 display, while `lastSeen` stays the advert timestamp used in radio writes.
+`NodeInfoSheet` also uses `lastHeard` for its default freshness label (U11a3).
+An owner-supplied `lastSeenText`, including the map's richer label, keeps
+priority. An older telemetry fix cannot move the display time backwards;
+viewing the sheet starts no request and does not modify contact metadata.
 `ContactStore` persists the optional metadata in existing per-node SQL rows
 and the prefs fallback, with no schema migration. Full sync temporarily holds
 fixes across clearing the active list and restores them only when the radio

@@ -32,7 +32,7 @@ Each contact is displayed as a list tile showing:
 - **Public key**: Full uppercase hex key; the middle is elided when it does not fit
 - **Routing prefix**: A small badge before the path label, showing the first 1-3 key bytes according to the connected radio's path hash width
 - **Unread badge**: Red pill with count (if unread messages exist)
-- **Last seen**: Relative timestamp ("Now", "5 mins ago", "2 hours ago", "3 days ago"). For chat contacts, this shows whichever is more recent: the last advertisement time or the last message time
+- **Last seen**: Relative timestamp ("Now", "5 mins ago", "2 hours ago", "3 days ago"). Uses the most recent advertisement or telemetry location update; chat contacts also account for a newer message time.
 - **Favorite star**: Amber star icon if favorited
 - **Location pin**: Grey pin icon if the contact has GPS coordinates
 
@@ -44,6 +44,10 @@ from the radio's current setting. The full public key remains available above
 the badge.
 
 Pull-to-refresh re-fetches the full contact list from the device.
+
+В общих подробностях ноды время последнего обнаружения также учитывает более
+свежую GPS-телеметрию. Старый GPS-ответ не заменяет время более нового
+объявления. Открытие карточки само по себе не запрашивает телеметрию.
 
 ## Search and Filter
 

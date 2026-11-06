@@ -217,7 +217,9 @@ class NodeInfoSheet extends StatelessWidget {
                     ),
                   NodeInfoRow(
                     label: l10n.map_lastSeen,
-                    value: lastSeenText ?? formatNodeLastSeen(l10n, contact.lastSeen),
+                    // Keep owner labels; this fallback is display-only.
+                    value: lastSeenText ??
+                        formatNodeLastSeen(l10n, contact.lastHeard),
                   ),
                   NodeInfoRow(label: l10n.map_publicKey, value: contact.publicKeyHex),
                   const SizedBox(height: 16),
