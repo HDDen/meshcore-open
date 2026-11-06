@@ -762,6 +762,17 @@ and route application are unchanged. merge_dialogs_baseline_test covers
 en/ru consent/cancel/error, short screens/keyboard, and constrained long-route
 details. No extra polling, external requests or service listeners are added.
 
+U11b3 adds SingleChildScrollView inside the existing SafeArea for Contacts'
+add sheet and Discovery's node menu, from historical 979e1a7d. Keep the fork's
+public-key/clipboard/QR/discovery entries and repeater-name/add/copy/delete
+actions intact. showMeshSheet owns safe-area/keyboard insets; these menus do
+not add a second inset or controller. Generic contact and channel menus already
+scroll and are not replaced by the upstream versions. The broader contact
+card, favorites/CLI ordering and channel folders are retained. Tests in
+companion_cli_screen_test and discovery_screen_test keep en/ru baseline and
+exercise short screens and a constrained keyboard viewport at scale 2,
+including first/last actions and local copying without a radio command.
+
 ### Notifications and the node's queue
 
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands

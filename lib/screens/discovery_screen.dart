@@ -547,38 +547,41 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       builder: (sheetContext) {
         final l10n = context.l10n;
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BottomSheetHeader(
-                title: contact.name.trim().isEmpty
-                    ? l10n.common_unknownDevice
-                    : contact.name,
-                subtitle: contact.typeLabel(l10n),
-              ),
-              if (contact.type == advTypeRepeater)
-                ListTile(
-                  leading: const Icon(Icons.person_search),
-                  title: Text(l10n.discoveredContacts_requestName),
-                  onTap: () => Navigator.of(sheetContext).pop('request_name'),
+          // The full action list must fit even with large system text.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BottomSheetHeader(
+                  title: contact.name.trim().isEmpty
+                      ? l10n.common_unknownDevice
+                      : contact.name,
+                  subtitle: contact.typeLabel(l10n),
                 ),
-              ListTile(
-                leading: const Icon(Icons.person_add_alt_1),
-                title: Text(l10n.discoveredContacts_addContact),
-                onTap: () => Navigator.of(sheetContext).pop('add_contact'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.copy),
-                title: Text(l10n.discoveredContacts_copyContact),
-                onTap: () => Navigator.of(sheetContext).pop('copy_contact'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete),
-                title: Text(l10n.discoveredContacts_deleteContact),
-                onTap: () => Navigator.of(sheetContext).pop('delete_contact'),
-              ),
-              const SizedBox(height: 8),
-            ],
+                if (contact.type == advTypeRepeater)
+                  ListTile(
+                    leading: const Icon(Icons.person_search),
+                    title: Text(l10n.discoveredContacts_requestName),
+                    onTap: () => Navigator.of(sheetContext).pop('request_name'),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.person_add_alt_1),
+                  title: Text(l10n.discoveredContacts_addContact),
+                  onTap: () => Navigator.of(sheetContext).pop('add_contact'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.copy),
+                  title: Text(l10n.discoveredContacts_copyContact),
+                  onTap: () => Navigator.of(sheetContext).pop('copy_contact'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: Text(l10n.discoveredContacts_deleteContact),
+                  onTap: () => Navigator.of(sheetContext).pop('delete_contact'),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
@@ -33,6 +34,7 @@ Contact _node(
   String name, {
   int type = advTypeChat,
   int heardSecondsAgo = 0,
+  Uint8List? rawPacket,
 }) => Contact(
   publicKey: Uint8List.fromList(
     List<int>.generate(32, (i) => i == 0 ? seed : (seed * 7 + i) & 0xFF),
@@ -41,6 +43,7 @@ Contact _node(
   type: type,
   pathLength: 0,
   path: Uint8List(0),
+  rawPacket: rawPacket,
   lastSeen: DateTime(2026, 9, 29, 12).subtract(
     Duration(seconds: heardSecondsAgo),
   ),
@@ -156,7 +159,19 @@ class _Harness {
     WidgetTester tester, {
     required List<Contact> discovered,
     Set<String> known = const {},
+    Locale locale = const Locale('en'),
+    Size? logicalSize,
+    double textScale = 1,
+    double keyboardInset = 0,
   }) async {
+    tester.view.viewInsets = FakeViewPadding(bottom: keyboardInset);
+    addTearDown(tester.view.resetViewInsets);
+    if (logicalSize != null) {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = logicalSize;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
     final connector = _FakeConnector()
       ..discovered.addAll(discovered)
       ..known.addAll(known);
@@ -174,8 +189,13 @@ class _Harness {
           ChangeNotifierProvider<AppSettingsService>.value(value: settings),
         ],
         child: MaterialApp(
+          locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: const DiscoveryScreen(),
         ),
       ),
@@ -265,6 +285,83 @@ void main() {
   });
 
   tearDown(PrefsManager.reset);
+
+  for (final language in ['en', 'ru']) {
+    for (final layout in [
+      (name: 'baseline', size: const Size(1000, 1400), scale: 1.0, inset: 0.0),
+      (name: 'landscape', size: const Size(568, 320), scale: 2.0, inset: 0.0),
+      (name: 'keyboard', size: const Size(1000, 1400), scale: 2.0, inset: 1120.0),
+    ]) {
+      testWidgets('U11b3 ${layout.name}: discovered repeater menu copies locally without adding or querying ($language)', (tester) async {
+        final node = _node(0x35, 'Synthetic discovered repeater',
+            type: advTypeRepeater,
+            rawPacket: Uint8List.fromList([0xab, 0xcd, 0x00, 0x12]));
+        final copied = <String>[];
+        final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        });
+        try {
+          final harness = await _Harness.pump(tester,
+              discovered: [node], locale: Locale(language),
+              logicalSize: layout.size, textScale: layout.scale,
+              keyboardInset: layout.inset);
+          final l10n = AppLocalizations.of(tester.element(find.byType(DiscoveryScreen)));
+          await tester.tap(find.text(node.name));
+          await _settleRows(tester);
+          final sheet = find.byType(BottomSheet);
+          expect(sheet, findsOneWidget);
+          for (final label in [
+            l10n.discoveredContacts_requestName,
+            l10n.discoveredContacts_addContact,
+            l10n.discoveredContacts_copyContact,
+            l10n.discoveredContacts_deleteContact,
+          ]) {
+            expect(find.descendant(of: sheet,
+                matching: find.widgetWithText(ListTile, label)), findsOneWidget);
+          }
+          expect(harness.connector.written, isEmpty);
+          expect(copied, isEmpty);
+          if (layout.name != 'baseline') {
+            final scrollable = find.descendant(of: sheet, matching: find.byType(Scrollable));
+            expect(scrollable, findsOneWidget);
+            final position = tester.state<ScrollableState>(scrollable).position;
+            expect(position.maxScrollExtent, greaterThan(0));
+            final lastAction = find.descendant(of: sheet, matching:
+                find.widgetWithText(ListTile, l10n.discoveredContacts_deleteContact));
+            await tester.ensureVisible(lastAction);
+            await tester.pump();
+            expect(position.pixels, greaterThan(0));
+            expect(lastAction.hitTestable(), findsOneWidget);
+            final firstAction = find.descendant(of: sheet, matching:
+                find.widgetWithText(ListTile, l10n.discoveredContacts_requestName));
+            await tester.ensureVisible(firstAction);
+            await tester.pump();
+            expect(firstAction.hitTestable(), findsOneWidget);
+          }
+          final copyAction = find.descendant(of: sheet, matching:
+              find.widgetWithText(ListTile, l10n.discoveredContacts_copyContact));
+          await tester.ensureVisible(copyAction);
+          await tester.pump();
+          expect(copyAction.hitTestable(), findsOneWidget);
+          await tester.tap(copyAction);
+          await _settleRows(tester);
+          expect(sheet, findsNothing);
+          expect(copied, ['meshcore://abcd0012']);
+          expect(harness.connector.written, isEmpty);
+          expect(harness.connector.known, isEmpty);
+          expect(harness.connector.discovered, [node]);
+          expect(tester.takeException(), isNull);
+        } finally {
+          await _Harness.unmount(tester);
+          messenger.setMockMethodCallHandler(SystemChannels.platform, null);
+        }
+      });
+    }
+  }
 
   testWidgets('a node the node holds is not listed, nor the node itself', (
     tester,

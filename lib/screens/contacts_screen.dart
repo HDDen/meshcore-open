@@ -1209,49 +1209,52 @@ class _ContactsScreenState extends State<ContactsScreen>
       context,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BottomSheetHeader(title: context.l10n.contacts_title),
-              ListTile(
-                leading: const Icon(Icons.vpn_key),
-                title: Text(context.l10n.contacts_addContactByPubkey),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _showAddContactByPubkeyDialog(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.paste),
-                title: Text(context.l10n.contacts_addContactFromClipboard),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _contactImport();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.qr_code_scanner),
-                title: Text(context.l10n.contacts_scanQrCode),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openContactQrScanner(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_add_rounded),
-                title: Text(context.l10n.discoveredContacts_Title),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DiscoveryScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
+          // Keep every add/import action reachable on short screens.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BottomSheetHeader(title: context.l10n.contacts_title),
+                ListTile(
+                  leading: const Icon(Icons.vpn_key),
+                  title: Text(context.l10n.contacts_addContactByPubkey),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showAddContactByPubkeyDialog(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.paste),
+                  title: Text(context.l10n.contacts_addContactFromClipboard),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _contactImport();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: Text(context.l10n.contacts_scanQrCode),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _openContactQrScanner(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.person_add_rounded),
+                  title: Text(context.l10n.discoveredContacts_Title),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DiscoveryScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),

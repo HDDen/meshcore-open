@@ -145,6 +145,11 @@ A **floating action button** (person-add icon) provides a shortcut sheet to "Add
 
 ## Adding Contacts
 
+The add-contact sheet and discovered-node action menu scroll when the screen
+is short, text is large, or the keyboard is open. Scroll to reach every action;
+opening or dismissing a menu does not send a command to the radio. Copying a
+discovered contact copies its advert link locally.
+
 ### Automatic (Passive)
 When the radio hears an advertisement, the contact appears automatically if auto-add is enabled for that type (configurable in Settings → Contact Settings).
 

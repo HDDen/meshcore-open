@@ -178,11 +178,14 @@ void main() {
     Size logicalSize = const Size(1000, 1400),
     TargetPlatform? platform,
     double bottomPadding = 0,
+    double keyboardInset = 0,
   }) async {
     tester.view.physicalSize = logicalSize * pixelRatio;
     tester.view.devicePixelRatio = pixelRatio;
+    tester.view.viewInsets = FakeViewPadding(bottom: keyboardInset * pixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
     await tester.pumpWidget(MultiProvider(providers: [
       ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
       ChangeNotifierProvider<AppSettingsService>.value(value: settings),
@@ -371,9 +374,11 @@ void main() {
     });
   }
 
-  for (final scale in [1.0, 1.5]) {
+  for (final (language, scale) in [
+    ('en', 1.0), ('en', 1.5), ('ru', 1.0), ('ru', 1.5),
+  ]) {
     testWidgets(
-      'U06a2: routing badge follows radio width and keeps full key and stored route (scale=$scale)',
+      'U06a2: routing badge follows radio width and keeps full key and stored route ($language, scale=$scale)',
       (tester) async {
         final contact = Contact(
           publicKey: Uint8List.fromList([
@@ -393,6 +398,7 @@ void main() {
         await show(
           tester,
           const ContactsScreen(hideBackButton: true),
+          locale: language,
           textScale: scale,
           logicalSize: const Size(390, 844),
         );
@@ -451,6 +457,105 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );
+  }
+
+  for (final language in ['en', 'ru']) {
+    for (final layout in [
+      (name: 'baseline', size: const Size(1000, 1400), scale: 1.0, inset: 0.0),
+      (name: 'landscape', size: const Size(568, 320), scale: 2.0, inset: 0.0),
+      (name: 'keyboard', size: const Size(1000, 1400), scale: 2.0, inset: 1120.0),
+    ]) {
+      testWidgets('U11b3 ${layout.name}: add-contact sheet retains all fork actions without sending ($language)', (tester) async {
+        try {
+          await show(tester, const ContactsScreen(hideBackButton: true),
+              locale: language, logicalSize: layout.size,
+              textScale: layout.scale, keyboardInset: layout.inset);
+          final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+          await tester.tap(find.byType(FloatingActionButton));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 350));
+          final sheet = find.byType(BottomSheet);
+          expect(sheet, findsOneWidget);
+          for (final label in [
+            l10n.contacts_addContactByPubkey,
+            l10n.contacts_addContactFromClipboard,
+            l10n.contacts_scanQrCode,
+            l10n.discoveredContacts_Title,
+          ]) {
+            expect(find.descendant(of: sheet,
+                matching: find.widgetWithText(ListTile, label)), findsOneWidget);
+          }
+          expect(connector.writes, isEmpty);
+          if (layout.name != 'baseline') {
+            final scrollable = find.descendant(of: sheet, matching: find.byType(Scrollable));
+            expect(scrollable, findsOneWidget);
+            final position = tester.state<ScrollableState>(scrollable).position;
+            expect(position.maxScrollExtent, greaterThan(0));
+            final lastAction = find.descendant(of: sheet, matching:
+                find.widgetWithText(ListTile, l10n.discoveredContacts_Title));
+            await tester.ensureVisible(lastAction);
+            await tester.pump();
+            expect(position.pixels, greaterThan(0));
+            expect(lastAction.hitTestable(), findsOneWidget);
+            final firstAction = find.descendant(of: sheet, matching:
+                find.widgetWithText(ListTile, l10n.contacts_addContactByPubkey));
+            await tester.ensureVisible(firstAction);
+            await tester.pump();
+            expect(firstAction.hitTestable(), findsOneWidget);
+            // A scrollable sheet can occupy the whole viewport, leaving no
+            // exposed modal barrier to tap. Back must still dismiss it safely.
+            await tester.binding.handlePopRoute();
+          } else {
+            await tester.tapAt(const Offset(8, 8));
+          }
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 350));
+          expect(sheet, findsNothing);
+          expect(find.byType(CompanionCliTile), findsOneWidget);
+          expect(connector.writes, isEmpty);
+          expect(connector.contactData, isEmpty);
+          expect(tester.takeException(), isNull);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        }
+      });
+    }
+
+    testWidgets('U11b3 baseline: channel actions retain sharing and notifications without sending ($language)', (tester) async {
+      await settings.updateSettings(settings.settings.copyWith(
+          roomServerShowNotemptyContactsOnChatscreen: true));
+      try {
+        await show(tester, const ChannelsScreen(hideBackButton: true), locale: language);
+        final l10n = AppLocalizations.of(tester.element(find.byType(ChannelsScreen)));
+        await tester.longPress(find.text('Alpha'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        final sheet = find.byType(BottomSheet);
+        expect(sheet, findsOneWidget);
+        for (final label in [
+          l10n.channels_editChannel,
+          l10n.common_share,
+          l10n.channels_notificationSettings,
+          l10n.channels_deleteChannel,
+        ]) {
+          expect(find.descendant(of: sheet,
+              matching: find.widgetWithText(ListTile, label)), findsOneWidget);
+        }
+        expect(connector.writes, isEmpty);
+        await tester.tapAt(const Offset(8, 8));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(sheet, findsNothing);
+        expect(find.byType(CompanionCliTile), findsOneWidget);
+        expect(connector.channelData.map((channel) => channel.name), ['Alpha', 'Beta']);
+        expect(connector.writes, isEmpty);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      }
+    });
   }
 
   testWidgets('compact contacts CLI starts below filters and above contact rows', (tester) async {
