@@ -30,8 +30,22 @@ All three build profiles and the active `pubspec.yaml` use
 `path: third_party/flserial`. Run `flutter pub get` after switching from
 the previous Git dependency so the native build selects this copy.
 
-The later upstream idle-loop fix `bb7a15f4` is **not included in U01**;
-it is a separate step in the merge plan.
+## Upstream idle-loop fix included in U16
+
+Upstream `bb7a15f43611803484c45bca0f62b6738016786a` (merge `5eaddcb1`)
+adds `setTimeout(10, 10, 0, 0, 0)` before opening a Linux/macOS port, in both
+`src/flserial.cpp` and `macos/Classes/flserial.cpp`. Previously a zero POSIX
+read timeout made SerialThread continuously poll an empty port. The new
+bounded read permits select to sleep. Windows keeps its previous timeout;
+the exported ABI, FIFO handling and U01 Linux callback/lifecycle guards remain.
+
+Readiness wakes select immediately, but a short read can continue collecting
+bytes until its 10 ms total read deadline. Notification of short RX bursts,
+queued TX and idle close can therefore wait approximately one read interval,
+plus host scheduling. This is not a guaranteed physical USB latency bound.
+Write timeout settings are unchanged. U16 does not fix the pre-existing macOS
+early-callback initialization race; native macOS acceptance is separate.
+A native rebuild is required; hot reload cannot replace this C++ change.
 
 ## Verification
 
@@ -47,6 +61,32 @@ python3 -B tool/test_linux_usb_native.py \
 ```
 
 This checks early RX before callback installation, close before callback,
-bidirectional binary I/O and several baud rates. Each case runs in a separate
-process with a timeout so a native crash or hang is reported. It does not
-replace a real USB-radio test, hot restart, or testing other architectures.
+bidirectional binary I/O, several baud rates, close after idle, and RX/TX after
+idle. The post-change idle-cpu case also measures one second of quiet process
+CPU, requiring less than 10% of one core, then verifies RX/TX. Run this on a
+quiet host; a heavily throttled or overloaded machine can distort a CPU ratio.
+Each case runs in a separate process with a timeout so a native crash or
+hang is reported. It does not replace a real USB-radio test, hot restart, or
+testing other architectures.
+
+Before and after changing the native timeout, measure the actual built library
+with the same script and options on a quiet Linux host:
+
+```sh
+clear
+python3 -B tool/benchmark_flserial_idle.py \
+  --library build/linux/x64/release/bundle/lib/libflserial.so
+```
+
+Use the same build profile, compiler and machine, retaining the old library
+outside generated build directories if needed for comparison. The script prints
+the library SHA256, process idle CPU (100% means one core), wall/CPU times and
+post-idle RX/TX/close timings. It verifies binary RX/TX too. Each sample runs in
+a child process with a timeout. An optional `--max-idle-core-percent` limit can
+be used as a post-change regression check on a controlled host; no CPU threshold
+is applied by default, so the same command also measures the old busy loop.
+These measurements do not establish app energy savings or real radio latency.
+The post-change Linux/macOS acceptance remains separate from passing Flutter
+tests with fake USB transports. In the test runner, idle-cpu is expected to fail
+against the old busy-loop library. For before/after measurement without that
+assertion, use the benchmark command above.

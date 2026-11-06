@@ -128,6 +128,15 @@ reader waits for the Dart callback before delivering bytes received immediately
 after opening a port. FIFO mutexes are initialized before the reader starts.
 The existing handshake and close/reconnect ordering are unchanged.
 
+The Linux/macOS native reader uses a 10 ms read timeout so an idle open port
+can sleep in select instead of continuously polling. Short RX bursts may be
+collected until that deadline, and queued TX/close is checked afterwards;
+actual latency also depends on the host scheduler. Windows keeps its existing
+native timeout. This change requires rebuilding the native library. It adds
+no radio polling or new application HTTP requests. Native CPU savings and
+USB-radio behavior must be checked on the target platform; Flutter tests with
+fake USB transports do not measure them.
+
 After updating from a build that used the Git dependency, developers must run
 `flutter pub get` and rebuild the Linux app. A Dart hot reload does not replace
 the native library. The GLIBC baud-symbol compatibility patch applies to x86-64;

@@ -3812,9 +3812,16 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
   vendored by upstream `24743890`). The Linux reader waits for its callback,
   with FIFO mutexes initialized before the thread. The GLIBC_2.2.5 baud-symbol
   binding is limited to x86-64; other architectures keep their normal calls.
-  App-side handshake/close and CPU-work tracking are unchanged. Provenance:
-  `third_party/flserial/PATCHES.md`; native PTY check:
-  `python3 -B tool/test_linux_usb_native.py --library <libflserial.so>`.
+  U16 (`bb7a15f4`) sets a 10 ms POSIX read timeout in both native copies,
+  allowing select to sleep on an idle Linux/macOS port. Short reads may collect
+  until that deadline; queued TX/idle close are checked afterwards. Windows
+  retains its existing timeout. App-side handshake/close and CPU-work tracking
+  are unchanged. Provenance: `third_party/flserial/PATCHES.md`; native PTY
+  regression: `python3 -B tool/test_linux_usb_native.py --library <libflserial.so>`.
+  It covers early RX, close before callback, baud/binary I/O, idle close and
+  RX/TX, plus a quiet-host idle CPU limit. Compare actual binaries with
+  `tool/benchmark_flserial_idle.py`; fake USB tests do not establish native CPU
+  or hardware results. Rebuild the native library; hot reload is insufficient.
 - Default baud rate: `115200`
 - Port enumeration: `MeshCoreConnector.listUsbPorts()`
 - Marker-and-length framed packets via `usb_serial_frame_codec.dart`: `0x3C`

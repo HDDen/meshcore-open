@@ -154,7 +154,13 @@ FFI_PLUGIN_EXPORT int fl_open(int flh, char *portname, int baudrate)
     port->serialport = new serial::Serial();
 #if !defined(__linux__) && !defined(__APPLE__)
     port->serialport->setTimeout(serial::Timeout(0, 2, 0, 0, 0));
-#endif // #if defined(__linux__)
+#else
+    // A zero read timeout makes SerialThread spin on an idle O_NONBLOCK port.
+    // Let select() wait for input. Readiness wakes select immediately, but a
+    // short read may still collect bytes until the 10 ms read deadline.
+    // Queued TX and the close flag are checked after that bounded read.
+    port->serialport->setTimeout(10, 10, 0, 0, 0);
+#endif
     port->serialport->setPort(portname);
     port->serialport->setBaudrate(baudrate);
 

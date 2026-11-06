@@ -16,7 +16,10 @@ import threading
 import time
 
 
-CASES = ("early-rx", "close-before-callback", "binary-io-and-baud")
+CASES = (
+    "early-rx", "close-before-callback", "binary-io-and-baud",
+    "idle-close", "idle-rx-tx", "idle-cpu",
+)
 CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_uint, ctypes.c_uint)
 
 
@@ -81,7 +84,17 @@ def exercise(library, case, baud):
         attributes = termios.tcgetattr(slave)
         require(attributes[4:6] == [speed, speed], "Incorrect RX/TX baud")
 
-        if case != "binary-io-and-baud":
+        if case == "idle-close":
+            require(library.fl_set_callback(handle, on_data) == 0, "Set callback failed")
+            time.sleep(0.1)
+            started = time.monotonic()
+            require(library.fl_close(handle) == 0, "Idle fl_close failed")
+            handle = None
+            require(time.monotonic() - started < 2, "Idle close did not join promptly")
+            require(not arrived.is_set(), "Idle port emitted a data callback")
+            return
+
+        if case in ("early-rx", "close-before-callback"):
             os.write(master, payload)
             # Let SerialThread reach its formerly unguarded null callback.
             time.sleep(0.1)
@@ -92,7 +105,25 @@ def exercise(library, case, baud):
                 return
 
         require(library.fl_set_callback(handle, on_data) == 0, "Set callback failed")
-        if case == "binary-io-and-baud":
+        if case in ("idle-rx-tx", "idle-cpu"):
+            # New input must wake a reader that has already reached idle.
+            time.sleep(0.1)
+            require(not arrived.is_set(), "Idle port emitted a data callback")
+        if case == "idle-cpu":
+            # This child has one native reader and no other ongoing work.
+            # Measure process CPU, not wall time alone: a busy reader would
+            # also pass RX/TX and close tests. 100% here means one CPU core.
+            wall_start = time.monotonic()
+            cpu_start = time.process_time()
+            time.sleep(1)
+            cpu_seconds = time.process_time() - cpu_start
+            wall_seconds = time.monotonic() - wall_start
+            core_percent = 100 * cpu_seconds / wall_seconds
+            print(f"idleCorePercent={core_percent:.3f}; 100%=one core", flush=True)
+            require(core_percent < 10,
+                    f"Idle reader consumed {core_percent:.3f}% of one core")
+            require(not arrived.is_set(), "Idle reader emitted a data callback")
+        if case in ("binary-io-and-baud", "idle-rx-tx", "idle-cpu"):
             os.write(master, payload)
         require(arrived.wait(2), "No RX notification after installing callback")
         require(sum(lengths) == len(payload), "Incorrect callback byte count")
