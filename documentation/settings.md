@@ -108,6 +108,12 @@ Settings take effect when saved. A snackbar confirms the update.
 
 A dedicated sub-screen for app-level preferences (nothing here is sent to the device). All settings persist locally via SharedPreferences.
 
+Language, map time-filter and unit choices remain scrollable on short screens
+and with large text; their labels are shown in full. The language list shrinks
+to the available height while its heading and Close button stay visible.
+The Stadia map API-key dialog also scrolls when the keyboard is open. Saving
+its unchanged masked value keeps the stored key; Cancel discards edits.
+
 ### Appearance
 - **Theme**: System / Light / Dark
 - **Language**: System default or one of 18 languages (English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian, Hungarian, Japanese, Korean)

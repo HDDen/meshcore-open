@@ -3190,6 +3190,20 @@ button. Both share the previous loading/connection guards and save callback.
 No changes to command order, background work or storage. Baseline and en/ru
 small-screen checks: `test/screens/repeater_settings_merge_baseline_test.dart`.
 
+### App settings sheets and map key
+
+`AppSettingsScreen` keeps its own language sheet: a `Flexible` list constrained
+to at most 400 logical pixels uses the space left under `BottomSheetHeader`,
+including the sheet's existing safe-area/keyboard constraints. The time-filter
+and units sheets wrap their existing columns in `SingleChildScrollView`; their
+options, selected checks, localized labels and setter callbacks are unchanged.
+The inline Stadia key `AlertDialog` is scrollable so its field and show/hide
+button remain reachable above the keyboard. Its masked-value preservation,
+trimmed Save and Cancel logic are unchanged. This layout adaptation adds no
+polling, downloads, preference schema changes or background work. Baseline and
+en/ru short-screen/keyboard checks:
+`test/screens/app_settings_sheets_merge_baseline_test.dart`.
+
 ### Room login routing
 
 `RoomLoginDialog` uses the same always-visible routing section as the repeater

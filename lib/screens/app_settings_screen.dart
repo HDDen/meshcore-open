@@ -1837,6 +1837,8 @@ class AppSettingsScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
+          // Keep the field reachable above the keyboard on short screens.
+          scrollable: true,
           title: Text(context.l10n.appSettings_stadiaApiKey),
           content: SizedBox(
             width: 420,
@@ -2538,202 +2540,205 @@ class AppSettingsScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           BottomSheetHeader(title: context.l10n.appSettings_language),
-          SizedBox(
-            height: 400,
-            child: ListView(
-              children: [
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageSystem,
-                  value: null,
-                  selected: settingsService.settings.languageOverride == null,
-                  onTap: () {
-                    settingsService.setLanguageOverride(null);
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageEn,
-                  value: 'en',
-                  selected: settingsService.settings.languageOverride == 'en',
-                  onTap: () {
-                    settingsService.setLanguageOverride('en');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageFr,
-                  value: 'fr',
-                  selected: settingsService.settings.languageOverride == 'fr',
-                  onTap: () {
-                    settingsService.setLanguageOverride('fr');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageEs,
-                  value: 'es',
-                  selected: settingsService.settings.languageOverride == 'es',
-                  onTap: () {
-                    settingsService.setLanguageOverride('es');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageDe,
-                  value: 'de',
-                  selected: settingsService.settings.languageOverride == 'de',
-                  onTap: () {
-                    settingsService.setLanguageOverride('de');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languagePl,
-                  value: 'pl',
-                  selected: settingsService.settings.languageOverride == 'pl',
-                  onTap: () {
-                    settingsService.setLanguageOverride('pl');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageSl,
-                  value: 'sl',
-                  selected: settingsService.settings.languageOverride == 'sl',
-                  onTap: () {
-                    settingsService.setLanguageOverride('sl');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languagePt,
-                  value: 'pt',
-                  selected: settingsService.settings.languageOverride == 'pt',
-                  onTap: () {
-                    settingsService.setLanguageOverride('pt');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageIt,
-                  value: 'it',
-                  selected: settingsService.settings.languageOverride == 'it',
-                  onTap: () {
-                    settingsService.setLanguageOverride('it');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageZh,
-                  value: 'zh',
-                  selected: settingsService.settings.languageOverride == 'zh',
-                  onTap: () {
-                    settingsService.setLanguageOverride('zh');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageSv,
-                  value: 'sv',
-                  selected: settingsService.settings.languageOverride == 'sv',
-                  onTap: () {
-                    settingsService.setLanguageOverride('sv');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageNl,
-                  value: 'nl',
-                  selected: settingsService.settings.languageOverride == 'nl',
-                  onTap: () {
-                    settingsService.setLanguageOverride('nl');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageSk,
-                  value: 'sk',
-                  selected: settingsService.settings.languageOverride == 'sk',
-                  onTap: () {
-                    settingsService.setLanguageOverride('sk');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageBg,
-                  value: 'bg',
-                  selected: settingsService.settings.languageOverride == 'bg',
-                  onTap: () {
-                    settingsService.setLanguageOverride('bg');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageRu,
-                  value: 'ru',
-                  selected: settingsService.settings.languageOverride == 'ru',
-                  onTap: () {
-                    settingsService.setLanguageOverride('ru');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageUk,
-                  value: 'uk',
-                  selected: settingsService.settings.languageOverride == 'uk',
-                  onTap: () {
-                    settingsService.setLanguageOverride('uk');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageHu,
-                  value: 'hu',
-                  selected: settingsService.settings.languageOverride == 'hu',
-                  onTap: () {
-                    settingsService.setLanguageOverride('hu');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageJa,
-                  value: 'ja',
-                  selected: settingsService.settings.languageOverride == 'ja',
-                  onTap: () {
-                    settingsService.setLanguageOverride('ja');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                _sheetOption<String?>(
-                  ctx,
-                  label: context.l10n.appSettings_languageKo,
-                  value: 'ko',
-                  selected: settingsService.settings.languageOverride == 'ko',
-                  onTap: () {
-                    settingsService.setLanguageOverride('ko');
-                    Navigator.pop(ctx);
-                  },
-                ),
-                SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
-              ],
+          // Keep the header visible; let the list use the remaining height.
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 400),
+              child: ListView(
+                children: [
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageSystem,
+                    value: null,
+                    selected: settingsService.settings.languageOverride == null,
+                    onTap: () {
+                      settingsService.setLanguageOverride(null);
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageEn,
+                    value: 'en',
+                    selected: settingsService.settings.languageOverride == 'en',
+                    onTap: () {
+                      settingsService.setLanguageOverride('en');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageFr,
+                    value: 'fr',
+                    selected: settingsService.settings.languageOverride == 'fr',
+                    onTap: () {
+                      settingsService.setLanguageOverride('fr');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageEs,
+                    value: 'es',
+                    selected: settingsService.settings.languageOverride == 'es',
+                    onTap: () {
+                      settingsService.setLanguageOverride('es');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageDe,
+                    value: 'de',
+                    selected: settingsService.settings.languageOverride == 'de',
+                    onTap: () {
+                      settingsService.setLanguageOverride('de');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languagePl,
+                    value: 'pl',
+                    selected: settingsService.settings.languageOverride == 'pl',
+                    onTap: () {
+                      settingsService.setLanguageOverride('pl');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageSl,
+                    value: 'sl',
+                    selected: settingsService.settings.languageOverride == 'sl',
+                    onTap: () {
+                      settingsService.setLanguageOverride('sl');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languagePt,
+                    value: 'pt',
+                    selected: settingsService.settings.languageOverride == 'pt',
+                    onTap: () {
+                      settingsService.setLanguageOverride('pt');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageIt,
+                    value: 'it',
+                    selected: settingsService.settings.languageOverride == 'it',
+                    onTap: () {
+                      settingsService.setLanguageOverride('it');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageZh,
+                    value: 'zh',
+                    selected: settingsService.settings.languageOverride == 'zh',
+                    onTap: () {
+                      settingsService.setLanguageOverride('zh');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageSv,
+                    value: 'sv',
+                    selected: settingsService.settings.languageOverride == 'sv',
+                    onTap: () {
+                      settingsService.setLanguageOverride('sv');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageNl,
+                    value: 'nl',
+                    selected: settingsService.settings.languageOverride == 'nl',
+                    onTap: () {
+                      settingsService.setLanguageOverride('nl');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageSk,
+                    value: 'sk',
+                    selected: settingsService.settings.languageOverride == 'sk',
+                    onTap: () {
+                      settingsService.setLanguageOverride('sk');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageBg,
+                    value: 'bg',
+                    selected: settingsService.settings.languageOverride == 'bg',
+                    onTap: () {
+                      settingsService.setLanguageOverride('bg');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageRu,
+                    value: 'ru',
+                    selected: settingsService.settings.languageOverride == 'ru',
+                    onTap: () {
+                      settingsService.setLanguageOverride('ru');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageUk,
+                    value: 'uk',
+                    selected: settingsService.settings.languageOverride == 'uk',
+                    onTap: () {
+                      settingsService.setLanguageOverride('uk');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageHu,
+                    value: 'hu',
+                    selected: settingsService.settings.languageOverride == 'hu',
+                    onTap: () {
+                      settingsService.setLanguageOverride('hu');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageJa,
+                    value: 'ja',
+                    selected: settingsService.settings.languageOverride == 'ja',
+                    onTap: () {
+                      settingsService.setLanguageOverride('ja');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languageKo,
+                    value: 'ko',
+                    selected: settingsService.settings.languageOverride == 'ko',
+                    onTap: () {
+                      settingsService.setLanguageOverride('ko');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
+                ],
+              ),
             ),
           ),
         ],
@@ -2747,66 +2752,69 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     showMeshSheet(
       context,
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BottomSheetHeader(title: context.l10n.appSettings_mapTimeFilter),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text(context.l10n.appSettings_showNodesDiscoveredWithin),
-          ),
-          _sheetOption<double>(
-            ctx,
-            label: context.l10n.appSettings_allTime,
-            value: 0,
-            selected: settingsService.settings.mapTimeFilterHours == 0,
-            onTap: () {
-              settingsService.setMapTimeFilterHours(0);
-              Navigator.pop(ctx);
-            },
-          ),
-          _sheetOption<double>(
-            ctx,
-            label: context.l10n.appSettings_lastHour,
-            value: 1,
-            selected: settingsService.settings.mapTimeFilterHours == 1,
-            onTap: () {
-              settingsService.setMapTimeFilterHours(1);
-              Navigator.pop(ctx);
-            },
-          ),
-          _sheetOption<double>(
-            ctx,
-            label: context.l10n.appSettings_last6Hours,
-            value: 6,
-            selected: settingsService.settings.mapTimeFilterHours == 6,
-            onTap: () {
-              settingsService.setMapTimeFilterHours(6);
-              Navigator.pop(ctx);
-            },
-          ),
-          _sheetOption<double>(
-            ctx,
-            label: context.l10n.appSettings_last24Hours,
-            value: 24,
-            selected: settingsService.settings.mapTimeFilterHours == 24,
-            onTap: () {
-              settingsService.setMapTimeFilterHours(24);
-              Navigator.pop(ctx);
-            },
-          ),
-          _sheetOption<double>(
-            ctx,
-            label: context.l10n.appSettings_lastWeek,
-            value: 168,
-            selected: settingsService.settings.mapTimeFilterHours == 168,
-            onTap: () {
-              settingsService.setMapTimeFilterHours(168);
-              Navigator.pop(ctx);
-            },
-          ),
-          SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
-        ],
+      // Scroll complete labels when the sheet is taller than the viewport.
+      builder: (ctx) => SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BottomSheetHeader(title: context.l10n.appSettings_mapTimeFilter),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(context.l10n.appSettings_showNodesDiscoveredWithin),
+            ),
+            _sheetOption<double>(
+              ctx,
+              label: context.l10n.appSettings_allTime,
+              value: 0,
+              selected: settingsService.settings.mapTimeFilterHours == 0,
+              onTap: () {
+                settingsService.setMapTimeFilterHours(0);
+                Navigator.pop(ctx);
+              },
+            ),
+            _sheetOption<double>(
+              ctx,
+              label: context.l10n.appSettings_lastHour,
+              value: 1,
+              selected: settingsService.settings.mapTimeFilterHours == 1,
+              onTap: () {
+                settingsService.setMapTimeFilterHours(1);
+                Navigator.pop(ctx);
+              },
+            ),
+            _sheetOption<double>(
+              ctx,
+              label: context.l10n.appSettings_last6Hours,
+              value: 6,
+              selected: settingsService.settings.mapTimeFilterHours == 6,
+              onTap: () {
+                settingsService.setMapTimeFilterHours(6);
+                Navigator.pop(ctx);
+              },
+            ),
+            _sheetOption<double>(
+              ctx,
+              label: context.l10n.appSettings_last24Hours,
+              value: 24,
+              selected: settingsService.settings.mapTimeFilterHours == 24,
+              onTap: () {
+                settingsService.setMapTimeFilterHours(24);
+                Navigator.pop(ctx);
+              },
+            ),
+            _sheetOption<double>(
+              ctx,
+              label: context.l10n.appSettings_lastWeek,
+              value: 168,
+              selected: settingsService.settings.mapTimeFilterHours == 168,
+              onTap: () {
+                settingsService.setMapTimeFilterHours(168);
+                Navigator.pop(ctx);
+              },
+            ),
+            SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
+          ],
+        ),
       ),
     );
   }
@@ -2817,33 +2825,36 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     showMeshSheet(
       context,
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          BottomSheetHeader(title: context.l10n.appSettings_unitsTitle),
-          _sheetOption<UnitSystem>(
-            ctx,
-            label: context.l10n.appSettings_unitsMetric,
-            value: UnitSystem.metric,
-            selected: settingsService.settings.unitSystem == UnitSystem.metric,
-            onTap: () {
-              settingsService.setUnitSystem(UnitSystem.metric);
-              Navigator.pop(ctx);
-            },
-          ),
-          _sheetOption<UnitSystem>(
-            ctx,
-            label: context.l10n.appSettings_unitsImperial,
-            value: UnitSystem.imperial,
-            selected:
-                settingsService.settings.unitSystem == UnitSystem.imperial,
-            onTap: () {
-              settingsService.setUnitSystem(UnitSystem.imperial);
-              Navigator.pop(ctx);
-            },
-          ),
-          SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
-        ],
+      // Scroll complete labels when the sheet is taller than the viewport.
+      builder: (ctx) => SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BottomSheetHeader(title: context.l10n.appSettings_unitsTitle),
+            _sheetOption<UnitSystem>(
+              ctx,
+              label: context.l10n.appSettings_unitsMetric,
+              value: UnitSystem.metric,
+              selected: settingsService.settings.unitSystem == UnitSystem.metric,
+              onTap: () {
+                settingsService.setUnitSystem(UnitSystem.metric);
+                Navigator.pop(ctx);
+              },
+            ),
+            _sheetOption<UnitSystem>(
+              ctx,
+              label: context.l10n.appSettings_unitsImperial,
+              value: UnitSystem.imperial,
+              selected:
+                  settingsService.settings.unitSystem == UnitSystem.imperial,
+              onTap: () {
+                settingsService.setUnitSystem(UnitSystem.imperial);
+                Navigator.pop(ctx);
+              },
+            ),
+            SizedBox(height: MediaQuery.paddingOf(ctx).bottom + 8),
+          ],
+        ),
       ),
     );
   }
