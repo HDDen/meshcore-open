@@ -9161,4 +9161,59 @@ class AppLocalizationsUk extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Немає відповіді від $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Макс. кількість переходів для advert (flood)';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Максимальна кількість переходів, які може пройти розісланий advert (0-64, за замовчуванням 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Макс. кількість переходів flood без регіону';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Максимальна кількість переходів для flood без області регіону (0-64, за замовчуванням 64). Низьке значення, наприклад 3, залишає трафік без регіону локальним.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Те саме, що flood max';
+
+  @override
+  String get repeater_rxDelay => 'Затримка приймання';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Утримує flood-пакети, почуті зі слабким сигналом, перед пересиланням, щоб шляхи з сильним сигналом ішли першими і надсилалося менше дублікатів (0-20, 0 вимикає).';
+
+  @override
+  String get repeater_cad => 'Виявлення активності каналу';
+
+  @override
+  String get repeater_cadHelper =>
+      'Прослуховує активність перед передачею і чекає, поки канал зайнятий. Працює разом з пороговим значенням перешкод.';
+
+  @override
+  String get repeater_adcMultiplier => 'Калібрування напруги батареї';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Множник для вимірювання напруги батареї (0-10). 0 використовує значення плати за замовчуванням.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Не кожна плата це підтримує. Непідтримувані плати відхиляють зміну.';
+
+  @override
+  String get repeater_extraSf => 'Додаткові коефіцієнти розширення';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'До 3 додаткових коефіцієнтів розширення (SF) для одночасного прослуховування, через кому (наприклад 9,10). Залиште порожнім, щоб вимкнути.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Лише для ретрансляторів з радіо LR2021. Інші ретранслятори не мають цього налаштування і відхиляють його.';
 }

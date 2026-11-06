@@ -4270,5 +4270,20 @@
   "map_requestLocation": "Aggiorna posizione",
   "map_locationUpdated": "Posizione aggiornata",
   "map_locationNotShared": "{name} ha risposto senza posizione",
-  "map_locationRequestFailed": "Nessuna risposta da {name}"
+  "map_locationRequestFailed": "Nessuna risposta da {name}",
+  "repeater_floodMaxAdvert": "Numero massimo di salti in flood per gli advert",
+  "repeater_floodMaxAdvertHelper": "Numero massimo di salti che un advert diffuso in flood può percorrere (0-64, predefinito 8)",
+  "repeater_floodMaxUnscoped": "Numero massimo di salti in flood senza regione",
+  "repeater_floodMaxUnscopedHelper": "Numero massimo di salti per i flood senza ambito regionale (0-64, predefinito 64). Un valore basso come 3 mantiene locale il traffico senza regione.",
+  "repeater_floodMaxUnscopedUnset": "Come il massimo in flood",
+  "repeater_rxDelay": "Ritardo di ricezione",
+  "repeater_rxDelayHelper": "Trattiene i pacchetti flood ricevuti con segnale debole prima di inoltrarli, così i percorsi con segnale forte passano per primi e vengono inviati meno duplicati (0-20, 0 lo disattiva).",
+  "repeater_cad": "Rilevamento dell'attività del canale",
+  "repeater_cadHelper": "Ascolta l'attività prima di trasmettere e attende finché il canale è occupato. Funziona insieme alla soglia di interferenza.",
+  "repeater_adcMultiplier": "Calibrazione della tensione della batteria",
+  "repeater_adcMultiplierHelper": "Moltiplicatore della lettura della tensione della batteria (0-10). 0 usa il valore predefinito della scheda.",
+  "repeater_boardSupportNote": "Non tutte le schede lo supportano. Le schede non supportate rifiutano la modifica.",
+  "repeater_extraSf": "Fattori di diffusione (SF) aggiuntivi",
+  "repeater_extraSfHelper": "Fino a 3 fattori di diffusione (SF) in più su cui ascoltare contemporaneamente, separati da virgole (ad esempio 9,10). Lascia vuoto per disattivare.",
+  "repeater_lr2021Only": "Solo per repeater con radio LR2021. Gli altri repeater non hanno questa impostazione e la rifiutano."
 }

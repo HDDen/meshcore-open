@@ -9,6 +9,8 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../helpers/repeater_settings_validation.dart';
+import '../helpers/repeater_extra_settings.dart';
+import '../widgets/repeater_extra_setting_control.dart';
 import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
 import '../theme/mesh_theme.dart';
@@ -54,7 +56,22 @@ enum _SettingField {
   directTxDelay,
   intThresh,
   agcResetInterval,
+  floodMaxAdvert,
+  floodMaxUnscoped,
+  rxDelay,
+  cad,
+  adcMultiplier,
+  extraSf,
 }
+
+const _extraSettingFields = {
+  RepeaterExtraSetting.floodMaxAdvert: _SettingField.floodMaxAdvert,
+  RepeaterExtraSetting.floodMaxUnscoped: _SettingField.floodMaxUnscoped,
+  RepeaterExtraSetting.rxDelay: _SettingField.rxDelay,
+  RepeaterExtraSetting.cad: _SettingField.cad,
+  RepeaterExtraSetting.adcMultiplier: _SettingField.adcMultiplier,
+  RepeaterExtraSetting.extraSf: _SettingField.extraSf,
+};
 
 enum _SaveOutcome { ok, rebootNeeded, error }
 
@@ -90,6 +107,13 @@ String _shortCommandLabel(String command) {
 
 class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   final StorageService _storage = StorageService();
+  final _extraControllers = {
+    for (final setting in RepeaterExtraSetting.values)
+      if (!setting.isToggle) setting: TextEditingController(),
+  };
+  final _refreshingExtras = <RepeaterExtraSetting>{};
+  bool _cadEnabled = false;
+  bool _unscopedInherited = false;
 
   bool _isLoading = false;
   bool _hasChanges = false;
@@ -254,6 +278,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     _prvKeyController.dispose();
     _pubKeyController.dispose();
     _prvKeyPrefixController.dispose();
+    for (final controller in _extraControllers.values) {
+      controller.dispose();
+    }
     _stopSearchingForKeyPair = true;
     super.dispose();
   }
@@ -460,12 +487,35 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   ///
   /// Response/command pairing is guaranteed by the prefix-matching layer in
   /// RepeaterCommandService (firmware echoes the `XX|` token from MyMesh.cpp),
-  /// so no shape-based validation is needed here — `tryParse` handles any
-  /// malformed value by leaving state untouched.
+  /// so legacy values retain their existing parser. The additional settings
+  /// use strict value recognition, including the raw LR2021 SF reply, before
+  /// unlocking a field or replacing its last known value.
   bool _handleGetResponse(String command, String response) {
     final normalized = command.trim().toLowerCase();
     if (!normalized.startsWith('get ')) return false;
     final key = normalized.substring(4).trim();
+    final extra = repeaterExtraSettingForKey(key);
+    if (extra != null) {
+      final value = parseRepeaterExtraReply(extra, response);
+      if (value == null) return false;
+      setState(() {
+        if (extra.isToggle) {
+          _cadEnabled = value == 'on';
+        } else if (extra == RepeaterExtraSetting.floodMaxUnscoped &&
+            value == '255') {
+          // 255 means inherit flood.max; it is not a writable hop count.
+          _unscopedInherited = true;
+          _extraControllers[extra]!.clear();
+        } else {
+          if (extra == RepeaterExtraSetting.floodMaxUnscoped) {
+            _unscopedInherited = false;
+          }
+          _extraControllers[extra]!.text = value;
+        }
+        _loadedKeys.add(key);
+      });
+      return true;
+    }
     final value = _extractGetValue(response);
     if (value == null) return false;
     setState(() {
@@ -542,6 +592,19 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       setState(() => setRefreshing(false));
     }
   }
+
+  Future<void> _refreshExtraSetting(RepeaterExtraSetting setting) =>
+      _refreshSection(
+        label: repeaterExtraSettingLabel(setting, context.l10n),
+        commands: ['get ${setting.cliKey}'],
+        setRefreshing: (value) {
+          if (value) {
+            _refreshingExtras.add(setting);
+          } else {
+            _refreshingExtras.remove(setting);
+          }
+        },
+      );
 
   Future<void> _refreshBasicSettings() async {
     final l10n = context.l10n;
@@ -801,6 +864,9 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
       _refreshDirectTxDelay,
       _refreshIntThresh,
       _refreshAgcResetInterval,
+      // Keep legacy request order; extra GETs run only in an explicit batch.
+      for (final setting in RepeaterExtraSetting.values)
+        () => _refreshExtraSetting(setting),
     ];
     _unansweredSections = 0;
     setState(() {
@@ -1191,6 +1257,25 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
           field: _SettingField.agcResetInterval,
           command: 'set agc.reset.interval $_agcResetInterval',
         ));
+      }
+
+      // New settings participate in the same per-field snapshot, retry and
+      // edited-during-save handling as all legacy settings.
+      for (final setting in RepeaterExtraSetting.values) {
+        final field = _extraSettingFields[setting]!;
+        if (!_dirtyFields.contains(field)) continue;
+        final text = setting.isToggle
+            ? (_cadEnabled ? 'on' : 'off')
+            : _extraControllers[setting]!.text;
+        final value = normalizeRepeaterExtraValue(setting, text);
+        if (value == null) {
+          final label = repeaterExtraSettingLabel(setting, l10n);
+          reject(field, text.trim().isEmpty
+              ? l10n.repeater_valueRequired(label)
+              : l10n.repeater_invalidSettingValue(label, text.trim()));
+          continue;
+        }
+        pending.add((field: field, command: 'set ${setting.cliKey} $value'));
       }
 
       var passwordsFailed = false;
@@ -1944,6 +2029,38 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     );
   }
 
+  List<Widget> _buildExtraControls(RepeaterExtraSection section) {
+    final connected = context.watch<MeshCoreConnector>().isConnected;
+    return [
+      for (final setting in RepeaterExtraSetting.values)
+        if (setting.section == section)
+          RepeaterExtraSettingControl(
+            key: ValueKey('repeater-extra:${setting.cliKey}'),
+            setting: setting,
+            l10n: context.l10n,
+            controller: _extraControllers[setting],
+            loaded: _loaded(setting.cliKey),
+            refreshing: _refreshingExtras.contains(setting),
+            canRefresh: connected && !_isLoading && !_loadingAll,
+            toggleValue: _cadEnabled,
+            inherited: setting == RepeaterExtraSetting.floodMaxUnscoped &&
+                _unscopedInherited,
+            onRefresh: () => _refreshExtraSetting(setting),
+            onChanged: (_) {
+              if (setting == RepeaterExtraSetting.floodMaxUnscoped &&
+                  _unscopedInherited) {
+                setState(() => _unscopedInherited = false);
+              }
+              _markChanged(_extraSettingFields[setting]!);
+            },
+            onToggle: (value) {
+              setState(() => _cadEnabled = value);
+              _markChanged(_extraSettingFields[setting]!);
+            },
+          ),
+    ];
+  }
+
   Widget _buildAdvertisementSettingsCard() {
     final l10n = context.l10n;
     return Column(
@@ -2123,6 +2240,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                         _markChanged(_SettingField.floodMax);
                       },
               ),
+              ..._buildExtraControls(RepeaterExtraSection.advertisement),
             ],
           ),
         ),
@@ -2249,6 +2367,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                         _markChanged(_SettingField.dutyCycle);
                       },
               ),
+              ..._buildExtraControls(RepeaterExtraSection.networkHealth),
             ],
           ),
         ),
@@ -2531,6 +2650,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     _markChanged(_SettingField.agcResetInterval);
                   },
           ),
+          ..._buildExtraControls(RepeaterExtraSection.advanced),
         ],
       ),
     );

@@ -3297,6 +3297,26 @@ GETs, timers or automatic defaults. Baseline and en/ru small-screen/regression
 checks: `test/screens/repeater_settings_merge_baseline_test.dart`; pure
 validation checks: `test/helpers/repeater_settings_validation_test.dart`.
 
+The six additional CLI fields from U13c are isolated in
+`helpers/repeater_extra_settings.dart` (keys, sections, parsing/validation) and
+`widgets/repeater_extra_setting_control.dart` (wrapping labels/descriptions,
+GET-gated inputs). The legacy fork renderer and all its actions remain in
+place. These fields join the same `_SettingField` dirty snapshot and
+edited-during-save handling; the screen owns/disposes their five controllers.
+`flood.max.advert` and `flood.max.unscoped` take integer 0..64; an unscoped
+GET of 255 displays inheritance but SET never sends 255. `rxdelay` takes a
+finite 0..20 and `adc.multiplier` a finite 0..10 (0 restores the board default);
+`cad` uses on/off. `extra.sf` takes up to three SFs 5..12, allows explicit empty
+SET to clear and recognizes raw SF lists/`No extra SF configured` from LR2021.
+Unsupported or malformed replies do not unlock a field or overwrite its last
+valid value. Explicit Refresh All appends these six GETs after the legacy 20;
+opening the screen, rebuilding controls and editing values never fetches them.
+No new background timer or persistence path is introduced. Missing ARB keys
+are appended without replacing existing translations; the owner regenerates
+Dart localizations. Coverage also includes
+`test/helpers/repeater_extra_settings_test.dart` and
+`test/widgets/repeater_extra_setting_control_test.dart`.
+
 ### App settings sheets and map key
 
 `AppSettingsScreen` keeps its own language sheet: a `Flexible` list constrained

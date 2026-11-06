@@ -9200,4 +9200,59 @@ class AppLocalizationsFr extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Aucune réponse de $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Nombre maximal de sauts en flood pour les adverts';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Nombre maximal de sauts qu’un advert diffusé en flood peut parcourir (0-64, 8 par défaut)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Nombre maximal de sauts en flood sans région';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Nombre maximal de sauts pour les floods sans portée régionale (0-64, 64 par défaut). Une valeur faible comme 3 garde le trafic sans région local.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Comme le maximum en flood';
+
+  @override
+  String get repeater_rxDelay => 'Délai de réception';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Retient les paquets flood reçus avec un signal faible avant de les retransmettre, afin que les chemins à signal fort passent en premier et que moins de doublons soient envoyés (0-20, 0 désactive).';
+
+  @override
+  String get repeater_cad => 'Détection d’activité du canal';
+
+  @override
+  String get repeater_cadHelper =>
+      'Écoute l’activité avant d’émettre et attend tant que le canal est occupé. Fonctionne avec le seuil de perturbation.';
+
+  @override
+  String get repeater_adcMultiplier => 'Calibrage de la tension de la batterie';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Multiplicateur de la mesure de tension de la batterie (0-10). 0 utilise la valeur par défaut de la carte.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Toutes les cartes ne le prennent pas en charge. Les cartes non compatibles refusent la modification.';
+
+  @override
+  String get repeater_extraSf => 'Facteurs de répartition (SF) supplémentaires';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Jusqu’à 3 facteurs de répartition (SF) supplémentaires à écouter en même temps, séparés par des virgules (par exemple 9,10). Laissez vide pour désactiver.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Uniquement pour les répéteurs dotés d’une radio LR2021. Les autres répéteurs n’ont pas ce paramètre et le refusent.';
 }

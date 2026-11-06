@@ -9115,4 +9115,59 @@ class AppLocalizationsSk extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Žiadna odpoveď od $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Maximálny počet skokov flood pre advert';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Maximálny počet skokov, ktoré môže prejsť rozosielaný advert (0-64, predvolene 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Maximálny počet skokov flood bez regiónu';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Maximálny počet skokov pre flood bez regiónu (0-64, predvolene 64). Nízka hodnota, napríklad 3, udrží premávku bez regiónu lokálnu.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Rovnaké ako flood max';
+
+  @override
+  String get repeater_rxDelay => 'Oneskorenie príjmu';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Pozdrží flood pakety zachytené so slabým signálom pred preposlaním, aby cesty so silným signálom išli prvé a odosielalo sa menej duplikátov (0-20, 0 to vypne).';
+
+  @override
+  String get repeater_cad => 'Detekcia aktivity kanála';
+
+  @override
+  String get repeater_cadHelper =>
+      'Pred vysielaním počúva, či na kanáli nie je aktivita, a počká, kým je kanál obsadený. Funguje spolu s hranicou rušenia.';
+
+  @override
+  String get repeater_adcMultiplier => 'Kalibrácia napätia batérie';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Násobiteľ pre meranie napätia batérie (0-10). 0 použije predvolenú hodnotu dosky.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Nie každá doska to podporuje. Nepodporované dosky zmenu odmietnu.';
+
+  @override
+  String get repeater_extraSf => 'Ďalšie spreading faktory';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Až 3 ďalšie spreading faktory, na ktorých sa súčasne počúva, oddelené čiarkami (napríklad 9,10). Ak chcete vypnúť, nechajte prázdne.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Len pre opakovače s rádiom LR2021. Ostatné opakovače toto nastavenie nemajú a odmietnu ho.';
 }

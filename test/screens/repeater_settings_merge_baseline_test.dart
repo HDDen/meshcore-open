@@ -8,6 +8,8 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/helpers/repeater_extra_settings.dart';
+import 'package:meshcore_open/widgets/repeater_extra_setting_control.dart';
 import 'package:meshcore_open/models/path_selection.dart';
 import 'package:meshcore_open/screens/repeater_settings_screen.dart';
 import 'package:meshcore_open/storage/node_state.dart';
@@ -158,6 +160,12 @@ Finder _icon(String tooltip) => find.byWidgetPredicate(
 Future<void> _reveal(WidgetTester tester, Finder finder) async {
   final scrollable = find.descendant(of: find.byType(ListView),
       matching: find.byType(Scrollable)).first;
+  if (finder.evaluate().isEmpty) {
+    // A lazy card can be above the current viewport after switching sections.
+    // Start from the top rather than searching only downward from the bottom.
+    tester.state<ScrollableState>(scrollable).position.jumpTo(0);
+    await tester.pump();
+  }
   await tester.scrollUntilVisible(finder, 180,
       scrollable: scrollable, maxScrolls: 80);
   await tester.pumpAndSettle();
@@ -234,6 +242,30 @@ Future<void> _openAdvanced(WidgetTester tester, AppLocalizations l10n) async {
   final heading = find.text(l10n.repeater_advancedSettings);
   await _reveal(tester, heading);
   await tester.tap(heading);
+  await tester.pumpAndSettle();
+}
+
+Finder _extraInput(RepeaterExtraSetting setting) =>
+    find.byKey(ValueKey('repeater-extra-input:${setting.cliKey}'));
+
+Future<void> _editExtra(WidgetTester tester,
+    RepeaterExtraSetting setting, String text) async {
+  final field = _extraInput(setting);
+  await _reveal(tester, field);
+  expect(tester.widget<TextField>(field).enabled, isTrue);
+  await tester.enterText(field, text);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _readExtra(WidgetTester tester, _Radio radio,
+    AppLocalizations l10n, RepeaterExtraSetting setting, String reply) async {
+  final refresh = _icon(repeaterExtraSettingLabel(setting, l10n));
+  final count = radio.commands.length;
+  await _reveal(tester, refresh);
+  await tester.tap(refresh);
+  await tester.pump();
+  expect(radio.commands.skip(count), ['get ${setting.cliKey}']);
+  await _answer(tester, radio, reply);
   await tester.pumpAndSettle();
 }
 
@@ -459,7 +491,7 @@ void main() {
     testWidgets('U13b baseline: manual batch reads serially and continues '
         'past an unsupported setting ($locale)', (tester) async {
       await _withSettings(tester, locale, (radio, l10n) async {
-        // This is the accepted pre-U13c GET list, not an automatic query.
+        // Legacy order is preserved; the six new GETs are explicit batch work.
         const replies = <(String, String)>[
           ('get name', '> Remote name'),
           ('get radio', '> 869.495,125,7,5'),
@@ -481,6 +513,12 @@ void main() {
           ('get direct.txdelay', '> 0.5'),
           ('get int.thresh', '> 0'),
           ('get agc.reset.interval', '> 60'),
+          ('get flood.max.advert', '> 8'),
+          ('get flood.max.unscoped', '> 255'),
+          ('get rxdelay', '> 1'),
+          ('get cad', 'Error: unsupported'),
+          ('get adc.multiplier', '> 2'),
+          ('get extra.sf', 'No extra SF configured'),
         ];
         final refresh = _icon(l10n.repeater_refreshAll);
         await tester.tap(refresh);
@@ -610,6 +648,293 @@ void main() {
         });
       });
     }
+
+    testWidgets('U13c baseline: RX gain requires its own GET and only writes '
+        'the edited toggle ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        final toggle = find.widgetWithText(SwitchListTile, l10n.repeater_rxGain);
+        await _reveal(tester, toggle);
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, isNull);
+        expect(radio.commands, isEmpty);
+        await _reveal(tester, _icon(l10n.repeater_refreshRxGain));
+        await tester.tap(_icon(l10n.repeater_refreshRxGain));
+        await tester.pump();
+        await _answer(tester, radio, 'Error: unknown command');
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, isNull);
+        await _read(tester, radio, l10n.repeater_refreshRxGain,
+            'get radio.rxgain', 'on');
+        expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, isNotNull);
+        expect(_dropdown<int>(tester, l10n.repeater_bandwidth).onChanged, isNull);
+        await _reveal(tester, toggle);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+        expect(radio.commands, ['get radio.rxgain', 'get radio.rxgain']);
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands,
+            ['get radio.rxgain', 'get radio.rxgain', 'set radio.rxgain off']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13c baseline: flood.max keeps its own GET guard and failed '
+        'slider draft ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        // The existing flood.max is the only 0..64 slider before U13c.
+        final slider = find.byWidgetPredicate(
+          (widget) => widget is Slider && widget.max == 64 &&
+              widget.divisions == 64,
+        );
+        await _reveal(tester, slider);
+        expect(tester.widget<Slider>(slider).onChanged, isNull);
+        expect(radio.commands, isEmpty);
+        await _read(tester, radio, l10n.repeater_floodMax, 'get flood.max', '12');
+        expect(tester.widget<Slider>(slider).value, 12);
+        await _reveal(tester, slider);
+        // Use a real pointer event; derive the expected integer from the
+        // resulting control instead of depending on a device's track width.
+        await tester.tapAt(tester.getCenter(slider));
+        await tester.pumpAndSettle();
+        final hops = tester.widget<Slider>(slider).value.toInt();
+        expect(hops, inInclusiveRange(0, 64));
+        expect(hops, isNot(12));
+        expect(radio.commands, ['get flood.max']);
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands, ['get flood.max', 'set flood.max $hops']);
+        await _answer(tester, radio, 'Error rejected');
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        expect(tester.widget<Slider>(slider).value, hops.toDouble());
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands, [
+          'get flood.max', 'set flood.max $hops', 'set flood.max $hops',
+        ]);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13c baseline: owner info preserves multiline encoding and '
+        'explicit clearing ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        final field = _textInput(l10n.repeater_ownerInfo);
+        await _reveal(tester, field);
+        expect(tester.widget<TextField>(field).enabled, isFalse);
+        expect(radio.commands, isEmpty);
+        await _read(tester, radio, l10n.repeater_refreshOwnerInfo,
+            'get owner.info', 'Owner|Second line');
+        expect(tester.widget<TextField>(field).controller!.text,
+            'Owner\nSecond line');
+        await _editText(tester, l10n.repeater_ownerInfo, 'Operator\nChannel link');
+        expect(radio.commands, ['get owner.info']);
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands,
+            ['get owner.info', 'set owner.info Operator|Channel link']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+        await _editText(tester, l10n.repeater_ownerInfo, '');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands, [
+          'get owner.info', 'set owner.info Operator|Channel link',
+          'set owner.info ',
+        ]);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+        expect(tester.widget<TextField>(field).controller!.text, isEmpty);
+      });
+    });
+
+    testWidgets('U13c: all new settings use explicit GET and partial-save '
+        'retry writes only the failed field ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        const edits = [
+          (RepeaterExtraSetting.floodMaxAdvert, '> 8', '5'),
+          (RepeaterExtraSetting.floodMaxUnscoped, '> 255', '3'),
+          (RepeaterExtraSetting.rxDelay, '> 1', '2,5'),
+          (RepeaterExtraSetting.cad, '> off', 'on'),
+          (RepeaterExtraSetting.adcMultiplier, '> 2', '0'),
+          (RepeaterExtraSetting.extraSf, '9,10', '5, 12'),
+        ];
+        final cad = find.byKey(const ValueKey('repeater-extra-toggle:cad'));
+        for (final (setting, reply, edit) in edits) {
+          if (setting == RepeaterExtraSetting.cad) {
+            await _openAdvanced(tester, l10n);
+            expect(tester.widget<Switch>(cad).onChanged, isNull);
+          } else {
+            await _reveal(tester, _extraInput(setting));
+            expect(tester.widget<TextField>(_extraInput(setting)).enabled,
+                isFalse);
+          }
+          await _readExtra(tester, radio, l10n, setting, reply);
+          if (setting == RepeaterExtraSetting.floodMaxUnscoped) {
+            expect(tester.widget<TextField>(_extraInput(setting)).controller!.text,
+                isEmpty);
+            expect(find.text(l10n.repeater_floodMaxUnscopedUnset), findsOneWidget);
+          }
+          if (setting.isToggle) {
+            await _reveal(tester, cad);
+            await tester.tap(cad);
+            await tester.pumpAndSettle();
+            expect(tester.widget<Switch>(cad).value, isTrue);
+          } else {
+            await _editExtra(tester, setting, edit);
+          }
+        }
+        expect(radio.commands, [
+          for (final (setting, _, _) in edits) 'get ${setting.cliKey}',
+        ]);
+        const writes = [
+          'set flood.max.advert 5', 'set flood.max.unscoped 3',
+          'set rxdelay 2.5', 'set cad on', 'set adc.multiplier 0.0',
+          'set extra.sf 5,12',
+        ];
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        for (var i = 0; i < writes.length; i++) {
+          expect(radio.commands.skip(6), writes.take(i + 1));
+          await _answer(tester, radio, i == 4 ? 'Error: unsupported' : 'OK');
+        }
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        await _editExtra(tester, RepeaterExtraSetting.adcMultiplier, '1');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(6), [...writes, 'set adc.multiplier 1.0']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
+
+    testWidgets('U13c: malformed or unsupported GET does not unlock controls; '
+        'empty SF can be loaded and cleared ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        const failures = [
+          (RepeaterExtraSetting.floodMaxAdvert, '> 65'),
+          (RepeaterExtraSetting.floodMaxUnscoped, '> unknown'),
+          (RepeaterExtraSetting.rxDelay, '> NaN'),
+          (RepeaterExtraSetting.cad, '> unknown'),
+          (RepeaterExtraSetting.adcMultiplier, 'Error: unsupported'),
+          (RepeaterExtraSetting.extraSf, '??: extra.sf'),
+        ];
+        for (final (setting, reply) in failures) {
+          if (setting == RepeaterExtraSetting.cad) {
+            await _openAdvanced(tester, l10n);
+          }
+          await _readExtra(tester, radio, l10n, setting, reply);
+          if (setting.isToggle) {
+            expect(tester.widget<Switch>(find.byKey(
+              const ValueKey('repeater-extra-toggle:cad'),
+            )).onChanged, isNull);
+          } else {
+            expect(tester.widget<TextField>(_extraInput(setting)).enabled,
+                isFalse);
+          }
+        }
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        expect(save, findsNothing);
+        const sf = RepeaterExtraSetting.extraSf;
+        await _readExtra(tester, radio, l10n, sf, 'No extra SF configured');
+        expect(tester.widget<TextField>(_extraInput(sf)).enabled, isTrue);
+        expect(tester.widget<TextField>(_extraInput(sf)).controller!.text, isEmpty);
+        await _editExtra(tester, sf, '9');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.last, 'set extra.sf 9');
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        // A later unsupported response must not erase an earlier valid value.
+        await _readExtra(tester, radio, l10n, sf, 'Error: unsupported');
+        expect(tester.widget<TextField>(_extraInput(sf)).enabled, isTrue);
+        expect(tester.widget<TextField>(_extraInput(sf)).controller!.text, '9');
+        await _editExtra(tester, sf, '');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.last, 'set extra.sf ');
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+        expect(radio.commands.where((command) => command.startsWith('set ')),
+            ['set extra.sf 9', 'set extra.sf ']);
+      });
+    });
+
+    testWidgets('U13c: invalid new values remain dirty while a valid field '
+        'saves once ($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        const edits = [
+          (RepeaterExtraSetting.floodMaxAdvert, '> 8', '65'),
+          (RepeaterExtraSetting.floodMaxUnscoped, '> 255', '255'),
+          (RepeaterExtraSetting.rxDelay, '> 1', '20.1'),
+          (RepeaterExtraSetting.adcMultiplier, '> 2', '-1'),
+          (RepeaterExtraSetting.extraSf, '9,10', '4,13'),
+        ];
+        for (final (setting, reply, edit) in edits) {
+          if (setting == RepeaterExtraSetting.adcMultiplier) {
+            await _openAdvanced(tester, l10n);
+          }
+          await _readExtra(tester, radio, l10n, setting, reply);
+          await _editExtra(tester, setting, edit);
+        }
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pumpAndSettle();
+        expect(radio.commands, hasLength(5));
+        expect(save, findsOneWidget);
+        await _editExtra(tester, RepeaterExtraSetting.rxDelay, '20');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands.skip(5), ['set rxdelay 20.0']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        await tester.tap(save);
+        await tester.pumpAndSettle();
+        expect(radio.commands.skip(5), ['set rxdelay 20.0']);
+      });
+    });
+
+    testWidgets('U13c: an edit made while SET awaits its ACK stays dirty '
+        '($locale)', (tester) async {
+      await _withSettings(tester, locale, (radio, l10n) async {
+        const setting = RepeaterExtraSetting.rxDelay;
+        await _readExtra(tester, radio, l10n, setting, '> 0');
+        await _editExtra(tester, setting, '1');
+        final save = find.widgetWithText(TextButton, l10n.common_save);
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands, ['get rxdelay', 'set rxdelay 1.0']);
+        await _editExtra(tester, setting, '2');
+        expect(radio.commands, hasLength(2));
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsOneWidget);
+        expect(tester.widget<TextField>(_extraInput(setting)).controller!.text, '2');
+        await tester.tap(save);
+        await tester.pump();
+        expect(radio.commands,
+            ['get rxdelay', 'set rxdelay 1.0', 'set rxdelay 2.0']);
+        await _answer(tester, radio, 'OK');
+        await tester.pumpAndSettle();
+        expect(save, findsNothing);
+      });
+    });
 
     testWidgets('U11b8 baseline: open and disconnected state never fetch settings ($locale)', (tester) async {
       await _withSettings(tester, locale, (radio, l10n) async {

@@ -4435,5 +4435,20 @@
   "map_requestLocation": "Standort aktualisieren",
   "map_locationUpdated": "Standort aktualisiert",
   "map_locationNotShared": "{name} hat ohne Standort geantwortet",
-  "map_locationRequestFailed": "Keine Antwort von {name}"
+  "map_locationRequestFailed": "Keine Antwort von {name}",
+  "repeater_floodMaxAdvert": "Maximale Sprünge für Advert-Flood",
+  "repeater_floodMaxAdvertHelper": "Maximale Anzahl Sprünge, die ein per Flood verbreiteter Advert zurücklegen darf (0-64, Standard 8)",
+  "repeater_floodMaxUnscoped": "Maximale Sprünge für Flood ohne Region",
+  "repeater_floodMaxUnscopedHelper": "Maximale Sprünge für Floods ohne Regionsbereich (0-64, Standard 64). Ein niedriger Wert wie 3 hält Verkehr ohne Region lokal.",
+  "repeater_floodMaxUnscopedUnset": "Wie maximale Flood-Sprünge",
+  "repeater_rxDelay": "Empfangsverzögerung",
+  "repeater_rxDelayHelper": "Hält Flood-Pakete, die mit schwachem Signal empfangen wurden, vor der Weiterleitung zurück, damit Pfade mit starkem Signal zuerst drankommen und weniger Duplikate gesendet werden (0-20, 0 schaltet es aus).",
+  "repeater_cad": "Kanalaktivitätserkennung",
+  "repeater_cadHelper": "Hört vor dem Senden auf Aktivität und wartet, solange der Kanal belegt ist. Arbeitet zusammen mit der Interferenzschwelle.",
+  "repeater_adcMultiplier": "Kalibrierung der Batteriespannung",
+  "repeater_adcMultiplierHelper": "Multiplikator für die Messung der Batteriespannung (0-10). 0 verwendet den Standardwert der Platine.",
+  "repeater_boardSupportNote": "Nicht jede Platine unterstützt dies. Nicht unterstützte Platinen lehnen die Änderung ab.",
+  "repeater_extraSf": "Zusätzliche Spreading-Faktoren (SF)",
+  "repeater_extraSfHelper": "Bis zu 3 weitere Spreading-Faktoren (SF), auf denen gleichzeitig gehört wird, durch Kommas getrennt (zum Beispiel 9,10). Leer lassen, um es auszuschalten.",
+  "repeater_lr2021Only": "Nur für Repeater mit LR2021-Funkmodul. Andere Repeater haben diese Einstellung nicht und lehnen sie ab."
 }

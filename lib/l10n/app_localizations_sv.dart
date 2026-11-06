@@ -9106,4 +9106,57 @@ class AppLocalizationsSv extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Inget svar från $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Max antal flood-hopp för advert';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Maximalt antal hopp som en flood-advert får färdas (0–64, standard 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'Max antal flood-hopp utan region';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Maximalt antal hopp för flood utan regionomfång (0–64, standard 64). Ett lågt värde som 3 håller trafik utan region lokal.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Samma som flood max';
+
+  @override
+  String get repeater_rxDelay => 'Mottagningsfördröjning';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Håller tillbaka flood-paket som hörs med svag signal innan de vidarebefordras, så att vägar med stark signal går först och färre dubbletter skickas (0–20, 0 stänger av det).';
+
+  @override
+  String get repeater_cad => 'Kanalaktivitetsdetektering';
+
+  @override
+  String get repeater_cadHelper =>
+      'Lyssnar efter aktivitet före sändning och väntar medan kanalen är upptagen. Fungerar tillsammans med störningströskeln.';
+
+  @override
+  String get repeater_adcMultiplier => 'Kalibrering av batterispänning';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Multiplikator för avläsningen av batterispänningen (0–10). 0 använder kortets standardvärde.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Alla kort stöder inte detta. Kort som inte stöder det avvisar ändringen.';
+
+  @override
+  String get repeater_extraSf => 'Extra spridningsfaktorer';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Upp till 3 extra spridningsfaktorer att lyssna på samtidigt, separerade med kommatecken (till exempel 9,10). Lämna tomt för att stänga av.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Endast för repeatrar med LR2021-radio. Andra repeatrar har inte den här inställningen och avvisar den.';
 }

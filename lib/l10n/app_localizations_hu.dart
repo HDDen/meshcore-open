@@ -9154,4 +9154,58 @@ class AppLocalizationsHu extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Nincs válasz tőle: $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Advert elárasztás max ugrás';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Az elárasztott advert által megtehető legtöbb ugrás (0-64, alapértelmezett 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'Régió nélküli elárasztás max ugrás';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'A régióhatókör nélküli elárasztások legtöbb ugrása (0-64, alapértelmezett 64). Egy alacsony érték, például 3, helyben tartja a régió nélküli forgalmat.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset =>
+      'Megegyezik az elárasztás max értékével';
+
+  @override
+  String get repeater_rxDelay => 'Vételi késleltetés';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Visszatartja a gyenge jellel hallott elárasztási csomagokat a továbbítás előtt, így az erős jelű útvonalak mennek előre, és kevesebb duplikátum kerül elküldésre (0-20, a 0 kikapcsolja).';
+
+  @override
+  String get repeater_cad => 'Csatornaaktivitás-érzékelés';
+
+  @override
+  String get repeater_cadHelper =>
+      'Adás előtt figyeli a tevékenységet, és vár, amíg a csatorna foglalt. Az interferencia küszöbbel együtt működik.';
+
+  @override
+  String get repeater_adcMultiplier => 'Akkumulátorfeszültség kalibrálása';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Az akkumulátorfeszültség-olvasás szorzója (0-10). A 0 a panel alapértelmezett értékét használja.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Nem minden panel támogatja ezt. A nem támogató panelek elutasítják a módosítást.';
+
+  @override
+  String get repeater_extraSf => 'További Spreading Factorok (SF)';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Legfeljebb 3 további Spreading Factor (SF), amelyeken egyszerre figyel, vesszővel elválasztva (például 9,10). Hagyja üresen a kikapcsoláshoz.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Csak LR2021 rádiós átjátszókhoz. A többi átjátszó nem rendelkezik ezzel a beállítással, és elutasítja azt.';
 }

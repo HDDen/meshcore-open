@@ -9142,4 +9142,57 @@ class AppLocalizationsRu extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Не удалось получить координаты от $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Лимит хопов объявлений';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Максимальное число хопов для объявлений, отправленных через flood (0–64; по умолчанию 8).';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'Лимит хопов без региона';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Максимальное число хопов для flood-пакетов без региона (0–64). Небольшое значение, например 3, ограничивает распространение таких пакетов.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Как у общего лимита flood';
+
+  @override
+  String get repeater_rxDelay => 'Задержка ретрансляции';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Задерживает ретрансляцию flood-пакетов со слабым сигналом, давая приоритет путям с сильным сигналом и уменьшая число копий (0–20; 0 отключает задержку).';
+
+  @override
+  String get repeater_cad => 'Проверка занятости канала';
+
+  @override
+  String get repeater_cadHelper =>
+      'Проверяет эфир перед передачей и ждёт освобождения занятого канала. Работает совместно с порогом помех.';
+
+  @override
+  String get repeater_adcMultiplier => 'Калибровка напряжения батареи';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Множитель показаний напряжения батареи (0–10). Значение 0 возвращает множитель платы по умолчанию.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Поддержка зависит от платы. Если функция недоступна, нода отклонит изменение.';
+
+  @override
+  String get repeater_extraSf => 'Дополнительные SF';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'До трёх дополнительных SF от 5 до 12 для одновременного приёма. Укажите их через запятую, например 9,10. Пустое значение отключает дополнительные SF.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Требуется радиочип LR2021. На других радиочипах эта настройка недоступна.';
 }

@@ -9180,4 +9180,60 @@ class AppLocalizationsBg extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Няма отговор от $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Максимален брой скокове при Flood за Advert';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Максимален брой скокове, които може да премине разпространен Advert (0-64, по подразбиране 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Максимален брой скокове при Flood без обхват';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Максимален брой скокове за Flood без регионален обхват (0-64, по подразбиране 64). Ниска стойност, например 3, запазва трафика без обхват локален.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Като максимума при Flood';
+
+  @override
+  String get repeater_rxDelay => 'Забавяне на приемането';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Задържа Flood пакети, чути със слаб сигнал, преди препращане, така че пътищата със силен сигнал да са първи и да се изпращат по-малко дубликати (0-20, 0 го изключва).';
+
+  @override
+  String get repeater_cad => 'Откриване на активност в канала';
+
+  @override
+  String get repeater_cadHelper =>
+      'Слуша за активност преди предаване и изчаква, докато каналът е зает. Работи заедно с прага на смущенията.';
+
+  @override
+  String get repeater_adcMultiplier =>
+      'Калибриране на напрежението на батерията';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Множител за отчитането на напрежението на батерията (0-10). 0 използва стойността по подразбиране на платката.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Не всяка платка поддържа това. Неподдържаните платки отхвърлят промяната.';
+
+  @override
+  String get repeater_extraSf => 'Допълнителни фактори на разпространение (SF)';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'До 3 допълнителни фактора на разпространение (SF), които да се слушат едновременно, разделени със запетаи (например 9,10). Оставете празно, за да изключите.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Само за репийтъри с радио LR2021. Другите репийтъри нямат тази настройка и я отхвърлят.';
 }

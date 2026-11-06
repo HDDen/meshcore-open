@@ -9024,4 +9024,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'No reply from $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Advert flood max hops';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Maximum hops a flooded advert may travel (0-64, default 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'Unscoped flood max hops';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Maximum hops for floods without a region scope (0-64, default 64). A low value such as 3 keeps unscoped traffic local.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Same as flood max';
+
+  @override
+  String get repeater_rxDelay => 'Receive delay';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Holds flood packets heard with a weak signal before forwarding, so strong-signal paths go first and fewer duplicates are sent (0-20, 0 turns it off).';
+
+  @override
+  String get repeater_cad => 'Channel activity detection';
+
+  @override
+  String get repeater_cadHelper =>
+      'Listen for activity before transmitting and wait while the channel is busy. Works alongside the interference threshold.';
+
+  @override
+  String get repeater_adcMultiplier => 'Battery voltage calibration';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Multiplier for the battery voltage reading (0-10). 0 uses the board\'s default.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Not every board supports this. Unsupported boards reject the change.';
+
+  @override
+  String get repeater_extraSf => 'Extra spreading factors';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Up to 3 more spreading factors to listen on at the same time, separated by commas (for example 9,10). Leave empty to turn off.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Only for repeaters with an LR2021 radio. Other repeaters don\'t have this setting and reject it.';
 }

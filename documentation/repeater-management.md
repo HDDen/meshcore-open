@@ -264,11 +264,14 @@ Nine configuration cards, each with its own per-field refresh button(s):
 **5. Network Health**
 - Loop detection dropdown (off / minimal / moderate / strict; `set loop.detect`)
 - Duty cycle slider (1–100%; `set dutycycle`)
+- Receive/forwarding delay factor (`get/set rxdelay`, finite 0–20; 0 disables the delay)
 
 **6. Advertisement Settings**
 - Local advert interval slider (60–240 minutes) with enable/disable toggle
 - Flood advert interval slider (3–168 hours) with enable/disable toggle
 - Flood max hops slider (0–64; `set flood.max`)
+- Advert flood hop limit (`get/set flood.max.advert`, integer 0–64)
+- Unscoped flood hop limit (`get/set flood.max.unscoped`, integer 0–64). A read value of 255 is shown as inheriting the general flood limit, never as 255 hops. The firmware does not accept 255 in SET; enter an explicit 0–64 limit to override it
 
 **7. Owner Info**
 - Multi-line text field for operator contact info (`set owner.info`); newlines sent as `|`
@@ -283,7 +286,10 @@ Nine configuration cards, each with its own per-field refresh button(s):
 - TX delay field (`set txdelay`), finite values from 0 to 2 inclusive
 - Direct TX delay field (`set direct.txdelay`), finite values from 0 to 2 inclusive
 - Interference threshold field (`set int.thresh`)
-- AGC reset interval slider (0–240s in multiples of 4; `set agc.reset.interval`)
+- AGC reset interval slider (0–1020s in multiples of 4; `set agc.reset.interval`)
+- Channel activity detection (`get/set cad`, on/off)
+- Battery voltage calibration (`get/set adc.multiplier`, finite 0–10; 0 restores the board default). Availability depends on the board
+- Extra spreading factors (`get/set extra.sf`, up to three SF values from 5 to 12, separated by commas). Available on LR2021 builds only; clearing the field and saving disables the extra SFs
 
 **Danger Zone** (red-styled card)
 - Reboot repeater (sends `reboot` with confirmation dialog)
@@ -291,7 +297,11 @@ Nine configuration cards, each with its own per-field refresh button(s):
 
 ### Key Interactions
 - **Settings are NOT auto-fetched on open**. Name is pre-filled from cached contact data. Each section has its own refresh button to fetch live values from the repeater
-- TX Power, RX Gain, latitude, longitude, and advanced fields each have independent inline refresh buttons
+- TX Power, RX Gain, latitude, longitude, advanced fields and all six extra CLI settings each have independent inline refresh buttons
+- Opening this screen sends no GETs. Explicit Refresh All runs the 20 existing GETs followed by six extra GETs, sequentially with the same command queue. Each GET is a LoRa request; use a field's refresh button when only that value is needed
+- New controls unlock only after a recognized valid reply. Unknown commands, malformed replies and unsupported hardware leave an unread field disabled and preserve any previously read value. Availability is determined by the actual reply, not a guessed firmware version
+- LR2021 `extra.sf` replies can be plain `9,10` or `No extra SF configured`, without `>`. Both are recognized; a bare empty reply is not treated as a successful read
+- Save sends only edited fields. A failed SET preserves that field for retry, and edits made while an earlier SET awaits its ACK remain unsaved drafts. No setting is stored automatically on opening or leaving the screen
 - Save button in app bar appears when any change is detected; failed commands keep those fields dirty for retry
 - Each field stays disabled until its manual GET succeeds. The first successful GET keeps an already expanded Advanced card open
 - TX delays accept a decimal point or comma. Values outside 0-2, non-numeric input and infinities are rejected locally; the draft remains available for correction

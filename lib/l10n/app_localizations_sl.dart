@@ -9116,4 +9116,57 @@ class AppLocalizationsSl extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Ni odgovora od $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Največ skokov flood za advert';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Največje število skokov, ki jih lahko prepotuje razposlani advert (0-64, privzeto 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'Največ skokov flood brez regije';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Največje število skokov za flood brez regije (0-64, privzeto 64). Nizka vrednost, na primer 3, ohrani promet brez regije lokalen.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Enako kot flood max';
+
+  @override
+  String get repeater_rxDelay => 'Zakasnitev sprejema';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Zadrži flood pakete, ki so slišani s šibkim signalom, pred posredovanjem, da gredo najprej poti z močnim signalom in se pošlje manj dvojnikov (0-20, 0 ga izklopi).';
+
+  @override
+  String get repeater_cad => 'Zaznavanje aktivnosti kanala';
+
+  @override
+  String get repeater_cadHelper =>
+      'Pred oddajanjem prisluhne aktivnosti in počaka, dokler je kanal zaseden. Deluje skupaj z mejo motenj.';
+
+  @override
+  String get repeater_adcMultiplier => 'Kalibracija napetosti baterije';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Množitelj za meritev napetosti baterije (0-10). 0 uporabi privzeto vrednost plošče.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Vsaka plošča tega ne podpira. Nepodprte plošče spremembo zavrnejo.';
+
+  @override
+  String get repeater_extraSf => 'Dodatni spreading faktorji';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Do 3 dodatni spreading faktorji za hkratno poslušanje, ločeni z vejicami (na primer 9,10). Pustite prazno za izklop.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Samo za repetitorje z radiem LR2021. Drugi repetitorji te nastavitve nimajo in jo zavrnejo.';
 }

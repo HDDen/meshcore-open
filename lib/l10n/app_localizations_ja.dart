@@ -8716,4 +8716,57 @@ class AppLocalizationsJa extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return '$name から応答がありません';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'アドバートのフラッド最大ホップ数';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'フラッドされるアドバートが通過できる最大ホップ数（0-64、デフォルト 8）';
+
+  @override
+  String get repeater_floodMaxUnscoped => 'スコープなしのフラッド最大ホップ数';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'リージョンスコープのないフラッドの最大ホップ数（0-64、デフォルト 64）。3 などの低い値にすると、スコープなしのトラフィックをローカルに留められます。';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'フラッド最大と同じ';
+
+  @override
+  String get repeater_rxDelay => '受信遅延';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      '弱い信号で受信したフラッドパケットを転送前に保留し、強い信号の経路を優先させて重複送信を減らします（0-20、0 で無効）。';
+
+  @override
+  String get repeater_cad => 'チャンネルアクティビティ検出';
+
+  @override
+  String get repeater_cadHelper =>
+      '送信前に通信の有無を確認し、チャンネルがビジー状態の間は待機します。干渉閾値と併せて機能します。';
+
+  @override
+  String get repeater_adcMultiplier => 'バッテリー電圧の補正';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'バッテリー電圧の読み取り値に掛ける係数（0-10）。0 の場合はボードのデフォルト値を使用します。';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'すべてのボードが対応しているわけではありません。非対応のボードは変更を拒否します。';
+
+  @override
+  String get repeater_extraSf => '追加の伝播係数';
+
+  @override
+  String get repeater_extraSfHelper =>
+      '同時に受信待ちする追加の伝播係数を最大 3 つまで、カンマ区切りで指定します（例: 9,10）。空欄にすると無効になります。';
+
+  @override
+  String get repeater_lr2021Only =>
+      'LR2021 無線を搭載したリピータ専用です。他のリピータにはこの設定がなく、変更は拒否されます。';
 }

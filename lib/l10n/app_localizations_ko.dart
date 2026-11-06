@@ -8720,4 +8720,57 @@ class AppLocalizationsKo extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return '$name의 응답이 없습니다';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => '광고 플러드 최대 홉 수';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      '플러드되는 광고(advert)가 거칠 수 있는 최대 홉 수 (0-64, 기본값 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => '범위 미지정 플러드 최대 홉 수';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      '지역 범위가 없는 플러드의 최대 홉 수 (0-64, 기본값 64). 3과 같은 낮은 값을 지정하면 범위 미지정 트래픽을 로컬에 머물게 합니다.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => '플러드 최대와 동일';
+
+  @override
+  String get repeater_rxDelay => '수신 지연';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      '약한 신호로 수신한 플러드 패킷을 전달하기 전에 잠시 보류하여, 강한 신호 경로가 먼저 전달되고 중복 전송이 줄어듭니다 (0-20, 0이면 꺼짐).';
+
+  @override
+  String get repeater_cad => '채널 활동 감지';
+
+  @override
+  String get repeater_cadHelper =>
+      '전송 전에 활동을 확인하고 채널이 사용 중이면 대기합니다. 간섭 허용치와 함께 동작합니다.';
+
+  @override
+  String get repeater_adcMultiplier => '배터리 전압 보정';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      '배터리 전압 측정값에 곱하는 배수 (0-10). 0이면 보드의 기본값을 사용합니다.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      '모든 보드가 이 기능을 지원하는 것은 아닙니다. 지원하지 않는 보드는 변경을 거부합니다.';
+
+  @override
+  String get repeater_extraSf => '추가 확산 계수';
+
+  @override
+  String get repeater_extraSfHelper =>
+      '동시에 수신 대기할 확산 계수를 최대 3개까지 쉼표로 구분하여 추가합니다 (예: 9,10). 비워 두면 꺼집니다.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'LR2021 무전기를 탑재한 리피터 전용입니다. 다른 리피터에는 이 설정이 없으며 변경을 거부합니다.';
 }

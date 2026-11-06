@@ -9149,4 +9149,59 @@ class AppLocalizationsPt extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Sem resposta de $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Máximo de saltos de inundação de anúncios';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Número máximo de saltos que um anúncio inundado pode percorrer (0-64, padrão 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Máximo de saltos de inundação sem escopo';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Número máximo de saltos para inundações sem escopo de região (0-64, padrão 64). Um valor baixo, como 3, mantém o tráfego sem escopo local.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Igual ao máximo de inundação';
+
+  @override
+  String get repeater_rxDelay => 'Atraso de recepção';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Retém pacotes de inundação ouvidos com sinal fraco antes de encaminhá-los, para que os caminhos com sinal forte tenham prioridade e menos duplicatas sejam enviadas (0-20, 0 desativa).';
+
+  @override
+  String get repeater_cad => 'Detecção de atividade do canal';
+
+  @override
+  String get repeater_cadHelper =>
+      'Escuta a atividade antes de transmitir e aguarda enquanto o canal estiver ocupado. Funciona em conjunto com o limite de interferência.';
+
+  @override
+  String get repeater_adcMultiplier => 'Calibração da tensão da bateria';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Multiplicador da leitura da tensão da bateria (0-10). 0 usa o padrão da placa.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Nem toda placa oferece suporte a isso. Placas sem suporte rejeitam a alteração.';
+
+  @override
+  String get repeater_extraSf => 'Fatores de dispersão extras';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Até 3 fatores de dispersão adicionais para escutar ao mesmo tempo, separados por vírgulas (por exemplo, 9,10). Deixe vazio para desativar.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Somente para repetidores com rádio LR2021. Os demais repetidores não têm esta configuração e a rejeitam.';
 }

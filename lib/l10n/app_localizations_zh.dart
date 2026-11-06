@@ -8527,4 +8527,54 @@ class AppLocalizationsZh extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return '$name 没有回复';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => '广播泛洪最大跳数';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      '广播（advert）泛洪可传输的最大跳数 (0-64，默认 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped => '无区域泛洪最大跳数';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      '未指定区域的泛洪最大跳数 (0-64，默认 64)。较低的值（如 3）可将无区域流量限制在本地。';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => '与泛洪最大跳数相同';
+
+  @override
+  String get repeater_rxDelay => '接收延迟';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      '转发前先暂缓处理以弱信号收到的泛洪包，让强信号路径优先，从而减少重复发送 (0-20，0 为关闭)。';
+
+  @override
+  String get repeater_cad => '信道活动检测';
+
+  @override
+  String get repeater_cadHelper => '发射前先监听是否有活动，信道繁忙时等待。与干扰阈值配合使用。';
+
+  @override
+  String get repeater_adcMultiplier => '电池电压校准';
+
+  @override
+  String get repeater_adcMultiplierHelper => '电池电压读数的倍数 (0-10)。0 表示使用开发板默认值。';
+
+  @override
+  String get repeater_boardSupportNote => '并非所有开发板都支持此功能。不支持的开发板会拒绝该更改。';
+
+  @override
+  String get repeater_extraSf => '额外扩频因子';
+
+  @override
+  String get repeater_extraSfHelper =>
+      '同时监听最多 3 个额外的扩频因子（SF），用逗号分隔（例如 9,10）。留空则关闭。';
+
+  @override
+  String get repeater_lr2021Only =>
+      '仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。';
 }

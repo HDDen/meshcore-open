@@ -9177,4 +9177,59 @@ class AppLocalizationsPl extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Brak odpowiedzi od $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert =>
+      'Maks. liczba skoków flood dla advertów';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Maksymalna liczba skoków, które może pokonać rozgłaszany (flood) advert (0-64, domyślnie 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Maks. liczba skoków flood bez zakresu';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Maksymalna liczba skoków dla floodów bez zakresu regionu (0-64, domyślnie 64). Niska wartość, np. 3, utrzymuje ruch bez zakresu lokalnie.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Jak maks. flood';
+
+  @override
+  String get repeater_rxDelay => 'Opóźnienie odbioru';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Wstrzymuje pakiety flood odebrane ze słabym sygnałem przed przekazaniem dalej, dzięki czemu ścieżki z silnym sygnałem są pierwsze i wysyłanych jest mniej duplikatów (0-20, 0 wyłącza).';
+
+  @override
+  String get repeater_cad => 'Wykrywanie aktywności kanału';
+
+  @override
+  String get repeater_cadHelper =>
+      'Nasłuchuje aktywności przed nadawaniem i czeka, dopóki kanał jest zajęty. Działa razem z progiem zakłóceń.';
+
+  @override
+  String get repeater_adcMultiplier => 'Kalibracja napięcia baterii';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Mnożnik odczytu napięcia baterii (0-10). 0 używa wartości domyślnej płytki.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Nie każda płytka to obsługuje. Nieobsługiwane płytki odrzucają zmianę.';
+
+  @override
+  String get repeater_extraSf => 'Dodatkowe współczynniki rozpraszania';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Do 3 dodatkowych współczynników rozpraszania, na których nasłuchiwać jednocześnie, oddzielonych przecinkami (na przykład 9,10). Pozostaw puste, aby wyłączyć.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Tylko dla przekaźników z radiem LR2021. Inne przekaźniki nie mają tego ustawienia i je odrzucają.';
 }

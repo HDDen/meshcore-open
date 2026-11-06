@@ -9177,4 +9177,58 @@ class AppLocalizationsDe extends AppLocalizations {
   String map_locationRequestFailed(String name) {
     return 'Keine Antwort von $name';
   }
+
+  @override
+  String get repeater_floodMaxAdvert => 'Maximale Sprünge für Advert-Flood';
+
+  @override
+  String get repeater_floodMaxAdvertHelper =>
+      'Maximale Anzahl Sprünge, die ein per Flood verbreiteter Advert zurücklegen darf (0-64, Standard 8)';
+
+  @override
+  String get repeater_floodMaxUnscoped =>
+      'Maximale Sprünge für Flood ohne Region';
+
+  @override
+  String get repeater_floodMaxUnscopedHelper =>
+      'Maximale Sprünge für Floods ohne Regionsbereich (0-64, Standard 64). Ein niedriger Wert wie 3 hält Verkehr ohne Region lokal.';
+
+  @override
+  String get repeater_floodMaxUnscopedUnset => 'Wie maximale Flood-Sprünge';
+
+  @override
+  String get repeater_rxDelay => 'Empfangsverzögerung';
+
+  @override
+  String get repeater_rxDelayHelper =>
+      'Hält Flood-Pakete, die mit schwachem Signal empfangen wurden, vor der Weiterleitung zurück, damit Pfade mit starkem Signal zuerst drankommen und weniger Duplikate gesendet werden (0-20, 0 schaltet es aus).';
+
+  @override
+  String get repeater_cad => 'Kanalaktivitätserkennung';
+
+  @override
+  String get repeater_cadHelper =>
+      'Hört vor dem Senden auf Aktivität und wartet, solange der Kanal belegt ist. Arbeitet zusammen mit der Interferenzschwelle.';
+
+  @override
+  String get repeater_adcMultiplier => 'Kalibrierung der Batteriespannung';
+
+  @override
+  String get repeater_adcMultiplierHelper =>
+      'Multiplikator für die Messung der Batteriespannung (0-10). 0 verwendet den Standardwert der Platine.';
+
+  @override
+  String get repeater_boardSupportNote =>
+      'Nicht jede Platine unterstützt dies. Nicht unterstützte Platinen lehnen die Änderung ab.';
+
+  @override
+  String get repeater_extraSf => 'Zusätzliche Spreading-Faktoren (SF)';
+
+  @override
+  String get repeater_extraSfHelper =>
+      'Bis zu 3 weitere Spreading-Faktoren (SF), auf denen gleichzeitig gehört wird, durch Kommas getrennt (zum Beispiel 9,10). Leer lassen, um es auszuschalten.';
+
+  @override
+  String get repeater_lr2021Only =>
+      'Nur für Repeater mit LR2021-Funkmodul. Andere Repeater haben diese Einstellung nicht und lehnen sie ab.';
 }

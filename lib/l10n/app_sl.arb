@@ -4273,5 +4273,20 @@
   "map_requestLocation": "Posodobi lokacijo",
   "map_locationUpdated": "Lokacija posodobljena",
   "map_locationNotShared": "{name} je odgovoril brez lokacije",
-  "map_locationRequestFailed": "Ni odgovora od {name}"
+  "map_locationRequestFailed": "Ni odgovora od {name}",
+  "repeater_floodMaxAdvert": "Največ skokov flood za advert",
+  "repeater_floodMaxAdvertHelper": "Največje število skokov, ki jih lahko prepotuje razposlani advert (0-64, privzeto 8)",
+  "repeater_floodMaxUnscoped": "Največ skokov flood brez regije",
+  "repeater_floodMaxUnscopedHelper": "Največje število skokov za flood brez regije (0-64, privzeto 64). Nizka vrednost, na primer 3, ohrani promet brez regije lokalen.",
+  "repeater_floodMaxUnscopedUnset": "Enako kot flood max",
+  "repeater_rxDelay": "Zakasnitev sprejema",
+  "repeater_rxDelayHelper": "Zadrži flood pakete, ki so slišani s šibkim signalom, pred posredovanjem, da gredo najprej poti z močnim signalom in se pošlje manj dvojnikov (0-20, 0 ga izklopi).",
+  "repeater_cad": "Zaznavanje aktivnosti kanala",
+  "repeater_cadHelper": "Pred oddajanjem prisluhne aktivnosti in počaka, dokler je kanal zaseden. Deluje skupaj z mejo motenj.",
+  "repeater_adcMultiplier": "Kalibracija napetosti baterije",
+  "repeater_adcMultiplierHelper": "Množitelj za meritev napetosti baterije (0-10). 0 uporabi privzeto vrednost plošče.",
+  "repeater_boardSupportNote": "Vsaka plošča tega ne podpira. Nepodprte plošče spremembo zavrnejo.",
+  "repeater_extraSf": "Dodatni spreading faktorji",
+  "repeater_extraSfHelper": "Do 3 dodatni spreading faktorji za hkratno poslušanje, ločeni z vejicami (na primer 9,10). Pustite prazno za izklop.",
+  "repeater_lr2021Only": "Samo za repetitorje z radiem LR2021. Drugi repetitorji te nastavitve nimajo in jo zavrnejo."
 }

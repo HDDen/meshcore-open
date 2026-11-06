@@ -4089,5 +4089,20 @@
   "map_requestLocation": "Atualizar localização",
   "map_locationUpdated": "Localização atualizada",
   "map_locationNotShared": "{name} respondeu sem localização",
-  "map_locationRequestFailed": "Sem resposta de {name}"
+  "map_locationRequestFailed": "Sem resposta de {name}",
+  "repeater_floodMaxAdvert": "Máximo de saltos de inundação de anúncios",
+  "repeater_floodMaxAdvertHelper": "Número máximo de saltos que um anúncio inundado pode percorrer (0-64, padrão 8)",
+  "repeater_floodMaxUnscoped": "Máximo de saltos de inundação sem escopo",
+  "repeater_floodMaxUnscopedHelper": "Número máximo de saltos para inundações sem escopo de região (0-64, padrão 64). Um valor baixo, como 3, mantém o tráfego sem escopo local.",
+  "repeater_floodMaxUnscopedUnset": "Igual ao máximo de inundação",
+  "repeater_rxDelay": "Atraso de recepção",
+  "repeater_rxDelayHelper": "Retém pacotes de inundação ouvidos com sinal fraco antes de encaminhá-los, para que os caminhos com sinal forte tenham prioridade e menos duplicatas sejam enviadas (0-20, 0 desativa).",
+  "repeater_cad": "Detecção de atividade do canal",
+  "repeater_cadHelper": "Escuta a atividade antes de transmitir e aguarda enquanto o canal estiver ocupado. Funciona em conjunto com o limite de interferência.",
+  "repeater_adcMultiplier": "Calibração da tensão da bateria",
+  "repeater_adcMultiplierHelper": "Multiplicador da leitura da tensão da bateria (0-10). 0 usa o padrão da placa.",
+  "repeater_boardSupportNote": "Nem toda placa oferece suporte a isso. Placas sem suporte rejeitam a alteração.",
+  "repeater_extraSf": "Fatores de dispersão extras",
+  "repeater_extraSfHelper": "Até 3 fatores de dispersão adicionais para escutar ao mesmo tempo, separados por vírgulas (por exemplo, 9,10). Deixe vazio para desativar.",
+  "repeater_lr2021Only": "Somente para repetidores com rádio LR2021. Os demais repetidores não têm esta configuração e a rejeitam."
 }

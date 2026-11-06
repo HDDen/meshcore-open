@@ -4273,5 +4273,20 @@
   "map_requestLocation": "Aktualizovať polohu",
   "map_locationUpdated": "Poloha aktualizovaná",
   "map_locationNotShared": "{name} odpovedal bez polohy",
-  "map_locationRequestFailed": "Žiadna odpoveď od {name}"
+  "map_locationRequestFailed": "Žiadna odpoveď od {name}",
+  "repeater_floodMaxAdvert": "Maximálny počet skokov flood pre advert",
+  "repeater_floodMaxAdvertHelper": "Maximálny počet skokov, ktoré môže prejsť rozosielaný advert (0-64, predvolene 8)",
+  "repeater_floodMaxUnscoped": "Maximálny počet skokov flood bez regiónu",
+  "repeater_floodMaxUnscopedHelper": "Maximálny počet skokov pre flood bez regiónu (0-64, predvolene 64). Nízka hodnota, napríklad 3, udrží premávku bez regiónu lokálnu.",
+  "repeater_floodMaxUnscopedUnset": "Rovnaké ako flood max",
+  "repeater_rxDelay": "Oneskorenie príjmu",
+  "repeater_rxDelayHelper": "Pozdrží flood pakety zachytené so slabým signálom pred preposlaním, aby cesty so silným signálom išli prvé a odosielalo sa menej duplikátov (0-20, 0 to vypne).",
+  "repeater_cad": "Detekcia aktivity kanála",
+  "repeater_cadHelper": "Pred vysielaním počúva, či na kanáli nie je aktivita, a počká, kým je kanál obsadený. Funguje spolu s hranicou rušenia.",
+  "repeater_adcMultiplier": "Kalibrácia napätia batérie",
+  "repeater_adcMultiplierHelper": "Násobiteľ pre meranie napätia batérie (0-10). 0 použije predvolenú hodnotu dosky.",
+  "repeater_boardSupportNote": "Nie každá doska to podporuje. Nepodporované dosky zmenu odmietnu.",
+  "repeater_extraSf": "Ďalšie spreading faktory",
+  "repeater_extraSfHelper": "Až 3 ďalšie spreading faktory, na ktorých sa súčasne počúva, oddelené čiarkami (napríklad 9,10). Ak chcete vypnúť, nechajte prázdne.",
+  "repeater_lr2021Only": "Len pre opakovače s rádiom LR2021. Ostatné opakovače toto nastavenie nemajú a odmietnu ho."
 }

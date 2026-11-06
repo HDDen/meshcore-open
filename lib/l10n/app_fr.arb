@@ -4406,5 +4406,20 @@
   "map_requestLocation": "Actualiser la position",
   "map_locationUpdated": "Position actualisée",
   "map_locationNotShared": "{name} a répondu sans position",
-  "map_locationRequestFailed": "Aucune réponse de {name}"
+  "map_locationRequestFailed": "Aucune réponse de {name}",
+  "repeater_floodMaxAdvert": "Nombre maximal de sauts en flood pour les adverts",
+  "repeater_floodMaxAdvertHelper": "Nombre maximal de sauts qu’un advert diffusé en flood peut parcourir (0-64, 8 par défaut)",
+  "repeater_floodMaxUnscoped": "Nombre maximal de sauts en flood sans région",
+  "repeater_floodMaxUnscopedHelper": "Nombre maximal de sauts pour les floods sans portée régionale (0-64, 64 par défaut). Une valeur faible comme 3 garde le trafic sans région local.",
+  "repeater_floodMaxUnscopedUnset": "Comme le maximum en flood",
+  "repeater_rxDelay": "Délai de réception",
+  "repeater_rxDelayHelper": "Retient les paquets flood reçus avec un signal faible avant de les retransmettre, afin que les chemins à signal fort passent en premier et que moins de doublons soient envoyés (0-20, 0 désactive).",
+  "repeater_cad": "Détection d’activité du canal",
+  "repeater_cadHelper": "Écoute l’activité avant d’émettre et attend tant que le canal est occupé. Fonctionne avec le seuil de perturbation.",
+  "repeater_adcMultiplier": "Calibrage de la tension de la batterie",
+  "repeater_adcMultiplierHelper": "Multiplicateur de la mesure de tension de la batterie (0-10). 0 utilise la valeur par défaut de la carte.",
+  "repeater_boardSupportNote": "Toutes les cartes ne le prennent pas en charge. Les cartes non compatibles refusent la modification.",
+  "repeater_extraSf": "Facteurs de répartition (SF) supplémentaires",
+  "repeater_extraSfHelper": "Jusqu’à 3 facteurs de répartition (SF) supplémentaires à écouter en même temps, séparés par des virgules (par exemple 9,10). Laissez vide pour désactiver.",
+  "repeater_lr2021Only": "Uniquement pour les répéteurs dotés d’une radio LR2021. Les autres répéteurs n’ont pas ce paramètre et le refusent."
 }

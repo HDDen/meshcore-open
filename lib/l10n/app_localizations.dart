@@ -15286,6 +15286,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No reply from {name}'**
   String map_locationRequestFailed(String name);
+
+  /// No description provided for @repeater_floodMaxAdvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Advert flood max hops'**
+  String get repeater_floodMaxAdvert;
+
+  /// No description provided for @repeater_floodMaxAdvertHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum hops a flooded advert may travel (0-64, default 8)'**
+  String get repeater_floodMaxAdvertHelper;
+
+  /// No description provided for @repeater_floodMaxUnscoped.
+  ///
+  /// In en, this message translates to:
+  /// **'Unscoped flood max hops'**
+  String get repeater_floodMaxUnscoped;
+
+  /// No description provided for @repeater_floodMaxUnscopedHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum hops for floods without a region scope (0-64, default 64). A low value such as 3 keeps unscoped traffic local.'**
+  String get repeater_floodMaxUnscopedHelper;
+
+  /// No description provided for @repeater_floodMaxUnscopedUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as flood max'**
+  String get repeater_floodMaxUnscopedUnset;
+
+  /// No description provided for @repeater_rxDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive delay'**
+  String get repeater_rxDelay;
+
+  /// No description provided for @repeater_rxDelayHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Holds flood packets heard with a weak signal before forwarding, so strong-signal paths go first and fewer duplicates are sent (0-20, 0 turns it off).'**
+  String get repeater_rxDelayHelper;
+
+  /// No description provided for @repeater_cad.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel activity detection'**
+  String get repeater_cad;
+
+  /// No description provided for @repeater_cadHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen for activity before transmitting and wait while the channel is busy. Works alongside the interference threshold.'**
+  String get repeater_cadHelper;
+
+  /// No description provided for @repeater_adcMultiplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery voltage calibration'**
+  String get repeater_adcMultiplier;
+
+  /// No description provided for @repeater_adcMultiplierHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplier for the battery voltage reading (0-10). 0 uses the board\'s default.'**
+  String get repeater_adcMultiplierHelper;
+
+  /// No description provided for @repeater_boardSupportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Not every board supports this. Unsupported boards reject the change.'**
+  String get repeater_boardSupportNote;
+
+  /// No description provided for @repeater_extraSf.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra spreading factors'**
+  String get repeater_extraSf;
+
+  /// No description provided for @repeater_extraSfHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 3 more spreading factors to listen on at the same time, separated by commas (for example 9,10). Leave empty to turn off.'**
+  String get repeater_extraSfHelper;
+
+  /// No description provided for @repeater_lr2021Only.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for repeaters with an LR2021 radio. Other repeaters don\'t have this setting and reject it.'**
+  String get repeater_lr2021Only;
 }
 
 class _AppLocalizationsDelegate

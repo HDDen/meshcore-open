@@ -298,6 +298,17 @@ Remote repeater CLI commands use the text-message command with `txtTypeCliData`,
 
 See `buildSendCliCommandFrame()` (takes the repeater public key) in [meshcore_protocol.dart](../lib/connector/meshcore_protocol.dart). Companion reboot uses `buildRebootFrame()`; remote repeater reboot is a CLI command.
 
+Additional [repeater settings](repeater-management.md) use this same framed CLI
+path: `flood.max.advert`, `flood.max.unscoped`, `rxdelay`, `cad`,
+`adc.multiplier` and `extra.sf`. Their replies are paired by the existing
+command prefix. Numeric and toggle GET values require `>`, except LR2021
+`extra.sf`, which returns a raw comma-separated SF list or
+`No extra SF configured`. The latter is a valid empty value; an empty wire
+reply or unknown/unsupported response is not. Unscoped limit 255 is a read-only
+inheritance sentinel; its SET range remains 0..64. Clearing SFs sends the
+explicit command `set extra.sf ` including its trailing space, then the usual
+NUL terminator. No binary command layout or ACK protocol changes.
+
 Локальная [консоль CompanionCLI](companion-cli.md) использует отдельный путь:
 `[66][UTF-8 command]` → `[29][UTF-8 reply]`. Здесь нет адреса назначения,
 timestamp, LoRa ACK или `SYNC_NEXT_MESSAGE`. MCOa добавляет `ID|` перед текстом

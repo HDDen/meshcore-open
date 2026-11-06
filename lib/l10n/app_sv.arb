@@ -4083,5 +4083,20 @@
   "map_requestLocation": "Uppdatera plats",
   "map_locationUpdated": "Platsen uppdaterad",
   "map_locationNotShared": "{name} svarade utan plats",
-  "map_locationRequestFailed": "Inget svar från {name}"
+  "map_locationRequestFailed": "Inget svar från {name}",
+  "repeater_floodMaxAdvert": "Max antal flood-hopp för advert",
+  "repeater_floodMaxAdvertHelper": "Maximalt antal hopp som en flood-advert får färdas (0–64, standard 8)",
+  "repeater_floodMaxUnscoped": "Max antal flood-hopp utan region",
+  "repeater_floodMaxUnscopedHelper": "Maximalt antal hopp för flood utan regionomfång (0–64, standard 64). Ett lågt värde som 3 håller trafik utan region lokal.",
+  "repeater_floodMaxUnscopedUnset": "Samma som flood max",
+  "repeater_rxDelay": "Mottagningsfördröjning",
+  "repeater_rxDelayHelper": "Håller tillbaka flood-paket som hörs med svag signal innan de vidarebefordras, så att vägar med stark signal går först och färre dubbletter skickas (0–20, 0 stänger av det).",
+  "repeater_cad": "Kanalaktivitetsdetektering",
+  "repeater_cadHelper": "Lyssnar efter aktivitet före sändning och väntar medan kanalen är upptagen. Fungerar tillsammans med störningströskeln.",
+  "repeater_adcMultiplier": "Kalibrering av batterispänning",
+  "repeater_adcMultiplierHelper": "Multiplikator för avläsningen av batterispänningen (0–10). 0 använder kortets standardvärde.",
+  "repeater_boardSupportNote": "Alla kort stöder inte detta. Kort som inte stöder det avvisar ändringen.",
+  "repeater_extraSf": "Extra spridningsfaktorer",
+  "repeater_extraSfHelper": "Upp till 3 extra spridningsfaktorer att lyssna på samtidigt, separerade med kommatecken (till exempel 9,10). Lämna tomt för att stänga av.",
+  "repeater_lr2021Only": "Endast för repeatrar med LR2021-radio. Andra repeatrar har inte den här inställningen och avvisar den."
 }
