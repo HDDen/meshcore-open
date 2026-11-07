@@ -4319,5 +4319,102 @@
   "repeater_boardSupportNote": "Nem minden panel támogatja ezt. A nem támogató panelek elutasítják a módosítást.",
   "repeater_extraSf": "További Spreading Factorok (SF)",
   "repeater_extraSfHelper": "Legfeljebb 3 további Spreading Factor (SF), amelyeken egyszerre figyel, vesszővel elválasztva (például 9,10). Hagyja üresen a kikapcsoláshoz.",
-  "repeater_lr2021Only": "Csak LR2021 rádiós átjátszókhoz. A többi átjátszó nem rendelkezik ezzel a beállítással, és elutasítja azt."
+  "repeater_lr2021Only": "Csak LR2021 rádiós átjátszókhoz. A többi átjátszó nem rendelkezik ezzel a beállítással, és elutasítja azt.",
+  "chatBackground_choosePicture": "Kép kiválasztása",
+  "chatBackground_fade": "Halványítás",
+  "chatBackground_none": "Nincs",
+  "chatBackground_picture": "Kép",
+  "chatBackground_pictureFailed": "Ezt a képet nem sikerült használni",
+  "chatBackground_themeOverrides": "A(z) „{name}” témád minden csevegésben beállítja a hátteret. Kapcsold ki ezt a témában, hogy ezt használhasd.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Csak ennél a csevegésnél",
+  "chatBackground_title": "Csevegés háttere",
+  "themes_accent": "Kiemelőszín",
+  "themes_accentHelp": "Gombok, kiemelések és a saját üzenetbuborékaid",
+  "themes_background": "Háttér",
+  "themes_backgroundHelp": "Sötét háttérrel sötét téma lesz",
+  "themes_builtIn": "Beépített",
+  "themes_chatBackground": "Csevegés háttere",
+  "themes_chatBackgroundEverywhere": "Használat minden csevegésben",
+  "themes_chatBackgroundEverywhereHelp": "Az egyes csevegésekhez beállított hátteret is felülírja",
+  "themes_chatBackgroundHelp": "Azokban a csevegésekben jelenik meg, amelyeknek nincs saját hátterük",
+  "themes_codeCopied": "Témakód másolva",
+  "themes_copyCode": "Témakód másolása",
+  "themes_copyName": "{name} másolata",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Téma létrehozása",
+  "themes_customize": "Másolat testreszabása",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Alapszínek, a Világos / Sötét beállítást követi",
+  "themes_deleteConfirm": "Törlöd a(z) „{name}” témát?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Téma szerkesztése",
+  "themes_exportAll": "Témáim exportálása",
+  "themes_exportFailed": "A témákat nem sikerült exportálni",
+  "themes_exportFile": "Exportálás fájlba",
+  "themes_hexColor": "Hexa színkód",
+  "themes_iconChanged": "Módosítva",
+  "themes_iconPictureFailed": "Ezt a képet nem sikerült használni",
+  "themes_iconRepeater": "Átjátszók",
+  "themes_iconReset": "Alapértelmezett ikon használata",
+  "themes_iconRoom": "Szobák",
+  "themes_iconSend": "Küldés gomb",
+  "themes_iconSensor": "Érzékelők",
+  "themes_iconUsePicture": "Kép használata",
+  "themes_icons": "Ikonok",
+  "themes_iconsHelp": "Koppints egy ikonra, hogy másik ikonra vagy saját képre cseréld",
+  "themes_import": "Téma importálása",
+  "themes_importFile": "Importálás fájlból",
+  "themes_importFileNone": "Nem található téma ebben a fájlban",
+  "themes_importFileResult": "{count} téma importálva",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Illeszd be a téma kódját",
+  "themes_importInvalid": "Ez nem érvényes témakód",
+  "themes_imported": "A(z) „{name}” téma hozzáadva",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "A kiemelőszín nehezen látszik ezen a háttéren",
+  "themes_mapMarkers": "Térképjelölők",
+  "themes_mapMarkersHelp": "Cseréld le a csomópontok és a te jelölődet a térképen",
+  "themes_myThemes": "Saját témáim",
+  "themes_myThemesEmpty": "Készíts saját témát egy háttér és egy kiemelőszín kiválasztásával.",
+  "themes_name": "Név",
+  "themes_nameRequired": "Adj nevet a témádnak",
+  "themes_newTitle": "Új téma",
+  "themes_pasteCode": "Témakód beillesztése",
+  "themes_preview": "Előnézet",
+  "themes_previewIncoming": "Van valaki a hálón ma este?",
+  "themes_previewOutgoing": "Hangosan és tisztán!",
+  "themes_previewSwitch": "Értesítések",
+  "themes_saveAndUse": "Mentés és használat",
+  "themes_title": "Témák"
 }

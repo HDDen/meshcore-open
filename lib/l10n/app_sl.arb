@@ -4288,5 +4288,102 @@
   "repeater_boardSupportNote": "Vsaka plošča tega ne podpira. Nepodprte plošče spremembo zavrnejo.",
   "repeater_extraSf": "Dodatni spreading faktorji",
   "repeater_extraSfHelper": "Do 3 dodatni spreading faktorji za hkratno poslušanje, ločeni z vejicami (na primer 9,10). Pustite prazno za izklop.",
-  "repeater_lr2021Only": "Samo za repetitorje z radiem LR2021. Drugi repetitorji te nastavitve nimajo in jo zavrnejo."
+  "repeater_lr2021Only": "Samo za repetitorje z radiem LR2021. Drugi repetitorji te nastavitve nimajo in jo zavrnejo.",
+  "chatBackground_choosePicture": "Izberi sliko",
+  "chatBackground_fade": "Zbledelost",
+  "chatBackground_none": "Brez",
+  "chatBackground_picture": "Slika",
+  "chatBackground_pictureFailed": "Te slike ni mogoče uporabiti",
+  "chatBackground_themeOverrides": "Vaša tema »{name}« nastavi ozadje v vseh klepetih. Izklopite to v temi, če želite uporabiti to ozadje.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Samo za ta klepet",
+  "chatBackground_title": "Ozadje klepeta",
+  "themes_accent": "Poudarek",
+  "themes_accentHelp": "Gumbi, označbe in vaši mehurčki s sporočili",
+  "themes_background": "Ozadje",
+  "themes_backgroundHelp": "Temno ozadje naredi temno temo",
+  "themes_builtIn": "Vgrajene",
+  "themes_chatBackground": "Ozadje klepeta",
+  "themes_chatBackgroundEverywhere": "Uporabi v vseh klepetih",
+  "themes_chatBackgroundEverywhereHelp": "Zamenja tudi ozadja, nastavljena v posameznih klepetih",
+  "themes_chatBackgroundHelp": "Prikazano v klepetih, ki nimajo svojega ozadja",
+  "themes_codeCopied": "Koda teme kopirana",
+  "themes_copyCode": "Kopiraj kodo teme",
+  "themes_copyName": "{name} (kopija)",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Ustvari temo",
+  "themes_customize": "Prilagodi kopijo",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Standardne barve, sledi nastavitvi Svetlo / Temno",
+  "themes_deleteConfirm": "Izbrišem temo »{name}«?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Uredi temo",
+  "themes_exportAll": "Izvozi moje teme",
+  "themes_exportFailed": "Tem ni bilo mogoče izvoziti",
+  "themes_exportFile": "Izvozi v datoteko",
+  "themes_hexColor": "Šestnajstiška barva",
+  "themes_iconChanged": "Spremenjeno",
+  "themes_iconPictureFailed": "Te slike ni mogoče uporabiti",
+  "themes_iconRepeater": "Ponavljalniki",
+  "themes_iconReset": "Uporabi privzeto ikono",
+  "themes_iconRoom": "Sobe",
+  "themes_iconSend": "Gumb za pošiljanje",
+  "themes_iconSensor": "Senzorji",
+  "themes_iconUsePicture": "Uporabi sliko",
+  "themes_icons": "Ikone",
+  "themes_iconsHelp": "Tapnite ikono, da jo zamenjate z drugo ikono ali svojo sliko",
+  "themes_import": "Uvozi temo",
+  "themes_importFile": "Uvozi iz datoteke",
+  "themes_importFileNone": "V tej datoteki ni najdenih tem",
+  "themes_importFileResult": "Uvoženih tem: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Prilepite kodo teme",
+  "themes_importInvalid": "To ni veljavna koda teme",
+  "themes_imported": "Dodana tema »{name}«",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Poudarjena barva je na tem ozadju slabo vidna",
+  "themes_mapMarkers": "Označbe na zemljevidu",
+  "themes_mapMarkersHelp": "Zamenjajte označbe za vozlišča in zase na zemljevidu",
+  "themes_myThemes": "Moje teme",
+  "themes_myThemesEmpty": "Ustvarite svojo temo z izbiro ozadja in poudarjene barve.",
+  "themes_name": "Ime",
+  "themes_nameRequired": "Poimenujte svojo temo",
+  "themes_newTitle": "Nova tema",
+  "themes_pasteCode": "Prilepi kodo teme",
+  "themes_preview": "Predogled",
+  "themes_previewIncoming": "Je kdo nocoj na mreži?",
+  "themes_previewOutgoing": "Slišim vas glasno in jasno!",
+  "themes_previewSwitch": "Obvestila",
+  "themes_saveAndUse": "Shrani in uporabi",
+  "themes_title": "Teme"
 }

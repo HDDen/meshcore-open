@@ -74,6 +74,8 @@ import 'channels_screen.dart';
 import 'chat_screen.dart';
 import 'contacts_screen.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
+import '../widgets/themed_icon.dart';
 import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/node_info_sheet.dart';
@@ -4319,6 +4321,7 @@ class _MapScreenState extends State<MapScreen>
                   child: _buildNodeMarkerWidget(
                     color: baseColor,
                     icon: _getNodeIcon(contact.type),
+                    iconSlot: mapMarkerSlotForNodeType(contact.type),
                     selected: selected,
                     stale: stale,
                     online: online,
@@ -4420,6 +4423,7 @@ class _MapScreenState extends State<MapScreen>
   Widget _buildNodeMarkerWidget({
     required Color color,
     required IconData icon,
+    ThemeIconSlot? iconSlot,
     bool selected = false,
     bool stale = false,
     bool online = false,
@@ -4458,7 +4462,14 @@ class _MapScreenState extends State<MapScreen>
             ],
           ),
           alignment: Alignment.center,
-          child: Icon(icon, color: Colors.white, size: selected ? 22 : 19),
+          child: iconSlot == null
+              ? Icon(icon, color: Colors.white, size: selected ? 22 : 19)
+              : ThemedIcon(
+                  iconSlot,
+                  fallback: icon,
+                  color: Colors.white,
+                  size: selected ? 22 : 19,
+                ),
         ),
         Positioned(
           right: selected ? -1 : -2,
@@ -5838,10 +5849,12 @@ class _MapScreenState extends State<MapScreen>
             ],
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.person_pin_circle,
-            color: MapPalette.selected,
-            size: 22,
+          child: Builder(
+            builder: (context) => ThemedIcon(
+              ThemeIconSlot.mapSelf,
+              color: MeshMapTheme.of(context).accent,
+              size: 22,
+            ),
           ),
         ),
       ),

@@ -4421,5 +4421,102 @@
   "repeater_boardSupportNote": "Toutes les cartes ne le prennent pas en charge. Les cartes non compatibles refusent la modification.",
   "repeater_extraSf": "Facteurs de répartition (SF) supplémentaires",
   "repeater_extraSfHelper": "Jusqu’à 3 facteurs de répartition (SF) supplémentaires à écouter en même temps, séparés par des virgules (par exemple 9,10). Laissez vide pour désactiver.",
-  "repeater_lr2021Only": "Uniquement pour les répéteurs dotés d’une radio LR2021. Les autres répéteurs n’ont pas ce paramètre et le refusent."
+  "repeater_lr2021Only": "Uniquement pour les répéteurs dotés d’une radio LR2021. Les autres répéteurs n’ont pas ce paramètre et le refusent.",
+  "chatBackground_choosePicture": "Choisir une image",
+  "chatBackground_fade": "Atténuation",
+  "chatBackground_none": "Aucun",
+  "chatBackground_picture": "Image",
+  "chatBackground_pictureFailed": "Impossible d'utiliser cette image",
+  "chatBackground_themeOverrides": "Votre thème « {name} » définit le fond dans toutes les discussions. Désactivez cette option dans le thème pour utiliser celui-ci.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Seulement pour cette discussion",
+  "chatBackground_title": "Fond de discussion",
+  "themes_accent": "Accent",
+  "themes_accentHelp": "Boutons, éléments en surbrillance et vos bulles de discussion",
+  "themes_background": "Fond",
+  "themes_backgroundHelp": "Un fond sombre donne un thème sombre",
+  "themes_builtIn": "Intégrés",
+  "themes_chatBackground": "Fond de discussion",
+  "themes_chatBackgroundEverywhere": "Utiliser dans toutes les discussions",
+  "themes_chatBackgroundEverywhereHelp": "Remplace aussi les fonds définis pour chaque discussion",
+  "themes_chatBackgroundHelp": "Affiché dans les discussions qui n'ont pas leur propre fond",
+  "themes_codeCopied": "Code du thème copié",
+  "themes_copyCode": "Copier le code du thème",
+  "themes_copyName": "Copie de {name}",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Créer un thème",
+  "themes_customize": "Personnaliser une copie",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Couleurs standard, suit le réglage Clair / Sombre",
+  "themes_deleteConfirm": "Supprimer le thème « {name} » ?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Modifier le thème",
+  "themes_exportAll": "Exporter mes thèmes",
+  "themes_exportFailed": "Impossible d'exporter les thèmes",
+  "themes_exportFile": "Exporter vers un fichier",
+  "themes_hexColor": "Couleur hexadécimale",
+  "themes_iconChanged": "Modifiée",
+  "themes_iconPictureFailed": "Impossible d'utiliser cette image",
+  "themes_iconRepeater": "Répéteurs",
+  "themes_iconReset": "Utiliser l'icône par défaut",
+  "themes_iconRoom": "Rooms",
+  "themes_iconSend": "Bouton d'envoi",
+  "themes_iconSensor": "Capteurs",
+  "themes_iconUsePicture": "Utiliser une image",
+  "themes_icons": "Icônes",
+  "themes_iconsHelp": "Touchez une icône pour la remplacer par une autre icône ou par votre propre image",
+  "themes_import": "Importer un thème",
+  "themes_importFile": "Importer depuis un fichier",
+  "themes_importFileNone": "Aucun thème trouvé dans ce fichier",
+  "themes_importFileResult": "{count} thèmes importés",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Collez un code de thème",
+  "themes_importInvalid": "Ce code de thème n'est pas valide",
+  "themes_imported": "Thème « {name} » ajouté",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "L'accent est difficile à voir sur ce fond",
+  "themes_mapMarkers": "Marqueurs de la carte",
+  "themes_mapMarkersHelp": "Remplacez les marqueurs des nœuds et le vôtre sur la carte",
+  "themes_myThemes": "Mes thèmes",
+  "themes_myThemesEmpty": "Créez votre propre thème en choisissant un fond et une couleur d'accent.",
+  "themes_name": "Nom",
+  "themes_nameRequired": "Donnez un nom à votre thème",
+  "themes_newTitle": "Nouveau thème",
+  "themes_pasteCode": "Coller le code du thème",
+  "themes_preview": "Aperçu",
+  "themes_previewIncoming": "Quelqu'un sur le réseau ce soir ?",
+  "themes_previewOutgoing": "Fort et clair !",
+  "themes_previewSwitch": "Notifications",
+  "themes_saveAndUse": "Enregistrer et utiliser",
+  "themes_title": "Thèmes"
 }

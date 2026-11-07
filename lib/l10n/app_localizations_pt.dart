@@ -9204,4 +9204,213 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'Somente para repetidores com rádio LR2021. Os demais repetidores não têm esta configuração e a rejeitam.';
+
+  @override
+  String get chatBackground_choosePicture => 'Escolher uma imagem';
+
+  @override
+  String get chatBackground_fade => 'Esmaecer';
+
+  @override
+  String get chatBackground_none => 'Nenhum';
+
+  @override
+  String get chatBackground_picture => 'Imagem';
+
+  @override
+  String get chatBackground_pictureFailed =>
+      'Não foi possível usar essa imagem';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return 'Seu tema \"$name\" define o fundo em todas as conversas. Desative isso no tema para usar este.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => 'Somente para esta conversa';
+
+  @override
+  String get chatBackground_title => 'Fundo da conversa';
+
+  @override
+  String get themes_accent => 'Destaque';
+
+  @override
+  String get themes_accentHelp => 'Botões, realces e seus balões de conversa';
+
+  @override
+  String get themes_background => 'Fundo';
+
+  @override
+  String get themes_backgroundHelp => 'Um fundo escuro cria um tema escuro';
+
+  @override
+  String get themes_builtIn => 'Incluídos';
+
+  @override
+  String get themes_chatBackground => 'Fundo da conversa';
+
+  @override
+  String get themes_chatBackgroundEverywhere => 'Usar em todas as conversas';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp =>
+      'Também substitui os fundos definidos em conversas individuais';
+
+  @override
+  String get themes_chatBackgroundHelp =>
+      'Mostrado nas conversas que não têm fundo próprio';
+
+  @override
+  String get themes_codeCopied => 'Código do tema copiado';
+
+  @override
+  String get themes_copyCode => 'Copiar código do tema';
+
+  @override
+  String themes_copyName(String name) {
+    return 'Cópia de $name';
+  }
+
+  @override
+  String get themes_create => 'Criar tema';
+
+  @override
+  String get themes_customize => 'Personalizar uma cópia';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle =>
+      'Cores padrão, segue a configuração Claro / Escuro';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return 'Excluir o tema \"$name\"?';
+  }
+
+  @override
+  String get themes_editTitle => 'Editar tema';
+
+  @override
+  String get themes_exportAll => 'Exportar meus temas';
+
+  @override
+  String get themes_exportFailed => 'Não foi possível exportar os temas';
+
+  @override
+  String get themes_exportFile => 'Exportar para arquivo';
+
+  @override
+  String get themes_hexColor => 'Cor hexadecimal';
+
+  @override
+  String get themes_iconChanged => 'Alterado';
+
+  @override
+  String get themes_iconPictureFailed => 'Não foi possível usar essa imagem';
+
+  @override
+  String get themes_iconRepeater => 'Repetidores';
+
+  @override
+  String get themes_iconReset => 'Usar o ícone padrão';
+
+  @override
+  String get themes_iconRoom => 'Salas';
+
+  @override
+  String get themes_iconSend => 'Botão de enviar';
+
+  @override
+  String get themes_iconSensor => 'Sensores';
+
+  @override
+  String get themes_iconUsePicture => 'Usar uma imagem';
+
+  @override
+  String get themes_icons => 'Ícones';
+
+  @override
+  String get themes_iconsHelp =>
+      'Toque em um ícone para trocá-lo por outro ícone ou por uma imagem sua';
+
+  @override
+  String get themes_import => 'Importar tema';
+
+  @override
+  String get themes_importFile => 'Importar de arquivo';
+
+  @override
+  String get themes_importFileNone => 'Nenhum tema encontrado nesse arquivo';
+
+  @override
+  String themes_importFileResult(int count) {
+    return '$count temas importados';
+  }
+
+  @override
+  String get themes_importHint => 'Cole um código de tema';
+
+  @override
+  String get themes_importInvalid => 'Esse não é um código de tema válido';
+
+  @override
+  String themes_imported(String name) {
+    return 'Tema \"$name\" adicionado';
+  }
+
+  @override
+  String get themes_lowContrast => 'O destaque quase não aparece neste fundo';
+
+  @override
+  String get themes_mapMarkers => 'Marcadores do mapa';
+
+  @override
+  String get themes_mapMarkersHelp =>
+      'Troque os marcadores dos nós e o seu no mapa';
+
+  @override
+  String get themes_myThemes => 'Meus temas';
+
+  @override
+  String get themes_myThemesEmpty =>
+      'Crie seu próprio tema escolhendo um fundo e uma cor de destaque.';
+
+  @override
+  String get themes_name => 'Nome';
+
+  @override
+  String get themes_nameRequired => 'Dê um nome ao seu tema';
+
+  @override
+  String get themes_newTitle => 'Novo tema';
+
+  @override
+  String get themes_pasteCode => 'Colar código do tema';
+
+  @override
+  String get themes_preview => 'Pré-visualização';
+
+  @override
+  String get themes_previewIncoming => 'Alguém na malha esta noite?';
+
+  @override
+  String get themes_previewOutgoing => 'Alto e claro!';
+
+  @override
+  String get themes_previewSwitch => 'Notificações';
+
+  @override
+  String get themes_saveAndUse => 'Salvar e usar';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => 'Temas';
 }

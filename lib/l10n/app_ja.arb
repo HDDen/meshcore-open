@@ -4420,5 +4420,102 @@
   "repeater_boardSupportNote": "すべてのボードが対応しているわけではありません。非対応のボードは変更を拒否します。",
   "repeater_extraSf": "追加の伝播係数",
   "repeater_extraSfHelper": "同時に受信待ちする追加の伝播係数を最大 3 つまで、カンマ区切りで指定します（例: 9,10）。空欄にすると無効になります。",
-  "repeater_lr2021Only": "LR2021 無線を搭載したリピータ専用です。他のリピータにはこの設定がなく、変更は拒否されます。"
+  "repeater_lr2021Only": "LR2021 無線を搭載したリピータ専用です。他のリピータにはこの設定がなく、変更は拒否されます。",
+  "chatBackground_choosePicture": "画像を選ぶ",
+  "chatBackground_fade": "薄さ",
+  "chatBackground_none": "なし",
+  "chatBackground_picture": "画像",
+  "chatBackground_pictureFailed": "その画像は使えませんでした",
+  "chatBackground_themeOverrides": "テーマ「{name}」が、すべてのチャットの背景を指定しています。この背景を使うには、テーマ側でその設定をオフにしてください。",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "このチャットだけ",
+  "chatBackground_title": "チャットの背景",
+  "themes_accent": "アクセント",
+  "themes_accentHelp": "ボタン、強調表示、自分のチャットの吹き出しに使います",
+  "themes_background": "背景",
+  "themes_backgroundHelp": "背景が暗いと、ダークテーマになります",
+  "themes_builtIn": "標準のテーマ",
+  "themes_chatBackground": "チャットの背景",
+  "themes_chatBackgroundEverywhere": "すべてのチャットで使う",
+  "themes_chatBackgroundEverywhereHelp": "チャットごとに設定した背景も置き換えます",
+  "themes_chatBackgroundHelp": "個別の背景がないチャットに表示されます",
+  "themes_codeCopied": "テーマコードをコピーしました",
+  "themes_copyCode": "テーマコードをコピー",
+  "themes_copyName": "{name}のコピー",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "テーマを作成",
+  "themes_customize": "コピーして編集",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "標準の色。ライト/ダークの設定に合わせます",
+  "themes_deleteConfirm": "テーマ「{name}」を削除しますか?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "テーマを編集",
+  "themes_exportAll": "マイテーマを書き出す",
+  "themes_exportFailed": "テーマを書き出せませんでした",
+  "themes_exportFile": "ファイルに書き出す",
+  "themes_hexColor": "16進数カラー",
+  "themes_iconChanged": "変更済み",
+  "themes_iconPictureFailed": "その画像は使えませんでした",
+  "themes_iconRepeater": "リピータ",
+  "themes_iconReset": "標準のアイコンに戻す",
+  "themes_iconRoom": "ルームサーバー",
+  "themes_iconSend": "送信ボタン",
+  "themes_iconSensor": "センサー",
+  "themes_iconUsePicture": "画像を使う",
+  "themes_icons": "アイコン",
+  "themes_iconsHelp": "アイコンをタップすると、ほかのアイコンや自分の画像に変更できます",
+  "themes_import": "テーマを読み込む",
+  "themes_importFile": "ファイルから読み込む",
+  "themes_importFileNone": "そのファイルにテーマが見つかりません",
+  "themes_importFileResult": "{count}件のテーマを読み込みました",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "テーマコードを貼り付けてください",
+  "themes_importInvalid": "テーマコードが正しくありません",
+  "themes_imported": "テーマ「{name}」を追加しました",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "この背景ではアクセントが見えにくいです",
+  "themes_mapMarkers": "地図のマーカー",
+  "themes_mapMarkersHelp": "地図上のノードと自分のマーカーを変更します",
+  "themes_myThemes": "マイテーマ",
+  "themes_myThemesEmpty": "背景とアクセントカラーを選んで、自分だけのテーマを作りましょう。",
+  "themes_name": "名前",
+  "themes_nameRequired": "テーマの名前を入力してください",
+  "themes_newTitle": "新しいテーマ",
+  "themes_pasteCode": "テーマコードを貼り付け",
+  "themes_preview": "プレビュー",
+  "themes_previewIncoming": "今夜、メッシュにいる人はいますか?",
+  "themes_previewOutgoing": "はっきり聞こえます!",
+  "themes_previewSwitch": "通知",
+  "themes_saveAndUse": "保存して使う",
+  "themes_title": "テーマ"
 }

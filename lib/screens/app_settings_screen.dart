@@ -35,6 +35,7 @@ import '../widgets/sync_progress_overlay.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/cyr2lat.dart';
 import 'map_cache_screen.dart';
+import 'themes_screen.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   /// Scrolls the image-message settings into view once, on first build.
@@ -219,12 +220,30 @@ class AppSettingsScreen extends StatelessWidget {
                     label: Text(context.l10n.appSettings_themeDark),
                   ),
                 ],
-                selected: {settingsService.settings.themeMode},
+                selected: settingsService.activeCustomTheme == null
+                    ? {settingsService.settings.themeMode}
+                    : const <String>{},
+                emptySelectionAllowed: true,
                 onSelectionChanged: (selection) {
-                  settingsService.setThemeMode(selection.first);
+                  if (selection.isNotEmpty) {
+                    unawaited(settingsService.setThemeMode(selection.first));
+                  }
                 },
               ),
             ],
+          ),
+        ),
+        const Divider(height: 1, indent: 16),
+        ListTile(
+          leading: const Icon(Icons.palette_outlined),
+          title: Text(context.l10n.themes_title),
+          subtitle: Text(
+            settingsService.activeCustomTheme?.name ??
+                context.l10n.themes_default,
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(builder: (_) => const ThemesScreen()),
           ),
         ),
         const Divider(height: 1, indent: 16),

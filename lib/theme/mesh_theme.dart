@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../helpers/readable_accent.dart';
+import '../models/custom_theme.dart';
+import '../widgets/themed_icon.dart';
+
 /// MeshCore palette — high-contrast slate surfaces with sky-blue accents.
 class MeshPalette {
   MeshPalette._();
@@ -222,11 +226,98 @@ class MeshRadii {
   static const pill = 999.0;
 }
 
+/// Accent for the own-position marker and optional tint for map tiles.
+@immutable
+class MeshMapTheme extends ThemeExtension<MeshMapTheme> {
+  /// Selection, own-position and route color.
+  final Color accent;
+
+  /// Washed over map tiles; null leaves tiles untouched.
+  final Color? tileTint;
+
+  const MeshMapTheme({required this.accent, this.tileTint});
+
+  static const standard = MeshMapTheme(accent: MapPalette.selected);
+
+  /// How strongly [tileTint] colors the tiles.
+  static const double tileTintStrength = 0.22;
+
+  static MeshMapTheme of(BuildContext context) =>
+      Theme.of(context).extension<MeshMapTheme>() ?? standard;
+
+  @override
+  MeshMapTheme copyWith({Color? accent, Color? tileTint}) {
+    return MeshMapTheme(
+      accent: accent ?? this.accent,
+      tileTint: tileTint ?? this.tileTint,
+    );
+  }
+
+  @override
+  MeshMapTheme lerp(MeshMapTheme? other, double t) {
+    if (other == null) return this;
+    return MeshMapTheme(
+      accent: Color.lerp(accent, other.accent, t)!,
+      tileTint: Color.lerp(tileTint, other.tileTint, t),
+    );
+  }
+}
+
+/// Colors for your own (outgoing) chat bubbles. Part of the theme so custom
+/// themes can tint them with their accent.
+@immutable
+class MeshBubbleTheme extends ThemeExtension<MeshBubbleTheme> {
+  final Color me;
+  final Color meBorder;
+  final Color meInk;
+
+  const MeshBubbleTheme({
+    required this.me,
+    required this.meBorder,
+    required this.meInk,
+  });
+
+  /// The stock dusk-blue bubble used by the built-in light and dark themes.
+  static const standard = MeshBubbleTheme(
+    me: MeshPalette.me,
+    meBorder: MeshPalette.meBorder,
+    meInk: MeshPalette.meInk,
+  );
+
+  static MeshBubbleTheme of(BuildContext context) =>
+      Theme.of(context).extension<MeshBubbleTheme>() ?? standard;
+
+  @override
+  MeshBubbleTheme copyWith({Color? me, Color? meBorder, Color? meInk}) {
+    return MeshBubbleTheme(
+      me: me ?? this.me,
+      meBorder: meBorder ?? this.meBorder,
+      meInk: meInk ?? this.meInk,
+    );
+  }
+
+  @override
+  MeshBubbleTheme lerp(MeshBubbleTheme? other, double t) {
+    if (other == null) return this;
+    return MeshBubbleTheme(
+      me: Color.lerp(me, other.me, t)!,
+      meBorder: Color.lerp(meBorder, other.meBorder, t)!,
+      meInk: Color.lerp(meInk, other.meInk, t)!,
+    );
+  }
+}
+
 /// Shared helpers exposed via [MeshTheme.of].
 class MeshTheme {
   MeshTheme._();
 
-  static ThemeData dark() {
+  static final ThemeData _dark = _stockDark();
+  static final ThemeData _light = _stockLight();
+
+  static ThemeData dark() => _dark;
+  static ThemeData light() => _light;
+
+  static ThemeData _stockDark() {
     const scheme = ColorScheme.dark(
       primary: MeshPalette.blue,
       onPrimary: Colors.white,
@@ -263,7 +354,7 @@ class MeshTheme {
     return _build(scheme, Brightness.dark);
   }
 
-  static ThemeData light() {
+  static ThemeData _stockLight() {
     const scheme = ColorScheme.light(
       primary: MeshPalette.lightBlue,
       onPrimary: Colors.white,
@@ -295,7 +386,63 @@ class MeshTheme {
     return _build(scheme, Brightness.light);
   }
 
-  static ThemeData _build(ColorScheme scheme, Brightness brightness) {
+  /// Builds a full theme from a user's two-color [CustomTheme].
+  ///
+  /// Surfaces are stepped from the background toward the text color, so any
+  /// background yields evenly separated cards, inputs and borders. Text is
+  /// near-white on dark backgrounds and near-black on light ones. Status
+  /// colors (warning, error, secondary) come from the stock theme of the
+  /// same brightness so they keep their meaning.
+  static ThemeData fromCustom(CustomTheme custom) {
+    final dark = custom.isDark;
+    final bg = custom.background;
+    final accent = custom.accent;
+    final ink = readableAccent(dark ? MeshPalette.ink : MeshPalette.lightInk, bg);
+    Color step(double t) => Color.lerp(bg, ink, t)!;
+    Color onColor(Color color) => readableAccent(
+      isDarkColor(color) ? Colors.white : MeshPalette.lightInk,
+      color,
+    );
+
+    final base = (dark ? MeshTheme.dark() : MeshTheme.light()).colorScheme;
+    final primaryContainer = Color.lerp(bg, accent, 0.4)!;
+    final scheme = base.copyWith(
+      primary: accent,
+      onPrimary: onColor(accent),
+      primaryContainer: primaryContainer,
+      onPrimaryContainer: onColor(primaryContainer),
+      surface: bg,
+      onSurface: ink,
+      surfaceContainerLowest: bg,
+      surfaceContainerLow: step(dark ? 0.04 : 0.035),
+      surfaceContainer: step(dark ? 0.04 : 0.035),
+      surfaceContainerHigh: step(dark ? 0.08 : 0.07),
+      surfaceContainerHighest: step(dark ? 0.13 : 0.11),
+      onSurfaceVariant: step(dark ? 0.8 : 0.75),
+      outline: step(dark ? 0.28 : 0.24),
+      outlineVariant: step(dark ? 0.15 : 0.13),
+      inverseSurface: ink,
+      onInverseSurface: bg,
+      inversePrimary: Color.lerp(accent, bg, 0.3),
+    );
+
+    final me = Color.lerp(bg, accent, dark ? 0.35 : 0.22)!;
+    return _build(
+      scheme,
+      dark ? Brightness.dark : Brightness.light,
+      bubble: MeshBubbleTheme(me: me, meBorder: accent, meInk: onColor(me)),
+      icons: MeshIconTheme(custom.icons),
+      map: MeshMapTheme(accent: accent, tileTint: bg),
+    );
+  }
+
+  static ThemeData _build(
+    ColorScheme scheme,
+    Brightness brightness, {
+    MeshBubbleTheme bubble = MeshBubbleTheme.standard,
+    MeshIconTheme icons = MeshIconTheme.none,
+    MeshMapTheme map = MeshMapTheme.standard,
+  }) {
     final baseText =
         Typography.material2021(
           platform: TargetPlatform.android,
@@ -309,6 +456,7 @@ class MeshTheme {
 
     return ThemeData(
       useMaterial3: true,
+      extensions: [bubble, icons, map],
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_icons.dart';
+import 'themed_icon.dart';
+
 /// Shared row inside settings cards, including About and the update checker.
 /// MeshCard owns the padding and the full-card tap target.
 class SettingsNavTileContent extends StatelessWidget {
@@ -11,10 +14,12 @@ class SettingsNavTileContent extends StatelessWidget {
     this.showChevron = true,
     this.titleColor,
     this.iconColor,
+    this.iconSlot,
     this.trailing,
   });
 
   final IconData icon;
+  final ThemeIconSlot? iconSlot;
   final String title;
   final String? subtitle;
   final bool showChevron;
@@ -31,7 +36,15 @@ class SettingsNavTileContent extends StatelessWidget {
     final foreground = titleColor;
     return Row(
       children: [
-        Icon(icon, size: 20, color: iconColor ?? scheme.onSurfaceVariant),
+        if (iconSlot case final slot?)
+          ThemedIcon(
+            slot,
+            fallback: icon,
+            size: 20,
+            color: iconColor ?? scheme.onSurfaceVariant,
+          )
+        else
+          Icon(icon, size: 20, color: iconColor ?? scheme.onSurfaceVariant),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../theme/theme_icons.dart';
+import 'themed_icon.dart';
 
 class ChatComposerSideAction extends StatelessWidget {
   static const double counterReserveHeight = 18;
@@ -64,8 +66,8 @@ class ChatComposerSendButton extends StatelessWidget {
             onSecondaryTap: onLongPress,
             child: SizedBox.square(
               dimension: size,
-              child: Icon(
-                Icons.send,
+              child: ThemedIcon(
+                ThemeIconSlot.send,
                 size: iconSize,
                 color:
                     foregroundColor ??

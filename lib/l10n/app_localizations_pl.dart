@@ -9232,4 +9232,213 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'Tylko dla przekaźników z radiem LR2021. Inne przekaźniki nie mają tego ustawienia i je odrzucają.';
+
+  @override
+  String get chatBackground_choosePicture => 'Wybierz zdjęcie';
+
+  @override
+  String get chatBackground_fade => 'Zanikanie';
+
+  @override
+  String get chatBackground_none => 'Brak';
+
+  @override
+  String get chatBackground_picture => 'Zdjęcie';
+
+  @override
+  String get chatBackground_pictureFailed => 'Nie udało się użyć tego zdjęcia';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return 'Twój motyw „$name” ustawia tło w każdym czacie. Wyłącz to w motywie, aby użyć tego tła.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => 'Tylko w tym czacie';
+
+  @override
+  String get chatBackground_title => 'Tło czatu';
+
+  @override
+  String get themes_accent => 'Akcent';
+
+  @override
+  String get themes_accentHelp => 'Przyciski, wyróżnienia i Twoje dymki czatu';
+
+  @override
+  String get themes_background => 'Tło';
+
+  @override
+  String get themes_backgroundHelp => 'Ciemne tło tworzy ciemny motyw';
+
+  @override
+  String get themes_builtIn => 'Wbudowane';
+
+  @override
+  String get themes_chatBackground => 'Tło czatu';
+
+  @override
+  String get themes_chatBackgroundEverywhere => 'Użyj w każdym czacie';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp =>
+      'Zastępuje też tła ustawione w pojedynczych czatach';
+
+  @override
+  String get themes_chatBackgroundHelp =>
+      'Pokazywane w czatach, które nie mają własnego tła';
+
+  @override
+  String get themes_codeCopied => 'Skopiowano kod motywu';
+
+  @override
+  String get themes_copyCode => 'Kopiuj kod motywu';
+
+  @override
+  String themes_copyName(String name) {
+    return '$name – kopia';
+  }
+
+  @override
+  String get themes_create => 'Utwórz motyw';
+
+  @override
+  String get themes_customize => 'Dostosuj kopię';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle =>
+      'Standardowe kolory, zależą od ustawienia Jasny / Ciemny';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return 'Usunąć motyw „$name”?';
+  }
+
+  @override
+  String get themes_editTitle => 'Edytuj motyw';
+
+  @override
+  String get themes_exportAll => 'Eksportuj moje motywy';
+
+  @override
+  String get themes_exportFailed => 'Nie udało się wyeksportować motywów';
+
+  @override
+  String get themes_exportFile => 'Eksportuj do pliku';
+
+  @override
+  String get themes_hexColor => 'Kolor szesnastkowy';
+
+  @override
+  String get themes_iconChanged => 'Zmieniono';
+
+  @override
+  String get themes_iconPictureFailed => 'Nie udało się użyć tego zdjęcia';
+
+  @override
+  String get themes_iconRepeater => 'Przekaźniki';
+
+  @override
+  String get themes_iconReset => 'Użyj domyślnej ikony';
+
+  @override
+  String get themes_iconRoom => 'Pokoje';
+
+  @override
+  String get themes_iconSend => 'Przycisk wysyłania';
+
+  @override
+  String get themes_iconSensor => 'Czujniki';
+
+  @override
+  String get themes_iconUsePicture => 'Użyj zdjęcia';
+
+  @override
+  String get themes_icons => 'Ikony';
+
+  @override
+  String get themes_iconsHelp =>
+      'Dotknij ikony, aby zamienić ją na inną ikonę lub własne zdjęcie';
+
+  @override
+  String get themes_import => 'Importuj motyw';
+
+  @override
+  String get themes_importFile => 'Importuj z pliku';
+
+  @override
+  String get themes_importFileNone => 'Nie znaleziono motywów w tym pliku';
+
+  @override
+  String themes_importFileResult(int count) {
+    return 'Zaimportowano motywy: $count';
+  }
+
+  @override
+  String get themes_importHint => 'Wklej kod motywu';
+
+  @override
+  String get themes_importInvalid => 'To nie jest prawidłowy kod motywu';
+
+  @override
+  String themes_imported(String name) {
+    return 'Dodano motyw „$name”';
+  }
+
+  @override
+  String get themes_lowContrast =>
+      'Kolor akcentu jest słabo widoczny na tym tle';
+
+  @override
+  String get themes_mapMarkers => 'Znaczniki na mapie';
+
+  @override
+  String get themes_mapMarkersHelp =>
+      'Zamień znaczniki węzłów i swojej pozycji na mapie';
+
+  @override
+  String get themes_myThemes => 'Moje motywy';
+
+  @override
+  String get themes_myThemesEmpty =>
+      'Stwórz własny motyw, wybierając tło i kolor akcentu.';
+
+  @override
+  String get themes_name => 'Nazwa';
+
+  @override
+  String get themes_nameRequired => 'Nadaj motywowi nazwę';
+
+  @override
+  String get themes_newTitle => 'Nowy motyw';
+
+  @override
+  String get themes_pasteCode => 'Wklej kod motywu';
+
+  @override
+  String get themes_preview => 'Podgląd';
+
+  @override
+  String get themes_previewIncoming => 'Ktoś jest dziś wieczorem w sieci?';
+
+  @override
+  String get themes_previewOutgoing => 'Odbiór głośny i wyraźny!';
+
+  @override
+  String get themes_previewSwitch => 'Powiadomienia';
+
+  @override
+  String get themes_saveAndUse => 'Zapisz i użyj';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => 'Motywy';
 }

@@ -4098,5 +4098,102 @@
   "repeater_boardSupportNote": "Alla kort stöder inte detta. Kort som inte stöder det avvisar ändringen.",
   "repeater_extraSf": "Extra spridningsfaktorer",
   "repeater_extraSfHelper": "Upp till 3 extra spridningsfaktorer att lyssna på samtidigt, separerade med kommatecken (till exempel 9,10). Lämna tomt för att stänga av.",
-  "repeater_lr2021Only": "Endast för repeatrar med LR2021-radio. Andra repeatrar har inte den här inställningen och avvisar den."
+  "repeater_lr2021Only": "Endast för repeatrar med LR2021-radio. Andra repeatrar har inte den här inställningen och avvisar den.",
+  "chatBackground_choosePicture": "Välj en bild",
+  "chatBackground_fade": "Tona ut",
+  "chatBackground_none": "Ingen",
+  "chatBackground_picture": "Bild",
+  "chatBackground_pictureFailed": "Kunde inte använda den bilden",
+  "chatBackground_themeOverrides": "Ditt tema \"{name}\" anger bakgrunden i alla chattar. Stäng av det i temat för att använda den här.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Endast för den här chatten",
+  "chatBackground_title": "Chattbakgrund",
+  "themes_accent": "Accentfärg",
+  "themes_accentHelp": "Knappar, markeringar och dina chattbubblor",
+  "themes_background": "Bakgrund",
+  "themes_backgroundHelp": "En mörk bakgrund ger ett mörkt tema",
+  "themes_builtIn": "Inbyggda",
+  "themes_chatBackground": "Chattbakgrund",
+  "themes_chatBackgroundEverywhere": "Använd i alla chattar",
+  "themes_chatBackgroundEverywhereHelp": "Ersätter även bakgrunder som är inställda för enskilda chattar",
+  "themes_chatBackgroundHelp": "Visas i chattar som inte har en egen bakgrund",
+  "themes_codeCopied": "Temakoden kopierades",
+  "themes_copyCode": "Kopiera temakod",
+  "themes_copyName": "Kopia av {name}",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Skapa tema",
+  "themes_customize": "Anpassa en kopia",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Standardfärger, följer inställningen Ljust / Mörkt",
+  "themes_deleteConfirm": "Radera temat \"{name}\"?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Redigera tema",
+  "themes_exportAll": "Exportera mina teman",
+  "themes_exportFailed": "Kunde inte exportera teman",
+  "themes_exportFile": "Exportera till fil",
+  "themes_hexColor": "Hex-färg",
+  "themes_iconChanged": "Ändrad",
+  "themes_iconPictureFailed": "Kunde inte använda den bilden",
+  "themes_iconRepeater": "Repeaters",
+  "themes_iconReset": "Använd standardikonen",
+  "themes_iconRoom": "Rum",
+  "themes_iconSend": "Skickaknapp",
+  "themes_iconSensor": "Sensorer",
+  "themes_iconUsePicture": "Använd en bild",
+  "themes_icons": "Ikoner",
+  "themes_iconsHelp": "Tryck på en ikon för att byta ut den mot en annan ikon eller en egen bild",
+  "themes_import": "Importera tema",
+  "themes_importFile": "Importera från fil",
+  "themes_importFileNone": "Inga teman hittades i filen",
+  "themes_importFileResult": "Importerade {count} teman",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Klistra in en temakod",
+  "themes_importInvalid": "Det där är ingen giltig temakod",
+  "themes_imported": "Lade till temat \"{name}\"",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Accentfärgen syns dåligt mot den här bakgrunden",
+  "themes_mapMarkers": "Kartmarkörer",
+  "themes_mapMarkersHelp": "Byt ut markörerna för noder och för dig själv på kartan",
+  "themes_myThemes": "Mina teman",
+  "themes_myThemesEmpty": "Skapa ett eget tema genom att välja en bakgrund och en accentfärg.",
+  "themes_name": "Namn",
+  "themes_nameRequired": "Ge ditt tema ett namn",
+  "themes_newTitle": "Nytt tema",
+  "themes_pasteCode": "Klistra in temakod",
+  "themes_preview": "Förhandsvisning",
+  "themes_previewIncoming": "Är det någon på nätet ikväll?",
+  "themes_previewOutgoing": "Hör dig tydligt!",
+  "themes_previewSwitch": "Aviseringar",
+  "themes_saveAndUse": "Spara och använd",
+  "themes_title": "Teman"
 }

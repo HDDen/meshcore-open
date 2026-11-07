@@ -32,7 +32,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "de": [
@@ -68,7 +70,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "es": [
@@ -104,7 +108,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "fr": [
@@ -140,7 +146,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "hu": [
@@ -176,7 +184,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "it": [
@@ -212,7 +222,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "ja": [
@@ -248,7 +260,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "ko": [
@@ -284,7 +298,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "nl": [
@@ -320,7 +336,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "pl": [
@@ -356,7 +374,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "pt": [
@@ -392,7 +412,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "sk": [
@@ -428,7 +450,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "sl": [
@@ -464,7 +488,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "sv": [
@@ -500,7 +526,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "uk": [
@@ -536,7 +564,9 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ],
 
   "zh": [
@@ -572,6 +602,8 @@
     "appSettings_loadLinkImagesSubtitle",
     "appSettings_showLinkImagesByDefault",
     "appSettings_showLinkImagesByDefaultSubtitle",
-    "channels_qrImportChanged"
+    "channels_qrImportChanged",
+    "chatBackground_saveFailed",
+    "themes_saveFailed"
   ]
 }

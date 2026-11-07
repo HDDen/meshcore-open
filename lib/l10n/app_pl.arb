@@ -4355,5 +4355,102 @@
   "repeater_boardSupportNote": "Nie każda płytka to obsługuje. Nieobsługiwane płytki odrzucają zmianę.",
   "repeater_extraSf": "Dodatkowe współczynniki rozpraszania",
   "repeater_extraSfHelper": "Do 3 dodatkowych współczynników rozpraszania, na których nasłuchiwać jednocześnie, oddzielonych przecinkami (na przykład 9,10). Pozostaw puste, aby wyłączyć.",
-  "repeater_lr2021Only": "Tylko dla przekaźników z radiem LR2021. Inne przekaźniki nie mają tego ustawienia i je odrzucają."
+  "repeater_lr2021Only": "Tylko dla przekaźników z radiem LR2021. Inne przekaźniki nie mają tego ustawienia i je odrzucają.",
+  "chatBackground_choosePicture": "Wybierz zdjęcie",
+  "chatBackground_fade": "Zanikanie",
+  "chatBackground_none": "Brak",
+  "chatBackground_picture": "Zdjęcie",
+  "chatBackground_pictureFailed": "Nie udało się użyć tego zdjęcia",
+  "chatBackground_themeOverrides": "Twój motyw „{name}” ustawia tło w każdym czacie. Wyłącz to w motywie, aby użyć tego tła.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Tylko w tym czacie",
+  "chatBackground_title": "Tło czatu",
+  "themes_accent": "Akcent",
+  "themes_accentHelp": "Przyciski, wyróżnienia i Twoje dymki czatu",
+  "themes_background": "Tło",
+  "themes_backgroundHelp": "Ciemne tło tworzy ciemny motyw",
+  "themes_builtIn": "Wbudowane",
+  "themes_chatBackground": "Tło czatu",
+  "themes_chatBackgroundEverywhere": "Użyj w każdym czacie",
+  "themes_chatBackgroundEverywhereHelp": "Zastępuje też tła ustawione w pojedynczych czatach",
+  "themes_chatBackgroundHelp": "Pokazywane w czatach, które nie mają własnego tła",
+  "themes_codeCopied": "Skopiowano kod motywu",
+  "themes_copyCode": "Kopiuj kod motywu",
+  "themes_copyName": "{name} – kopia",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Utwórz motyw",
+  "themes_customize": "Dostosuj kopię",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Standardowe kolory, zależą od ustawienia Jasny / Ciemny",
+  "themes_deleteConfirm": "Usunąć motyw „{name}”?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Edytuj motyw",
+  "themes_exportAll": "Eksportuj moje motywy",
+  "themes_exportFailed": "Nie udało się wyeksportować motywów",
+  "themes_exportFile": "Eksportuj do pliku",
+  "themes_hexColor": "Kolor szesnastkowy",
+  "themes_iconChanged": "Zmieniono",
+  "themes_iconPictureFailed": "Nie udało się użyć tego zdjęcia",
+  "themes_iconRepeater": "Przekaźniki",
+  "themes_iconReset": "Użyj domyślnej ikony",
+  "themes_iconRoom": "Pokoje",
+  "themes_iconSend": "Przycisk wysyłania",
+  "themes_iconSensor": "Czujniki",
+  "themes_iconUsePicture": "Użyj zdjęcia",
+  "themes_icons": "Ikony",
+  "themes_iconsHelp": "Dotknij ikony, aby zamienić ją na inną ikonę lub własne zdjęcie",
+  "themes_import": "Importuj motyw",
+  "themes_importFile": "Importuj z pliku",
+  "themes_importFileNone": "Nie znaleziono motywów w tym pliku",
+  "themes_importFileResult": "Zaimportowano motywy: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Wklej kod motywu",
+  "themes_importInvalid": "To nie jest prawidłowy kod motywu",
+  "themes_imported": "Dodano motyw „{name}”",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Kolor akcentu jest słabo widoczny na tym tle",
+  "themes_mapMarkers": "Znaczniki na mapie",
+  "themes_mapMarkersHelp": "Zamień znaczniki węzłów i swojej pozycji na mapie",
+  "themes_myThemes": "Moje motywy",
+  "themes_myThemesEmpty": "Stwórz własny motyw, wybierając tło i kolor akcentu.",
+  "themes_name": "Nazwa",
+  "themes_nameRequired": "Nadaj motywowi nazwę",
+  "themes_newTitle": "Nowy motyw",
+  "themes_pasteCode": "Wklej kod motywu",
+  "themes_preview": "Podgląd",
+  "themes_previewIncoming": "Ktoś jest dziś wieczorem w sieci?",
+  "themes_previewOutgoing": "Odbiór głośny i wyraźny!",
+  "themes_previewSwitch": "Powiadomienia",
+  "themes_saveAndUse": "Zapisz i użyj",
+  "themes_title": "Motywy"
 }

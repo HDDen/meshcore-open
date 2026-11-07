@@ -4393,5 +4393,102 @@
   "repeater_boardSupportNote": "No todas las placas lo admiten. Las placas no compatibles rechazan el cambio.",
   "repeater_extraSf": "Factores de propagación (SF) adicionales",
   "repeater_extraSfHelper": "Hasta 3 factores de propagación (SF) más para escuchar a la vez, separados por comas (por ejemplo 9,10). Déjalo vacío para desactivarlo.",
-  "repeater_lr2021Only": "Solo para repetidores con radio LR2021. Los demás repetidores no tienen este ajuste y lo rechazan."
+  "repeater_lr2021Only": "Solo para repetidores con radio LR2021. Los demás repetidores no tienen este ajuste y lo rechazan.",
+  "chatBackground_choosePicture": "Elegir una imagen",
+  "chatBackground_fade": "Difuminado",
+  "chatBackground_none": "Ninguno",
+  "chatBackground_picture": "Imagen",
+  "chatBackground_pictureFailed": "No se pudo usar esa imagen",
+  "chatBackground_themeOverrides": "Tu tema \"{name}\" define el fondo en todos los chats. Desactívalo en el tema para usar este.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Solo para este chat",
+  "chatBackground_title": "Fondo del chat",
+  "themes_accent": "Acento",
+  "themes_accentHelp": "Botones, resaltados y tus burbujas de chat",
+  "themes_background": "Fondo",
+  "themes_backgroundHelp": "Un fondo oscuro crea un tema oscuro",
+  "themes_builtIn": "Incluidos",
+  "themes_chatBackground": "Fondo del chat",
+  "themes_chatBackgroundEverywhere": "Usar en todos los chats",
+  "themes_chatBackgroundEverywhereHelp": "También reemplaza los fondos de chats individuales",
+  "themes_chatBackgroundHelp": "Se muestra en los chats que no tienen fondo propio",
+  "themes_codeCopied": "Código del tema copiado",
+  "themes_copyCode": "Copiar código del tema",
+  "themes_copyName": "Copia de {name}",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Crear tema",
+  "themes_customize": "Personalizar una copia",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Colores estándar, sigue el ajuste Claro / Oscuro",
+  "themes_deleteConfirm": "¿Eliminar el tema \"{name}\"?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Editar tema",
+  "themes_exportAll": "Exportar mis temas",
+  "themes_exportFailed": "No se pudieron exportar los temas",
+  "themes_exportFile": "Exportar a archivo",
+  "themes_hexColor": "Color hexadecimal",
+  "themes_iconChanged": "Cambiado",
+  "themes_iconPictureFailed": "No se pudo usar esa imagen",
+  "themes_iconRepeater": "Repetidores",
+  "themes_iconReset": "Usar el icono predeterminado",
+  "themes_iconRoom": "Salas",
+  "themes_iconSend": "Botón de enviar",
+  "themes_iconSensor": "Sensores",
+  "themes_iconUsePicture": "Usar una imagen",
+  "themes_icons": "Iconos",
+  "themes_iconsHelp": "Toca un icono para cambiarlo por otro icono o por tu propia imagen",
+  "themes_import": "Importar tema",
+  "themes_importFile": "Importar desde archivo",
+  "themes_importFileNone": "No se encontraron temas en ese archivo",
+  "themes_importFileResult": "Se importaron {count} temas",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Pega un código de tema",
+  "themes_importInvalid": "Ese no es un código de tema válido",
+  "themes_imported": "Se agregó el tema \"{name}\"",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "El acento casi no se ve sobre este fondo",
+  "themes_mapMarkers": "Marcadores del mapa",
+  "themes_mapMarkersHelp": "Cambia los marcadores de los nodos y el tuyo en el mapa",
+  "themes_myThemes": "Mis temas",
+  "themes_myThemesEmpty": "Crea tu propio tema eligiendo un fondo y un color de acento.",
+  "themes_name": "Nombre",
+  "themes_nameRequired": "Ponle un nombre a tu tema",
+  "themes_newTitle": "Tema nuevo",
+  "themes_pasteCode": "Pegar código del tema",
+  "themes_preview": "Vista previa",
+  "themes_previewIncoming": "¿Alguien en la malla esta noche?",
+  "themes_previewOutgoing": "¡Fuerte y claro!",
+  "themes_previewSwitch": "Notificaciones",
+  "themes_saveAndUse": "Guardar y usar",
+  "themes_title": "Temas"
 }

@@ -56,6 +56,7 @@ import '../models/message_compression.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
+import '../services/chat_background_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
@@ -100,6 +101,7 @@ import '../helpers/snack_bar_builder.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/chat_background.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
@@ -1092,6 +1094,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         _showContactInfo(context);
                       case 'settings':
                         _showContactSettings(context);
+                      case 'background':
+                        unawaited(showChatBackgroundSheet(
+                          context,
+                          ChatBackgroundService.contactKey(widget.contact),
+                        ));
                       case 'telemetry':
                         Navigator.push(
                           context,
@@ -1136,6 +1143,14 @@ class _ChatScreenState extends State<ChatScreen> {
                           text: context.l10n.contact_settings,
                         ),
                       ),
+                    if (context.read<ChatBackgroundService?>() != null)
+                      PopupMenuItem(
+                        value: 'background',
+                        child: PopupMenuRow(
+                          icon: Icons.wallpaper,
+                          text: context.l10n.chatBackground_title,
+                        ),
+                      ),
                     if (!connector.isOfflineMode)
                       PopupMenuItem(
                         value: 'clearChat',
@@ -1167,6 +1182,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: Stack(
                     children: [
+                      Positioned.fill(
+                        child: ChatBackgroundPaint(
+                          chatKey: ChatBackgroundService.contactKey(widget.contact),
+                        ),
+                      ),
                       messages.isEmpty
                           ? _buildEmptyState()
                           : _buildMessageList(messages, connector),
@@ -3646,20 +3666,20 @@ class _MessageBubble extends StatelessWidget {
       (connector) => connector.isContactUrlImagesEnabled(sourceId),
     );
 
-    // Bubble colors — outgoing uses MeshPalette.me / meBorder / meInk.
+    final bubbleTheme = MeshBubbleTheme.of(context);
     final bubbleColor = isFailed
         ? scheme.errorContainer
         : isOutgoing
-        ? MeshPalette.me
+        ? bubbleTheme.me
         : scheme.surfaceContainerLow;
     final bubbleBorder = isFailed
         ? scheme.error
         : isOutgoing
-        ? MeshPalette.meBorder
+        ? bubbleTheme.meBorder
         : scheme.outlineVariant;
     final textColor = isFailed
         ? scheme.onErrorContainer
-        : (isOutgoing ? MeshPalette.meInk : scheme.onSurface);
+        : (isOutgoing ? bubbleTheme.meInk : scheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.65);
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     // An incoming message decoded from its echo (DirectEchoRecovery) carries

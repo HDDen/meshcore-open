@@ -9236,4 +9236,214 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'Само за репийтъри с радио LR2021. Другите репийтъри нямат тази настройка и я отхвърлят.';
+
+  @override
+  String get chatBackground_choosePicture => 'Избери снимка';
+
+  @override
+  String get chatBackground_fade => 'Избледняване';
+
+  @override
+  String get chatBackground_none => 'Няма';
+
+  @override
+  String get chatBackground_picture => 'Снимка';
+
+  @override
+  String get chatBackground_pictureFailed =>
+      'Тази снимка не може да се използва';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return 'Вашата тема „$name“ задава фона във всички чатове. Изключете това в темата, за да използвате този фон.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => 'Само за този чат';
+
+  @override
+  String get chatBackground_title => 'Фон на чата';
+
+  @override
+  String get themes_accent => 'Акцент';
+
+  @override
+  String get themes_accentHelp =>
+      'Бутони, подчертавания и вашите балончета със съобщения';
+
+  @override
+  String get themes_background => 'Фон';
+
+  @override
+  String get themes_backgroundHelp => 'Тъмният фон прави тъмна тема';
+
+  @override
+  String get themes_builtIn => 'Вградени';
+
+  @override
+  String get themes_chatBackground => 'Фон на чата';
+
+  @override
+  String get themes_chatBackgroundEverywhere => 'Използвай във всички чатове';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp =>
+      'Заменя и фоновете, зададени на отделни чатове';
+
+  @override
+  String get themes_chatBackgroundHelp =>
+      'Показва се в чатове, които нямат свой фон';
+
+  @override
+  String get themes_codeCopied => 'Кодът на темата е копиран';
+
+  @override
+  String get themes_copyCode => 'Копирай кода на темата';
+
+  @override
+  String themes_copyName(String name) {
+    return '$name (копие)';
+  }
+
+  @override
+  String get themes_create => 'Създай тема';
+
+  @override
+  String get themes_customize => 'Персонализирай копие';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle =>
+      'Стандартни цветове, следва настройката Светла / Тъмна';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return 'Да изтрия ли темата „$name“?';
+  }
+
+  @override
+  String get themes_editTitle => 'Редактиране на тема';
+
+  @override
+  String get themes_exportAll => 'Експортирай моите теми';
+
+  @override
+  String get themes_exportFailed => 'Темите не можаха да се експортират';
+
+  @override
+  String get themes_exportFile => 'Експортирай във файл';
+
+  @override
+  String get themes_hexColor => 'Шестнадесетичен цвят';
+
+  @override
+  String get themes_iconChanged => 'Променена';
+
+  @override
+  String get themes_iconPictureFailed => 'Тази снимка не може да се използва';
+
+  @override
+  String get themes_iconRepeater => 'Повторители';
+
+  @override
+  String get themes_iconReset => 'Използвай иконата по подразбиране';
+
+  @override
+  String get themes_iconRoom => 'Стаи';
+
+  @override
+  String get themes_iconSend => 'Бутон за изпращане';
+
+  @override
+  String get themes_iconSensor => 'Сензори';
+
+  @override
+  String get themes_iconUsePicture => 'Използвай снимка';
+
+  @override
+  String get themes_icons => 'Икони';
+
+  @override
+  String get themes_iconsHelp =>
+      'Докоснете икона, за да я смените с друга икона или със своя снимка';
+
+  @override
+  String get themes_import => 'Импортирай тема';
+
+  @override
+  String get themes_importFile => 'Импортирай от файл';
+
+  @override
+  String get themes_importFileNone => 'Във файла не са намерени теми';
+
+  @override
+  String themes_importFileResult(int count) {
+    return 'Импортирани теми: $count';
+  }
+
+  @override
+  String get themes_importHint => 'Поставете код на тема';
+
+  @override
+  String get themes_importInvalid => 'Това не е валиден код на тема';
+
+  @override
+  String themes_imported(String name) {
+    return 'Добавена тема „$name“';
+  }
+
+  @override
+  String get themes_lowContrast => 'Акцентът трудно се вижда на този фон';
+
+  @override
+  String get themes_mapMarkers => 'Маркери на картата';
+
+  @override
+  String get themes_mapMarkersHelp =>
+      'Сменете маркерите за възлите и за вас на картата';
+
+  @override
+  String get themes_myThemes => 'Моите теми';
+
+  @override
+  String get themes_myThemesEmpty =>
+      'Направете своя тема, като изберете фон и акцентен цвят.';
+
+  @override
+  String get themes_name => 'Име';
+
+  @override
+  String get themes_nameRequired => 'Дайте име на темата си';
+
+  @override
+  String get themes_newTitle => 'Нова тема';
+
+  @override
+  String get themes_pasteCode => 'Поставете код на тема';
+
+  @override
+  String get themes_preview => 'Преглед';
+
+  @override
+  String get themes_previewIncoming => 'Има ли някой в мрежата тази вечер?';
+
+  @override
+  String get themes_previewOutgoing => 'Чувам ви ясно и силно!';
+
+  @override
+  String get themes_previewSwitch => 'Известия';
+
+  @override
+  String get themes_saveAndUse => 'Запази и използвай';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => 'Теми';
 }

@@ -3643,5 +3643,104 @@
   "repeater_boardSupportNote": "Поддержка зависит от платы. Если функция недоступна, нода отклонит изменение.",
   "repeater_extraSf": "Дополнительные SF",
   "repeater_extraSfHelper": "До трёх дополнительных SF от 5 до 12 для одновременного приёма. Укажите их через запятую, например 9,10. Пустое значение отключает дополнительные SF.",
-  "repeater_lr2021Only": "Требуется радиочип LR2021. На других радиочипах эта настройка недоступна."
+  "repeater_lr2021Only": "Требуется радиочип LR2021. На других радиочипах эта настройка недоступна.",
+  "chatBackground_choosePicture": "Выбрать картинку",
+  "chatBackground_fade": "Затемнение",
+  "chatBackground_none": "Нет",
+  "chatBackground_picture": "Картинка",
+  "chatBackground_pictureFailed": "Не удалось использовать эту картинку",
+  "chatBackground_saveFailed": "Не удалось сохранить фон чата",
+  "chatBackground_themeOverrides": "Ваша тема «{name}» задаёт фон во всех чатах. Отключите это в теме, чтобы использовать этот фон.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Только для этого чата",
+  "chatBackground_title": "Фон чата",
+  "themes_accent": "Акцент",
+  "themes_accentHelp": "Кнопки, выделения и ваши сообщения в чате",
+  "themes_background": "Фон",
+  "themes_backgroundHelp": "Тёмный фон даёт тёмную тему",
+  "themes_builtIn": "Встроенные",
+  "themes_chatBackground": "Фон чата",
+  "themes_chatBackgroundEverywhere": "Использовать во всех чатах",
+  "themes_chatBackgroundEverywhereHelp": "Также заменяет фоны, заданные в отдельных чатах",
+  "themes_chatBackgroundHelp": "Показывается в чатах, у которых нет своего фона",
+  "themes_codeCopied": "Код темы скопирован",
+  "themes_copyCode": "Скопировать код темы",
+  "themes_copyName": "Копия «{name}»",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Создать тему",
+  "themes_customize": "Изменить копию",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Стандартные цвета, зависят от настройки «Светлая / Тёмная»",
+  "themes_deleteConfirm": "Удалить тему «{name}»?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Изменить тему",
+  "themes_exportAll": "Экспортировать мои темы",
+  "themes_exportFailed": "Не удалось экспортировать темы",
+  "themes_exportFile": "Экспорт в файл",
+  "themes_hexColor": "HEX-цвет",
+  "themes_iconChanged": "Изменён",
+  "themes_iconPictureFailed": "Не удалось использовать эту картинку",
+  "themes_iconRepeater": "Репитеры",
+  "themes_iconReset": "Использовать значок по умолчанию",
+  "themes_iconRoom": "Комнаты",
+  "themes_iconSend": "Кнопка отправки",
+  "themes_iconSensor": "Сенсоры",
+  "themes_iconUsePicture": "Использовать картинку",
+  "themes_icons": "Значки",
+  "themes_iconsHelp": "Нажмите на значок, чтобы заменить его другим значком или своей картинкой",
+  "themes_import": "Импортировать тему",
+  "themes_importFile": "Импорт из файла",
+  "themes_importFileNone": "В этом файле нет тем",
+  "themes_importFileResult": "Импортировано тем: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Вставьте код темы",
+  "themes_importInvalid": "Это неверный код темы",
+  "themes_imported": "Тема «{name}» добавлена",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Акцентный цвет плохо виден на этом фоне",
+  "themes_mapMarkers": "Маркеры на карте",
+  "themes_mapMarkersHelp": "Замените маркеры для нод и для себя на карте",
+  "themes_myThemes": "Мои темы",
+  "themes_myThemesEmpty": "Создайте свою тему: выберите фон и акцентный цвет.",
+  "themes_name": "Название",
+  "themes_nameRequired": "Дайте теме название",
+  "themes_newTitle": "Новая тема",
+  "themes_pasteCode": "Вставить код темы",
+  "themes_preview": "Предпросмотр",
+  "themes_previewIncoming": "Кто-нибудь сегодня на связи?",
+  "themes_previewOutgoing": "Слышу вас отлично!",
+  "themes_previewSwitch": "Уведомления",
+  "themes_saveAndUse": "Сохранить и применить",
+  "themes_saveFailed": "Не удалось сохранить тему",
+  "themes_title": "Темы"
 }

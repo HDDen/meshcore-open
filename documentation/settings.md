@@ -116,6 +116,8 @@ its unchanged masked value keeps the stored key; Cancel discards edits.
 
 ### Appearance
 - **Theme**: System / Light / Dark
+- **Themes** opens the manual theme library. Choose a preset or create a theme with your own colors, icons and optional chat background. **Default** returns to the saved System, Light or Dark mode.
+- The theme menu can copy or paste a share code and import or export `.jsonl` files. Themes and photos are stored locally. A photo is included when you share the theme that uses it.
 - Status-chip labels use the theme's normal text color. Status marks and avatar icons/initials retain their accent hue, adjusted for contrast against the standard tinted card background (target 3:1 for marks, 4.5:1 for text). Tint, border and type icons remain unchanged. Color correction uses a bounded cache; it adds no status animation or network request
 - **Language**: System default or one of 18 languages (English, French, Spanish, German, Polish, Slovenian, Portuguese, Italian, Chinese, Swedish, Dutch, Slovak, Bulgarian, Russian, Ukrainian, Hungarian, Japanese, Korean)
 

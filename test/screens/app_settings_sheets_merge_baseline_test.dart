@@ -35,6 +35,9 @@ class _Settings extends AppSettingsService {
   Future<void> setUnitSystem(UnitSystem units) async =>
       _apply(value.copyWith(unitSystem: units), 'units', units);
   @override
+  Future<void> setThemeMode(String mode) async =>
+      _apply(value.copyWith(themeMode: mode, activeThemeId: null), 'theme', mode);
+  @override
   Future<void> setLanguageOverride(String? code) async =>
       _apply(value.copyWith(languageOverride: code), 'language', code);
   @override
@@ -223,6 +226,34 @@ Future<void> _dialogAction(WidgetTester tester, String label) async {
 
 void main() {
   for (final locale in ['en', 'ru']) {
+    testWidgets('U19b baseline: stock theme choices remain reachable ($locale)', (
+      tester,
+    ) async {
+      await _withSettings(tester, locale, (settings, l10n) async {
+        final before = settings.value;
+        final control = find.byType(SegmentedButton<String>);
+        await tester.ensureVisible(control);
+        expect(tester.widget<SegmentedButton<String>>(control).selected, {'system'});
+        for (final (mode, label) in [
+          ('light', l10n.appSettings_themeLight),
+          ('dark', l10n.appSettings_themeDark),
+          ('system', l10n.appSettings_themeSystem),
+        ]) {
+          final option = find.descendant(of: control, matching: find.text(label));
+          expect(option.hitTestable(), findsOneWidget);
+          await tester.tap(option);
+          await tester.pumpAndSettle();
+          expect(tester.widget<SegmentedButton<String>>(control).selected, {mode});
+          expect(settings.value.toJson(), before.copyWith(themeMode: mode).toJson());
+        }
+        expect(settings.writes, [
+          ('theme', 'light'),
+          ('theme', 'dark'),
+          ('theme', 'system'),
+        ]);
+      });
+    });
+
     testWidgets('U11b9 baseline: time filter preserves all five choices and dismissal ($locale)', (tester) async {
       await _withSettings(tester, locale, (settings, l10n) async {
         final initial = settings.value.toJson();

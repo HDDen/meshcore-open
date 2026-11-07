@@ -4320,5 +4320,102 @@
   "repeater_boardSupportNote": "并非所有开发板都支持此功能。不支持的开发板会拒绝该更改。",
   "repeater_extraSf": "额外扩频因子",
   "repeater_extraSfHelper": "同时监听最多 3 个额外的扩频因子（SF），用逗号分隔（例如 9,10）。留空则关闭。",
-  "repeater_lr2021Only": "仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。"
+  "repeater_lr2021Only": "仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。",
+  "chatBackground_choosePicture": "选择图片",
+  "chatBackground_fade": "淡化",
+  "chatBackground_none": "无",
+  "chatBackground_picture": "图片",
+  "chatBackground_pictureFailed": "无法使用该图片",
+  "chatBackground_themeOverrides": "你的主题“{name}”为所有聊天设置了背景。请在该主题中关闭此项，才能使用这里的背景。",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "仅用于此聊天",
+  "chatBackground_title": "聊天背景",
+  "themes_accent": "强调色",
+  "themes_accentHelp": "按钮、高亮和你的聊天气泡",
+  "themes_background": "背景",
+  "themes_backgroundHelp": "深色背景会生成深色主题",
+  "themes_builtIn": "内置",
+  "themes_chatBackground": "聊天背景",
+  "themes_chatBackgroundEverywhere": "用于所有聊天",
+  "themes_chatBackgroundEverywhereHelp": "同时会替换单个聊天中设置的背景",
+  "themes_chatBackgroundHelp": "显示在没有自己背景的聊天中",
+  "themes_codeCopied": "主题代码已复制",
+  "themes_copyCode": "复制主题代码",
+  "themes_copyName": "{name} 副本",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "创建主题",
+  "themes_customize": "自定义副本",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "标准颜色，跟随浅色/深色设置",
+  "themes_deleteConfirm": "删除主题“{name}”？",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "编辑主题",
+  "themes_exportAll": "导出我的主题",
+  "themes_exportFailed": "无法导出主题",
+  "themes_exportFile": "导出到文件",
+  "themes_hexColor": "十六进制颜色",
+  "themes_iconChanged": "已更改",
+  "themes_iconPictureFailed": "无法使用该图片",
+  "themes_iconRepeater": "中继器",
+  "themes_iconReset": "使用默认图标",
+  "themes_iconRoom": "房间",
+  "themes_iconSend": "发送按钮",
+  "themes_iconSensor": "传感器",
+  "themes_iconUsePicture": "使用图片",
+  "themes_icons": "图标",
+  "themes_iconsHelp": "点按图标，可换成其他图标或你自己的图片",
+  "themes_import": "导入主题",
+  "themes_importFile": "从文件导入",
+  "themes_importFileNone": "该文件中没有找到主题",
+  "themes_importFileResult": "已导入 {count} 个主题",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "粘贴主题代码",
+  "themes_importInvalid": "这不是有效的主题代码",
+  "themes_imported": "已添加主题“{name}”",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "在此背景上很难看清强调色",
+  "themes_mapMarkers": "地图标记",
+  "themes_mapMarkersHelp": "更换地图上节点和你自己的标记",
+  "themes_myThemes": "我的主题",
+  "themes_myThemesEmpty": "选择背景和强调色，制作你自己的主题。",
+  "themes_name": "名称",
+  "themes_nameRequired": "请为主题起个名字",
+  "themes_newTitle": "新主题",
+  "themes_pasteCode": "粘贴主题代码",
+  "themes_preview": "预览",
+  "themes_previewIncoming": "今晚网络里有人吗？",
+  "themes_previewOutgoing": "收到，信号很清楚！",
+  "themes_previewSwitch": "通知",
+  "themes_saveAndUse": "保存并使用",
+  "themes_title": "主题"
 }

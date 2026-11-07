@@ -34,6 +34,7 @@ import 'services/storage_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/app_settings_service.dart';
+import 'services/chat_background_service.dart';
 import 'services/app_update_service.dart';
 import 'widgets/app_update_controls.dart';
 import 'services/network_map/network_map_availability.dart';
@@ -72,6 +73,7 @@ import 'helpers/delivery_observation_power_binding.dart';
 import 'helpers/ble_plugin_log_power_settings.dart';
 import 'helpers/ios_presentation_guard.dart';
 import 'theme/mesh_theme.dart';
+import 'models/custom_theme.dart';
 import 'utils/app_logger.dart';
 import 'utils/module_diagnostic_logger.dart';
 import 'utils/app_route_observer.dart';
@@ -1076,6 +1078,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: widget.retryService),
         ChangeNotifierProvider.value(value: widget.pathHistoryService),
         ChangeNotifierProvider.value(value: widget.appSettingsService),
+        ChangeNotifierProvider(
+          create: (_) => ChatBackgroundService(widget.appSettingsService),
+        ),
         ChangeNotifierProvider<AppUpdateService>(
           create: (_) => AppUpdateService(preferences: PrefsManager.instance),
         ),
@@ -1099,6 +1104,13 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       ],
       child: Consumer<AppSettingsService>(
         builder: (context, settingsService, child) {
+          final selected = settingsService.activeCustomTheme;
+          if (selected != _cachedCustomTheme) {
+            _cachedCustomTheme = selected;
+            _customThemeData = selected == null
+                ? null
+                : MeshTheme.fromCustom(selected);
+          }
           return MaterialApp(
             title: 'MCO Advanced',
             navigatorKey: MeshCoreApp._navigatorKey,
@@ -1116,11 +1128,13 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
             locale: _localeFromSetting(
               settingsService.settings.languageOverride,
             ),
-            theme: MeshTheme.light(),
-            darkTheme: MeshTheme.dark(),
-            themeMode: _themeModeFromSetting(
-              settingsService.settings.themeMode,
-            ),
+            theme: _customThemeData ?? MeshTheme.light(),
+            darkTheme: _customThemeData ?? MeshTheme.dark(),
+            themeMode: switch (_customThemeData?.brightness) {
+              Brightness.dark => ThemeMode.dark,
+              Brightness.light => ThemeMode.light,
+              null => _themeModeFromSetting(settingsService.settings.themeMode),
+            },
             builder: (context, child) {
               // Update notification service with resolved locale
               final locale = Localizations.localeOf(context);
@@ -1180,6 +1194,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       ),
     );
   }
+
+  CustomTheme? _cachedCustomTheme;
+  ThemeData? _customThemeData;
 
   ThemeMode _themeModeFromSetting(String value) {
     switch (value) {

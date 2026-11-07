@@ -4295,5 +4295,102 @@
   "repeater_boardSupportNote": "Не кожна плата це підтримує. Непідтримувані плати відхиляють зміну.",
   "repeater_extraSf": "Додаткові коефіцієнти розширення",
   "repeater_extraSfHelper": "До 3 додаткових коефіцієнтів розширення (SF) для одночасного прослуховування, через кому (наприклад 9,10). Залиште порожнім, щоб вимкнути.",
-  "repeater_lr2021Only": "Лише для ретрансляторів з радіо LR2021. Інші ретранслятори не мають цього налаштування і відхиляють його."
+  "repeater_lr2021Only": "Лише для ретрансляторів з радіо LR2021. Інші ретранслятори не мають цього налаштування і відхиляють його.",
+  "chatBackground_choosePicture": "Обрати картинку",
+  "chatBackground_fade": "Затемнення",
+  "chatBackground_none": "Немає",
+  "chatBackground_picture": "Картинка",
+  "chatBackground_pictureFailed": "Не вдалося використати цю картинку",
+  "chatBackground_themeOverrides": "Ваша тема «{name}» задає тло в усіх чатах. Вимкніть це в темі, щоб використати це тло.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Лише для цього чату",
+  "chatBackground_title": "Тло чату",
+  "themes_accent": "Акцент",
+  "themes_accentHelp": "Кнопки, виділення та ваші повідомлення в чаті",
+  "themes_background": "Фон",
+  "themes_backgroundHelp": "Темний фон дає темну тему",
+  "themes_builtIn": "Вбудовані",
+  "themes_chatBackground": "Тло чату",
+  "themes_chatBackgroundEverywhere": "Використовувати в усіх чатах",
+  "themes_chatBackgroundEverywhereHelp": "Також замінює тла, задані в окремих чатах",
+  "themes_chatBackgroundHelp": "Показується в чатах, які не мають власного тла",
+  "themes_codeCopied": "Код теми скопійовано",
+  "themes_copyCode": "Скопіювати код теми",
+  "themes_copyName": "Копія «{name}»",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Створити тему",
+  "themes_customize": "Змінити копію",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Стандартні кольори, залежать від налаштування «Світла / Темна»",
+  "themes_deleteConfirm": "Видалити тему «{name}»?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Змінити тему",
+  "themes_exportAll": "Експортувати мої теми",
+  "themes_exportFailed": "Не вдалося експортувати теми",
+  "themes_exportFile": "Експорт у файл",
+  "themes_hexColor": "HEX-колір",
+  "themes_iconChanged": "Змінено",
+  "themes_iconPictureFailed": "Не вдалося використати цю картинку",
+  "themes_iconRepeater": "Ретранслятори",
+  "themes_iconReset": "Використати значок за замовчуванням",
+  "themes_iconRoom": "Кімнати",
+  "themes_iconSend": "Кнопка надсилання",
+  "themes_iconSensor": "Сенсори",
+  "themes_iconUsePicture": "Використати картинку",
+  "themes_icons": "Значки",
+  "themes_iconsHelp": "Натисніть на значок, щоб замінити його іншим значком або власною картинкою",
+  "themes_import": "Імпортувати тему",
+  "themes_importFile": "Імпорт із файлу",
+  "themes_importFileNone": "У цьому файлі немає тем",
+  "themes_importFileResult": "Імпортовано тем: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Вставте код теми",
+  "themes_importInvalid": "Це недійсний код теми",
+  "themes_imported": "Тему «{name}» додано",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Акцентний колір погано видно на цьому тлі",
+  "themes_mapMarkers": "Маркери на мапі",
+  "themes_mapMarkersHelp": "Замініть маркери для вузлів і для себе на мапі",
+  "themes_myThemes": "Мої теми",
+  "themes_myThemesEmpty": "Створіть власну тему: оберіть фон і акцентний колір.",
+  "themes_name": "Назва",
+  "themes_nameRequired": "Дайте темі назву",
+  "themes_newTitle": "Нова тема",
+  "themes_pasteCode": "Вставити код теми",
+  "themes_preview": "Попередній перегляд",
+  "themes_previewIncoming": "Хто-небудь сьогодні на зв'язку?",
+  "themes_previewOutgoing": "Чую вас чудово!",
+  "themes_previewSwitch": "Сповіщення",
+  "themes_saveAndUse": "Зберегти та застосувати",
+  "themes_title": "Теми"
 }

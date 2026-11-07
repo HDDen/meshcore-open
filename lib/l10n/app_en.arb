@@ -4707,5 +4707,104 @@
   "repeater_boardSupportNote": "Not every board supports this. Unsupported boards reject the change.",
   "repeater_extraSf": "Extra spreading factors",
   "repeater_extraSfHelper": "Up to 3 more spreading factors to listen on at the same time, separated by commas (for example 9,10). Leave empty to turn off.",
-  "repeater_lr2021Only": "Only for repeaters with an LR2021 radio. Other repeaters don't have this setting and reject it."
+  "repeater_lr2021Only": "Only for repeaters with an LR2021 radio. Other repeaters don't have this setting and reject it.",
+  "chatBackground_choosePicture": "Choose a picture",
+  "chatBackground_fade": "Fade",
+  "chatBackground_none": "None",
+  "chatBackground_picture": "Picture",
+  "chatBackground_pictureFailed": "Could not use that picture",
+  "chatBackground_saveFailed": "Could not save the chat background",
+  "chatBackground_themeOverrides": "Your theme \"{name}\" sets the background in every chat. Turn that off in the theme to use this one.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Only for this chat",
+  "chatBackground_title": "Chat background",
+  "themes_accent": "Accent",
+  "themes_accentHelp": "Buttons, highlights and your chat bubbles",
+  "themes_background": "Background",
+  "themes_backgroundHelp": "A dark background makes a dark theme",
+  "themes_builtIn": "Built-in",
+  "themes_chatBackground": "Chat background",
+  "themes_chatBackgroundEverywhere": "Use in every chat",
+  "themes_chatBackgroundEverywhereHelp": "Also replaces backgrounds set on individual chats",
+  "themes_chatBackgroundHelp": "Shown in chats that do not have their own background",
+  "themes_codeCopied": "Theme code copied",
+  "themes_copyCode": "Copy theme code",
+  "themes_copyName": "{name} copy",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Create theme",
+  "themes_customize": "Customize a copy",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Standard colors, follows the Light / Dark setting",
+  "themes_deleteConfirm": "Delete theme \"{name}\"?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Edit theme",
+  "themes_exportAll": "Export my themes",
+  "themes_exportFailed": "Could not export themes",
+  "themes_exportFile": "Export to file",
+  "themes_hexColor": "Hex color",
+  "themes_iconChanged": "Changed",
+  "themes_iconPictureFailed": "Could not use that picture",
+  "themes_iconRepeater": "Repeaters",
+  "themes_iconReset": "Use the default icon",
+  "themes_iconRoom": "Rooms",
+  "themes_iconSend": "Send button",
+  "themes_iconSensor": "Sensors",
+  "themes_iconUsePicture": "Use a picture",
+  "themes_icons": "Icons",
+  "themes_iconsHelp": "Tap an icon to swap it for another icon or your own picture",
+  "themes_import": "Import theme",
+  "themes_importFile": "Import from file",
+  "themes_importFileNone": "No themes found in that file",
+  "themes_importFileResult": "Imported {count} themes",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Paste a theme code",
+  "themes_importInvalid": "That is not a valid theme code",
+  "themes_imported": "Added theme \"{name}\"",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "The accent is hard to see on this background",
+  "themes_mapMarkers": "Map markers",
+  "themes_mapMarkersHelp": "Swap the markers for nodes and for you on the map",
+  "themes_myThemes": "My themes",
+  "themes_myThemesEmpty": "Make your own theme by picking a background and an accent color.",
+  "themes_name": "Name",
+  "themes_nameRequired": "Give your theme a name",
+  "themes_newTitle": "New theme",
+  "themes_pasteCode": "Paste theme code",
+  "themes_preview": "Preview",
+  "themes_previewIncoming": "Anyone on the mesh tonight?",
+  "themes_previewOutgoing": "Loud and clear!",
+  "themes_previewSwitch": "Notifications",
+  "themes_saveAndUse": "Save and use",
+  "themes_saveFailed": "Could not save the theme",
+  "themes_title": "Themes"
 }

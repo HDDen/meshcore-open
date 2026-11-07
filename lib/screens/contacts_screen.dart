@@ -34,6 +34,7 @@ import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
 import '../services/wardrive_service.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
 import '../utils/contact_search.dart';
 import '../storage/contact_group_store.dart';
 import '../utils/dialog_utils.dart';
@@ -3341,6 +3342,12 @@ class _ContactTile extends StatelessWidget {
                 size: 42,
                 color: isChat ? null : _avatarColor(),
                 icon: _avatarIcon(),
+                iconSlot: switch (contact.type) {
+                  advTypeRepeater => ThemeIconSlot.repeater,
+                  advTypeRoom => ThemeIconSlot.room,
+                  advTypeSensor => ThemeIconSlot.sensor,
+                  _ => null,
+                },
               ),
             const SizedBox(width: 12),
             // Main content

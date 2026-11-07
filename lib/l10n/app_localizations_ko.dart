@@ -8773,4 +8773,206 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'LR2021 무전기를 탑재한 리피터 전용입니다. 다른 리피터에는 이 설정이 없으며 변경을 거부합니다.';
+
+  @override
+  String get chatBackground_choosePicture => '사진 선택';
+
+  @override
+  String get chatBackground_fade => '흐리게';
+
+  @override
+  String get chatBackground_none => '없음';
+
+  @override
+  String get chatBackground_picture => '사진';
+
+  @override
+  String get chatBackground_pictureFailed => '그 사진을 사용할 수 없습니다';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return '내 테마 \"$name\"이(가) 모든 채팅의 배경을 정하고 있습니다. 이 배경을 쓰려면 테마에서 그 설정을 끄세요.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => '이 채팅에만 적용';
+
+  @override
+  String get chatBackground_title => '채팅 배경';
+
+  @override
+  String get themes_accent => '강조 색';
+
+  @override
+  String get themes_accentHelp => '버튼, 강조 표시, 내 말풍선에 쓰입니다';
+
+  @override
+  String get themes_background => '배경';
+
+  @override
+  String get themes_backgroundHelp => '어두운 배경을 고르면 어두운 테마가 됩니다';
+
+  @override
+  String get themes_builtIn => '기본 제공';
+
+  @override
+  String get themes_chatBackground => '채팅 배경';
+
+  @override
+  String get themes_chatBackgroundEverywhere => '모든 채팅에 사용';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp => '개별 채팅에 정한 배경도 바뀝니다';
+
+  @override
+  String get themes_chatBackgroundHelp => '따로 배경이 없는 채팅에 표시됩니다';
+
+  @override
+  String get themes_codeCopied => '테마 코드를 복사했습니다';
+
+  @override
+  String get themes_copyCode => '테마 코드 복사';
+
+  @override
+  String themes_copyName(String name) {
+    return '$name 복사본';
+  }
+
+  @override
+  String get themes_create => '테마 만들기';
+
+  @override
+  String get themes_customize => '복사본 꾸미기';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle => '기본 색상, 밝음/어두움 설정을 따릅니다';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return '테마 \"$name\"을(를) 삭제할까요?';
+  }
+
+  @override
+  String get themes_editTitle => '테마 편집';
+
+  @override
+  String get themes_exportAll => '내 테마 내보내기';
+
+  @override
+  String get themes_exportFailed => '테마를 내보내지 못했습니다';
+
+  @override
+  String get themes_exportFile => '파일로 내보내기';
+
+  @override
+  String get themes_hexColor => '16진수 색상';
+
+  @override
+  String get themes_iconChanged => '변경됨';
+
+  @override
+  String get themes_iconPictureFailed => '그 사진을 사용할 수 없습니다';
+
+  @override
+  String get themes_iconRepeater => '리피터';
+
+  @override
+  String get themes_iconReset => '기본 아이콘 사용';
+
+  @override
+  String get themes_iconRoom => '룸';
+
+  @override
+  String get themes_iconSend => '보내기 버튼';
+
+  @override
+  String get themes_iconSensor => '센서';
+
+  @override
+  String get themes_iconUsePicture => '사진 사용';
+
+  @override
+  String get themes_icons => '아이콘';
+
+  @override
+  String get themes_iconsHelp => '아이콘을 눌러 다른 아이콘이나 내 사진으로 바꾸세요';
+
+  @override
+  String get themes_import => '테마 가져오기';
+
+  @override
+  String get themes_importFile => '파일에서 가져오기';
+
+  @override
+  String get themes_importFileNone => '그 파일에서 테마를 찾지 못했습니다';
+
+  @override
+  String themes_importFileResult(int count) {
+    return '테마 $count개를 가져왔습니다';
+  }
+
+  @override
+  String get themes_importHint => '테마 코드를 붙여넣으세요';
+
+  @override
+  String get themes_importInvalid => '올바른 테마 코드가 아닙니다';
+
+  @override
+  String themes_imported(String name) {
+    return '테마 \"$name\"을(를) 추가했습니다';
+  }
+
+  @override
+  String get themes_lowContrast => '이 배경에서는 강조 색이 잘 보이지 않습니다';
+
+  @override
+  String get themes_mapMarkers => '지도 마커';
+
+  @override
+  String get themes_mapMarkersHelp => '지도에서 노드와 내 위치 마커를 바꿉니다';
+
+  @override
+  String get themes_myThemes => '내 테마';
+
+  @override
+  String get themes_myThemesEmpty => '배경과 강조 색을 골라 나만의 테마를 만들어 보세요.';
+
+  @override
+  String get themes_name => '이름';
+
+  @override
+  String get themes_nameRequired => '테마 이름을 입력하세요';
+
+  @override
+  String get themes_newTitle => '새 테마';
+
+  @override
+  String get themes_pasteCode => '테마 코드 붙여넣기';
+
+  @override
+  String get themes_preview => '미리보기';
+
+  @override
+  String get themes_previewIncoming => '오늘 밤 메시에 계신 분 있나요?';
+
+  @override
+  String get themes_previewOutgoing => '잘 들립니다!';
+
+  @override
+  String get themes_previewSwitch => '알림';
+
+  @override
+  String get themes_saveAndUse => '저장하고 사용';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => '테마';
 }

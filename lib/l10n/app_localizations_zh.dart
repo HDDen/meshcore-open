@@ -8577,4 +8577,206 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       '仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。';
+
+  @override
+  String get chatBackground_choosePicture => '选择图片';
+
+  @override
+  String get chatBackground_fade => '淡化';
+
+  @override
+  String get chatBackground_none => '无';
+
+  @override
+  String get chatBackground_picture => '图片';
+
+  @override
+  String get chatBackground_pictureFailed => '无法使用该图片';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return '你的主题“$name”为所有聊天设置了背景。请在该主题中关闭此项，才能使用这里的背景。';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => '仅用于此聊天';
+
+  @override
+  String get chatBackground_title => '聊天背景';
+
+  @override
+  String get themes_accent => '强调色';
+
+  @override
+  String get themes_accentHelp => '按钮、高亮和你的聊天气泡';
+
+  @override
+  String get themes_background => '背景';
+
+  @override
+  String get themes_backgroundHelp => '深色背景会生成深色主题';
+
+  @override
+  String get themes_builtIn => '内置';
+
+  @override
+  String get themes_chatBackground => '聊天背景';
+
+  @override
+  String get themes_chatBackgroundEverywhere => '用于所有聊天';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp => '同时会替换单个聊天中设置的背景';
+
+  @override
+  String get themes_chatBackgroundHelp => '显示在没有自己背景的聊天中';
+
+  @override
+  String get themes_codeCopied => '主题代码已复制';
+
+  @override
+  String get themes_copyCode => '复制主题代码';
+
+  @override
+  String themes_copyName(String name) {
+    return '$name 副本';
+  }
+
+  @override
+  String get themes_create => '创建主题';
+
+  @override
+  String get themes_customize => '自定义副本';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle => '标准颜色，跟随浅色/深色设置';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return '删除主题“$name”？';
+  }
+
+  @override
+  String get themes_editTitle => '编辑主题';
+
+  @override
+  String get themes_exportAll => '导出我的主题';
+
+  @override
+  String get themes_exportFailed => '无法导出主题';
+
+  @override
+  String get themes_exportFile => '导出到文件';
+
+  @override
+  String get themes_hexColor => '十六进制颜色';
+
+  @override
+  String get themes_iconChanged => '已更改';
+
+  @override
+  String get themes_iconPictureFailed => '无法使用该图片';
+
+  @override
+  String get themes_iconRepeater => '中继器';
+
+  @override
+  String get themes_iconReset => '使用默认图标';
+
+  @override
+  String get themes_iconRoom => '房间';
+
+  @override
+  String get themes_iconSend => '发送按钮';
+
+  @override
+  String get themes_iconSensor => '传感器';
+
+  @override
+  String get themes_iconUsePicture => '使用图片';
+
+  @override
+  String get themes_icons => '图标';
+
+  @override
+  String get themes_iconsHelp => '点按图标，可换成其他图标或你自己的图片';
+
+  @override
+  String get themes_import => '导入主题';
+
+  @override
+  String get themes_importFile => '从文件导入';
+
+  @override
+  String get themes_importFileNone => '该文件中没有找到主题';
+
+  @override
+  String themes_importFileResult(int count) {
+    return '已导入 $count 个主题';
+  }
+
+  @override
+  String get themes_importHint => '粘贴主题代码';
+
+  @override
+  String get themes_importInvalid => '这不是有效的主题代码';
+
+  @override
+  String themes_imported(String name) {
+    return '已添加主题“$name”';
+  }
+
+  @override
+  String get themes_lowContrast => '在此背景上很难看清强调色';
+
+  @override
+  String get themes_mapMarkers => '地图标记';
+
+  @override
+  String get themes_mapMarkersHelp => '更换地图上节点和你自己的标记';
+
+  @override
+  String get themes_myThemes => '我的主题';
+
+  @override
+  String get themes_myThemesEmpty => '选择背景和强调色，制作你自己的主题。';
+
+  @override
+  String get themes_name => '名称';
+
+  @override
+  String get themes_nameRequired => '请为主题起个名字';
+
+  @override
+  String get themes_newTitle => '新主题';
+
+  @override
+  String get themes_pasteCode => '粘贴主题代码';
+
+  @override
+  String get themes_preview => '预览';
+
+  @override
+  String get themes_previewIncoming => '今晚网络里有人吗？';
+
+  @override
+  String get themes_previewOutgoing => '收到，信号很清楚！';
+
+  @override
+  String get themes_previewSwitch => '通知';
+
+  @override
+  String get themes_saveAndUse => '保存并使用';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => '主题';
 }

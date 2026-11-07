@@ -4285,5 +4285,102 @@
   "repeater_boardSupportNote": "Non tutte le schede lo supportano. Le schede non supportate rifiutano la modifica.",
   "repeater_extraSf": "Fattori di diffusione (SF) aggiuntivi",
   "repeater_extraSfHelper": "Fino a 3 fattori di diffusione (SF) in più su cui ascoltare contemporaneamente, separati da virgole (ad esempio 9,10). Lascia vuoto per disattivare.",
-  "repeater_lr2021Only": "Solo per repeater con radio LR2021. Gli altri repeater non hanno questa impostazione e la rifiutano."
+  "repeater_lr2021Only": "Solo per repeater con radio LR2021. Gli altri repeater non hanno questa impostazione e la rifiutano.",
+  "chatBackground_choosePicture": "Scegli un'immagine",
+  "chatBackground_fade": "Dissolvenza",
+  "chatBackground_none": "Nessuno",
+  "chatBackground_picture": "Immagine",
+  "chatBackground_pictureFailed": "Impossibile usare questa immagine",
+  "chatBackground_themeOverrides": "Il tuo tema \"{name}\" imposta lo sfondo in tutte le chat. Disattivalo nel tema per usare questo.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Solo per questa chat",
+  "chatBackground_title": "Sfondo della chat",
+  "themes_accent": "Colore di risalto",
+  "themes_accentHelp": "Pulsanti, elementi evidenziati e i tuoi fumetti nella chat",
+  "themes_background": "Sfondo",
+  "themes_backgroundHelp": "Uno sfondo scuro crea un tema scuro",
+  "themes_builtIn": "Integrati",
+  "themes_chatBackground": "Sfondo della chat",
+  "themes_chatBackgroundEverywhere": "Usa in tutte le chat",
+  "themes_chatBackgroundEverywhereHelp": "Sostituisce anche gli sfondi impostati sulle singole chat",
+  "themes_chatBackgroundHelp": "Mostrato nelle chat che non hanno uno sfondo proprio",
+  "themes_codeCopied": "Codice tema copiato",
+  "themes_copyCode": "Copia codice tema",
+  "themes_copyName": "Copia di {name}",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Crea tema",
+  "themes_customize": "Personalizza una copia",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Colori standard, segue l'impostazione Chiaro / Scuro",
+  "themes_deleteConfirm": "Eliminare il tema \"{name}\"?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Modifica tema",
+  "themes_exportAll": "Esporta i miei temi",
+  "themes_exportFailed": "Impossibile esportare i temi",
+  "themes_exportFile": "Esporta su file",
+  "themes_hexColor": "Colore esadecimale",
+  "themes_iconChanged": "Modificata",
+  "themes_iconPictureFailed": "Impossibile usare questa immagine",
+  "themes_iconRepeater": "Ripetitori",
+  "themes_iconReset": "Usa l'icona predefinita",
+  "themes_iconRoom": "Stanze",
+  "themes_iconSend": "Pulsante di invio",
+  "themes_iconSensor": "Sensori",
+  "themes_iconUsePicture": "Usa un'immagine",
+  "themes_icons": "Icone",
+  "themes_iconsHelp": "Tocca un'icona per sostituirla con un'altra icona o con una tua immagine",
+  "themes_import": "Importa tema",
+  "themes_importFile": "Importa da file",
+  "themes_importFileNone": "Nessun tema trovato in questo file",
+  "themes_importFileResult": "Importati {count} temi",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Incolla un codice tema",
+  "themes_importInvalid": "Questo non è un codice tema valido",
+  "themes_imported": "Tema \"{name}\" aggiunto",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Il colore di risalto si vede male su questo sfondo",
+  "themes_mapMarkers": "Indicatori della mappa",
+  "themes_mapMarkersHelp": "Sostituisci gli indicatori dei nodi e il tuo sulla mappa",
+  "themes_myThemes": "I miei temi",
+  "themes_myThemesEmpty": "Crea il tuo tema scegliendo uno sfondo e un colore di risalto.",
+  "themes_name": "Nome",
+  "themes_nameRequired": "Dai un nome al tuo tema",
+  "themes_newTitle": "Nuovo tema",
+  "themes_pasteCode": "Incolla codice tema",
+  "themes_preview": "Anteprima",
+  "themes_previewIncoming": "C'è qualcuno sulla mesh stasera?",
+  "themes_previewOutgoing": "Forte e chiaro!",
+  "themes_previewSwitch": "Notifiche",
+  "themes_saveAndUse": "Salva e usa",
+  "themes_title": "Temi"
 }

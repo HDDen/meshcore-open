@@ -13,6 +13,7 @@ import 'package:meshcore_open/screens/channel_chat_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
 import 'package:meshcore_open/widgets/stop_sending_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,6 +84,14 @@ void main() {
           expect(find.byType(StopSendingBar), findsOneWidget);
           final l10n = AppLocalizations.of(tester.element(bar));
           expect(find.descendant(of: bar, matching: find.text(l10n.chat_stopSending)), findsOneWidget);
+          // U19b layers are placed behind the existing composer and controls.
+          final composer = find.byWidgetPredicate(
+            (widget) => widget is EditableText && !widget.readOnly,
+          ).hitTestable();
+          expect(composer, findsOneWidget);
+          final send = find.byType(ChatComposerSendButton).hitTestable();
+          expect(send, findsOneWidget);
+          expect(tester.widget<ChatComposerSendButton>(send).tooltip, l10n.chat_sendMessage);
           // The feature toggle hides the control without falsely completing delivery.
           await settings.updateSettings(settings.settings.copyWith(channelMinHopsEnabled: false));
           await tester.pump();

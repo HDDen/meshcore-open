@@ -4450,5 +4450,102 @@
   "repeater_boardSupportNote": "Nicht jede Platine unterstützt dies. Nicht unterstützte Platinen lehnen die Änderung ab.",
   "repeater_extraSf": "Zusätzliche Spreading-Faktoren (SF)",
   "repeater_extraSfHelper": "Bis zu 3 weitere Spreading-Faktoren (SF), auf denen gleichzeitig gehört wird, durch Kommas getrennt (zum Beispiel 9,10). Leer lassen, um es auszuschalten.",
-  "repeater_lr2021Only": "Nur für Repeater mit LR2021-Funkmodul. Andere Repeater haben diese Einstellung nicht und lehnen sie ab."
+  "repeater_lr2021Only": "Nur für Repeater mit LR2021-Funkmodul. Andere Repeater haben diese Einstellung nicht und lehnen sie ab.",
+  "chatBackground_choosePicture": "Bild auswählen",
+  "chatBackground_fade": "Abblenden",
+  "chatBackground_none": "Kein Hintergrund",
+  "chatBackground_picture": "Bild",
+  "chatBackground_pictureFailed": "Das Bild konnte nicht verwendet werden",
+  "chatBackground_themeOverrides": "Ihr Design „{name}“ legt den Hintergrund in jedem Chat fest. Schalten Sie das im Design aus, um diesen zu verwenden.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Nur für diesen Chat",
+  "chatBackground_title": "Chat-Hintergrund",
+  "themes_accent": "Akzent",
+  "themes_accentHelp": "Schaltflächen, Hervorhebungen und Ihre Chat-Blasen",
+  "themes_background": "Hintergrund",
+  "themes_backgroundHelp": "Ein dunkler Hintergrund ergibt ein dunkles Design",
+  "themes_builtIn": "Vorinstalliert",
+  "themes_chatBackground": "Chat-Hintergrund",
+  "themes_chatBackgroundEverywhere": "In jedem Chat verwenden",
+  "themes_chatBackgroundEverywhereHelp": "Ersetzt auch Hintergründe, die für einzelne Chats gesetzt wurden",
+  "themes_chatBackgroundHelp": "Wird in Chats gezeigt, die keinen eigenen Hintergrund haben",
+  "themes_codeCopied": "Design-Code kopiert",
+  "themes_copyCode": "Design-Code kopieren",
+  "themes_copyName": "{name} Kopie",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Design erstellen",
+  "themes_customize": "Kopie anpassen",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Standardfarben, folgt der Einstellung Hell / Dunkel",
+  "themes_deleteConfirm": "Design „{name}“ löschen?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Design bearbeiten",
+  "themes_exportAll": "Meine Designs exportieren",
+  "themes_exportFailed": "Designs konnten nicht exportiert werden",
+  "themes_exportFile": "In Datei exportieren",
+  "themes_hexColor": "Hex-Farbe",
+  "themes_iconChanged": "Geändert",
+  "themes_iconPictureFailed": "Das Bild konnte nicht verwendet werden",
+  "themes_iconRepeater": "Repeater",
+  "themes_iconReset": "Standardsymbol verwenden",
+  "themes_iconRoom": "Raumserver",
+  "themes_iconSend": "Senden-Schaltfläche",
+  "themes_iconSensor": "Sensoren",
+  "themes_iconUsePicture": "Bild verwenden",
+  "themes_icons": "Symbole",
+  "themes_iconsHelp": "Tippen Sie auf ein Symbol, um es durch ein anderes Symbol oder ein eigenes Bild zu ersetzen",
+  "themes_import": "Design importieren",
+  "themes_importFile": "Aus Datei importieren",
+  "themes_importFileNone": "In dieser Datei wurden keine Designs gefunden",
+  "themes_importFileResult": "{count} Designs importiert",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Design-Code einfügen",
+  "themes_importInvalid": "Das ist kein gültiger Design-Code",
+  "themes_imported": "Design „{name}“ hinzugefügt",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Der Akzent ist auf diesem Hintergrund schlecht zu sehen",
+  "themes_mapMarkers": "Kartenmarkierungen",
+  "themes_mapMarkersHelp": "Ersetzen Sie die Markierungen für Knoten und für Sie selbst auf der Karte",
+  "themes_myThemes": "Meine Designs",
+  "themes_myThemesEmpty": "Erstellen Sie ein eigenes Design, indem Sie einen Hintergrund und eine Akzentfarbe wählen.",
+  "themes_name": "Name",
+  "themes_nameRequired": "Geben Sie Ihrem Design einen Namen",
+  "themes_newTitle": "Neues Design",
+  "themes_pasteCode": "Design-Code einfügen",
+  "themes_preview": "Vorschau",
+  "themes_previewIncoming": "Ist heute Abend jemand im Mesh?",
+  "themes_previewOutgoing": "Laut und deutlich!",
+  "themes_previewSwitch": "Benachrichtigungen",
+  "themes_saveAndUse": "Speichern und verwenden",
+  "themes_title": "Designs"
 }

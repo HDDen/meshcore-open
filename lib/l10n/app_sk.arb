@@ -4288,5 +4288,102 @@
   "repeater_boardSupportNote": "Nie každá doska to podporuje. Nepodporované dosky zmenu odmietnu.",
   "repeater_extraSf": "Ďalšie spreading faktory",
   "repeater_extraSfHelper": "Až 3 ďalšie spreading faktory, na ktorých sa súčasne počúva, oddelené čiarkami (napríklad 9,10). Ak chcete vypnúť, nechajte prázdne.",
-  "repeater_lr2021Only": "Len pre opakovače s rádiom LR2021. Ostatné opakovače toto nastavenie nemajú a odmietnu ho."
+  "repeater_lr2021Only": "Len pre opakovače s rádiom LR2021. Ostatné opakovače toto nastavenie nemajú a odmietnu ho.",
+  "chatBackground_choosePicture": "Vybrať obrázok",
+  "chatBackground_fade": "Vyblednutie",
+  "chatBackground_none": "Žiadne",
+  "chatBackground_picture": "Obrázok",
+  "chatBackground_pictureFailed": "Tento obrázok sa nepodarilo použiť",
+  "chatBackground_themeOverrides": "Vaša téma „{name}“ nastavuje pozadie v každom chate. Vypnite to v téme, ak chcete použiť toto.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Len pre tento chat",
+  "chatBackground_title": "Pozadie chatu",
+  "themes_accent": "Zvýraznenie",
+  "themes_accentHelp": "Tlačidlá, zvýraznenia a vaše bubliny v chate",
+  "themes_background": "Pozadie",
+  "themes_backgroundHelp": "Tmavé pozadie vytvorí tmavú tému",
+  "themes_builtIn": "Vstavané",
+  "themes_chatBackground": "Pozadie chatu",
+  "themes_chatBackgroundEverywhere": "Použiť v každom chate",
+  "themes_chatBackgroundEverywhereHelp": "Nahradí aj pozadia nastavené v jednotlivých chatoch",
+  "themes_chatBackgroundHelp": "Zobrazuje sa v chatoch, ktoré nemajú vlastné pozadie",
+  "themes_codeCopied": "Kód témy skopírovaný",
+  "themes_copyCode": "Kopírovať kód témy",
+  "themes_copyName": "{name} – kópia",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Vytvoriť tému",
+  "themes_customize": "Upraviť kópiu",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Štandardné farby, riadi sa nastavením Svetlý / Tmavý",
+  "themes_deleteConfirm": "Odstrániť tému „{name}“?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Upraviť tému",
+  "themes_exportAll": "Exportovať moje témy",
+  "themes_exportFailed": "Témy sa nepodarilo exportovať",
+  "themes_exportFile": "Exportovať do súboru",
+  "themes_hexColor": "Hexadecimálna farba",
+  "themes_iconChanged": "Zmenené",
+  "themes_iconPictureFailed": "Tento obrázok sa nepodarilo použiť",
+  "themes_iconRepeater": "Opakovače",
+  "themes_iconReset": "Použiť predvolenú ikonu",
+  "themes_iconRoom": "Miestnosti",
+  "themes_iconSend": "Tlačidlo odoslať",
+  "themes_iconSensor": "Senzory",
+  "themes_iconUsePicture": "Použiť obrázok",
+  "themes_icons": "Ikony",
+  "themes_iconsHelp": "Ťuknite na ikonu a zamente ju za inú ikonu alebo vlastný obrázok",
+  "themes_import": "Importovať tému",
+  "themes_importFile": "Importovať zo súboru",
+  "themes_importFileNone": "V tomto súbore sa nenašli žiadne témy",
+  "themes_importFileResult": "Importované témy: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Vložte kód témy",
+  "themes_importInvalid": "Toto nie je platný kód témy",
+  "themes_imported": "Pridaná téma „{name}“",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Farba zvýraznenia je na tomto pozadí zle viditeľná",
+  "themes_mapMarkers": "Značky na mape",
+  "themes_mapMarkersHelp": "Zamente značky uzlov a vašej polohy na mape",
+  "themes_myThemes": "Moje témy",
+  "themes_myThemesEmpty": "Vytvorte si vlastnú tému výberom pozadia a farby zvýraznenia.",
+  "themes_name": "Názov",
+  "themes_nameRequired": "Pomenujte svoju tému",
+  "themes_newTitle": "Nová téma",
+  "themes_pasteCode": "Vložiť kód témy",
+  "themes_preview": "Náhľad",
+  "themes_previewIncoming": "Je dnes večer niekto v sieti?",
+  "themes_previewOutgoing": "Počujem hlasno a zreteľne!",
+  "themes_previewSwitch": "Upozornenia",
+  "themes_saveAndUse": "Uložiť a použiť",
+  "themes_title": "Témy"
 }

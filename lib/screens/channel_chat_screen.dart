@@ -63,6 +63,7 @@ import '../models/contact.dart';
 import '../models/image_codec_support.dart' show aeicRatePointForUi;
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
+import '../services/chat_background_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/image_chunk_transport.dart';
 import '../services/image_codec_backend.dart' show kImageCodecFeatureAvailable;
@@ -113,6 +114,7 @@ import '../widgets/translated_message_content.dart';
 import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../widgets/chat_background.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/mesh_ui.dart';
@@ -1088,6 +1090,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 switch (value) {
                   case 'searchMessages':
                     unawaited(_showMessageSearch());
+                  case 'background':
+                    unawaited(showChatBackgroundSheet(
+                      context,
+                      ChatBackgroundService.channelKey(widget.channel),
+                    ));
                   case 'editChannel':
                     final connector = context.read<MeshCoreConnector>();
                     showChannelEditSheet(context, connector, widget.channel);
@@ -1126,6 +1133,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     child: PopupMenuRow(
                       icon: Icons.edit_outlined,
                       text: context.l10n.channels_editChannel,
+                    ),
+                  ),
+                if (ChatBackgroundService.channelKey(widget.channel).isNotEmpty &&
+                    context.read<ChatBackgroundService?>() != null)
+                  PopupMenuItem(
+                    value: 'background',
+                    child: PopupMenuRow(
+                      icon: Icons.wallpaper,
+                      text: context.l10n.chatBackground_title,
                     ),
                   ),
                 // channel-qr-share: fork-only, see helpers/channel_qr_link.dart
@@ -1199,34 +1215,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final reversedRows = _transcriptRowsFor(context, messages);
 
                     if (reversedRows.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              widget.channel.isPublicChannel
-                                  ? Icons.public
-                                  : Icons.tag,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              context.l10n.chat_noMessages,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
+                      return ChatBackdrop(
+                        chatKey: ChatBackgroundService.channelKey(widget.channel),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                widget.channel.isPublicChannel
+                                    ? Icons.public
+                                    : Icons.tag,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              context.l10n.chat_sendMessageToStart,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
+                              const SizedBox(height: 16),
+                              Text(
+                                context.l10n.chat_noMessages,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                context.l10n.chat_sendMessageToStart,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }
@@ -1277,6 +1296,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
                     return Stack(
                       children: [
+                        Positioned.fill(
+                          child: ChatBackgroundPaint(
+                            chatKey: ChatBackgroundService.channelKey(widget.channel),
+                          ),
+                        ),
                         Listener(
                           onPointerDown: (_) =>
                               _cancelMessageScrollStabilization(),
@@ -1709,20 +1733,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         hasNoRetransmissionWarning;
 
     final isHighlighted = _highlightedMessageId == message.messageId;
+    final bubbleTheme = MeshBubbleTheme.of(context);
     final bubbleColor = showFailureVisual
         ? scheme.errorContainer
         : isOutgoing
-        ? MeshPalette.me
+        ? bubbleTheme.me
         : scheme.surfaceContainerLow;
     final bubbleBorder = showFailureVisual
         ? scheme.error
         : isOutgoing
-        ? MeshPalette.meBorder
+        ? bubbleTheme.meBorder
         : scheme.outlineVariant;
     final textColor = showFailureVisual
         ? scheme.onErrorContainer
         : isOutgoing
-        ? MeshPalette.meInk
+        ? bubbleTheme.meInk
         : scheme.onSurface;
     final senderNameScale = settingsService.settings.senderNameScale;
     final senderNameGapScale = settingsService.settings.senderNameGapScale;
@@ -3118,7 +3143,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     Widget? trailing,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
+    final textColor =
+        isOutgoing ? MeshBubbleTheme.of(context).meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.7);
 
     return Row(
@@ -3602,7 +3628,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final settings = settingsService.settings;
     final enableTimeSeconds = settings.enableTimeSeconds;
     final isOutgoing = entry.isOutgoing;
-    final textColor = isOutgoing ? MeshPalette.meInk : scheme.onSurface;
+    final bubbleTheme = MeshBubbleTheme.of(context);
+    final textColor = isOutgoing ? bubbleTheme.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
 
     return Padding(
@@ -3622,12 +3649,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: isOutgoing
-                    ? MeshPalette.me
+                    ? bubbleTheme.me
                     : scheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(MeshRadii.lg),
                 border: Border.all(
                   color: isOutgoing
-                      ? MeshPalette.meBorder
+                      ? bubbleTheme.meBorder
                       : scheme.outlineVariant,
                   width: 1,
                 ),

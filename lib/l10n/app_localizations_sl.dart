@@ -9169,4 +9169,213 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'Samo za repetitorje z radiem LR2021. Drugi repetitorji te nastavitve nimajo in jo zavrnejo.';
+
+  @override
+  String get chatBackground_choosePicture => 'Izberi sliko';
+
+  @override
+  String get chatBackground_fade => 'Zbledelost';
+
+  @override
+  String get chatBackground_none => 'Brez';
+
+  @override
+  String get chatBackground_picture => 'Slika';
+
+  @override
+  String get chatBackground_pictureFailed => 'Te slike ni mogoče uporabiti';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return 'Vaša tema »$name« nastavi ozadje v vseh klepetih. Izklopite to v temi, če želite uporabiti to ozadje.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => 'Samo za ta klepet';
+
+  @override
+  String get chatBackground_title => 'Ozadje klepeta';
+
+  @override
+  String get themes_accent => 'Poudarek';
+
+  @override
+  String get themes_accentHelp => 'Gumbi, označbe in vaši mehurčki s sporočili';
+
+  @override
+  String get themes_background => 'Ozadje';
+
+  @override
+  String get themes_backgroundHelp => 'Temno ozadje naredi temno temo';
+
+  @override
+  String get themes_builtIn => 'Vgrajene';
+
+  @override
+  String get themes_chatBackground => 'Ozadje klepeta';
+
+  @override
+  String get themes_chatBackgroundEverywhere => 'Uporabi v vseh klepetih';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp =>
+      'Zamenja tudi ozadja, nastavljena v posameznih klepetih';
+
+  @override
+  String get themes_chatBackgroundHelp =>
+      'Prikazano v klepetih, ki nimajo svojega ozadja';
+
+  @override
+  String get themes_codeCopied => 'Koda teme kopirana';
+
+  @override
+  String get themes_copyCode => 'Kopiraj kodo teme';
+
+  @override
+  String themes_copyName(String name) {
+    return '$name (kopija)';
+  }
+
+  @override
+  String get themes_create => 'Ustvari temo';
+
+  @override
+  String get themes_customize => 'Prilagodi kopijo';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle =>
+      'Standardne barve, sledi nastavitvi Svetlo / Temno';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return 'Izbrišem temo »$name«?';
+  }
+
+  @override
+  String get themes_editTitle => 'Uredi temo';
+
+  @override
+  String get themes_exportAll => 'Izvozi moje teme';
+
+  @override
+  String get themes_exportFailed => 'Tem ni bilo mogoče izvoziti';
+
+  @override
+  String get themes_exportFile => 'Izvozi v datoteko';
+
+  @override
+  String get themes_hexColor => 'Šestnajstiška barva';
+
+  @override
+  String get themes_iconChanged => 'Spremenjeno';
+
+  @override
+  String get themes_iconPictureFailed => 'Te slike ni mogoče uporabiti';
+
+  @override
+  String get themes_iconRepeater => 'Ponavljalniki';
+
+  @override
+  String get themes_iconReset => 'Uporabi privzeto ikono';
+
+  @override
+  String get themes_iconRoom => 'Sobe';
+
+  @override
+  String get themes_iconSend => 'Gumb za pošiljanje';
+
+  @override
+  String get themes_iconSensor => 'Senzorji';
+
+  @override
+  String get themes_iconUsePicture => 'Uporabi sliko';
+
+  @override
+  String get themes_icons => 'Ikone';
+
+  @override
+  String get themes_iconsHelp =>
+      'Tapnite ikono, da jo zamenjate z drugo ikono ali svojo sliko';
+
+  @override
+  String get themes_import => 'Uvozi temo';
+
+  @override
+  String get themes_importFile => 'Uvozi iz datoteke';
+
+  @override
+  String get themes_importFileNone => 'V tej datoteki ni najdenih tem';
+
+  @override
+  String themes_importFileResult(int count) {
+    return 'Uvoženih tem: $count';
+  }
+
+  @override
+  String get themes_importHint => 'Prilepite kodo teme';
+
+  @override
+  String get themes_importInvalid => 'To ni veljavna koda teme';
+
+  @override
+  String themes_imported(String name) {
+    return 'Dodana tema »$name«';
+  }
+
+  @override
+  String get themes_lowContrast =>
+      'Poudarjena barva je na tem ozadju slabo vidna';
+
+  @override
+  String get themes_mapMarkers => 'Označbe na zemljevidu';
+
+  @override
+  String get themes_mapMarkersHelp =>
+      'Zamenjajte označbe za vozlišča in zase na zemljevidu';
+
+  @override
+  String get themes_myThemes => 'Moje teme';
+
+  @override
+  String get themes_myThemesEmpty =>
+      'Ustvarite svojo temo z izbiro ozadja in poudarjene barve.';
+
+  @override
+  String get themes_name => 'Ime';
+
+  @override
+  String get themes_nameRequired => 'Poimenujte svojo temo';
+
+  @override
+  String get themes_newTitle => 'Nova tema';
+
+  @override
+  String get themes_pasteCode => 'Prilepi kodo teme';
+
+  @override
+  String get themes_preview => 'Predogled';
+
+  @override
+  String get themes_previewIncoming => 'Je kdo nocoj na mreži?';
+
+  @override
+  String get themes_previewOutgoing => 'Slišim vas glasno in jasno!';
+
+  @override
+  String get themes_previewSwitch => 'Obvestila';
+
+  @override
+  String get themes_saveAndUse => 'Shrani in uporabi';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => 'Teme';
 }

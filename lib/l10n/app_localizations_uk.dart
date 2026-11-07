@@ -9216,4 +9216,214 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get repeater_lr2021Only =>
       'Лише для ретрансляторів з радіо LR2021. Інші ретранслятори не мають цього налаштування і відхиляють його.';
+
+  @override
+  String get chatBackground_choosePicture => 'Обрати картинку';
+
+  @override
+  String get chatBackground_fade => 'Затемнення';
+
+  @override
+  String get chatBackground_none => 'Немає';
+
+  @override
+  String get chatBackground_picture => 'Картинка';
+
+  @override
+  String get chatBackground_pictureFailed =>
+      'Не вдалося використати цю картинку';
+
+  @override
+  String get chatBackground_saveFailed => 'Could not save the chat background';
+
+  @override
+  String chatBackground_themeOverrides(String name) {
+    return 'Ваша тема «$name» задає тло в усіх чатах. Вимкніть це в темі, щоб використати це тло.';
+  }
+
+  @override
+  String get chatBackground_thisChatOnly => 'Лише для цього чату';
+
+  @override
+  String get chatBackground_title => 'Тло чату';
+
+  @override
+  String get themes_accent => 'Акцент';
+
+  @override
+  String get themes_accentHelp =>
+      'Кнопки, виділення та ваші повідомлення в чаті';
+
+  @override
+  String get themes_background => 'Фон';
+
+  @override
+  String get themes_backgroundHelp => 'Темний фон дає темну тему';
+
+  @override
+  String get themes_builtIn => 'Вбудовані';
+
+  @override
+  String get themes_chatBackground => 'Тло чату';
+
+  @override
+  String get themes_chatBackgroundEverywhere => 'Використовувати в усіх чатах';
+
+  @override
+  String get themes_chatBackgroundEverywhereHelp =>
+      'Також замінює тла, задані в окремих чатах';
+
+  @override
+  String get themes_chatBackgroundHelp =>
+      'Показується в чатах, які не мають власного тла';
+
+  @override
+  String get themes_codeCopied => 'Код теми скопійовано';
+
+  @override
+  String get themes_copyCode => 'Скопіювати код теми';
+
+  @override
+  String themes_copyName(String name) {
+    return 'Копія «$name»';
+  }
+
+  @override
+  String get themes_create => 'Створити тему';
+
+  @override
+  String get themes_customize => 'Змінити копію';
+
+  @override
+  String get themes_default => 'MeshCore';
+
+  @override
+  String get themes_defaultSubtitle =>
+      'Стандартні кольори, залежать від налаштування «Світла / Темна»';
+
+  @override
+  String themes_deleteConfirm(String name) {
+    return 'Видалити тему «$name»?';
+  }
+
+  @override
+  String get themes_editTitle => 'Змінити тему';
+
+  @override
+  String get themes_exportAll => 'Експортувати мої теми';
+
+  @override
+  String get themes_exportFailed => 'Не вдалося експортувати теми';
+
+  @override
+  String get themes_exportFile => 'Експорт у файл';
+
+  @override
+  String get themes_hexColor => 'HEX-колір';
+
+  @override
+  String get themes_iconChanged => 'Змінено';
+
+  @override
+  String get themes_iconPictureFailed => 'Не вдалося використати цю картинку';
+
+  @override
+  String get themes_iconRepeater => 'Ретранслятори';
+
+  @override
+  String get themes_iconReset => 'Використати значок за замовчуванням';
+
+  @override
+  String get themes_iconRoom => 'Кімнати';
+
+  @override
+  String get themes_iconSend => 'Кнопка надсилання';
+
+  @override
+  String get themes_iconSensor => 'Сенсори';
+
+  @override
+  String get themes_iconUsePicture => 'Використати картинку';
+
+  @override
+  String get themes_icons => 'Значки';
+
+  @override
+  String get themes_iconsHelp =>
+      'Натисніть на значок, щоб замінити його іншим значком або власною картинкою';
+
+  @override
+  String get themes_import => 'Імпортувати тему';
+
+  @override
+  String get themes_importFile => 'Імпорт із файлу';
+
+  @override
+  String get themes_importFileNone => 'У цьому файлі немає тем';
+
+  @override
+  String themes_importFileResult(int count) {
+    return 'Імпортовано тем: $count';
+  }
+
+  @override
+  String get themes_importHint => 'Вставте код теми';
+
+  @override
+  String get themes_importInvalid => 'Це недійсний код теми';
+
+  @override
+  String themes_imported(String name) {
+    return 'Тему «$name» додано';
+  }
+
+  @override
+  String get themes_lowContrast => 'Акцентний колір погано видно на цьому тлі';
+
+  @override
+  String get themes_mapMarkers => 'Маркери на мапі';
+
+  @override
+  String get themes_mapMarkersHelp =>
+      'Замініть маркери для вузлів і для себе на мапі';
+
+  @override
+  String get themes_myThemes => 'Мої теми';
+
+  @override
+  String get themes_myThemesEmpty =>
+      'Створіть власну тему: оберіть фон і акцентний колір.';
+
+  @override
+  String get themes_name => 'Назва';
+
+  @override
+  String get themes_nameRequired => 'Дайте темі назву';
+
+  @override
+  String get themes_newTitle => 'Нова тема';
+
+  @override
+  String get themes_pasteCode => 'Вставити код теми';
+
+  @override
+  String get themes_preview => 'Попередній перегляд';
+
+  @override
+  String get themes_previewIncoming => 'Хто-небудь сьогодні на зв\'язку?';
+
+  @override
+  String get themes_previewOutgoing => 'Чую вас чудово!';
+
+  @override
+  String get themes_previewSwitch => 'Сповіщення';
+
+  @override
+  String get themes_saveAndUse => 'Зберегти та застосувати';
+
+  @override
+  String get themes_saveFailed => 'Could not save the theme';
+
+  @override
+  String get themes_title => 'Теми';
 }

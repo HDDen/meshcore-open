@@ -10,6 +10,8 @@ import '../l10n/l10n.dart';
 import '../models/power_saving_settings.dart';
 import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
+import 'themed_icon.dart';
 
 export '../helpers/readable_accent.dart' show meshContrastRatio, readableAccent;
 
@@ -249,6 +251,7 @@ class AvatarCircle extends StatelessWidget {
   final double size;
   final Color? color;
   final IconData? icon;
+  final ThemeIconSlot? iconSlot;
 
   const AvatarCircle({
     super.key,
@@ -256,6 +259,7 @@ class AvatarCircle extends StatelessWidget {
     this.size = 40,
     this.color,
     this.icon,
+    this.iconSlot,
   });
 
   static const _hues = [
@@ -278,7 +282,7 @@ class AvatarCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = color ?? _colorFor(name);
-    final initials = _initials(name);
+    final slot = iconSlot;
     final background = Color.alphaBlend(accent.withValues(alpha: 0.14),
         Theme.of(context).colorScheme.surfaceContainerLow);
     return Container(
@@ -290,11 +294,18 @@ class AvatarCircle extends StatelessWidget {
         border: Border.all(color: accent.withValues(alpha: 0.4)),
       ),
       alignment: Alignment.center,
-      child: icon != null
+      child: slot != null
+          ? ThemedIcon(
+              slot,
+              fallback: icon,
+              size: size * 0.5,
+              color: readableAccent(accent, background, minContrast: 3),
+            )
+          : icon != null
           ? Icon(icon, size: size * 0.5,
               color: readableAccent(accent, background, minContrast: 3))
           : Text(
-              initials,
+              _initials(name),
               style: MeshTheme.mono(
                 fontSize: size * 0.36,
                 fontWeight: FontWeight.w700,

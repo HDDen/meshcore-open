@@ -19,6 +19,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/app_debug_log_service.dart';
 import 'package:mco_service/mco_service.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
 import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
@@ -139,6 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: _buildNavTileContent(
                     context,
                     icon: Icons.settings_outlined,
+                    iconSlot: ThemeIconSlot.settings,
                     title: l10n.settings_appSettings,
                     subtitle: l10n.settings_appSettingsSubtitle,
                   ),
@@ -234,6 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuildContext context, {
     required IconData icon,
     required String title,
+    ThemeIconSlot? iconSlot,
     String? subtitle,
     bool showChevron = true,
     Color? titleColor,
@@ -241,6 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return SettingsNavTileContent(
       icon: icon,
+      iconSlot: iconSlot,
       title: title,
       subtitle: subtitle,
       showChevron: showChevron,

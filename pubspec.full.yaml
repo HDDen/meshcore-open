@@ -89,6 +89,7 @@ dependencies:
   share_plus: ^13.3.1
   file_selector: ^1.0.3
   image_picker: ^1.2.2
+  koni_jxl_flutter: 0.1.4 # Local theme and chat pictures
   wakelock_plus: ^1.5.2
   build_pipe: ^0.3.1
   material_symbols_icons: ^4.2928.1

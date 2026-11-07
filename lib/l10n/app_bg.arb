@@ -4287,5 +4287,102 @@
   "repeater_boardSupportNote": "Не всяка платка поддържа това. Неподдържаните платки отхвърлят промяната.",
   "repeater_extraSf": "Допълнителни фактори на разпространение (SF)",
   "repeater_extraSfHelper": "До 3 допълнителни фактора на разпространение (SF), които да се слушат едновременно, разделени със запетаи (например 9,10). Оставете празно, за да изключите.",
-  "repeater_lr2021Only": "Само за репийтъри с радио LR2021. Другите репийтъри нямат тази настройка и я отхвърлят."
+  "repeater_lr2021Only": "Само за репийтъри с радио LR2021. Другите репийтъри нямат тази настройка и я отхвърлят.",
+  "chatBackground_choosePicture": "Избери снимка",
+  "chatBackground_fade": "Избледняване",
+  "chatBackground_none": "Няма",
+  "chatBackground_picture": "Снимка",
+  "chatBackground_pictureFailed": "Тази снимка не може да се използва",
+  "chatBackground_themeOverrides": "Вашата тема „{name}“ задава фона във всички чатове. Изключете това в темата, за да използвате този фон.",
+  "@chatBackground_themeOverrides": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBackground_thisChatOnly": "Само за този чат",
+  "chatBackground_title": "Фон на чата",
+  "themes_accent": "Акцент",
+  "themes_accentHelp": "Бутони, подчертавания и вашите балончета със съобщения",
+  "themes_background": "Фон",
+  "themes_backgroundHelp": "Тъмният фон прави тъмна тема",
+  "themes_builtIn": "Вградени",
+  "themes_chatBackground": "Фон на чата",
+  "themes_chatBackgroundEverywhere": "Използвай във всички чатове",
+  "themes_chatBackgroundEverywhereHelp": "Заменя и фоновете, зададени на отделни чатове",
+  "themes_chatBackgroundHelp": "Показва се в чатове, които нямат свой фон",
+  "themes_codeCopied": "Кодът на темата е копиран",
+  "themes_copyCode": "Копирай кода на темата",
+  "themes_copyName": "{name} (копие)",
+  "@themes_copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_create": "Създай тема",
+  "themes_customize": "Персонализирай копие",
+  "themes_default": "MeshCore",
+  "themes_defaultSubtitle": "Стандартни цветове, следва настройката Светла / Тъмна",
+  "themes_deleteConfirm": "Да изтрия ли темата „{name}“?",
+  "@themes_deleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_editTitle": "Редактиране на тема",
+  "themes_exportAll": "Експортирай моите теми",
+  "themes_exportFailed": "Темите не можаха да се експортират",
+  "themes_exportFile": "Експортирай във файл",
+  "themes_hexColor": "Шестнадесетичен цвят",
+  "themes_iconChanged": "Променена",
+  "themes_iconPictureFailed": "Тази снимка не може да се използва",
+  "themes_iconRepeater": "Повторители",
+  "themes_iconReset": "Използвай иконата по подразбиране",
+  "themes_iconRoom": "Стаи",
+  "themes_iconSend": "Бутон за изпращане",
+  "themes_iconSensor": "Сензори",
+  "themes_iconUsePicture": "Използвай снимка",
+  "themes_icons": "Икони",
+  "themes_iconsHelp": "Докоснете икона, за да я смените с друга икона или със своя снимка",
+  "themes_import": "Импортирай тема",
+  "themes_importFile": "Импортирай от файл",
+  "themes_importFileNone": "Във файла не са намерени теми",
+  "themes_importFileResult": "Импортирани теми: {count}",
+  "@themes_importFileResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "themes_importHint": "Поставете код на тема",
+  "themes_importInvalid": "Това не е валиден код на тема",
+  "themes_imported": "Добавена тема „{name}“",
+  "@themes_imported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_lowContrast": "Акцентът трудно се вижда на този фон",
+  "themes_mapMarkers": "Маркери на картата",
+  "themes_mapMarkersHelp": "Сменете маркерите за възлите и за вас на картата",
+  "themes_myThemes": "Моите теми",
+  "themes_myThemesEmpty": "Направете своя тема, като изберете фон и акцентен цвят.",
+  "themes_name": "Име",
+  "themes_nameRequired": "Дайте име на темата си",
+  "themes_newTitle": "Нова тема",
+  "themes_pasteCode": "Поставете код на тема",
+  "themes_preview": "Преглед",
+  "themes_previewIncoming": "Има ли някой в мрежата тази вечер?",
+  "themes_previewOutgoing": "Чувам ви ясно и силно!",
+  "themes_previewSwitch": "Известия",
+  "themes_saveAndUse": "Запази и използвай",
+  "themes_title": "Теми"
 }

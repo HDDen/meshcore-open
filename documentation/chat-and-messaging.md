@@ -19,7 +19,7 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 - **Title**: Contact name
 - **Subtitle**: Current routing path label (e.g., "2 hops", "flood (auto)", "direct (forced)") and unread count. Tapping the subtitle shows the full path details.
 - **Action button**:
-  - **Overflow menu** (⋮ icon): Contains Search Messages, Routing, Info, Telemetry, Settings, and Clear Chat. Routing opens the routing sheet where you can switch between Auto, Direct, and Flood routing and manage recent paths (hop count, round-trip time, age, success count, color-coded by repeater). Info shows a dialog with contact type, path, GPS coordinates, and public key.
+  - **Overflow menu** (⋮ icon): Contains Search Messages, Routing, Info, Telemetry, Settings, Chat Background, and Clear Chat. Routing opens the routing sheet where you can switch between Auto, Direct, and Flood routing and manage recent paths (hop count, round-trip time, age, success count, color-coded by repeater). Info shows a dialog with contact type, path, GPS coordinates, and public key.
 
 ### Message List
 
@@ -33,6 +33,14 @@ From the Contacts screen, tap any Chat-type contact to open the ChatScreen.
 - **Jump to bottom**: Floating button appears when scrolled away from the bottom
 - **Lazy loading**: Scrolling to top loads older messages from storage. The newest 200 messages are kept in memory; up to 1000 per conversation are kept in storage
 - **Arrival order**: Messages are ordered by when they arrived on this device, not by the sender's clock. If a message's time is more than 5 minutes in the future, a small clock-warning icon appears next to its time (the sender's clock is probably wrong); tap it for an explanation
+
+### Chat Background
+
+From the overflow menu in a direct chat or a channel, **Chat background**
+lets you choose a color or local photo and adjust its fade. The setting follows
+the contact or channel when you reopen it. A theme can supply a default
+background or override individual chat backgrounds while the theme is active.
+Choose **None** to clear the chat's own background.
 
 ### Message Search
 

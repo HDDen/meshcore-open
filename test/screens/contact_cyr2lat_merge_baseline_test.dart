@@ -13,6 +13,7 @@ import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/screens/chat_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
+import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
 import 'package:provider/provider.dart';
 
 import '../support/wrapping_label_expectations.dart';
@@ -345,6 +346,21 @@ Future<void> _barrier(WidgetTester tester) async {
 
 void main() {
   for (final locale in ['en', 'ru']) {
+    testWidgets('U19b baseline: direct chat keeps its message area and composer ($locale)', (
+      tester,
+    ) async {
+      await _withChat(tester, locale, advTypeChat, (radio, settings, l10n) async {
+        expect(find.text(l10n.chat_noMessages), findsOneWidget);
+        final composer = find.byWidgetPredicate(
+          (widget) => widget is EditableText && !widget.readOnly,
+        ).hitTestable();
+        expect(composer, findsOneWidget);
+        final send = find.byType(ChatComposerSendButton).hitTestable();
+        expect(send, findsOneWidget);
+        expect(tester.widget<ChatComposerSendButton>(send).tooltip, l10n.chat_sendMessage);
+      });
+    });
+
     for (final type in [advTypeChat, advTypeRoom]) {
       testWidgets('U11b10 baseline: profile persists immediately across Close and barrier ($locale, type=$type)', (tester) async {
         await _withChat(tester, locale, type, (radio, settings, l10n) async {

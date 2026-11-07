@@ -1,8 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/theme_icons.dart';
+import 'themed_icon.dart';
 
 class QuickSwitchBar extends StatelessWidget {
   final int selectedIndex;
@@ -85,33 +88,29 @@ class QuickSwitchBar extends StatelessWidget {
                 destinations: [
                   NavigationDestination(
                     icon: _buildIconWithBadge(
-                      context,
-                      const Icon(Icons.people_outline),
+                      const ThemedIcon(ThemeIconSlot.contacts),
                       contactsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
-                      context,
-                      const Icon(Icons.people),
+                      const ThemedIcon(ThemeIconSlot.contacts, selected: true),
                       contactsUnreadCount,
                     ),
                     label: context.l10n.nav_contacts,
                   ),
                   NavigationDestination(
                     icon: _buildIconWithBadge(
-                      context,
-                      const Icon(Icons.tag),
+                      const ThemedIcon(ThemeIconSlot.channels),
                       channelsUnreadCount,
                     ),
                     selectedIcon: _buildIconWithBadge(
-                      context,
-                      const Icon(Icons.tag),
+                      const ThemedIcon(ThemeIconSlot.channels),
                       channelsUnreadCount,
                     ),
                     label: context.l10n.nav_channels,
                   ),
                   NavigationDestination(
-                    icon: const Icon(Icons.map_outlined),
-                    selectedIcon: const Icon(Icons.map),
+                    icon: const ThemedIcon(ThemeIconSlot.map),
+                    selectedIcon: const ThemedIcon(ThemeIconSlot.map, selected: true),
                     label: context.l10n.nav_map,
                   ),
                 ],
@@ -123,7 +122,7 @@ class QuickSwitchBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconWithBadge(BuildContext context, Icon icon, int count) {
+  Widget _buildIconWithBadge(Widget icon, int count) {
     if (count <= 0) return icon;
     final label = count > 99 ? '99+' : '$count';
     return Badge(label: Text(label), child: icon);

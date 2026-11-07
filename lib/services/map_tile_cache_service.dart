@@ -10,6 +10,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/app_settings.dart';
+import '../theme/mesh_theme.dart';
 import 'app_settings_service.dart';
 import 'cache_manager_orphans.dart';
 
@@ -684,6 +685,17 @@ class MapTileCacheService extends ChangeNotifier {
           ? _darkHCMapFilter
           : _darkMapFilter;
       layer = ColorFiltered(colorFilter: filter, child: layer);
+    }
+
+    final tint = MeshMapTheme.of(context).tileTint;
+    if (tint != null) {
+      layer = ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          tint.withValues(alpha: MeshMapTheme.tileTintStrength),
+          BlendMode.srcOver,
+        ),
+        child: layer,
+      );
     }
 
     if (opacity < 1) {
