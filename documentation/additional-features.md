@@ -201,7 +201,7 @@ deliveries to evaluate prediction error and premature retries.
 ## On-Device Message Translation
 
 ### What It Is
-An optional on-device translation service powered by an embedded LLM (llamadart, running GGUF models). Translation inference runs on-device; messages are not uploaded for inference. Installing models requires internet access.
+The full build profile includes on-device message translation through llamadart and llama.cpp. Use a GGUF model from the presets or a custom download URL. LiteRT-LM (.litertlm) models are unsupported in this build. Installing models requires internet access. Inference runs locally on the device.
 
 ### How to Access
 Open App Settings → Translation, download/select a model, and enable translation. Then long-press an incoming message and choose "Translate message" (right-click on desktop). Automatic incoming translation is a separate toggle; pre-send translation has its own composer control.

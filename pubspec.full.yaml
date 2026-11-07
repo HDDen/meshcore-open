@@ -111,6 +111,8 @@ dependencies:
 hooks:
   user_defines:
     llamadart:
+      # GGUF translation uses llama.cpp. LiteRT-LM requires iOS 26.4.
+      llamadart_native_runtimes: [llama_cpp]
       llamadart_native_backends:
         platforms:
           android-arm64:

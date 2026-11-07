@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -132,6 +133,14 @@ Map<String, String> _publicMembers(String source, String className) {
   return members;
 }
 
+String _iosNativeAssetScript(String project) {
+  final phase = RegExp(
+    r'/\* Fix Native Asset Minimum OS \*/ = \{'
+    r'[\s\S]*?shellScript = (".*");',
+  ).firstMatch(project)!;
+  return jsonDecode(phase.group(1)!) as String;
+}
+
 void main() {
   test('the checked-in tree is the $_defaultProfile profile', () {
     expect(
@@ -187,6 +196,105 @@ void main() {
     };
     expect(rest['lite'], rest['lite-aeic']);
     expect(rest['full'], rest['lite-aeic']);
+  });
+
+  test('U23: full bundles llama.cpp and keeps its Android CPU backends', () {
+    final hooks = _section(_read('pubspec.full.yaml'), 'hooks');
+    final userDefines = hooks['user_defines'];
+    expect(userDefines, contains('llamadart_native_runtimes: [llama_cpp]'));
+    expect(
+      userDefines,
+      contains(
+        'android-arm64:\n'
+        'backends: [cpu]\n'
+        'android-x64:\n'
+        'backends: [cpu]',
+      ),
+    );
+  });
+
+  test('U23 baseline: iOS targets follow the selected profile', () {
+    final profileTool = _read('tool/use_translation_profile.dart');
+    final targets = RegExp(
+      r"const _iosDeploymentTargets = \{([^}]+)\};",
+    ).firstMatch(profileTool)!.group(1)!;
+    expect(
+      {
+        for (final entry in RegExp(r"'([^']+)': '([\d.]+)'").allMatches(targets))
+          entry.group(1)!: entry.group(2)!,
+      },
+      {'lite': '13.0', 'lite-aeic': '16.0', 'full': '16.0'},
+    );
+
+    expect(_read('ios/Podfile'), contains("platform :ios, '16.0'"));
+    final project = _read('ios/Runner.xcodeproj/project.pbxproj');
+    expect(
+      RegExp(r'IPHONEOS_DEPLOYMENT_TARGET = ([\d.]+);')
+          .allMatches(project)
+          .map((match) => match.group(1))
+          .toSet(),
+      {'16.0'},
+    );
+  });
+
+  test('U23 baseline: Runner fixes only Flutter assets after embedding', () {
+    final project = _read('ios/Runner.xcodeproj/project.pbxproj');
+    final runnerPhases = RegExp(
+      r'/\* Runner \*/ = \{\s*isa = PBXNativeTarget;'
+      r'[^}]+?buildPhases = \(([^)]+)\);',
+    ).firstMatch(project)!.group(1)!;
+    expect(
+      RegExp(r'/\* (.*?) \*/')
+          .allMatches(runnerPhases)
+          .map((match) => match.group(1)),
+      containsAllInOrder([
+        'Embed Frameworks',
+        'Embed App Extensions',
+        'Thin Binary',
+        'Fix Native Asset Minimum OS',
+      ]),
+    );
+
+    final script = _iosNativeAssetScript(project);
+    expect(
+      script,
+      contains(r'FRAMEWORKS_DIR="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"'),
+    );
+    expect(script, contains(r'MIN_OS="${IPHONEOS_DEPLOYMENT_TARGET}"'));
+    expect(script, contains('Print :CFBundleIdentifier'));
+    expect(script, contains('io.flutter.flutter.native-assets.*)'));
+    expect(script, contains('Set :MinimumOSVersion'));
+    expect(script, contains('Add :MinimumOSVersion string'));
+    expect(
+      project,
+      contains('MeshCoreBackgroundTcpExtension.appex in Embed App Extensions'),
+    );
+    expect(project, contains('MCOImmortalizerBackend.m in Sources'));
+  });
+
+  test('U23: only the patched native framework is re-signed', () {
+    final script = _iosNativeAssetScript(
+      _read('ios/Runner.xcodeproj/project.pbxproj'),
+    );
+    final nativeAsset = RegExp(
+      r'io\.flutter\.flutter\.native-assets\.\*\)([\s\S]*?);;',
+    ).firstMatch(script)!.group(1)!;
+    expect(nativeAsset, contains(r'[ -n "$EXPANDED_CODE_SIGN_IDENTITY" ]'));
+    expect(nativeAsset, contains(r'[ "$CODE_SIGNING_ALLOWED" != NO ]'));
+    expect(
+      nativeAsset,
+      contains(r'codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY"'),
+    );
+    expect(
+      nativeAsset,
+      contains('--preserve-metadata=identifier,entitlements,flags'),
+    );
+    expect(nativeAsset, contains(r'"$(dirname "$plist")"'));
+    expect(
+      nativeAsset.indexOf('codesign --force'),
+      greaterThan(nativeAsset.indexOf('Add :MinimumOSVersion string')),
+    );
+    expect('codesign --force'.allMatches(script), hasLength(1));
   });
 
   test('every profile uses the vendored flserial USB fixes', () {
