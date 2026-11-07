@@ -486,7 +486,8 @@ Ready-made builds are published in the
 
 ## Building from source
 
-Requires the Flutter SDK (3.38.5 or later) and a MeshCore-compatible LoRa device.
+Requires Flutter 3.47.9 or later and a MeshCore-compatible LoRa device.
+CI and AppImage builds use Flutter 3.47.9.
 
 Two branches matter:
 
@@ -514,9 +515,9 @@ flutter build linux --release
 
 ### Linux with Nix
 
-The optional `nix develop` environment pins Flutter and its matching Dart SDK,
-wrapped Clang, native build tools and Linux headers. It preserves the selected
-lite / lite-aeic / full profile and does not enable private modules.
+The optional `nix develop` environment pins wrapped Clang, native build tools
+and Linux headers. Use Flutter 3.47.9 or later from `PATH` with the current
+lock. The shell preserves the selected lite / lite-aeic / full profile.
 See [Linux builds and profiling with Nix](documentation/linux-nix.md) for checks,
 our `mco_advanced` bundle, native prerequisites and Sysprof instructions.
 The guide also covers [optional AppImage builds](documentation/linux-nix.md#optional-linux-appimage)

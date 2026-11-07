@@ -20,6 +20,8 @@ version: 9.5.0-mcoa.1.12.0+47
 
 environment:
   sdk: ^3.9.2
+  # CI reads this version. Keep scripts/appimage-tools.json in sync.
+  flutter: 3.47.9
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions

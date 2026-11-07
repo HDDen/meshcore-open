@@ -10,6 +10,8 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        flutterVersion = (builtins.fromJSON (builtins.readFile ./scripts/appimage-tools.json)).flutter.version;
+        hasPackagedFlutter = pkgs.lib.versionAtLeast pkgs.flutter.version flutterVersion;
       in
       {
         devShells.default = (pkgs.mkShell.override {
@@ -22,9 +24,6 @@
           ];
 
           buildInputs = with pkgs; [
-            # Use Flutter's matching Dart SDK, not a second standalone SDK.
-            flutter
-
             # Java (required for Android development)
             jdk17
 
@@ -41,7 +40,8 @@
             # Additional tools for installing Android SDK if not present
             curl
             unzip
-          ] ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+          ] ++ pkgs.lib.optional hasPackagedFlutter pkgs.flutter
+            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
             pkgs.libsysprof-capture
             # Optional private builds use flutter_secure_storage_linux.
             pkgs.libsecret
@@ -49,6 +49,9 @@
 
           shellHook = ''
             echo "MeshCore Flutter Development Environment"
+            ${pkgs.lib.optionalString (!hasPackagedFlutter) ''
+              echo "Use Flutter ${flutterVersion} or newer from PATH (locked nixpkgs has ${pkgs.flutter.version})."
+            ''}
             export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [pkgs.gtk3 pkgs.glib pkgs.sysprof pkgs.libdatrie]}:$LD_LIBRARY_PATH"
             
             # Setup Android SDK in home directory (standard location)

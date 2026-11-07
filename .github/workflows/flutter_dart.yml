@@ -13,10 +13,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check Flutter pins agree
+        run: |
+          expected="$(jq -er '.flutter.version' scripts/appimage-tools.json)"
+          for manifest in pubspec.yaml pubspec.full.yaml pubspec.lite.yaml pubspec.lite-aeic.yaml; do
+            actual="$(sed -nE 's/^  flutter: ([0-9]+\.[0-9]+\.[0-9]+)[[:space:]]*$/\1/p' "$manifest")"
+            if [ "$actual" != "$expected" ]; then
+              echo "$manifest pins Flutter '$actual', expected '$expected' from scripts/appimage-tools.json" >&2
+              exit 1
+            fi
+          done
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version-file: pubspec.yaml
 
       - name: Install dependencies
         run: flutter pub get

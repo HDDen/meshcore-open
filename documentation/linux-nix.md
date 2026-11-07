@@ -3,8 +3,10 @@
 The Nix shell is optional. Existing Windows, Android and other build workflows
 continue to work independently. `flake.lock` pins the historical nixpkgs revision
 from upstream commit `4454033f`; it has not been refreshed to a newer release.
-Verify the actual Flutter version inside the shell instead of relying on a
-version installed elsewhere on the host.
+All build profiles require Flutter 3.47.9 or later. The current Nix lock
+provides Flutter 3.47.4, so put a compatible SDK on `PATH` before entering
+the shell. The shell includes the packaged SDK when its version meets the
+project minimum.
 
 ## Enter and check the environment
 

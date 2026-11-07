@@ -176,6 +176,42 @@ void main() {
     expect(workflow, contains('--network none'));
   });
 
+  test('U26: Flutter pins agree across profiles, CI, AppImage and Nix', () {
+    final manifest = jsonDecode(_read('scripts/appimage-tools.json'))
+        as Map<String, dynamic>;
+    final flutter = manifest['flutter'] as Map<String, dynamic>;
+    final version = flutter['version'] as String;
+    expect(version, matches(RegExp(r'^\d+\.\d+\.\d+$')));
+    expect(flutter['source_revision'], matches(RegExp(r'^[a-f0-9]{40}$')));
+    expect(flutter['sha256'], matches(RegExp(r'^[a-f0-9]{64}$')));
+    expect(flutter['url'], endsWith('/flutter_linux_$version-stable.tar.xz'));
+
+    final pin = RegExp(r'^  flutter: (\d+\.\d+\.\d+)$', multiLine: true);
+    for (final suffix in ['', '.full', '.lite', '.lite-aeic']) {
+      final profile = 'pubspec$suffix.yaml';
+      expect(
+        pin.allMatches(_read(profile)).map((match) => match.group(1)),
+        [version],
+        reason: profile,
+      );
+    }
+
+    for (final name in ['build', 'deploy', 'flutter_dart']) {
+      final workflow = _read('.github/workflows/$name.yml');
+      expect(
+        'flutter-version-file: pubspec.yaml'.allMatches(workflow),
+        hasLength('uses: subosito/flutter-action@v2'.allMatches(workflow).length),
+        reason: name,
+      );
+      expect(workflow, isNot(contains('flutter-version:')));
+    }
+
+    final flake = _read('flake.nix');
+    expect(flake, contains('builtins.readFile ./scripts/appimage-tools.json'));
+    expect(flake, contains('versionAtLeast pkgs.flutter.version flutterVersion'));
+    expect(flake, contains('or newer from PATH'));
+  });
+
   test('U15: the shell uses Flutter Dart and a wrapped Linux compiler', () {
     final flake = _read('flake.nix');
     final nativeTools = RegExp(
@@ -188,7 +224,7 @@ void main() {
         matches(RegExp('^\\s*$tool\\s*' r'$', multiLine: true)),
       );
     }
-    expect(flake, matches(RegExp(r'^\s*flutter\s*$', multiLine: true)));
+    expect(flake, contains('pkgs.lib.optional hasPackagedFlutter pkgs.flutter'));
     expect(
       flake,
       isNot(matches(RegExp(r'^\s*(?:dart|libclang)\s*$', multiLine: true))),
