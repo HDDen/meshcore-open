@@ -3731,7 +3731,11 @@ question, the app settings show no network-map section, and the map's
 `mapSource` is `local` without reading `UiViewStateService`, so the
 Local / Online / Both switch, the online layers, the hint and the
 `NetworkMapOnlineController` (a `late final` the disabled build never
-touches) stay out of the build. The connector reads the path byte through
+touches) stay out of the build. U18 updates that dormant renderer with two
+independent viewport limits. Above 30 repeaters it skips hexagons and marker
+shadows. Above 70 links it uses one half-width stroke per line. Center marker
+actions, local duplicate suppression and confirmed/dashed line patterns are
+retained. The connector reads the path byte through
 `raw_packet.dart`'s public `decodePathByteLen` / `decodePathHashWidth`
 where it had private copies. The decision is the fork's: what its users'
 packet records should feed, if anything, is not settled, and an upload
