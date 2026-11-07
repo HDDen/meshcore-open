@@ -414,6 +414,19 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
 ### Theming
 - Material 3 design (`useMaterial3: true`)
 - Light/dark selected via `AppSettings.themeMode` (`system` / `light` / `dark`)
+- U19a stores manual themes in `AppSettings.customThemes` and an optional
+  `activeThemeId`. `AppSettingsService` resolves the selected preset or saved
+  theme and uses the regular preferences update path for edits and imports.
+  Selecting a stock mode clears the active ID. Individual invalid theme entries
+  are filtered during settings load. A batch import validates the resulting
+  library and publishes it in one settings update.
+- `CustomTheme` and `theme_file.dart` support upstream share JSON and JSONL.
+  The library holds up to 64 themes and 4 MiB of encoded icons, with a 128 KiB
+  decoded limit per icon. Exchange files are limited to 16 MiB and individual
+  inline backgrounds to 2 MiB. Stored chat backgrounds use image-store IDs.
+  U19b connects image storage and the UI to the data APIs. Icon bytes decode
+  lazily and are cached by the override instance. The JSON model imports the
+  icon catalog and media metadata independently of the JPEG XL renderer.
 - Системные панели следуют разрешённой теме через `AppSystemUi` в `lib/helpers/app_system_ui_style.dart`, подключённый в `MaterialApp.builder`: navigation bar/разделитель используют `colorScheme.surface`, значки — контрастную яркость, в тёмной теме системная контрастная подложка отключена, в светлой сохранена для тёмных участков карты. Корневой фон Flutter окрашен той же поверхностью под прозрачными панелями edge-to-edge; insets не расходуются, локальные стили полноэкранных страниц сохраняют приоритет. Исходные инварианты темы — `test/helpers/app_system_ui_style_baseline_test.dart`, регрессии цвета/фона/insets/возврата с тёмного экрана — `test/widgets/app_system_ui_test.dart`. Нативный результат требует проверки на Android; подробнее: `documentation/android-system-bars.md`.
 - `lib/theme/mesh_theme.dart` defines the warm-dark `MeshPalette` (phosphor-green accents) and **is wired** in `main.dart` via `MeshTheme.light()` / `MeshTheme.dark()`
 - Global UI scale (`AppSettings.uiScale`, optionally applied to icons) is layered on top of the system text scaler in the `MaterialApp.builder`

@@ -1,3 +1,4 @@
+import 'custom_theme.dart';
 import 'image_codec_support.dart';
 import 'translation_support.dart';
 import 'power_saving_settings.dart';
@@ -373,6 +374,12 @@ class AppSettings {
   /// its own.
   final bool regionOnHopsLine;
   final String themeMode;
+
+  /// User themes, with the built-in presets kept in [CustomTheme.presets].
+  final List<CustomTheme> customThemes;
+
+  /// A saved theme or preset ID. Null uses the stock [themeMode].
+  final String? activeThemeId;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
   final Map<String, String> batteryChemistryByDeviceId;
@@ -823,6 +830,8 @@ class AppSettings {
     this.channelMinHopsRepeaterCount = 2,
     this.regionOnHopsLine = false,
     this.themeMode = 'system',
+    this.customThemes = const [],
+    this.activeThemeId,
     this.languageOverride,
     this.appDebugLogEnabled = false,
     Map<String, String>? batteryChemistryByDeviceId,
@@ -999,6 +1008,9 @@ class AppSettings {
       'channel_min_hops_repeater_count': channelMinHopsRepeaterCount,
       'region_on_hops_line': regionOnHopsLine,
       'theme_mode': themeMode,
+      if (customThemes.isNotEmpty)
+        'custom_themes': customThemes.map((theme) => theme.toJson()).toList(),
+      if (activeThemeId != null) 'active_theme_id': activeThemeId,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
@@ -1230,6 +1242,10 @@ class AppSettings {
               .toInt(),
       regionOnHopsLine: json['region_on_hops_line'] as bool? ?? false,
       themeMode: json['theme_mode'] as String? ?? 'system',
+      customThemes: CustomTheme.readSavedThemes(json['custom_themes']),
+      activeThemeId: json['active_theme_id'] is String
+          ? json['active_theme_id'] as String
+          : null,
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
       batteryChemistryByDeviceId:
@@ -1456,6 +1472,8 @@ class AppSettings {
     int? channelMinHopsRepeaterCount,
     bool? regionOnHopsLine,
     String? themeMode,
+    List<CustomTheme>? customThemes,
+    Object? activeThemeId = _unset,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
     Map<String, String>? batteryChemistryByDeviceId,
@@ -1648,6 +1666,10 @@ class AppSettings {
           channelMinHopsRepeaterCount ?? this.channelMinHopsRepeaterCount,
       regionOnHopsLine: regionOnHopsLine ?? this.regionOnHopsLine,
       themeMode: themeMode ?? this.themeMode,
+      customThemes: customThemes ?? this.customThemes,
+      activeThemeId: activeThemeId == _unset
+          ? this.activeThemeId
+          : activeThemeId as String?,
       languageOverride: languageOverride == _unset
           ? this.languageOverride
           : languageOverride as String?,

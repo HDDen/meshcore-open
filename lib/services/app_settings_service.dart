@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
+import 'package:uuid/uuid.dart';
 import '../models/app_settings.dart';
+import '../models/custom_theme.dart';
 import '../models/low_battery_alert_settings.dart';
 import '../storage/channel_identity_store.dart';
 import '../models/cpu_sleep_options.dart';
@@ -786,7 +788,96 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   Future<void> setThemeMode(String value) async {
-    await updateSettings(_settings.copyWith(themeMode: value));
+    await updateSettings(
+      _settings.copyWith(themeMode: value, activeThemeId: null),
+    );
+  }
+
+  CustomTheme? get chosenCustomTheme => _themeById(_settings.activeThemeId);
+
+  CustomTheme? get activeCustomTheme => chosenCustomTheme;
+
+  CustomTheme? _themeById(String? id) {
+    if (id == null) return null;
+    return CustomTheme.presetById(id) ??
+        _settings.customThemes.where((theme) => theme.id == id).firstOrNull;
+  }
+
+  /// Selects a saved theme or preset. Null restores the saved stock mode.
+  Future<void> setActiveTheme(String? id) async {
+    if (id != null && _themeById(id) == null) {
+      throw ArgumentError.value(id, 'id', 'Unknown theme');
+    }
+    if (_settings.activeThemeId == id) return;
+    await updateSettings(_settings.copyWith(activeThemeId: id));
+  }
+
+  Future<void> saveCustomTheme(CustomTheme theme, {bool apply = false}) async {
+    final themes = List<CustomTheme>.of(_settings.customThemes);
+    final snapshot = theme.copyWith(icons: Map.unmodifiable(theme.icons));
+    final index = themes.indexWhere((saved) => saved.id == theme.id);
+    if (index < 0) {
+      themes.add(snapshot);
+    } else {
+      themes[index] = snapshot;
+    }
+    await _saveThemeLibrary(themes, apply ? theme.id : _settings.activeThemeId);
+  }
+
+  Future<void> deleteCustomTheme(String id) async {
+    final themes = _settings.customThemes.where((theme) => theme.id != id).toList();
+    if (themes.length == _settings.customThemes.length) return;
+    await _saveThemeLibrary(
+      themes,
+      _settings.activeThemeId == id ? null : _settings.activeThemeId,
+    );
+  }
+
+  String newCustomThemeId() => 'custom:${const Uuid().v4()}';
+
+  /// Saves the batch together after validating the library. A background
+  /// carried inline by an import must first be written to the image store.
+  Future<int> importCustomThemes(List<CustomTheme> themes) async {
+    if (themes.length > CustomTheme.maxSavedThemes) {
+      throw StateError('Too many themes in the import');
+    }
+    final saved = List<CustomTheme>.of(_settings.customThemes);
+    final ids = saved.map((theme) => theme.id).toSet();
+    var added = 0;
+    for (final theme in themes) {
+      if (saved.any((existing) => existing.sameContent(theme))) continue;
+      final id = ids.contains(theme.id) || theme.isPreset
+          ? newCustomThemeId()
+          : theme.id;
+      final candidate = theme.copyWith(id: id, icons: Map.unmodifiable(theme.icons));
+      saved.add(candidate);
+      ids.add(candidate.id);
+      added++;
+    }
+    if (added > 0) await _saveThemeLibrary(saved, _settings.activeThemeId);
+    return added;
+  }
+
+  Future<void> _saveThemeLibrary(List<CustomTheme> themes, String? activeId) async {
+    if (themes.length > CustomTheme.maxSavedThemes) {
+      throw StateError('Theme library is full');
+    }
+    var iconCharacters = 0;
+    for (final theme in themes) {
+      if (!theme.canSave) {
+        throw ArgumentError('Theme needs a valid ID, name and stored background');
+      }
+      iconCharacters += theme.storedIconCharacters;
+    }
+    if (iconCharacters > CustomTheme.maxSavedIconCharacters) {
+      throw StateError('Theme library icon data exceeds the storage limit');
+    }
+    await updateSettings(
+      _settings.copyWith(
+        customThemes: List.unmodifiable(themes),
+        activeThemeId: activeId,
+      ),
+    );
   }
 
   Future<void> setLanguageOverride(String? value) async {
