@@ -468,7 +468,7 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     // waits for it.
     await releaseDataRootLock();
     await Process.start(
-      Platform.resolvedExecutable,
+      DataRoot.launchExecutable ?? Platform.resolvedExecutable,
       DataRoot.launchArguments,
       mode: ProcessStartMode.detached,
     );

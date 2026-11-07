@@ -10,6 +10,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_async_p
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:shared_preferences_windows/shared_preferences_windows.dart';
 
+import '../helpers/linux_appimage.dart';
 import 'data_root_core.dart';
 
 export 'data_transfer_io.dart';
@@ -26,10 +27,20 @@ RandomAccessFile? _lock;
 /// folder would be made next to the test runner's executable.
 Future<DataRootOutcome> prepareDataRoot(List<String> args) async {
   DataRoot.launchArguments = List.unmodifiable(args);
+  DataRoot.launchExecutable = null;
   if (Platform.isWindows || Platform.isLinux) {
+    final executable = Platform.resolvedExecutable;
+    final launcher = Platform.isLinux
+        ? linuxAppImageLauncher(
+            executablePath: executable,
+            environment: Platform.environment,
+            context: p.context,
+          )
+        : executable;
+    if (launcher != executable) DataRoot.launchExecutable = launcher;
     final selection = selectDataRoot(
       args: args,
-      executablePath: Platform.resolvedExecutable,
+      executablePath: launcher,
       portable: true,
       context: p.context,
     );

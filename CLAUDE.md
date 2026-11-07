@@ -182,6 +182,12 @@ On Windows and Linux everything the app writes lives in one folder of its own, s
 
 `prepareDataRoot` (`storage/data_root_io.dart`; the rules in the pure `data_root_core.dart`, a web stub behind `data_root.dart`) runs first in `main()`, at stage `MCO-STARTUP-110`. It replaces `PathProviderPlatform.instance` with a subclass of the platform's own provider whose four directories are folders of the data folder, made when first asked for, and hands the same provider to the Windows and Linux preference stores, which keep a `pathProvider` field of their own, marked for tests yet the only way to give them a folder, and would otherwise go on writing to the system folder. The stores and services needed no change: `getApplicationSupportDirectory()` and its siblings simply answer differently. Downloads and the save dialogs stay the system's.
 
+For the Linux AppImage, `linuxAppImageLauncher` checks that the resolved
+binary is the runner inside APPDIR before it accepts APPIMAGE. Portable data
+and relative `--data-dir` values resolve beside that outer file. Migration
+restart uses it with the original arguments, and startup timing logs beside it.
+The plain bundle still resolves relative paths beside its own executable.
+
 ```
 <data folder>/
   profile.lock      the lock, held while the app runs
@@ -3865,6 +3871,12 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
   payload length
 - macOS device-name resolution via `ioreg` (`utils/macos_usb_device_names.dart`)
 - API: `MeshCoreConnector.connectUsb(portName: ..., baudRate: 115200)`
+
+U22 adds an opt-in AppImage install hook with a separate manual workflow on
+Ubuntu 24.04 x86_64 and ARM64. The hook packages the existing Release bundle
+only with `MESHCORE_BUILD_APPIMAGE=1`. The packager stages the bundle, preserves
+the runner's transitive DT_RPATH for ONNX and verifies downloaded tools by hash.
+The runtime check launches with isolated data and a disabled network.
 
 Linux packaging (`linux/CMakeLists.txt`) keeps `USE_SYSTEM_ONNXRUNTIME=OFF`.
 The ONNX plugin's build RPATH includes `$ORIGIN` and the bundled runtime's

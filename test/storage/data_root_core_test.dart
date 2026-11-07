@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/linux_appimage.dart';
 import 'package:meshcore_open/storage/data_root_core.dart';
 import 'package:path/path.dart' as p;
 
@@ -92,6 +93,60 @@ void main() {
 
     test('a quote is part of a Linux name', () {
       expect(onLinux(['--data-dir=/tmp/a"']).path, '/tmp/a"');
+    });
+  });
+
+  group('Linux AppImage', () {
+    const image = '/home/denis/mesh apps/MCO Advanced.AppImage';
+    const appDir = '/tmp/.mount_MCOAbcd';
+    const inner = '$appDir/usr/bin/mco_advanced';
+    const environment = {'APPIMAGE': image, 'APPDIR': appDir};
+
+    String launcher(
+      String executable, [
+      Map<String, String> variables = environment,
+    ]) => linuxAppImageLauncher(
+      executablePath: executable,
+      environment: variables,
+      context: posix,
+    );
+
+    DataRootSelection select(List<String> args) => selectDataRoot(
+      args: args,
+      executablePath: launcher(inner),
+      portable: true,
+      context: posix,
+    );
+
+    test('the real launcher and userdata stay beside the image', () {
+      expect(launcher(inner), image);
+      expect(select([]).path, '/home/denis/mesh apps/userdata');
+    });
+
+    test('relative and absolute overrides open independent profiles', () {
+      expect(
+        select(['--data-dir=profiles/one']).path,
+        '/home/denis/mesh apps/profiles/one',
+      );
+      expect(
+        select(['--data-dir=profiles/one', '--data-dir=../profiles/два']).path,
+        '/home/denis/profiles/два',
+      );
+      expect(
+        select(['--data-dir=/srv/mco/three']).path,
+        '/srv/mco/three',
+      );
+      expect(select(['--data-dir=']).missingPath, isTrue);
+    });
+
+    test('plain bundles and incomplete launcher environments use the binary', () {
+      expect(launcher(linuxExe), linuxExe);
+      expect(launcher(inner, {'APPDIR': appDir}), inner);
+      expect(launcher(inner, {'APPDIR': appDir, 'APPIMAGE': 'relative'}), inner);
+      expect(
+        launcher(inner, {'APPDIR': appDir, 'APPIMAGE': '$appDir/file'}),
+        inner,
+      );
     });
   });
 

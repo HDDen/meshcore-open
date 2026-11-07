@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=MCO Advanced
+Exec=mco_advanced
+Icon=com.monitormx.mcoadvanced
+Terminal=false
+Categories=Network;InstantMessaging;

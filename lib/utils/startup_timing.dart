@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
+import '../storage/data_root_core.dart';
+
 /// How long each step of the startup took, appended to [fileName] next to
 /// the executable when the app is started with [argument]: a slow step shows
 /// up in one run, without a debugger. Off, every call returns at once.
@@ -59,7 +61,10 @@ abstract final class StartupTiming {
     buffer.writeln();
     try {
       await File(
-        p.join(p.dirname(Platform.resolvedExecutable), fileName),
+        p.join(
+          p.dirname(DataRoot.launchExecutable ?? Platform.resolvedExecutable),
+          fileName,
+        ),
       ).writeAsString(buffer.toString(), mode: FileMode.append, flush: true);
     } on FileSystemException {
       // A diagnostic: a folder that cannot be written loses it, nothing else.

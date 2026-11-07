@@ -519,6 +519,8 @@ wrapped Clang, native build tools and Linux headers. It preserves the selected
 lite / lite-aeic / full profile and does not enable private modules.
 See [Linux builds and profiling with Nix](documentation/linux-nix.md) for checks,
 our `mco_advanced` bundle, native prerequisites and Sysprof instructions.
+The guide also covers [optional AppImage builds](documentation/linux-nix.md#optional-linux-appimage)
+and their portable data folders.
 
 ### Android Auto build option
 

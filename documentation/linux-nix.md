@@ -66,6 +66,42 @@ tests cover profiles, shell configuration and Linux bundle rules; they do not
 evaluate Nix or compile Linux plugins. Check both builds for each profile you
 intend to distribute, and check the resulting bundle on the target Linux host.
 
+## Optional Linux AppImage
+
+Build on Ubuntu 24.04 for the target architecture, x86_64 or ARM64. Use the
+desired build profile and the Flutter pin from
+[appimage-tools.json](../scripts/appimage-tools.json). The manual
+[Linux AppImage workflow](../.github/workflows/appimage.yml) lists the build
+and packaging tools and runs a launch check in a clean Ubuntu container.
+
+A regular Flutter build produces the existing bundle. Set the packaging
+switch for a Release build to also create an AppImage.
+
+```bash
+clear
+MESHCORE_BUILD_APPIMAGE=1 flutter build linux --release
+```
+
+Find `mco-advanced-x86_64.AppImage` or `mco-advanced-aarch64.AppImage` beside
+the `bundle` directory in the release build output. The packager verifies
+tool hashes and writes an ELF audit. Build the distributable on a compatible
+Ubuntu host when developing in Nix.
+
+When you launch the AppImage, `userdata` is created beside the image file.
+The same `--data-dir` override as the plain bundle selects another profile.
+Relative paths start from the image's directory. Absolute paths work as given.
+For a profile that stays with the image and another stored separately:
+
+```bash
+clear
+./mco-advanced-x86_64.AppImage --data-dir="profiles/Node 868"
+./mco-advanced-x86_64.AppImage --data-dir=/srv/mco/node-433
+```
+
+The migration restart relaunches the image with the original arguments.
+The packager copies the application binary, libraries and assets. Existing
+profile directories stay outside the image.
+
 ## Bundle, data and stale caches
 
 Launch the profile bundle from a graphical session; use `arm64` instead of

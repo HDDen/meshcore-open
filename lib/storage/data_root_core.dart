@@ -3,7 +3,7 @@ import 'package:path/path.dart' as p;
 /// Where this run keeps its data.
 enum DataRootMode {
   /// Windows and Linux: a folder of the app's own, `userdata` next to the
-  /// executable or the one `--data-dir` names, holding every directory the
+  /// launcher or the one `--data-dir` names, holding every directory the
   /// app writes to.
   portable,
 
@@ -47,10 +47,14 @@ abstract final class DataRoot {
   /// What `main` received, `--data-dir` included, for a restart to hand on.
   static List<String> launchArguments = const [];
 
+  /// The outer AppImage launcher when the executable runs inside an image.
+  static String? launchExecutable;
+
   static void resetForTesting() {
     mode = DataRootMode.system;
     path = null;
     launchArguments = const [];
+    launchExecutable = null;
   }
 }
 

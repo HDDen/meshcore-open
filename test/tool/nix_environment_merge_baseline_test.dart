@@ -90,6 +90,92 @@ void main() {
     expect(cmake, contains('RENAME "libonnxruntime.so.1"'));
   });
 
+  test('U22 baseline: the Linux runtime bundle includes its native assets', () {
+    final cmake = _read('linux/CMakeLists.txt');
+    final install = cmake.replaceAll(RegExp(r'\s+'), ' ');
+
+    expect(cmake, contains('set(APPLICATION_ID "com.monitormx.mcoadvanced")'));
+    for (final rule in [
+      r'install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION '
+          r'"${CMAKE_INSTALL_PREFIX}" COMPONENT Runtime)',
+      r'install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION '
+          r'"${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)',
+      r'install(FILES "${FLUTTER_LIBRARY}" DESTINATION '
+          r'"${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)',
+      r'install(DIRECTORY "${NATIVE_ASSETS_DIR}" DESTINATION '
+          r'"${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)',
+      r'install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}" '
+          r'DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)',
+      r'if(NOT CMAKE_BUILD_TYPE MATCHES "Debug") install(FILES "${AOT_LIBRARY}" '
+          r'DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime) endif()',
+    ]) {
+      expect(install, contains(rule));
+    }
+    expect(cmake, contains('libonnxruntime_providers_shared.so'));
+    expect(
+      cmake,
+      contains('target_compile_definitions(flserial PRIVATE __STDC_NO_THREADS__)'),
+    );
+  });
+
+  test('U22 baseline: legacy serial symbols are scoped to x86_64 glibc', () {
+    final serial = _read('third_party/flserial/src/native_libs/src/impl/unix.cpp');
+    const guard =
+        '#if defined(__linux__) && defined(__GLIBC__) && defined(__x86_64__)';
+    final start = serial.indexOf(guard);
+    expect(start, isNonNegative);
+    const fallback =
+        '#else\nstatic speed_t glibc_legacy_baud(speed_t baud) { return baud; }\n'
+        '#endif';
+    final end = serial.indexOf(fallback, start);
+    expect(end, greaterThan(start));
+    final legacyBranch = serial.substring(start, end);
+
+    for (final symbol in ['cfsetispeed', 'cfsetospeed']) {
+      final binding = '".symver $symbol, $symbol@GLIBC_2.2.5"';
+      expect(legacyBranch, contains(binding));
+      expect(binding.allMatches(serial), hasLength(1));
+      expect(serial, contains('::$symbol(&options, glibc_legacy_baud(baud));'));
+    }
+  });
+
+  test('U22 baseline: CI has a plain Linux release build', () {
+    final workflow = _read('.github/workflows/build.yml');
+    final job = RegExp(
+      r'^  linux:\n([\s\S]*?)(?=^  \S|(?![\s\S]))',
+      multiLine: true,
+    ).firstMatch(workflow);
+    expect(job, isNotNull);
+    final steps = job!.group(1)!;
+    expect(steps, contains('flutter build linux --release --no-pub'));
+    expect(steps, isNot(contains('build_appimage.sh')));
+  });
+
+  test('U22: AppImage is opt-in and keeps the fork identity', () {
+    final cmake = _read('linux/appimage.cmake.in');
+    final gate = cmake.indexOf('STREQUAL "Release"');
+    final optIn = cmake.indexOf(r'NOT "$ENV{MESHCORE_BUILD_APPIMAGE}" STREQUAL "1"');
+    final invoke = cmake.indexOf('execute_process(');
+    expect(gate, isNonNegative);
+    expect(optIn, greaterThan(gate));
+    expect(invoke, greaterThan(optIn));
+    expect(cmake.substring(optIn, invoke), contains('return()'));
+
+    final runner = _read('scripts/appimage/AppRun');
+    expect(runner, contains(r'exec "$APPDIR/usr/bin/mco_advanced" "$@"'));
+    final desktop = _read('scripts/appimage/com.monitormx.mcoadvanced.desktop');
+    expect(desktop, contains('Exec=mco_advanced\n'));
+    expect(desktop, contains('Icon=com.monitormx.mcoadvanced\n'));
+
+    final packager = _read('scripts/build_appimage.sh');
+    expect(packager, contains('--force-rpath'));
+    final workflow = _read('.github/workflows/appimage.yml');
+    expect(workflow, contains('  workflow_dispatch:'));
+    expect(workflow, contains("MESHCORE_BUILD_APPIMAGE: '1'"));
+    expect(workflow, contains('ubuntu-24.04-arm'));
+    expect(workflow, contains('--network none'));
+  });
+
   test('U15: the shell uses Flutter Dart and a wrapped Linux compiler', () {
     final flake = _read('flake.nix');
     final nativeTools = RegExp(

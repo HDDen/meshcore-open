@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Resolve the mounted directory the same way as the inner executable.
+export APPDIR="$(cd -- "$(dirname -- "$0")" && pwd -P)"
+export PATH="$APPDIR/usr/bin:$PATH"
+for hook in "$APPDIR"/apprun-hooks/*.sh; do
+  # shellcheck source=/dev/null
+  [[ ! -f "$hook" ]] || source "$hook"
+done
+exec "$APPDIR/usr/bin/mco_advanced" "$@"
