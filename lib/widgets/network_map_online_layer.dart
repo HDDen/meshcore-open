@@ -18,8 +18,8 @@ enum NetworkMapLoadState { idle, loading, ready, zoomIn, error }
 
 /// Fetches the online network map for the visible area.
 ///
-/// Requests are debounced while the map moves; a response that arrives after
-/// a newer request started is dropped.
+/// Requests are debounced while the map moves. Scheduling new bounds also
+/// invalidates the previous response during the debounce.
 class NetworkMapOnlineController extends ChangeNotifier {
   static const Duration _debounce = Duration(milliseconds: 600);
 
@@ -40,9 +40,14 @@ class NetworkMapOnlineController extends ChangeNotifier {
   List<NetworkMapLink> get links => _links;
   NetworkMapLoadState get state => _state;
 
-  void requestBounds(LatLngBounds bounds) {
+  void requestBounds(LatLngBounds bounds, {bool fetchLinks = true}) {
     _timer?.cancel();
-    _timer = Timer(_debounce, () => _load(bounds));
+    final generation = ++_generation;
+    if (!fetchLinks) _links = const [];
+    _timer = Timer(
+      _debounce,
+      () => _load(bounds, generation: generation, fetchLinks: fetchLinks),
+    );
   }
 
   /// Drops any pending or in-flight request (the online layer was hidden).
@@ -51,33 +56,36 @@ class NetworkMapOnlineController extends ChangeNotifier {
     _generation++;
   }
 
-  Future<void> _load(LatLngBounds bounds) async {
+  Future<void> _load(
+    LatLngBounds bounds, {
+    required int generation,
+    required bool fetchLinks,
+  }) async {
     final boxes = NetworkMapBbox.forVisibleArea(
       west: bounds.west,
       south: bounds.south,
       east: bounds.east,
       north: bounds.north,
     );
-    final generation = ++_generation;
     if (boxes == null) {
       _setState(NetworkMapLoadState.zoomIn);
       return;
     }
     _setState(NetworkMapLoadState.loading);
     try {
-      final results = await Future.wait([
+      final (repeaterResults, linkResults) = await (
         Future.wait(boxes.map(_client.fetchRepeaters)),
-        Future.wait(boxes.map((b) => _client.fetchLinks(b))),
-      ]);
+        fetchLinks
+            ? Future.wait(boxes.map(_client.fetchLinks))
+            : Future.value(const <List<NetworkMapLink>>[]),
+      ).wait;
       if (_disposed || generation != _generation) return;
       // Two boxes (antimeridian) can both return items on the seam.
       _repeaters = {
-        for (final r in results[0].expand((l) => l as List<NetworkMapRepeater>))
-          r.key: r,
+        for (final r in repeaterResults.expand((items) => items)) r.key: r,
       }.values.toList();
       _links = {
-        for (final l in results[1].expand((l) => l as List<NetworkMapLink>))
-          '${l.a}:${l.b}': l,
+        for (final l in linkResults.expand((items) => items)) '${l.a}:${l.b}': l,
       }.values.toList();
       _setState(NetworkMapLoadState.ready);
     } catch (_) {
@@ -138,6 +146,18 @@ Polyline _onlineLinkPolyline(NetworkMapLink link, {required bool simple}) {
 
 
 
+List<NetworkMapLink> _visibleOnlineLinks(
+  List<NetworkMapLink> links,
+  List<NetworkMapRepeater> repeaters,
+) {
+  if (links.isEmpty || repeaters.isEmpty) return const [];
+  final keys = {for (final repeater in repeaters) repeater.key};
+  return [
+    for (final link in links)
+      if (keys.contains(link.a) && keys.contains(link.b)) link,
+  ];
+}
+
 /// Map layers for the online network: links, repeater hexagons and a
 /// tappable center marker so small cells stay visible when zoomed out.
 ///
@@ -145,30 +165,39 @@ Polyline _onlineLinkPolyline(NetworkMapLink link, {required bool simple}) {
 /// their hexagon outline is added.
 List<Widget> buildNetworkMapOnlineLayers({
   required NetworkMapOnlineController controller,
+  List<NetworkMapRepeater>? repeaters,
+  bool showLinks = true,
   required Set<String> localMarkerKeys,
   required ValueChanged<NetworkMapRepeater> onTap,
 }) {
-  final repeaters = controller.repeaters;
-  final links = controller.links;
-  final dropHexagons = repeaters.length > networkMapDenseNodeCount;
+  final visibleRepeaters = repeaters ?? controller.repeaters;
+  final links = showLinks
+      ? _visibleOnlineLinks(controller.links, visibleRepeaters)
+      : const <NetworkMapLink>[];
+  final dropHexagons = visibleRepeaters.length > networkMapDenseNodeCount;
   final simpleLines = links.length > networkMapDenseLinkCount;
   return [
-    PolylineLayer(
-      polylines: [
-        for (final link in links)
-          _onlineLinkPolyline(link, simple: simpleLines),
-      ],
-    ),
+    if (showLinks)
+      PolylineLayer(
+        polylines: [
+          for (final link in links)
+            _onlineLinkPolyline(link, simple: simpleLines),
+        ],
+      ),
     if (!dropHexagons)
       GestureDetector(
         onTap: () {
           final hits = controller.hitNotifier.value?.hitValues;
-          if (hits != null && hits.isNotEmpty) onTap(hits.first);
+          if (hits != null &&
+              hits.isNotEmpty &&
+              visibleRepeaters.contains(hits.first)) {
+            onTap(hits.first);
+          }
         },
         child: PolygonLayer<NetworkMapRepeater>(
           hitNotifier: controller.hitNotifier,
           polygons: [
-            for (final repeater in repeaters)
+            for (final repeater in visibleRepeaters)
               if (repeater.cell.boundary.length >= 3)
                 Polygon<NetworkMapRepeater>(
                   points: repeater.cell.boundary,
@@ -189,7 +218,7 @@ List<Widget> buildNetworkMapOnlineLayers({
       ),
     MarkerLayer(
       markers: [
-        for (final repeater in repeaters)
+        for (final repeater in visibleRepeaters)
           if (!localMarkerKeys.contains(repeater.key))
             Marker(
               point: repeater.cell.center,

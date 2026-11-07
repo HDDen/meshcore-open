@@ -1,5 +1,8 @@
 {
   "bg": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -38,6 +41,9 @@
   ],
 
   "de": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -76,6 +82,9 @@
   ],
 
   "es": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -114,6 +123,9 @@
   ],
 
   "fr": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -152,6 +164,9 @@
   ],
 
   "hu": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -190,6 +205,9 @@
   ],
 
   "it": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -228,6 +246,9 @@
   ],
 
   "ja": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -266,6 +287,9 @@
   ],
 
   "ko": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -304,6 +328,9 @@
   ],
 
   "nl": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -342,6 +369,9 @@
   ],
 
   "pl": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -380,6 +410,9 @@
   ],
 
   "pt": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -418,6 +451,9 @@
   ],
 
   "sk": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -456,6 +492,9 @@
   ],
 
   "sl": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -494,6 +533,9 @@
   ],
 
   "sv": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -532,6 +574,9 @@
   ],
 
   "uk": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",
@@ -570,6 +615,9 @@
   ],
 
   "zh": [
+    "appSettings_showOnlineLinks",
+    "appSettings_showOnlineLinksSubtitle",
+    "map_showOnlineLinks",
     "settings_modSettingsBattery",
     "settings_lowBatteryAlerts",
     "appSettings_ipfsImageLinks",

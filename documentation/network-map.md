@@ -16,8 +16,13 @@ Open the map and use the **Local / Online / Both** switch at the top.
 
 Hexagons are about 2–3 km across and never show a node's exact position. A dashed outline means the repeater has only been reported by one uploader so far ("single source"). When the visible area is larger than 20° the map asks you to zoom in.
 
-Above 30 repeaters in the online view, the renderer draws center markers
-without hexagons or marker shadows. Above 70 links, it draws thinner lines
+In **Online** and **Both**, the node type, activity, age, key prefix and
+estimated-location filters also apply to online nodes. Links connect pairs of
+visible nodes. Turn off **Show Online Map Connections** in the map filter sheet
+or map settings to stop loading and drawing online links.
+
+Above 30 visible online nodes, the renderer draws center markers without
+hexagons or marker shadows. Above 70 visible links, it draws thinner lines
 with their solid or dashed patterns.
 
 Tap a hexagon or a center marker to see the repeater's name, type, status and

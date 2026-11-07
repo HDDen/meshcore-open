@@ -361,6 +361,9 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(mapShowOtherNodes: value));
   }
 
+  Future<void> setMapShowOnlineLinks(bool value) =>
+      updateSettings(_settings.copyWith(mapShowOnlineLinks: value));
+
   Future<void> setPathTraceHighTimeoutEnabled(bool value) async {
     await updateSettings(
       _settings.copyWith(pathTraceHighTimeoutEnabled: value),

@@ -1179,6 +1179,13 @@ class AppLocalizationsBg extends AppLocalizations {
       'Покажи други типове възли на картата';
 
   @override
+  String get appSettings_showOnlineLinks => 'Show Online Map Connections';
+
+  @override
+  String get appSettings_showOnlineLinksSubtitle =>
+      'Display connection lines between nodes from the online map';
+
+  @override
   String get appSettings_timeFilter => 'Филтриране по време';
 
   @override
@@ -2408,6 +2415,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_otherNodes => 'Други възли';
+
+  @override
+  String get map_showOnlineLinks => 'Show Online Map Connections';
 
   @override
   String get map_showOverlaps => 'Припокриване на ключовете на повторителите';

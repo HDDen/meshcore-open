@@ -1214,6 +1214,17 @@ class AppSettingsScreen extends StatelessWidget {
         value: settingsService.settings.mapShowOtherNodes,
         onChanged: (value) => settingsService.setMapShowOtherNodes(value),
       ),
+      if (networkMapAvailable) ...[
+        const Divider(height: 1, indent: 16),
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          secondary: const Icon(Icons.timeline_outlined, size: 20),
+          title: Text(context.l10n.appSettings_showOnlineLinks),
+          subtitle: Text(context.l10n.appSettings_showOnlineLinksSubtitle),
+          value: settingsService.settings.mapShowOnlineLinks,
+          onChanged: settingsService.setMapShowOnlineLinks,
+        ),
+      ],
       const Divider(height: 1, indent: 16),
       SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

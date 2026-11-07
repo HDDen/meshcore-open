@@ -1165,6 +1165,13 @@ class AppLocalizationsSl extends AppLocalizations {
       'Pokaži druge vrste naprav na zemljevidu.';
 
   @override
+  String get appSettings_showOnlineLinks => 'Show Online Map Connections';
+
+  @override
+  String get appSettings_showOnlineLinksSubtitle =>
+      'Display connection lines between nodes from the online map';
+
+  @override
   String get appSettings_timeFilter => 'Filter po času';
 
   @override
@@ -2389,6 +2396,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get map_otherNodes => 'Druga vozlišča';
+
+  @override
+  String get map_showOnlineLinks => 'Show Online Map Connections';
 
   @override
   String get map_showOverlaps => 'Prekrivanja ključev ponoviteljev';

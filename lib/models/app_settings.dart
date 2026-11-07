@@ -203,6 +203,7 @@ class AppSettings {
   final bool mapShowRepeaters;
   final bool mapShowChatNodes;
   final bool mapShowOtherNodes;
+  final bool mapShowOnlineLinks;
   final bool pathTraceHighTimeoutEnabled;
   final bool mapShowOverlaps;
   final double mapTimeFilterHours; // 0 = all time
@@ -751,6 +752,7 @@ class AppSettings {
     this.mapShowRepeaters = true,
     this.mapShowChatNodes = true,
     this.mapShowOtherNodes = true,
+    this.mapShowOnlineLinks = true,
     this.pathTraceHighTimeoutEnabled = false,
     this.mapShowOverlaps = false,
     this.mapTimeFilterHours = 168,
@@ -927,6 +929,7 @@ class AppSettings {
       'map_show_repeaters': mapShowRepeaters,
       'map_show_chat_nodes': mapShowChatNodes,
       'map_show_other_nodes': mapShowOtherNodes,
+      'map_show_online_links': mapShowOnlineLinks,
       'path_trace_high_timeout_enabled': pathTraceHighTimeoutEnabled,
       'map_show_overlaps': mapShowOverlaps,
       'map_time_filter_hours': mapTimeFilterHours,
@@ -1117,6 +1120,7 @@ class AppSettings {
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
       mapShowChatNodes: json['map_show_chat_nodes'] as bool? ?? true,
       mapShowOtherNodes: json['map_show_other_nodes'] as bool? ?? true,
+      mapShowOnlineLinks: json['map_show_online_links'] as bool? ?? true,
       pathTraceHighTimeoutEnabled:
           json['path_trace_high_timeout_enabled'] as bool? ?? false,
       mapShowOverlaps: json['map_show_overlaps'] as bool? ?? false,
@@ -1404,6 +1408,7 @@ class AppSettings {
     bool? mapShowRepeaters,
     bool? mapShowChatNodes,
     bool? mapShowOtherNodes,
+    bool? mapShowOnlineLinks,
     bool? pathTraceHighTimeoutEnabled,
     bool? mapShowOverlaps,
     double? mapTimeFilterHours,
@@ -1549,6 +1554,7 @@ class AppSettings {
       mapShowRepeaters: mapShowRepeaters ?? this.mapShowRepeaters,
       mapShowChatNodes: mapShowChatNodes ?? this.mapShowChatNodes,
       mapShowOtherNodes: mapShowOtherNodes ?? this.mapShowOtherNodes,
+      mapShowOnlineLinks: mapShowOnlineLinks ?? this.mapShowOnlineLinks,
       pathTraceHighTimeoutEnabled:
           pathTraceHighTimeoutEnabled ?? this.pathTraceHighTimeoutEnabled,
       mapShowOverlaps: mapShowOverlaps ?? this.mapShowOverlaps,

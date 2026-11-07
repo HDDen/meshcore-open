@@ -1174,6 +1174,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отображать другие типы нод на карте';
 
   @override
+  String get appSettings_showOnlineLinks => 'Линии связей на онлайн-карте';
+
+  @override
+  String get appSettings_showOnlineLinksSubtitle =>
+      'Показывать линии связей между нодами онлайн-карты';
+
+  @override
   String get appSettings_timeFilter => 'Фильтр по времени';
 
   @override
@@ -2399,6 +2406,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_otherNodes => 'Другие ноды';
+
+  @override
+  String get map_showOnlineLinks => 'Линии связей на онлайн-карте';
 
   @override
   String get map_showOverlaps => 'Перекрытия ключей репитеров';

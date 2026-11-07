@@ -56,6 +56,7 @@ import '../helpers/estimated_repeater_map.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/map_location_helper.dart';
 import '../helpers/map_session_zoom.dart';
+import '../helpers/network_map_filters.dart';
 import '../helpers/last_value_memo.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/wardrive_coverage_helper.dart';
@@ -160,6 +161,9 @@ class _MapScreenState extends State<MapScreen>
   final MapMarkerService _markerService = MapMarkerService();
   /// Created on first use, which the disabled network map never makes.
   late final NetworkMapOnlineController _online = NetworkMapOnlineController();
+  late final AppSettingsService _onlineSettings =
+      context.read<AppSettingsService>();
+  late bool _showOnlineLinks;
   final ContactLocationEstimateStore _contactLocationEstimateStore =
       ContactLocationEstimateStore();
   late final ChannelMarkerStyles _channelMarkerStyles = ChannelMarkerStyles(
@@ -289,9 +293,21 @@ class _MapScreenState extends State<MapScreen>
 
   void _requestOnlineData() {
     try {
-      _online.requestBounds(_mapController.camera.visibleBounds);
+      _online.requestBounds(
+        _mapController.camera.visibleBounds,
+        fetchLinks: _onlineSettings.settings.mapShowOnlineLinks,
+      );
     } catch (_) {
       // Camera not ready yet; onMapReady requests once it is.
+    }
+  }
+
+  void _onOnlineSettingsChanged() {
+    final showLinks = _onlineSettings.settings.mapShowOnlineLinks;
+    if (_showOnlineLinks == showLinks) return;
+    _showOnlineLinks = showLinks;
+    if (_showsOnline(context.read<UiViewStateService>().mapSource)) {
+      _requestOnlineData();
     }
   }
 
@@ -326,7 +342,11 @@ class _MapScreenState extends State<MapScreen>
     _nodeFiltersExpanded =
         PrefsManager.instance.getBool(_nodeFiltersExpandedKey) ?? true;
     _loadRemovedMarkers();
-    if (networkMapAvailable) _online.addListener(_onOnlineChanged);
+    if (networkMapAvailable) {
+      _online.addListener(_onOnlineChanged);
+      _showOnlineLinks = _onlineSettings.settings.mapShowOnlineLinks;
+      _onlineSettings.addListener(_onOnlineSettingsChanged);
+    }
     _ageTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) setState(() {});
     });
@@ -409,6 +429,7 @@ class _MapScreenState extends State<MapScreen>
     _ageTimer?.cancel();
     if (networkMapAvailable) {
       _online.removeListener(_onOnlineChanged);
+      _onlineSettings.removeListener(_onOnlineSettingsChanged);
       _online.dispose();
     }
     _searchController.dispose();
@@ -1513,6 +1534,25 @@ class _MapScreenState extends State<MapScreen>
                     if (showOnline)
                       ...buildNetworkMapOnlineLayers(
                         controller: _online,
+                        repeaters: filterNetworkMapRepeaters(
+                          _online.repeaters,
+                          settings: settings,
+                          now: now,
+                          statuses: switch (_freshness) {
+                            _Freshness.all => null,
+                            _Freshness.online => const {
+                              NetworkMapRepeaterStatus.active,
+                            },
+                            _Freshness.recent => const {
+                              NetworkMapRepeaterStatus.active,
+                              NetworkMapRepeaterStatus.recent,
+                            },
+                            _Freshness.stale => const {
+                              NetworkMapRepeaterStatus.stale,
+                            },
+                          },
+                        ),
+                        showLinks: settings.mapShowOnlineLinks,
                         localMarkerKeys: showLocal
                             ? {for (final c in visibleContacts) c.publicKeyHex}
                             : const {},
@@ -7326,6 +7366,9 @@ class _MapScreenState extends State<MapScreen>
     BuildContext context,
     AppSettingsService settingsService,
   ) {
+    final showOnlineFilters =
+        networkMapAvailable &&
+        _showsOnline(context.read<UiViewStateService>().mapSource);
     showMeshSheet(
       context,
       builder: (sheetContext) => StatefulBuilder(
@@ -7456,6 +7499,13 @@ class _MapScreenState extends State<MapScreen>
                           onChanged: (value) =>
                               service.setMapShowOtherNodes(value),
                         ),
+                        if (showOnlineFilters)
+                          SwitchListTile(
+                            title: Text(sheetContext.l10n.map_showOnlineLinks),
+                            value: settings.mapShowOnlineLinks,
+                            dense: true,
+                            onChanged: service.setMapShowOnlineLinks,
+                          ),
                         SectionHeader(sheetContext.l10n.map_markers),
                         SwitchListTile(
                           title: Text(sheetContext.l10n.map_showSharedMarkers),

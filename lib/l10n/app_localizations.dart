@@ -2128,6 +2128,18 @@ abstract class AppLocalizations {
   /// **'Display other node types on the map'**
   String get appSettings_showOtherNodesSubtitle;
 
+  /// No description provided for @appSettings_showOnlineLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Online Map Connections'**
+  String get appSettings_showOnlineLinks;
+
+  /// No description provided for @appSettings_showOnlineLinksSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display connection lines between nodes from the online map'**
+  String get appSettings_showOnlineLinksSubtitle;
+
   /// No description provided for @appSettings_timeFilter.
   ///
   /// In en, this message translates to:
@@ -4263,6 +4275,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other Nodes'**
   String get map_otherNodes;
+
+  /// No description provided for @map_showOnlineLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Online Map Connections'**
+  String get map_showOnlineLinks;
 
   /// No description provided for @map_showOverlaps.
   ///

@@ -886,7 +886,19 @@ void main() {
     testWidgets('quick filters collapse, persist and reopen without radio work', (tester) async {
       try {
         final nodes = [_node(1, 'Synthetic filter contact', 55.75, 37.62)];
-        final harness = await _Harness.pump(tester, nodes: nodes, zoom: 15);
+        final view = UiViewStateService()..setMapSource(MapSourceOption.online);
+        addTearDown(view.dispose);
+        final harness = await _Harness.pump(
+          tester,
+          nodes: nodes,
+          zoom: 15,
+          viewState: view,
+        );
+        expect(
+          _markerPoints(tester),
+          contains(const LatLng(55.75, 37.62)),
+          reason: 'A saved online source must not hide the local map',
+        );
         final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
         final writes = harness.connector.sentFrames.length;
         expect(find.byType(SegmentedButton<MapSourceOption>), findsNothing);
@@ -906,7 +918,12 @@ void main() {
         expect(harness.wardrive.lastPhoneLocationAt, isNull);
 
         await _Harness.unmount(tester);
-        final reopened = await _Harness.pump(tester, nodes: nodes, zoom: 15);
+        final reopened = await _Harness.pump(
+          tester,
+          nodes: nodes,
+          zoom: 15,
+          viewState: view,
+        );
         final reopenedWrites = reopened.connector.sentFrames.length;
         expect(find.text(l10n.time_allTime), findsNothing);
         await tester.tap(find.text(l10n.listFilter_filters));
@@ -968,6 +985,7 @@ void main() {
         await _pumpFrames(tester);
         final chatSwitch = find.widgetWithText(SwitchListTile, l10n.map_chatNodes);
         final repeaterSwitch = find.widgetWithText(SwitchListTile, l10n.map_repeaters);
+        expect(find.text(l10n.map_showOnlineLinks), findsNothing);
         expect(chatSwitch, findsOneWidget);
         expect(repeaterSwitch, findsOneWidget);
         expect(tester.widget<SwitchListTile>(chatSwitch).value, isFalse);

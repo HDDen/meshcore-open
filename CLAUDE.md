@@ -3767,7 +3767,12 @@ touches) stay out of the build. U18 updates that dormant renderer with two
 independent viewport limits. Above 30 repeaters it skips hexagons and marker
 shadows. Above 70 links it uses one half-width stroke per line. Center marker
 actions, local duplicate suppression and confirmed/dashed line patterns are
-retained. The connector reads the path byte through
+retained. U24 applies the map visibility filters to online snapshots and
+draws links between visible endpoints. A separate setting gates link
+requests and rendering. A new viewport or link setting fences old responses
+when scheduling the debounced load. The settings listener and online
+controller are initialized only when the network map is available. The
+connector reads the path byte through
 `raw_packet.dart`'s public `decodePathByteLen` / `decodePathHashWidth`
 where it had private copies. The decision is the fork's: what its users'
 packet records should feed, if anything, is not settled, and an upload
