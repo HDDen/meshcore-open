@@ -43,25 +43,32 @@ void main() {
     addTearDown(frames.cancel);
     final peer = await fixture.connect();
 
-    // The first complete frame acknowledges consumption of this chunk before
-    // the rest of the second header is sent; no timing-based sleep is needed.
-    peer.add(<int>[0x3e, 0x01, 0x00, 0x70, 0x3e, 0x04]);
-    await peer.flush();
-    expect(await _nextFrame(frames), orderedEquals(<int>[0x70]));
-
-    peer.add(<int>[
-      0x00, 0x80, 0x3e, 0x3c, 0x00,
-      0x3c, 0x01, 0x00, 0xff,
-      0x3e, 0x01, 0x00, 0x0a,
-    ]);
-    await peer.flush();
-
-    expect(
-      await _nextFrame(frames),
-      orderedEquals(<int>[0x80, 0x3e, 0x3c, 0x00]),
+    // Wait for the first complete frame before sending the rest of the header.
+    final first = await _sendAndReadFrame(
+      peer,
+      frames,
+      <int>[0x3e, 0x01, 0x00, 0x70, 0x3e, 0x04],
+      'first complete RX frame',
     );
+    expect(first, orderedEquals(<int>[0x70]));
+
+    final split = await _sendAndReadFrame(
+      peer,
+      frames,
+      <int>[
+        0x00, 0x80, 0x3e, 0x3c, 0x00,
+        0x3c, 0x01, 0x00, 0xff,
+        0x3e, 0x01, 0x00, 0x0a,
+      ],
+      'RX frame with the split header',
+    );
+    expect(split, orderedEquals(<int>[0x80, 0x3e, 0x3c, 0x00]));
+
     // A TX-direction frame between the two RX frames must not be delivered.
-    expect(await _nextFrame(frames), orderedEquals(<int>[0x0a]));
+    expect(
+      await _nextFrame(frames, 'RX frame after the skipped TX frame'),
+      orderedEquals(<int>[0x0a]),
+    );
   });
 
   test('reconnect discards an incomplete frame from the old peer', () async {
@@ -69,19 +76,23 @@ void main() {
     addTearDown(frames.cancel);
     final oldPeer = await fixture.connect();
 
-    oldPeer.add(<int>[
-      0x3e, 0x01, 0x00, 0x71,
-      0x3e, 0x03, 0x00, 0xaa,
-    ]);
-    await oldPeer.flush();
-    expect(await _nextFrame(frames), orderedEquals(<int>[0x71]));
+    final beforeReconnect = await _sendAndReadFrame(
+      oldPeer,
+      frames,
+      <int>[0x3e, 0x01, 0x00, 0x71, 0x3e, 0x03, 0x00, 0xaa],
+      'RX frame before reconnect',
+    );
+    expect(beforeReconnect, orderedEquals(<int>[0x71]));
 
     await fixture.service.disconnect();
     final newPeer = await fixture.connect();
-    newPeer.add(<int>[0x3e, 0x02, 0x00, 0x72, 0x73]);
-    await newPeer.flush();
-
-    expect(await _nextFrame(frames), orderedEquals(<int>[0x72, 0x73]));
+    final afterReconnect = await _sendAndReadFrame(
+      newPeer,
+      frames,
+      <int>[0x3e, 0x02, 0x00, 0x72, 0x73],
+      'RX frame after reconnect',
+    );
+    expect(afterReconnect, orderedEquals(<int>[0x72, 0x73]));
     expect(fixture.service.status, TcpTransportStatus.connected);
   });
 
@@ -125,9 +136,13 @@ void main() {
           fixture.service.activeEndpoint,
           '${InternetAddress.loopbackIPv4.address}:${fixture.server.port}',
         );
-        currentPeer.add(<int>[0x3e, 0x01, 0x00, 0x74]);
-        await currentPeer.flush();
-        expect(await _nextFrame(frames), orderedEquals(<int>[0x74]));
+        final received = await _sendAndReadFrame(
+          currentPeer,
+          frames,
+          <int>[0x3e, 0x01, 0x00, 0x74],
+          'RX frame after the cancelled dial',
+        );
+        expect(received, orderedEquals(<int>[0x74]));
       } finally {
         if (!overrides.release.isCompleted) overrides.release.complete();
         await oldConnect.timeout(_ioTimeout);
@@ -155,9 +170,13 @@ void main() {
         await oldFailure.timeout(_ioTimeout);
 
         expect(fixture.service.status, TcpTransportStatus.connected);
-        currentPeer.add(<int>[0x3e, 1, 0, 0x75]);
-        await currentPeer.flush();
-        expect(await _nextFrame(frames), orderedEquals(<int>[0x75]));
+        final received = await _sendAndReadFrame(
+          currentPeer,
+          frames,
+          <int>[0x3e, 1, 0, 0x75],
+          'RX frame after the late dial failure',
+        );
+        expect(received, orderedEquals(<int>[0x75]));
       } finally {
         if (!overrides.release.isCompleted) overrides.release.complete();
         await oldFailure.timeout(_ioTimeout);
@@ -195,9 +214,13 @@ void main() {
     await IOOverrides.runWithIOOverrides(() async {
       try {
         final oldPeer = await fixture.connect();
-        oldPeer.add(<int>[0x3e, 1, 0, 0x76]);
-        await oldPeer.flush();
-        expect(await _nextFrame(frames), <int>[0x76]);
+        final received = await _sendAndReadFrame(
+          oldPeer,
+          frames,
+          <int>[0x3e, 1, 0, 0x76],
+          'RX frame before the idle disconnect',
+        );
+        expect(received, <int>[0x76]);
         // The adapter is now suspended in moveNext(), not at a yield.
         await Future<void>.delayed(Duration.zero);
         final disconnecting = fixture.service.disconnect();
@@ -207,9 +230,13 @@ void main() {
         expect(fixture.service.status, TcpTransportStatus.disconnected);
 
         final currentPeer = await fixture.connect();
-        currentPeer.add(<int>[0x3e, 1, 0, 0x77]);
-        await currentPeer.flush();
-        expect(await _nextFrame(frames), <int>[0x77]);
+        final afterReconnect = await _sendAndReadFrame(
+          currentPeer,
+          frames,
+          <int>[0x3e, 1, 0, 0x77],
+          'RX frame after the idle disconnect',
+        );
+        expect(afterReconnect, <int>[0x77]);
         expect(fixture.service.status, TcpTransportStatus.connected);
       } finally {
         // Even the pre-fix implementation must not hang this test's cleanup.
@@ -257,8 +284,34 @@ Future<List<int>> _readBytes(Socket peer, int count) => peer
     .toList()
     .timeout(_ioTimeout);
 
-Future<Uint8List> _nextFrame(StreamIterator<Uint8List> frames) async {
-  expect(await frames.moveNext().timeout(_ioTimeout), isTrue);
+Future<Uint8List> _sendAndReadFrame(
+  Socket peer,
+  StreamIterator<Uint8List> frames,
+  List<int> bytes,
+  String phase,
+) async {
+  // The first moveNext subscribes to the broadcast stream. Start it before
+  // writing so the transport cannot deliver the reply without a listener.
+  final received = _nextFrame(frames, phase);
+  await Future.wait<void>([
+    received,
+    Future<void>.sync(() {
+      peer.add(bytes);
+      return peer.flush();
+    }),
+  ], eagerError: true);
+  return received;
+}
+
+Future<Uint8List> _nextFrame(
+  StreamIterator<Uint8List> frames,
+  String phase,
+) async {
+  final hasFrame = await frames.moveNext().timeout(
+    _ioTimeout,
+    onTimeout: () => throw TimeoutException('Waiting for $phase', _ioTimeout),
+  );
+  expect(hasFrame, isTrue, reason: 'Stream closed before $phase');
   return frames.current;
 }
 
