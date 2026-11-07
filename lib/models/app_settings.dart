@@ -98,10 +98,18 @@ class AppSettings {
   static const String defaultPublicIpfsGateway =
       'https://ipfs.filebase.io/ipfs/';
 
+  // Routing algorithm default values
+  static const double defaultMaxRouteWeight = 5.0;
+  static const double defaultInitialRouteWeight = 3.0;
+  static const double defaultRouteWeightSuccessIncrement = 0.5;
+  static const double defaultRouteWeightFailureDecrement = 0.2;
+  static const int defaultMaxMessageRetries = 5;
+
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
   final bool mapShowChatNodes;
   final bool mapShowOtherNodes;
+  final bool mapShowOnlineLinks;
   final bool mapShowOverlaps;
   final double mapTimeFilterHours; // 0 = all time
   final bool mapKeyPrefixEnabled;
@@ -254,6 +262,7 @@ class AppSettings {
     this.mapShowRepeaters = true,
     this.mapShowChatNodes = true,
     this.mapShowOtherNodes = true,
+    this.mapShowOnlineLinks = true,
     this.mapShowOverlaps = false,
     this.mapTimeFilterHours = 168,
     this.mapKeyPrefixEnabled = false,
@@ -276,11 +285,11 @@ class AppSettings {
     this.autoSendZeroHopAdvertOnGpsUpdate = false,
     this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = true,
-    this.maxRouteWeight = 5.0,
-    this.initialRouteWeight = 3.0,
-    this.routeWeightSuccessIncrement = 0.5,
-    this.routeWeightFailureDecrement = 0.2,
-    this.maxMessageRetries = 5,
+    this.maxRouteWeight = defaultMaxRouteWeight,
+    this.initialRouteWeight = defaultInitialRouteWeight,
+    this.routeWeightSuccessIncrement = defaultRouteWeightSuccessIncrement,
+    this.routeWeightFailureDecrement = defaultRouteWeightFailureDecrement,
+    this.maxMessageRetries = defaultMaxMessageRetries,
     this.channelMinHopsEnabled = false,
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
@@ -349,6 +358,7 @@ class AppSettings {
       'map_show_repeaters': mapShowRepeaters,
       'map_show_chat_nodes': mapShowChatNodes,
       'map_show_other_nodes': mapShowOtherNodes,
+      'map_show_online_links': mapShowOnlineLinks,
       'map_show_overlaps': mapShowOverlaps,
       'map_time_filter_hours': mapTimeFilterHours,
       'map_key_prefix_enabled': mapKeyPrefixEnabled,
@@ -481,6 +491,7 @@ class AppSettings {
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
       mapShowChatNodes: json['map_show_chat_nodes'] as bool? ?? true,
       mapShowOtherNodes: json['map_show_other_nodes'] as bool? ?? true,
+      mapShowOnlineLinks: json['map_show_online_links'] as bool? ?? true,
       mapShowOverlaps: json['map_show_overlaps'] as bool? ?? false,
       mapTimeFilterHours:
           (json['map_time_filter_hours'] as num?)?.toDouble() ?? 168,
@@ -511,14 +522,20 @@ class AppSettings {
           (json['gps_interval_seconds'] as num?)?.toInt() ?? 900,
       autoRouteRotationEnabled:
           json['auto_route_rotation_enabled'] as bool? ?? true,
-      maxRouteWeight: (json['max_route_weight'] as num?)?.toDouble() ?? 5.0,
+      maxRouteWeight:
+          (json['max_route_weight'] as num?)?.toDouble() ??
+          defaultMaxRouteWeight,
       initialRouteWeight:
-          (json['initial_route_weight'] as num?)?.toDouble() ?? 3.0,
+          (json['initial_route_weight'] as num?)?.toDouble() ??
+          defaultInitialRouteWeight,
       routeWeightSuccessIncrement:
-          (json['route_weight_success_increment'] as num?)?.toDouble() ?? 0.5,
+          (json['route_weight_success_increment'] as num?)?.toDouble() ??
+          defaultRouteWeightSuccessIncrement,
       routeWeightFailureDecrement:
-          (json['route_weight_failure_decrement'] as num?)?.toDouble() ?? 0.2,
-      maxMessageRetries: json['max_message_retries'] as int? ?? 5,
+          (json['route_weight_failure_decrement'] as num?)?.toDouble() ??
+          defaultRouteWeightFailureDecrement,
+      maxMessageRetries:
+          json['max_message_retries'] as int? ?? defaultMaxMessageRetries,
       channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
@@ -648,6 +665,7 @@ class AppSettings {
     bool? mapShowRepeaters,
     bool? mapShowChatNodes,
     bool? mapShowOtherNodes,
+    bool? mapShowOnlineLinks,
     bool? mapShowOverlaps,
     double? mapTimeFilterHours,
     bool? mapKeyPrefixEnabled,
@@ -727,6 +745,7 @@ class AppSettings {
       mapShowRepeaters: mapShowRepeaters ?? this.mapShowRepeaters,
       mapShowChatNodes: mapShowChatNodes ?? this.mapShowChatNodes,
       mapShowOtherNodes: mapShowOtherNodes ?? this.mapShowOtherNodes,
+      mapShowOnlineLinks: mapShowOnlineLinks ?? this.mapShowOnlineLinks,
       mapShowOverlaps: mapShowOverlaps ?? this.mapShowOverlaps,
       mapTimeFilterHours: mapTimeFilterHours ?? this.mapTimeFilterHours,
       mapKeyPrefixEnabled: mapKeyPrefixEnabled ?? this.mapKeyPrefixEnabled,
