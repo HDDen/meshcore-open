@@ -4,6 +4,9 @@
 
 The Map feature is a full-featured node-location visualization and radio-planning tool built on OpenStreetMap tiles. It is one of the three primary views accessible from the QuickSwitchBar.
 
+A custom theme can tint map tiles and replace node and own-position markers.
+The map retains its status indicators. [Themes](themes.md)
+
 ## How to Access
 
 - **QuickSwitchBar tab 2** (rightmost) from Contacts or Channels

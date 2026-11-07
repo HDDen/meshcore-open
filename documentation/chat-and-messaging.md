@@ -45,6 +45,7 @@ Choose **None** to clear the chat's own background.
 In **Settings → App Settings → Themes → Holidays**, you can enable short
 effects for holiday greetings. They play once for a new visible message in
 the active chat. Existing history stays quiet.
+[Themes](themes.md#holiday-message-animations)
 
 ### Message Search
 

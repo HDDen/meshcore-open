@@ -110,6 +110,7 @@ Tap a channel card to open the channel chat screen.
 - Subtitle: channel type and effective region when set, with `(default)` when inherited
 - Tap the title or landscape icon to select a region; see [Regions](regions.md)
 - Bell icon: mute or unmute notifications for this channel (crossed-out bell when muted)
+- Open **⋮ → Chat background** to choose a color or photo for the channel. You can enable greeting effects separately in **Themes → Holidays**. [Themes](themes.md#chat-backgrounds)
 
 ### Message Display
 

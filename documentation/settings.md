@@ -115,8 +115,8 @@ The Stadia map API-key dialog also scrolls when the keyboard is open. Saving
 its unchanged masked value keeps the stored key; Cancel discards edits.
 
 ### Appearance
-- **Theme**: System / Light / Dark
-- **Themes** opens the manual theme library. Choose a preset or create a theme with your own colors, icons and optional chat background. **Default** returns to the saved System, Light or Dark mode.
+- **Theme** selects System, Light or Dark. With a custom theme active, choosing one of these modes returns to the standard palette.
+- **Themes** opens the theme library. Choose a preset or create a theme with your own colors, icons and optional chat background. The **MeshCore** entry returns to the saved System, Light or Dark mode. [Themes](themes.md)
 - The theme menu can copy or paste a share code and import or export `.jsonl` files. Themes and photos are stored locally. A photo is included when you share the theme that uses it.
 - **Holidays** includes four themes you can select manually. Automatic switching is optional. It uses the nearest holiday from 17 days before through the holiday itself, then restores your chosen theme when no holiday is active. A manual selection during a holiday skips that occurrence.
 - **Holiday message animations** is a separate option for short effects when a fresh greeting appears in a visible chat. Both holiday switches start off. Effects respect reduced motion and the profiles that disable status animations.

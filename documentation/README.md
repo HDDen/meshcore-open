@@ -40,6 +40,7 @@ For the optional Linux development environment and profiling tools, see
 22. [MCOtxt для браузера](mcotxt-js.md) — автономный ES6-кодек, размеры текста и демо с метаданными
 23. [CompanionCLI](companion-cli.md) — локальная консоль подключённой ноды, история по нодам и совместимость
 24. [Настройки контактов в SQLite](contact-settings-storage.md) — структура БД, параметры и перенос из SharedPreferences
+25. [Themes](themes.md) — palettes, icons, chat backgrounds and optional holiday effects
 
 ## App Overview
 
