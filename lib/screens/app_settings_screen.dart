@@ -729,6 +729,28 @@ class AppSettingsScreen extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
         const Divider(height: 1, indent: 16),
+        // The attempt limit also applies when automatic rotation is off.
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          leading: const Icon(Icons.restart_alt, size: 20),
+          title: Text(context.l10n.appSettings_resetRoutingToDefault),
+          subtitle: Text(
+            context.l10n.appSettings_resetRoutingToDefaultSubtitle,
+          ),
+          onTap: () async {
+            await settingsService.resetRoutingSettingsToDefault();
+            if (!context.mounted) return;
+            showDismissibleSnackBar(
+              context,
+              content: Text(context.l10n.appSettings_routingResetToDefault),
+              duration: const Duration(seconds: 2),
+            );
+          },
+        ),
+        const Divider(height: 1, indent: 16),
         _buildChannelResendTimeoutTile(context, settingsService),
         const Divider(height: 1, indent: 16),
         SwitchListTile(

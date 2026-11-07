@@ -8057,6 +8057,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_routingSection => 'Маршрутизация';
 
   @override
+  String get appSettings_resetRoutingToDefault =>
+      'Сбросить параметры маршрутизации';
+
+  @override
+  String get appSettings_resetRoutingToDefaultSubtitle =>
+      'Вернуть стандартные параметры веса и число попыток отправки';
+
+  @override
+  String get appSettings_routingResetToDefault =>
+      'Параметры маршрутизации сброшены';
+
+  @override
   String get appSettings_imageMessagesSection => 'Сообщения-изображения';
 
   @override

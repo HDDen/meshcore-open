@@ -8020,6 +8020,18 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_routingSection => 'Routing';
 
   @override
+  String get appSettings_resetRoutingToDefault =>
+      'Reset Routing Algorithm to Default';
+
+  @override
+  String get appSettings_resetRoutingToDefaultSubtitle =>
+      'Restore the default route weight settings and message attempt limit';
+
+  @override
+  String get appSettings_routingResetToDefault =>
+      'Routing algorithm settings reset to default';
+
+  @override
   String get appSettings_imageMessagesSection => 'Bildmeddelanden';
 
   @override

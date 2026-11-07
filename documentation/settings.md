@@ -134,12 +134,13 @@ Individual channels can be muted from the channel chat bell icon, the channel li
 ### Messaging
 - **Clear Path on Max Retry**: Erases the stored routing path after all retries fail
 - **Jump to Oldest Unread**: When opening a chat, scrolls to the oldest unread message instead of the newest
-- **Auto Route Rotation**: Enables weighted routing algorithm. When enabled, expands to show five slider sub-settings (hidden when off):
+- **Max Message Retries** sets the direct-message attempt limit (2–10, default 5) in every routing mode.
+- **Auto Route Rotation** enables weighted routing. Turn it on to see these four sliders:
   - Max Route Weight (1–10, default 5, integer steps)
   - Initial Route Weight (0.5–5.0, default 3.0)
   - Success Increment (0.1–2.0, default 0.5, 0.1 steps)
   - Failure Decrement (0.1–2.0, default 0.2, 0.1 steps)
-  - Max Message Retries (2–10, default 5)
+- **Reset Routing Algorithm to Default** restores these four settings and the attempt limit. The rotation switch and learned route weights keep their values.
 - **Enable Message Tracing**: Shows path trace overlays and extra metadata on messages
 - **Region next to hop count** (default off): Shows a channel message's region chip on the same line as its hop count instead of below it
 - **Resend channel messages until they travel far enough** (default off): If your channel message isn't heard coming back through enough repeaters, it's sent again. Uses more airtime. When on, it shows:

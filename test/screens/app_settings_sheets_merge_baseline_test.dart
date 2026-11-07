@@ -29,6 +29,10 @@ class _Settings extends AppSettingsService {
   }
 
   @override
+  Future<void> updateSettings(AppSettings next) async =>
+      _apply(next, 'settings', null);
+
+  @override
   Future<void> setMapTimeFilterHours(double hours) async =>
       _apply(value.copyWith(mapTimeFilterHours: hours), 'time', hours);
   @override
@@ -76,8 +80,10 @@ Future<void> _withSettings(WidgetTester tester, String locale,
     Future<void> Function(_Settings, AppLocalizations) run, {
   Size size = const Size(1100, 1800),
   double textScale = 1,
+  AppSettings? initialSettings,
 }) async {
   final settings = _Settings();
+  if (initialSettings != null) settings.value = initialSettings;
   final radio = _Radio();
   final sections = _Sections();
   // This service's constructor and view getters do not scan/download models;
@@ -124,7 +130,7 @@ Future<void> _withSettings(WidgetTester tester, String locale,
   }
 }
 
-Future<void> _open(WidgetTester tester, String title) async {
+Future<Finder> _revealSetting(WidgetTester tester, String title) async {
   final screen = find.byType(AppSettingsScreen);
   final label = find.descendant(of: screen, matching: find.text(title));
   final list = find.descendant(of: screen, matching: find.byType(ListView));
@@ -155,7 +161,11 @@ Future<void> _open(WidgetTester tester, String title) async {
   await Scrollable.ensureVisible(tester.element(label), alignment: 0.5);
   await tester.pumpAndSettle();
   expect(label.hitTestable(), findsOneWidget);
-  await tester.tap(label);
+  return label;
+}
+
+Future<void> _open(WidgetTester tester, String title) async {
+  await tester.tap(await _revealSetting(tester, title));
   await tester.pumpAndSettle();
 }
 
@@ -225,6 +235,66 @@ Future<void> _dialogAction(WidgetTester tester, String label) async {
 }
 
 void main() {
+  for (final autoRotate in [false, true]) {
+    testWidgets('U25: reset and retries stay visible with rotation=$autoRotate', (
+      tester,
+    ) async {
+      await _withSettings(
+        tester,
+        'ru',
+        (settings, l10n) async {
+          await _revealSetting(tester, l10n.appSettings_maxMessageRetries);
+          final retries = find.widgetWithText(
+            ListTile,
+            l10n.appSettings_maxMessageRetries,
+          );
+          final slider = find.descendant(
+            of: retries,
+            matching: find.byType(Slider),
+          );
+          expect(tester.widget<Slider>(slider).value, 8);
+          expect(
+            find.widgetWithText(SwitchListTile, l10n.appSettings_autoRouteRotation),
+            findsOneWidget,
+          );
+          expect(
+            find.widgetWithText(ListTile, l10n.appSettings_maxRouteWeight),
+            autoRotate ? findsOneWidget : findsNothing,
+          );
+          expect(settings.writes, isEmpty);
+
+          final reset = await _revealSetting(
+            tester,
+            l10n.appSettings_resetRoutingToDefault,
+          );
+          await tester.tap(reset);
+          await tester.pumpAndSettle();
+          expect(
+            find.text(l10n.appSettings_routingResetToDefault),
+            findsOneWidget,
+          );
+          expect(settings.writes, [('settings', null)]);
+          expect(settings.settings.autoRouteRotationEnabled, autoRotate);
+          expect(settings.settings.clearPathOnMaxRetry, isTrue);
+          expect(tester.widget<Slider>(slider).value, 5);
+          expect(settings.settings.maxRouteWeight, 5.0);
+          expect(settings.settings.initialRouteWeight, 3.0);
+          expect(settings.settings.routeWeightSuccessIncrement, 0.5);
+          expect(settings.settings.routeWeightFailureDecrement, 0.2);
+        },
+        initialSettings: AppSettings(
+          autoRouteRotationEnabled: autoRotate,
+          clearPathOnMaxRetry: true,
+          maxMessageRetries: 8,
+          maxRouteWeight: 9,
+          initialRouteWeight: 4.5,
+          routeWeightSuccessIncrement: 1.0,
+          routeWeightFailureDecrement: 1.0,
+        ),
+      );
+    });
+  }
+
   for (final locale in ['en', 'ru']) {
     testWidgets('U19b baseline: stock theme choices remain reachable ($locale)', (
       tester,

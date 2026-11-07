@@ -763,6 +763,16 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(maxMessageRetries: value));
   }
 
+  Future<void> resetRoutingSettingsToDefault() => updateSettings(
+    settings.copyWith(
+      maxRouteWeight: AppSettings.defaultMaxRouteWeight,
+      initialRouteWeight: AppSettings.defaultInitialRouteWeight,
+      routeWeightSuccessIncrement: AppSettings.defaultRouteWeightSuccessIncrement,
+      routeWeightFailureDecrement: AppSettings.defaultRouteWeightFailureDecrement,
+      maxMessageRetries: AppSettings.defaultMaxMessageRetries,
+    ),
+  );
+
   Future<void> setChannelResendTimeoutSeconds(int value) async {
     await updateSettings(
       _settings.copyWith(

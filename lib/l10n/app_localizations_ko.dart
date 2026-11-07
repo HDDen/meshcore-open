@@ -7691,6 +7691,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_routingSection => '라우팅';
 
   @override
+  String get appSettings_resetRoutingToDefault =>
+      'Reset Routing Algorithm to Default';
+
+  @override
+  String get appSettings_resetRoutingToDefaultSubtitle =>
+      'Restore the default route weight settings and message attempt limit';
+
+  @override
+  String get appSettings_routingResetToDefault =>
+      'Routing algorithm settings reset to default';
+
+  @override
   String get appSettings_imageMessagesSection => '이미지 메시지';
 
   @override

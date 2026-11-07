@@ -16,6 +16,7 @@ import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_settings_store.dart';
 import 'package:meshcore_open/storage/contact_discovery_store.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
@@ -608,6 +609,71 @@ Future<void> main() async {
         expect(settings.maxMessageRetries, equals(5));
       },
     );
+
+    test('U25: editing and resetting preserve stored routes and other settings', () async {
+      await _openHistoryStorage();
+      final settings = AppSettingsService();
+      final reopened = AppSettingsService();
+      addTearDown(settings.dispose);
+      addTearDown(reopened.dispose);
+      await settings.loadSettings();
+      await settings.updateSettings(
+        settings.settings.copyWith(
+          autoRouteRotationEnabled: true,
+          clearPathOnMaxRetry: true,
+          maxRouteWeight: 9,
+          initialRouteWeight: 4.5,
+          routeWeightSuccessIncrement: 1.0,
+          routeWeightFailureDecrement: 1.0,
+          channelMinHopsEnabled: true,
+        ),
+      );
+
+      final contactKey = 'cd' * 32;
+      final storage = StorageService()..setPublicKeyHex = 'ab' * 32;
+      final history = ContactPathHistory(
+        contactPubKeyHex: contactKey,
+        recentPaths: [
+          PathRecord(
+            hopCount: 1,
+            tripTimeMs: 600,
+            timestamp: DateTime.utc(2026, 11, 7),
+            wasFloodDiscovery: false,
+            pathBytes: const [0x12],
+            successCount: 4,
+            failureCount: 1,
+            routeWeight: 7.5,
+          ),
+        ],
+      );
+      await storage.savePathHistory(contactKey, history);
+
+      final before = settings.settings.toJson();
+      var notifications = 0;
+      settings.addListener(() => notifications++);
+      await settings.setMaxMessageRetries(8);
+      await reopened.loadSettings();
+
+      expect(notifications, 1);
+      expect(reopened.settings.toJson(), {...before, 'max_message_retries': 8});
+
+      await settings.resetRoutingSettingsToDefault();
+      await reopened.loadSettings();
+
+      expect(notifications, 2);
+      expect(reopened.settings.toJson(), {
+        ...before,
+        'max_route_weight': 5.0,
+        'initial_route_weight': 3.0,
+        'route_weight_success_increment': 0.5,
+        'route_weight_failure_decrement': 0.2,
+        'max_message_retries': 5,
+      });
+      expect(
+        (await storage.loadPathHistory(contactKey))?.toJson(),
+        history.toJson(),
+      );
+    }, skip: skip);
 
     test('automatic route switching is off unless stored on', () {
       expect(AppSettings().autoRouteRotationEnabled, isFalse);
