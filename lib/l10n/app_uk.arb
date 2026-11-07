@@ -4392,5 +4392,16 @@
   "themes_previewOutgoing": "Чую вас чудово!",
   "themes_previewSwitch": "Сповіщення",
   "themes_saveAndUse": "Зберегти та застосувати",
-  "themes_title": "Теми"
+  "themes_title": "Теми",
+  "appSettings_holidayAnimations": "Анімації святкових повідомлень",
+  "appSettings_holidayAnimationsSubtitle": "Кажани, індик, Дід Мороз або феєрверк, коли хтось надсилає святкове привітання",
+  "themes_holidays": "Свята",
+  "themes_holidayAutoSwitch": "Перемикати автоматично",
+  "themes_holidayAutoSwitchSubtitle": "Тема кожного свята вмикається за 17 днів до нього і діє до самого свята",
+  "themes_holidayAutoApplied": "Тему «{holiday}» увімкнено автоматично. Ваша тема повернеться після свята.",
+  "themes_holidayAutoAppliedTag": "Увімкнено автоматично",
+  "holidayGreeting_halloween": "З Гелловіном|З Хелловіном|З Геловіном|Щасливого Гелловіну|Щасливого Хелловіну|Happy Halloween",
+  "holidayGreeting_thanksgiving": "З Днем подяки|З Днём подяки|Щасливого Дня подяки|Happy Thanksgiving",
+  "holidayGreeting_christmas": "З Різдвом|З Різдвом Христовим|Веселого Різдва|Щасливого Різдва|Веселих свят|Merry Christmas",
+  "holidayGreeting_newYear": "З Новим роком|З наступаючим Новим роком|Щасливого Нового року|Happy New Year"
 }

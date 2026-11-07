@@ -9381,4 +9381,45 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get themes_title => 'Témy';
+
+  @override
+  String get appSettings_holidayAnimations => 'Sviatočné animácie správ';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Netopiere, moriak, Santa alebo ohňostroj, keď niekto pošle sviatočné želanie';
+
+  @override
+  String get themes_holidays => 'Sviatky';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Prepínať automaticky';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Používa tému každého sviatku od 17 dní pred ním až do samotného dňa';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Téma $holiday je zapnutá automaticky. Vaša vlastná téma sa vráti po sviatku.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Zapnuté automaticky';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Veselý Halloween|Šťastný Halloween|Veselého Halloweenu|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Šťastný Deň vďakyvzdania|Šťastný Deň vďaky|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Veselé Vianoce|Šťastné a veselé Vianoce|Príjemné Vianoce|Požehnané Vianoce|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Šťastný Nový rok|Úspešný nový rok|Happy New Year';
 }

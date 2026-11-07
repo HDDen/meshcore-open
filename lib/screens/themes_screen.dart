@@ -27,6 +27,7 @@ class ThemesScreen extends StatelessWidget {
     final l10n = context.l10n;
     final settingsService = context.watch<AppSettingsService>();
     final activeId = settingsService.activeCustomTheme?.id;
+    final automatic = settingsService.autoHolidayTheme;
     final myThemes = settingsService.settings.customThemes;
 
     return Scaffold(
@@ -102,6 +103,36 @@ class ThemesScreen extends StatelessWidget {
             ),
             for (final preset in CustomTheme.presets)
               _presetTile(context, settingsService, preset, activeId),
+            SectionHeader(l10n.themes_holidays),
+            SwitchListTile(
+              secondary: const Icon(Icons.event_available_outlined),
+              title: Text(l10n.themes_holidayAutoSwitch),
+              subtitle: Text(l10n.themes_holidayAutoSwitchSubtitle),
+              value: settingsService.settings.holidayAutoSwitch,
+              onChanged: settingsService.setHolidayAutoSwitch,
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.celebration_outlined),
+              title: Text(l10n.appSettings_holidayAnimations),
+              subtitle: Text(l10n.appSettings_holidayAnimationsSubtitle),
+              value: settingsService.settings.holidayAnimationsEnabled,
+              onChanged: settingsService.setHolidayAnimationsEnabled,
+            ),
+            if (automatic != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Text(l10n.themes_holidayAutoApplied(automatic.name)),
+              ),
+            for (final preset in CustomTheme.holidayPresets)
+              _presetTile(
+                context,
+                settingsService,
+                preset,
+                activeId,
+                subtitle: preset.id == automatic?.id
+                    ? l10n.themes_holidayAutoAppliedTag
+                    : null,
+              ),
           ],
         ),
       ),
@@ -112,14 +143,16 @@ class ThemesScreen extends StatelessWidget {
     BuildContext context,
     AppSettingsService settingsService,
     CustomTheme preset,
-    String? activeId,
-  ) {
+    String? activeId, {
+    String? subtitle,
+  }) {
     final l10n = context.l10n;
     return _ThemeTile(
       name: preset.name,
+      subtitle: subtitle,
       background: preset.background,
       accent: preset.accent,
-      preview: preset.icons.isEmpty
+      preview: preset.id != activeId || preset.icons.isEmpty
           ? null
           : ThemedIcon.preview(
               ThemeIconSlot.channels,

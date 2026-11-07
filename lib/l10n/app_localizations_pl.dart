@@ -9441,4 +9441,46 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get themes_title => 'Motywy';
+
+  @override
+  String get appSettings_holidayAnimations =>
+      'Animacje świątecznych wiadomości';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Nietoperze, indyk, Mikołaj lub fajerwerki, gdy ktoś wyśle świąteczne życzenia';
+
+  @override
+  String get themes_holidays => 'Święta';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Przełączaj automatycznie';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Używa motywu każdego święta od 17 dni przed nim aż do samego dnia';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Motyw $holiday jest włączony automatycznie. Twój własny motyw wróci po świętach.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Włączony automatycznie';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Wesołego Halloween|Szczęśliwego Halloween|Straszne Halloween|Cukierek albo psikus|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Szczęśliwego Święta Dziękczynienia|Wesołego Święta Dziękczynienia|Szczęśliwego Dnia Dziękczynienia|Wesołego Dnia Dziękczynienia|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Wesołych Świąt|Wesołych Świąt Bożego Narodzenia|Wesołej Gwiazdki|Radosnych Świąt|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Szczęśliwego Nowego Roku|Dobrego Nowego Roku|Udanego Nowego Roku|Happy New Year';
 }

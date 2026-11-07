@@ -115,6 +115,7 @@ import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/chat_background.dart';
+import '../widgets/holiday_animations.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
 import '../widgets/mesh_ui.dart';
@@ -153,6 +154,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final MarkupTextEditingController _textController =
       MarkupTextEditingController();
   final ChatScrollController _scrollController = ChatScrollController();
+  final _holidayWatcher = HolidayTriggerWatcher();
   final ChatBottomSnapGuard _bottomSnapGuard = ChatBottomSnapGuard();
   final FocusNode _textFieldFocusNode = FocusNode();
   final FocusNode _screenFocusNode = FocusNode();
@@ -483,6 +485,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   void dispose() {
+    _holidayWatcher.dispose();
     _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
     _watchedImageStore?.removeListener(_onImageStoreChanged);
     _connector?.setActiveChannel(null);
@@ -1212,6 +1215,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final settingsService = context
                         .watch<AppSettingsService>();
                     final messages = timeline.messages;
+                    final newest = messages.lastOrNull;
+                    _holidayWatcher.onNewest(
+                      context,
+                      id: newest?.messageId,
+                      text: newest?.text,
+                      receivedAt: newest?.receivedAt,
+                      messageContext: (id) =>
+                          _scrollController.showJumpToBottom.value
+                              ? null
+                              : _tryGetMessageContext(id),
+                    );
                     final reversedRows = _transcriptRowsFor(context, messages);
 
                     if (reversedRows.isEmpty) {

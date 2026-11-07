@@ -4195,5 +4195,16 @@
   "themes_previewOutgoing": "Hör dig tydligt!",
   "themes_previewSwitch": "Aviseringar",
   "themes_saveAndUse": "Spara och använd",
-  "themes_title": "Teman"
+  "themes_title": "Teman",
+  "appSettings_holidayAnimations": "Helganimationer i meddelanden",
+  "appSettings_holidayAnimationsSubtitle": "Fladdermöss, en kalkon, tomten eller fyrverkerier när någon skickar en helghälsning",
+  "themes_holidays": "Helger",
+  "themes_holidayAutoSwitch": "Byt automatiskt",
+  "themes_holidayAutoSwitchSubtitle": "Använder varje helgs tema från 17 dagar före till själva dagen",
+  "themes_holidayAutoApplied": "Temat {holiday} är på automatiskt. Ditt eget tema kommer tillbaka efter helgen.",
+  "themes_holidayAutoAppliedTag": "På automatiskt",
+  "holidayGreeting_halloween": "Glad Halloween|Trevlig Halloween|Happy Halloween|Gott Halloween",
+  "holidayGreeting_thanksgiving": "Glad Thanksgiving|Trevlig Thanksgiving|Happy Thanksgiving|Glad tacksägelsedag",
+  "holidayGreeting_christmas": "God jul|Glad jul|Trevlig jul|Merry Christmas|God jul och gott nytt år",
+  "holidayGreeting_newYear": "Gott nytt år|Happy New Year|Ett gott nytt år"
 }

@@ -287,8 +287,60 @@ class CustomTheme {
     ),
   ];
 
+  /// Holiday themes: colors, a chat background and festive icons, all
+  /// bundled under `assets/themes/<holiday>/`.
+  static const List<CustomTheme> holidayPresets = [
+    CustomTheme(
+      id: '${presetIdPrefix}halloween',
+      name: 'Halloween',
+      background: Color(0xFF160F22),
+      accent: Color(0xFFFF7A1A),
+      icons: _HolidayIcons.halloween,
+      chatBackground: ChatBackground.asset(
+        'assets/themes/halloween/background.jxl',
+        fade: 0.35,
+      ),
+    ),
+    CustomTheme(
+      id: '${presetIdPrefix}thanksgiving',
+      name: 'Thanksgiving',
+      background: Color(0xFF1C120B),
+      accent: Color(0xFFF2A93B),
+      icons: _HolidayIcons.thanksgiving,
+      chatBackground: ChatBackground.asset(
+        'assets/themes/thanksgiving/background.jxl',
+        fade: 0.3,
+      ),
+    ),
+    CustomTheme(
+      id: '${presetIdPrefix}christmas',
+      name: 'Christmas',
+      background: Color(0xFF0B1F14),
+      accent: Color(0xFFE5484D),
+      icons: _HolidayIcons.christmas,
+      chatBackground: ChatBackground.asset(
+        'assets/themes/christmas/background.jxl',
+        fade: 0.35,
+      ),
+    ),
+    CustomTheme(
+      id: '${presetIdPrefix}new_year',
+      name: "New Year's",
+      background: Color(0xFF0A1024),
+      accent: Color(0xFFF5C542),
+      icons: _HolidayIcons.newYear,
+      chatBackground: ChatBackground.asset(
+        'assets/themes/new_year/background.jxl',
+        fade: 0.35,
+      ),
+    ),
+  ];
+
   static CustomTheme? presetById(String id) {
     for (final preset in presets) {
+      if (preset.id == id) return preset;
+    }
+    for (final preset in holidayPresets) {
       if (preset.id == id) return preset;
     }
     return null;
@@ -324,4 +376,78 @@ bool isDarkColor(Color color) {
   final luminance = color.computeLuminance();
   const kThreshold = 0.15;
   return (luminance + 0.05) * (luminance + 0.05) <= kThreshold;
+}
+
+/// Icons for the tabs, composer and map in each holiday preset.
+abstract final class _HolidayIcons {
+  static const halloween = {
+    'contacts': ThemeIconOverride.asset('assets/themes/halloween/contacts.jxl'),
+    'channels': ThemeIconOverride.asset('assets/themes/halloween/channels.jxl'),
+    'map': ThemeIconOverride.asset('assets/themes/halloween/map.jxl'),
+    'send': ThemeIconOverride.asset('assets/themes/halloween/send.jxl'),
+    'map_chat': ThemeIconOverride.asset('assets/themes/halloween/map_chat.jxl'),
+    'map_repeater': ThemeIconOverride.asset(
+      'assets/themes/halloween/map_repeater.jxl',
+    ),
+    'map_room': ThemeIconOverride.asset('assets/themes/halloween/map_room.jxl'),
+    'map_sensor': ThemeIconOverride.asset(
+      'assets/themes/halloween/map_sensor.jxl',
+    ),
+    'map_self': ThemeIconOverride.asset('assets/themes/halloween/map_self.jxl'),
+  };
+  static const thanksgiving = {
+    'contacts': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/contacts.jxl',
+    ),
+    'channels': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/channels.jxl',
+    ),
+    'map': ThemeIconOverride.asset('assets/themes/thanksgiving/map.jxl'),
+    'send': ThemeIconOverride.asset('assets/themes/thanksgiving/send.jxl'),
+    'map_chat': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/map_chat.jxl',
+    ),
+    'map_repeater': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/map_repeater.jxl',
+    ),
+    'map_room': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/map_room.jxl',
+    ),
+    'map_sensor': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/map_sensor.jxl',
+    ),
+    'map_self': ThemeIconOverride.asset(
+      'assets/themes/thanksgiving/map_self.jxl',
+    ),
+  };
+  static const christmas = {
+    'contacts': ThemeIconOverride.asset('assets/themes/christmas/contacts.jxl'),
+    'channels': ThemeIconOverride.asset('assets/themes/christmas/channels.jxl'),
+    'map': ThemeIconOverride.asset('assets/themes/christmas/map.jxl'),
+    'send': ThemeIconOverride.asset('assets/themes/christmas/send.jxl'),
+    'map_chat': ThemeIconOverride.asset('assets/themes/christmas/map_chat.jxl'),
+    'map_repeater': ThemeIconOverride.asset(
+      'assets/themes/christmas/map_repeater.jxl',
+    ),
+    'map_room': ThemeIconOverride.asset('assets/themes/christmas/map_room.jxl'),
+    'map_sensor': ThemeIconOverride.asset(
+      'assets/themes/christmas/map_sensor.jxl',
+    ),
+    'map_self': ThemeIconOverride.asset('assets/themes/christmas/map_self.jxl'),
+  };
+  static const newYear = {
+    'contacts': ThemeIconOverride.asset('assets/themes/new_year/contacts.jxl'),
+    'channels': ThemeIconOverride.asset('assets/themes/new_year/channels.jxl'),
+    'map': ThemeIconOverride.asset('assets/themes/new_year/map.jxl'),
+    'send': ThemeIconOverride.asset('assets/themes/new_year/send.jxl'),
+    'map_chat': ThemeIconOverride.asset('assets/themes/new_year/map_chat.jxl'),
+    'map_repeater': ThemeIconOverride.asset(
+      'assets/themes/new_year/map_repeater.jxl',
+    ),
+    'map_room': ThemeIconOverride.asset('assets/themes/new_year/map_room.jxl'),
+    'map_sensor': ThemeIconOverride.asset(
+      'assets/themes/new_year/map_sensor.jxl',
+    ),
+    'map_self': ThemeIconOverride.asset('assets/themes/new_year/map_self.jxl'),
+  };
 }

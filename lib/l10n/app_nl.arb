@@ -4202,5 +4202,16 @@
   "themes_previewOutgoing": "Luid en duidelijk!",
   "themes_previewSwitch": "Meldingen",
   "themes_saveAndUse": "Opslaan en gebruiken",
-  "themes_title": "Thema's"
+  "themes_title": "Thema's",
+  "appSettings_holidayAnimations": "Feestdaganimaties in berichten",
+  "appSettings_holidayAnimationsSubtitle": "Vleermuizen, een kalkoen, de Kerstman of vuurwerk wanneer iemand een feestdagwens stuurt",
+  "themes_holidays": "Feestdagen",
+  "themes_holidayAutoSwitch": "Automatisch wisselen",
+  "themes_holidayAutoSwitchSubtitle": "Gebruikt het thema van elke feestdag vanaf 17 dagen ervoor tot de dag zelf",
+  "themes_holidayAutoApplied": "Het thema {holiday} staat automatisch aan. Na de feestdag komt je eigen thema terug.",
+  "themes_holidayAutoAppliedTag": "Automatisch aan",
+  "holidayGreeting_halloween": "Fijne Halloween|Gelukkige Halloween|Happy Halloween|Gruwelijke Halloween",
+  "holidayGreeting_thanksgiving": "Fijne Thanksgiving|Gelukkige Thanksgiving|Happy Thanksgiving|Fijne Thanksgiving Day",
+  "holidayGreeting_christmas": "Vrolijk kerstfeest|Fijne kerst|Prettige kerstdagen|Zalig kerstfeest|Vrolijk kerst|Zalig kerst|Merry Christmas|Fijne feestdagen|Prettige feestdagen",
+  "holidayGreeting_newYear": "Gelukkig Nieuwjaar|Gelukkig nieuw jaar|Prettig nieuwjaar|Een gelukkig nieuwjaar|Happy New Year|Zalig nieuwjaar|Fijne jaarwisseling"
 }

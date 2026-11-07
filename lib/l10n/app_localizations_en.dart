@@ -9286,4 +9286,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themes_title => 'Themes';
+
+  @override
+  String get appSettings_holidayAnimations => 'Holiday message animations';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Bats, a turkey, Santa or fireworks when someone sends a holiday greeting';
+
+  @override
+  String get themes_holidays => 'Holidays';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Switch automatically';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Uses each holiday\'s theme from 17 days before until the day itself';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return '$holiday theme is on automatically. Your own theme comes back after the holiday.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'On automatically';
+
+  @override
+  String get holidayGreeting_halloween => 'Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving => 'Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Merry Christmas|Merry Xmas|Happy Christmas';
+
+  @override
+  String get holidayGreeting_newYear => 'Happy New Year|Happy New Year\'s';
 }

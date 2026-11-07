@@ -9368,4 +9368,45 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get themes_title => 'Teman';
+
+  @override
+  String get appSettings_holidayAnimations => 'Helganimationer i meddelanden';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Fladdermöss, en kalkon, tomten eller fyrverkerier när någon skickar en helghälsning';
+
+  @override
+  String get themes_holidays => 'Helger';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Byt automatiskt';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Använder varje helgs tema från 17 dagar före till själva dagen';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Temat $holiday är på automatiskt. Ditt eget tema kommer tillbaka efter helgen.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'På automatiskt';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Glad Halloween|Trevlig Halloween|Happy Halloween|Gott Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Glad Thanksgiving|Trevlig Thanksgiving|Happy Thanksgiving|Glad tacksägelsedag';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'God jul|Glad jul|Trevlig jul|Merry Christmas|God jul och gott nytt år';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Gott nytt år|Happy New Year|Ett gott nytt år';
 }

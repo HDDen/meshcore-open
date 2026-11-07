@@ -9446,4 +9446,46 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get themes_title => 'Теми';
+
+  @override
+  String get appSettings_holidayAnimations =>
+      'Анимации за празници в съобщенията';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Прилепи, пуйка, Дядо Коледа или фойерверки, когато някой изпрати празнично пожелание';
+
+  @override
+  String get themes_holidays => 'Празници';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Превключвай автоматично';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Използва темата на всеки празник от 17 дни преди него до самия ден';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Темата „$holiday“ е включена автоматично. Вашата тема се връща след празника.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Включена автоматично';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Честит Хелоуин|Весел Хелоуин|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Честит Ден на благодарността|Честит Thanksgiving|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Весела Коледа|Честито Рождество|Честита Коледа|Весели празници|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Честита Нова година|Щастлива Нова година|Happy New Year';
 }

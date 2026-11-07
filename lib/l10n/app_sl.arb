@@ -4385,5 +4385,16 @@
   "themes_previewOutgoing": "Slišim vas glasno in jasno!",
   "themes_previewSwitch": "Obvestila",
   "themes_saveAndUse": "Shrani in uporabi",
-  "themes_title": "Teme"
+  "themes_title": "Teme",
+  "appSettings_holidayAnimations": "Animacije praznikov v sporočilih",
+  "appSettings_holidayAnimationsSubtitle": "Netopirji, puran, božiček ali ognjemet, ko nekdo pošlje praznično voščilo",
+  "themes_holidays": "Prazniki",
+  "themes_holidayAutoSwitch": "Samodejno preklopi",
+  "themes_holidayAutoSwitchSubtitle": "Uporabi temo posameznega praznika od 17 dni prej do praznika samega",
+  "themes_holidayAutoApplied": "Tema {holiday} je vklopljena samodejno. Vaša tema se vrne po prazniku.",
+  "themes_holidayAutoAppliedTag": "Samodejno vklopljeno",
+  "holidayGreeting_halloween": "Vesel Halloween|Srečen Halloween|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Vesel dan zahvalnosti|Srečen dan zahvalnosti|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Vesel božič|Srečen božič|Vesele božične praznike|Merry Christmas",
+  "holidayGreeting_newYear": "Srečno novo leto|Srečno v novem letu|Vse najboljše v novem letu|Happy New Year"
 }

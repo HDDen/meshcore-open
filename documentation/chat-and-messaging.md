@@ -42,6 +42,10 @@ the contact or channel when you reopen it. A theme can supply a default
 background or override individual chat backgrounds while the theme is active.
 Choose **None** to clear the chat's own background.
 
+In **Settings → App Settings → Themes → Holidays**, you can enable short
+effects for holiday greetings. They play once for a new visible message in
+the active chat. Existing history stays quiet.
+
 ### Message Search
 
 Search Messages is available from the Contacts and Channels list menus and from each contact, room-server, or channel chat. On Windows and Linux, Ctrl+F opens the same sheet.

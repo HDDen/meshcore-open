@@ -9419,4 +9419,45 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get themes_title => 'Témák';
+
+  @override
+  String get appSettings_holidayAnimations => 'Ünnepi üzenet-animációk';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Denevérek, pulyka, Mikulás vagy tűzijáték, ha valaki ünnepi jókívánságot küld';
+
+  @override
+  String get themes_holidays => 'Ünnepek';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Automatikus váltás';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Minden ünnep témáját használja az ünnep előtt 17 nappal kezdve, magán az ünnepen is';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'A(z) $holiday téma automatikusan be van kapcsolva. Az ünnep után visszaáll a saját témád.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Automatikusan bekapcsolva';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Boldog Halloweent|Boldog Halloween|Boldog Halloweent kívánok|Vidám Halloweent|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Boldog hálaadást|Boldog hálaadás napot|Boldog Thanksgivinget|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Boldog karácsonyt|Kellemes karácsonyi ünnepeket|Kellemes ünnepeket|Áldott karácsonyt|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Boldog új évet|Boldog újévet|Boldog új esztendőt|BÚÉK|Happy New Year';
 }

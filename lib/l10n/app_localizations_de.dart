@@ -9445,4 +9445,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themes_title => 'Designs';
+
+  @override
+  String get appSettings_holidayAnimations =>
+      'Feiertags-Animationen in Nachrichten';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Fledermäuse, ein Truthahn, der Weihnachtsmann oder Feuerwerk, wenn jemand einen Feiertagsgruß schreibt';
+
+  @override
+  String get themes_holidays => 'Feiertage';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Automatisch wechseln';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Nutzt das Design jedes Feiertags ab 17 Tage vorher bis zum Feiertag selbst';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Das Design „$holiday“ ist automatisch aktiv. Nach dem Feiertag kommt Ihr eigenes Design zurück.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Automatisch aktiv';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Frohes Halloween|Fröhliches Halloween|Happy Halloween|Schaurig schönes Halloween|Gruselige Halloween|Süßes oder Saures';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Frohes Thanksgiving|Schönes Thanksgiving|Frohes Erntedankfest|Happy Thanksgiving|Schönes Erntedankfest';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Frohe Weihnachten|Fröhliche Weihnachten|Frohes Fest|Schöne Weihnachten|Merry Christmas|Gesegnete Weihnachten|Frohe Weihnachtstage';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Frohes neues Jahr|Gutes neues Jahr|Guten Rutsch|Prosit Neujahr|Happy New Year|Ein gutes neues Jahr|Guten Rutsch ins neue Jahr|Frohes Neues';
 }

@@ -4490,5 +4490,16 @@
   "themes_previewOutgoing": "¡Fuerte y claro!",
   "themes_previewSwitch": "Notificaciones",
   "themes_saveAndUse": "Guardar y usar",
-  "themes_title": "Temas"
+  "themes_title": "Temas",
+  "appSettings_holidayAnimations": "Animaciones de mensajes festivos",
+  "appSettings_holidayAnimationsSubtitle": "Murciélagos, un pavo, Papá Noel o fuegos artificiales cuando alguien envía un saludo festivo",
+  "themes_holidays": "Fiestas",
+  "themes_holidayAutoSwitch": "Cambiar automáticamente",
+  "themes_holidayAutoSwitchSubtitle": "Usa el tema de cada fiesta desde 17 días antes hasta el día mismo",
+  "themes_holidayAutoApplied": "El tema de {holiday} se activó automáticamente. Tu propio tema vuelve después de la fiesta.",
+  "themes_holidayAutoAppliedTag": "Activado automáticamente",
+  "holidayGreeting_halloween": "Feliz Halloween|Feliz Noche de Brujas|Feliz Noche de Halloween|Felices Halloween|Truco o trato",
+  "holidayGreeting_thanksgiving": "Feliz Día de Acción de Gracias|Feliz Thanksgiving|Feliz Día de Gracias|Feliz Acción de Gracias",
+  "holidayGreeting_christmas": "Feliz Navidad|Felices Fiestas|Feliz Nochebuena|Felices Navidades|Merry Christmas",
+  "holidayGreeting_newYear": "Feliz Año Nuevo|Próspero Año Nuevo|Feliz Año|Feliz Nochevieja|Próspero Año|Happy New Year"
 }

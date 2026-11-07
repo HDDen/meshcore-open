@@ -9396,4 +9396,45 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get themes_title => 'Thema\'s';
+
+  @override
+  String get appSettings_holidayAnimations => 'Feestdaganimaties in berichten';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Vleermuizen, een kalkoen, de Kerstman of vuurwerk wanneer iemand een feestdagwens stuurt';
+
+  @override
+  String get themes_holidays => 'Feestdagen';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Automatisch wisselen';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Gebruikt het thema van elke feestdag vanaf 17 dagen ervoor tot de dag zelf';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Het thema $holiday staat automatisch aan. Na de feestdag komt je eigen thema terug.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Automatisch aan';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Fijne Halloween|Gelukkige Halloween|Happy Halloween|Gruwelijke Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Fijne Thanksgiving|Gelukkige Thanksgiving|Happy Thanksgiving|Fijne Thanksgiving Day';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Vrolijk kerstfeest|Fijne kerst|Prettige kerstdagen|Zalig kerstfeest|Vrolijk kerst|Zalig kerst|Merry Christmas|Fijne feestdagen|Prettige feestdagen';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Gelukkig Nieuwjaar|Gelukkig nieuw jaar|Prettig nieuwjaar|Een gelukkig nieuwjaar|Happy New Year|Zalig nieuwjaar|Fijne jaarwisseling';
 }

@@ -4806,5 +4806,35 @@
   "themes_previewSwitch": "Notifications",
   "themes_saveAndUse": "Save and use",
   "themes_saveFailed": "Could not save the theme",
-  "themes_title": "Themes"
+  "themes_title": "Themes",
+  "appSettings_holidayAnimations": "Holiday message animations",
+  "appSettings_holidayAnimationsSubtitle": "Bats, a turkey, Santa or fireworks when someone sends a holiday greeting",
+  "themes_holidays": "Holidays",
+  "themes_holidayAutoSwitch": "Switch automatically",
+  "themes_holidayAutoSwitchSubtitle": "Uses each holiday's theme from 17 days before until the day itself",
+  "themes_holidayAutoApplied": "{holiday} theme is on automatically. Your own theme comes back after the holiday.",
+  "@themes_holidayAutoApplied": {
+    "placeholders": {
+      "holiday": {
+        "type": "String"
+      }
+    }
+  },
+  "themes_holidayAutoAppliedTag": "On automatically",
+  "holidayGreeting_halloween": "Happy Halloween",
+  "@holidayGreeting_halloween": {
+    "description": "Holiday greeting that plays the Halloween bats animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |."
+  },
+  "holidayGreeting_thanksgiving": "Happy Thanksgiving",
+  "@holidayGreeting_thanksgiving": {
+    "description": "Holiday greeting that plays the Thanksgiving turkey animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |."
+  },
+  "holidayGreeting_christmas": "Merry Christmas|Merry Xmas|Happy Christmas",
+  "@holidayGreeting_christmas": {
+    "description": "Holiday greeting that plays the Christmas Santa animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |."
+  },
+  "holidayGreeting_newYear": "Happy New Year|Happy New Year's",
+  "@holidayGreeting_newYear": {
+    "description": "Holiday greeting that plays the New Year's fireworks animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |."
+  }
 }

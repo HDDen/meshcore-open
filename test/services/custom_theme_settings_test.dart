@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/chat_background.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
+import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/theme/theme_icons.dart';
@@ -77,6 +78,33 @@ void main() {
     await expectLater(reopened.setActiveTheme('custom:missing'), throwsArgumentError);
     expect(reopened.activeCustomTheme, isNull);
   });
+
+  test(
+    'U19c baseline: manual themes preserve the power profile and stock fallback',
+    () async {
+      final service = await open();
+      await service.setThemeMode('light');
+      await service.setPowerSavingProfile(PowerSavingProfile.maximum);
+      final savedPowerSettings = service.settings.powerSaving.toJson();
+      expect(
+        service.settings.powerSaving.effective.disableContinuousStatusAnimations,
+        isTrue,
+      );
+
+      await service.saveCustomTheme(_forest, apply: true);
+      expect(service.chosenCustomTheme, _forest);
+      expect(service.activeCustomTheme, _forest);
+      expect(service.settings.powerSaving.toJson(), savedPowerSettings);
+
+      final reopened = await open();
+      expect(reopened.activeCustomTheme, _forest);
+      expect(reopened.settings.powerSaving.toJson(), savedPowerSettings);
+      await reopened.setActiveTheme(null);
+      expect(reopened.activeCustomTheme, isNull);
+      expect(reopened.settings.themeMode, 'light');
+      expect(reopened.settings.powerSaving.toJson(), savedPowerSettings);
+    },
+  );
 
   test('U19a: import skips duplicates and resolves an ID collision in one update', () async {
     final service = await open();

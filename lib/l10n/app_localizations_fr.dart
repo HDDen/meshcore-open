@@ -9466,4 +9466,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get themes_title => 'Thèmes';
+
+  @override
+  String get appSettings_holidayAnimations => 'Animations des messages de fête';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Chauves-souris, dinde, Père Noël ou feux d\'artifice quand quelqu\'un envoie des vœux de fête';
+
+  @override
+  String get themes_holidays => 'Fêtes';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Changer automatiquement';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Utilise le thème de chaque fête de 17 jours avant jusqu\'au jour même';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Le thème $holiday est activé automatiquement. Votre propre thème reviendra après la fête.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Activé automatiquement';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Joyeux Halloween|Joyeuse Halloween|Bon Halloween|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Joyeux Thanksgiving|Joyeuse Action de grâce|Joyeux Jour de l\'Action de grâce|Bon Thanksgiving|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Joyeux Noël|Joyeuses fêtes|Bon Noël|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Bonne année|Bonne et heureuse année|Happy New Year';
 }

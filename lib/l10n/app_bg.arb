@@ -4384,5 +4384,16 @@
   "themes_previewOutgoing": "Чувам ви ясно и силно!",
   "themes_previewSwitch": "Известия",
   "themes_saveAndUse": "Запази и използвай",
-  "themes_title": "Теми"
+  "themes_title": "Теми",
+  "appSettings_holidayAnimations": "Анимации за празници в съобщенията",
+  "appSettings_holidayAnimationsSubtitle": "Прилепи, пуйка, Дядо Коледа или фойерверки, когато някой изпрати празнично пожелание",
+  "themes_holidays": "Празници",
+  "themes_holidayAutoSwitch": "Превключвай автоматично",
+  "themes_holidayAutoSwitchSubtitle": "Използва темата на всеки празник от 17 дни преди него до самия ден",
+  "themes_holidayAutoApplied": "Темата „{holiday}“ е включена автоматично. Вашата тема се връща след празника.",
+  "themes_holidayAutoAppliedTag": "Включена автоматично",
+  "holidayGreeting_halloween": "Честит Хелоуин|Весел Хелоуин|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Честит Ден на благодарността|Честит Thanksgiving|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Весела Коледа|Честито Рождество|Честита Коледа|Весели празници|Merry Christmas",
+  "holidayGreeting_newYear": "Честита Нова година|Щастлива Нова година|Happy New Year"
 }

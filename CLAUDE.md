@@ -432,6 +432,14 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
   use files and web uses preferences. All four profiles pin JPEG XL support to
   the same version. Icon bytes decode lazily and are cached by the override.
   The JSON model remains independent of the JPEG XL renderer.
+- U19c adds optional automatic holiday themes and greeting effects, both
+  disabled by default. The holiday schedule is evaluated in local calendar
+  dates. The app keeps one timer for the next effective boundary while
+  foreground and cancels it when hidden. The saved manual theme ID survives
+  automatic changes and manual overrides apply to one occurrence. Chat
+  effects use the newest visible message, obey reduced motion, ticker mode
+  and power policy, and are removed when the app or route loses visibility.
+  Holiday JPEG XL assets are declared in all four profiles and read on use.
 - Системные панели следуют разрешённой теме через `AppSystemUi` в `lib/helpers/app_system_ui_style.dart`, подключённый в `MaterialApp.builder`: navigation bar/разделитель используют `colorScheme.surface`, значки — контрастную яркость, в тёмной теме системная контрастная подложка отключена, в светлой сохранена для тёмных участков карты. Корневой фон Flutter окрашен той же поверхностью под прозрачными панелями edge-to-edge; insets не расходуются, локальные стили полноэкранных страниц сохраняют приоритет. Исходные инварианты темы — `test/helpers/app_system_ui_style_baseline_test.dart`, регрессии цвета/фона/insets/возврата с тёмного экрана — `test/widgets/app_system_ui_test.dart`. Нативный результат требует проверки на Android; подробнее: `documentation/android-system-bars.md`.
 - `lib/theme/mesh_theme.dart` defines the warm-dark `MeshPalette` (phosphor-green accents) and **is wired** in `main.dart` via `MeshTheme.light()` / `MeshTheme.dark()`
 - Global UI scale (`AppSettings.uiScale`, optionally applied to icons) is layered on top of the system text scaler in the `MaterialApp.builder`

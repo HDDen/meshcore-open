@@ -4547,5 +4547,16 @@
   "themes_previewOutgoing": "Laut und deutlich!",
   "themes_previewSwitch": "Benachrichtigungen",
   "themes_saveAndUse": "Speichern und verwenden",
-  "themes_title": "Designs"
+  "themes_title": "Designs",
+  "appSettings_holidayAnimations": "Feiertags-Animationen in Nachrichten",
+  "appSettings_holidayAnimationsSubtitle": "Fledermäuse, ein Truthahn, der Weihnachtsmann oder Feuerwerk, wenn jemand einen Feiertagsgruß schreibt",
+  "themes_holidays": "Feiertage",
+  "themes_holidayAutoSwitch": "Automatisch wechseln",
+  "themes_holidayAutoSwitchSubtitle": "Nutzt das Design jedes Feiertags ab 17 Tage vorher bis zum Feiertag selbst",
+  "themes_holidayAutoApplied": "Das Design „{holiday}“ ist automatisch aktiv. Nach dem Feiertag kommt Ihr eigenes Design zurück.",
+  "themes_holidayAutoAppliedTag": "Automatisch aktiv",
+  "holidayGreeting_halloween": "Frohes Halloween|Fröhliches Halloween|Happy Halloween|Schaurig schönes Halloween|Gruselige Halloween|Süßes oder Saures",
+  "holidayGreeting_thanksgiving": "Frohes Thanksgiving|Schönes Thanksgiving|Frohes Erntedankfest|Happy Thanksgiving|Schönes Erntedankfest",
+  "holidayGreeting_christmas": "Frohe Weihnachten|Fröhliche Weihnachten|Frohes Fest|Schöne Weihnachten|Merry Christmas|Gesegnete Weihnachten|Frohe Weihnachtstage",
+  "holidayGreeting_newYear": "Frohes neues Jahr|Gutes neues Jahr|Guten Rutsch|Prosit Neujahr|Happy New Year|Ein gutes neues Jahr|Guten Rutsch ins neue Jahr|Frohes Neues"
 }

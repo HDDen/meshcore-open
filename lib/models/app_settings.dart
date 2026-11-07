@@ -380,6 +380,13 @@ class AppSettings {
 
   /// A saved theme or preset ID. Null uses the stock [themeMode].
   final String? activeThemeId;
+
+  /// Optional festive themes and one-shot greeting effects.
+  final bool holidayAutoSwitch;
+  final bool holidayAnimationsEnabled;
+
+  /// The single occurrence skipped after a manual choice during a holiday.
+  final String? holidayThemeDismissed;
   final String? languageOverride; // null = system default
   final bool appDebugLogEnabled;
   final Map<String, String> batteryChemistryByDeviceId;
@@ -832,6 +839,9 @@ class AppSettings {
     this.themeMode = 'system',
     this.customThemes = const [],
     this.activeThemeId,
+    this.holidayAutoSwitch = false,
+    this.holidayAnimationsEnabled = false,
+    this.holidayThemeDismissed,
     this.languageOverride,
     this.appDebugLogEnabled = false,
     Map<String, String>? batteryChemistryByDeviceId,
@@ -1011,6 +1021,9 @@ class AppSettings {
       if (customThemes.isNotEmpty)
         'custom_themes': customThemes.map((theme) => theme.toJson()).toList(),
       if (activeThemeId != null) 'active_theme_id': activeThemeId,
+      if (holidayAutoSwitch) 'holiday_auto_switch': true,
+      if (holidayAnimationsEnabled) 'holiday_animations_enabled': true,
+      'holiday_theme_dismissed': ?holidayThemeDismissed,
       'language_override': languageOverride,
       'app_debug_log_enabled': appDebugLogEnabled,
       'battery_chemistry_by_device_id': batteryChemistryByDeviceId,
@@ -1246,6 +1259,11 @@ class AppSettings {
       activeThemeId: json['active_theme_id'] is String
           ? json['active_theme_id'] as String
           : null,
+      holidayAutoSwitch: json['holiday_auto_switch'] == true,
+      holidayAnimationsEnabled: json['holiday_animations_enabled'] == true,
+      holidayThemeDismissed: json['holiday_theme_dismissed'] is String
+          ? json['holiday_theme_dismissed'] as String
+          : null,
       languageOverride: json['language_override'] as String?,
       appDebugLogEnabled: json['app_debug_log_enabled'] as bool? ?? false,
       batteryChemistryByDeviceId:
@@ -1474,6 +1492,9 @@ class AppSettings {
     String? themeMode,
     List<CustomTheme>? customThemes,
     Object? activeThemeId = _unset,
+    bool? holidayAutoSwitch,
+    bool? holidayAnimationsEnabled,
+    Object? holidayThemeDismissed = _unset,
     Object? languageOverride = _unset,
     bool? appDebugLogEnabled,
     Map<String, String>? batteryChemistryByDeviceId,
@@ -1670,6 +1691,12 @@ class AppSettings {
       activeThemeId: activeThemeId == _unset
           ? this.activeThemeId
           : activeThemeId as String?,
+      holidayAutoSwitch: holidayAutoSwitch ?? this.holidayAutoSwitch,
+      holidayAnimationsEnabled:
+          holidayAnimationsEnabled ?? this.holidayAnimationsEnabled,
+      holidayThemeDismissed: holidayThemeDismissed == _unset
+          ? this.holidayThemeDismissed
+          : holidayThemeDismissed as String?,
       languageOverride: languageOverride == _unset
           ? this.languageOverride
           : languageOverride as String?,

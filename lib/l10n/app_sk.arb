@@ -4385,5 +4385,16 @@
   "themes_previewOutgoing": "Počujem hlasno a zreteľne!",
   "themes_previewSwitch": "Upozornenia",
   "themes_saveAndUse": "Uložiť a použiť",
-  "themes_title": "Témy"
+  "themes_title": "Témy",
+  "appSettings_holidayAnimations": "Sviatočné animácie správ",
+  "appSettings_holidayAnimationsSubtitle": "Netopiere, moriak, Santa alebo ohňostroj, keď niekto pošle sviatočné želanie",
+  "themes_holidays": "Sviatky",
+  "themes_holidayAutoSwitch": "Prepínať automaticky",
+  "themes_holidayAutoSwitchSubtitle": "Používa tému každého sviatku od 17 dní pred ním až do samotného dňa",
+  "themes_holidayAutoApplied": "Téma {holiday} je zapnutá automaticky. Vaša vlastná téma sa vráti po sviatku.",
+  "themes_holidayAutoAppliedTag": "Zapnuté automaticky",
+  "holidayGreeting_halloween": "Veselý Halloween|Šťastný Halloween|Veselého Halloweenu|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Šťastný Deň vďakyvzdania|Šťastný Deň vďaky|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Veselé Vianoce|Šťastné a veselé Vianoce|Príjemné Vianoce|Požehnané Vianoce|Merry Christmas",
+  "holidayGreeting_newYear": "Šťastný Nový rok|Úspešný nový rok|Happy New Year"
 }

@@ -4518,5 +4518,16 @@
   "themes_previewOutgoing": "Fort et clair !",
   "themes_previewSwitch": "Notifications",
   "themes_saveAndUse": "Enregistrer et utiliser",
-  "themes_title": "Thèmes"
+  "themes_title": "Thèmes",
+  "appSettings_holidayAnimations": "Animations des messages de fête",
+  "appSettings_holidayAnimationsSubtitle": "Chauves-souris, dinde, Père Noël ou feux d'artifice quand quelqu'un envoie des vœux de fête",
+  "themes_holidays": "Fêtes",
+  "themes_holidayAutoSwitch": "Changer automatiquement",
+  "themes_holidayAutoSwitchSubtitle": "Utilise le thème de chaque fête de 17 jours avant jusqu'au jour même",
+  "themes_holidayAutoApplied": "Le thème {holiday} est activé automatiquement. Votre propre thème reviendra après la fête.",
+  "themes_holidayAutoAppliedTag": "Activé automatiquement",
+  "holidayGreeting_halloween": "Joyeux Halloween|Joyeuse Halloween|Bon Halloween|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Joyeux Thanksgiving|Joyeuse Action de grâce|Joyeux Jour de l'Action de grâce|Bon Thanksgiving|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Joyeux Noël|Joyeuses fêtes|Bon Noël|Merry Christmas",
+  "holidayGreeting_newYear": "Bonne année|Bonne et heureuse année|Happy New Year"
 }

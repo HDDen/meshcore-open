@@ -9378,4 +9378,46 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get themes_title => 'Teme';
+
+  @override
+  String get appSettings_holidayAnimations =>
+      'Animacije praznikov v sporočilih';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Netopirji, puran, božiček ali ognjemet, ko nekdo pošlje praznično voščilo';
+
+  @override
+  String get themes_holidays => 'Prazniki';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Samodejno preklopi';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Uporabi temo posameznega praznika od 17 dni prej do praznika samega';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Tema $holiday je vklopljena samodejno. Vaša tema se vrne po prazniku.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Samodejno vklopljeno';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Vesel Halloween|Srečen Halloween|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Vesel dan zahvalnosti|Srečen dan zahvalnosti|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Vesel božič|Srečen božič|Vesele božične praznike|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Srečno novo leto|Srečno v novem letu|Vse najboljše v novem letu|Happy New Year';
 }

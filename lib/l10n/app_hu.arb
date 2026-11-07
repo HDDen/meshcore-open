@@ -4416,5 +4416,16 @@
   "themes_previewOutgoing": "Hangosan és tisztán!",
   "themes_previewSwitch": "Értesítések",
   "themes_saveAndUse": "Mentés és használat",
-  "themes_title": "Témák"
+  "themes_title": "Témák",
+  "appSettings_holidayAnimations": "Ünnepi üzenet-animációk",
+  "appSettings_holidayAnimationsSubtitle": "Denevérek, pulyka, Mikulás vagy tűzijáték, ha valaki ünnepi jókívánságot küld",
+  "themes_holidays": "Ünnepek",
+  "themes_holidayAutoSwitch": "Automatikus váltás",
+  "themes_holidayAutoSwitchSubtitle": "Minden ünnep témáját használja az ünnep előtt 17 nappal kezdve, magán az ünnepen is",
+  "themes_holidayAutoApplied": "A(z) {holiday} téma automatikusan be van kapcsolva. Az ünnep után visszaáll a saját témád.",
+  "themes_holidayAutoAppliedTag": "Automatikusan bekapcsolva",
+  "holidayGreeting_halloween": "Boldog Halloweent|Boldog Halloween|Boldog Halloweent kívánok|Vidám Halloweent|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Boldog hálaadást|Boldog hálaadás napot|Boldog Thanksgivinget|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Boldog karácsonyt|Kellemes karácsonyi ünnepeket|Kellemes ünnepeket|Áldott karácsonyt|Merry Christmas",
+  "holidayGreeting_newYear": "Boldog új évet|Boldog újévet|Boldog új esztendőt|BÚÉK|Happy New Year"
 }

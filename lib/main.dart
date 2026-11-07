@@ -700,6 +700,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    iosAppPresentationActive.addListener(_syncHolidayThemeForeground);
+    _syncHolidayThemeForeground();
     widget.settingsSectionsService.setUiContextProvider(
       () => MeshCoreApp._navigatorKey.currentContext,
     );
@@ -838,6 +840,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    iosAppPresentationActive.removeListener(_syncHolidayThemeForeground);
+    widget.appSettingsService.setHolidayThemeForeground(false);
     widget.connector.removeListener(_handleConnectionStateChanged);
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
@@ -1020,9 +1024,18 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     });
   }
 
+  void _syncHolidayThemeForeground() {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    widget.appSettingsService.setHolidayThemeForeground(
+      (lifecycle == null || lifecycle == AppLifecycleState.resumed) &&
+          iosAppPresentationActive.value,
+    );
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    _syncHolidayThemeForeground();
     if (state == AppLifecycleState.resumed ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {

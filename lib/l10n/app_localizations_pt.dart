@@ -9413,4 +9413,45 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get themes_title => 'Temas';
+
+  @override
+  String get appSettings_holidayAnimations => 'Animações de mensagens festivas';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Morcegos, um peru, o Papai Noel ou fogos de artifício quando alguém envia uma saudação festiva';
+
+  @override
+  String get themes_holidays => 'Feriados';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Mudar automaticamente';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Usa o tema de cada feriado de 17 dias antes até o próprio dia';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'O tema de $holiday foi ativado automaticamente. Seu próprio tema volta depois do feriado.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Ativado automaticamente';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Feliz Halloween|Feliz Dia das Bruxas|Feliz Dia de Halloween|Doce ou travessura';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Feliz Dia de Ação de Graças|Feliz Thanksgiving|Feliz Ação de Graças|Feliz Dia de Graças';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Feliz Natal|Boas Festas|Boas Festas de Natal|Feliz Natal e Boas Festas|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Feliz Ano Novo|Próspero Ano Novo|Feliz Ano|Feliz Réveillon|Boas Festas e Feliz Ano Novo|Happy New Year';
 }

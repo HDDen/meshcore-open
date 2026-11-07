@@ -9404,4 +9404,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themes_title => 'Темы';
+
+  @override
+  String get appSettings_holidayAnimations => 'Анимации праздничных сообщений';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Летучие мыши, индейка, Дед Мороз или салют, когда кто-то отправляет праздничное поздравление';
+
+  @override
+  String get themes_holidays => 'Праздники';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Переключать автоматически';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Тема каждого праздника включается за 17 дней до него и действует до самого праздника';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Тема «$holiday» включена автоматически. Ваша тема вернётся после праздника.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Включена автоматически';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'С Хэллоуином|С Хеллоуином|Счастливого Хэллоуина|Счастливого Хеллоуина|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'С Днём благодарения|С Днем благодарения|Счастливого Дня благодарения|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'С Рождеством|С Рождеством Христовым|Счастливого Рождества|Весёлого Рождества|Веселого Рождества|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'С Новым годом|С Новым годом!|С Новым годом всех|С наступающим Новым годом|Счастливого Нового года|Happy New Year';
 }

@@ -8975,4 +8975,45 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get themes_title => '테마';
+
+  @override
+  String get appSettings_holidayAnimations => '명절 메시지 애니메이션';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      '누군가 명절 인사를 보내면 박쥐, 칠면조, 산타, 불꽃놀이가 나타납니다';
+
+  @override
+  String get themes_holidays => '명절';
+
+  @override
+  String get themes_holidayAutoSwitch => '자동으로 바꾸기';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      '명절 17일 전부터 당일까지 그 명절 테마를 사용합니다';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return '$holiday 테마가 자동으로 켜져 있습니다. 명절이 끝나면 내 테마로 돌아갑니다.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => '자동 적용 중';
+
+  @override
+  String get holidayGreeting_halloween =>
+      '해피 할로윈|즐거운 할로윈|행복한 할로윈|할로윈 축하해|할로윈 잘 보내세요|트릭 오어 트릿|해피 할로윈데이';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      '해피 땡스기빙|즐거운 추수감사절|행복한 추수감사절|추수감사절 잘 보내세요|추수감사절 축하해요|해피 땡스기빙데이';
+
+  @override
+  String get holidayGreeting_christmas =>
+      '메리 크리스마스|즐거운 성탄절|즐거운 크리스마스|행복한 성탄절|성탄 축하드립니다|메리 크리스마스 되세요|해피 크리스마스|메리 크리스마스 이브';
+
+  @override
+  String get holidayGreeting_newYear =>
+      '새해 복 많이 받으세요|새해 복 많이 받아|새해 복 많이 받으십시오|새해 복 많이 받아요|해피 뉴 이어|해피 뉴이어|즐거운 새해|행복한 새해';
 }

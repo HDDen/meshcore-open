@@ -9446,4 +9446,46 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get themes_title => 'Temi';
+
+  @override
+  String get appSettings_holidayAnimations =>
+      'Animazioni dei messaggi di festa';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Pipistrelli, tacchino, Babbo Natale o fuochi d\'artificio quando qualcuno invia un augurio di festa';
+
+  @override
+  String get themes_holidays => 'Festività';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Cambia automaticamente';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Usa il tema di ogni festività da 17 giorni prima fino al giorno stesso';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Il tema $holiday è attivo automaticamente. Il tuo tema tornerà dopo la festività.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Attivo automaticamente';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'Buon Halloween|Felice Halloween|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'Buon Ringraziamento|Buon Thanksgiving|Felice Ringraziamento|Felice Thanksgiving|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'Buon Natale|Buone Feste|Felice Natale|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'Felice Anno Nuovo|Buon Anno Nuovo|Buon Capodanno|Buon Anno|Felice Anno|Felice Capodanno|Happy New Year';
 }

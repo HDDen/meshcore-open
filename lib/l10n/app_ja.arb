@@ -4517,5 +4517,16 @@
   "themes_previewOutgoing": "はっきり聞こえます!",
   "themes_previewSwitch": "通知",
   "themes_saveAndUse": "保存して使う",
-  "themes_title": "テーマ"
+  "themes_title": "テーマ",
+  "appSettings_holidayAnimations": "祝日メッセージのアニメーション",
+  "appSettings_holidayAnimationsSubtitle": "祝日のあいさつが届くと、コウモリ、七面鳥、サンタ、花火が表示されます",
+  "themes_holidays": "祝日",
+  "themes_holidayAutoSwitch": "自動で切り替える",
+  "themes_holidayAutoSwitchSubtitle": "各祝日の17日前から当日まで、その祝日のテーマを使います",
+  "themes_holidayAutoApplied": "{holiday}のテーマを自動で使っています。祝日が終わると、元のテーマに戻ります。",
+  "themes_holidayAutoAppliedTag": "自動で使用中",
+  "holidayGreeting_halloween": "ハッピーハロウィン|ハッピーハロウィーン|ハッピーハロウィン|ハピハロ|トリックオアトリート|Happy Halloween",
+  "holidayGreeting_thanksgiving": "ハッピーサンクスギビング|ハッピー・サンクスギビング|感謝祭おめでとう|Happy Thanksgiving",
+  "holidayGreeting_christmas": "メリークリスマス|メリー・クリスマス|メリクリ|Merry Christmas",
+  "holidayGreeting_newYear": "あけましておめでとう|明けましておめでとう|あけおめ|アケオメ|ハッピーニューイヤー|ハッピー・ニューイヤー|謹賀新年|Happy New Year"
 }

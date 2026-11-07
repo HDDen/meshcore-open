@@ -3742,5 +3742,16 @@
   "themes_previewSwitch": "Уведомления",
   "themes_saveAndUse": "Сохранить и применить",
   "themes_saveFailed": "Не удалось сохранить тему",
-  "themes_title": "Темы"
+  "themes_title": "Темы",
+  "appSettings_holidayAnimations": "Анимации праздничных сообщений",
+  "appSettings_holidayAnimationsSubtitle": "Летучие мыши, индейка, Дед Мороз или салют, когда кто-то отправляет праздничное поздравление",
+  "themes_holidays": "Праздники",
+  "themes_holidayAutoSwitch": "Переключать автоматически",
+  "themes_holidayAutoSwitchSubtitle": "Тема каждого праздника включается за 17 дней до него и действует до самого праздника",
+  "themes_holidayAutoApplied": "Тема «{holiday}» включена автоматически. Ваша тема вернётся после праздника.",
+  "themes_holidayAutoAppliedTag": "Включена автоматически",
+  "holidayGreeting_halloween": "С Хэллоуином|С Хеллоуином|Счастливого Хэллоуина|Счастливого Хеллоуина|Happy Halloween",
+  "holidayGreeting_thanksgiving": "С Днём благодарения|С Днем благодарения|Счастливого Дня благодарения|Happy Thanksgiving",
+  "holidayGreeting_christmas": "С Рождеством|С Рождеством Христовым|Счастливого Рождества|Весёлого Рождества|Веселого Рождества|Merry Christmas",
+  "holidayGreeting_newYear": "С Новым годом|С Новым годом!|С Новым годом всех|С наступающим Новым годом|Счастливого Нового года|Happy New Year"
 }

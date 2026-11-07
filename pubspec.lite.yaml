@@ -131,6 +131,10 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/themes/christmas/
+    - assets/themes/halloween/
+    - assets/themes/new_year/
+    - assets/themes/thanksgiving/
     - assets/images/
     - assets/icons/
     - assets/mcopacks/

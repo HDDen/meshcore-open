@@ -8971,4 +8971,44 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themes_title => 'テーマ';
+
+  @override
+  String get appSettings_holidayAnimations => '祝日メッセージのアニメーション';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      '祝日のあいさつが届くと、コウモリ、七面鳥、サンタ、花火が表示されます';
+
+  @override
+  String get themes_holidays => '祝日';
+
+  @override
+  String get themes_holidayAutoSwitch => '自動で切り替える';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle => '各祝日の17日前から当日まで、その祝日のテーマを使います';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return '$holidayのテーマを自動で使っています。祝日が終わると、元のテーマに戻ります。';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => '自動で使用中';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'ハッピーハロウィン|ハッピーハロウィーン|ハッピーハロウィン|ハピハロ|トリックオアトリート|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'ハッピーサンクスギビング|ハッピー・サンクスギビング|感謝祭おめでとう|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'メリークリスマス|メリー・クリスマス|メリクリ|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'あけましておめでとう|明けましておめでとう|あけおめ|アケオメ|ハッピーニューイヤー|ハッピー・ニューイヤー|謹賀新年|Happy New Year';
 }

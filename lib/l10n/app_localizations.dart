@@ -15760,6 +15760,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Themes'**
   String get themes_title;
+
+  /// No description provided for @appSettings_holidayAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Holiday message animations'**
+  String get appSettings_holidayAnimations;
+
+  /// No description provided for @appSettings_holidayAnimationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bats, a turkey, Santa or fireworks when someone sends a holiday greeting'**
+  String get appSettings_holidayAnimationsSubtitle;
+
+  /// No description provided for @themes_holidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Holidays'**
+  String get themes_holidays;
+
+  /// No description provided for @themes_holidayAutoSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch automatically'**
+  String get themes_holidayAutoSwitch;
+
+  /// No description provided for @themes_holidayAutoSwitchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses each holiday\'s theme from 17 days before until the day itself'**
+  String get themes_holidayAutoSwitchSubtitle;
+
+  /// No description provided for @themes_holidayAutoApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'{holiday} theme is on automatically. Your own theme comes back after the holiday.'**
+  String themes_holidayAutoApplied(String holiday);
+
+  /// No description provided for @themes_holidayAutoAppliedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'On automatically'**
+  String get themes_holidayAutoAppliedTag;
+
+  /// Holiday greeting that plays the Halloween bats animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Halloween'**
+  String get holidayGreeting_halloween;
+
+  /// Holiday greeting that plays the Thanksgiving turkey animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy Thanksgiving'**
+  String get holidayGreeting_thanksgiving;
+
+  /// Holiday greeting that plays the Christmas Santa animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Merry Christmas|Merry Xmas|Happy Christmas'**
+  String get holidayGreeting_christmas;
+
+  /// Holiday greeting that plays the New Year's fireworks animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy New Year|Happy New Year\'s'**
+  String get holidayGreeting_newYear;
 }
 
 class _AppLocalizationsDelegate

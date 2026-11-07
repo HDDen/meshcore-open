@@ -4452,5 +4452,16 @@
   "themes_previewOutgoing": "Odbiór głośny i wyraźny!",
   "themes_previewSwitch": "Powiadomienia",
   "themes_saveAndUse": "Zapisz i użyj",
-  "themes_title": "Motywy"
+  "themes_title": "Motywy",
+  "appSettings_holidayAnimations": "Animacje świątecznych wiadomości",
+  "appSettings_holidayAnimationsSubtitle": "Nietoperze, indyk, Mikołaj lub fajerwerki, gdy ktoś wyśle świąteczne życzenia",
+  "themes_holidays": "Święta",
+  "themes_holidayAutoSwitch": "Przełączaj automatycznie",
+  "themes_holidayAutoSwitchSubtitle": "Używa motywu każdego święta od 17 dni przed nim aż do samego dnia",
+  "themes_holidayAutoApplied": "Motyw {holiday} jest włączony automatycznie. Twój własny motyw wróci po świętach.",
+  "themes_holidayAutoAppliedTag": "Włączony automatycznie",
+  "holidayGreeting_halloween": "Wesołego Halloween|Szczęśliwego Halloween|Straszne Halloween|Cukierek albo psikus|Happy Halloween",
+  "holidayGreeting_thanksgiving": "Szczęśliwego Święta Dziękczynienia|Wesołego Święta Dziękczynienia|Szczęśliwego Dnia Dziękczynienia|Wesołego Dnia Dziękczynienia|Happy Thanksgiving",
+  "holidayGreeting_christmas": "Wesołych Świąt|Wesołych Świąt Bożego Narodzenia|Wesołej Gwiazdki|Radosnych Świąt|Merry Christmas",
+  "holidayGreeting_newYear": "Szczęśliwego Nowego Roku|Dobrego Nowego Roku|Udanego Nowego Roku|Happy New Year"
 }

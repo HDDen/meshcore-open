@@ -8779,4 +8779,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themes_title => '主题';
+
+  @override
+  String get appSettings_holidayAnimations => '节日消息动画';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      '有人发送节日祝福时，显示蝙蝠、火鸡、圣诞老人或烟花';
+
+  @override
+  String get themes_holidays => '节日';
+
+  @override
+  String get themes_holidayAutoSwitch => '自动切换';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle => '每个节日的主题从节日前 17 天使用到节日当天';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return '已自动启用$holiday主题。节日过后会恢复你自己的主题。';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => '已自动启用';
+
+  @override
+  String get holidayGreeting_halloween =>
+      '万圣节快乐|萬聖節快樂|万圣夜快乐|萬聖夜快樂|不给糖就捣蛋|不給糖就搗蛋';
+
+  @override
+  String get holidayGreeting_thanksgiving => '感恩节快乐|感恩節快樂|感恩节愉快|感恩節愉快';
+
+  @override
+  String get holidayGreeting_christmas =>
+      '圣诞快乐|聖誕快樂|圣诞节快乐|聖誕節快樂|圣诞节愉快|聖誕節愉快|圣诞愉快|聖誕愉快';
+
+  @override
+  String get holidayGreeting_newYear => '新年快乐|新年快樂|元旦快乐|元旦快樂|新年好|新年愉快';
 }

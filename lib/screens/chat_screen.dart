@@ -102,6 +102,7 @@ import '../helpers/contact_history_candidates.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/chat_background.dart';
+import '../widgets/holiday_animations.dart';
 import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
@@ -128,6 +129,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _textController = MarkupTextEditingController();
   final _scrollController = ChatScrollController();
+  final _holidayWatcher = HolidayTriggerWatcher();
   final ChatBottomSnapGuard _bottomSnapGuard = ChatBottomSnapGuard();
   final _textFieldFocusNode = FocusNode();
   final _screenFocusNode = FocusNode();
@@ -969,6 +971,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _holidayWatcher.dispose();
     _connector?.setActiveContact(null);
     _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
@@ -1170,6 +1173,17 @@ class _ChatScreenState extends State<ChatScreen> {
         body: Consumer<MeshCoreConnector>(
           builder: (context, connector, child) {
             final messages = _messagesForDisplay(connector);
+            final newest = messages.lastOrNull;
+            _holidayWatcher.onNewest(
+              context,
+              id: newest?.messageId,
+              text: newest?.isCli == true ? null : newest?.text,
+              receivedAt: newest?.receivedAt ?? newest?.timestamp,
+              messageContext: (id) =>
+                  _scrollController.showJumpToBottom.value
+                      ? null
+                      : _tryGetMessageContext(id),
+            );
             return Column(
               children: [
                 if (_historyCandidates.isNotEmpty && !_historyBannerDismissed)

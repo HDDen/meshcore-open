@@ -9426,4 +9426,45 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get themes_title => 'Теми';
+
+  @override
+  String get appSettings_holidayAnimations => 'Анімації святкових повідомлень';
+
+  @override
+  String get appSettings_holidayAnimationsSubtitle =>
+      'Кажани, індик, Дід Мороз або феєрверк, коли хтось надсилає святкове привітання';
+
+  @override
+  String get themes_holidays => 'Свята';
+
+  @override
+  String get themes_holidayAutoSwitch => 'Перемикати автоматично';
+
+  @override
+  String get themes_holidayAutoSwitchSubtitle =>
+      'Тема кожного свята вмикається за 17 днів до нього і діє до самого свята';
+
+  @override
+  String themes_holidayAutoApplied(String holiday) {
+    return 'Тему «$holiday» увімкнено автоматично. Ваша тема повернеться після свята.';
+  }
+
+  @override
+  String get themes_holidayAutoAppliedTag => 'Увімкнено автоматично';
+
+  @override
+  String get holidayGreeting_halloween =>
+      'З Гелловіном|З Хелловіном|З Геловіном|Щасливого Гелловіну|Щасливого Хелловіну|Happy Halloween';
+
+  @override
+  String get holidayGreeting_thanksgiving =>
+      'З Днем подяки|З Днём подяки|Щасливого Дня подяки|Happy Thanksgiving';
+
+  @override
+  String get holidayGreeting_christmas =>
+      'З Різдвом|З Різдвом Христовим|Веселого Різдва|Щасливого Різдва|Веселих свят|Merry Christmas';
+
+  @override
+  String get holidayGreeting_newYear =>
+      'З Новим роком|З наступаючим Новим роком|Щасливого Нового року|Happy New Year';
 }

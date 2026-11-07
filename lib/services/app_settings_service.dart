@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import 'package:uuid/uuid.dart';
 import '../models/app_settings.dart';
 import '../models/custom_theme.dart';
+import '../models/holiday_schedule.dart';
 import '../models/low_battery_alert_settings.dart';
 import '../storage/channel_identity_store.dart';
 import '../models/cpu_sleep_options.dart';
@@ -22,6 +24,14 @@ export '../models/app_settings.dart' show ChannelNotificationMode;
 
 class AppSettingsService extends ChangeNotifier {
   static const String _settingsKey = 'app_settings';
+
+  AppSettingsService({DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+
+  final DateTime Function() _clock;
+  ActiveHoliday? _scheduledHoliday;
+  Timer? _holidayTimer;
+  bool _holidayForeground = false;
 
   AppSettings _settings = AppSettings();
   List<McoBatteryChemistryProfile> Function(String deviceId)?
@@ -111,21 +121,27 @@ class AppSettingsService extends ChangeNotifier {
             loadedSettings.channelsSendAsBinary) {
           await _saveSettings();
         }
+        _syncHolidaySchedule();
         notifyListeners();
       } catch (e) {
         // If parsing fails, use defaults
         _settings = _normalizeRuntimeDependentSettings(AppSettings());
         _applyRuntimeSettings();
+        _syncHolidaySchedule();
       }
     } else {
       _settings = _normalizeRuntimeDependentSettings(AppSettings());
       _applyRuntimeSettings();
+      _syncHolidaySchedule();
     }
   }
 
   Future<void> updateSettings(AppSettings newSettings) async {
+    final autoSwitchChanged =
+        _settings.holidayAutoSwitch != newSettings.holidayAutoSwitch;
     _settings = _normalizeRuntimeDependentSettings(newSettings);
     _applyRuntimeSettings();
+    if (autoSwitchChanged) _syncHolidaySchedule();
     notifyListeners();
 
     await _saveSettings();
@@ -789,13 +805,87 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setThemeMode(String value) async {
     await updateSettings(
-      _settings.copyWith(themeMode: value, activeThemeId: null),
+      _dismissAutoHoliday(
+        _settings.copyWith(themeMode: value, activeThemeId: null),
+      ),
     );
   }
 
   CustomTheme? get chosenCustomTheme => _themeById(_settings.activeThemeId);
 
-  CustomTheme? get activeCustomTheme => chosenCustomTheme;
+  CustomTheme? get activeCustomTheme => autoHolidayTheme ?? chosenCustomTheme;
+
+  ActiveHoliday? get autoHoliday {
+    final holiday = _scheduledHoliday;
+    if (holiday == null ||
+        _settings.holidayThemeDismissed == holiday.occurrenceKey ||
+        _settings.activeThemeId == holiday.themeId) {
+      return null;
+    }
+    return holiday;
+  }
+
+  CustomTheme? get autoHolidayTheme => _themeById(autoHoliday?.themeId);
+
+  AppSettings _dismissAutoHoliday(AppSettings next) {
+    final holiday = _scheduledHoliday;
+    return holiday == null
+        ? next
+        : next.copyWith(holidayThemeDismissed: holiday.occurrenceKey);
+  }
+
+  Future<void> setHolidayAutoSwitch(bool enabled) async {
+    if (_settings.holidayAutoSwitch == enabled) return;
+    await updateSettings(
+      _settings.copyWith(
+        holidayAutoSwitch: enabled,
+        holidayThemeDismissed: enabled ? null : _settings.holidayThemeDismissed,
+      ),
+    );
+  }
+
+  Future<void> setHolidayAnimationsEnabled(bool enabled) =>
+      updateSettings(_settings.copyWith(holidayAnimationsEnabled: enabled));
+
+  /// Date tracking is owned by the app's foreground lifecycle.
+  void setHolidayThemeForeground(bool foreground) {
+    if (_holidayForeground == foreground) return;
+    _holidayForeground = foreground;
+    if (foreground) {
+      _refreshHolidayDate();
+    } else {
+      _holidayTimer?.cancel();
+      _holidayTimer = null;
+    }
+  }
+
+  void _refreshHolidayDate() {
+    final previous = autoHolidayTheme;
+    _syncHolidaySchedule();
+    if (previous != autoHolidayTheme) notifyListeners();
+  }
+
+  void _syncHolidaySchedule() {
+    _holidayTimer?.cancel();
+    _holidayTimer = null;
+    if (!_settings.holidayAutoSwitch) {
+      _scheduledHoliday = null;
+      return;
+    }
+
+    final now = _clock().toLocal();
+    _scheduledHoliday = activeHolidayFor(now);
+    if (_holidayForeground) {
+      final next = nextHolidayThemeChangeAfter(now);
+      _holidayTimer = Timer(next.difference(now), _refreshHolidayDate);
+    }
+  }
+
+  @override
+  void dispose() {
+    _holidayTimer?.cancel();
+    super.dispose();
+  }
 
   CustomTheme? _themeById(String? id) {
     if (id == null) return null;
@@ -808,8 +898,14 @@ class AppSettingsService extends ChangeNotifier {
     if (id != null && _themeById(id) == null) {
       throw ArgumentError.value(id, 'id', 'Unknown theme');
     }
-    if (_settings.activeThemeId == id) return;
-    await updateSettings(_settings.copyWith(activeThemeId: id));
+    final automaticId = autoHoliday?.themeId;
+    if (automaticId != null && automaticId == id) return;
+    final next = _dismissAutoHoliday(_settings.copyWith(activeThemeId: id));
+    if (next.activeThemeId == _settings.activeThemeId &&
+        next.holidayThemeDismissed == _settings.holidayThemeDismissed) {
+      return;
+    }
+    await updateSettings(next);
   }
 
   Future<void> saveCustomTheme(CustomTheme theme, {bool apply = false}) async {
@@ -821,7 +917,11 @@ class AppSettingsService extends ChangeNotifier {
     } else {
       themes[index] = snapshot;
     }
-    await _saveThemeLibrary(themes, apply ? theme.id : _settings.activeThemeId);
+    await _saveThemeLibrary(
+      themes,
+      apply ? theme.id : _settings.activeThemeId,
+      manualChoice: apply,
+    );
   }
 
   Future<void> deleteCustomTheme(String id) async {
@@ -858,7 +958,11 @@ class AppSettingsService extends ChangeNotifier {
     return added;
   }
 
-  Future<void> _saveThemeLibrary(List<CustomTheme> themes, String? activeId) async {
+  Future<void> _saveThemeLibrary(
+    List<CustomTheme> themes,
+    String? activeId, {
+    bool manualChoice = false,
+  }) async {
     if (themes.length > CustomTheme.maxSavedThemes) {
       throw StateError('Theme library is full');
     }
@@ -872,12 +976,11 @@ class AppSettingsService extends ChangeNotifier {
     if (iconCharacters > CustomTheme.maxSavedIconCharacters) {
       throw StateError('Theme library icon data exceeds the storage limit');
     }
-    await updateSettings(
-      _settings.copyWith(
-        customThemes: List.unmodifiable(themes),
-        activeThemeId: activeId,
-      ),
+    final next = _settings.copyWith(
+      customThemes: List.unmodifiable(themes),
+      activeThemeId: activeId,
     );
+    await updateSettings(manualChoice ? _dismissAutoHoliday(next) : next);
   }
 
   Future<void> setLanguageOverride(String? value) async {
