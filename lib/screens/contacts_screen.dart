@@ -62,6 +62,7 @@ import 'channels_screen.dart';
 import 'chat_screen.dart';
 import 'contact_qr_scanner_screen.dart';
 import 'discovery_screen.dart';
+import 'manual_path_trace_screen.dart';
 import 'map_screen.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
@@ -745,6 +746,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                       ),
                       onTap: () => _showMessageSearch(this.context),
                     ),
+                    if (!widget.selectionMode && connector.isConnected)
+                      PopupMenuItem(
+                        child: PopupMenuRow(
+                          icon: Icons.radar,
+                          text: context.l10n.manualTrace_title,
+                        ),
+                        onTap: () => ManualPathTraceScreen.open(this.context),
+                      ),
                     ..._serviceHeaderItems(context, this.context, connector),
                     const PopupMenuDivider(),
                     PopupMenuItem(

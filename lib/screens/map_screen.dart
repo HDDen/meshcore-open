@@ -74,6 +74,7 @@ import '../icons/los_icon.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
 import 'contacts_screen.dart';
+import 'manual_path_trace_screen.dart';
 import '../theme/mesh_theme.dart';
 import '../theme/theme_icons.dart';
 import '../widgets/themed_icon.dart';
@@ -8205,6 +8206,18 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
+  void _openManualPathTrace() {
+    _commitPathEdit();
+    _pathEditFocus.unfocus();
+    final connector = context.read<MeshCoreConnector>();
+    unawaited(ManualPathTraceScreen.open(
+      context,
+      initialText: _pathEditController.text,
+      initialRoundTrip: _traceReturnPath,
+      initialHashWidth: _activePathHashWidth(connector),
+    ));
+  }
+
   void _openPathTraceResult({
     required bool flipPathAround,
     bool reuseLastResult = false,
@@ -8377,6 +8390,12 @@ class _MapScreenState extends State<MapScreen>
               icon: const Icon(Icons.undo),
               label: Text(l10n.map_removeLast),
             ),
+            if (hasHops && !_isRegionRequestTrace)
+              TextButton.icon(
+                onPressed: _openManualPathTrace,
+                icon: const Icon(Icons.keyboard),
+                label: Text(l10n.manualTrace_title),
+              ),
             if (hasHops && !_isRegionRequestTrace) TextButton.icon(
               onPressed: _clearPathTrace,
               icon: const Icon(Icons.delete_outline),

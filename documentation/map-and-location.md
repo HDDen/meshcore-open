@@ -183,6 +183,7 @@ is used. This action does not request another trace or start GPS tracking.
 
 ### How to Access
 - From the main map's menu → **Path Trace** (build your own route, see below)
+- From Contacts → ⋮ → **Trace by hop hashes** (enter a route without opening the map)
 - From a contact's long-press menu → "Path Trace / Ping"
 - From a message's path view → radar icon
 
@@ -206,6 +207,21 @@ result, preserves previously collected direct-echo observations and neither
 subscribes to radio frames nor sends another request. A new explicit run uses
 the normal live response validation and timeouts. A temporary reconnect with
 no radio identity does not discard the draft; another confirmed identity does.
+
+### Tracing by Hop Hashes
+
+Enter hex hashes separated by commas, spaces or arrows. All hops in the route
+must have the same width. Continuous input uses the selected draft's width,
+or the radio's configured width when starting a new draft.
+For three-byte hashes, each hop needs a unique known relay so the app can use
+the fourth byte of its public key in TRACE. The map's builder can prefill the
+manual editor with its current route and mode. Each editor keeps its own
+draft during the app session.
+
+The app checks the number of hops and the encoded size of the request,
+including any return hops. If the route exceeds the radio's limit, shorten
+it or select **As entered**. A successful trace shows SNR for each hop.
+GPS and map tiles are used only if you open **View map**.
 
 ### What the User Sees
 A map with a polyline showing the route from your node through repeater hops to the target:

@@ -12,6 +12,7 @@ import 'package:meshcore_open/helpers/path_hop_resolver.dart';
 import 'package:meshcore_open/helpers/map_location_helper.dart';
 import 'package:meshcore_open/helpers/map_session_zoom.dart';
 import 'package:meshcore_open/helpers/path_trace_progress_helper.dart';
+import 'package:meshcore_open/helpers/trace_request_limits.dart';
 import 'package:meshcore_open/helpers/saved_path_trace_result.dart';
 import 'package:meshcore_open/helpers/signal_reading_text.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -71,6 +72,8 @@ class PathTraceMapScreen extends StatefulWidget {
   final int pathHashByteWidth;
   final List<Contact>? pathContacts;
   final bool revealMapManually;
+  final bool deferLocationUntilMapShown;
+  final String? expectedRadioKey;
   /// When false, a target trace uses [path] exactly as supplied instead of
   /// refreshing the target contact's saved route from the connector.
   final bool useLiveTargetPath;
@@ -90,6 +93,8 @@ class PathTraceMapScreen extends StatefulWidget {
     this.pathHashByteWidth = pathHashSize,
     this.pathContacts,
     this.revealMapManually = false,
+    this.deferLocationUntilMapShown = false,
+    this.expectedRadioKey,
     this.useLiveTargetPath = true,
     this.initialTraceFrame,
     this.initialTraceObservations = const [],
@@ -123,6 +128,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Timer? _timeoutTimer;
 
   bool _isLoading = false;
+  bool _traceTooLong = false;
   bool _failed2Loaded = false;
 
   /// True between sending the trace command and receiving its RESP_CODE_SENT.
@@ -152,7 +158,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   int _tracedPathHashWidth = 1;
   PathTraceProgressTracker? _traceProgressTracker;
   List<PathTraceObservation> _traceObservations = const [];
-  late final Future<LatLng?> _preferredSelfPositionFuture;
+  Future<LatLng?>? _preferredSelfPositionFuture;
   LatLng? _preferredPhonePosition;
 
   // Packet-flow animation + multi-path view state.
@@ -174,21 +180,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   String? _scheduledViewportFit;
   String? _completedViewportFit;
 
-  String _formatPathPrefixes(Uint8List pathBytes, [int? hashByteWidth]) {
-    return PathHelper.splitPathBytes(
-      pathBytes,
-      hashByteWidth ?? widget.pathHashByteWidth,
-    ).map(PathHelper.formatHopHex).join(',');
-  }
-
-  int _traceHashByteWidth(int pathHashByteWidth) {
-    final width = pathHashByteWidth.clamp(1, pubKeySize).toInt();
-    if (width <= 1) return 1;
-    if (width == 2) return 2;
-    // Trace packets encode hash width as 1 << flags, so 3-byte path hashes
-    // must be traced with a 4-byte public-key prefix.
-    return 4;
-  }
+  // Routing paths use up to three bytes per hop. TRACE can carry four.
+  List<Uint8List> _splitTraceHops(Uint8List bytes, int width) => [
+    for (var offset = 0; offset < bytes.length; offset += width)
+      Uint8List.sublistView(bytes, offset, min(offset + width, bytes.length)),
+  ];
 
   int _traceFlagsForHashWidth(int traceHashByteWidth) {
     if (traceHashByteWidth <= 1) return 0;
@@ -215,12 +211,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   ) {
     if (hop.length == traceHashByteWidth) return hop;
 
-    final candidates = <Contact>[
-      ...?widget.pathContacts,
-      if (widget.targetContact != null) widget.targetContact!,
-      ...connector.allContactsUnfiltered,
-    ];
-    for (final contact in candidates) {
+    for (final contact in _traceCandidates(connector)) {
       if (contact.publicKey.length < traceHashByteWidth) continue;
       if (!listEquals(contact.publicKey.sublist(0, hop.length), hop)) continue;
       return Uint8List.fromList(
@@ -236,6 +227,14 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       tag: 'PathTraceMapScreen',
     );
     return null;
+  }
+
+  Iterable<Contact> _traceCandidates(MeshCoreConnector connector) sync* {
+    final explicit = widget.pathContacts;
+    if (explicit != null) yield* explicit;
+    final target = widget.targetContact;
+    if (target != null) yield target;
+    yield* connector.allContactsUnfiltered;
   }
 
   Uint8List? _tracePathFromBytes(
@@ -264,18 +263,11 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     _playback.addListener(_followPacketCamera);
     _pathHistory = context.read<PathHistoryService>();
     _pathHistory!.addListener(_onPathHistoryChanged);
-    _preferredSelfPositionFuture = MapLocationHelper.resolve(
-      enabled: context
-          .read<AppSettingsService>()
-          .settings
-          .alwaysRequestMapLocation,
-      wardrive: context.read<WardriveService>(),
-      connector: context.read<MeshCoreConnector>(),
-      onPhoneLocation: (position) => _preferredPhonePosition = position,
-    );
+    if (!widget.deferLocationUntilMapShown) {
+      _preferredSelfPositionFuture = _requestSelfPosition();
+    }
     final initialFrame = widget.initialTraceFrame;
     if (initialFrame == null) {
-      _setupFrameListener();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _doPathTrace();
       });
@@ -306,6 +298,35 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     super.dispose();
   }
 
+  Future<LatLng?> _requestSelfPosition() => MapLocationHelper.resolve(
+    enabled: context.read<AppSettingsService>().settings.alwaysRequestMapLocation,
+    wardrive: context.read<WardriveService>(),
+    connector: context.read<MeshCoreConnector>(),
+    onPhoneLocation: (position) => _preferredPhonePosition = position,
+  );
+
+  Future<void> _revealTraceMap() async {
+    setState(() {
+      _mapReady = false;
+      _completedViewportFit = null;
+      _mapRevealed = true;
+    });
+    if (_preferredSelfPositionFuture != null) return;
+    final connector = context.read<MeshCoreConnector>();
+    if (!_matchesExpectedRadio(connector)) return;
+    final previousPosition = _selfPosition(connector);
+    final runRevision = _traceRunRevision;
+    final pending = _preferredSelfPositionFuture = _requestSelfPosition();
+    await pending;
+    if (!mounted ||
+        !_hasData ||
+        runRevision != _traceRunRevision ||
+        !_matchesExpectedRadio(connector)) {
+      return;
+    }
+    _refreshDisplayedSelfPosition(connector, previousPosition);
+  }
+
   Future<void> _setMyLocation(LatLng point) async {
     final connector = context.read<MeshCoreConnector>();
     final previousSelfPosition = _selfPosition(connector);
@@ -313,11 +334,16 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     if (!ok || !mounted || !_hasData) {
       return;
     }
+    _refreshDisplayedSelfPosition(connector, previousSelfPosition);
+  }
+
+  void _refreshDisplayedSelfPosition(
+    MeshCoreConnector connector,
+    LatLng? previousSelfPosition,
+  ) {
     // Writing to the node must not replace an available phone position.
     final displayPosition = _selfPosition(connector);
-    if (displayPosition == null) {
-      return;
-    }
+    if (displayPosition == null || displayPosition == previousSelfPosition) return;
     setState(() {
       _points = List<LatLng>.of(_points);
       if (_points.isNotEmpty && _points.first == previousSelfPosition) {
@@ -335,6 +361,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
             ]
           : <Polyline>[];
       _pathDistanceMeters = getPathDistanceMeters(_points);
+      _completedViewportFit = null;
       _rebuildDisplayPaths(connector);
     });
   }
@@ -596,10 +623,15 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     return (live.pathBytesForDisplay, width);
   }
 
+  bool _matchesExpectedRadio(MeshCoreConnector connector) {
+    final expectedRadio = widget.expectedRadioKey;
+    return expectedRadio == null ||
+        (connector.isConnected && connector.selfPublicKeyHex == expectedRadio);
+  }
+
   Future<void> _doPathTrace() async {
     _traceRunRevision++;
     _isReplayingResult = false;
-    if (_frameSubscription == null) _setupFrameListener();
     _playback.stop();
     _timeoutTimer?.cancel();
     if (_traceObservationScrollController.hasClients) {
@@ -610,6 +642,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       setState(() {
         _isLoading = true;
         _failed2Loaded = false;
+        _traceTooLong = false;
         _hasData = false;
         _mapRevealed = false;
         _traceData = null;
@@ -619,8 +652,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     }
 
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
+    if (!_matchesExpectedRadio(connector)) {
+      _failTrace();
+      return;
+    }
     final (livePath, hopWidth) = _resolveLivePath(connector);
-    final traceHashByteWidth = _traceHashByteWidth(hopWidth);
+    final traceHashByteWidth = traceRequestHashWidth(hopWidth);
     _tracedPath = livePath;
     _tracedPathHashWidth = hopWidth;
 
@@ -670,9 +707,24 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       return;
     }
 
+    final traceStageCount = path.length ~/ traceHashByteWidth;
+    if (path.length % traceHashByteWidth != 0) {
+      _failTrace();
+      return;
+    }
+    if (!traceRequestFits(
+      hopCount: traceStageCount,
+      wireHashWidth: traceHashByteWidth,
+      firmwareCode: connector.firmwareVerCode,
+    )) {
+      _traceTooLong = true;
+      _failTrace();
+      return;
+    }
+
     appLogger.info(
       'Initiating path trace with path: '
-      '${_formatPathPrefixes(path, traceHashByteWidth)}',
+      '${_splitTraceHops(path, traceHashByteWidth).map(PathHelper.formatHopHex).join(',')}',
       tag: 'PathTraceMapScreen',
       noNotify: !mounted,
     );
@@ -689,7 +741,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       ..[2] = (sentTag >> 16) & 0xFF
       ..[3] = (sentTag >> 24) & 0xFF;
 
-    final traceStageCount = path.length ~/ traceHashByteWidth;
     _traceProgressTracker = PathTraceProgressTracker(
       expectedTag: _sentTagBytes!,
       route: path,
@@ -703,13 +754,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     final flags = _traceFlagsForHashWidth(traceHashByteWidth);
     final settings = context.read<AppSettingsService>().settings;
     if (settings.pathTraceHighTimeoutEnabled) {
-      final traceHopCount = PathHelper.splitPathBytes(
-        path,
-        traceHashByteWidth,
-      ).length;
-      _traceTimeoutFloor = Duration(
-        milliseconds: _traceTimeoutPerHop.inMilliseconds * traceHopCount,
-      );
+      _traceTimeoutFloor = _traceTimeoutPerHop * traceStageCount;
     } else {
       _traceTimeoutFloor = null;
     }
@@ -721,6 +766,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       payload: path,
     );
     // Only frames that arrive after this point can belong to our request.
+    if (_frameSubscription == null) _setupFrameListener();
     _awaitingTraceSent = true;
     // The node may never answer at all (dropped command frame), so arm a
     // fallback now; RESP_CODE_SENT replaces it with the firmware estimate.
@@ -825,8 +871,13 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   Future<void> _handleTraceResponse(Uint8List frame) async {
     final runRevision = _traceRunRevision;
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    await _preferredSelfPositionFuture;
+    final pendingPosition = _preferredSelfPositionFuture;
+    if (pendingPosition != null) await pendingPosition;
     if (!mounted || runRevision != _traceRunRevision) return;
+    if (!_matchesExpectedRadio(connector)) {
+      _failTrace();
+      return;
+    }
 
     final buffer = BufferReader(frame);
     try {
@@ -836,8 +887,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       buffer.skipBytes(4); // Skip tag data
       buffer.skipBytes(4); // Skip auth code
       // Trace frames encode the hash size as 1 << (flags & 3): 1, 2, 4 or 8
-      // bytes. PathHelper splits hops up to 4 bytes wide, so an 8-byte reply is
-      // reported as unparsable instead of being silently split into wrong hops.
+      // bytes. An 8-byte reply is unsupported, so reject it rather than
+      // silently splitting it into the wrong hops.
       var width = 1 << (flags & 0x03);
       if (width > 4) {
         appLogger.error(
@@ -861,7 +912,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
         }
       }
       final pathBytes = buffer.readBytes(pathLength);
-      final pathData = PathHelper.splitPathBytes(pathBytes, width);
+      final pathData = _splitTraceHops(pathBytes, width);
       // Firmware emits (path_len >> path_sz) hop SNRs plus 1 final SNR (to this node).
       final snrCount = (pathLength ~/ width) + 1;
       List<double> snrData = buffer
@@ -1380,7 +1431,6 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
       builder: (context, connector, _) {
         final settings = context.watch<AppSettingsService>().settings;
         final isImperial = settings.unitSystem == UnitSystem.imperial;
-        final tileCache = context.read<MapTileCacheService>();
         final scheme = Theme.of(context).colorScheme;
         final showMap =
             _hasData && (!widget.revealMapManually || _mapRevealed);
@@ -1419,7 +1469,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                     ),
                   ),
                 if (showMap)
-                  _buildMapPathTrace(context, tileCache, _targetContact),
+                  _buildMapPathTrace(
+                    context, context.read<MapTileCacheService>(), _targetContact,
+                  ),
                 if (showMap && _isDesktopPlatform(defaultTargetPlatform))
                   _buildDesktopMapControls(),
                 if (showMap && _displayPaths.length > 1)
@@ -1457,11 +1509,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: FilledButton(
-                          onPressed: () => setState(() {
-                            _mapReady = false;
-                            _completedViewportFit = null;
-                            _mapRevealed = true;
-                          }),
+                          onPressed: _revealTraceMap,
                           child: Text(context.l10n.channelPath_viewMap),
                         ),
                       ),
@@ -2186,14 +2234,20 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     );
   }
 
-  Widget _buildSnrHopList(PathTraceData pathTraceData, int highlightRow) {
+  Widget _buildSnrHopList(
+    PathTraceData pathTraceData,
+    int highlightRow, {
+    ScrollController? controller,
+  }) {
     final l10n = context.l10n;
     final brightness = Theme.of(context).brightness;
     if (pathTraceData.pathData.isEmpty) {
       return Center(child: Text(l10n.channelPath_noHopDetailsAvailable));
     }
     return Scrollbar(
+      controller: controller,
       child: ListView.separated(
+        controller: controller,
         padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: pathTraceData.pathData.length + 1,
         separatorBuilder: (_, _) => const Divider(height: 1),
@@ -2256,6 +2310,15 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     ColorScheme scheme, {
     double bottomPadding = 16,
   }) {
+    final result = _traceData;
+    if (widget.deferLocationUntilMapShown && _hasData && result != null) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: _buildSnrHopList(
+          result, -1, controller: _traceObservationScrollController,
+        ),
+      );
+    }
     final tracker = _traceProgressTracker;
     final total = tracker?.totalStages ?? 0;
     final completed = _traceObservations.fold<int>(
@@ -2315,7 +2378,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           if (!_isLoading && _failed2Loaded) ...[
             const SizedBox(height: 12),
             Text(
-              context.l10n.pathTrace_notAvailable,
+              _traceTooLong
+                  ? context.l10n.manualTrace_requestTooLong
+                  : context.l10n.pathTrace_notAvailable,
               style: TextStyle(color: scheme.onSurfaceVariant),
             ),
           ],

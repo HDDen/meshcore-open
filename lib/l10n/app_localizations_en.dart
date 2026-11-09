@@ -8879,6 +8879,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap more nodes to add hops, choose how the trace returns, then tap Run path trace.';
 
   @override
+  String get manualTrace_title => 'Trace by hop hashes';
+
+  @override
+  String get manualTrace_hashes => 'Hop hashes';
+
+  @override
+  String get manualTrace_invalidHashes =>
+      'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
+
+  @override
+  String get manualTrace_requestTooLong =>
+      'This trace exceeds the radio request limit. Remove hops or choose As entered.';
+
+  @override
+  String get manualTrace_unresolvedHop =>
+      'Each 3-byte hash must match a unique known relay.';
+
+  @override
   String get map_pathTraceModeRoundTrip => 'Round trip';
 
   @override

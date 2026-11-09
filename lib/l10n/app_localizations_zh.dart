@@ -8386,6 +8386,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_pathTraceAddMoreHint => '点击更多节点以添加跳数，选择追踪的返回方式，然后点击“运行路径追踪”。';
 
   @override
+  String get manualTrace_title => 'Trace by hop hashes';
+
+  @override
+  String get manualTrace_hashes => 'Hop hashes';
+
+  @override
+  String get manualTrace_invalidHashes =>
+      'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
+
+  @override
+  String get manualTrace_requestTooLong =>
+      'This trace exceeds the radio request limit. Remove hops or choose As entered.';
+
+  @override
+  String get manualTrace_unresolvedHop =>
+      'Each 3-byte hash must match a unique known relay.';
+
+  @override
   String get map_pathTraceModeRoundTrip => '往返';
 
   @override

@@ -8997,6 +8997,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажимайте на другие ноды, чтобы добавить хопы, выберите способ возврата трассировки и нажмите «Запустить трассировку пути».';
 
   @override
+  String get manualTrace_title => 'Трассировка по хэшам';
+
+  @override
+  String get manualTrace_hashes => 'Хэши хопов';
+
+  @override
+  String get manualTrace_invalidHashes =>
+      'Введите шестнадцатеричные хэши одинаковой ширины: 1, 2 или 3 байта.';
+
+  @override
+  String get manualTrace_requestTooLong =>
+      'Маршрут превышает лимит запроса ноды. Уберите несколько хопов или выберите «Как введено».';
+
+  @override
+  String get manualTrace_unresolvedHop =>
+      'Каждый трёхбайтовый хэш должен однозначно совпадать с известным узлом маршрута.';
+
+  @override
   String get map_pathTraceModeRoundTrip => 'Туда и обратно';
 
   @override

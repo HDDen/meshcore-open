@@ -1925,6 +1925,17 @@ after parsing a complete matching live result. Tests: map_screen_state_test,
 path_trace_test, map_path_trace_draft_test and saved_path_trace_result_test.
 User guide: `documentation/map-and-location.md`.
 
+U32 adds a text-only trace editor to Contacts and a prefill from the map
+draft. It parses uniform 1–3 byte hex prefixes and keeps its own session
+draft tied to the radio key. Unique known contacts supply the fourth
+byte for three-byte input. PathTraceMapScreen checks the final expanded
+and mirrored request before attaching a frame listener or starting a
+timeout. It uses 172 bytes for legacy or unknown firmware, 176 from code
+13 and 64 hops for both. TRACE response splitting preserves the actual
+wire width, including four-byte prefixes. The manual result shows SNR
+without GPS or tile providers. Opening its map requests the position
+through the normal phone-first flow.
+
 ### Heard repeater details (U06a3)
 
 Both `SNRIndicator` and `SNRActivityIndicator` use `_RepeaterDialogList` in

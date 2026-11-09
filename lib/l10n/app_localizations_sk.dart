@@ -8970,6 +8970,24 @@ class AppLocalizationsSk extends AppLocalizations {
       'Ťuknutím na ďalšie uzly pridajte skoky, vyberte, ako sa sledovanie vráti, a potom ťuknite na Spustiť sledovanie cesty.';
 
   @override
+  String get manualTrace_title => 'Trace by hop hashes';
+
+  @override
+  String get manualTrace_hashes => 'Hop hashes';
+
+  @override
+  String get manualTrace_invalidHashes =>
+      'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
+
+  @override
+  String get manualTrace_requestTooLong =>
+      'This trace exceeds the radio request limit. Remove hops or choose As entered.';
+
+  @override
+  String get manualTrace_unresolvedHop =>
+      'Each 3-byte hash must match a unique known relay.';
+
+  @override
   String get map_pathTraceModeRoundTrip => 'Tam a späť';
 
   @override

@@ -8577,6 +8577,24 @@ class AppLocalizationsKo extends AppLocalizations {
       '노드를 더 탭해 홉을 추가하고, 추적이 돌아오는 방식을 선택한 뒤 경로 추적 실행을 탭하세요.';
 
   @override
+  String get manualTrace_title => 'Trace by hop hashes';
+
+  @override
+  String get manualTrace_hashes => 'Hop hashes';
+
+  @override
+  String get manualTrace_invalidHashes =>
+      'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
+
+  @override
+  String get manualTrace_requestTooLong =>
+      'This trace exceeds the radio request limit. Remove hops or choose As entered.';
+
+  @override
+  String get manualTrace_unresolvedHop =>
+      'Each 3-byte hash must match a unique known relay.';
+
+  @override
   String get map_pathTraceModeRoundTrip => '왕복';
 
   @override

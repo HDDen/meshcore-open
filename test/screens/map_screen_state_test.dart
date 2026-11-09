@@ -16,6 +16,7 @@ import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/screens/channel_message_path_screen.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
+import 'package:meshcore_open/screens/manual_path_trace_screen.dart';
 import 'package:meshcore_open/screens/map_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
@@ -405,6 +406,44 @@ void main() {
       expect(gesture.onTap, isNotNull);
       gesture.onTap!();
     }
+
+    testWidgets('U32: the map prefills the manual route and keeps its own draft',
+        (tester) async {
+      final connector = _TraceBuilderConnector(1);
+      try {
+        await _Harness.pump(
+          tester,
+          nodes: [],
+          zoom: 15,
+          connectorOverride: connector,
+          screenOverride: MapScreen(
+            initialTracePath: Uint8List.fromList([0x10, 0x11]),
+            initialTraceHashByteWidth: 2,
+          ),
+        );
+        final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+        await tester.tap(find.text(l10n.map_pathTraceModeAsEntered));
+        await _pumpFrames(tester);
+        await tester.tap(find.text(l10n.manualTrace_title));
+        await _pumpFrames(tester);
+        final manual = find.byType(ManualPathTraceScreen);
+        expect(tester.widget<ManualPathTraceScreen>(manual).initialHashWidth, 2);
+        final manualInput = find.descendant(
+          of: find.byType(ManualPathTraceScreen),
+          matching: find.byType(TextField),
+        );
+        expect(tester.widget<TextField>(manualInput).controller!.text, '1011');
+        final mode = find.widgetWithText(ChoiceChip, l10n.map_pathTraceModeAsEntered);
+        expect(tester.widget<ChoiceChip>(mode).selected, isTrue);
+        await tester.enterText(manualInput, 'A1, B2');
+        await tester.pageBack();
+        await _pumpFrames(tester);
+        expect(editorText(tester), '1011');
+        expect(connector.sentFrames, isEmpty);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
 
     testWidgets('U06b3: close, reopen and a new map preserve the session draft and mode', (tester) async {
       final view = UiViewStateService();

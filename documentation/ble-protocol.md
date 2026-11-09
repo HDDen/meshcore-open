@@ -288,6 +288,15 @@ Uses Flutter `Provider` with `ChangeNotifier`. The central state holder is `Mesh
 6. `notifyListeners()` triggers UI rebuilds
 7. Screens read current state via getters
 
+## Trace request limits
+
+`CMD_SEND_TRACE_PATH` uses a 10-byte header followed by hop hashes.
+TRACE encodes 1-, 2- or 4-byte prefixes. The app expands three-byte routing
+hashes with the fourth byte of the known relay's public key. It checks the
+expanded route and includes the return leg in the limit of 64 hops.
+The outbound TRACE frame is capped at 172 bytes for legacy or unknown
+firmware and at 176 bytes from companion protocol code 13.
+
 ## Advertisement application data
 
 After an advert's public key (32 bytes), timestamp (4 bytes) and signature

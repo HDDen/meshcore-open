@@ -24,6 +24,7 @@ import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/screens/companion_cli_screen.dart';
 import 'package:meshcore_open/screens/contacts_screen.dart';
+import 'package:meshcore_open/screens/manual_path_trace_screen.dart';
 import 'package:meshcore_open/screens/channels_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/companion_cli_session.dart';
@@ -50,6 +51,9 @@ class _ContactMenuSections extends ChangeNotifier implements SettingsSectionsSer
   @override
   dynamic noSuchMethod(Invocation invocation) {
     if (invocation.memberName == #contactActionTiles) return <Widget>[];
+    if (invocation.memberName == #contactHeaderActionItems) {
+      return <PopupMenuEntry<dynamic>>[];
+    }
     return super.noSuchMethod(invocation);
   }
 }
@@ -221,6 +225,28 @@ void main() {
 
   Rect cardSurface(WidgetTester tester, Finder card) => tester.getRect(
     find.descendant(of: card, matching: find.byType(Material)).first);
+
+  testWidgets('U32: contacts menu opens the manual trace without a command',
+      (tester) async {
+    await show(
+      tester,
+      ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
+        child: const ContactsScreen(hideBackButton: true),
+      ),
+    );
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ContactsScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.contacts_moreOptions));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.manualTrace_title));
+    await tester.pumpAndSettle();
+    expect(find.byType(ManualPathTraceScreen), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(connector.writes, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('U29 baseline: tab switching preserves the contacts search',
       (tester) async {

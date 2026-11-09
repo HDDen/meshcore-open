@@ -39,6 +39,7 @@ class UiViewStateService extends ChangeNotifier {
   bool? _companionCliSharedHistory;
 
   final MapPathTraceDraft mapPathTrace = MapPathTraceDraft();
+  ({String radioKey, String text, bool roundTrip, int? hashWidth})? manualPathTrace;
 
   String get contactsSelectedGroupName => _contactsSelectedGroupName;
   String get contactsSearchText => _contactsSearchText;

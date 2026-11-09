@@ -15041,6 +15041,36 @@ abstract class AppLocalizations {
   /// **'Tap more nodes to add hops, choose how the trace returns, then tap Run path trace.'**
   String get map_pathTraceAddMoreHint;
 
+  /// No description provided for @manualTrace_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace by hop hashes'**
+  String get manualTrace_title;
+
+  /// No description provided for @manualTrace_hashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop hashes'**
+  String get manualTrace_hashes;
+
+  /// No description provided for @manualTrace_invalidHashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).'**
+  String get manualTrace_invalidHashes;
+
+  /// No description provided for @manualTrace_requestTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'This trace exceeds the radio request limit. Remove hops or choose As entered.'**
+  String get manualTrace_requestTooLong;
+
+  /// No description provided for @manualTrace_unresolvedHop.
+  ///
+  /// In en, this message translates to:
+  /// **'Each 3-byte hash must match a unique known relay.'**
+  String get manualTrace_unresolvedHop;
+
   /// No description provided for @map_pathTraceModeRoundTrip.
   ///
   /// In en, this message translates to:
