@@ -192,6 +192,7 @@
   "appSettings_languageSv": "瑞典语",
   "appSettings_languageNl": "荷兰语",
   "appSettings_languageSk": "斯洛伐克语",
+  "appSettings_languageCs": "捷克语",
   "appSettings_languageBg": "保加利亚语",
   "appSettings_languageRu": "俄语",
   "appSettings_languageUk": "乌克兰语",
@@ -1039,6 +1040,7 @@
   "repeater_received": "接收",
   "repeater_duplicates": "重复",
   "repeater_daysHoursMinsSecs": "{days}天 {hours}小时 {minutes}分 {seconds}秒",
+  "repeater_hoursMinsSecs": "{hours}小时 {minutes}分 {seconds}秒",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2160,14 +2162,6 @@
   "contact_settings": "联系人设置",
   "contact_teleLocSubtitle": "允许共享位置数据",
   "contact_telemetry": "遥测数据",
-  "appSettings_maxRouteWeight": "最大路径重量",
-  "appSettings_initialRouteWeightSubtitle": "新发现路径的初始重量",
-  "appSettings_initialRouteWeight": "初始路线权重",
-  "appSettings_maxRouteWeightSubtitle": "一条路径可以累积的最大重量，取决于成功交付的数量。",
-  "appSettings_routeWeightSuccessIncrement": "成功权重增加",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "在成功交付后，将重量添加到路径中",
-  "appSettings_routeWeightFailureDecrement": "失败权重降低",
-  "appSettings_routeWeightFailureDecrementSubtitle": "从一条路径上移除的货物，由于无法成功交付而移除。",
   "appSettings_maxMessageRetries": "最大消息重试次数",
   "appSettings_maxMessageRetriesSubtitle": "在将消息标记为失败之前，允许尝试的次数",
   "path_routeWeight": "{weight}/{max}",
@@ -2222,7 +2216,7 @@
   "appSettings_autoFetchRepeaterSettings": "自动获取转发节点设置",
   "appSettings_autoFetchRepeaterSettingsSubtitle": "打开转发节点设置时请求所有设置。每项设置都是一次通过 LoRa 发送的独立请求，因此速度较慢并会占用空中时间。关闭后，请点按“全部刷新”或刷新单独的部分。",
   "appSettings_jumpToOldestUnread": "跳转到最旧、未读的文章",
-  "appSettings_languageHu": "匈牙利",
+  "appSettings_languageHu": "匈牙利语",
   "appSettings_languageJa": "日语",
   "appSettings_languageKo": "韩语",
   "radioStats_tooltip": "无线电和网状结构统计数据",
@@ -2515,9 +2509,9 @@
   "contacts_searchOpen": "搜索联系人",
   "contacts_searchClose": "高级搜索",
   "routing_title": "路由",
-  "routing_modeAuto": "汽车",
+  "routing_modeAuto": "自动",
   "routing_modeFlood": "泛洪",
-  "routing_modeManual": "手册",
+  "routing_modeManual": "手动",
   "routing_modeAutoHint": "自动选择已知最佳路径，当没有已知路径时，则进行“泛洪”搜索。",
   "routing_modeFloodHint": "通过所有中继站进行广播。 这种方式最可靠，但占用更多的时间。",
   "routing_modeManualHint": "总是按照您设置的路径进行导航。",
@@ -3566,6 +3560,8 @@
   "messageFilter_automaticSection": "自动",
   "messageFilter_duplicates": "重复消息",
   "messageFilter_duplicatesSubtitle": "重复发送的相同消息，或多个发送者发送的相同消息",
+  "messageFilter_repeatSends": "视为重复的发送次数",
+  "messageFilter_repeatSendsSubtitle": "同一发送者在 10 分钟内发送同一消息 {count} 次时隐藏该消息",
   "messageFilter_repeatedCharacters": "重复字符",
   "messageFilter_repeatedCharactersSubtitle": "同一字符的长串重复，例如“aaaaaaaaaaaaaaaaaaaa”",
   "messageFilter_learning": "从“垃圾消息”点击中学习",
@@ -3646,5 +3642,130 @@
   },
   "messageFilter_filterLikeThis": "过滤类似的消息…",
   "messageFilter_channelToggle": "过滤此频道中的消息",
-  "messageFilter_ghostIconTooltip": "已被你的消息过滤隐藏"
+  "messageFilter_ghostIconTooltip": "已被你的消息过滤隐藏",
+  "chatSearch_tooltip": "搜索消息",
+  "chatSearch_hint": "搜索消息",
+  "chatSearch_close": "关闭搜索",
+  "chatSearch_resultCount": "{count, plural, other{{count} 条结果}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "没有匹配的消息",
+  "chatSearch_noResultsHint": "请尝试其他词语或检查拼写",
+  "contactShare_headerOutgoing": "你分享了一个联系人",
+  "contactShare_headerIncoming": "分享了一个联系人",
+  "contactShare_add": "添加联系人",
+  "contactShare_adding": "正在添加联系人...",
+  "contactShare_saved": "已保存",
+  "contactShare_isYou": "这是你自己",
+  "contactShare_shareAction": "分享联系人",
+  "contactShare_pickerTitle": "分享联系人",
+  "contactShare_myContact": "我的联系人",
+  "contactShare_searchHint": "搜索联系人",
+  "contactShare_noContacts": "未找到联系人",
+  "contactShare_preview": "分享的联系人：{name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "分享了一个联系人：{name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "按哈希进行路径追踪",
+  "manualTrace_inputLabel": "中继器哈希",
+  "manualTrace_helper": "示例：{example}。用逗号或空格分隔。",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "跳数（{count}）",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "未知节点",
+  "manualTrace_enterHashes": "输入哈希",
+  "manualTrace_run": "运行路径追踪",
+  "manualTrace_notConnected": "请连接电台以运行追踪",
+  "manualTrace_errorInvalidHex": "仅允许十六进制字符（0-9、A-F）",
+  "manualTrace_errorOddLength": "每个哈希的十六进制字符数必须为偶数，与跳大小一致",
+  "manualTrace_errorMixedWidths": "所有哈希长度必须相同",
+  "manualTrace_errorUnsupportedWidth": "哈希必须为 1、2 或 3 字节（2、4 或 6 个十六进制字符）",
+  "manualTrace_errorTooManyHops": "路径过长（最多 {max} 字节）",
+  "manualTrace_errorTraceTooLong": "跳数过多，无法在一次请求中追踪。请减少一些跳，或选择“按输入顺序”。",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "在聊天中找不到该消息",
+  "chat_clearSelection": "取消选择",
+  "chat_deleteSelectedConfirm": "{count, plural, other{要从此设备删除 {count} 条消息吗？}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "删除消息？",
+  "chat_messagesDeleted": "{count, plural, other{已删除 {count} 条消息}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "全选",
+  "chat_selectMessages": "选择消息",
+  "chat_selectedCount": "已选择 {count} 项",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "重新添加",
+  "messageFilter_markedNotSpamCount": "{count, plural, other{已将 {count} 条消息标记为非垃圾消息}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, other{已将 {count} 条消息标记为垃圾消息}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "展开中继列表",
+  "pathMap_showMap": "显示地图",
+  "routing_modeDirect": "直连",
+  "routing_modeDirectHint": "始终直接发送给该联系人，不经过中继跳。在对方处于无线电范围内时使用。"
 }

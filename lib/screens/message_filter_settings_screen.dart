@@ -178,6 +178,8 @@ class _RulesList extends StatelessWidget {
       SnackBar(
         content: Text(l10n.messageFilter_ruleDeleted),
         duration: const Duration(seconds: 6),
+        // Newer Flutter persists snackbars with an action unless told not to.
+        persist: false,
         action: SnackBarAction(
           label: l10n.common_undo,
           onPressed: () =>
@@ -362,6 +364,36 @@ class _AutomaticOptions extends StatelessWidget {
           value: settings.duplicates,
           onChanged: (value) => service.updateSettings(
             service.settings.copyWith(duplicates: value),
+          ),
+        ),
+        ListTile(
+          key: const ValueKey('messageFilter_repeatSends'),
+          contentPadding: padding,
+          enabled: settings.duplicates,
+          leading: const Icon(Icons.repeat, size: 24),
+          title: Text(l10n.messageFilter_repeatSends),
+          subtitle: Text(
+            l10n.messageFilter_repeatSendsSubtitle(settings.repeatSends),
+          ),
+          trailing: DropdownButton<int>(
+            key: const ValueKey('messageFilter_repeatSendsDropdown'),
+            value: settings.repeatSends,
+            onChanged: settings.duplicates
+                ? (value) {
+                    if (value == null) return;
+                    service.updateSettings(
+                      service.settings.copyWith(repeatSends: value),
+                    );
+                  }
+                : null,
+            items: [
+              for (
+                var n = MessageFilterSettings.minRepeatSends;
+                n <= MessageFilterSettings.maxRepeatSends;
+                n++
+              )
+                DropdownMenuItem(value: n, child: Text('$n')),
+            ],
           ),
         ),
         const Divider(height: 1, indent: 16),

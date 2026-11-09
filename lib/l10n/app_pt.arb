@@ -181,7 +181,8 @@
   "appSettings_languageZh": "Chinês",
   "appSettings_languageSv": "Sueco",
   "appSettings_languageNl": "Holandês",
-  "appSettings_languageSk": "Esloveno",
+  "appSettings_languageSk": "Eslovaco",
+  "appSettings_languageCs": "Tcheco",
   "appSettings_languageBg": "Búlgaro",
   "appSettings_notifications": "Notificações",
   "appSettings_enableNotifications": "Ativar Notificações",
@@ -1009,6 +1010,7 @@
   "repeater_received": "Recebido",
   "repeater_duplicates": "Duplicatas",
   "repeater_daysHoursMinsSecs": "{days} dias {hours}h {minutes}m {seconds}s",
+  "repeater_hoursMinsSecs": "{hours}h {minutes}m {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2162,14 +2164,6 @@
   "contact_telemetry": "Telemetria",
   "contact_settings": "Configurações de Contato",
   "contact_teleBaseSubtitle": "Permitir compartilhamento do nível da bateria e telemetria básica",
-  "appSettings_initialRouteWeight": "Peso Inicial da Rota",
-  "appSettings_maxRouteWeight": "Peso Máximo da Rota",
-  "appSettings_maxRouteWeightSubtitle": "Peso máximo que um determinado percurso pode acumular com entregas bem-sucedidas.",
-  "appSettings_initialRouteWeightSubtitle": "Peso inicial para novos caminhos descobertos",
-  "appSettings_routeWeightSuccessIncrement": "Aumento do peso para indicar sucesso",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Peso adicionado a um caminho após a entrega bem-sucedida.",
-  "appSettings_routeWeightFailureDecrement": "Redução do peso da falha",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Peso removido de um caminho após uma tentativa de entrega malsucedida.",
   "appSettings_maxMessageRetries": "Número máximo de tentativas de envio de mensagens",
   "appSettings_maxMessageRetriesSubtitle": "Número de tentativas de reenvio antes de classificar uma mensagem como falha.",
   "path_routeWeight": "{weight}/{max}",
@@ -2517,7 +2511,7 @@
   "contacts_searchOpen": "Pesquisar contatos",
   "contacts_searchClose": "Pesquisa avançada",
   "routing_title": "Rotas",
-  "routing_modeAuto": "Carro",
+  "routing_modeAuto": "Automático",
   "routing_modeFlood": "Inundação",
   "routing_modeManual": "Manual",
   "routing_modeAutoHint": "Seleciona automaticamente o caminho mais conhecido, e, se nenhum caminho conhecido for encontrado, utiliza a estratégia de \"inundação\".",
@@ -3561,6 +3555,8 @@
   "messageFilter_automaticSection": "Automático",
   "messageFilter_duplicates": "Mensagens repetidas",
   "messageFilter_duplicatesSubtitle": "A mesma mensagem enviada de novo, ou por vários remetentes",
+  "messageFilter_repeatSends": "Envios que contam como repetição",
+  "messageFilter_repeatSendsSubtitle": "Ocultar uma mensagem quando o mesmo remetente a envia {count} vezes em 10 minutos",
   "messageFilter_repeatedCharacters": "Caracteres repetidos",
   "messageFilter_repeatedCharactersSubtitle": "Sequências longas de um mesmo caractere, como \"aaaaaaaaaaaaaaaaaaaa\"",
   "messageFilter_learning": "Aprender com os toques em Spam",
@@ -3641,5 +3637,130 @@
   },
   "messageFilter_filterLikeThis": "Filtrar mensagens como esta…",
   "messageFilter_channelToggle": "Filtrar mensagens neste canal",
-  "messageFilter_ghostIconTooltip": "Oculta pelo seu filtro de mensagens"
+  "messageFilter_ghostIconTooltip": "Oculta pelo seu filtro de mensagens",
+  "chatSearch_tooltip": "Pesquisar mensagens",
+  "chatSearch_hint": "Pesquisar mensagens",
+  "chatSearch_close": "Fechar pesquisa",
+  "chatSearch_resultCount": "{count, plural, =1{1 resultado} other{{count} resultados}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "Nenhuma mensagem correspondente",
+  "chatSearch_noResultsHint": "Tente outra palavra ou verifique a ortografia",
+  "contactShare_headerOutgoing": "Você compartilhou um contato",
+  "contactShare_headerIncoming": "Compartilhou um contato",
+  "contactShare_add": "Adicionar contato",
+  "contactShare_adding": "Adicionando contato...",
+  "contactShare_saved": "Salvo",
+  "contactShare_isYou": "Este é você",
+  "contactShare_shareAction": "Compartilhar contato",
+  "contactShare_pickerTitle": "Compartilhar um contato",
+  "contactShare_myContact": "Meu contato",
+  "contactShare_searchHint": "Pesquisar contatos",
+  "contactShare_noContacts": "Nenhum contato encontrado",
+  "contactShare_preview": "Contato compartilhado: {name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "Compartilhou um contato: {name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "Rastreamento de caminho por hashes",
+  "manualTrace_inputLabel": "Hashes de repetidores",
+  "manualTrace_helper": "Exemplo: {example}. Separe com vírgulas ou espaços.",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "Saltos ({count})",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "Nó desconhecido",
+  "manualTrace_enterHashes": "Insira os hashes",
+  "manualTrace_run": "Executar rastreamento de caminho",
+  "manualTrace_notConnected": "Conecte-se a um rádio para executar um rastreamento",
+  "manualTrace_errorInvalidHex": "Somente caracteres hexadecimais (0-9, A-F) são permitidos",
+  "manualTrace_errorOddLength": "Cada hash precisa de um número par de caracteres hexadecimais, de acordo com o tamanho do salto",
+  "manualTrace_errorMixedWidths": "Todos os hashes devem ter o mesmo comprimento",
+  "manualTrace_errorUnsupportedWidth": "Os hashes devem ter 1, 2 ou 3 bytes (2, 4 ou 6 caracteres hexadecimais)",
+  "manualTrace_errorTooManyHops": "O caminho é muito longo (máximo de {max} bytes)",
+  "manualTrace_errorTraceTooLong": "Saltos demais para rastrear em uma única solicitação. Remova alguns saltos ou escolha “Como inserido”.",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "Não foi possível encontrar essa mensagem na conversa",
+  "chat_clearSelection": "Limpar seleção",
+  "chat_deleteSelectedConfirm": "{count, plural, =1{Excluir 1 mensagem deste dispositivo?} other{Excluir {count} mensagens deste dispositivo?}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "Excluir mensagens?",
+  "chat_messagesDeleted": "{count, plural, =1{1 mensagem excluída} other{{count} mensagens excluídas}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "Selecionar tudo",
+  "chat_selectMessages": "Selecionar mensagens",
+  "chat_selectedCount": "{count} selecionadas",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "Adicionar novamente",
+  "messageFilter_markedNotSpamCount": "{count, plural, =1{1 mensagem marcada como não spam} other{{count} mensagens marcadas como não spam}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, =1{1 mensagem marcada como spam} other{{count} mensagens marcadas como spam}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "Expandir lista de saltos",
+  "pathMap_showMap": "Mostrar mapa",
+  "routing_modeDirect": "Direto",
+  "routing_modeDirectHint": "Envia sempre diretamente a este contato, sem saltos de repetidor. Use quando ele estiver ao alcance do rádio."
 }

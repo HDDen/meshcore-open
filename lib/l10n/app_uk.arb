@@ -183,6 +183,7 @@
   "appSettings_languageSv": "Шведська",
   "appSettings_languageNl": "Нідерландська",
   "appSettings_languageSk": "Словацька",
+  "appSettings_languageCs": "Чеська",
   "appSettings_languageBg": "Болгарська",
   "appSettings_languageUk": "Українська",
   "appSettings_notifications": "Сповіщення",
@@ -1027,6 +1028,7 @@
   "repeater_received": "Отримано",
   "repeater_duplicates": "Дублікати",
   "repeater_daysHoursMinsSecs": "{days} дн. {hours} год {minutes} хв {seconds} с",
+  "repeater_hoursMinsSecs": "{hours} год {minutes} хв {seconds} с",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2234,14 +2236,6 @@
   "contact_lastSeen": "Останній раз бачили",
   "contact_teleEnv": "Середовище телеметрії",
   "contact_teleEnvSubtitle": "Дозволити спільний доступ до даних датчиків середовища",
-  "appSettings_initialRouteWeight": "Початкова вартість маршруту",
-  "appSettings_initialRouteWeightSubtitle": "Початкова вага для нових відкритих шляхів",
-  "appSettings_maxRouteWeight": "Максимальна вага маршруту",
-  "appSettings_maxRouteWeightSubtitle": "Максимальна вага, яку може накопичити маршрут завдяки успішним доставкам.",
-  "appSettings_routeWeightSuccessIncrement": "Збільшення ваги успіху",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Вага, додана до маршруту після успішної доставки",
-  "appSettings_routeWeightFailureDecrement": "Зменшення ваги помилки",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Вага, яка була знята з маршруту після невдалої доставки",
   "appSettings_maxMessageRetries": "Максимальна кількість повторних спроб надсилання повідомлення",
   "appSettings_maxMessageRetriesSubtitle": "Кількість спроб повторного відправлення повідомлення перед тим, як позначити його як невдале",
   "appSettings_ipfsImageLinks": "Налаштування IPFS-провайдера",
@@ -2575,9 +2569,9 @@
   "contacts_searchOpen": "Пошук контактів",
   "contacts_searchClose": "Закрити пошук",
   "routing_title": "Маршрутизація",
-  "routing_modeAuto": "Автомобіль",
+  "routing_modeAuto": "Авто",
   "routing_modeFlood": "Через всю мережу",
-  "routing_modeManual": "Інструкція",
+  "routing_modeManual": "Вручну",
   "routing_modeAutoHint": "Автоматично обирає найкращий відомий шлях, а за відсутності відомого шляху використовує режим «через всю мережу» (flood).",
   "routing_modeFloodHint": "Передавання через усі ретранслятори. Найбільш надійний спосіб, але потребує більше часу.",
   "routing_modeManualHint": "Завжди доставляє точно за вказаним вами маршрутом.",
@@ -3541,6 +3535,8 @@
   "messageFilter_automaticSection": "Автоматично",
   "messageFilter_duplicates": "Повідомлення, що повторюються",
   "messageFilter_duplicatesSubtitle": "Те саме повідомлення, надіслане знову або кількома відправниками",
+  "messageFilter_repeatSends": "Яка відправка вважається повтором",
+  "messageFilter_repeatSendsSubtitle": "Приховувати повідомлення, якщо той самий відправник надсилає його повторно протягом 10 хвилин (кількість відправлень: {count})",
   "messageFilter_repeatedCharacters": "Повторювані символи",
   "messageFilter_repeatedCharactersSubtitle": "Довгі послідовності одного символа, наприклад «aaaaaaaaaaaaaaaaaaaa»",
   "messageFilter_learning": "Навчання на натисканнях «Спам»",
@@ -3569,5 +3565,130 @@
   "messageFilter_filterSenderConfirm": "Приховати всі повідомлення від «{name}»?",
   "messageFilter_filterLikeThis": "Фільтрувати повідомлення, схожі на це…",
   "messageFilter_channelToggle": "Фільтрувати повідомлення в цьому каналі",
-  "messageFilter_ghostIconTooltip": "Приховано вашим фільтром повідомлень"
+  "messageFilter_ghostIconTooltip": "Приховано вашим фільтром повідомлень",
+  "chatSearch_tooltip": "Пошук повідомлень",
+  "chatSearch_hint": "Пошук повідомлень",
+  "chatSearch_close": "Закрити пошук",
+  "chatSearch_resultCount": "{count, plural, one{{count} результат} few{{count} результати} many{{count} результатів} other{{count} результату}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "Відповідних повідомлень немає",
+  "chatSearch_noResultsHint": "Спробуйте інше слово або перевірте написання",
+  "contactShare_headerOutgoing": "Ви надіслали контакт",
+  "contactShare_headerIncoming": "Надіслав(-ла) контакт",
+  "contactShare_add": "Додати контакт",
+  "contactShare_adding": "Додавання контакту...",
+  "contactShare_saved": "Збережено",
+  "contactShare_isYou": "Це ви",
+  "contactShare_shareAction": "Надіслати контакт",
+  "contactShare_pickerTitle": "Надіслати контакт",
+  "contactShare_myContact": "Мій контакт",
+  "contactShare_searchHint": "Пошук контактів",
+  "contactShare_noContacts": "Контактів не знайдено",
+  "contactShare_preview": "Контакт: {name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "Надіслав(-ла) контакт: {name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "Трасування шляху за хешами",
+  "manualTrace_inputLabel": "Хеші репітерів",
+  "manualTrace_helper": "Приклад: {example}. Розділяйте комами або пробілами.",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "Хопи ({count})",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "Невідомий вузол",
+  "manualTrace_enterHashes": "Введіть хеші",
+  "manualTrace_run": "Запустити трасування шляху",
+  "manualTrace_notConnected": "Підключіться до радіо, щоб запустити трасування",
+  "manualTrace_errorInvalidHex": "Дозволені лише шістнадцяткові символи (0-9, A-F)",
+  "manualTrace_errorOddLength": "Кожен хеш має складатися з парної кількості шістнадцяткових символів, що відповідає розміру хопа",
+  "manualTrace_errorMixedWidths": "Усі хеші мають бути однакової довжини",
+  "manualTrace_errorUnsupportedWidth": "Хеші мають бути завдовжки 1, 2 або 3 байти (2, 4 або 6 шістнадцяткових символів)",
+  "manualTrace_errorTooManyHops": "Шлях задовгий (максимум {max} байт)",
+  "manualTrace_errorTraceTooLong": "Забагато хопів для трасування в одному запиті. Видаліть кілька хопів або виберіть «Як введено».",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "Не вдалося знайти це повідомлення в чаті",
+  "chat_clearSelection": "Скасувати вибір",
+  "chat_deleteSelectedConfirm": "{count, plural, one{Видалити {count} повідомлення з цього пристрою?} few{Видалити {count} повідомлення з цього пристрою?} many{Видалити {count} повідомлень з цього пристрою?} other{Видалити {count} повідомлення з цього пристрою?}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "Видалити повідомлення?",
+  "chat_messagesDeleted": "{count, plural, one{{count} повідомлення видалено} few{{count} повідомлення видалено} many{{count} повідомлень видалено} other{{count} повідомлення видалено}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "Вибрати все",
+  "chat_selectMessages": "Вибрати повідомлення",
+  "chat_selectedCount": "Вибрано: {count}",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "Додати знову",
+  "messageFilter_markedNotSpamCount": "{count, plural, one{{count} повідомлення позначено як не спам} few{{count} повідомлення позначено як не спам} many{{count} повідомлень позначено як не спам} other{{count} повідомлення позначено як не спам}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, one{{count} повідомлення позначено як спам} few{{count} повідомлення позначено як спам} many{{count} повідомлень позначено як спам} other{{count} повідомлення позначено як спам}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "Розгорнути список ретрансляторів",
+  "pathMap_showMap": "Показати карту",
+  "routing_modeDirect": "Напряму",
+  "routing_modeDirectHint": "Завжди надсилає напряму цьому контакту, без проміжних ретрансляторів. Використовуйте, якщо він у зоні радіозв'язку."
 }

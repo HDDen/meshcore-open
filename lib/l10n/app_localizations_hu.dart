@@ -399,6 +399,187 @@ class AppLocalizationsHu extends AppLocalizations {
       'Értesítések, üzenetküldés és térképbeállítások';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save or restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import File';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_passwordHelp =>
+      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+
+  @override
+  String get backupRestore_importUnavailable =>
+      'Check the password or choose a supported backup file.';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_nodeSettings => 'Node Settings';
+
+  @override
+  String get backupRestore_nodeSettingsDescription =>
+      'Device name, private and public keys, radio settings, and regions';
+
+  @override
+  String get backupRestore_deviceName => 'Device Name';
+
+  @override
+  String get backupRestore_privateKey => 'Private Key (sensitive)';
+
+  @override
+  String get backupRestore_publicKey => 'Public Key';
+
+  @override
+  String get backupRestore_radioSettings => 'Radio Settings';
+
+  @override
+  String get backupRestore_regions => 'Regions';
+
+  @override
+  String get backupRestore_location => 'Location';
+
+  @override
+  String get backupRestore_contactSettings => 'Contact Settings';
+
+  @override
+  String get backupRestore_privacySettings => 'Privacy Settings';
+
+  @override
+  String get backupRestore_contactsData => 'Contacts';
+
+  @override
+  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+
+  @override
+  String get backupRestore_contactGroups => 'Contact Groups';
+
+  @override
+  String get backupRestore_contactHistory => 'Contact History';
+
+  @override
+  String get backupRestore_channelsData => 'Channels';
+
+  @override
+  String get backupRestore_channelFilters => 'Message Filter Settings';
+
+  @override
+  String get backupRestore_channelSettings => 'Channel Settings';
+
+  @override
+  String get backupRestore_communities => 'Communities';
+
+  @override
+  String get backupRestore_channelHistory => 'Channel History';
+
+  @override
+  String get backupRestore_locationSettings => 'Location Settings';
+
+  @override
+  String get backupRestore_locationSettingsDescription =>
+      'Location, contact settings, and privacy settings';
+
+  @override
+  String get backupRestore_appSettings => 'App Settings';
+
+  @override
+  String get backupRestore_appSettingsDescription =>
+      'App preferences and appearance settings';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+
+  @override
+  String get backupRestore_contacts => 'Contacts';
+
+  @override
+  String get backupRestore_contactsDescription =>
+      'Contacts, per-contact filters and settings, groups, and message history';
+
+  @override
+  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+
+  @override
+  String get backupRestore_discoveredContactsDescription =>
+      'Discovered contacts and their saved details';
+
+  @override
+  String get backupRestore_channels => 'Channels';
+
+  @override
+  String get backupRestore_channelsDescription =>
+      'Channels, channel filters, communities, and message history';
+
+  @override
+  String get backupRestore_backup => 'Create Backup';
+
+  @override
+  String get backupRestore_restore => 'Restore Selected';
+
+  @override
+  String get backupRestore_backupComplete => 'Backup file created.';
+
+  @override
+  String get backupRestore_restoreComplete =>
+      'Restore complete. Reconnect if you restored the radio identity.';
+
+  @override
+  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+
+  @override
+  String backupRestore_missingModelsMessage(String models) {
+    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
+  }
+
+  @override
+  String get backupRestore_downloadModels => 'Download Models';
+
+  @override
+  String get backupRestore_downloading => 'Downloading…';
+
+  @override
+  String get backupRestore_cancelDownload => 'Cancel Download';
+
+  @override
+  String backupRestore_failed(String error) {
+    return 'Backup operation failed: $error';
+  }
+
+  @override
+  String get backupRestore_fileTooLarge =>
+      'Backup file is larger than the 100 MB limit.';
+
+  @override
+  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+
+  @override
+  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+
+  @override
+  String get backupRestore_replaceIdentityMessage =>
+      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+
+  @override
   String get settings_nodeSettings => 'Csomópont beállításai';
 
   @override
@@ -1108,6 +1289,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appSettings_languageUk => 'Українська';
 
   @override
+  String get appSettings_languageCs => 'Čeština';
+
+  @override
   String get repeater_pathHashModeOption0 => '1 bájt';
 
   @override
@@ -1264,34 +1448,6 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get appSettings_autoRouteRotationDisabled =>
       'Az automatikus útvonalforgatás letiltva';
-
-  @override
-  String get appSettings_maxRouteWeight => 'Maximális útvonalsúly';
-
-  @override
-  String get appSettings_maxRouteWeightSubtitle =>
-      'Maximális súly, amelyet egy útvonal felhalmozhat a sikeres szállításokból';
-
-  @override
-  String get appSettings_initialRouteWeight => 'Az útvonal kezdeti súlya';
-
-  @override
-  String get appSettings_initialRouteWeightSubtitle =>
-      'Kezdősúly az újonnan felfedezett utakhoz';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrement => 'Siker súlynövekedés';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      'Súly hozzáadva egy útvonalhoz a sikeres szállítás után';
-
-  @override
-  String get appSettings_routeWeightFailureDecrement => 'Hiba súlycsökkentés';
-
-  @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      'Sikertelen szállítás után eltávolított súly az útvonalról';
 
   @override
   String get appSettings_maxMessageRetries =>
@@ -2034,6 +2190,37 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_noMessages => 'Még nincsenek üzenetek';
 
   @override
+  String get chatSearch_tooltip => 'Üzenetek keresése';
+
+  @override
+  String get chatSearch_hint => 'Üzenetek keresése';
+
+  @override
+  String get chatSearch_close => 'Keresés bezárása';
+
+  @override
+  String chatSearch_resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count találat',
+      one: '1 találat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatSearch_noResults => 'Nincs egyező üzenet';
+
+  @override
+  String get chatSearch_noResultsHint =>
+      'Próbálj másik szót, vagy ellenőrizd a helyesírást';
+
+  @override
+  String get chatSearch_jumpFailed =>
+      'Ez az üzenet nem található a csevegésben';
+
+  @override
   String get chat_sendMessage => 'Üzenet küldése';
 
   @override
@@ -2077,6 +2264,67 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => 'Üzenet törölve';
+
+  @override
+  String get chat_selectMessages => 'Üzenetek kijelölése';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '$count kijelölve';
+  }
+
+  @override
+  String get chat_selectAll => 'Összes kijelölése';
+
+  @override
+  String get chat_clearSelection => 'Kijelölés törlése';
+
+  @override
+  String get chat_deleteSelectedTitle => 'Törli az üzeneteket?';
+
+  @override
+  String chat_deleteSelectedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Törli a(z) $count üzenetet erről az eszközről?',
+      one: 'Törli az 1 üzenetet erről az eszközről?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chat_messagesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count üzenet törölve',
+      one: '1 üzenet törölve',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count üzenet spamként megjelölve',
+      one: '1 üzenet spamként megjelölve',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedNotSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count üzenet nem spamként megjelölve',
+      one: '1 üzenet nem spamként megjelölve',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chat_retryingMessage => 'Üzenet újrapróbálkozása';
@@ -2313,7 +2561,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get routing_modeFlood => 'Elárasztás';
 
   @override
-  String get routing_modeManual => 'Kézikönyv';
+  String get routing_modeManual => 'Kézi';
+
+  @override
+  String get routing_modeDirect => 'Közvetlen';
 
   @override
   String get routing_modeAutoHint =>
@@ -2326,6 +2577,10 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Mindig pontosan az Ön által megadott útvonalon küld.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Mindig közvetlenül ennek a névjegynek küld, átjátszó ugrások nélkül. Akkor használja, ha rádiótávolságon belül van.';
 
   @override
   String get routing_currentRoute => 'Jelenlegi útvonal';
@@ -2479,6 +2734,52 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get chat_poiShared => 'POI megosztva';
+
+  @override
+  String get contactShare_headerOutgoing => 'Megosztottál egy névjegyet';
+
+  @override
+  String get contactShare_headerIncoming => 'Megosztott egy névjegyet';
+
+  @override
+  String get contactShare_add => 'Névjegy hozzáadása';
+
+  @override
+  String get contactShare_adding => 'Névjegy hozzáadása...';
+
+  @override
+  String get contactShare_saved => 'Mentve';
+
+  @override
+  String get contactShare_addAgain => 'Hozzáadás újra';
+
+  @override
+  String get contactShare_isYou => 'Ez te vagy';
+
+  @override
+  String get contactShare_shareAction => 'Névjegy megosztása';
+
+  @override
+  String get contactShare_pickerTitle => 'Névjegy megosztása';
+
+  @override
+  String get contactShare_myContact => 'Saját névjegyem';
+
+  @override
+  String get contactShare_searchHint => 'Névjegyek keresése';
+
+  @override
+  String get contactShare_noContacts => 'Nem található névjegy';
+
+  @override
+  String contactShare_preview(String name) {
+    return 'Megosztott névjegy: $name';
+  }
+
+  @override
+  String contactShare_notification(String name) {
+    return 'Megosztott egy névjegyet: $name';
+  }
 
   @override
   String chat_unread(int count) {
@@ -2789,6 +3090,60 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Utolsó eredmény megtekintése';
+
+  @override
+  String get manualTrace_menuItem => 'Útvonal-nyomkövetés hashek alapján';
+
+  @override
+  String get manualTrace_inputLabel => 'Átjátszó hashek';
+
+  @override
+  String manualTrace_helper(String example) {
+    return 'Példa: $example. Vesszővel vagy szóközzel válaszd el.';
+  }
+
+  @override
+  String manualTrace_previewTitle(int count) {
+    return 'Ugrások ($count)';
+  }
+
+  @override
+  String get manualTrace_unknownNode => 'Ismeretlen csomópont';
+
+  @override
+  String get manualTrace_enterHashes => 'Add meg a hasheket';
+
+  @override
+  String get manualTrace_run => 'Útvonal-nyomkövetés indítása';
+
+  @override
+  String get manualTrace_notConnected =>
+      'Csatlakozz egy rádióhoz a nyomkövetés indításához';
+
+  @override
+  String get manualTrace_errorInvalidHex =>
+      'Csak hexadecimális karakterek (0-9, A-F) engedélyezettek';
+
+  @override
+  String get manualTrace_errorOddLength =>
+      'Minden hashnek páros számú hexadecimális karakterből kell állnia, az ugrásmérettel egyezően';
+
+  @override
+  String get manualTrace_errorMixedWidths =>
+      'Minden hashnek azonos hosszúságúnak kell lennie';
+
+  @override
+  String get manualTrace_errorUnsupportedWidth =>
+      'A hasheknek 1, 2 vagy 3 bájtosnak kell lenniük (2, 4 vagy 6 hexadecimális karakter)';
+
+  @override
+  String manualTrace_errorTooManyHops(int max) {
+    return 'Az útvonal túl hosszú (legfeljebb $max bájt)';
+  }
+
+  @override
+  String get manualTrace_errorTraceTooLong =>
+      'Túl sok ugrás egyetlen nyomkövetési kéréshez. Távolíts el néhány ugrást, vagy válaszd a „Megadott sorrendben” lehetőséget.';
 
   @override
   String get mapCache_title => 'Offline térképgyorsítótár';
@@ -3193,6 +3548,11 @@ class AppLocalizationsHu extends AppLocalizations {
     int seconds,
   ) {
     return '$days nap $hoursó ${minutes}p ${seconds}s';
+  }
+
+  @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '$hoursó ${minutes}p ${seconds}s';
   }
 
   @override
@@ -5846,6 +6206,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get pathMap_expandPanel => 'Panel kibontása';
 
   @override
+  String get pathMap_expandHopList => 'Ugráslista kibontása';
+
+  @override
+  String get pathMap_showMap => 'Térkép megjelenítése';
+
+  @override
   String get pathMap_noLocation => 'Nincs hely';
 
   @override
@@ -6940,6 +7306,14 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get messageFilter_duplicatesSubtitle =>
       'Ugyanaz az üzenet újra elküldve, vagy több feladótól';
+
+  @override
+  String get messageFilter_repeatSends => 'Ismétlésnek számító küldések';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return 'Üzenet elrejtése, ha ugyanaz a feladó $count× elküldi 10 percen belül';
+  }
 
   @override
   String get messageFilter_repeatedCharacters => 'Ismétlődő karakterek';

@@ -528,116 +528,6 @@ class AppSettingsScreen extends StatelessWidget {
                     children: [
                       const Divider(height: 1),
                       ListTile(
-                        title: Text(context.l10n.appSettings_maxRouteWeight),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.appSettings_maxRouteWeightSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService.settings.maxRouteWeight,
-                              min: 1,
-                              max: 10,
-                              divisions: 9,
-                              label: settingsService.settings.maxRouteWeight
-                                  .round()
-                                  .toString(),
-                              onChanged: (value) =>
-                                  settingsService.setMaxRouteWeight(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_initialRouteWeight,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_initialRouteWeightSubtitle,
-                            ),
-                            Slider(
-                              value:
-                                  settingsService.settings.initialRouteWeight,
-                              min: 0.5,
-                              max: 5.0,
-                              divisions: 9,
-                              label: settingsService.settings.initialRouteWeight
-                                  .toStringAsFixed(1),
-                              onChanged: (value) =>
-                                  settingsService.setInitialRouteWeight(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_routeWeightSuccessIncrement,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_routeWeightSuccessIncrementSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService
-                                  .settings
-                                  .routeWeightSuccessIncrement,
-                              min: 0.1,
-                              max: 2.0,
-                              divisions: 19,
-                              label: settingsService
-                                  .settings
-                                  .routeWeightSuccessIncrement
-                                  .toStringAsFixed(1),
-                              onChanged: (value) => settingsService
-                                  .setRouteWeightSuccessIncrement(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_routeWeightFailureDecrement,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_routeWeightFailureDecrementSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService
-                                  .settings
-                                  .routeWeightFailureDecrement,
-                              min: 0.1,
-                              max: 2.0,
-                              divisions: 19,
-                              label: settingsService
-                                  .settings
-                                  .routeWeightFailureDecrement
-                                  .toStringAsFixed(1),
-                              onChanged: (value) => settingsService
-                                  .setRouteWeightFailureDecrement(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
                         title: Text(context.l10n.appSettings_maxMessageRetries),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -942,7 +832,7 @@ class AppSettingsScreen extends StatelessWidget {
   ) {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final alreadyHave = codec.availableModels.any((m) => m.id == spec.id);
+    final alreadyHave = spec.hasCompleteInstalledRecord(codec.availableModels);
     // downloadPresetModel throws StateError on a placeholder URL, deliberately,
     // so the button must not be offerable until the weights are published.
     final blocked = spec.urlsArePlaceholders;
@@ -1001,7 +891,7 @@ class AppSettingsScreen extends StatelessWidget {
     final l10n = context.l10n;
     try {
       await codec.downloadPresetModel(spec);
-    } on Exception catch (error) {
+    } catch (error) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.imageMessages_downloadFailedWithError('$error')),

@@ -403,6 +403,187 @@ class AppLocalizationsFr extends AppLocalizations {
       'Notifications, messagerie et préférences de carte';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save or restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import File';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_passwordHelp =>
+      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+
+  @override
+  String get backupRestore_importUnavailable =>
+      'Check the password or choose a supported backup file.';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_nodeSettings => 'Node Settings';
+
+  @override
+  String get backupRestore_nodeSettingsDescription =>
+      'Device name, private and public keys, radio settings, and regions';
+
+  @override
+  String get backupRestore_deviceName => 'Device Name';
+
+  @override
+  String get backupRestore_privateKey => 'Private Key (sensitive)';
+
+  @override
+  String get backupRestore_publicKey => 'Public Key';
+
+  @override
+  String get backupRestore_radioSettings => 'Radio Settings';
+
+  @override
+  String get backupRestore_regions => 'Regions';
+
+  @override
+  String get backupRestore_location => 'Location';
+
+  @override
+  String get backupRestore_contactSettings => 'Contact Settings';
+
+  @override
+  String get backupRestore_privacySettings => 'Privacy Settings';
+
+  @override
+  String get backupRestore_contactsData => 'Contacts';
+
+  @override
+  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+
+  @override
+  String get backupRestore_contactGroups => 'Contact Groups';
+
+  @override
+  String get backupRestore_contactHistory => 'Contact History';
+
+  @override
+  String get backupRestore_channelsData => 'Channels';
+
+  @override
+  String get backupRestore_channelFilters => 'Message Filter Settings';
+
+  @override
+  String get backupRestore_channelSettings => 'Channel Settings';
+
+  @override
+  String get backupRestore_communities => 'Communities';
+
+  @override
+  String get backupRestore_channelHistory => 'Channel History';
+
+  @override
+  String get backupRestore_locationSettings => 'Location Settings';
+
+  @override
+  String get backupRestore_locationSettingsDescription =>
+      'Location, contact settings, and privacy settings';
+
+  @override
+  String get backupRestore_appSettings => 'App Settings';
+
+  @override
+  String get backupRestore_appSettingsDescription =>
+      'App preferences and appearance settings';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+
+  @override
+  String get backupRestore_contacts => 'Contacts';
+
+  @override
+  String get backupRestore_contactsDescription =>
+      'Contacts, per-contact filters and settings, groups, and message history';
+
+  @override
+  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+
+  @override
+  String get backupRestore_discoveredContactsDescription =>
+      'Discovered contacts and their saved details';
+
+  @override
+  String get backupRestore_channels => 'Channels';
+
+  @override
+  String get backupRestore_channelsDescription =>
+      'Channels, channel filters, communities, and message history';
+
+  @override
+  String get backupRestore_backup => 'Create Backup';
+
+  @override
+  String get backupRestore_restore => 'Restore Selected';
+
+  @override
+  String get backupRestore_backupComplete => 'Backup file created.';
+
+  @override
+  String get backupRestore_restoreComplete =>
+      'Restore complete. Reconnect if you restored the radio identity.';
+
+  @override
+  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+
+  @override
+  String backupRestore_missingModelsMessage(String models) {
+    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
+  }
+
+  @override
+  String get backupRestore_downloadModels => 'Download Models';
+
+  @override
+  String get backupRestore_downloading => 'Downloading…';
+
+  @override
+  String get backupRestore_cancelDownload => 'Cancel Download';
+
+  @override
+  String backupRestore_failed(String error) {
+    return 'Backup operation failed: $error';
+  }
+
+  @override
+  String get backupRestore_fileTooLarge =>
+      'Backup file is larger than the 100 MB limit.';
+
+  @override
+  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+
+  @override
+  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+
+  @override
+  String get backupRestore_replaceIdentityMessage =>
+      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+
+  @override
   String get settings_nodeSettings => 'Paramètres du nœud';
 
   @override
@@ -1115,6 +1296,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainien';
 
   @override
+  String get appSettings_languageCs => 'Tchèque';
+
+  @override
   String get repeater_pathHashModeOption0 => '0 - 1 octet';
 
   @override
@@ -1272,36 +1456,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get appSettings_autoRouteRotationDisabled =>
       'Rotation automatique du routage désactivée';
-
-  @override
-  String get appSettings_maxRouteWeight => 'Poids maximal du chemin';
-
-  @override
-  String get appSettings_maxRouteWeightSubtitle =>
-      'Poids maximal qu\'un chemin peut accumuler grâce aux livraisons réussies.';
-
-  @override
-  String get appSettings_initialRouteWeight => 'Poids initial de l\'itinéraire';
-
-  @override
-  String get appSettings_initialRouteWeightSubtitle =>
-      'Poids de départ pour les nouveaux chemins découverts';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrement =>
-      'Incrément du poids de succès';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      'Poids ajouté à un chemin après une livraison réussie.';
-
-  @override
-  String get appSettings_routeWeightFailureDecrement =>
-      'Décrément du poids d\'échec';
-
-  @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      'Poids retiré d\'un chemin après une tentative de livraison infructueuse.';
 
   @override
   String get appSettings_maxMessageRetries =>
@@ -2043,6 +2197,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_noMessages => 'Aucun message pour le moment';
 
   @override
+  String get chatSearch_tooltip => 'Rechercher des messages';
+
+  @override
+  String get chatSearch_hint => 'Rechercher des messages';
+
+  @override
+  String get chatSearch_close => 'Fermer la recherche';
+
+  @override
+  String chatSearch_resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count résultats',
+      one: '1 résultat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatSearch_noResults => 'Aucun message correspondant';
+
+  @override
+  String get chatSearch_noResultsHint =>
+      'Essayez un autre mot ou vérifiez l\'orthographe';
+
+  @override
+  String get chatSearch_jumpFailed =>
+      'Impossible de trouver ce message dans la discussion';
+
+  @override
   String get chat_sendMessage => 'Envoyer un message';
 
   @override
@@ -2086,6 +2271,67 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => 'Message supprimé';
+
+  @override
+  String get chat_selectMessages => 'Sélectionner des messages';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '$count sélectionné(s)';
+  }
+
+  @override
+  String get chat_selectAll => 'Tout sélectionner';
+
+  @override
+  String get chat_clearSelection => 'Effacer la sélection';
+
+  @override
+  String get chat_deleteSelectedTitle => 'Supprimer les messages ?';
+
+  @override
+  String chat_deleteSelectedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Supprimer $count messages de cet appareil ?',
+      one: 'Supprimer 1 message de cet appareil ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chat_messagesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages supprimés',
+      one: '1 message supprimé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages marqués comme spam',
+      one: '1 message marqué comme spam',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedNotSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages marqués comme pas un spam',
+      one: '1 message marqué comme pas un spam',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chat_retryingMessage => 'Nouvelle tentative d\'envoi du message';
@@ -2326,6 +2572,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get routing_modeManual => 'Manuel';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeAutoHint =>
       'Sélectionne automatiquement le meilleur chemin connu, et utilise le flood si aucun chemin n\'est connu.';
 
@@ -2336,6 +2585,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Envoie toujours selon le chemin exact que vous avez défini.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Envoie toujours directement à ce contact, sans relais. À utiliser quand il est à portée radio.';
 
   @override
   String get routing_currentRoute => 'Route actuelle';
@@ -2490,6 +2743,52 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chat_poiShared => 'Point d\'intérêt partagé';
+
+  @override
+  String get contactShare_headerOutgoing => 'Vous avez partagé un contact';
+
+  @override
+  String get contactShare_headerIncoming => 'A partagé un contact';
+
+  @override
+  String get contactShare_add => 'Ajouter le contact';
+
+  @override
+  String get contactShare_adding => 'Ajout du contact...';
+
+  @override
+  String get contactShare_saved => 'Enregistré';
+
+  @override
+  String get contactShare_addAgain => 'Ajouter à nouveau';
+
+  @override
+  String get contactShare_isYou => 'C\'est vous';
+
+  @override
+  String get contactShare_shareAction => 'Partager le contact';
+
+  @override
+  String get contactShare_pickerTitle => 'Partager un contact';
+
+  @override
+  String get contactShare_myContact => 'Mon contact';
+
+  @override
+  String get contactShare_searchHint => 'Rechercher des contacts';
+
+  @override
+  String get contactShare_noContacts => 'Aucun contact trouvé';
+
+  @override
+  String contactShare_preview(String name) {
+    return 'Contact partagé : $name';
+  }
+
+  @override
+  String contactShare_notification(String name) {
+    return 'A partagé un contact : $name';
+  }
 
   @override
   String chat_unread(int count) {
@@ -2799,6 +3098,60 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Voir le dernier résultat';
+
+  @override
+  String get manualTrace_menuItem => 'Traçage de chemin par hachages';
+
+  @override
+  String get manualTrace_inputLabel => 'Hachages des répéteurs';
+
+  @override
+  String manualTrace_helper(String example) {
+    return 'Exemple : $example. Séparez par des virgules ou des espaces.';
+  }
+
+  @override
+  String manualTrace_previewTitle(int count) {
+    return 'Sauts ($count)';
+  }
+
+  @override
+  String get manualTrace_unknownNode => 'Nœud inconnu';
+
+  @override
+  String get manualTrace_enterHashes => 'Saisissez les hachages';
+
+  @override
+  String get manualTrace_run => 'Lancer le traçage de chemin';
+
+  @override
+  String get manualTrace_notConnected =>
+      'Connectez-vous à une radio pour lancer une trace';
+
+  @override
+  String get manualTrace_errorInvalidHex =>
+      'Seuls les caractères hexadécimaux (0-9, A-F) sont autorisés';
+
+  @override
+  String get manualTrace_errorOddLength =>
+      'Chaque hachage doit avoir un nombre pair de caractères hexadécimaux, correspondant à la taille du saut';
+
+  @override
+  String get manualTrace_errorMixedWidths =>
+      'Tous les hachages doivent avoir la même longueur';
+
+  @override
+  String get manualTrace_errorUnsupportedWidth =>
+      'Les hachages doivent faire 1, 2 ou 3 octets (2, 4 ou 6 caractères hexadécimaux)';
+
+  @override
+  String manualTrace_errorTooManyHops(int max) {
+    return 'Le chemin est trop long (maximum $max octets)';
+  }
+
+  @override
+  String get manualTrace_errorTraceTooLong =>
+      'Trop de sauts à tracer en une seule requête. Retirez des sauts ou choisissez « Tel que saisi ».';
 
   @override
   String get mapCache_title => 'Cache de carte hors ligne';
@@ -3202,6 +3555,11 @@ class AppLocalizationsFr extends AppLocalizations {
     int seconds,
   ) {
     return '$days jours ${hours}h ${minutes}m ${seconds}s';
+  }
+
+  @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '${hours}h ${minutes}m ${seconds}s';
   }
 
   @override
@@ -5874,6 +6232,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pathMap_expandPanel => 'Développer le panneau';
 
   @override
+  String get pathMap_expandHopList => 'Agrandir la liste des relais';
+
+  @override
+  String get pathMap_showMap => 'Afficher la carte';
+
+  @override
   String get pathMap_noLocation => 'Aucune localisation';
 
   @override
@@ -6977,6 +7341,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get messageFilter_duplicatesSubtitle =>
       'Le même message envoyé de nouveau, ou par plusieurs expéditeurs';
+
+  @override
+  String get messageFilter_repeatSends => 'Envois comptés comme répétition';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return 'Masquer un message lorsque le même expéditeur l\'envoie $count fois en 10 minutes';
+  }
 
   @override
   String get messageFilter_repeatedCharacters => 'Caractères répétés';

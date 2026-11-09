@@ -378,6 +378,187 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_appSettingsSubtitle => '通知、消息和地图偏好';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save or restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import File';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_passwordHelp =>
+      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+
+  @override
+  String get backupRestore_importUnavailable =>
+      'Check the password or choose a supported backup file.';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_nodeSettings => 'Node Settings';
+
+  @override
+  String get backupRestore_nodeSettingsDescription =>
+      'Device name, private and public keys, radio settings, and regions';
+
+  @override
+  String get backupRestore_deviceName => 'Device Name';
+
+  @override
+  String get backupRestore_privateKey => 'Private Key (sensitive)';
+
+  @override
+  String get backupRestore_publicKey => 'Public Key';
+
+  @override
+  String get backupRestore_radioSettings => 'Radio Settings';
+
+  @override
+  String get backupRestore_regions => 'Regions';
+
+  @override
+  String get backupRestore_location => 'Location';
+
+  @override
+  String get backupRestore_contactSettings => 'Contact Settings';
+
+  @override
+  String get backupRestore_privacySettings => 'Privacy Settings';
+
+  @override
+  String get backupRestore_contactsData => 'Contacts';
+
+  @override
+  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+
+  @override
+  String get backupRestore_contactGroups => 'Contact Groups';
+
+  @override
+  String get backupRestore_contactHistory => 'Contact History';
+
+  @override
+  String get backupRestore_channelsData => 'Channels';
+
+  @override
+  String get backupRestore_channelFilters => 'Message Filter Settings';
+
+  @override
+  String get backupRestore_channelSettings => 'Channel Settings';
+
+  @override
+  String get backupRestore_communities => 'Communities';
+
+  @override
+  String get backupRestore_channelHistory => 'Channel History';
+
+  @override
+  String get backupRestore_locationSettings => 'Location Settings';
+
+  @override
+  String get backupRestore_locationSettingsDescription =>
+      'Location, contact settings, and privacy settings';
+
+  @override
+  String get backupRestore_appSettings => 'App Settings';
+
+  @override
+  String get backupRestore_appSettingsDescription =>
+      'App preferences and appearance settings';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+
+  @override
+  String get backupRestore_contacts => 'Contacts';
+
+  @override
+  String get backupRestore_contactsDescription =>
+      'Contacts, per-contact filters and settings, groups, and message history';
+
+  @override
+  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+
+  @override
+  String get backupRestore_discoveredContactsDescription =>
+      'Discovered contacts and their saved details';
+
+  @override
+  String get backupRestore_channels => 'Channels';
+
+  @override
+  String get backupRestore_channelsDescription =>
+      'Channels, channel filters, communities, and message history';
+
+  @override
+  String get backupRestore_backup => 'Create Backup';
+
+  @override
+  String get backupRestore_restore => 'Restore Selected';
+
+  @override
+  String get backupRestore_backupComplete => 'Backup file created.';
+
+  @override
+  String get backupRestore_restoreComplete =>
+      'Restore complete. Reconnect if you restored the radio identity.';
+
+  @override
+  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+
+  @override
+  String backupRestore_missingModelsMessage(String models) {
+    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
+  }
+
+  @override
+  String get backupRestore_downloadModels => 'Download Models';
+
+  @override
+  String get backupRestore_downloading => 'Downloading…';
+
+  @override
+  String get backupRestore_cancelDownload => 'Cancel Download';
+
+  @override
+  String backupRestore_failed(String error) {
+    return 'Backup operation failed: $error';
+  }
+
+  @override
+  String get backupRestore_fileTooLarge =>
+      'Backup file is larger than the 100 MB limit.';
+
+  @override
+  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+
+  @override
+  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+
+  @override
+  String get backupRestore_replaceIdentityMessage =>
+      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+
+  @override
   String get settings_nodeSettings => '节点设置';
 
   @override
@@ -1048,6 +1229,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_languageUk => '乌克兰语';
 
   @override
+  String get appSettings_languageCs => '捷克语';
+
+  @override
   String get repeater_pathHashModeOption0 => '0 - 1 字节';
 
   @override
@@ -1187,32 +1371,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationDisabled => '自动路径轮换已禁用';
-
-  @override
-  String get appSettings_maxRouteWeight => '最大路径重量';
-
-  @override
-  String get appSettings_maxRouteWeightSubtitle => '一条路径可以累积的最大重量，取决于成功交付的数量。';
-
-  @override
-  String get appSettings_initialRouteWeight => '初始路线权重';
-
-  @override
-  String get appSettings_initialRouteWeightSubtitle => '新发现路径的初始重量';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrement => '成功权重增加';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      '在成功交付后，将重量添加到路径中';
-
-  @override
-  String get appSettings_routeWeightFailureDecrement => '失败权重降低';
-
-  @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      '从一条路径上移除的货物，由于无法成功交付而移除。';
 
   @override
   String get appSettings_maxMessageRetries => '最大消息重试次数';
@@ -1917,6 +2075,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_noMessages => '暂无消息';
 
   @override
+  String get chatSearch_tooltip => '搜索消息';
+
+  @override
+  String get chatSearch_hint => '搜索消息';
+
+  @override
+  String get chatSearch_close => '关闭搜索';
+
+  @override
+  String chatSearch_resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条结果',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatSearch_noResults => '没有匹配的消息';
+
+  @override
+  String get chatSearch_noResultsHint => '请尝试其他词语或检查拼写';
+
+  @override
+  String get chatSearch_jumpFailed => '在聊天中找不到该消息';
+
+  @override
   String get chat_sendMessage => '发送消息';
 
   @override
@@ -1959,6 +2145,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => '消息已删除';
+
+  @override
+  String get chat_selectMessages => '选择消息';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '已选择 $count 项';
+  }
+
+  @override
+  String get chat_selectAll => '全选';
+
+  @override
+  String get chat_clearSelection => '取消选择';
+
+  @override
+  String get chat_deleteSelectedTitle => '删除消息？';
+
+  @override
+  String chat_deleteSelectedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '要从此设备删除 $count 条消息吗？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chat_messagesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已删除 $count 条消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已将 $count 条消息标记为垃圾消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedNotSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已将 $count 条消息标记为非垃圾消息',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chat_retryingMessage => '正在重试消息';
@@ -2175,13 +2418,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_title => '路由';
 
   @override
-  String get routing_modeAuto => '汽车';
+  String get routing_modeAuto => '自动';
 
   @override
   String get routing_modeFlood => '泛洪';
 
   @override
-  String get routing_modeManual => '手册';
+  String get routing_modeManual => '手动';
+
+  @override
+  String get routing_modeDirect => '直连';
 
   @override
   String get routing_modeAutoHint => '自动选择已知最佳路径，当没有已知路径时，则进行“泛洪”搜索。';
@@ -2191,6 +2437,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get routing_modeManualHint => '总是按照您设置的路径进行导航。';
+
+  @override
+  String get routing_modeDirectHint => '始终直接发送给该联系人，不经过中继跳。在对方处于无线电范围内时使用。';
 
   @override
   String get routing_currentRoute => '当前路线';
@@ -2340,6 +2589,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_poiShared => '共享位置';
+
+  @override
+  String get contactShare_headerOutgoing => '你分享了一个联系人';
+
+  @override
+  String get contactShare_headerIncoming => '分享了一个联系人';
+
+  @override
+  String get contactShare_add => '添加联系人';
+
+  @override
+  String get contactShare_adding => '正在添加联系人...';
+
+  @override
+  String get contactShare_saved => '已保存';
+
+  @override
+  String get contactShare_addAgain => '重新添加';
+
+  @override
+  String get contactShare_isYou => '这是你自己';
+
+  @override
+  String get contactShare_shareAction => '分享联系人';
+
+  @override
+  String get contactShare_pickerTitle => '分享联系人';
+
+  @override
+  String get contactShare_myContact => '我的联系人';
+
+  @override
+  String get contactShare_searchHint => '搜索联系人';
+
+  @override
+  String get contactShare_noContacts => '未找到联系人';
+
+  @override
+  String contactShare_preview(String name) {
+    return '分享的联系人：$name';
+  }
+
+  @override
+  String contactShare_notification(String name) {
+    return '分享了一个联系人：$name';
+  }
 
   @override
   String chat_unread(int count) {
@@ -2635,6 +2930,56 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => '查看上次结果';
+
+  @override
+  String get manualTrace_menuItem => '按哈希进行路径追踪';
+
+  @override
+  String get manualTrace_inputLabel => '中继器哈希';
+
+  @override
+  String manualTrace_helper(String example) {
+    return '示例：$example。用逗号或空格分隔。';
+  }
+
+  @override
+  String manualTrace_previewTitle(int count) {
+    return '跳数（$count）';
+  }
+
+  @override
+  String get manualTrace_unknownNode => '未知节点';
+
+  @override
+  String get manualTrace_enterHashes => '输入哈希';
+
+  @override
+  String get manualTrace_run => '运行路径追踪';
+
+  @override
+  String get manualTrace_notConnected => '请连接电台以运行追踪';
+
+  @override
+  String get manualTrace_errorInvalidHex => '仅允许十六进制字符（0-9、A-F）';
+
+  @override
+  String get manualTrace_errorOddLength => '每个哈希的十六进制字符数必须为偶数，与跳大小一致';
+
+  @override
+  String get manualTrace_errorMixedWidths => '所有哈希长度必须相同';
+
+  @override
+  String get manualTrace_errorUnsupportedWidth =>
+      '哈希必须为 1、2 或 3 字节（2、4 或 6 个十六进制字符）';
+
+  @override
+  String manualTrace_errorTooManyHops(int max) {
+    return '路径过长（最多 $max 字节）';
+  }
+
+  @override
+  String get manualTrace_errorTraceTooLong =>
+      '跳数过多，无法在一次请求中追踪。请减少一些跳，或选择“按输入顺序”。';
 
   @override
   String get mapCache_title => '离线地图缓存';
@@ -3023,6 +3368,11 @@ class AppLocalizationsZh extends AppLocalizations {
     int seconds,
   ) {
     return '$days天 $hours小时 $minutes分 $seconds秒';
+  }
+
+  @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '$hours小时 $minutes分 $seconds秒';
   }
 
   @override
@@ -5059,7 +5409,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '打开转发节点设置时请求所有设置。每项设置都是一次通过 LoRa 发送的独立请求，因此速度较慢并会占用空中时间。关闭后，请点按“全部刷新”或刷新单独的部分。';
 
   @override
-  String get appSettings_languageHu => '匈牙利';
+  String get appSettings_languageHu => '匈牙利语';
 
   @override
   String get appSettings_languageJa => '日语';
@@ -5432,6 +5782,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pathMap_expandPanel => '展开面板';
+
+  @override
+  String get pathMap_expandHopList => '展开中继列表';
+
+  @override
+  String get pathMap_showMap => '显示地图';
 
   @override
   String get pathMap_noLocation => '无位置';
@@ -6475,6 +6831,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get messageFilter_duplicatesSubtitle => '重复发送的相同消息，或多个发送者发送的相同消息';
+
+  @override
+  String get messageFilter_repeatSends => '视为重复的发送次数';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return '同一发送者在 10 分钟内发送同一消息 $count 次时隐藏该消息';
+  }
 
   @override
   String get messageFilter_repeatedCharacters => '重复字符';

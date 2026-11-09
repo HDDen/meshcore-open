@@ -397,6 +397,187 @@ class AppLocalizationsSv extends AppLocalizations {
       'Notifieringar, meddelanden och kartinställningar';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save or restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import File';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_passwordHelp =>
+      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+
+  @override
+  String get backupRestore_importUnavailable =>
+      'Check the password or choose a supported backup file.';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_nodeSettings => 'Node Settings';
+
+  @override
+  String get backupRestore_nodeSettingsDescription =>
+      'Device name, private and public keys, radio settings, and regions';
+
+  @override
+  String get backupRestore_deviceName => 'Device Name';
+
+  @override
+  String get backupRestore_privateKey => 'Private Key (sensitive)';
+
+  @override
+  String get backupRestore_publicKey => 'Public Key';
+
+  @override
+  String get backupRestore_radioSettings => 'Radio Settings';
+
+  @override
+  String get backupRestore_regions => 'Regions';
+
+  @override
+  String get backupRestore_location => 'Location';
+
+  @override
+  String get backupRestore_contactSettings => 'Contact Settings';
+
+  @override
+  String get backupRestore_privacySettings => 'Privacy Settings';
+
+  @override
+  String get backupRestore_contactsData => 'Contacts';
+
+  @override
+  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+
+  @override
+  String get backupRestore_contactGroups => 'Contact Groups';
+
+  @override
+  String get backupRestore_contactHistory => 'Contact History';
+
+  @override
+  String get backupRestore_channelsData => 'Channels';
+
+  @override
+  String get backupRestore_channelFilters => 'Message Filter Settings';
+
+  @override
+  String get backupRestore_channelSettings => 'Channel Settings';
+
+  @override
+  String get backupRestore_communities => 'Communities';
+
+  @override
+  String get backupRestore_channelHistory => 'Channel History';
+
+  @override
+  String get backupRestore_locationSettings => 'Location Settings';
+
+  @override
+  String get backupRestore_locationSettingsDescription =>
+      'Location, contact settings, and privacy settings';
+
+  @override
+  String get backupRestore_appSettings => 'App Settings';
+
+  @override
+  String get backupRestore_appSettingsDescription =>
+      'App preferences and appearance settings';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+
+  @override
+  String get backupRestore_contacts => 'Contacts';
+
+  @override
+  String get backupRestore_contactsDescription =>
+      'Contacts, per-contact filters and settings, groups, and message history';
+
+  @override
+  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+
+  @override
+  String get backupRestore_discoveredContactsDescription =>
+      'Discovered contacts and their saved details';
+
+  @override
+  String get backupRestore_channels => 'Channels';
+
+  @override
+  String get backupRestore_channelsDescription =>
+      'Channels, channel filters, communities, and message history';
+
+  @override
+  String get backupRestore_backup => 'Create Backup';
+
+  @override
+  String get backupRestore_restore => 'Restore Selected';
+
+  @override
+  String get backupRestore_backupComplete => 'Backup file created.';
+
+  @override
+  String get backupRestore_restoreComplete =>
+      'Restore complete. Reconnect if you restored the radio identity.';
+
+  @override
+  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+
+  @override
+  String backupRestore_missingModelsMessage(String models) {
+    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
+  }
+
+  @override
+  String get backupRestore_downloadModels => 'Download Models';
+
+  @override
+  String get backupRestore_downloading => 'Downloading…';
+
+  @override
+  String get backupRestore_cancelDownload => 'Cancel Download';
+
+  @override
+  String backupRestore_failed(String error) {
+    return 'Backup operation failed: $error';
+  }
+
+  @override
+  String get backupRestore_fileTooLarge =>
+      'Backup file is larger than the 100 MB limit.';
+
+  @override
+  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+
+  @override
+  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+
+  @override
+  String get backupRestore_replaceIdentityMessage =>
+      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+
+  @override
   String get settings_nodeSettings => 'Nodinställningar';
 
   @override
@@ -1096,6 +1277,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_languageUk => 'Ukrainska';
 
   @override
+  String get appSettings_languageCs => 'Tjeckiska';
+
+  @override
   String get repeater_pathHashModeOption0 => '0 - 1 byte';
 
   @override
@@ -1250,36 +1434,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get appSettings_autoRouteRotationDisabled =>
       'Automatisk ruttrotation är avstängd';
-
-  @override
-  String get appSettings_maxRouteWeight => 'Maximal ruttvikt';
-
-  @override
-  String get appSettings_maxRouteWeightSubtitle =>
-      'Maximal vikt som en rutt kan samla efter lyckade leveranser';
-
-  @override
-  String get appSettings_initialRouteWeight => 'Initial vikt för rutt';
-
-  @override
-  String get appSettings_initialRouteWeightSubtitle =>
-      'Startvikt för nyligen upptäckta rutter';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrement =>
-      'Ökning av vikt för framgång';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      'Vikt som läggs till en rutt efter en lyckad leverans';
-
-  @override
-  String get appSettings_routeWeightFailureDecrement =>
-      'Minskning av vikten för misslyckande';
-
-  @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      'Vikt som tas bort från en rutt efter en misslyckad leverans';
 
   @override
   String get appSettings_maxMessageRetries => 'Maximalt antal försök';
@@ -2013,6 +2167,37 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_noMessages => 'Inga meddelanden ännu';
 
   @override
+  String get chatSearch_tooltip => 'Sök i meddelanden';
+
+  @override
+  String get chatSearch_hint => 'Sök i meddelanden';
+
+  @override
+  String get chatSearch_close => 'Stäng sökning';
+
+  @override
+  String chatSearch_resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count träffar',
+      one: '1 träff',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatSearch_noResults => 'Inga matchande meddelanden';
+
+  @override
+  String get chatSearch_noResultsHint =>
+      'Prova ett annat ord eller kontrollera stavningen';
+
+  @override
+  String get chatSearch_jumpFailed =>
+      'Det gick inte att hitta meddelandet i chatten';
+
+  @override
   String get chat_sendMessage => 'Skicka meddelande';
 
   @override
@@ -2058,6 +2243,67 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => 'Meddelandet raderat';
+
+  @override
+  String get chat_selectMessages => 'Markera meddelanden';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '$count markerade';
+  }
+
+  @override
+  String get chat_selectAll => 'Markera alla';
+
+  @override
+  String get chat_clearSelection => 'Rensa markering';
+
+  @override
+  String get chat_deleteSelectedTitle => 'Radera meddelanden?';
+
+  @override
+  String chat_deleteSelectedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Radera $count meddelanden från den här enheten?',
+      one: 'Radera 1 meddelande från den här enheten?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chat_messagesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meddelanden raderade',
+      one: '1 meddelande raderat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meddelanden markerade som skräppost',
+      one: '1 meddelande markerat som skräppost',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedNotSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meddelanden markerade som inte skräppost',
+      one: '1 meddelande markerat som inte skräppost',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chat_retryingMessage => 'Försöker igen';
@@ -2297,6 +2543,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get routing_modeManual => 'Manuell';
 
   @override
+  String get routing_modeDirect => 'Direkt';
+
+  @override
   String get routing_modeAutoHint =>
       'Väljer automatiskt den bästa kända rutten och använder flood när ingen rutt är känd.';
 
@@ -2307,6 +2556,10 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Skickar alltid längs exakt den rutt du anger.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Skickar alltid direkt till den här kontakten utan repeaterhopp. Använd när kontakten är inom radioräckvidd.';
 
   @override
   String get routing_currentRoute => 'Nuvarande rutt';
@@ -2460,6 +2713,52 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get chat_poiShared => 'Delad POI';
+
+  @override
+  String get contactShare_headerOutgoing => 'Du delade en kontakt';
+
+  @override
+  String get contactShare_headerIncoming => 'Delade en kontakt';
+
+  @override
+  String get contactShare_add => 'Lägg till kontakt';
+
+  @override
+  String get contactShare_adding => 'Lägger till kontakt...';
+
+  @override
+  String get contactShare_saved => 'Sparad';
+
+  @override
+  String get contactShare_addAgain => 'Lägg till igen';
+
+  @override
+  String get contactShare_isYou => 'Det här är du';
+
+  @override
+  String get contactShare_shareAction => 'Dela kontakt';
+
+  @override
+  String get contactShare_pickerTitle => 'Dela en kontakt';
+
+  @override
+  String get contactShare_myContact => 'Min kontakt';
+
+  @override
+  String get contactShare_searchHint => 'Sök bland kontakter';
+
+  @override
+  String get contactShare_noContacts => 'Inga kontakter hittades';
+
+  @override
+  String contactShare_preview(String name) {
+    return 'Delad kontakt: $name';
+  }
+
+  @override
+  String contactShare_notification(String name) {
+    return 'Delade en kontakt: $name';
+  }
 
   @override
   String chat_unread(int count) {
@@ -2766,6 +3065,59 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => 'Visa senaste resultat';
+
+  @override
+  String get manualTrace_menuItem => 'Ruttspårning via hashar';
+
+  @override
+  String get manualTrace_inputLabel => 'Repeater-hashar';
+
+  @override
+  String manualTrace_helper(String example) {
+    return 'Exempel: $example. Separera med kommatecken eller mellanslag.';
+  }
+
+  @override
+  String manualTrace_previewTitle(int count) {
+    return 'Hopp ($count)';
+  }
+
+  @override
+  String get manualTrace_unknownNode => 'Okänd nod';
+
+  @override
+  String get manualTrace_enterHashes => 'Ange hashar';
+
+  @override
+  String get manualTrace_run => 'Kör ruttspårning';
+
+  @override
+  String get manualTrace_notConnected =>
+      'Anslut till en radio för att köra en spårning';
+
+  @override
+  String get manualTrace_errorInvalidHex =>
+      'Endast hex-tecken (0-9, A-F) är tillåtna';
+
+  @override
+  String get manualTrace_errorOddLength =>
+      'Varje hash måste ha ett jämnt antal hex-tecken, som matchar hoppstorleken';
+
+  @override
+  String get manualTrace_errorMixedWidths => 'Alla hashar måste ha samma längd';
+
+  @override
+  String get manualTrace_errorUnsupportedWidth =>
+      'Hashar måste vara 1, 2 eller 3 byte (2, 4 eller 6 hex-tecken)';
+
+  @override
+  String manualTrace_errorTooManyHops(int max) {
+    return 'Rutten är för lång (högst $max byte)';
+  }
+
+  @override
+  String get manualTrace_errorTraceTooLong =>
+      'För många hopp för att spåra i en enda förfrågan. Ta bort några hopp eller välj ”Som inmatat”.';
 
   @override
   String get mapCache_title => 'Offline Kartcache';
@@ -3168,6 +3520,11 @@ class AppLocalizationsSv extends AppLocalizations {
     int seconds,
   ) {
     return '$days dagar $hours timmar $minutes minuter $seconds sekunder';
+  }
+
+  @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '$hours timmar $minutes minuter $seconds sekunder';
   }
 
   @override
@@ -5802,6 +6159,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pathMap_expandPanel => 'Expandera panel';
 
   @override
+  String get pathMap_expandHopList => 'Expandera hopplistan';
+
+  @override
+  String get pathMap_showMap => 'Visa karta';
+
+  @override
   String get pathMap_noLocation => 'Ingen position';
 
   @override
@@ -6891,6 +7254,14 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get messageFilter_duplicatesSubtitle =>
       'Samma meddelande skickas igen, eller av flera avsändare';
+
+  @override
+  String get messageFilter_repeatSends => 'Utskick som räknas som upprepning';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return 'Dölj ett meddelande när samma avsändare skickar det $count gånger inom 10 minuter';
+  }
 
   @override
   String get messageFilter_repeatedCharacters => 'Upprepade tecken';

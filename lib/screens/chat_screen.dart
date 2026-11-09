@@ -12,6 +12,7 @@ import '../utils/platform_info.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/chat_jump.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/message_url_image_helper.dart';
 import '../helpers/path_helper.dart';
@@ -21,7 +22,10 @@ import '../widgets/empty_state.dart';
 import '../helpers/chat_scroll_controller.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/ipfs_link_attach_flow.dart';
+import '../helpers/contact_share_message.dart';
 import '../helpers/marker_message.dart';
+import '../helpers/message_search.dart';
+import '../widgets/chat_search_results.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
@@ -51,6 +55,8 @@ import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/share_contact_sheet.dart';
+import '../widgets/shared_contact_card.dart';
 import 'telemetry_screen.dart';
 import '../services/chat_background_service.dart';
 import '../widgets/chat_background.dart';
@@ -91,16 +97,53 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _unreadDividerMessageId;
   final ChatSendGuard _sendGuard = ChatSendGuard();
 
-  /// Contact keys of the chat screens currently on the navigation stack, in
-  /// push order. A room chat can push a nested ChatScreen for one of its
-  /// posters; when that one is popped, the room underneath must become the
-  /// active conversation again rather than none at all.
-  static final List<String> _activeContactStack = [];
+  /// The chat currently registered as the visible conversation. Screens
+  /// register while their route is uncovered and unregister when a page is
+  /// pushed over them (a nested room poster chat, a chat opened from a
+  /// notification, …), re-registering when it is popped. Only the owner
+  /// clears the registration, so a screen disposed after the one underneath
+  /// re-registered cannot wipe it out.
+  static _ChatScreenState? _activeOwner;
+  ModalRoute<dynamic>? _route;
+
+  void _registerActive() {
+    final connector = _connector;
+    if (connector == null) return;
+    _activeOwner = this;
+    connector.setActiveContact(widget.contact.publicKeyHex);
+  }
+
+  void _unregisterActive() {
+    if (!identical(_activeOwner, this)) return;
+    _activeOwner = null;
+    _connector?.setActiveContact(null);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!identical(route, _route)) {
+      _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+      _route = route;
+      route?.secondaryAnimation?.addStatusListener(_onCoveringRouteStatus);
+    }
+  }
+
+  void _onCoveringRouteStatus(AnimationStatus status) {
+    if (!mounted) return;
+    if (status == AnimationStatus.dismissed) {
+      _registerActive();
+    } else {
+      // Not just `forward`: a page pushed without a transition jumps
+      // straight to `completed`.
+      _unregisterActive();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _activeContactStack.add(widget.contact.publicKeyHex);
     _textFieldFocusNode.addListener(_onTextFieldFocusChange);
     _scrollController.onScrollNearTop = _loadOlderMessages;
     _scrollController.showJumpToBottom.addListener(_clearDividerAtBottom);
@@ -108,7 +151,6 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       final connector = context.read<MeshCoreConnector>();
       final settings = context.read<AppSettingsService>().settings;
-      final keyHex = widget.contact.publicKeyHex;
       final unread = widget.initialUnreadCount;
       final messages = connector.getMessages(widget.contact);
       Message? anchor;
@@ -121,8 +163,8 @@ class _ChatScreenState extends State<ChatScreen> {
           _pendingUnreadScrollTarget = anchor;
         }
       });
-      connector.setActiveContact(keyHex);
       _connector = connector;
+      if (_route?.isCurrent ?? true) _registerActive();
       if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -189,79 +231,235 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    final index = _activeContactStack.lastIndexOf(widget.contact.publicKeyHex);
-    final wasTop = index == _activeContactStack.length - 1;
-    if (index >= 0) _activeContactStack.removeAt(index);
-    if (wasTop) {
-      // Restore whichever chat is now on top (e.g. the room this nested chat
-      // was opened from), or clear when this was the only one.
-      _connector?.setActiveContact(
-        _activeContactStack.isEmpty ? null : _activeContactStack.last,
-      );
-    }
+    _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
+    _unregisterActive();
     _scrollController.showJumpToBottom.removeListener(_clearDividerAtBottom);
     _textFieldFocusNode.removeListener(_onTextFieldFocusChange);
     _textFieldFocusNode.dispose();
     _textController.dispose();
+    _searchController.dispose();
+    _highlightTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
+  bool _searching = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  bool get _showSearchResults => _searching && _searchQuery.trim().isNotEmpty;
+
+  void _openSearch() => setState(() => _searching = true);
+
+  void _closeSearch() {
+    _searchController.clear();
+    setState(() {
+      _searching = false;
+      _searchQuery = '';
+    });
+  }
+
+  Widget _buildSearchField() {
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): _closeSearch,
+      },
+      child: TextField(
+        controller: _searchController,
+        autofocus: true,
+        textInputAction: TextInputAction.search,
+        style: const TextStyle(fontSize: 16),
+        decoration: InputDecoration(
+          hintText: context.l10n.chatSearch_hint,
+          border: InputBorder.none,
+        ),
+        onChanged: (value) => setState(() => _searchQuery = value),
+      ),
+    );
+  }
+
+  Widget _buildSearchResults(
+    Future<List<ChatSearchEntry>> Function() loadEntries,
+  ) {
+    return ChatSearchResults(
+      query: _searchQuery.trim(),
+      loadEntries: loadEntries,
+      textScale: context.watch<ChatTextScaleService>().scale,
+      onSelect: (entry) => unawaited(_jumpToSearchResult(entry.id)),
+    );
+  }
+
+  /// Message briefly highlighted after jumping to it from search.
+  String? _highlightedMessageId;
+  Timer? _highlightTimer;
+
+  /// Closes search and scrolls the conversation to [messageId], loading
+  /// older pages first when the message is further back than what is loaded.
+  Future<void> _jumpToSearchResult(String messageId) async {
+    FocusScope.of(context).unfocus();
+    _closeSearch();
+    final connector = context.read<MeshCoreConnector>();
+    final keyHex = widget.contact.publicKeyHex;
+    int indexOf() => connector
+        .getMessages(widget.contact)
+        .indexWhere((m) => m.messageId == messageId);
+    for (var page = 0; page < 500 && indexOf() < 0; page++) {
+      if (!mounted) return;
+      if (_isLoadingOlder) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        continue;
+      }
+      setState(() => _isLoadingOlder = true);
+      final older = await connector.loadOlderMessages(keyHex);
+      if (!mounted) return;
+      setState(() => _isLoadingOlder = false);
+      if (older.isEmpty) break;
+    }
+    // Let the list (rebuilt after closing search) lay out.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final messages = connector.getMessages(widget.contact);
+    final index = indexOf();
+    // The list is reversed: newest message is row 0.
+    final found =
+        index >= 0 &&
+        await scrollListToIndex(
+          controller: _scrollController,
+          targetIndex: messages.length - 1 - index,
+          itemCount: messages.length,
+          isMounted: () => mounted,
+        );
+    if (!mounted) return;
+    if (!found) {
+      showDismissibleSnackBar(
+        context,
+        content: Text(context.l10n.chatSearch_jumpFailed),
+      );
+      return;
+    }
+    _highlightTimer?.cancel();
+    setState(() => _highlightedMessageId = messageId);
+    _highlightTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _highlightedMessageId = null);
+    });
+  }
+
+  Future<List<ChatSearchEntry>> _loadSearchEntries() async {
+    final connector = context.read<MeshCoreConnector>();
+    final contact = _resolveContact(connector);
+    final isRoom = contact.type == advTypeRoom;
+    final youLabel = context.l10n.notification_you;
+    final messages = await connector.allMessagesForSearch(
+      widget.contact.publicKeyHex,
+    );
+    String senderOf(Message m) {
+      if (m.isOutgoing) return youLabel;
+      if (!isRoom) return contact.name;
+      // Room posts name their author by a 4-byte key prefix, as in the list.
+      final key = m.fourByteRoomContactKey;
+      final hex = key
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join()
+          .toUpperCase();
+      final author = key.isEmpty
+          ? null
+          : _resolveContactFrom4Bytes(connector, key);
+      return author != null ? '${author.name} [$hex]' : '[$hex]';
+    }
+
+    return [
+      for (final m in messages)
+        if (!m.isCli)
+          ChatSearchEntry(
+            id: m.messageId,
+            sender: senderOf(m),
+            text: m.text,
+            translatedText: m.translatedText,
+            time: m.receivedAt,
+          ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_searching,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _searching) _closeSearch();
+      },
+      child: _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Consumer2<PathHistoryService, MeshCoreConnector>(
-          builder: (context, pathService, connector, _) {
-            final contact = _resolveContact(connector);
-            final pathLabel = _currentPathLabel(contact);
+        leading: _searching
+            ? IconButton(
+                tooltip: context.l10n.chatSearch_close,
+                icon: const Icon(Icons.arrow_back),
+                onPressed: _closeSearch,
+              )
+            : null,
+        title: _searching
+            ? _buildSearchField()
+            : Consumer2<PathHistoryService, MeshCoreConnector>(
+                builder: (context, pathService, connector, _) {
+                  final contact = _resolveContact(connector);
+                  final pathLabel = _currentPathLabel(contact);
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  contact.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      ContactRoutingSheet.show(context, contact: contact),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Builder(
-                      builder: (context) {
-                        // Follows the chat text size, capped so the two-line
-                        // title still fits the app bar.
-                        final textScale = context
-                            .select<ChatTextScaleService, double>(
-                              (service) => service.scale,
-                            )
-                            .clamp(1.0, 1.3);
-                        return Text(
-                          pathLabel,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12 * textScale,
-                            fontWeight: FontWeight.normal,
-                            decoration: TextDecoration.underline,
-                            decorationStyle: TextDecorationStyle.dotted,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        contact.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () =>
+                            ContactRoutingSheet.show(context, contact: contact),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Builder(
+                            builder: (context) {
+                              // Follows the chat text size, capped so the two-line
+                              // title still fits the app bar.
+                              final textScale = context
+                                  .select<ChatTextScaleService, double>(
+                                    (service) => service.scale,
+                                  )
+                                  .clamp(1.0, 1.3);
+                              return Text(
+                                pathLabel,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12 * textScale,
+                                  fontWeight: FontWeight.normal,
+                                  decoration: TextDecoration.underline,
+                                  decorationStyle: TextDecorationStyle.dotted,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
         centerTitle: false,
         bottom: const SyncProgressAppBarBottom(),
         actions: [
           const RadioStatsIconButton(),
+          if (!_searching)
+            IconButton(
+              tooltip: context.l10n.chatSearch_tooltip,
+              icon: const Icon(Icons.search),
+              onPressed: _openSearch,
+            ),
           Consumer<MeshCoreConnector>(
             builder: (context, connector, _) {
               final contact = _resolveContact(connector);
@@ -369,41 +567,47 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Consumer<MeshCoreConnector>(
-        builder: (context, connector, child) {
-          final messages = connector.getMessages(widget.contact);
-          final newest = messages.isEmpty ? null : messages.last;
-          _holidayWatcher.onNewest(
-            context,
-            id: newest?.messageId,
-            texts: [newest?.text, newest?.translatedText],
-            receivedAt: newest?.receivedAt,
-            originOf: () => newestMessageOrigin(
-              _messageAreaKey,
-              isOutgoing: newest?.isOutgoing ?? false,
-            ),
-          );
-          return Column(
-            children: [
-              Expanded(
-                child: ChatBackdrop(
-                  key: _messageAreaKey,
-                  chatKey: ChatBackgroundService.contactKey(widget.contact),
-                  child: Stack(
-                    children: [
-                      messages.isEmpty
-                          ? _buildEmptyState()
-                          : _buildMessageList(messages, connector),
-                      JumpToBottomButton(scrollController: _scrollController),
-                    ],
+      body: _showSearchResults
+          ? _buildSearchResults(_loadSearchEntries)
+          : Consumer<MeshCoreConnector>(
+              builder: (context, connector, child) {
+                final messages = connector.getMessages(widget.contact);
+                final newest = messages.isEmpty ? null : messages.last;
+                _holidayWatcher.onNewest(
+                  context,
+                  id: newest?.messageId,
+                  texts: [newest?.text, newest?.translatedText],
+                  receivedAt: newest?.receivedAt,
+                  originOf: () => newestMessageOrigin(
+                    _messageAreaKey,
+                    isOutgoing: newest?.isOutgoing ?? false,
                   ),
-                ),
-              ),
-              _buildInputBar(connector),
-            ],
-          );
-        },
-      ),
+                );
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ChatBackdrop(
+                        key: _messageAreaKey,
+                        chatKey: ChatBackgroundService.contactKey(
+                          widget.contact,
+                        ),
+                        child: Stack(
+                          children: [
+                            messages.isEmpty
+                                ? _buildEmptyState()
+                                : _buildMessageList(messages, connector),
+                            JumpToBottomButton(
+                              scrollController: _scrollController,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    _buildInputBar(connector),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -503,6 +707,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     reversedMessages[messageIndex + 1].receivedAt,
                     message.receivedAt,
                   );
+              final highlighted = message.messageId == _highlightedMessageId;
+              final shown = highlighted
+                  ? AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(MeshRadii.md),
+                      ),
+                      child: bubble,
+                    )
+                  : bubble;
               final child = isUnreadAnchor || startsDay
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
@@ -510,10 +727,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (startsDay)
                           ChatDaySeparator(day: message.receivedAt),
                         if (isUnreadAnchor) const UnreadDivider(),
-                        bubble,
+                        shown,
                       ],
                     )
-                  : bubble;
+                  : shown;
               if (identical(message, _pendingUnreadScrollTarget)) {
                 return KeyedSubtree(key: _unreadScrollKey, child: child);
               }
@@ -581,6 +798,11 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icons.my_location,
             label: context.l10n.chat_shareMyLocation,
           ),
+          ChatComposerAction(
+            id: 'share-contact',
+            icon: Icons.person_add_alt,
+            label: context.l10n.contactShare_shareAction,
+          ),
         ];
       },
       onAction: (action) {
@@ -592,6 +814,12 @@ class _ChatScreenState extends State<ChatScreen> {
             _sendImageViaIpfs();
           case 'send-my-location':
             _shareMyLocation(context.read<MeshCoreConnector>());
+          case 'share-contact':
+            showShareContactSheet(
+              context,
+              _textController,
+              focusNode: _textFieldFocusNode,
+            );
         }
       },
     );
@@ -1297,6 +1525,7 @@ class _MessageBubble extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final gifId = GifHelper.parseGif(message.text);
     final poi = parseMarkerText(message.text);
+    final contactShare = parseContactShare(message.text);
     final isFailed = message.status == MessageStatus.failed;
     final urlImagesEnabled = context.select<MeshCoreConnector, bool>(
       (connector) => connector.isContactUrlImagesEnabled(sourceId),
@@ -1400,7 +1629,15 @@ class _MessageBubble extends StatelessWidget {
                             ),
                             if (gifId == null) const SizedBox(height: 2),
                           ],
-                          if (poi != null)
+                          if (contactShare != null)
+                            SharedContactCard(
+                              share: contactShare,
+                              isOutgoing: isOutgoing,
+                              textScale: textScale,
+                              textColor: textColor,
+                              metaColor: metaColor,
+                            )
+                          else if (poi != null)
                             _buildPoiMessage(
                               context,
                               poi,

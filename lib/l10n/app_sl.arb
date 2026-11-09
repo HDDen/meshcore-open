@@ -181,7 +181,8 @@
   "appSettings_languageZh": "中文",
   "appSettings_languageSv": "Švedščina",
   "appSettings_languageNl": "Nizozemščina",
-  "appSettings_languageSk": "Slovenščina",
+  "appSettings_languageSk": "Slovaščina",
+  "appSettings_languageCs": "Češčina",
   "appSettings_languageBg": "Български",
   "appSettings_notifications": "Obvestila",
   "appSettings_enableNotifications": "Omogoči obvestila",
@@ -1009,6 +1010,7 @@
   "repeater_received": "Prejeto",
   "repeater_duplicates": "Duplikati",
   "repeater_daysHoursMinsSecs": "{days} dni {hours}h {minutes}m {seconds}s",
+  "repeater_hoursMinsSecs": "{hours}h {minutes}m {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2155,14 +2157,6 @@
   "contact_teleEnv": "Okolje telemetrije",
   "contact_teleEnvSubtitle": "Dovoli deljenje podatkov okoljskih senzorjev",
   "contact_teleLocSubtitle": "Dovoli deljenje podatkov o lokaciji",
-  "appSettings_maxRouteWeightSubtitle": "Največja teža, ki jo pot lahko nabere z uspešnimi dostavami",
-  "appSettings_initialRouteWeight": "Začetna teža poti",
-  "appSettings_initialRouteWeightSubtitle": "Začetna teža novo odkritih poti",
-  "appSettings_maxRouteWeight": "Največja dovoljena teža poti",
-  "appSettings_routeWeightSuccessIncrement": "Povečanje teže ob uspehu",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Teža, dodana poti po uspešni dostavi",
-  "appSettings_routeWeightFailureDecrement": "Zmanjšanje teže ob neuspehu",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Teža, odstranjena s poti po neuspešni dostavi",
   "appSettings_maxMessageRetries": "Največ poskusov pošiljanja sporočila",
   "appSettings_maxMessageRetriesSubtitle": "Število poskusov ponovnega poslanja, preden se sporočilo označuje kot neuspešno",
   "path_routeWeight": "{weight}/{max}",
@@ -2510,9 +2504,9 @@
   "contacts_searchOpen": "Iskanje kontaktov",
   "contacts_searchClose": "Izklopi iskanje",
   "routing_title": "Navigacija",
-  "routing_modeAuto": "Avto",
+  "routing_modeAuto": "Samodejno",
   "routing_modeFlood": "Flood",
-  "routing_modeManual": "Navodilo",
+  "routing_modeManual": "Ročno",
   "routing_modeAutoHint": "Samodejno izbere najbolj poznano pot, in sicer, ko ni na voljo nobena.",
   "routing_modeFloodHint": "Prenosi preko vseh repetitorjev. Najzanesljivejši način, vendar zahteva več časa.",
   "routing_modeManualHint": "Vedno sledi natančni poti, ki jo ste določili.",
@@ -3643,6 +3637,8 @@
   "@messageFilter_duplicatesSubtitle": {
     "description": "Message filter: The same message sent again, or by several senders"
   },
+  "messageFilter_repeatSends": "Pošiljanje, šteto kot ponovitev",
+  "messageFilter_repeatSendsSubtitle": "Skrij sporočilo, ko ga isti pošiljatelj v 10 minutah pošlje ponovno (število pošiljanj: {count})",
   "messageFilter_repeatedCharacters": "Ponavljajoči se znaki",
   "@messageFilter_repeatedCharacters": {
     "description": "Message filter: Repeated characters"
@@ -3796,5 +3792,130 @@
   "messageFilter_ghostIconTooltip": "Skrito z vašim filtrom sporočil",
   "@messageFilter_ghostIconTooltip": {
     "description": "Message filter: Hidden by your message filter"
-  }
+  },
+  "chatSearch_tooltip": "Išči sporočila",
+  "chatSearch_hint": "Išči sporočila",
+  "chatSearch_close": "Zapri iskanje",
+  "chatSearch_resultCount": "{count, plural, one{{count} zadetek} two{{count} zadetka} few{{count} zadetki} other{{count} zadetkov}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "Ni ustreznih sporočil",
+  "chatSearch_noResultsHint": "Poskusite z drugo besedo ali preverite črkovanje",
+  "contactShare_headerOutgoing": "Delili ste stik",
+  "contactShare_headerIncoming": "Delil stik",
+  "contactShare_add": "Dodaj stik",
+  "contactShare_adding": "Dodajanje stika ...",
+  "contactShare_saved": "Shranjeno",
+  "contactShare_isYou": "To ste vi",
+  "contactShare_shareAction": "Deli stik",
+  "contactShare_pickerTitle": "Deli stik",
+  "contactShare_myContact": "Moj stik",
+  "contactShare_searchHint": "Išči stike",
+  "contactShare_noContacts": "Ni najdenih stikov",
+  "contactShare_preview": "Deljen stik: {name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "Delil stik: {name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "Sledenje poti po zgoščenih vrednostih",
+  "manualTrace_inputLabel": "Zgoščene vrednosti repetitorjev",
+  "manualTrace_helper": "Primer: {example}. Ločite z vejicami ali presledki.",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "Skoki ({count})",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "Neznano vozlišče",
+  "manualTrace_enterHashes": "Vnesite zgoščene vrednosti",
+  "manualTrace_run": "Zaženi sledenje poti",
+  "manualTrace_notConnected": "Za izvedbo sledenja se povežite z radiem",
+  "manualTrace_errorInvalidHex": "Dovoljeni so samo šestnajstiški znaki (0-9, A-F)",
+  "manualTrace_errorOddLength": "Vsaka zgoščena vrednost mora imeti sodo število šestnajstiških znakov, skladno z velikostjo skoka",
+  "manualTrace_errorMixedWidths": "Vse zgoščene vrednosti morajo biti enake dolžine",
+  "manualTrace_errorUnsupportedWidth": "Zgoščene vrednosti morajo imeti 1, 2 ali 3 bajte (2, 4 ali 6 šestnajstiških znakov)",
+  "manualTrace_errorTooManyHops": "Pot je predolga (največ {max} bajtov)",
+  "manualTrace_errorTraceTooLong": "Preveč skokov za sledenje v eni zahtevi. Odstranite nekaj skokov ali izberite »Kot vneseno«.",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "Sporočila ni bilo mogoče najti v klepetu",
+  "chat_clearSelection": "Počisti izbiro",
+  "chat_deleteSelectedConfirm": "{count, plural, one{Želite izbrisati {count} sporočilo iz te naprave?} two{Želite izbrisati {count} sporočili iz te naprave?} few{Želite izbrisati {count} sporočila iz te naprave?} other{Želite izbrisati {count} sporočil iz te naprave?}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "Izbrisati sporočila?",
+  "chat_messagesDeleted": "{count, plural, one{{count} sporočilo izbrisano} two{{count} sporočili izbrisani} few{{count} sporočila izbrisana} other{{count} sporočil izbrisanih}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "Izberi vse",
+  "chat_selectMessages": "Izberi sporočila",
+  "chat_selectedCount": "Izbrano: {count}",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "Dodaj znova",
+  "messageFilter_markedNotSpamCount": "{count, plural, one{{count} sporočilo označeno kot ni neželeno} two{{count} sporočili označeni kot ni neželeno} few{{count} sporočila označena kot ni neželeno} other{{count} sporočil označenih kot ni neželeno}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, one{{count} sporočilo označeno kot neželeno} two{{count} sporočili označeni kot neželeno} few{{count} sporočila označena kot neželeno} other{{count} sporočil označenih kot neželeno}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "Razširi seznam repetitorjev",
+  "pathMap_showMap": "Pokaži zemljevid",
+  "routing_modeDirect": "Neposredno",
+  "routing_modeDirectHint": "Vedno pošlje neposredno temu stiku, brez skokov prek repetitorjev. Uporabite, če je v radijskem dosegu."
 }

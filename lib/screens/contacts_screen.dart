@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
+import 'package:meshcore_open/screens/manual_path_trace_screen.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
@@ -33,6 +34,7 @@ import '../widgets/repeater_login_dialog.dart';
 import '../widgets/room_login_dialog.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
+import '../helpers/contact_share_message.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
@@ -355,6 +357,12 @@ class _ContactsScreenState extends State<ContactsScreen>
       return;
     }
     final text = clipboardData.text!.trim();
+    // A contact shared in chat (`<PUBKEY:TYPE:NAME>`) copied from the bubble.
+    final share = findContactShare(text);
+    if (share != null && !text.startsWith('meshcore://')) {
+      await _importContactShare(connector, share);
+      return;
+    }
     if (!text.startsWith('meshcore://')) {
       if (mounted) {
         showDismissibleSnackBar(
@@ -390,6 +398,32 @@ class _ContactsScreenState extends State<ContactsScreen>
         );
       }
     }
+  }
+
+  Future<void> _importContactShare(
+    MeshCoreConnector connector,
+    ContactShare share,
+  ) async {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    if (share.publicKeyHex == connector.selfPublicKeyHex) {
+      showDismissibleSnackBar(context, content: Text(l10n.contactShare_isYou));
+      return;
+    }
+    var ok = true;
+    try {
+      await connector.addContactFromCard(share.toScannedContact());
+    } catch (e) {
+      appLogger.warn('Contact share import failed: $e', tag: 'ContactsScreen');
+      ok = false;
+    }
+    if (!mounted) return;
+    showDismissibleSnackBar(
+      context,
+      content: Text(
+        ok ? l10n.contacts_contactImported : l10n.contacts_contactImportFailed,
+      ),
+    );
   }
 
   @override
@@ -483,6 +517,16 @@ class _ContactsScreenState extends State<ContactsScreen>
                     ],
                   ),
                   onTap: () => _contactExport(Uint8List.fromList([])),
+                ),
+                PopupMenuItem(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.radar),
+                      const SizedBox(width: 8),
+                      Text(context.l10n.manualTrace_menuItem),
+                    ],
+                  ),
+                  onTap: () => ManualPathTraceScreen.open(context),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
@@ -795,7 +839,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         ),
       ],
       child: SizedBox(
-        height: 48,
+        height: _controlHeight(context),
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(color: Theme.of(context).colorScheme.outline),
@@ -819,6 +863,13 @@ class _ContactsScreenState extends State<ContactsScreen>
         ),
       ),
     );
+  }
+
+  /// Height of the group/search controls; grows with the system font size so
+  /// larger text is not clipped.
+  double _controlHeight(BuildContext context) {
+    final textHeight = MediaQuery.textScalerOf(context).scale(16) * 1.5;
+    return (textHeight + 20).clamp(48.0, 120.0);
   }
 
   Widget _buildContactsBody(BuildContext context, MeshCoreConnector connector) {
@@ -958,7 +1009,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 width: viewState.contactsSearchExpanded
                     ? searchExpandedWidth
                     : searchCollapsedWidth,
-                height: 48,
+                height: _controlHeight(context),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -1266,6 +1317,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   void _handleQuickSwitch(int index, BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (index == 0) return;
     switch (index) {
       case 1:

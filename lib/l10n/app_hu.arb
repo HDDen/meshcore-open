@@ -249,6 +249,7 @@
   "appSettings_languageSv": "Svenska",
   "appSettings_languageNl": "Nederlands",
   "appSettings_languageSk": "Slovenčina",
+  "appSettings_languageCs": "Čeština",
   "appSettings_languageBg": "Български",
   "appSettings_languageRu": "Русский",
   "appSettings_languageUk": "Українська",
@@ -275,14 +276,6 @@
   "appSettings_autoRouteRotationSubtitle": "Váltson a legjobb útvonalak és az elárasztási mód között",
   "appSettings_autoRouteRotationEnabled": "Az automatikus útvonalforgatás engedélyezve",
   "appSettings_autoRouteRotationDisabled": "Az automatikus útvonalforgatás letiltva",
-  "appSettings_maxRouteWeight": "Maximális útvonalsúly",
-  "appSettings_maxRouteWeightSubtitle": "Maximális súly, amelyet egy útvonal felhalmozhat a sikeres szállításokból",
-  "appSettings_initialRouteWeight": "Az útvonal kezdeti súlya",
-  "appSettings_initialRouteWeightSubtitle": "Kezdősúly az újonnan felfedezett utakhoz",
-  "appSettings_routeWeightSuccessIncrement": "Siker súlynövekedés",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Súly hozzáadva egy útvonalhoz a sikeres szállítás után",
-  "appSettings_routeWeightFailureDecrement": "Hiba súlycsökkentés",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Sikertelen szállítás után eltávolított súly az útvonalról",
   "appSettings_maxMessageRetries": "Üzenet újrapróbálkozások maximális száma",
   "appSettings_maxMessageRetriesSubtitle": "Az üzenet sikertelenként való megjelölése előtti újrapróbálkozások száma",
   "appSettings_ipfsImageLinks": "IPFS-szolgáltató beállítása",
@@ -1245,6 +1238,7 @@
   "repeater_received": "Fogadva",
   "repeater_duplicates": "Ismétlődések",
   "repeater_daysHoursMinsSecs": "{days} nap {hours}ó {minutes}p {seconds}s",
+  "repeater_hoursMinsSecs": "{hours}ó {minutes}p {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2642,7 +2636,7 @@
   "routing_title": "Útválasztás",
   "routing_modeAuto": "Auto",
   "routing_modeFlood": "Elárasztás",
-  "routing_modeManual": "Kézikönyv",
+  "routing_modeManual": "Kézi",
   "routing_modeAutoHint": "Automatikusan kiválasztja a legismertebb utat, és elárasztja, ha nem ismert.",
   "routing_modeFloodHint": "Minden átjátszón keresztül sugároz. A legmegbízhatóbb, de több műsoridőt használ.",
   "routing_modeManualHint": "Mindig pontosan az Ön által megadott útvonalon küld.",
@@ -3600,6 +3594,8 @@
   "messageFilter_automaticSection": "Automatikus",
   "messageFilter_duplicates": "Ismétlődő üzenetek",
   "messageFilter_duplicatesSubtitle": "Ugyanaz az üzenet újra elküldve, vagy több feladótól",
+  "messageFilter_repeatSends": "Ismétlésnek számító küldések",
+  "messageFilter_repeatSendsSubtitle": "Üzenet elrejtése, ha ugyanaz a feladó {count}× elküldi 10 percen belül",
   "messageFilter_repeatedCharacters": "Ismétlődő karakterek",
   "messageFilter_repeatedCharactersSubtitle": "Ugyanazon karakter hosszú sorozata, például „aaaaaaaaaaaaaaaaaaaa”",
   "messageFilter_learning": "Tanulás a Spam gombokból",
@@ -3680,5 +3676,130 @@
   },
   "messageFilter_filterLikeThis": "Ehhez hasonló üzenetek szűrése…",
   "messageFilter_channelToggle": "Üzenetek szűrése ezen a csatornán",
-  "messageFilter_ghostIconTooltip": "Az üzenetszűrő elrejtette"
+  "messageFilter_ghostIconTooltip": "Az üzenetszűrő elrejtette",
+  "chatSearch_tooltip": "Üzenetek keresése",
+  "chatSearch_hint": "Üzenetek keresése",
+  "chatSearch_close": "Keresés bezárása",
+  "chatSearch_resultCount": "{count, plural, =1{1 találat} other{{count} találat}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "Nincs egyező üzenet",
+  "chatSearch_noResultsHint": "Próbálj másik szót, vagy ellenőrizd a helyesírást",
+  "contactShare_headerOutgoing": "Megosztottál egy névjegyet",
+  "contactShare_headerIncoming": "Megosztott egy névjegyet",
+  "contactShare_add": "Névjegy hozzáadása",
+  "contactShare_adding": "Névjegy hozzáadása...",
+  "contactShare_saved": "Mentve",
+  "contactShare_isYou": "Ez te vagy",
+  "contactShare_shareAction": "Névjegy megosztása",
+  "contactShare_pickerTitle": "Névjegy megosztása",
+  "contactShare_myContact": "Saját névjegyem",
+  "contactShare_searchHint": "Névjegyek keresése",
+  "contactShare_noContacts": "Nem található névjegy",
+  "contactShare_preview": "Megosztott névjegy: {name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "Megosztott egy névjegyet: {name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "Útvonal-nyomkövetés hashek alapján",
+  "manualTrace_inputLabel": "Átjátszó hashek",
+  "manualTrace_helper": "Példa: {example}. Vesszővel vagy szóközzel válaszd el.",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "Ugrások ({count})",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "Ismeretlen csomópont",
+  "manualTrace_enterHashes": "Add meg a hasheket",
+  "manualTrace_run": "Útvonal-nyomkövetés indítása",
+  "manualTrace_notConnected": "Csatlakozz egy rádióhoz a nyomkövetés indításához",
+  "manualTrace_errorInvalidHex": "Csak hexadecimális karakterek (0-9, A-F) engedélyezettek",
+  "manualTrace_errorOddLength": "Minden hashnek páros számú hexadecimális karakterből kell állnia, az ugrásmérettel egyezően",
+  "manualTrace_errorMixedWidths": "Minden hashnek azonos hosszúságúnak kell lennie",
+  "manualTrace_errorUnsupportedWidth": "A hasheknek 1, 2 vagy 3 bájtosnak kell lenniük (2, 4 vagy 6 hexadecimális karakter)",
+  "manualTrace_errorTooManyHops": "Az útvonal túl hosszú (legfeljebb {max} bájt)",
+  "manualTrace_errorTraceTooLong": "Túl sok ugrás egyetlen nyomkövetési kéréshez. Távolíts el néhány ugrást, vagy válaszd a „Megadott sorrendben” lehetőséget.",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "Ez az üzenet nem található a csevegésben",
+  "chat_clearSelection": "Kijelölés törlése",
+  "chat_deleteSelectedConfirm": "{count, plural, one{Törli az 1 üzenetet erről az eszközről?} other{Törli a(z) {count} üzenetet erről az eszközről?}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "Törli az üzeneteket?",
+  "chat_messagesDeleted": "{count, plural, one{1 üzenet törölve} other{{count} üzenet törölve}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "Összes kijelölése",
+  "chat_selectMessages": "Üzenetek kijelölése",
+  "chat_selectedCount": "{count} kijelölve",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "Hozzáadás újra",
+  "messageFilter_markedNotSpamCount": "{count, plural, one{1 üzenet nem spamként megjelölve} other{{count} üzenet nem spamként megjelölve}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, one{1 üzenet spamként megjelölve} other{{count} üzenet spamként megjelölve}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "Ugráslista kibontása",
+  "pathMap_showMap": "Térkép megjelenítése",
+  "routing_modeDirect": "Közvetlen",
+  "routing_modeDirectHint": "Mindig közvetlenül ennek a névjegynek küld, átjátszó ugrások nélkül. Akkor használja, ha rádiótávolságon belül van."
 }

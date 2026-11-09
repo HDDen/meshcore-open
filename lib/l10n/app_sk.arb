@@ -182,6 +182,7 @@
   "appSettings_languageSv": "Švédčina",
   "appSettings_languageNl": "Niderlandsky",
   "appSettings_languageSk": "Slovenčina",
+  "appSettings_languageCs": "Čeština",
   "appSettings_languageBg": "Bulharčina",
   "appSettings_notifications": "Upozornenia",
   "appSettings_enableNotifications": "Povoliť upozornenia",
@@ -486,7 +487,7 @@
     }
   },
   "chat_messageCopied": "Správa skopírovaná",
-  "chat_messageDeleted": "Posolstvo odstránené",
+  "chat_messageDeleted": "Správa odstránená",
   "chat_retryingMessage": "Pokus o obnovenie",
   "chat_retryCount": "Skúsiť {current}/{max}",
   "@chat_retryCount": {
@@ -1017,6 +1018,7 @@
   "repeater_received": "Prijaté",
   "repeater_duplicates": "Duplikáty",
   "repeater_daysHoursMinsSecs": "{days} dní {hours}h {minutes}m {seconds}s",
+  "repeater_hoursMinsSecs": "{hours}h {minutes}m {seconds}s",
   "@repeater_daysHoursMinsSecs": {
     "placeholders": {
       "days": {
@@ -2231,14 +2233,6 @@
   "contact_lastSeen": "Naposledy videný",
   "contact_teleBase": "Báza telemetrie",
   "contact_teleEnvSubtitle": "Povoliť zdieľanie údajov senzorov prostredia",
-  "appSettings_maxRouteWeightSubtitle": "Maximálna váha, ktorú môže cesta nazbierať z úspešných doručení",
-  "appSettings_initialRouteWeightSubtitle": "Počiatočná váha pre nové, objavené cesty",
-  "appSettings_initialRouteWeight": "Počiatočná váha trasy",
-  "appSettings_maxRouteWeight": "Maximálna váha trasy",
-  "appSettings_routeWeightSuccessIncrement": "Zvyšenie váhy úspechu",
-  "appSettings_routeWeightSuccessIncrementSubtitle": "Váha pridaná k ceste po úspešnom doručení",
-  "appSettings_routeWeightFailureDecrement": "Zníženie váhy pri neúspechu",
-  "appSettings_routeWeightFailureDecrementSubtitle": "Váha odobraná z cesty po neúspešnom doručení",
   "appSettings_maxMessageRetries": "Maximálny počet pokusov o odoslanie správy",
   "appSettings_maxMessageRetriesSubtitle": "Počet opakovaných pokusov pred označením správy ako neúspešnej",
   "appSettings_ipfsImageLinks": "Konfigurácia poskytovateľa IPFS",
@@ -2604,7 +2598,7 @@
   "routing_title": "Navigácia",
   "routing_modeAuto": "Auto",
   "routing_modeFlood": "Flood",
-  "routing_modeManual": "Ručná príručka",
+  "routing_modeManual": "Ručne",
   "routing_modeAutoHint": "Automaticky vyberá najznámejší trasa, a ak žiadna nie je známa, použije náhodnú trasu.",
   "routing_modeFloodHint": "Prenos prostredníctvom všetkých opakovačov. Najspoľahlivejší spôsob, ale vyžaduje viac času vysielania.",
   "routing_modeManualHint": "Vždy dodáva presne podľa zadaného trasy.",
@@ -3562,6 +3556,8 @@
   "messageFilter_automaticSection": "Automatické",
   "messageFilter_duplicates": "Opakované správy",
   "messageFilter_duplicatesSubtitle": "Rovnaká správa odoslaná znova alebo viacerými odosielateľmi",
+  "messageFilter_repeatSends": "Odoslanie počítané ako opakovanie",
+  "messageFilter_repeatSendsSubtitle": "Skryť správu, ak ju ten istý odosielateľ pošle opakovane do 10 minút (počet odoslaní: {count})",
   "messageFilter_repeatedCharacters": "Opakované znaky",
   "messageFilter_repeatedCharactersSubtitle": "Dlhé rady jedného znaku, napríklad „aaaaaaaaaaaaaaaaaaaa“",
   "messageFilter_learning": "Učiť sa z klepnutí na Spam",
@@ -3642,5 +3638,130 @@
   },
   "messageFilter_filterLikeThis": "Filtrovať podobné správy…",
   "messageFilter_channelToggle": "Filtrovať správy v tomto kanáli",
-  "messageFilter_ghostIconTooltip": "Skryté vaším filtrom správ"
+  "messageFilter_ghostIconTooltip": "Skryté vaším filtrom správ",
+  "chatSearch_tooltip": "Hľadať správy",
+  "chatSearch_hint": "Hľadať správy",
+  "chatSearch_close": "Zavrieť hľadanie",
+  "chatSearch_resultCount": "{count, plural, =1{1 výsledok} few{{count} výsledky} many{{count} výsledku} other{{count} výsledkov}}",
+  "@chatSearch_resultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_noResults": "Žiadne zodpovedajúce správy",
+  "chatSearch_noResultsHint": "Skúste iné slovo alebo skontrolujte preklepy",
+  "contactShare_headerOutgoing": "Zdieľali ste kontakt",
+  "contactShare_headerIncoming": "Zdieľal(a) kontakt",
+  "contactShare_add": "Pridať kontakt",
+  "contactShare_adding": "Pridávanie kontaktu...",
+  "contactShare_saved": "Uložené",
+  "contactShare_isYou": "Toto ste vy",
+  "contactShare_shareAction": "Zdieľať kontakt",
+  "contactShare_pickerTitle": "Zdieľať kontakt",
+  "contactShare_myContact": "Môj kontakt",
+  "contactShare_searchHint": "Hľadať kontakty",
+  "contactShare_noContacts": "Nenašli sa žiadne kontakty",
+  "contactShare_preview": "Zdieľaný kontakt: {name}",
+  "@contactShare_preview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactShare_notification": "Zdieľal(a) kontakt: {name}",
+  "@contactShare_notification": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_menuItem": "Sledovanie cesty podľa hashov",
+  "manualTrace_inputLabel": "Hashe opakovačov",
+  "manualTrace_helper": "Príklad: {example}. Oddeľte čiarkami alebo medzerami.",
+  "@manualTrace_helper": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "manualTrace_previewTitle": "Skoky ({count})",
+  "@manualTrace_previewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manualTrace_unknownNode": "Neznámy uzol",
+  "manualTrace_enterHashes": "Zadajte hashe",
+  "manualTrace_run": "Spustiť sledovanie cesty",
+  "manualTrace_notConnected": "Na spustenie sledovania sa pripojte k rádiu",
+  "manualTrace_errorInvalidHex": "Povolené sú iba hexadecimálne znaky (0-9, A-F)",
+  "manualTrace_errorOddLength": "Každý hash potrebuje párny počet hexadecimálnych znakov zodpovedajúci veľkosti skoku",
+  "manualTrace_errorMixedWidths": "Všetky hashe musia mať rovnakú dĺžku",
+  "manualTrace_errorUnsupportedWidth": "Hashe musia mať 1, 2 alebo 3 bajty (2, 4 alebo 6 hexadecimálnych znakov)",
+  "manualTrace_errorTooManyHops": "Cesta je príliš dlhá (maximum {max} bajtov)",
+  "manualTrace_errorTraceTooLong": "Príliš veľa skokov na sledovanie v jednej požiadavke. Odstráňte niektoré skoky alebo zvoľte „Podľa zadania“.",
+  "@manualTrace_errorTooManyHops": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "chatSearch_jumpFailed": "Túto správu sa v chate nepodarilo nájsť",
+  "chat_clearSelection": "Zrušiť výber",
+  "chat_deleteSelectedConfirm": "{count, plural, one{Odstrániť {count} správu z tohto zariadenia?} few{Odstrániť {count} správy z tohto zariadenia?} many{Odstrániť {count} správy z tohto zariadenia?} other{Odstrániť {count} správ z tohto zariadenia?}}",
+  "@chat_deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_deleteSelectedTitle": "Odstrániť správy?",
+  "chat_messagesDeleted": "{count, plural, one{{count} správa odstránená} few{{count} správy odstránené} many{{count} správy odstránené} other{{count} správ odstránených}}",
+  "@chat_messagesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chat_selectAll": "Vybrať všetko",
+  "chat_selectMessages": "Vybrať správy",
+  "chat_selectedCount": "Vybrané: {count}",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactShare_addAgain": "Pridať znova",
+  "messageFilter_markedNotSpamCount": "{count, plural, one{{count} správa označená ako nie spam} few{{count} správy označené ako nie spam} many{{count} správy označené ako nie spam} other{{count} správ označených ako nie spam}}",
+  "@messageFilter_markedNotSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_markedSpamCount": "{count, plural, one{{count} správa označená ako spam} few{{count} správy označené ako spam} many{{count} správy označené ako spam} other{{count} správ označených ako spam}}",
+  "@messageFilter_markedSpamCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pathMap_expandHopList": "Rozbaliť zoznam opakovačov",
+  "pathMap_showMap": "Zobraziť mapu",
+  "routing_modeDirect": "Priamo",
+  "routing_modeDirectHint": "Vždy odosiela priamo tomuto kontaktu, bez prechodov cez opakovače. Použite, ak je v dosahu rádia."
 }

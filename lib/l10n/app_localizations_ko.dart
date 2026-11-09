@@ -384,6 +384,187 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_appSettingsSubtitle => '알림, 메시징, 지도 설정';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save or restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import File';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_passwordHelp =>
+      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+
+  @override
+  String get backupRestore_importUnavailable =>
+      'Check the password or choose a supported backup file.';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_nodeSettings => 'Node Settings';
+
+  @override
+  String get backupRestore_nodeSettingsDescription =>
+      'Device name, private and public keys, radio settings, and regions';
+
+  @override
+  String get backupRestore_deviceName => 'Device Name';
+
+  @override
+  String get backupRestore_privateKey => 'Private Key (sensitive)';
+
+  @override
+  String get backupRestore_publicKey => 'Public Key';
+
+  @override
+  String get backupRestore_radioSettings => 'Radio Settings';
+
+  @override
+  String get backupRestore_regions => 'Regions';
+
+  @override
+  String get backupRestore_location => 'Location';
+
+  @override
+  String get backupRestore_contactSettings => 'Contact Settings';
+
+  @override
+  String get backupRestore_privacySettings => 'Privacy Settings';
+
+  @override
+  String get backupRestore_contactsData => 'Contacts';
+
+  @override
+  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+
+  @override
+  String get backupRestore_contactGroups => 'Contact Groups';
+
+  @override
+  String get backupRestore_contactHistory => 'Contact History';
+
+  @override
+  String get backupRestore_channelsData => 'Channels';
+
+  @override
+  String get backupRestore_channelFilters => 'Message Filter Settings';
+
+  @override
+  String get backupRestore_channelSettings => 'Channel Settings';
+
+  @override
+  String get backupRestore_communities => 'Communities';
+
+  @override
+  String get backupRestore_channelHistory => 'Channel History';
+
+  @override
+  String get backupRestore_locationSettings => 'Location Settings';
+
+  @override
+  String get backupRestore_locationSettingsDescription =>
+      'Location, contact settings, and privacy settings';
+
+  @override
+  String get backupRestore_appSettings => 'App Settings';
+
+  @override
+  String get backupRestore_appSettingsDescription =>
+      'App preferences and appearance settings';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+
+  @override
+  String get backupRestore_contacts => 'Contacts';
+
+  @override
+  String get backupRestore_contactsDescription =>
+      'Contacts, per-contact filters and settings, groups, and message history';
+
+  @override
+  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+
+  @override
+  String get backupRestore_discoveredContactsDescription =>
+      'Discovered contacts and their saved details';
+
+  @override
+  String get backupRestore_channels => 'Channels';
+
+  @override
+  String get backupRestore_channelsDescription =>
+      'Channels, channel filters, communities, and message history';
+
+  @override
+  String get backupRestore_backup => 'Create Backup';
+
+  @override
+  String get backupRestore_restore => 'Restore Selected';
+
+  @override
+  String get backupRestore_backupComplete => 'Backup file created.';
+
+  @override
+  String get backupRestore_restoreComplete =>
+      'Restore complete. Reconnect if you restored the radio identity.';
+
+  @override
+  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+
+  @override
+  String backupRestore_missingModelsMessage(String models) {
+    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
+  }
+
+  @override
+  String get backupRestore_downloadModels => 'Download Models';
+
+  @override
+  String get backupRestore_downloading => 'Downloading…';
+
+  @override
+  String get backupRestore_cancelDownload => 'Cancel Download';
+
+  @override
+  String backupRestore_failed(String error) {
+    return 'Backup operation failed: $error';
+  }
+
+  @override
+  String get backupRestore_fileTooLarge =>
+      'Backup file is larger than the 100 MB limit.';
+
+  @override
+  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+
+  @override
+  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+
+  @override
+  String get backupRestore_replaceIdentityMessage =>
+      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+
+  @override
   String get settings_nodeSettings => '노드 설정';
 
   @override
@@ -1063,6 +1244,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_languageUk => '우크라이나어';
 
   @override
+  String get appSettings_languageCs => '체코어';
+
+  @override
   String get repeater_pathHashModeOption0 => '1 바이트';
 
   @override
@@ -1208,33 +1392,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationDisabled => '자동 경로 순환 기능 비활성화';
-
-  @override
-  String get appSettings_maxRouteWeight => '최대 경로 가중치';
-
-  @override
-  String get appSettings_maxRouteWeightSubtitle =>
-      '한 경로가 성공적인 전송을 통해 누적할 수 있는 최대 가중치';
-
-  @override
-  String get appSettings_initialRouteWeight => '초기 경로 가중치';
-
-  @override
-  String get appSettings_initialRouteWeightSubtitle => '새로 발견된 경로의 초기 가중치';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrement => '성공 시 증가';
-
-  @override
-  String get appSettings_routeWeightSuccessIncrementSubtitle =>
-      '성공적으로 전송된 경로에 추가되는 가중치';
-
-  @override
-  String get appSettings_routeWeightFailureDecrement => '실패 시 감소';
-
-  @override
-  String get appSettings_routeWeightFailureDecrementSubtitle =>
-      '전송 실패 후 경로에서 제거되는 가중치';
 
   @override
   String get appSettings_maxMessageRetries => '최대 메시지 재시도 횟수';
@@ -1943,6 +2100,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_noMessages => '아직 메시지가 없습니다.';
 
   @override
+  String get chatSearch_tooltip => '메시지 검색';
+
+  @override
+  String get chatSearch_hint => '메시지 검색';
+
+  @override
+  String get chatSearch_close => '검색 닫기';
+
+  @override
+  String chatSearch_resultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '결과 $count개',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatSearch_noResults => '일치하는 메시지가 없습니다';
+
+  @override
+  String get chatSearch_noResultsHint => '다른 단어를 입력하거나 철자를 확인해 보세요';
+
+  @override
+  String get chatSearch_jumpFailed => '채팅에서 해당 메시지를 찾을 수 없습니다';
+
+  @override
   String get chat_sendMessage => '메시지를 보내기';
 
   @override
@@ -1986,6 +2171,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => '메시지가 삭제되었습니다.';
+
+  @override
+  String get chat_selectMessages => '메시지 선택';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '$count개 선택됨';
+  }
+
+  @override
+  String get chat_selectAll => '모두 선택';
+
+  @override
+  String get chat_clearSelection => '선택 해제';
+
+  @override
+  String get chat_deleteSelectedTitle => '메시지를 삭제하시겠습니까?';
+
+  @override
+  String chat_deleteSelectedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '이 기기에서 메시지 $count개를 삭제하시겠습니까?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chat_messagesDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '메시지 $count개를 삭제했습니다',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '메시지 $count개를 스팸으로 표시했습니다',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String messageFilter_markedNotSpamCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '메시지 $count개를 스팸 아님으로 표시했습니다',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chat_retryingMessage => '재시도 메시지';
@@ -2220,6 +2462,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get routing_modeManual => '수동';
 
   @override
+  String get routing_modeDirect => '직접';
+
+  @override
   String get routing_modeAutoHint =>
       '가장 잘 알려진 경로를 자동으로 선택하고, 경로가 없으면 플러딩으로 전환합니다.';
 
@@ -2229,6 +2474,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get routing_modeManualHint => '항상 지정한 정확한 경로를 따릅니다.';
+
+  @override
+  String get routing_modeDirectHint =>
+      '중계기를 거치지 않고 항상 이 연락처로 바로 보냅니다. 상대가 무선 범위 안에 있을 때 사용하세요.';
 
   @override
   String get routing_currentRoute => '현재 경로';
@@ -2378,6 +2627,52 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chat_poiShared => '공유된 POI';
+
+  @override
+  String get contactShare_headerOutgoing => '연락처를 공유했습니다';
+
+  @override
+  String get contactShare_headerIncoming => '연락처를 공유받음';
+
+  @override
+  String get contactShare_add => '연락처 추가';
+
+  @override
+  String get contactShare_adding => '연락처 추가 중...';
+
+  @override
+  String get contactShare_saved => '저장됨';
+
+  @override
+  String get contactShare_addAgain => '다시 추가';
+
+  @override
+  String get contactShare_isYou => '본인입니다';
+
+  @override
+  String get contactShare_shareAction => '연락처 공유';
+
+  @override
+  String get contactShare_pickerTitle => '연락처 공유';
+
+  @override
+  String get contactShare_myContact => '내 연락처';
+
+  @override
+  String get contactShare_searchHint => '연락처 검색';
+
+  @override
+  String get contactShare_noContacts => '연락처를 찾을 수 없습니다';
+
+  @override
+  String contactShare_preview(String name) {
+    return '공유된 연락처: $name';
+  }
+
+  @override
+  String contactShare_notification(String name) {
+    return '연락처를 공유받음: $name';
+  }
 
   @override
   String chat_unread(int count) {
@@ -2678,6 +2973,56 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get map_pathTraceViewLast => '마지막 결과 보기';
+
+  @override
+  String get manualTrace_menuItem => '해시로 경로 추적';
+
+  @override
+  String get manualTrace_inputLabel => '리피터 해시';
+
+  @override
+  String manualTrace_helper(String example) {
+    return '예: $example. 쉼표 또는 공백으로 구분하세요.';
+  }
+
+  @override
+  String manualTrace_previewTitle(int count) {
+    return '홉 ($count)';
+  }
+
+  @override
+  String get manualTrace_unknownNode => '알 수 없는 노드';
+
+  @override
+  String get manualTrace_enterHashes => '해시 입력';
+
+  @override
+  String get manualTrace_run => '경로 추적 실행';
+
+  @override
+  String get manualTrace_notConnected => '추적을 실행하려면 무선 장치에 연결하세요';
+
+  @override
+  String get manualTrace_errorInvalidHex => '16진수 문자(0-9, A-F)만 사용할 수 있습니다';
+
+  @override
+  String get manualTrace_errorOddLength => '각 해시는 홉 크기에 맞게 16진수 문자 수가 짝수여야 합니다';
+
+  @override
+  String get manualTrace_errorMixedWidths => '모든 해시의 길이가 같아야 합니다';
+
+  @override
+  String get manualTrace_errorUnsupportedWidth =>
+      '해시는 1, 2 또는 3바이트(16진수 2, 4 또는 6자)여야 합니다';
+
+  @override
+  String manualTrace_errorTooManyHops(int max) {
+    return '경로가 너무 깁니다(최대 $max바이트)';
+  }
+
+  @override
+  String get manualTrace_errorTraceTooLong =>
+      '한 번의 요청으로 추적하기에는 홉이 너무 많습니다. 홉을 줄이거나 “입력한 대로”를 선택하세요.';
 
   @override
   String get mapCache_title => '오프라인 지도 캐시';
@@ -3068,6 +3413,11 @@ class AppLocalizationsKo extends AppLocalizations {
     int seconds,
   ) {
     return '$days일 $hours시간 $minutes분 $seconds초';
+  }
+
+  @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '$hours시간 $minutes분 $seconds초';
   }
 
   @override
@@ -5201,7 +5551,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '리피터 설정을 열 때 모든 설정을 요청합니다. 각 설정은 LoRa를 통한 별도의 요청이므로 느리고 전송 시간(airtime)을 사용합니다. 꺼져 있으면 \'모두 새로고침\'을 누르거나 개별 섹션을 새로고침하세요.';
 
   @override
-  String get appSettings_languageHu => '헝가리';
+  String get appSettings_languageHu => '헝가리어';
 
   @override
   String get appSettings_languageJa => '일본어';
@@ -5578,6 +5928,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pathMap_expandPanel => '패널 펼치기';
+
+  @override
+  String get pathMap_expandHopList => '중계 목록 펼치기';
+
+  @override
+  String get pathMap_showMap => '지도 보기';
 
   @override
   String get pathMap_noLocation => '위치 없음';
@@ -6639,6 +6995,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get messageFilter_duplicatesSubtitle =>
       '같은 메시지를 다시 보냈거나 여러 발신자가 보낸 경우';
+
+  @override
+  String get messageFilter_repeatSends => '반복으로 간주할 전송 횟수';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return '같은 발신자가 10분 안에 같은 메시지를 $count번 보내면 숨깁니다';
+  }
 
   @override
   String get messageFilter_repeatedCharacters => '반복된 문자';
