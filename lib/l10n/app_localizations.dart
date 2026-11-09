@@ -15989,6 +15989,12 @@ abstract class AppLocalizations {
   /// **'Hidden message · Tap to view'**
   String get messageFilter_ghostSingle;
 
+  /// No description provided for @messageFilter_ghostMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} hidden message · Tap to view} other{{count} hidden messages · Tap to view}}'**
+  String messageFilter_ghostMany(int count);
+
   /// No description provided for @messageFilter_reasonManual.
   ///
   /// In en, this message translates to:
@@ -16006,6 +16012,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as spam'**
   String get messageFilter_markSpam;
+
+  /// No description provided for @messageFilter_filterSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter this sender'**
+  String get messageFilter_filterSender;
+
+  /// No description provided for @messageFilter_filterSenderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide messages from anyone named “{name}” in channels where the filter is on?'**
+  String messageFilter_filterSenderConfirm(String name);
+
+  /// No description provided for @messageFilter_filterLikeThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter messages like this…'**
+  String get messageFilter_filterLikeThis;
+
+  /// No description provided for @messageFilter_currentChannelToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter messages in this channel'**
+  String get messageFilter_currentChannelToggle;
+
+  /// No description provided for @messageFilter_ruleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule saved'**
+  String get messageFilter_ruleSaved;
 
   /// No description provided for @messageFilter_channelToggle.
   ///

@@ -4864,9 +4864,29 @@
   "messageFilter_ruleMatchExact": "Exact",
   "messageFilter_filteredMessagesEmpty": "No filtered messages in the loaded history.",
   "messageFilter_ghostSingle": "Hidden message · Tap to view",
+  "messageFilter_ghostMany": "{count, plural, one{{count} hidden message · Tap to view} other{{count} hidden messages · Tap to view}}",
+  "@messageFilter_ghostMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "messageFilter_reasonManual": "Marked as spam",
   "messageFilter_notSpam": "Not spam",
   "messageFilter_markSpam": "Mark as spam",
+  "messageFilter_filterSender": "Filter this sender",
+  "messageFilter_filterSenderConfirm": "Hide messages from anyone named “{name}” in channels where the filter is on?",
+  "@messageFilter_filterSenderConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "messageFilter_filterLikeThis": "Filter messages like this…",
+  "messageFilter_currentChannelToggle": "Filter messages in this channel",
+  "messageFilter_ruleSaved": "Rule saved",
   "messageFilter_channelToggle": "Filter messages in these channels",
   "messageFilter_ghostIconTooltip": "Hidden by your message filter",
   "messageFilter_saveError": "Could not save the message filter change.",

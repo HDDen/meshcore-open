@@ -23,6 +23,8 @@ import '../utils/platform_info.dart';
 import '../helpers/marker_message.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
+import '../helpers/channel_filtered_row_grouping.dart';
+import '../helpers/last_value_memo.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-share
 import '../helpers/chat_keyboard_navigation_history.dart';
@@ -65,6 +67,7 @@ import '../models/image_codec_support.dart' show aeicRatePointForUi;
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/message_filter/message_filter_service.dart';
+import '../services/message_filter/message_filter_text.dart';
 import '../services/chat_background_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/image_chunk_transport.dart';
@@ -79,6 +82,7 @@ import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/blocked_message_body.dart';
 import '../widgets/blocked_senders_sheet.dart';
+import '../widgets/channel_filter_actions.dart';
 import '../widgets/filtered_channel_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
@@ -177,8 +181,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   final MentionSearchDebounce _mentionSearchDebounce = MentionSearchDebounce();
   final CommunityStore _communityStore = CommunityStore();
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
-  final Map<String, GlobalKey> _messageKeys = {};
+  final Map<Object, GlobalKey> _messageKeys = {};
+  Map<String, GlobalKey> _groupMessageKeys = const {};
+  Map<Key, int> _transcriptIndexByKey = const {};
   _TranscriptOrder? _transcriptOrder;
+  final _filteredRowsMemo =
+      LastValueMemo<
+        (_TranscriptOrder, String?, int, String),
+        List<_ChannelChatRow>
+      >();
   ReceivedImageStore? _watchedImageStore;
   int _imageStoreVersion = 0;
   ModalRoute<dynamic>? _route;
@@ -668,10 +679,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     return null;
   }
 
-  BuildContext? _tryGetMessageContext(String messageId) {
-    final key = _messageKeys[messageId];
-    return key?.currentContext;
-  }
+  GlobalKey? _messageKeyFor(String messageId) =>
+      _groupMessageKeys[messageId] ?? _messageKeys[messageId];
+
+  BuildContext? _tryGetMessageContext(String messageId) =>
+      _messageKeyFor(messageId)?.currentContext;
 
   List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
     return connector.getChannelMessageTimeline(widget.channel);
@@ -705,11 +717,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
       if (targetIndex >= 0) {
         if (_scrollController.hasClients) {
-          final targetOffset = messages.length > 1
-              ? _scrollController.position.maxScrollExtent *
-                    ((messages.length - 1 - targetIndex) /
-                        (messages.length - 1))
-              : 0.0;
+          final rowIndex = _transcriptIndexByKey[_messageKeyFor(messageId)];
+          final rowCount = _transcriptIndexByKey.length;
+          final fraction = rowIndex != null
+              ? (rowCount > 1 ? rowIndex / (rowCount - 1) : 0.0)
+              : (messages.length > 1
+                    ? (messages.length - 1 - targetIndex) /
+                          (messages.length - 1)
+                    : 0.0);
+          final targetOffset =
+              _scrollController.position.maxScrollExtent * fraction;
           final materializedContext = await _probeMessageContextAroundOffset(
             messageId,
             targetOffset,
@@ -1126,6 +1143,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       ),
                     );
+                  case 'toggleMessageFilter':
+                    final filter = context
+                        .read<MeshCoreConnector>()
+                        .messageFilterService;
+                    final channelId = widget.channel.storageId;
+                    if (filter != null &&
+                        filter.settings.enabled &&
+                        channelId != null) {
+                      unawaited(
+                        toggleChannelMessageFilter(context, filter, channelId),
+                      );
+                    }
                   case 'filteredMessages':
                     unawaited(
                       showFilteredChannelMessages(context, widget.channel),
@@ -1169,6 +1198,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       icon: Icons.qr_code_2,
                       text: context.l10n.common_share,
                     ),
+                  ),
+                if (widget.channel.storageId != null &&
+                    context.read<MeshCoreConnector>()
+                        .messageFilterService?.settings.enabled == true)
+                  CheckedPopupMenuItem(
+                    value: 'toggleMessageFilter',
+                    checked: context.read<MeshCoreConnector>()
+                        .isChannelFilterEnabled(widget.channel),
+                    child: Text(context.l10n.messageFilter_currentChannelToggle),
                   ),
                 if (context.read<MeshCoreConnector>().isChannelFilterEnabled(
                   widget.channel,
@@ -1245,9 +1283,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final settingsService = context
                         .watch<AppSettingsService>();
                     final messages = timeline.messages;
+                    final reversedRows = _transcriptRowsFor(
+                      context,
+                      messages,
+                      groupFiltered:
+                          timeline.filterEnabled && !timeline.hideFiltered,
+                      connector: connector,
+                    );
                     final newest = messages.lastOrNull;
-                    final oldest = timeline.hideFiltered
-                        ? connector.getLoadedChannelMessages(widget.channel).firstOrNull
+                    final compacted = timeline.hideFiltered ||
+                        (timeline.filterEnabled &&
+                            reversedRows.any((row) => row.filteredGroup != null));
+                    final oldest = compacted
+                        ? connector
+                              .getLoadedChannelMessages(widget.channel)
+                              .firstOrNull
                         : null;
                     final showOlderButton =
                         oldest != null &&
@@ -1267,9 +1317,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ? null
                               : _tryGetMessageContext(id),
                     );
-                    final reversedRows = _transcriptRowsFor(context, messages);
 
                     if (reversedRows.isEmpty && !showOlderControl) {
+                      _messageKeys.clear();
+                      _groupMessageKeys = const {};
+                      _transcriptIndexByKey = const {};
                       return ChatBackdrop(
                         chatKey: ChatBackgroundService.channelKey(widget.channel),
                         child: Center(
@@ -1308,34 +1360,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     final itemCount =
                         reversedRows.length + (showOlderControl ? 1 : 0);
 
-                    // Prune stale keys (deleted/cleared messages) to avoid
-                    // unbounded growth.
-                    final liveIds = reversedRows.map((row) => row.id).toSet();
-                    _messageKeys.removeWhere((id, _) => !liveIds.contains(id));
-
-                    // Rare messageId collisions must not reuse the same
-                    // GlobalKey in the list.
-                    final keyedIndices = <int>{};
-                    final duplicateKeys = <int, ValueKey<String>>{};
-                    final indexByKey = <Key, int>{};
-                    final occurrencesById = <String, int>{};
-                    for (var i = 0; i < reversedRows.length; i++) {
-                      final messageId = reversedRows[i].id;
-                      final occurrence = occurrencesById[messageId] ?? 0;
-                      occurrencesById[messageId] = occurrence + 1;
-                      if (occurrence == 0) {
-                        keyedIndices.add(i);
-                        final key = _messageKeys.putIfAbsent(
-                          messageId,
-                          GlobalKey.new,
-                        );
-                        indexByKey[key] = i;
-                      } else {
-                        final key = ValueKey('$messageId#$occurrence');
-                        duplicateKeys[i] = key;
-                        indexByKey[key] = i;
-                      }
-                    }
+                    final rowKeys = _indexTranscriptRows(reversedRows);
+                    final indexByKey = _transcriptIndexByKey;
 
                     // Auto-scroll to bottom if user is already at bottom
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1382,8 +1408,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     }
                                     final adjustedIndex = index - 1;
 
-                                    // A page may contain only hidden rows. Keep a
-                                    // way to reach the next raw history cursor.
+                                    // A page may contain only hidden rows or
+                                    // collapse into one group. Keep paging
+                                    // reachable with the raw history cursor.
                                     if (showOlderControl &&
                                         adjustedIndex == reversedRows.length) {
                                       if (!_isLoadingOlder) {
@@ -1413,18 +1440,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     }
                                     final messageIndex = adjustedIndex;
                                     final row = reversedRows[messageIndex];
-                                    final Key messageKey =
-                                        keyedIndices.contains(messageIndex)
-                                        ? _messageKeys.putIfAbsent(
-                                            row.id,
-                                            GlobalKey.new,
-                                          )
-                                        : duplicateKeys[messageIndex]!;
+                                    final group = row.filteredGroup;
                                     final isUnreadAnchor =
                                         _unreadDividerMessageId != null &&
-                                        row.id == _unreadDividerMessageId;
+                                        (group?.last.messageId ?? row.id) ==
+                                            _unreadDividerMessageId;
                                     return Container(
-                                      key: messageKey,
+                                      key: rowKeys[messageIndex],
                                       child: Builder(
                                         builder: (context) {
                                           final textScale = context
@@ -1433,7 +1455,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                                 double
                                               >((service) => service.scale);
                                           final message = row.message;
-                                          final bubble = message != null
+                                          final bubble = group != null
+                                              ? FilteredChannelGroup(
+                                                  messages: group,
+                                                  channel: widget.channel,
+                                                )
+                                              : message != null
                                               ? _buildMessageBubble(
                                                   message,
                                                   textScale,
@@ -3648,13 +3675,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// message list object, its length and its two end ids, and on the image
   /// store's version: the merge of messages and images and the sort by
   /// arrival used to run on every rebuild of the transcript, relays
-  /// included. The rows themselves are built anew from the live list, since
-  /// the connector replaces a message in place when its status or repeats
-  /// change.
+  /// included. When filtering uses placeholders, also memoise grouping for
+  /// the immutable display snapshot supplied by the connector.
   List<_ChannelChatRow> _transcriptRowsFor(
     BuildContext context,
-    List<ChannelMessage> messages,
-  ) {
+    List<ChannelMessage> messages, {
+    required bool groupFiltered,
+    required MeshCoreConnector connector,
+  }) {
     ReceivedImageStore? store;
     if (kImageCodecFeatureAvailable) {
       try {
@@ -3693,7 +3721,81 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       );
       _transcriptOrder = order;
     }
-    return order.rows(messages);
+    if (!groupFiltered) {
+      _filteredRowsMemo.clear();
+      return order.rows(messages);
+    }
+
+    final channelName = connector.channelDisplayName(widget.channel.index);
+    final blocked = BlockedSenders.instance;
+    final unreadAnchor = _unreadDividerMessageId;
+    final key = (order, unreadAnchor, blocked.revision, channelName);
+    return _filteredRowsMemo.of(
+      key,
+      () => groupAdjacentFilteredRows(
+        key.$1.rows(messages),
+        isFiltered: (row) {
+          final message = row.message;
+          return message != null &&
+              message.isFiltered &&
+              !message.wasBlocked &&
+              !blocked.hidesStoredMessage(message, channelName);
+        },
+        canJoin: (newer, older) =>
+            newer.id != unreadAnchor &&
+            isSameChatDay(newer.receivedAt, older.receivedAt),
+        buildGroup: (members) => _ChannelChatRow(
+          message: members.first.message,
+          filteredGroup: [for (final member in members) member.message!],
+        ),
+      ),
+    );
+  }
+
+  List<Key> _indexTranscriptRows(List<_ChannelChatRow> rows) {
+    final rowKeys = <Key>[];
+    final liveKeys = <Object>{};
+    final indexByKey = <Key, int>{};
+    final occurrencesById = <String, int>{};
+    Map<String, GlobalKey>? groupMessageKeys;
+    for (final row in rows) {
+      final occurrence = occurrencesById.update(
+        row.id,
+        (n) => n + 1,
+        ifAbsent: () => 0,
+      );
+      final Object identity = occurrence == 0 ? row.id : (row.id, occurrence);
+      final group = row.filteredGroup;
+      final Key key;
+      if (occurrence == 0 || group != null) {
+        liveKeys.add(identity);
+        final anchor = _messageKeys.putIfAbsent(identity, GlobalKey.new);
+        key = anchor;
+        if (group != null) {
+          // Every member resolves to this visible anchor. Keep the first
+          // occurrence in display order when history contains duplicate IDs.
+          for (var i = 1; i < group.length; i++) {
+            final id = group[i].messageId;
+            final memberOccurrence = occurrencesById.update(
+              id,
+              (n) => n + 1,
+              ifAbsent: () => 0,
+            );
+            if (memberOccurrence == 0) {
+              (groupMessageKeys ??= {})[id] = anchor;
+            }
+          }
+        }
+      } else {
+        key = ValueKey(identity);
+      }
+      indexByKey[key] = rowKeys.length;
+      rowKeys.add(key);
+    }
+    _messageKeys.removeWhere((identity, _) => !liveKeys.contains(identity));
+    _groupMessageKeys = groupMessageKeys ?? const {};
+    _transcriptIndexByKey = indexByKey;
+    return rowKeys;
   }
 
   Set<String> _imageChannelIds() {
@@ -5239,9 +5341,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       message,
       connector.channelDisplayName(widget.channel.index),
     );
-    final canMarkSpam =
-        MessageFilterService.learningAvailable &&
-        connector.isChannelFilterEnabled(widget.channel) &&
+    final filter = connector.messageFilterService;
+    final filterChannelId = widget.channel.storageId;
+    final canFilterMessage =
+        filter != null &&
+        filter.appliesTo(filterChannelId) &&
+        filterChannelId != null &&
         !connector.isOfflineSharedMode &&
         !message.isOutgoing &&
         !message.wasBlocked &&
@@ -5272,7 +5377,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (canMarkSpam)
+                if (canFilterMessage && MessageFilterService.learningAvailable)
                   ListTile(
                     leading: const Icon(Icons.flag_outlined),
                     title: Text(context.l10n.messageFilter_markSpam),
@@ -5284,6 +5389,38 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         widget.channel,
                         message,
                         const FilterVerdict(reason: FilterReason.manual),
+                      ));
+                    },
+                  ),
+                if (canFilterMessage && message.senderName.trim().isNotEmpty)
+                  ListTile(
+                    leading: const Icon(Icons.person_search_outlined),
+                    title: Text(context.l10n.messageFilter_filterSender),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(addChannelSenderFilter(
+                        context,
+                        filter,
+                        channelId: filterChannelId,
+                        sender: message.senderName,
+                      ));
+                    },
+                  ),
+                if (canFilterMessage &&
+                    message.text.trim().isNotEmpty &&
+                    !MessageFilterText.isStructuredPayload(
+                      message.text.trimLeft(),
+                    ))
+                  ListTile(
+                    leading: const Icon(Icons.filter_alt_outlined),
+                    title: Text(context.l10n.messageFilter_filterLikeThis),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(addChannelTextFilter(
+                        context,
+                        filter,
+                        channelId: filterChannelId,
+                        text: message.text,
                       ));
                     },
                   ),
@@ -6329,8 +6466,9 @@ class _SwipeReplyBubbleState extends State<_SwipeReplyBubble> {
 class _ChannelChatRow {
   final ChannelMessage? message;
   final ReceivedImageEntry? image;
+  final List<ChannelMessage>? filteredGroup;
 
-  const _ChannelChatRow({this.message, this.image});
+  const _ChannelChatRow({this.message, this.image, this.filteredGroup});
 
   DateTime get receivedAt => message?.receivedAt ?? image!.firstSeen;
 

@@ -15,11 +15,13 @@ class FilteredChannelMessage extends StatelessWidget {
     required this.message,
     required this.channel,
     required this.connector,
+    this.initiallyExpanded = false,
   });
 
   final ChannelMessage message;
   final Channel channel;
   final MeshCoreConnector connector;
+  final bool initiallyExpanded;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +41,7 @@ class FilteredChannelMessage extends StatelessWidget {
     final detail = verdict.detail;
     return ExpansionTile(
       key: PageStorageKey('filter:${message.messageId}'),
+      initiallyExpanded: initiallyExpanded,
       leading: const Icon(Icons.filter_alt_outlined),
       title: Text(l10n.messageFilter_ghostSingle),
       subtitle: Text(reason),
@@ -135,7 +138,49 @@ Future<void> saveChannelMessageVerdict(
   }
 }
 
-Future<void> showFilteredChannelMessages(BuildContext context, Channel channel) {
+class FilteredChannelGroup extends StatelessWidget {
+  const FilteredChannelGroup({
+    super.key,
+    required this.messages,
+    required this.channel,
+  });
+
+  final List<ChannelMessage> messages;
+  final Channel channel;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.filter_alt_outlined),
+      title: Text(context.l10n.messageFilter_ghostMany(messages.length)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => showFilteredChannelMessages(
+        context,
+        channel,
+        group: messages,
+      ),
+    );
+  }
+}
+
+// Same IDs can appear in combined history. Match the selected post rather
+// than including a different row from another group with a colliding ID.
+(String, DateTime, String, String, String?) _reviewIdentity(
+  ChannelMessage message,
+) => (
+  message.messageId,
+  message.timestamp,
+  message.senderName,
+  message.text,
+  message.sharedHistorySourceName,
+);
+
+Future<void> showFilteredChannelMessages(
+  BuildContext context,
+  Channel channel, {
+  List<ChannelMessage>? group,
+}) {
+  final selectedPosts = group?.map(_reviewIdentity).toSet();
   return Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (context) => Scaffold(
@@ -144,8 +189,22 @@ Future<void> showFilteredChannelMessages(BuildContext context, Channel channel) 
           child: Consumer<MeshCoreConnector>(
             builder: (context, connector, _) {
               final name = connector.channelDisplayName(channel.index);
-              final messages = connector
-                  .getLoadedFilteredChannelMessages(channel)
+              Iterable<ChannelMessage> candidates;
+              if (selectedPosts == null) {
+                candidates = connector.getLoadedFilteredChannelMessages(channel);
+              } else if (connector.isChannelFilterEnabled(channel)) {
+                candidates = connector
+                    .getChannelMergedMessages(channel)
+                    .reversed
+                    .where(
+                      (message) =>
+                          message.isFiltered &&
+                          selectedPosts.contains(_reviewIdentity(message)),
+                    );
+              } else {
+                candidates = const [];
+              }
+              final messages = candidates
                   .where(
                     (message) =>
                         !message.wasBlocked &&
@@ -164,6 +223,7 @@ Future<void> showFilteredChannelMessages(BuildContext context, Channel channel) 
                   channel: channel,
                   message: messages[index],
                   connector: connector,
+                  initiallyExpanded: selectedPosts != null,
                 ),
               );
             },

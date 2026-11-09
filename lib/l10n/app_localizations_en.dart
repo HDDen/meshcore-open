@@ -9414,6 +9414,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageFilter_ghostSingle => 'Hidden message · Tap to view';
 
   @override
+  String messageFilter_ghostMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hidden messages · Tap to view',
+      one: '$count hidden message · Tap to view',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get messageFilter_reasonManual => 'Marked as spam';
 
   @override
@@ -9421,6 +9432,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageFilter_markSpam => 'Mark as spam';
+
+  @override
+  String get messageFilter_filterSender => 'Filter this sender';
+
+  @override
+  String messageFilter_filterSenderConfirm(String name) {
+    return 'Hide messages from anyone named “$name” in channels where the filter is on?';
+  }
+
+  @override
+  String get messageFilter_filterLikeThis => 'Filter messages like this…';
+
+  @override
+  String get messageFilter_currentChannelToggle =>
+      'Filter messages in this channel';
+
+  @override
+  String get messageFilter_ruleSaved => 'Rule saved';
 
   @override
   String get messageFilter_channelToggle => 'Filter messages in these channels';

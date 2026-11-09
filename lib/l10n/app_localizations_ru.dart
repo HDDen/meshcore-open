@@ -9537,6 +9537,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Скрытое сообщение · Нажмите для просмотра';
 
   @override
+  String messageFilter_ghostMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count скрытых сообщений · Нажмите для просмотра',
+      many: '$count скрытых сообщений · Нажмите для просмотра',
+      few: '$count скрытых сообщения · Нажмите для просмотра',
+      one: '$count скрытое сообщение · Нажмите для просмотра',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get messageFilter_reasonManual => 'Отмечено как спам';
 
   @override
@@ -9544,6 +9557,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get messageFilter_markSpam => 'Отметить как спам';
+
+  @override
+  String get messageFilter_filterSender => 'Фильтровать этого отправителя';
+
+  @override
+  String messageFilter_filterSenderConfirm(String name) {
+    return 'Скрывать сообщения от отправителей с именем «$name» во всех каналах, где включён фильтр?';
+  }
+
+  @override
+  String get messageFilter_filterLikeThis => 'Фильтровать похожие сообщения…';
+
+  @override
+  String get messageFilter_currentChannelToggle =>
+      'Фильтровать сообщения в этом канале';
+
+  @override
+  String get messageFilter_ruleSaved => 'Правило сохранено';
 
   @override
   String get messageFilter_channelToggle =>

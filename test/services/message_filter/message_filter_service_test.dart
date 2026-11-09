@@ -27,6 +27,17 @@ void main() {
   });
   tearDown(PrefsManager.reset);
 
+  test('U27g: concurrent appends keep both rules in storage', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await Future.wait([filter.addRule(_bonus), filter.addRule(_sender)]);
+    expect(filter.rules, [_bonus, _sender]);
+
+    final reloaded = MessageFilterService()..load();
+    addTearDown(reloaded.dispose);
+    expect(reloaded.rules, [_bonus, _sender]);
+  });
+
   test('rules require opt-in and channel exclusions survive reload', () async {
     final filter = MessageFilterService()..load();
     await filter.replaceRules(const [_bonus]);

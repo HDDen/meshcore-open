@@ -9,11 +9,16 @@ import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/screens/channel_chat_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
+import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
+import 'package:meshcore_open/services/translation_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
+import 'package:meshcore_open/widgets/chat_bubble_box.dart';
+import 'package:meshcore_open/widgets/filtered_channel_message.dart';
 import 'package:meshcore_open/widgets/stop_sending_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +26,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 final _channel = Channel(index: 0, name: 'synthetic', psk: Uint8List(16));
 
 class _Node extends MeshCoreConnector {
+  _Node({super.messageFilterService});
+
   @override
   bool get isConnected => true;
   @override
@@ -36,6 +43,211 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  testWidgets('U27f: a quote can reach a member of a filtered group', (
+    tester,
+  ) async {
+    final filter = MessageFilterService();
+    await filter.updateSettings(const MessageFilterSettings(enabled: true));
+    final node = _Node(messageFilterService: filter);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(filter.dispose);
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+
+    final channel = Channel.fromHex(0, 'synthetic', Channel.publicChannelPsk);
+    final now = DateTime(2026, 1, 1, 12);
+    ChannelMessage post(String id, int seconds, {bool filtered = true}) {
+      final at = now.add(Duration(seconds: seconds));
+      return ChannelMessage(
+        messageId: id,
+        senderName: 'Alice',
+        text: id,
+        timestamp: at,
+        receivedAt: at,
+        isOutgoing: false,
+        status: ChannelMessageStatus.sent,
+        filterVerdict: filtered
+            ? const FilterVerdict(reason: FilterReason.manual)
+            : null,
+      );
+    }
+
+    final first = post('hidden-first', 0);
+    final second = post('hidden-second', 1);
+    final reply = post('visible-reply', 2, filtered: false).copyWith(
+      replyToMessageId: first.messageId,
+      replyToSenderName: first.senderName,
+      replyToText: first.text,
+    );
+    node.setChannelMessagesForTest(channel.index, [first, second, reply]);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChannelChatScreen(channel: channel),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final group = find.byType(FilteredChannelGroup);
+    expect(group, findsOneWidget);
+    final l10n = AppLocalizations.of(tester.element(group));
+    final quote = find.text(l10n.messageFilter_ghostIconTooltip);
+    expect(quote, findsOneWidget);
+    expect(find.text(l10n.messageFilter_loadOlder), findsOneWidget);
+    expect(find.text(first.text), findsNothing);
+    await tester.tap(quote);
+    await tester.pump(kDoubleTapTimeout);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_originalMessageNotFound), findsNothing);
+
+    await tester.tap(group);
+    await tester.pump(kDoubleTapTimeout);
+    await tester.pumpAndSettle();
+    Finder body(String id) => find.byWidgetPredicate(
+      (widget) => widget is SelectableText && widget.data == 'Alice: $id',
+    );
+    expect(body(first.messageId), findsOneWidget);
+    expect(body(second.messageId), findsOneWidget);
+    expect(find.text(l10n.messageFilter_notSpam), findsNWidgets(2));
+    expect(find.text(reply.text), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('U27g: channel actions create rules and toggle one channel', (
+    tester,
+  ) async {
+    final filter = MessageFilterService();
+    await filter.updateSettings(const MessageFilterSettings(enabled: true));
+    final node = _Node(messageFilterService: filter);
+    final settings = AppSettingsService();
+    final translation = TranslationService(settings);
+    final scale = ChatTextScaleService();
+    addTearDown(filter.dispose);
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(translation.dispose);
+    addTearDown(scale.dispose);
+
+    final channel = Channel.fromHex(0, 'synthetic', Channel.publicChannelPsk);
+    final now = DateTime.utc(2026);
+    final message = ChannelMessage(
+      senderName: 'Alice',
+      text: 'An ordinary message',
+      timestamp: now,
+      receivedAt: now,
+      isOutgoing: false,
+      status: ChannelMessageStatus.sent,
+    );
+    node.setChannelMessagesForTest(channel.index, [message]);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+          ChangeNotifierProvider<TranslationService>.value(value: translation),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChannelChatScreen(channel: channel),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(AppBar)));
+    final filterLike = find.text(l10n.messageFilter_filterLikeThis);
+    final filterSender = find.text(l10n.messageFilter_filterSender);
+
+    Future<void> openMessageActions() async {
+      final bubble = find.byType(ChatBubbleBox);
+      final position = tester.getTopLeft(bubble) + const Offset(12, 6);
+      await tester.longPressAt(position);
+      await tester.pumpAndSettle();
+    }
+
+    await openMessageActions();
+    expect(filterLike, findsOneWidget);
+    await tester.tap(filterLike);
+    await tester.pumpAndSettle();
+    final field = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    expect(tester.widget<TextField>(field).controller!.text, message.text);
+    await tester.enterText(field, 'Another phrase');
+    await tester.tap(find.text(l10n.common_save));
+    await tester.pumpAndSettle();
+    expect(filter.rules.single.pattern, 'Another phrase');
+    expect(filter.rules.single.field, FilterRuleField.text);
+
+    await openMessageActions();
+    await tester.tap(filterSender);
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l10n.messageFilter_filterSenderConfirm(message.senderName)),
+      findsOneWidget,
+    );
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(filter.rules, hasLength(1));
+
+    await openMessageActions();
+    await tester.tap(filterSender);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.common_save));
+    await tester.pumpAndSettle();
+    expect(filter.rules.last.pattern, message.senderName);
+    expect(filter.rules.last.field, FilterRuleField.sender);
+    expect(filter.rules.last.match, FilterRuleMatch.exact);
+    expect(filter.learningEnabled, isFalse);
+    expect(find.byType(FilteredChannelMessage), findsOneWidget);
+
+    final menu = find.descendant(
+      of: find.byType(AppBar),
+      matching: find.byType(PopupMenuButton<String>),
+    );
+    Future<void> toggleChannel({required bool checked}) async {
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
+      final entry = find.widgetWithText(
+        CheckedPopupMenuItem<String>,
+        l10n.messageFilter_currentChannelToggle,
+      );
+      expect(tester.widget<CheckedPopupMenuItem<String>>(entry).checked, checked);
+      await tester.tap(entry);
+      await tester.pumpAndSettle();
+    }
+
+    await toggleChannel(checked: true);
+    expect(filter.appliesTo(channel.storageId), isFalse);
+    expect(find.byType(FilteredChannelMessage), findsNothing);
+    await toggleChannel(checked: false);
+    expect(filter.appliesTo(channel.storageId), isTrue);
+    expect(filter.rules, hasLength(2));
+    expect(find.byType(FilteredChannelMessage), findsOneWidget);
+    await node.flushChannelRuleVerdicts();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 5));
+  });
 
   for (final locale in ['ru', 'en']) {
     for (final finish in ['tap', 'coverage']) {

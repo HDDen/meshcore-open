@@ -1098,6 +1098,13 @@ of loaded rows. The message snapshots adopt that same projection before
 concurrent channel saves. A lifecycle flush starts pending work early.
 Manual restoration stores a per-post exception in the message JSON.
 SQLite paging still uses the raw history and its original cursors.
+In placeholder mode the channel transcript groups adjacent filtered posts
+within each day and splits at the unread divider. Every member ID resolves
+to the group row for quote navigation. The group opens the same lazy review
+list scoped to its posts, preserving per-post verdicts and restoration.
+The message menu can add an exact sender-name rule or prefill the shared
+rule editor with message text. The channel menu uses the same PSK-based
+exclusions as the filter settings screen.
 Optional automatic checks detect long runs of one character and separate
 publications of the same text. The publication tracker compares send times
 within each channel and uses local arrival time for expiration. It is

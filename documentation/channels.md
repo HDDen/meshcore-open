@@ -242,10 +242,14 @@ can become another example. Disabling learning clears the active model.
 history. The learning controls are available on platforms that use SQLite.
 
 Filtered posts stay in channel history. Choose between an expandable
-placeholder and hiding the row. To review loaded filtered posts, open
+placeholder and hiding the row. Adjacent filtered posts on the same day
+can share a placeholder with a count. Tap it to review those posts.
+To review all loaded filtered posts, open
 **Filtered messages** from the channel menu. Use **Not spam** to restore a
-post. Long-press an incoming post and choose **Mark as spam** to filter it
-manually. On platforms with local learning, both actions ask to turn it on
+post. The channel menu has a switch to apply the filter to this channel.
+Long-press an incoming post to start a rule from its sender name or text.
+A sender rule matches that exact name across filtered channels.
+Choose **Mark as spam** to filter the post manually. On platforms with local learning, both actions ask to turn it on
 when it is off. Confirm to turn on learning and then apply the action.
 Cancel closes the prompt without applying the action. Cancelling **Not
 spam** keeps the text visible in the expanded preview, with its filter

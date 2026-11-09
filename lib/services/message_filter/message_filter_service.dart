@@ -21,6 +21,7 @@ class MessageFilterService extends ChangeNotifier {
   MessageFilterSettings _settings = const MessageFilterSettings();
   List<FilterRule> _rules = const [];
   MessageFilterRules? _ruleMatcher;
+  Future<void> _ruleWrites = Future<void>.value();
   DuplicateTracker? _duplicates;
   MessageFilterLearning? _learning;
 
@@ -48,12 +49,32 @@ class MessageFilterService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> replaceRules(List<FilterRule> rules) async {
-    final next = List<FilterRule>.unmodifiable(rules);
-    await _store.saveRules(next);
-    _rules = next;
-    _ruleMatcher = null;
-    notifyListeners();
+  Future<void> setChannelExcluded(String channelId, {required bool excluded}) {
+    final ids = {..._settings.excludedChannelIds};
+    final changed = excluded ? ids.add(channelId) : ids.remove(channelId);
+    return changed
+        ? updateSettings(_settings.copyWith(excludedChannelIds: ids))
+        : Future<void>.value();
+  }
+
+  Future<void> addRule(FilterRule rule) =>
+      _writeRules(() => [..._rules, rule]);
+
+  Future<void> replaceRules(List<FilterRule> rules) {
+    final replacement = List<FilterRule>.unmodifiable(rules);
+    return _writeRules(() => replacement);
+  }
+
+  Future<void> _writeRules(List<FilterRule> Function() nextRules) {
+    final write = _ruleWrites.then((_) async {
+      final next = List<FilterRule>.unmodifiable(nextRules());
+      await _store.saveRules(next);
+      _rules = next;
+      _ruleMatcher = null;
+      notifyListeners();
+    });
+    _ruleWrites = write.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    return write;
   }
 
   bool appliesTo(String? channelId) =>

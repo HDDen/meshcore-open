@@ -4,6 +4,7 @@ import '../l10n/l10n.dart';
 import '../models/channel.dart';
 import '../models/message_filter.dart';
 import '../services/message_filter/message_filter_service.dart';
+import '../widgets/channel_filter_rule_dialog.dart';
 
 class MessageFilterSettingsScreen extends StatefulWidget {
   const MessageFilterSettingsScreen({
@@ -41,10 +42,7 @@ class _MessageFilterSettingsScreenState
   }
 
   Future<void> _editRule(FilterRule? rule) async {
-    final result = await showDialog<({FilterRule? rule})>(
-      context: context,
-      builder: (_) => _RuleDialog(rule: rule),
-    );
+    final result = await showChannelFilterRuleDialog(context, rule: rule);
     if (result == null || !mounted) return;
     final replacement = result.rule;
     final rules = widget.service.rules;
@@ -179,8 +177,8 @@ class _MessageFilterSettingsScreenState
               ListTile(
                 title: Text(rule.pattern),
                 subtitle: Text(
-                  '${_fieldLabel(context, rule.field)} · '
-                  '${_matchLabel(context, rule.match)}',
+                  '${filterRuleFieldLabel(context, rule.field)} · '
+                  '${filterRuleMatchLabel(context, rule.match)}',
                 ),
                 onTap: _saving ? null : () => _editRule(rule),
                 trailing: Switch(
@@ -218,138 +216,17 @@ class _MessageFilterSettingsScreenState
                   value: !settings.excludedChannelIds.contains(entry.key),
                   onChanged: _saving
                       ? null
-                      : (enabled) {
-                          final excluded = {...settings.excludedChannelIds};
-                          if (enabled == true) {
-                            excluded.remove(entry.key);
-                          } else {
-                            excluded.add(entry.key);
-                          }
-                          _save(
-                            () => service.updateSettings(
-                              settings.copyWith(excludedChannelIds: excluded),
-                            ),
-                          );
-                        },
+                      : (enabled) => _save(
+                          () => service.setChannelExcluded(
+                            entry.key,
+                            excluded: enabled != true,
+                          ),
+                        ),
                 ),
             ],
           ],
         ),
       ),
-    );
-  }
-}
-
-String _fieldLabel(BuildContext context, FilterRuleField field) =>
-    switch (field) {
-      FilterRuleField.text => context.l10n.messageFilter_ruleFieldText,
-      FilterRuleField.sender => context.l10n.messageFilter_ruleFieldSender,
-      FilterRuleField.both => context.l10n.messageFilter_ruleFieldBoth,
-    };
-
-String _matchLabel(BuildContext context, FilterRuleMatch match) =>
-    switch (match) {
-      FilterRuleMatch.contains => context.l10n.messageFilter_ruleMatchContains,
-      FilterRuleMatch.wholeWord => context.l10n.messageFilter_ruleMatchWholeWord,
-      FilterRuleMatch.exact => context.l10n.messageFilter_ruleMatchExact,
-    };
-
-class _RuleDialog extends StatefulWidget {
-  const _RuleDialog({required this.rule});
-
-  final FilterRule? rule;
-
-  @override
-  State<_RuleDialog> createState() => _RuleDialogState();
-}
-
-class _RuleDialogState extends State<_RuleDialog> {
-  late final _pattern = TextEditingController(text: widget.rule?.pattern);
-  late var _field = widget.rule?.field ?? FilterRuleField.text;
-  late var _match = widget.rule?.match ?? FilterRuleMatch.contains;
-
-  @override
-  void dispose() {
-    _pattern.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final rule = widget.rule;
-    return AlertDialog(
-      scrollable: true,
-      title: Text(
-        rule == null ? l10n.messageFilter_addRule : l10n.messageFilter_editRule,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _pattern,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: l10n.messageFilter_rulePattern),
-          ),
-          DropdownButtonFormField<FilterRuleField>(
-            initialValue: _field,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l10n.messageFilter_ruleWhere),
-            items: [
-              for (final field in FilterRuleField.values)
-                DropdownMenuItem(
-                  value: field,
-                  child: Text(_fieldLabel(context, field)),
-                ),
-            ],
-            onChanged: (value) {
-              if (value != null) _field = value;
-            },
-          ),
-          DropdownButtonFormField<FilterRuleMatch>(
-            initialValue: _match,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: l10n.messageFilter_ruleMatch),
-            items: [
-              for (final match in FilterRuleMatch.values)
-                DropdownMenuItem(
-                  value: match,
-                  child: Text(_matchLabel(context, match)),
-                ),
-            ],
-            onChanged: (value) {
-              if (value != null) _match = value;
-            },
-          ),
-        ],
-      ),
-      actions: [
-        if (rule != null)
-          TextButton(
-            onPressed: () => Navigator.pop(context, (rule: null)),
-            child: Text(l10n.common_delete),
-          ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.common_cancel),
-        ),
-        FilledButton(
-          onPressed: _pattern.text.trim().isEmpty
-              ? null
-              : () => Navigator.pop(
-                  context,
-                  (rule: FilterRule(
-                    id: rule?.id ??
-                        DateTime.now().microsecondsSinceEpoch.toString(),
-                    pattern: _pattern.text.trim(),
-                    field: _field,
-                    match: _match,
-                    enabled: rule?.enabled ?? true,
-                  )),
-                ),
-          child: Text(l10n.common_save),
-        ),
-      ],
     );
   }
 }
