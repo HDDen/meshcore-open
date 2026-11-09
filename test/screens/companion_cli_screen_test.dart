@@ -222,6 +222,45 @@ void main() {
   Rect cardSurface(WidgetTester tester, Finder card) => tester.getRect(
     find.descendant(of: card, matching: find.byType(Material)).first);
 
+  testWidgets('U29 baseline: tab switching preserves the contacts search',
+      (tester) async {
+    connector.contactData.add(Contact(
+      publicKey: Uint8List.fromList(List.filled(32, 0x45)),
+      name: 'Synthetic contact',
+      type: advTypeChat,
+      pathLength: -1,
+      path: Uint8List(0),
+      lastSeen: DateTime.utc(2026),
+    ));
+    await show(tester, const ContactsScreen(hideBackButton: true),
+        logicalSize: const Size(450, 820));
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ContactsScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.contacts_searchOpen));
+    await tester.pumpAndSettle();
+    final search = find.byType(TextField);
+    await tester.enterText(search, 'Synthetic');
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(view.contactsSearchText, 'Synthetic');
+    expect(find.text('Synthetic contact'), findsOneWidget);
+
+    final switchBar = find.byType(NavigationBar);
+    Finder destination(String label) =>
+        find.descendant(of: switchBar, matching: find.text(label));
+    await tester.tap(destination(l10n.nav_channels));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChannelsScreen), findsOneWidget);
+    await tester.tap(destination(l10n.nav_contacts));
+    await tester.pumpAndSettle();
+    expect(find.byType(ContactsScreen), findsOneWidget);
+    expect(tester.widget<TextField>(search).controller!.text, 'Synthetic');
+    expect(view.contactsSearchExpanded, isTrue);
+    expect(find.text('Synthetic contact'), findsOneWidget);
+    expect(connector.writes, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
     for (final scenario in [
       (dpr: 1.0, scale: 1.0),

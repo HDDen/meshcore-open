@@ -1,11 +1,9 @@
-import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
-
 import '../../connector/meshcore_protocol.dart';
 import '../../connector/raw_packet.dart';
+import '../../helpers/advert_signature.dart';
 import '../../utils/location_grid.dart';
 
 /// Records uploaded to the network map (see the server's API contract).
@@ -18,8 +16,6 @@ const String hiddenNodeMarker = '\u{1F6AB}';
 const int _maxUploadPathBytes = 64;
 const int _maxAdvertNameBytes = 32;
 const int _advertPubKeySize = 32;
-const int _advertSignatureSize = 64;
-const int _maxAdvertDataSize = 32;
 
 class NetworkMapLoc {
   final double lat;
@@ -285,23 +281,16 @@ Future<NetworkMapAdvertRecord?> buildAdvertRecord(
 ) async {
   final rx = _parseRxFrame(frame);
   if (rx == null || rx.payloadType != payloadTypeADVERT) return null;
-  final payload = rx.payload;
-  const appDataStart = _advertPubKeySize + 4 + _advertSignatureSize;
-  if (payload.length <= appDataStart) return null;
+  final payload = boundedAdvertPayload(rx.payload);
+  if (payload.length <= advertAppDataOffset) return null;
 
-  // Only the first 32 app-data bytes are signed (firmware Mesh.cpp truncates
-  // to MAX_ADVERT_DATA_SIZE before verifying and parsing), so bytes appended
-  // after them must never reach the name, location or 🚫 check.
-  final appData = payload.sublist(
-    appDataStart,
-    min(payload.length, appDataStart + _maxAdvertDataSize),
-  );
+  final appData = Uint8List.sublistView(payload, advertAppDataOffset);
   final flags = appData[0];
   final type = flags & 0x0F;
   if (type != advTypeRepeater && type != advTypeRoom) return null;
 
+  if (!await verifyAdvertSignature(payload)) return null;
   final publicKey = payload.sublist(0, _advertPubKeySize);
-  if (!await _verifyAdvertSignature(payload, publicKey)) return null;
 
   // Same layout as the firmware's AdvertDataParser.
   var i = 1;
@@ -341,35 +330,6 @@ Future<NetworkMapAdvertRecord?> buildAdvertRecord(
     hw: rx.hashWidth,
     path: rx.pathHex,
   );
-}
-
-/// The firmware signs pubkey ‖ timestamp ‖ app_data (app_data capped at
-/// MAX_ADVERT_DATA_SIZE), see Mesh::createAdvert.
-Future<bool> _verifyAdvertSignature(
-  Uint8List payload,
-  Uint8List publicKey,
-) async {
-  const sigStart = _advertPubKeySize + 4;
-  const appDataStart = sigStart + _advertSignatureSize;
-  var appDataEnd = payload.length;
-  if (appDataEnd - appDataStart > _maxAdvertDataSize) {
-    appDataEnd = appDataStart + _maxAdvertDataSize;
-  }
-  final message = <int>[
-    ...payload.sublist(0, sigStart),
-    ...payload.sublist(appDataStart, appDataEnd),
-  ];
-  try {
-    return await Ed25519().verify(
-      message,
-      signature: Signature(
-        payload.sublist(sigStart, appDataStart),
-        publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519),
-      ),
-    );
-  } catch (_) {
-    return false;
-  }
 }
 
 bool _isPlausibleLocation(double lat, double lon) {

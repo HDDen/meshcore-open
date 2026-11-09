@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/screens/message_filter_settings_screen.dart';
 import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/storage/message_filter_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/widgets/channel_filter_rule_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _SettingsStore extends MessageFilterStore {
@@ -90,5 +92,85 @@ void main() {
     expect(reloaded.settings.enabled, isTrue);
     expect(reloaded.settings.learning, isTrue);
     expect(reloaded.appliesTo(channel.storageId), isFalse);
+
+    final savedRule = find.widgetWithText(ListTile, 'bonus');
+    await tester.scrollUntilVisible(savedRule, -120);
+    await tester.ensureVisible(savedRule);
+    await tester.tap(savedRule);
+    await tester.pumpAndSettle();
+    final dialog = find.byType(AlertDialog);
+    await tester.tap(find.descendant(of: dialog, matching: find.text('Delete')));
+    await tester.pumpAndSettle();
+    expect(service.rules, isEmpty);
+    final afterDelete = MessageFilterService(store: store)..load();
+    addTearDown(afterDelete.dispose);
+    expect(afterDelete.rules, isEmpty);
   });
+
+  for (final locale in ['ru', 'en']) {
+    testWidgets('U29 baseline: rule editing preserves match and scope ($locale)',
+        (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(480, 760);
+      addTearDown(tester.view.reset);
+
+      const original = FilterRule(
+        id: 'synthetic',
+        pattern: 'Alice',
+        field: FilterRuleField.sender,
+        match: FilterRuleMatch.exact,
+        enabled: false,
+      );
+      FilterRule? saved;
+      await tester.pumpWidget(MaterialApp(
+        locale: Locale(locale),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(2),
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                final result = await showChannelFilterRuleDialog(
+                  context, rule: original,
+                );
+                saved = result?.rule;
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ));
+      final l10n = AppLocalizations.of(tester.element(find.text('Open')));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      final input = find.byType(TextField);
+      expect(tester.widget<TextField>(input).controller!.text, 'Alice');
+      await tester.tap(input);
+      await tester.enterText(input, 'Bob');
+      tester.view.viewInsets = const FakeViewPadding(bottom: 240);
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(find.byType(EditableText))
+          .focusNode.hasFocus, isTrue);
+      expect(tester.widget<TextField>(input).decoration!.labelText,
+          l10n.messageFilter_rulePattern);
+
+      final save = find.widgetWithText(FilledButton, l10n.common_save);
+      await tester.ensureVisible(save);
+      expect(save.hitTestable(), findsOneWidget);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(saved?.id, original.id);
+      expect(saved?.pattern, 'Bob');
+      expect(saved?.field, original.field);
+      expect(saved?.match, original.match);
+      expect(saved?.enabled, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

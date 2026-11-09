@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,8 @@ import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 
+import '../support/signed_advert_fixture.dart';
+
 // U06c2 baseline on unchanged production code. The physical radio is scripted;
 // sendFrame, its ACK queue, contact handlers and native SQLite are real. Removal
 // is explicitly awaited here (already supported by the fork's batch UI).
@@ -39,9 +42,11 @@ Uint8List _key(int seed) => Uint8List.fromList(
 );
 
 final _nodeKey = _key(0x20);
-final _targetKey = _key(0x50);
+late final SimpleKeyPair _targetKeys;
+late final SimpleKeyPair _linkedKeys;
+late final Uint8List _targetKey;
+late final Uint8List _linkedKey;
 final _otherKey = _key(0x80);
-final _linkedKey = _key(0xB0);
 final _advertTime = DateTime.utc(2026, 1, 2, 3, 4, 5);
 
 Contact _contact(Uint8List key, String name) => Contact(
@@ -75,7 +80,7 @@ Uint8List _contactFrame(Contact contact, {int code = respCodeContact}) {
 // A received advert and a manual raw import exercise two independent
 // connector parsers. Accepted baseline has no feature fields; regressions
 // below additionally exercise both optional 16-bit fields and truncation.
-Uint8List _rxAdvert(Uint8List key, String name, {
+Uint8List _unsignedRxAdvert(Uint8List key, String name, {
   required Uint8List path,
   required int width,
   bool located = false,
@@ -94,7 +99,7 @@ Uint8List _rxAdvert(Uint8List key, String name, {
     (payloadTypeADVERT << 2) | 1, // flood route
     ((width - 1) << 6) | (path.length ~/ width),
     ...path, ...key, ...stamp.buffer.asUint8List(),
-    ...List<int>.filled(64, 0), // synthetic signature; parser does not verify it
+    ...List<int>.filled(64, 0), // Filled by signAdvertFixture.
     type | (located ? 0x10 : 0) | (hasName ? 0x80 : 0) |
         (feature1 != null ? 0x20 : 0) | (feature2 != null ? 0x40 : 0),
     if (located) ...position.buffer.asUint8List(),
@@ -103,6 +108,47 @@ Uint8List _rxAdvert(Uint8List key, String name, {
     if (hasName) ...utf8.encode(name),
     if (hasName) 0,
   ]);
+}
+
+Future<Uint8List> _rxAdvert(Uint8List key, String name, {
+  required Uint8List path,
+  required int width,
+  bool located = false,
+  int timestamp = 1700000000,
+  bool hasName = true,
+  int type = advTypeRoom,
+  int? feature1,
+  int? feature2,
+}) {
+  final frame = _unsignedRxAdvert(
+    key, name, path: path, width: width, located: located, timestamp: timestamp,
+    hasName: hasName, type: type, feature1: feature1, feature2: feature2,
+  );
+  final keys = pubKeyToHex(key) == pubKeyToHex(_targetKey)
+      ? _targetKeys
+      : _linkedKeys;
+  return signAdvertFixture(frame, keys, payloadOffset: 5 + path.length);
+}
+
+Future<Uint8List> _signedRxAdvert(
+  SimpleKeyPair keys, {
+  required int type,
+  required String name,
+  required Uint8List path,
+  required int width,
+}) async {
+  final publicKey = Uint8List.fromList((await keys.extractPublicKey()).bytes);
+  final frame = _unsignedRxAdvert(
+    publicKey,
+    name,
+    path: path,
+    width: width,
+    type: type,
+    located: true,
+    feature1: 0x1200,
+    feature2: 0x3400,
+  );
+  return signAdvertFixture(frame, keys, payloadOffset: 5 + path.length);
 }
 
 Uint8List _selfInfo() {
@@ -311,7 +357,12 @@ Future<void> main() async {
   late _Harness h;
   const badge = MethodChannel('meshcore_open/app_badge');
 
-  setUpAll(() {
+  setUpAll(() async {
+    final ed25519 = Ed25519();
+    _targetKeys = await ed25519.newKeyPairFromSeed(_key(0x50));
+    _linkedKeys = await ed25519.newKeyPairFromSeed(_key(0xB0));
+    _targetKey = Uint8List.fromList((await _targetKeys.extractPublicKey()).bytes);
+    _linkedKey = Uint8List.fromList((await _linkedKeys.extractPublicKey()).bytes);
     originalPaths = PathProviderPlatform.instance;
     PathProviderPlatform.instance = _NoDirectory();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -638,11 +689,11 @@ Future<void> main() async {
             List<int>.generate(2 * width, (index) => 0x40 + index),
           );
           final reversed = [...route.skip(width), ...route.take(width)];
-          final frame = _rxAdvert(_linkedKey, 'Synthetic room',
+          final frame = await _rxAdvert(_linkedKey, 'Synthetic room',
               path: route, width: width, located: located);
           final keyHex = pubKeyToHex(_linkedKey);
           h.sent.clear();
-          h.connector.handleFrameForTest(frame);
+          await h.connector.handleFrameForTest(frame);
           await _until(() => h.connector.discoveredContacts.any(
             (contact) => contact.publicKeyHex == keyHex,
           ), 'raw advert discovered');
@@ -661,10 +712,10 @@ Future<void> main() async {
           expect(h.connector.contacts, hasLength(2));
           expect(h.sent, isEmpty);
           final revision = h.connector.discoveredRevision;
-          h.connector.handleFrameForTest(frame);
+          await h.connector.handleFrameForTest(frame);
           expect(h.connector.discoveredRevision, revision);
 
-          h.connector.importContact(frame);
+          await h.connector.importContact(frame);
           await _until(() => h.connector.contacts.any(
             (contact) => contact.publicKeyHex == keyHex,
           ), 'manual raw import acknowledged');
@@ -683,14 +734,205 @@ Future<void> main() async {
       }
     }
 
+    test('U29 baseline: signed adverts keep names, features and reverse hops', () async {
+      const cases = [
+        (type: advTypeChat, width: 1),
+        (type: advTypeRepeater, width: 2),
+        (type: advTypeRoom, width: 3),
+        (type: advTypeSensor, width: 1),
+      ];
+      for (final sample in cases) {
+        final keys = await Ed25519().newKeyPairFromSeed(
+          List<int>.filled(32, 0xC0 + sample.type),
+        );
+        final key = Uint8List.fromList((await keys.extractPublicKey()).bytes);
+        final keyHex = pubKeyToHex(key);
+        final route = Uint8List.fromList(
+          List.generate(sample.width * 2, (index) => 0xA0 + index),
+        );
+        final name = 'Signed node ${sample.type}';
+        final frame = await _signedRxAdvert(
+          keys,
+          type: sample.type,
+          name: name,
+          path: route,
+          width: sample.width,
+        );
+
+        await h.connector.handleFrameForTest(frame);
+        await _until(
+          () => h.connector.discoveredContacts.any(
+            (contact) => contact.publicKeyHex == keyHex,
+          ),
+          'signed advert discovered',
+        );
+        final found = h.connector.discoveredContacts.singleWhere(
+          (contact) => contact.publicKeyHex == keyHex,
+        );
+        expect(found.name, name);
+        expect(found.type, sample.type);
+        expect(found.pathHashWidth, sample.width);
+        expect(found.pathLength, 2);
+        expect(found.path, [
+          ...route.skip(sample.width),
+          ...route.take(sample.width),
+        ]);
+        expect(found.latitude, 55.75);
+        expect(found.longitude, 37.625);
+        expect(found.isActive, isFalse);
+      }
+      expect(h.connector.contacts, hasLength(2));
+      expect(h.sent, isEmpty);
+    });
+
+    for (final preserveExisting in [true, false]) {
+      test('U29: only full sync permits rediscovery '
+          '(preserveExisting=$preserveExisting)', () async {
+        final keys = await Ed25519().newKeyPairFromSeed(List<int>.filled(32, 0xD2));
+        final key = Uint8List.fromList((await keys.extractPublicKey()).bytes);
+        final contact = _contact(key, 'Stored on radio');
+        final keyHex = contact.publicKeyHex;
+        h.radioContacts.add(contact);
+        await h.connector.getContacts(preserveExisting: true);
+        expect(h.connector.knownContactKeys, contains(keyHex));
+
+        h.radioContacts.remove(contact);
+        await h.connector.getContacts(since: 1700000000, preserveExisting: true);
+        expect(h.connector.knownContactKeys, contains(keyHex));
+        expect(h.connector.contacts.map((entry) => entry.publicKeyHex), contains(keyHex));
+
+        await h.connector.getContacts(preserveExisting: preserveExisting);
+        expect(h.connector.knownContactKeys, isNot(contains(keyHex)));
+        expect(h.connector.getContactByPubKeyHex(keyHex), isNull);
+        await _until(
+          () async => (await h.contacts.loadContacts()).every(
+            (entry) => entry.publicKeyHex != keyHex,
+          ),
+          'contact omitted by full sync removed from SQL',
+        );
+
+        final frame = await _signedRxAdvert(
+          keys,
+          type: advTypeRepeater,
+          name: 'Heard again',
+          path: Uint8List(0),
+          width: 1,
+        );
+        h.sent.clear();
+        await h.connector.handleFrameForTest(frame);
+        await _until(
+          () => h.connector.discoveredContacts.any(
+            (entry) =>
+                entry.publicKeyHex == keyHex &&
+                entry.name == 'Heard again' &&
+                !entry.isActive,
+          ),
+          'signed advert rediscovered without adding the contact back',
+        );
+        expect(h.connector.getContactByPubKeyHex(keyHex), isNull);
+        expect(h.sent, isEmpty);
+      });
+    }
+
+    for (final forgedFirst in [true, false]) {
+      test('U29: tampering cannot reuse or poison the signature result '
+          '(forgedFirst=$forgedFirst)', () async {
+        final keys = await Ed25519().newKeyPairFromSeed(
+          List<int>.filled(32, forgedFirst ? 0xD3 : 0xD4),
+        );
+        final key = Uint8List.fromList((await keys.extractPublicKey()).bytes);
+        final keyHex = pubKeyToHex(key);
+        final valid = await _signedRxAdvert(
+          keys,
+          type: advTypeRepeater,
+          name: 'Trusted name',
+          path: Uint8List(0),
+          width: 1,
+        );
+        // Same public key and signature. Alter the first byte of the name.
+        const nameOffset = 5 + 100 + 1 + 8 + 2 + 2;
+        final forged = Uint8List.fromList(valid)..[nameOffset] = 0x46;
+        // Alter only the signed timestamp, leaving the app_data intact.
+        final forgedTime = Uint8List.fromList(valid);
+        forgedTime[5 + 32] ^= 1;
+
+        Iterable<Contact> matchingDiscovery() => h.connector.discoveredContacts
+            .where((contact) => contact.publicKeyHex == keyHex);
+        if (forgedFirst) {
+          await h.connector.handleFrameForTest(forged);
+          expect(matchingDiscovery(), isEmpty);
+        }
+        await h.connector.handleFrameForTest(valid);
+        final discovered = matchingDiscovery().single;
+        expect(discovered.name, 'Trusted name');
+        final discoveryRevision = h.connector.discoveredRevision;
+
+        await h.connector.handleFrameForTest(forged);
+        await h.connector.handleFrameForTest(forgedTime);
+        await h.connector.importContact(forged);
+        expect(h.connector.discoveredRevision, discoveryRevision);
+        expect(identical(matchingDiscovery().single, discovered), isTrue);
+        expect(h.sent, isEmpty);
+
+        await h.connector.importContact(valid);
+        final saved = h.connector.getContactByPubKeyHex(keyHex)!;
+        final contactsRevision = h.connector.contactsRevision;
+        await h.connector.handleFrameForTest(forged);
+        await h.connector.handleFrameForTest(forgedTime);
+        expect(identical(h.connector.getContactByPubKeyHex(keyHex), saved), isTrue);
+        expect(h.connector.contactsRevision, contactsRevision);
+        expect(h.sent.map((bytes) => bytes.first), [cmdAddUpdateContact]);
+      });
+    }
+
+    test('U29: an unsigned suffix cannot extend a signed name', () async {
+      const signedName = 'abcdefghijklmnopqrstuvwxyz12345';
+      final valid = await _rxAdvert(
+        _linkedKey, signedName, path: Uint8List(0), width: 1,
+      );
+      final withSuffix = Uint8List.fromList([
+        ...valid.take(valid.length - 1),
+        ...' forged suffix'.codeUnits,
+        0,
+      ]);
+      final keyHex = pubKeyToHex(_linkedKey);
+      await h.connector.handleFrameForTest(withSuffix);
+      final found = h.connector.discoveredContacts.singleWhere(
+        (contact) => contact.publicKeyHex == keyHex,
+      );
+      expect(found.name, signedName);
+      await h.connector.importContact(withSuffix);
+      expect(h.connector.getContactByPubKeyHex(keyHex)!.name, signedName);
+    });
+
+    test('U29: an advert still being verified cannot update a reset session',
+        () async {
+      final frame = await _rxAdvert(
+        _linkedKey, 'From old session', path: Uint8List(0), width: 1,
+      );
+      final keyHex = pubKeyToHex(_linkedKey);
+      Iterable<Contact> matchingDiscovery() => h.connector.discoveredContacts
+          .where((contact) => contact.publicKeyHex == keyHex);
+      final rx = h.connector.handleFrameForTest(frame);
+      final manual = h.connector.importContact(frame);
+      h.connector.resetSyncProgressForTest();
+      await rx;
+      await manual;
+      expect(matchingDiscovery(), isEmpty);
+      expect(h.sent, isEmpty);
+
+      await h.connector.handleFrameForTest(frame);
+      expect(matchingDiscovery().single.name, 'From old session');
+    });
+
     test('U14 baseline: a real name change updates discovery with no radio write',
         () async {
       final keyHex = pubKeyToHex(_linkedKey);
       final route = Uint8List.fromList([0x10]);
       h.sent.clear();
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Before',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, 'Before',
           path: route, width: 1));
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'After',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, 'After',
           path: route, width: 1, timestamp: 1700000001));
       final found = h.connector.discoveredContacts.singleWhere(
         (contact) => contact.publicKeyHex == keyHex,
@@ -706,12 +948,12 @@ Future<void> main() async {
       final keyHex = pubKeyToHex(_linkedKey);
       final route = Uint8List.fromList([0x10]);
       h.sent.clear();
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, '',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, '',
           path: route, width: 1, hasName: false));
       expect(h.connector.discoveredContacts.singleWhere(
         (contact) => contact.publicKeyHex == keyHex,
       ).name, isEmpty);
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Now named',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, 'Now named',
           path: route, width: 1, timestamp: 1700000001));
       expect(h.connector.discoveredContacts.singleWhere(
         (contact) => contact.publicKeyHex == keyHex,
@@ -726,12 +968,12 @@ Future<void> main() async {
           final route = Uint8List.fromList(
             List<int>.generate(2 * width, (i) => 0x40 + i),
           );
-          final frame = _rxAdvert(_linkedKey, 'Feature room',
+          final frame = await _rxAdvert(_linkedKey, 'Feature room',
             path: route, width: width, located: width == 3,
             feature1: features.$1, feature2: features.$2,
           );
           h.sent.clear();
-          h.connector.handleFrameForTest(frame);
+          await h.connector.handleFrameForTest(frame);
           final keyHex = pubKeyToHex(_linkedKey);
           final found = h.connector.discoveredContacts.singleWhere(
             (contact) => contact.publicKeyHex == keyHex,
@@ -743,7 +985,7 @@ Future<void> main() async {
           expect(found.latitude, width == 3 ? 55.75 : null);
           expect(found.longitude, width == 3 ? 37.625 : null);
           expect(h.sent, isEmpty);
-          h.connector.importContact(frame);
+          await h.connector.importContact(frame);
           await _until(() => h.connector.contacts.any(
             (contact) => contact.publicKeyHex == keyHex,
           ), 'feature advert manually imported');
@@ -762,14 +1004,16 @@ Future<void> main() async {
     for (final features in [(0x1200, null), (null, 0x3400), (0x1200, 0x3400)]) {
       test('U14: truncated declared feature fields are ignored by both parsers '
           '(features=$features)', () async {
-        final complete = _rxAdvert(_linkedKey, '',
+        final complete = _unsignedRxAdvert(_linkedKey, '',
           path: Uint8List(0), width: 1, hasName: false,
           feature1: features.$1, feature2: features.$2,
         );
-        final truncated = Uint8List.fromList(complete.sublist(0, complete.length - 1));
+        final truncated = await signAdvertFixture(
+          complete.sublist(0, complete.length - 1), _linkedKeys, payloadOffset: 5,
+        );
         h.sent.clear();
-        h.connector.handleFrameForTest(truncated);
-        h.connector.importContact(truncated);
+        await h.connector.handleFrameForTest(truncated);
+        await h.connector.importContact(truncated);
         await Future<void>.delayed(Duration.zero);
         expect(h.connector.discoveredContacts.any(
           (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
@@ -780,13 +1024,15 @@ Future<void> main() async {
     }
 
     test('U14: truncated declared GPS is not interpreted as advert name', () async {
-      final complete = _rxAdvert(_linkedKey, '',
+      final complete = _unsignedRxAdvert(_linkedKey, '',
         path: Uint8List(0), width: 1, located: true, hasName: false,
       );
-      final truncated = Uint8List.fromList(complete.sublist(0, complete.length - 1));
+      final truncated = await signAdvertFixture(
+        complete.sublist(0, complete.length - 1), _linkedKeys, payloadOffset: 5,
+      );
       h.sent.clear();
-      h.connector.handleFrameForTest(truncated);
-      h.connector.importContact(truncated);
+      await h.connector.handleFrameForTest(truncated);
+      await h.connector.importContact(truncated);
       await Future<void>.delayed(Duration.zero);
       expect(h.connector.discoveredContacts.any(
         (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
@@ -797,7 +1043,7 @@ Future<void> main() async {
     test('U14: empty, missing and whitespace names keep discovery name and '
         'the unchanged revision fast path', () async {
       final route = Uint8List.fromList([0x10]);
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Known room',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, 'Known room',
           path: route, width: 1));
       final keyHex = pubKeyToHex(_linkedKey);
       final known = h.connector.discoveredContacts.singleWhere(
@@ -806,7 +1052,7 @@ Future<void> main() async {
       final revision = h.connector.discoveredRevision;
       h.sent.clear();
       for (final variant in [('', true), ('', false), ('  ', true)]) {
-        h.connector.handleFrameForTest(_rxAdvert(_linkedKey, variant.$1,
+        await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, variant.$1,
           path: route, width: 1, hasName: variant.$2,
         ));
         final current = h.connector.discoveredContacts.singleWhere(
@@ -822,9 +1068,9 @@ Future<void> main() async {
     test('U14: newer nameless discovery keeps its name and accepts new time',
         () async {
       final route = Uint8List.fromList([0x10]);
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, 'Known room',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, 'Known room',
           path: route, width: 1));
-      h.connector.handleFrameForTest(_rxAdvert(_linkedKey, '',
+      await h.connector.handleFrameForTest(await _rxAdvert(_linkedKey, '',
           path: route, width: 1, timestamp: 1700000001));
       final current = h.connector.discoveredContacts.singleWhere(
         (contact) => contact.publicKeyHex == pubKeyToHex(_linkedKey),
@@ -837,7 +1083,7 @@ Future<void> main() async {
         () async {
       final before = h.target;
       h.sent.clear();
-      h.connector.handleFrameForTest(_rxAdvert(before.publicKey, '',
+      await h.connector.handleFrameForTest(await _rxAdvert(before.publicKey, '',
         path: Uint8List.fromList([0x44, 0x45]), width: 1,
         type: advTypeRepeater,
         timestamp: _advertTime.millisecondsSinceEpoch ~/ 1000 + 1,
@@ -1068,29 +1314,33 @@ Future<void> main() async {
       ), isTrue);
       final fixAt = h.target.telemetryFixAt;
       final revision = h.connector.contactsRevision;
-      Uint8List advertFrame(DateTime at) {
+      Future<Uint8List> advertFrame(DateTime at) {
         final payload = BufferWriter()
           ..writeBytes(original.publicKey)
           ..writeUInt32LE(at.millisecondsSinceEpoch ~/ 1000)
-          ..writeBytes(Uint8List(64)) // Synthetic, not a verified signature.
+          ..writeBytes(Uint8List(64))
           ..writeByte(original.type | 0x10 | 0x80)
           ..writeInt32LE(3000000)
           ..writeInt32LE(-4000000)
           ..writeCString(original.name, maxNameSize);
-        return Uint8List.fromList([
-          pushCodeLogRxData, 40, 196, (payloadTypeADVERT << 2) | 1, 0,
-          ...payload.toBytes(),
-        ]);
+        return signAdvertFixture(
+          Uint8List.fromList([
+            pushCodeLogRxData, 40, 196, (payloadTypeADVERT << 2) | 1, 0,
+            ...payload.toBytes(),
+          ]),
+          _targetKeys,
+          payloadOffset: 5,
+        );
       }
-      h.connector.handleFrameForTest(advertFrame(original.lastSeen));
-      h.connector.handleFrameForTest(advertFrame(
+      await h.connector.handleFrameForTest(await advertFrame(original.lastSeen));
+      await h.connector.handleFrameForTest(await advertFrame(
         original.lastSeen.subtract(const Duration(seconds: 1)),
       ));
       expect(h.connector.contactsRevision, revision);
       expect(h.target.telemetryFixAt, fixAt);
       expect(h.target.latitude, 1);
       expect(h.target.lastSeen, original.lastSeen);
-      h.connector.handleFrameForTest(advertFrame(
+      await h.connector.handleFrameForTest(await advertFrame(
         original.lastSeen.add(const Duration(seconds: 1)),
       ));
       expect(h.target.telemetryFixAt, isNull);

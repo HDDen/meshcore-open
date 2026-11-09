@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/signed_advert_fixture.dart';
 
 // Invariants of what the RX log feeds into the two repeater lists behind the
 // SNR indicators and the routing sheet, and of what an overheard advert does
@@ -57,31 +60,42 @@ Uint8List _rxLogFrame({
   ]);
 }
 
-/// An advert payload: key, timestamp, an unchecked signature, the flags byte
-/// (type, no location) and the name.
-List<int> _advert(
-  Uint8List key, {
+Future<Uint8List> _advert(
+  SimpleKeyPair keys, {
   required int timestamp,
   int type = advTypeRepeater,
-  String? name,
-}) => [
-  ...key,
-  timestamp & 0xFF,
-  (timestamp >> 8) & 0xFF,
-  (timestamp >> 16) & 0xFF,
-  (timestamp >> 24) & 0xFF,
-  ...List<int>.filled(64, 0),
-  type | (name != null ? 0x80 : 0),
-  if (name != null) ...name.codeUnits,
-  if (name != null) 0,
-];
+  required String name,
+}) async {
+  final key = await keys.extractPublicKey();
+  return signAdvertFixture(
+    Uint8List.fromList([
+      ...key.bytes,
+      timestamp & 0xFF,
+      (timestamp >> 8) & 0xFF,
+      (timestamp >> 16) & 0xFF,
+      (timestamp >> 24) & 0xFF,
+      ...List<int>.filled(64, 0),
+      type | 0x80,
+      ...name.codeUnits,
+      0,
+    ]),
+    keys,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const pathProvider = MethodChannel('plugins.flutter.io/path_provider');
   final tempDir = Directory.systemTemp.createTempSync('mco_repeater_activity_');
 
-  setUpAll(() {
+  late SimpleKeyPair repeaterKeys;
+  late SimpleKeyPair chatKeys;
+  late Uint8List repeaterKey;
+  setUpAll(() async {
+    final ed25519 = Ed25519();
+    repeaterKeys = await ed25519.newKeyPairFromSeed(_key(0x22));
+    chatKeys = await ed25519.newKeyPairFromSeed(_key(0x33));
+    repeaterKey = Uint8List.fromList((await repeaterKeys.extractPublicKey()).bytes);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pathProvider, (_) async => tempDir.path);
   });
@@ -262,24 +276,24 @@ void main() {
     const later = 1700001000;
 
     test('a stored repeater heard directly enters the direct repeaters and '
-        'refreshes the contact', () {
+        'refreshes the contact', () async {
       final connector = MeshCoreConnector();
       connector.handleFrameForTest(
-        _contactFrame(respCodeContact, _key(0x22), 'Rep', type: advTypeRepeater),
+        _contactFrame(respCodeContact, repeaterKey, 'Rep', type: advTypeRepeater),
       );
       final rep = connector.contacts.single;
 
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [],
           snr: 6,
-          payload: _advert(_key(0x22), timestamp: later, name: 'Rep'),
+          payload: await _advert(repeaterKeys, timestamp: later, name: 'Rep'),
         ),
       );
 
       final direct = connector.directRepeaters.single;
-      expect(direct.pubkeyPrefix, [0x22]);
+      expect(direct.pubkeyPrefix, [repeaterKey.first]);
       expect(direct.contactKeyHex, rep.publicKeyHex);
       expect(direct.snr, 6);
       expect(
@@ -289,18 +303,18 @@ void main() {
     });
 
     test('an advert with a new name updates the stored contact and bumps the '
-        'revision', () {
+        'revision', () async {
       final connector = MeshCoreConnector();
       connector.handleFrameForTest(
-        _contactFrame(respCodeContact, _key(0x22), 'Rep', type: advTypeRepeater),
+        _contactFrame(respCodeContact, repeaterKey, 'Rep', type: advTypeRepeater),
       );
       final before = connector.contactsRevision;
 
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [],
-          payload: _advert(_key(0x22), timestamp: later, name: 'Rep2'),
+          payload: await _advert(repeaterKeys, timestamp: later, name: 'Rep2'),
         ),
       );
 
@@ -309,14 +323,14 @@ void main() {
     });
 
     test('a chat advert heard directly adds nothing to the direct repeaters',
-        () {
+        () async {
       final connector = MeshCoreConnector();
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [],
-          payload: _advert(
-            _key(0x33),
+          payload: await _advert(
+            chatKeys,
             timestamp: later,
             type: advTypeChat,
             name: 'Bob',
@@ -328,16 +342,16 @@ void main() {
       expect(connector.discoveredContacts.map((c) => c.name), contains('Bob'));
     });
 
-    test('a relayed advert of an unknown node records the relaying hop', () {
+    test('a relayed advert of an unknown node records the relaying hop', () async {
       final connector = MeshCoreConnector();
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [
             [0x55],
           ],
-          payload: _advert(
-            _key(0x33),
+          payload: await _advert(
+            chatKeys,
             timestamp: later,
             type: advTypeChat,
             name: 'Bob',
@@ -353,16 +367,16 @@ void main() {
         () async {
       final connector = MeshCoreConnector();
       connector.handleFrameForTest(
-        _contactFrame(respCodeContact, _key(0x22), 'Rep', type: advTypeRepeater),
+        _contactFrame(respCodeContact, repeaterKey, 'Rep', type: advTypeRepeater),
       );
       await Future<void>.delayed(const Duration(milliseconds: 120));
       final before = connector.uiRevision;
 
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [],
-          payload: _advert(_key(0x22), timestamp: later, name: 'Rep'),
+          payload: await _advert(repeaterKeys, timestamp: later, name: 'Rep'),
         ),
       );
       // Notifications are coalesced into a 50 ms window.
@@ -396,22 +410,22 @@ void main() {
         'revision and the listeners alone', () async {
       final connector = MeshCoreConnector();
       connector.handleFrameForTest(
-        _contactFrame(respCodeContact, _key(0x22), 'Rep', type: advTypeRepeater),
+        _contactFrame(respCodeContact, repeaterKey, 'Rep', type: advTypeRepeater),
       );
       final advert = _rxLogFrame(
         payloadType: payloadTypeADVERT,
         hops: const [],
         snr: 6,
-        payload: _advert(_key(0x22), timestamp: later, name: 'Rep'),
+        payload: await _advert(repeaterKeys, timestamp: later, name: 'Rep'),
       );
-      connector.handleFrameForTest(advert);
+      await connector.handleFrameForTest(advert);
       await Future<void>.delayed(const Duration(milliseconds: 120));
       final contactsBefore = connector.contactsRevision;
       final revisionBefore = connector.uiRevision;
       final activityBefore = connector.repeaterActivity.value;
       final contactBefore = connector.contacts.single;
 
-      connector.handleFrameForTest(advert);
+      await connector.handleFrameForTest(advert);
       await Future<void>.delayed(const Duration(milliseconds: 120));
 
       expect(connector.contactsRevision, contactsBefore);
@@ -422,16 +436,16 @@ void main() {
       expect(connector.directRepeaters.single.snr, 6);
     });
 
-    test('a chat advert heard directly touches no repeater list', () {
+    test('a chat advert heard directly touches no repeater list', () async {
       final connector = MeshCoreConnector();
       final activityBefore = connector.repeaterActivity.value;
 
-      connector.handleFrameForTest(
+      await connector.handleFrameForTest(
         _rxLogFrame(
           payloadType: payloadTypeADVERT,
           hops: const [],
-          payload: _advert(
-            _key(0x33),
+          payload: await _advert(
+            chatKeys,
             timestamp: later,
             type: advTypeChat,
             name: 'Bob',

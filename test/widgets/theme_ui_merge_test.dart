@@ -10,11 +10,14 @@ import 'package:meshcore_open/services/chat_background_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/theme/theme_icons.dart';
+import 'package:meshcore_open/widgets/adaptive_app_bar_title.dart';
 import 'package:meshcore_open/widgets/chat_background.dart';
 import 'package:meshcore_open/widgets/quick_switch_bar.dart';
 import 'package:meshcore_open/widgets/themed_icon.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../support/wrapping_label_expectations.dart';
 
 const _key = 'contact:demo';
 const _photoTint = ChatBackground.color(Color(0xFF109060));
@@ -129,6 +132,46 @@ void main() {
     expect(find.byType(ChatBackgroundLayer), findsNothing);
     expect(find.text('draft updated'), findsOneWidget);
   });
+
+  for (final locale in ['ru', 'en']) {
+    testWidgets('U29 baseline: large titles retain the complete text ($locale)',
+        (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(360, 720);
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(MaterialApp(
+        locale: Locale(locale),
+        theme: MeshTheme.dark(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: Builder(builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return Scaffold(
+            appBar: AppBar(
+              title: AdaptiveAppBarTitle(l10n.settings_modSettings),
+              actions: [
+                IconButton(onPressed: () {}, icon: const Icon(Icons.info_outline)),
+              ],
+            ),
+          );
+        }),
+      ));
+      final l10n = AppLocalizations.of(tester.element(find.byType(AppBar)));
+      final title = find.text(l10n.settings_modSettings);
+      expectCompleteWrappingLabel(tester, title, wraps: false);
+      final titleRect = tester.getRect(title);
+      final appBar = tester.getRect(find.byType(AppBar));
+      final action = tester.getRect(find.byIcon(Icons.info_outline));
+      expect(titleRect.left, greaterThanOrEqualTo(appBar.left));
+      expect(titleRect.right, lessThanOrEqualTo(action.left));
+      expect(titleRect.bottom, lessThanOrEqualTo(appBar.bottom));
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('U19b: custom palettes and icons resolve with stock fallbacks', (tester) async {
     const theme = CustomTheme(

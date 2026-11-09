@@ -71,6 +71,7 @@ import '../helpers/channel_app_data_helper.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/advert_feature_fields.dart';
+import '../helpers/advert_signature.dart';
 import '../helpers/contact_telemetry_location.dart';
 import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
@@ -691,6 +692,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       DeferredChannelInbox(MessageHistoryStorage.instance);
   final Set<int> _pendingChannelBindingRequests = {};
   int _channelInboxRevision = 0;
+  Future<void>? _pendingRawAdvert;
   static const int _maxChannelSyncRetries = 3;
   static const int _channelSyncTimeoutMs = 2000; // 2 second timeout per channel
   DevicePollingIntervals _devicePollingIntervals = const DevicePollingIntervals();
@@ -5962,7 +5964,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   @visibleForTesting
-  void handleFrameForTest(List<int> data) => _handleFrame(data);
+  Future<void>? handleFrameForTest(List<int> data) => _handleFrame(data);
 
   /// Подменяет только физическую запись; sendFrame и очередь ответов настоящие.
   @visibleForTesting
@@ -7304,6 +7306,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    _pendingRawAdvert = null;
     _pendingChannelBindingRequests.clear();
     _hasLoadedCachedChannelStorage = false;
     _pendingInitialChannelSync = false;
@@ -12274,8 +12277,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _handleFrame(List<int> data) {
-    if (data.isEmpty) return;
+  Future<void>? _handleFrame(List<int> data) {
+    if (data.isEmpty) return null;
     _lastRxTime = DateTime.now();
     if (_activeTransport == MeshCoreTransportType.bluetooth &&
         PlatformInfo.isIOS) {
@@ -12295,8 +12298,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           isAcceptedQueuedFragment: false,
         );
       }
-      _handleCompanionFrame(incomingFrame);
-      return;
+      return _handleCompanionFrame(incomingFrame);
     }
 
     _bleDebugLogService?.logFrame(
@@ -12318,17 +12320,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       if (result.frames.isEmpty) _handleQueuedMessageReceived();
     }
+    Future<void>? pendingAdvert;
     for (final frame in result.frames) {
-      _handleCompanionFrame(frame);
+      pendingAdvert = _handleCompanionFrame(frame) ?? pendingAdvert;
     }
+    return pendingAdvert;
   }
 
-  void _handleCompanionFrame(
+  Future<void>? _handleCompanionFrame(
     Uint8List frame, {
     bool notifyExtensions = true,
     String? localSourceLabel,
   }) {
-    if (frame.isEmpty) return;
+    if (frame.isEmpty) return null;
     _companionFrameSequence++;
     _cliProxyHandled = false;
     if (notifyExtensions) {
@@ -12336,7 +12340,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     if (_cliProxyHandled) {
       _bleDebugLogService?.logFrame(frame, outgoing: false);
-      return;
+      return null;
     }
     _receivedFramesController.add(frame);
     _bleDebugLogService?.logFrame(frame, outgoing: false);
@@ -12371,11 +12375,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _stashTelemetryFixes();
           _contacts.clear();
         }
-        // A sync filtered by lastmod lists only what changed, so only a full
-        // one can tell which listed contacts the node no longer holds.
+        // The key index survives a non-preserving refresh clearing _contacts.
+        // Only a completed, unfiltered sync can confirm a key is gone.
         _contactsUnconfirmedBySync = _contactSyncUsesSinceFilter
             ? null
-            : {for (final contact in _contacts) contact.publicKeyHex};
+            : Set.of(_knownContactKeys);
         _isLoadingContacts = true;
         _contactSyncIndexes = {
           for (var i = 0; i < _contacts.length; i++)
@@ -12554,9 +12558,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       case pushCodeLogRxData:
         _lastRadioRxTime = DateTime.now();
         _retryService?.handleRxLogFrame(frame);
-        _handleRxData(frame);
+        final pendingAdvert = _handleRxData(frame);
         _handleLogRxData(frame);
-        break;
+        return pendingAdvert;
       case respCodeChannelInfo:
         unawaited(_handleChannelInfo(frame));
         break;
@@ -12588,6 +12592,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       default:
         debugPrint('Unknown frame code: $code');
     }
+    return null;
   }
 
   void _handleErrorFrame(Uint8List frame) {
@@ -19769,7 +19774,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void _handleRxData(Uint8List frame) {
+  Future<void>? _handleRxData(Uint8List frame) {
     final packet = BufferReader(frame);
     try {
       packet.skipBytes(1); // Skip frame type byte
@@ -19796,27 +19801,40 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _recordRepeaterActivity(pathBytes, pathHashWidth, snr);
       }
 
-      final rawPacket = frame.sublist(3);
-      switch (payloadType) {
-        case payloadTypeADVERT:
-          _handlePayloadAdvertReceived(
-            rawPacket,
-            payload,
-            pathBytes,
-            pathHashWidth,
-            routeType,
-            snr,
-          );
-          break;
-        default:
+      if (payloadType == payloadTypeADVERT) {
+        final revision = _channelInboxRevision;
+        final nodeKey = selfPublicKeyHex;
+        Future<void> receive() => _handlePayloadAdvertReceived(
+          frame.sublist(3),
+          boundedAdvertPayload(payload),
+          pathBytes,
+          pathHashWidth,
+          snr,
+          revision,
+          nodeKey,
+        );
+
+        // A cached result must not overtake an earlier advert in a coalesced
+        // RX batch. Other frame types can continue while verification runs.
+        final previous = _pendingRawAdvert;
+        final work = previous == null
+            ? receive()
+            : previous.then((_) => receive());
+        late final Future<void> pending;
+        pending = work.catchError((Object error) {
+          appLogger.warn('Advert handling failed: $error', tag: 'Connector');
+        }).whenComplete(() {
+          if (identical(_pendingRawAdvert, pending)) _pendingRawAdvert = null;
+        });
+        return _pendingRawAdvert = pending;
       }
     } catch (e) {
       appLogger.warn('Malformed RX frame: $e', tag: 'Connector');
-      return;
     }
+    return null;
   }
 
-  void importContact(Uint8List frame) {
+  Future<void> importContact(Uint8List frame) async {
     final packet = BufferReader(frame);
     int payloadType = 0;
     Uint8List pathBytes = Uint8List(0);
@@ -19853,29 +19871,36 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       appLogger.warn('Unexpected payload type: $payloadType', tag: 'Connector');
       return;
     }
+    final revision = _channelInboxRevision;
+    final nodeKey = selfPublicKeyHex;
+    final payload = boundedAdvertPayload(packet.readRemainingBytes());
+    if (!await verifyAdvertSignature(payload) ||
+        !_isCurrentAdvertSession(revision, nodeKey)) {
+      return;
+    }
+    final advert = BufferReader(payload);
     try {
-      publicKey = packet.readBytes(32);
-      timestamp = packet.readInt32LE();
-      //TODO add signature verification
-      packet.skipBytes(64); // Skip signature for now
-      final flags = packet.readByte();
+      publicKey = advert.readBytes(pubKeySize);
+      timestamp = advert.readInt32LE();
+      advert.skipBytes(64);
+      final flags = advert.readByte();
       type = flags & 0x0F;
       hasLocation = (flags & 0x10) != 0;
       hasName = (flags & 0x80) != 0;
       if (hasLocation) {
-        latitude = packet.readInt32LE() / 1e6;
-        longitude = packet.readInt32LE() / 1e6;
+        latitude = advert.readInt32LE() / 1e6;
+        longitude = advert.readInt32LE() / 1e6;
       }
-      skipAdvertFeatureFields(packet, flags);
-      if (hasName && packet.remaining > 0) {
-        name = packet.readCString();
+      skipAdvertFeatureFields(advert, flags);
+      if (hasName && advert.remaining > 0) {
+        name = advert.readCString();
       }
     } catch (e) {
       appLogger.warn('Malformed advert frame: $e', tag: 'Connector');
       return;
     }
 
-    importDiscoveredContact(
+    await importDiscoveredContact(
       Contact(
         rawPacket: frame,
         publicKey: publicKey,
@@ -19906,14 +19931,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         lon <= 180.0;
   }
 
-  void _handlePayloadAdvertReceived(
+  bool _isCurrentAdvertSession(int revision, String nodeKey) =>
+      !_disposed &&
+      revision == _channelInboxRevision &&
+      nodeKey == selfPublicKeyHex;
+
+  Future<void> _handlePayloadAdvertReceived(
     Uint8List rawPacket,
     Uint8List payload,
     Uint8List path,
     int pathHashWidth,
-    int routeType,
     double snr,
-  ) {
+    int revision,
+    String nodeKey,
+  ) async {
+    if (!_isCurrentAdvertSession(revision, nodeKey) ||
+        !await verifyAdvertSignature(payload) ||
+        !_isCurrentAdvertSession(revision, nodeKey)) {
+      return;
+    }
     final advert = BufferReader(payload);
     double? latitude;
     double? longitude;
@@ -19925,14 +19961,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool hasLocation = false;
     bool hasName = false;
     try {
-      publicKey = advert.readBytes(32);
-      contactKeyHex = publicKey
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .join();
+      publicKey = advert.readBytes(pubKeySize);
+      contactKeyHex = pubKeyToHex(publicKey);
 
       timestamp = advert.readInt32LE();
-      //TODO add signature verification
-      advert.skipBytes(64); // Skip signature for now
+      advert.skipBytes(64);
       final flags = advert.readByte();
       type = flags & 0x0F;
       hasLocation = (flags & 0x10) != 0;

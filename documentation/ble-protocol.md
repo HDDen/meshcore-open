@@ -301,11 +301,14 @@ node type. The optional fields follow in this order:
 | 0x40 | Feature 2 | 2 bytes |
 | 0x80 | UTF-8 node name | Remaining name bytes / NUL terminator |
 
-Both raw reception and manual raw import skip the declared feature fields
-before decoding the name; incomplete declared GPS/features reject that advert.
-These are existing wire fields, not a new format. Route metadata is decoded
-separately with its negotiated bytes per hop. An absent/blank name retains a
-locally known name without changing the node-owned route or frame hashing.
+Raw reception and manual raw import verify Ed25519 over the public key,
+timestamp and the first 32 bytes of application data, as the firmware does.
+The parser uses that same limit, skips the declared feature fields, and
+rejects incomplete GPS or feature data. Route metadata is outside the
+signature and is decoded separately with its negotiated bytes per hop. An
+absent or blank name retains a locally known name. A completed full contact
+sync drops keys omitted by the radio so those nodes can appear in discovery
+again. An incremental sync only reports changes.
 
 ## CLI and application payloads
 
