@@ -3,6 +3,10 @@ set -eo pipefail
 
 # Resolve the mounted directory the same way as the inner executable.
 export APPDIR="$(cd -- "$(dirname -- "$0")" && pwd -P)"
+# Hooks below select the image's modules. Host plugin overrides can load
+# modules built against a different GTK/GIO stack.
+unset GIO_EXTRA_MODULES GIO_MODULE_DIR GI_TYPELIB_PATH GTK_PATH GTK_MODULES GDK_PIXBUF_MODULE_FILE
+export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
 export PATH="$APPDIR/usr/bin:$PATH"
 for hook in "$APPDIR"/apprun-hooks/*.sh; do
   # shellcheck source=/dev/null

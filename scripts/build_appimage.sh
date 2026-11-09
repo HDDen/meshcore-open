@@ -123,7 +123,7 @@ package_direct() {
   local work appdir library relative linuxdeploy appimagetool appimage_name plugins
   local rpath_flags=()
   local dependencies=()
-  require_tools curl jq sha256sum flock file readelf patchelf pkg-config \
+  require_tools curl jq sha256sum flock file readelf ldd patchelf pkg-config \
     desktop-file-validate glib-compile-schemas gdk-pixbuf-thumbnailer xdg-user-dir
   pkg-config --exists gtk+-3.0 librsvg-2.0 gobject-introspection-1.0 || \
     { fail 'Missing GTK, librsvg or GObject introspection development files'; return 1; }
@@ -158,6 +158,7 @@ package_direct() {
     dependencies+=(--deploy-deps-only "$library")
   done < <(find "$appdir/usr/bin/lib" -type f -print0)
   "$linuxdeploy" --appdir "$appdir" "${dependencies[@]}"
+  bash "$project/scripts/appimage/dependencies.sh" bundle "$appdir" "$work/dependencies.txt"
   while IFS= read -r -d '' library; do
     readelf -h "$library" >/dev/null 2>&1 || continue
     relative="$(realpath --relative-to="$(dirname "$library")" "$appdir/usr/lib")"
@@ -199,6 +200,8 @@ package_direct() {
     cp "$MESHCORE_APPIMAGE_FLUTTER_ROOT/LICENSE" "$appdir/usr/share/doc/mco-advanced/Flutter-LICENSE"
   fi
   audit_appdir "$appdir" "$work/audit.txt"
+  bash "$project/scripts/appimage/dependencies.sh" audit "$appdir" "$work/dependencies.txt"
+  cat "$work/dependencies.txt" >> "$work/audit.txt"
   ARCH="$architecture" "$appimagetool" --runtime-file "$cache/runtime" --no-appstream \
     "$appdir" "$work/$appimage_name"
   chmod +x "$work/$appimage_name"

@@ -86,8 +86,11 @@ MESHCORE_BUILD_APPIMAGE=1 flutter build linux --release
 
 Find `mco-advanced-x86_64.AppImage` or `mco-advanced-aarch64.AppImage` beside
 the `bundle` directory in the release build output. The packager verifies
-tool hashes and writes an ELF audit. Build the distributable on a compatible
-Ubuntu host when developing in Nix.
+tool hashes and writes an ELF audit. It bundles missing libraries and lists
+the graphics and system interfaces resolved from the host. The final audit
+checks the packaged RPATH without a temporary library search path. AppRun
+clears host GTK/GIO module overrides before loading its own hooks.
+Build the distributable on a compatible Ubuntu host when developing in Nix.
 
 When you launch the AppImage, `userdata` is created beside the image file.
 The same `--data-dir` override as the plain bundle selects another profile.

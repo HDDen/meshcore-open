@@ -4,6 +4,7 @@ set -euo pipefail
 image="$(realpath "$1")"
 mkdir -p "$2"
 output="$(realpath "$2")"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 exec > >(tee -a "$output/runtime-test.log") 2>&1
 
 log() {
@@ -90,28 +91,12 @@ done < <(find "$appdir/usr/bin" "$appdir/usr/lib" -type f -print0)
 log "ELF architecture audit passed ($elf_count files)"
 
 dependencies="$output/dependencies.log"
-: > "$dependencies"
-run_timed 'check application dependencies' 20s "$workspace/ldd.log" \
-  ldd "$appdir/usr/bin/mco_advanced"
-cat "$workspace/ldd.log" >> "$dependencies"
-while IFS= read -r -d '' library; do
-  relative="${library#"$appdir/"}"
-  if run_timed "check dependencies: $relative" 20s "$workspace/ldd.log" ldd "$library"; then
-    cat "$workspace/ldd.log" >> "$dependencies"
-  else
-    status=$?
-    cat "$workspace/ldd.log" >> "$dependencies"
-    if [[ "$status" == 124 || "$status" == 137 ]]; then
-      exit "$status"
-    fi
-    log "ldd returned $status for $relative; continuing unresolved-dependency scan"
-  fi
-done < <(find "$appdir/usr/bin/lib" "$appdir/usr/lib" -type f -name '*.so*' -print0)
-if grep 'not found' "$dependencies"; then
-  log 'Unresolved AppImage dependencies'
+if ! run_timed 'audit dependency origins' 120s "$workspace/dependency-audit.log" \
+  bash "$script_dir/dependencies.sh" audit "$appdir" "$dependencies"; then
+  tail -n 60 "$dependencies" >&2 || true
   exit 1
 fi
-log 'Dependency audit passed'
+log 'Dependency origin audit passed'
 
 mkdir -p "$workspace/home/Documents" "$workspace/home/config"
 printf 'XDG_DOCUMENTS_DIR="%s/Documents"\n' "$workspace/home" > "$workspace/home/config/user-dirs.dirs"
@@ -124,7 +109,11 @@ start_app() {
   (
     cd "$working_directory"
     # shellcheck disable=SC2016
-    exec env -u LD_LIBRARY_PATH -u GTK_PATH -u GSETTINGS_SCHEMA_DIR \
+    exec env -u LD_LIBRARY_PATH -u LD_PRELOAD -u LD_AUDIT \
+      GIO_EXTRA_MODULES=/host/gio/modules GIO_MODULE_DIR=/host/gio/modules \
+      GI_TYPELIB_PATH=/host/girepository GTK_PATH=/host/gtk/modules \
+      GTK_MODULES=host-module GDK_PIXBUF_MODULE_FILE=/host/pixbuf.loaders \
+      GSETTINGS_SCHEMA_DIR=/host/glib-2.0/schemas \
       APPIMAGE="$workspace/MCO Advanced.AppImage" \
       HOME="$workspace/home" XDG_CONFIG_HOME="$workspace/home/config" \
       XDG_DATA_HOME="$workspace/home/data" XDG_CACHE_HOME="$workspace/home/cache" \
@@ -210,6 +199,20 @@ if [[ ! -s "$profile_lock" ||
       -e "$workspace/home/profiles" || -e "$appdir/usr/bin/profiles" ]]; then
   log 'The relative override did not open a separate profile beside the AppImage'
   tail -n 100 "$output/second-profile.log" >&2 || true
+  exit 1
+fi
+stop_process "$app_pid"
+log 'Checking a profile with an absolute override'
+absolute_profile="$workspace/Absolute Profile"
+start_app "$workspace/home" "$output/absolute-profile.log" "--data-dir=$absolute_profile"
+profile_deadline=$((SECONDS + 30))
+while [[ ! -s "$absolute_profile/profile.lock" ]] && ((SECONDS < profile_deadline)); do
+  kill -0 "$app_pid" 2>/dev/null || break
+  sleep 1
+done
+if [[ ! -s "$absolute_profile/profile.lock" ]]; then
+  log 'The absolute override did not open the requested profile'
+  tail -n 100 "$output/absolute-profile.log" >&2 || true
   exit 1
 fi
 log "Runtime test passed; screenshot: $output/startup.png"

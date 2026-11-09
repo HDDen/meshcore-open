@@ -3931,7 +3931,12 @@ U22 adds an opt-in AppImage install hook with a separate manual workflow on
 Ubuntu 24.04 x86_64 and ARM64. The hook packages the existing Release bundle
 only with `MESHCORE_BUILD_APPIMAGE=1`. The packager stages the bundle, preserves
 the runner's transitive DT_RPATH for ONNX and verifies downloaded tools by hash.
-The runtime check launches with isolated data and a disabled network.
+U30 closes the dependencies of staged dynamic ELF objects, leaving host
+graphics and system interfaces on the host when resolving missing libraries.
+The final origin audit runs after RPATH setup without a temporary library
+search path. AppRun clears host GTK/GIO overrides before running its hooks.
+The extracted runtime check repeats the origin audit with networking disabled
+and opens the default, relative and absolute profile locations.
 
 Linux packaging (`linux/CMakeLists.txt`) keeps `USE_SYSTEM_ONNXRUNTIME=OFF`.
 The ONNX plugin's build RPATH includes `$ORIGIN` and the bundled runtime's

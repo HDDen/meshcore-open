@@ -63,7 +63,7 @@ jobs:
             librsvg2-dev libgirepository1.0-dev libgtk-3-bin libgdk-pixbuf2.0-bin \
             libgdk-pixbuf-2.0-dev dpkg-dev patchelf file desktop-file-utils xdg-user-dirs \
             shellcheck libssl-dev libunwind-dev libvulkan-dev libgl1-mesa-dev \
-            libasound2-dev libsecret-1-dev
+            libasound2-dev libsecret-1-dev libgpg-error0
       - uses: actions/cache@v4
         with:
           path: ~/.cache/mco-advanced/appimage
@@ -101,6 +101,7 @@ jobs:
             --env MCO_APPIMAGE_EXPECT_ONNX=1 \
             --mount "type=bind,source=$artifact,target=/artifact.AppImage,readonly" \
             --mount "type=bind,source=$PWD/scripts/appimage/test_runtime.sh,target=/test_runtime.sh,readonly" \
+            --mount "type=bind,source=$PWD/scripts/appimage/dependencies.sh,target=/dependencies.sh,readonly" \
             --mount "type=bind,source=$PWD/build/appimage-runtime,target=/results" \
             mco-appimage-runtime:ci timeout --signal=TERM --kill-after=15s 300s \
             xvfb-run -a bash /test_runtime.sh /artifact.AppImage /results
