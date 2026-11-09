@@ -57,12 +57,14 @@ import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
+import '../models/message_filter.dart';
 import '../models/message_compression.dart';
 import '../models/mco_image_gallery_item.dart';
 import '../models/contact.dart';
 import '../models/image_codec_support.dart' show aeicRatePointForUi;
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
+import '../services/message_filter/message_filter_service.dart';
 import '../services/chat_background_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/image_chunk_transport.dart';
@@ -77,6 +79,7 @@ import '../utils/emoji_utils.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/blocked_message_body.dart';
 import '../widgets/blocked_senders_sheet.dart';
+import '../widgets/filtered_channel_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/channel_edit_sheet.dart';
@@ -205,6 +208,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   bool _isLoadingOlder = false;
+  ChannelMessage? _oldestWithoutEarlierHistory;
   final ImageIdAllocator _imageIds = ImageIdAllocator();
   int _imageSendSent = 0;
   int _imageSendTotal = 0;
@@ -476,10 +480,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     setState(() => _isLoadingOlder = true);
 
     final connector = context.read<MeshCoreConnector>();
-    await connector.loadOlderChannelMessages(widget.channel.index);
-
-    if (mounted) {
-      setState(() => _isLoadingOlder = false);
+    final oldest = connector.getLoadedChannelMessages(widget.channel).firstOrNull;
+    try {
+      final older = await connector.loadOlderChannelMessages(
+        widget.channel.index,
+      );
+      if (mounted) {
+        _oldestWithoutEarlierHistory = older.isEmpty ? oldest : null;
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingOlder = false);
     }
   }
 
@@ -1116,6 +1126,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       ),
                     );
+                  case 'filteredMessages':
+                    unawaited(
+                      showFilteredChannelMessages(context, widget.channel),
+                    );
                   case 'blockedSenders':
                     unawaited(BlockedSendersSheet.show(context));
                   case 'clearChat':
@@ -1156,6 +1170,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       text: context.l10n.common_share,
                     ),
                   ),
+                if (context.read<MeshCoreConnector>().isChannelFilterEnabled(
+                  widget.channel,
+                ))
+                  PopupMenuItem(
+                    value: 'filteredMessages',
+                    child: PopupMenuRow(
+                      icon: Icons.filter_alt_outlined,
+                      text: context.l10n.messageFilter_displayTitle,
+                    ),
+                  ),
                 // Not gated on offline mode: the block list is local data
                 // and stays editable with no radio attached.
                 PopupMenuItem(
@@ -1192,6 +1216,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     List<ChannelMessage> messages,
                     int pathHashByteWidth,
                     bool urlImagesEnabled,
+                    bool filterEnabled,
+                    bool hideFiltered,
                     int resendRevision,
                   })
                 >(
@@ -1201,6 +1227,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     urlImagesEnabled: connector.isChannelUrlImagesEnabled(
                       widget.channel.index,
                     ),
+                    filterEnabled: connector.isChannelFilterEnabled(widget.channel),
+                    hideFiltered: connector.hidesFilteredChannelRows(widget.channel),
                     // The attempt badge's spinner follows the resend loop,
                     // which changes nothing in the message list itself.
                     resendRevision: connector.channelResendRevision,
@@ -1209,6 +1237,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       !identical(previous.messages, next.messages) ||
                       previous.pathHashByteWidth != next.pathHashByteWidth ||
                       previous.urlImagesEnabled != next.urlImagesEnabled ||
+                      previous.filterEnabled != next.filterEnabled ||
+                      previous.hideFiltered != next.hideFiltered ||
                       previous.resendRevision != next.resendRevision,
                   builder: (context, timeline, child) {
                     final connector = context.read<MeshCoreConnector>();
@@ -1216,10 +1246,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         .watch<AppSettingsService>();
                     final messages = timeline.messages;
                     final newest = messages.lastOrNull;
+                    final oldest = timeline.hideFiltered
+                        ? connector.getLoadedChannelMessages(widget.channel).firstOrNull
+                        : null;
+                    final showOlderButton =
+                        oldest != null &&
+                        !identical(oldest, _oldestWithoutEarlierHistory) &&
+                        !connector.isOfflineSharedMode;
+                    final showOlderControl = _isLoadingOlder || showOlderButton;
                     _holidayWatcher.onNewest(
                       context,
                       id: newest?.messageId,
-                      text: newest?.text,
+                      text:
+                          timeline.filterEnabled && (newest?.isFiltered ?? false)
+                          ? null
+                          : newest?.text,
                       receivedAt: newest?.receivedAt,
                       messageContext: (id) =>
                           _scrollController.showJumpToBottom.value
@@ -1228,7 +1269,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     );
                     final reversedRows = _transcriptRowsFor(context, messages);
 
-                    if (reversedRows.isEmpty) {
+                    if (reversedRows.isEmpty && !showOlderControl) {
                       return ChatBackdrop(
                         chatKey: ChatBackgroundService.channelKey(widget.channel),
                         child: Center(
@@ -1265,7 +1306,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     }
 
                     final itemCount =
-                        reversedRows.length + (_isLoadingOlder ? 1 : 0);
+                        reversedRows.length + (showOlderControl ? 1 : 0);
 
                     // Prune stale keys (deleted/cleared messages) to avoid
                     // unbounded growth.
@@ -1341,9 +1382,20 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     }
                                     final adjustedIndex = index - 1;
 
-                                    // Loading indicator now appears at end (bottom) of reversed list
-                                    if (_isLoadingOlder &&
-                                        adjustedIndex == itemCount - 1) {
+                                    // A page may contain only hidden rows. Keep a
+                                    // way to reach the next raw history cursor.
+                                    if (showOlderControl &&
+                                        adjustedIndex == reversedRows.length) {
+                                      if (!_isLoadingOlder) {
+                                        return Center(
+                                          child: TextButton(
+                                            onPressed: _loadOlderMessages,
+                                            child: Text(
+                                              context.l10n.messageFilter_loadOlder,
+                                            ),
+                                          ),
+                                        );
+                                      }
                                       return const Padding(
                                         padding: EdgeInsets.symmetric(
                                           vertical: 16,
@@ -1570,6 +1622,19 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     AppSettingsService settingsService,
     bool urlImagesEnabled,
   ) {
+    if (message.isFiltered &&
+        connector.isChannelFilterEnabled(widget.channel) &&
+        !message.wasBlocked &&
+        !BlockedSenders.instance.hidesStoredMessage(
+          message,
+          connector.channelDisplayName(widget.channel.index),
+        )) {
+      return FilteredChannelMessage(
+        message: message,
+        channel: widget.channel,
+        connector: connector,
+      );
+    }
     final enableTracing = settingsService.settings.enableMessageTracing;
     final noRetransmissionWarningsEnabled =
         settingsService.settings.noRetransmissionWarningSeconds > 0;
@@ -2923,7 +2988,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       channelName: connector.channelDisplayName(widget.channel.index),
       isOwnQuote: isOwnNode,
     );
-    final replyText = quoteBlocked ? '' : (message.replyToText ?? '');
+    final quoteFiltered =
+        !isOwnNode &&
+        (quoted?.isFiltered ?? false) &&
+        connector.isChannelFilterEnabled(widget.channel);
+    final replyText = quoteBlocked || quoteFiltered
+        ? ''
+        : (message.replyToText ?? '');
     final colorScheme = Theme.of(context).colorScheme;
     final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
 
@@ -2946,6 +3017,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           color: previewTextColor.withValues(alpha: 0.55),
           fontStyle: FontStyle.italic,
         ),
+      );
+    } else if (quoteFiltered) {
+      contentPreview = Text(
+        context.l10n.messageFilter_ghostIconTooltip,
+        style: TextStyle(fontSize: 12 * textScale, color: previewTextColor),
       );
     } else if (gifId != null) {
       contentPreview = ClipRRect(
@@ -3012,9 +3088,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
     return GestureDetector(
       onTap:
-          (message.replyToMessageId == null &&
-              message.replyToSenderName == null &&
-              message.replyToText == null)
+          (quoteFiltered && connector.hidesFilteredChannelRows(widget.channel)) ||
+              (message.replyToMessageId == null &&
+                  message.replyToSenderName == null &&
+                  message.replyToText == null)
           ? null
           : () => _scrollToReplyTarget(message),
       child: Container(
@@ -5154,15 +5231,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         : await McoImagePackOriginals.instance.hasOriginalForText(message.text);
     if (!mounted) return;
     final settings = context.read<AppSettingsService>().settings;
+    final connector = context.read<MeshCoreConnector>();
     // The rule, not the message: one that arrived while blocked keeps its
     // placeholder after the block is lifted, and offering "unblock" there
     // would do nothing.
     final isSenderBlocked = BlockedSenders.instance.isSenderBlocked(
       message,
-      context.read<MeshCoreConnector>().channelDisplayName(
-        widget.channel.index,
-      ),
+      connector.channelDisplayName(widget.channel.index),
     );
+    final canMarkSpam =
+        MessageFilterService.learningAvailable &&
+        connector.isChannelFilterEnabled(widget.channel) &&
+        !connector.isOfflineSharedMode &&
+        !message.isOutgoing &&
+        !message.wasBlocked &&
+        !isSenderBlocked &&
+        message.sharedHistorySourceName == null;
     // Blocking is the consequential half of that entry; lifting it is not, so
     // only that half is red.
     final blockActionColor = isSenderBlocked
@@ -5188,6 +5272,21 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (canMarkSpam)
+                  ListTile(
+                    leading: const Icon(Icons.flag_outlined),
+                    title: Text(context.l10n.messageFilter_markSpam),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(saveChannelMessageVerdict(
+                        context,
+                        connector,
+                        widget.channel,
+                        message,
+                        const FilterVerdict(reason: FilterReason.manual),
+                      ));
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.reply),
                   title: Text(context.l10n.chat_reply),

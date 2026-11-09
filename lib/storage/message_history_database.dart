@@ -10,6 +10,7 @@ import '../helpers/contact_option_storage.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
 import '../models/companion_cli_entry.dart';
+import '../models/message_filter.dart';
 import '../models/repeater_cli_entry.dart';
 import '../models/pending_channel_frame.dart';
 
@@ -488,7 +489,106 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureContactIdentitiesTable();
     await _ensureCliHistoryTables();
     await _ensurePendingChannelFramesTable();
+    await _ensureFilterTrainingExamplesTable();
   }
+
+  // One corpus for the entire data folder, independent of the node identity.
+  Future<void> _ensureFilterTrainingExamplesTable() async {
+    await customStatement("""
+CREATE TABLE IF NOT EXISTS filter_training_corpus (
+  id INTEGER PRIMARY KEY,
+  text TEXT NOT NULL,
+  sender TEXT NOT NULL,
+  kind INTEGER NOT NULL CHECK (kind IN (0, 1, 2)),
+  source_key TEXT
+)
+""");
+    await customStatement("""
+CREATE UNIQUE INDEX IF NOT EXISTS filter_training_manual_identity
+ON filter_training_corpus (text, sender) WHERE kind <> 0
+""");
+  }
+
+  Future<({int spam, int notSpam})> filterTrainingLabelCounts() async {
+    final row = await customSelect("""
+SELECT COUNT(CASE WHEN kind = 2 THEN 1 END) AS spam,
+       COUNT(CASE WHEN kind = 1 THEN 1 END) AS not_spam
+FROM filter_training_corpus
+""").getSingle();
+    return (spam: row.read<int>('spam'), notSpam: row.read<int>('not_spam'));
+  }
+
+  Future<List<FilterExample>> readFilterTrainingExamples() async {
+    final rows = await customSelect("""
+SELECT sender, text, kind FROM filter_training_corpus ORDER BY id
+""").get();
+    return [
+      for (final row in rows)
+        FilterExample(
+          sender: row.read<String>('sender'),
+          text: row.read<String>('text'),
+          spam: row.read<int>('kind') == 2,
+        ),
+    ];
+  }
+
+  Future<void> writeFilterTrainingExamples(
+    Iterable<FilterExample> examples, {
+    required bool manual,
+  }) async {
+    if (examples.isEmpty) return;
+    await batch((batch) {
+      for (final example in examples) {
+        if (manual) {
+          final kind = example.spam ? 2 : 1;
+          // The latest explicit class applies to this text. Within that
+          // class, keep a separate example per normalized sender.
+          batch.customStatement(
+            'DELETE FROM filter_training_corpus WHERE text = ? AND kind <> ?',
+            [example.text, kind],
+          );
+          batch.customStatement(
+            'INSERT OR REPLACE INTO filter_training_corpus (text, sender, kind) '
+            'VALUES (?, ?, ?)',
+            [example.text, example.sender, kind],
+          );
+        } else {
+          // Only skip the previous ordinary author/text pair. Do this in SQL
+          // as well so it works across batches and after reopening the app.
+          final sourceKey = example.sourceKey ??
+              FilterExample.sourceKeyFor(example.sender, example.text);
+          batch.customStatement(
+            """
+INSERT INTO filter_training_corpus (text, sender, kind, source_key)
+SELECT ?, ?, 0, ?
+WHERE NOT EXISTS (
+  SELECT 1 FROM filter_training_corpus WHERE text = ? AND kind <> 0
+) AND ? IS NOT (
+  SELECT source_key FROM filter_training_corpus WHERE kind = 0
+  ORDER BY id DESC LIMIT 1
+)
+""",
+            [example.text, example.sender, sourceKey, example.text, sourceKey],
+          );
+        }
+      }
+      for (final kind in manual ? [1, 2] : [0]) {
+        batch.customStatement(
+          """
+DELETE FROM filter_training_corpus
+WHERE kind = ? AND id NOT IN (
+  SELECT id FROM filter_training_corpus WHERE kind = ?
+  ORDER BY id DESC LIMIT ?
+)
+""",
+          [kind, kind, manual ? 200 : 300],
+        );
+      }
+    });
+  }
+
+  Future<void> clearFilterTrainingExamples() =>
+      customStatement('DELETE FROM filter_training_corpus');
 
   // Auxiliary table: no history rewrite, schema version change or generator.
   Future<void> _ensurePendingChannelFramesTable() async {
@@ -2291,6 +2391,36 @@ JOIN history_messages AS latest
     });
     return companions.any((companion) => companion.containsMarker.value);
   }
+
+  /// Patches only rule metadata on rows that still belong to channel history.
+  Future<void> updateChannelRuleVerdicts(ChannelRuleVerdictUpdates updates) =>
+      batch((batch) {
+        for (final channel in updates.entries) {
+          for (final row in channel.value.entries) {
+            final reason = row.value?.reason.name;
+            final detail = row.value?.detail;
+            batch.customStatement(
+              _updateChannelRuleVerdictSql,
+              [reason, reason, detail, channel.key, row.key, reason, detail],
+            );
+          }
+        }
+      });
+
+  static const _updateChannelRuleVerdictSql = r'''
+UPDATE history_messages
+SET message_json = CASE WHEN ? IS NULL
+  THEN json_remove(message_json, '$.filterReason', '$.filterDetail')
+  ELSE json_set(message_json, '$.filterReason', ?, '$.filterDetail', ?)
+END
+WHERE kind = 1 AND storage_key = ? AND message_id = ? AND is_outgoing = 0
+  AND COALESCE(json_extract(message_json, '$.wasBlocked'), 0) = 0
+  AND COALESCE(json_extract(message_json, '$.filterRestored'), 0) = 0
+  AND COALESCE(json_extract(message_json, '$.filterReason'), '')
+      IN ('', 'textRule', 'senderRule')
+  AND (json_extract(message_json, '$.filterReason') IS NOT ?
+       OR json_extract(message_json, '$.filterDetail') IS NOT ?)
+''';
 
   Future<bool> replaceMessages(
     int kind,

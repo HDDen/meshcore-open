@@ -10,10 +10,15 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/blocked_senders.dart';
 import 'package:meshcore_open/helpers/mcoimg_codec.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
+import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/message_filter.dart';
+import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
+import 'package:meshcore_open/services/message_filter/ngram_spam_classifier.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/notification_service.dart';
@@ -231,6 +236,8 @@ class _NotificationPlugin {
 /// A connected connector whose frames go nowhere: the node is played by the
 /// test through [handleFrameForTest].
 class _QueueConnector extends MeshCoreConnector {
+  _QueueConnector({super.messageFilterService});
+
   final List<Uint8List> sent = [];
 
   /// Read as each CMD_SYNC_NEXT_MESSAGE goes out: how much of the watched
@@ -259,6 +266,30 @@ class _QueueConnector extends MeshCoreConnector {
   int get syncRequests => storedAtSyncNext.length;
 }
 
+class _RecordingMessageFilter extends MessageFilterService {
+  int evaluations = 0;
+
+  @override
+  FilterVerdict? evaluate({
+    required String channelId,
+    required String sender,
+    required String text,
+    DateTime? sentAt,
+    DateTime? receivedAt,
+    String? verifiedSenderKey,
+  }) {
+    evaluations++;
+    return super.evaluate(
+      channelId: channelId,
+      sender: sender,
+      text: text,
+      sentAt: sentAt,
+      receivedAt: receivedAt,
+      verifiedSenderKey: verifiedSenderKey,
+    );
+  }
+}
+
 /// A connector past its handshake, with notifications on.
 class _Harness {
   _Harness(this.connector, this.settings);
@@ -266,8 +297,13 @@ class _Harness {
   final _QueueConnector connector;
   final AppSettingsService settings;
 
-  static Future<_Harness> start({bool notifications = true}) async {
-    final connector = _QueueConnector();
+  static Future<_Harness> start({
+    bool notifications = true,
+    MessageFilterService? messageFilterService,
+  }) async {
+    final connector = _QueueConnector(
+      messageFilterService: messageFilterService,
+    );
     final settings = AppSettingsService();
     await settings.updateSettings(
       settings.settings.copyWith(
@@ -575,6 +611,407 @@ Future<void> main() async {
       await _settle();
       expect(connector.syncRequests, 2);
     });
+
+    test(
+      'U27 baseline: a blocked post is committed before the next queue request',
+      () async {
+        final harness = await _Harness.start();
+        final connector = harness.connector;
+        addTearDown(harness.settings.dispose);
+        addTearDown(connector.dispose);
+        await harness.addChannel(0, 'Test', _psk(1));
+
+        final history = ChannelMessageStore()
+          ..setPublicKeyHex = connector.selfPublicKeyHex
+          ..registerChannel(connector.channels.single);
+        final blocked = BlockedSenders.instance;
+        await blocked.blockName('Alice');
+        try {
+          final blockedAtRequest = <bool?>[];
+          connector.beforeQueueRequest = () async {
+            final page = await history.loadLatestChannelMessages(0, limit: 1);
+            blockedAtRequest.add(page.isEmpty ? null : page.single.wasBlocked);
+          };
+          await connector.syncQueuedMessages();
+          connector.handleFrameForTest(
+            _channelMessageFrame(
+              channelIndex: 0,
+              timestampSeconds: _timestamp,
+              senderName: 'Alice',
+              text: 'blocked post',
+            ),
+          );
+          await _waitFor(
+            () => connector.syncRequests == 2,
+            'the request after the blocked post was committed',
+          );
+          connector.handleFrameForTest(
+            Uint8List.fromList([respCodeNoMoreMessages]),
+          );
+          await _settle();
+
+          expect(blockedAtRequest, [null, true]);
+          expect(connector.getUnreadCountForChannelIndex(0), 0);
+          expect(plugin.shown, isEmpty);
+          await blocked.unblock('Alice');
+          final stored = (await history.loadChannelMessages(0)).single;
+          expect(stored.text, 'blocked post');
+          expect(stored.wasBlocked, isTrue);
+        } finally {
+          await blocked.unblock('Alice');
+        }
+      },
+    );
+
+    test('U27: a filtered queued post is persisted once without an alert', () async {
+      final filter = _RecordingMessageFilter();
+      addTearDown(filter.dispose);
+      await filter.updateSettings(const MessageFilterSettings(enabled: true));
+      await filter.replaceRules(const [
+        FilterRule(id: 'ad', pattern: 'bonus', match: FilterRuleMatch.wholeWord),
+      ]);
+      final harness = await _Harness.start(messageFilterService: filter);
+      final connector = harness.connector;
+      addTearDown(harness.settings.dispose);
+      addTearDown(connector.dispose);
+      await harness.addChannel(0, 'Test', _psk(1));
+
+      final history = ChannelMessageStore()
+        ..setPublicKeyHex = connector.selfPublicKeyHex
+        ..registerChannel(connector.channels.single);
+      final filteredAtRequest = <bool?>[];
+      connector.beforeQueueRequest = () async {
+        final page = await history.loadLatestChannelMessages(0, limit: 1);
+        filteredAtRequest.add(page.isEmpty ? null : page.single.isFiltered);
+      };
+      final frame = _channelMessageFrame(
+        channelIndex: 0,
+        timestampSeconds: _timestamp,
+        senderName: 'Alice',
+        text: 'Win a bonus',
+      );
+      await connector.syncQueuedMessages();
+      connector.handleFrameForTest(frame);
+      await _waitFor(() => connector.syncRequests == 2, 'the next request');
+      connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+      await _settle();
+
+      expect(filteredAtRequest, [null, true]);
+      expect(connector.getUnreadCountForChannelIndex(0), 0);
+      expect(plugin.shown, isEmpty);
+      expect(filter.evaluations, 1);
+      final first = (await history.loadChannelMessages(0)).single;
+      expect(first.text, 'Win a bonus');
+      expect(first.wasBlocked, isFalse);
+      expect(
+        first.filterVerdict,
+        const FilterVerdict(reason: FilterReason.textRule, detail: 'bonus'),
+      );
+
+      await filter.replaceRules(const [
+        FilterRule(id: 'new', pattern: 'different rule'),
+      ]);
+      connector.handleFrameForTest(frame);
+      await _settle();
+      final replayed = (await history.loadChannelMessages(0)).single;
+      expect(replayed.messageId, first.messageId);
+      expect(replayed.filterVerdict, first.filterVerdict);
+      expect(filter.evaluations, 1);
+      expect(connector.getUnreadCountForChannelIndex(0), 0);
+      expect(plugin.shown, isEmpty);
+    });
+  }, skip: skip);
+
+  test('U27d: manual spam feedback can filter a later channel post', () async {
+    final filter = MessageFilterService(
+      trainer: (_) async => const SpamModel({}, 8),
+    );
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, learning: true),
+    );
+    final harness = await _Harness.start(messageFilterService: filter);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(channel);
+
+    const texts = ['buy cheap radios', 'claim a free prize', 'weather is nice'];
+    for (final (i, text) in texts.indexed) {
+      connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: channel.index,
+        timestampSeconds: _timestamp + i * 10,
+        senderName: 'Alice',
+        text: text,
+      ));
+      await _waitFor(() => plugin.shown.length == i + 1, 'initial notification');
+    }
+    final initial = await history.loadChannelMessages(channel.index);
+    for (final message in initial.take(2)) {
+      expect(
+        await connector.setChannelMessageFilterVerdict(
+          channel,
+          message,
+          const FilterVerdict(reason: FilterReason.manual),
+        ),
+        isTrue,
+      );
+    }
+
+    await _waitFor(
+      () => filter.evaluate(
+        channelId: channel.storageId!,
+        sender: 'Alice',
+        text: 'another spam post',
+      )?.reason == FilterReason.learned,
+      'the learned model',
+    );
+    final unreadBefore = connector.getUnreadCountForChannelIndex(channel.index);
+    connector.handleFrameForTest(_channelMessageFrame(
+      channelIndex: channel.index,
+      timestampSeconds: _timestamp + 30,
+      senderName: 'Alice',
+      text: 'another spam post',
+    ));
+    await _settle();
+
+    final saved = await history.loadChannelMessages(channel.index);
+    expect(saved, hasLength(4));
+    expect(saved.last.filterVerdict?.reason, FilterReason.learned);
+    expect(saved.last.text, 'another spam post');
+    expect(connector.getUnreadCountForChannelIndex(channel.index), unreadBefore);
+    expect(plugin.shown, hasLength(3));
+  }, skip: skip);
+
+  test('U27c: a second publication is hidden but a packet copy stays merged', () async {
+    final filter = _RecordingMessageFilter();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true),
+    );
+    final harness = await _Harness.start(messageFilterService: filter);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(channel);
+    const text = 'Anyone on the hill repeater?';
+    Uint8List publication(int timestampSeconds) => _channelMessageFrame(
+      channelIndex: 0,
+      timestampSeconds: timestampSeconds,
+      senderName: 'Alice',
+      text: text,
+    );
+
+    connector.handleFrameForTest(publication(_timestamp));
+    await _settle();
+    connector.handleFrameForTest(publication(_timestamp));
+    await _settle();
+    expect((await history.loadChannelMessages(0)).single.isFiltered, isFalse);
+    expect(filter.evaluations, 1);
+    expect(connector.getUnreadCountForChannelIndex(0), 1);
+    expect(plugin.shown, hasLength(1));
+
+    connector.handleFrameForTest(publication(_timestamp + 10));
+    await _settle();
+    final messages = await history.loadChannelMessages(0);
+    expect(messages, hasLength(2));
+    expect(messages.first.isFiltered, isFalse);
+    expect(messages.last.filterVerdict?.reason, FilterReason.duplicate);
+    expect(messages.last.text, text);
+    expect(filter.evaluations, 2);
+    expect(connector.getUnreadCountForChannelIndex(0), 1);
+    expect(plugin.shown, hasLength(1));
+  }, skip: skip);
+
+  test('U27b: hiding a page keeps its SQL cursor and the preview', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, hideFiltered: true),
+    );
+    final harness = await _Harness.start(messageFilterService: filter);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(channel);
+    final time = DateTime.utc(2026, 1, 1);
+    final older = ChannelMessage(
+      channelIndex: channel.index,
+      messageId: 'older',
+      senderName: 'Alice',
+      text: 'normal conversation',
+      timestamp: time,
+      receivedAt: time,
+      isOutgoing: false,
+    );
+    const verdict = FilterVerdict(reason: FilterReason.manual);
+    final newest = ChannelMessage(
+      channelIndex: channel.index,
+      messageId: 'newest',
+      senderName: 'Bob',
+      text: 'filtered body',
+      timestamp: time.add(const Duration(seconds: 1)),
+      receivedAt: time.add(const Duration(seconds: 1)),
+      isOutgoing: false,
+      filterVerdict: verdict,
+    );
+    await history.saveChannelMessages(channel.index, [older, newest]);
+    connector.setChannelMessagesForTest(channel.index, [newest]);
+
+    expect(connector.getChannelMessageTimeline(channel), isEmpty);
+    expect(connector.getChannelMergedMessages(channel).single.messageId, 'newest');
+    expect(connector.latestChannelPreviewMessage(channel), isNull);
+
+    final page = await connector.loadOlderChannelMessages(channel.index, count: 1);
+    expect(page.single.messageId, 'older');
+    expect(connector.getChannelMessageTimeline(channel).single.messageId, 'older');
+    expect(connector.latestChannelPreviewMessage(channel)?.messageId, 'older');
+
+    await filter.updateSettings(
+      filter.settings.copyWith(excludedChannelIds: {channel.storageId!}),
+    );
+    expect(connector.getChannelMessageTimeline(channel), hasLength(2));
+    expect(connector.latestChannelPreviewMessage(channel)?.messageId, 'newest');
+    await filter.updateSettings(
+      filter.settings.copyWith(excludedChannelIds: const {}),
+    );
+    expect(connector.getChannelMessageTimeline(channel), hasLength(1));
+
+    expect(
+      await connector.setChannelMessageFilterVerdict(channel, newest, null),
+      isTrue,
+    );
+    expect(connector.getChannelMessageTimeline(channel), hasLength(2));
+    expect(
+      await connector.setChannelMessageFilterVerdict(channel, newest, verdict),
+      isTrue,
+    );
+    final saved = await history.loadChannelMessages(channel.index);
+    expect(saved.map((message) => message.messageId), ['older', 'newest']);
+    expect(saved.first.text, older.text);
+    expect(saved.last.text, newest.text);
+    expect(saved.last.filterVerdict, verdict);
+    expect(saved.last.wasBlocked, isFalse);
+  }, skip: skip);
+
+  test('U27e: current rules project immediately and persist after flush', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, hideFiltered: true),
+    );
+    final harness = await _Harness.start(messageFilterService: filter);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(channel);
+    final time = DateTime.utc(2026, 1, 1);
+    ChannelMessage post(String id, int seconds, {FilterVerdict? verdict}) {
+      final at = time.add(Duration(seconds: seconds));
+      return ChannelMessage(
+        channelIndex: channel.index,
+        messageId: id,
+        senderName: 'Alice',
+        text: 'buy this now',
+        timestamp: at,
+        receivedAt: at,
+        isOutgoing: false,
+        filterVerdict: verdict,
+      );
+    }
+
+    const manual = FilterVerdict(reason: FilterReason.manual);
+    final older = post('older', 0);
+    final marked = post('manual', 1, verdict: manual);
+    final newest = post('newest', 2);
+    await history.saveChannelMessages(channel.index, [older, marked, newest]);
+    connector.setChannelMessagesForTest(channel.index, [marked, newest]);
+
+    List<String> visibleIds() => connector
+        .getChannelMessageTimeline(channel)
+        .map((message) => message.messageId)
+        .toList();
+
+    expect(visibleIds(), ['newest']);
+    expect(
+      (await history.loadChannelMessages(channel.index))
+          .map((message) => message.filterVerdict),
+      [null, manual, null],
+    );
+
+    const rules = [FilterRule(id: 'sales', pattern: 'buy this')];
+    await filter.replaceRules(rules);
+    expect(visibleIds(), isEmpty);
+    expect(connector.latestChannelPreviewMessage(channel), isNull);
+
+    final page = await connector.loadOlderChannelMessages(
+      channel.index,
+      count: 1,
+    );
+    expect(page.map((message) => message.messageId), [older.messageId]);
+    expect(visibleIds(), isEmpty);
+    expect(
+      connector.getChannelMergedMessages(channel).first.filterVerdict?.reason,
+      FilterReason.textRule,
+    );
+
+    await connector.flushChannelRuleVerdicts();
+    const sales = FilterVerdict(reason: FilterReason.textRule, detail: 'buy this');
+    final persisted = await history.loadChannelMessages(channel.index);
+    expect(
+      persisted.map((message) => message.filterVerdict),
+      [sales, manual, sales],
+    );
+    expect(
+      persisted.map((message) => message.text),
+      everyElement('buy this now'),
+    );
+    expect(visibleIds(), isEmpty);
+
+    final reviewed = connector.getLoadedFilteredChannelMessages(channel).first;
+    expect(reviewed.messageId, newest.messageId);
+    expect(
+      await connector.setChannelMessageFilterVerdict(channel, reviewed, null),
+      isTrue,
+    );
+    expect(visibleIds(), ['newest']);
+    final restored = await history.loadChannelMessages(channel.index);
+    expect(restored.last.filterRestored, isTrue);
+    connector.setChannelMessagesForTest(channel.index, restored);
+    expect(visibleIds(), ['newest']);
+    expect(connector.latestChannelPreviewMessage(channel)?.messageId, 'newest');
+
+    await filter.replaceRules(const []);
+    expect(visibleIds(), ['older', 'newest']);
+    await connector.flushChannelRuleVerdicts();
+    final afterRemoval = await history.loadChannelMessages(channel.index);
+    expect(
+      afterRemoval.map((message) => message.filterVerdict),
+      [null, manual, null],
+    );
+    expect(afterRemoval.last.filterRestored, isTrue);
+    expect(
+      connector.getLoadedFilteredChannelMessages(channel).single.filterVerdict,
+      manual,
+    );
+    expect(connector.getUnreadCountForChannelIndex(channel.index), 0);
+    expect(plugin.shown, isEmpty);
   }, skip: skip);
 
   group('U05 baseline: fork channel mute and mentions', () {

@@ -9467,4 +9467,154 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get holidayGreeting_newYear =>
       'С Новым годом|С Новым годом!|С Новым годом всех|С наступающим Новым годом|Счастливого Нового года|Happy New Year';
+
+  @override
+  String get messageFilter_title => 'Фильтр сообщений';
+
+  @override
+  String get messageFilter_enabled => 'Фильтровать сообщения';
+
+  @override
+  String get messageFilter_enabledSubtitle =>
+      'Для входящих сообщений в каналах';
+
+  @override
+  String get messageFilter_displayTitle => 'Отфильтрованные сообщения';
+
+  @override
+  String get messageFilter_displayHide => 'Полностью скрывать строки';
+
+  @override
+  String get messageFilter_displayHideHelp =>
+      'Загруженные отфильтрованные сообщения доступны в меню канала.';
+
+  @override
+  String get messageFilter_rulesSection => 'Ваши правила';
+
+  @override
+  String get messageFilter_rulesScope =>
+      'Изменения правил применяются к новым сообщениям.';
+
+  @override
+  String get messageFilter_addRule => 'Добавить правило';
+
+  @override
+  String get messageFilter_editRule => 'Изменить правило';
+
+  @override
+  String get messageFilter_rulePattern => 'Слово, фраза или имя';
+
+  @override
+  String get messageFilter_ruleWhere => 'Где искать';
+
+  @override
+  String get messageFilter_ruleFieldText => 'Текст сообщения';
+
+  @override
+  String get messageFilter_ruleFieldSender => 'Имя отправителя';
+
+  @override
+  String get messageFilter_ruleFieldBoth => 'Текст и имя';
+
+  @override
+  String get messageFilter_ruleMatch => 'Совпадение';
+
+  @override
+  String get messageFilter_ruleMatchContains => 'Содержит';
+
+  @override
+  String get messageFilter_ruleMatchWholeWord => 'Целое слово';
+
+  @override
+  String get messageFilter_ruleMatchExact => 'Точное';
+
+  @override
+  String get messageFilter_filteredMessagesEmpty =>
+      'В загруженной истории нет отфильтрованных сообщений.';
+
+  @override
+  String get messageFilter_ghostSingle =>
+      'Скрытое сообщение · Нажмите для просмотра';
+
+  @override
+  String get messageFilter_reasonManual => 'Отмечено как спам';
+
+  @override
+  String get messageFilter_notSpam => 'Не спам';
+
+  @override
+  String get messageFilter_markSpam => 'Отметить как спам';
+
+  @override
+  String get messageFilter_channelToggle =>
+      'Фильтровать сообщения в этих каналах';
+
+  @override
+  String get messageFilter_ghostIconTooltip => 'Скрыто фильтром сообщений';
+
+  @override
+  String get messageFilter_saveError =>
+      'Не удалось сохранить изменение фильтра.';
+
+  @override
+  String get messageFilter_loadOlder => 'Загрузить более ранние сообщения';
+
+  @override
+  String get messageFilter_automaticSection => 'Автоматические проверки';
+
+  @override
+  String get messageFilter_duplicates => 'Повторные публикации';
+
+  @override
+  String get messageFilter_duplicatesSubtitle =>
+      'Один и тот же текст опубликован снова или несколькими отправителями.';
+
+  @override
+  String get messageFilter_repeatedCharacters => 'Повторяющиеся символы';
+
+  @override
+  String get messageFilter_repeatedCharactersSubtitle =>
+      'Цепочки из 20 и более одинаковых символов. Пробелы и цифры пропускаются.';
+
+  @override
+  String get messageFilter_reasonRepeatedCharacters =>
+      'Скрыто: повторяющиеся символы';
+
+  @override
+  String get messageFilter_reasonDuplicate => 'Скрыто: повторная публикация';
+
+  @override
+  String get messageFilter_reasonCrossSenderDuplicate =>
+      'Скрыто: один и тот же текст от нескольких отправителей';
+
+  @override
+  String get messageFilter_learning => 'Учиться на отметках о спаме';
+
+  @override
+  String get messageFilter_learningHelp =>
+      'Локальная модель. На диск сохраняются только ручные отметки.';
+
+  @override
+  String messageFilter_learningSubtitle(int spam, int notSpam) {
+    return 'Ручные примеры: $spam — спам, $notSpam — не спам';
+  }
+
+  @override
+  String get messageFilter_resetLearning => 'Сбросить обучение';
+
+  @override
+  String get messageFilter_resetLearningConfirm =>
+      'Очистить примеры и сбросить обученную модель? Правила и история сообщений сохранятся.';
+
+  @override
+  String get messageFilter_reasonLearned =>
+      'Скрыто: похоже на сообщения, отмеченные как спам';
+
+  @override
+  String get messageFilter_learningSqlHelp =>
+      'Локальная модель с общим для всех нод корпусом в SQLite.';
+
+  @override
+  String get messageFilter_enableLearningPrompt =>
+      'Для полноценного функционирования функционала необходимо включить функцию обучения спам-фильтра. Включить это сейчас?';
 }

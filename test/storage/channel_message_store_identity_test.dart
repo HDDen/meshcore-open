@@ -3,8 +3,10 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_name_keyed_store.dart';
@@ -105,9 +107,12 @@ Future<void> main() async {
 
   /// Two messages under the old name, then the rename: slot 2 now holds
   /// 'Горы-2026' with the same key.
-  Future<void> seedAndRename() async {
+  Future<void> seedAndRename({ChannelMessage? oldest}) async {
     store.replaceChannels([_channel(2, 'Горы')]);
-    await store.saveChannelMessages(2, [_message('a', 1), _message('b', 2)]);
+    await store.saveChannelMessages(2, [
+      oldest ?? _message('a', 1),
+      _message('b', 2),
+    ]);
     await ChannelIdentities.instance.link(
       ChannelIdentity(_id(1), 'Горы'),
       ChannelIdentity(_id(1), 'Горы-2026'),
@@ -144,8 +149,17 @@ Future<void> main() async {
     expect(await _idsUnder(newKey), ['a', 'c']);
   }, skip: skip);
 
-  test('paging crosses the names', () async {
-    await seedAndRename();
+  test('paging crosses names and preserves blocked message metadata', () async {
+    final blocked = _message('a', 1).copyWith(
+      wasBlocked: true,
+      mcmpSignatureStatus: McmpSignatureStatus.valid,
+      verifiedSenderKeyHex: _otherNode,
+      pathLength: 1,
+      pathHashWidth: 2,
+      pathBytes: Uint8List.fromList([0x12, 0x34]),
+      packetRegion: 'test-region',
+    );
+    await seedAndRename(oldest: blocked);
     await store.saveChannelMessage(2, _message('c', 3));
     final c = (await store.loadLatestChannelMessages(2, limit: 1)).single;
     expect(c.messageId, 'c');
@@ -155,8 +169,42 @@ Future<void> main() async {
     final one = await store.loadChannelMessagesBefore(2, before: c, limit: 1);
     expect(one.map((m) => m.messageId), ['b']);
     final a = before.first;
+    expect(a.wasBlocked, isTrue);
+    expect(before.last.wasBlocked, isFalse);
+    expect(a.mcmpSignatureStatus, McmpSignatureStatus.valid);
+    expect(a.verifiedSenderKeyHex, _otherNode);
+    expect(a.pathLength, 1);
+    expect(a.pathHashWidth, 2);
+    expect(a.pathBytes, [0x12, 0x34]);
+    expect(a.packetRegion, 'test-region');
     final after = await store.loadChannelMessagesAfter(2, after: a, limit: 10);
     expect(after.map((m) => m.messageId), ['b', 'c']);
+  }, skip: skip);
+
+  test('U27: filter verdicts round-trip and can be cleared on a single row', () async {
+    await seedAndRename();
+    const verdict = FilterVerdict(reason: FilterReason.senderRule, detail: 'Ghost');
+    final marked = _message('c', 3).copyWith(filterVerdict: verdict);
+    await store.saveChannelMessage(2, marked);
+
+    final latest = (await store.loadLatestChannelMessages(2, limit: 1)).single;
+    expect(latest.filterVerdict, verdict);
+    expect(latest.wasBlocked, isFalse);
+    final older = await store.loadChannelMessagesBefore(
+      2,
+      before: latest,
+      limit: 2,
+    );
+    expect(older.map((message) => message.messageId), ['a', 'b']);
+    expect(older.every((message) => !message.isFiltered), isTrue);
+    expect(latest.copyWith(repeatCount: 1).filterVerdict, verdict);
+
+    await store.saveChannelMessage(2, latest.copyWith(filterVerdict: null));
+    final restored = (await store.loadLatestChannelMessages(2, limit: 1)).single;
+    expect(restored.messageId, latest.messageId);
+    expect(restored.receivedAt, latest.receivedAt);
+    expect(restored.text, latest.text);
+    expect(restored.isFiltered, isFalse);
   }, skip: skip);
 
   test('a deletion and a replacement reach the former name', () async {

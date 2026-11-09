@@ -1083,6 +1083,38 @@ itself, which is deleted instead. The behaviour lives in two files:
 while parsing a frame). Two widgets carry the UI — `blocked_message_body.dart` for the
 placeholder and `blocked_senders_sheet.dart` for the list.
 
+Channel message filter rules use a separate verdict. The profile starts with
+filtering disabled. When enabled, rules evaluate newly stored inbound posts
+after packet deduplication and the sender block. The verdict lives in the
+same SQLite message JSON, and a post matched on receipt skips unread,
+translation and notification work. Manual marking and restoration update one
+loaded row. Channel exclusions use the stable PSK identity. Existing sender
+blocks continue to persist as `wasBlocked`. The hidden-row mode is part of
+the timeline cache key. The transcript, its quote targets, previews, and
+search project the current manual rules immediately. Unchanged in-memory
+messages reuse the projection until the rules change. One second after the
+last rule edit, a serialized SQLite batch patches just the changed verdicts
+of loaded rows. The message snapshots adopt that same projection before
+concurrent channel saves. A lifecycle flush starts pending work early.
+Manual restoration stores a per-post exception in the message JSON.
+SQLite paging still uses the raw history and its original cursors.
+Optional automatic checks detect long runs of one character and separate
+publications of the same text. The publication tracker compares send times
+within each channel and uses local arrival time for expiration. It is
+indexed by channel PSK and normalized text, capped at 1,000 publications
+per channel, and discarded when its switch or the master switch is turned off.
+The opt-in classifier uses upstream's n-gram logistic regression. The
+profile's SQLite database holds one corpus across all nodes, with up to
+200 examples of each manual label and 300 ordinary samples. Manual
+examples are keyed by normalized text and sender within the latest
+explicit class for that text. Ordinary samples preserve arrival order
+and skip a consecutive repeat from the same sender across batches. The receive
+path queues up to ten ordinary samples per batch. The training job reads
+the corpus on demand. Feedback and the first usable clean sample can
+schedule a coalesced background fit. The model is used only with both
+switches on. Disabling or resetting discards results from jobs already
+running. A learned verdict follows the same row persistence as a rule.
+
 **The table** is one app-wide JSON blob, **not** scoped by node public key like most stores here:
 a sender worth muting is worth muting from every radio this phone connects to. A row's key is the
 identity the mute is aimed at — a channel sender's name, or a room author's 4-byte public-key

@@ -15862,6 +15862,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Happy New Year|Happy New Year\'s'**
   String get holidayGreeting_newYear;
+
+  /// No description provided for @messageFilter_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Message filter'**
+  String get messageFilter_title;
+
+  /// No description provided for @messageFilter_enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter messages'**
+  String get messageFilter_enabled;
+
+  /// No description provided for @messageFilter_enabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to incoming channel messages'**
+  String get messageFilter_enabledSubtitle;
+
+  /// No description provided for @messageFilter_displayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered messages'**
+  String get messageFilter_displayTitle;
+
+  /// No description provided for @messageFilter_displayHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide filtered rows completely'**
+  String get messageFilter_displayHide;
+
+  /// No description provided for @messageFilter_displayHideHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Review loaded filtered messages from the channel menu.'**
+  String get messageFilter_displayHideHelp;
+
+  /// No description provided for @messageFilter_rulesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rules'**
+  String get messageFilter_rulesSection;
+
+  /// No description provided for @messageFilter_rulesScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule changes apply to new messages.'**
+  String get messageFilter_rulesScope;
+
+  /// No description provided for @messageFilter_addRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rule'**
+  String get messageFilter_addRule;
+
+  /// No description provided for @messageFilter_editRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rule'**
+  String get messageFilter_editRule;
+
+  /// No description provided for @messageFilter_rulePattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Word, phrase or name'**
+  String get messageFilter_rulePattern;
+
+  /// No description provided for @messageFilter_ruleWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Look in'**
+  String get messageFilter_ruleWhere;
+
+  /// No description provided for @messageFilter_ruleFieldText.
+  ///
+  /// In en, this message translates to:
+  /// **'Message text'**
+  String get messageFilter_ruleFieldText;
+
+  /// No description provided for @messageFilter_ruleFieldSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name'**
+  String get messageFilter_ruleFieldSender;
+
+  /// No description provided for @messageFilter_ruleFieldBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Text and sender'**
+  String get messageFilter_ruleFieldBoth;
+
+  /// No description provided for @messageFilter_ruleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get messageFilter_ruleMatch;
+
+  /// No description provided for @messageFilter_ruleMatchContains.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains'**
+  String get messageFilter_ruleMatchContains;
+
+  /// No description provided for @messageFilter_ruleMatchWholeWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole word'**
+  String get messageFilter_ruleMatchWholeWord;
+
+  /// No description provided for @messageFilter_ruleMatchExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact'**
+  String get messageFilter_ruleMatchExact;
+
+  /// No description provided for @messageFilter_filteredMessagesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No filtered messages in the loaded history.'**
+  String get messageFilter_filteredMessagesEmpty;
+
+  /// No description provided for @messageFilter_ghostSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden message · Tap to view'**
+  String get messageFilter_ghostSingle;
+
+  /// No description provided for @messageFilter_reasonManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked as spam'**
+  String get messageFilter_reasonManual;
+
+  /// No description provided for @messageFilter_notSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Not spam'**
+  String get messageFilter_notSpam;
+
+  /// No description provided for @messageFilter_markSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as spam'**
+  String get messageFilter_markSpam;
+
+  /// No description provided for @messageFilter_channelToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter messages in these channels'**
+  String get messageFilter_channelToggle;
+
+  /// No description provided for @messageFilter_ghostIconTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden by your message filter'**
+  String get messageFilter_ghostIconTooltip;
+
+  /// No description provided for @messageFilter_saveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the message filter change.'**
+  String get messageFilter_saveError;
+
+  /// No description provided for @messageFilter_loadOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older messages'**
+  String get messageFilter_loadOlder;
+
+  /// No description provided for @messageFilter_automaticSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic checks'**
+  String get messageFilter_automaticSection;
+
+  /// No description provided for @messageFilter_duplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeated publications'**
+  String get messageFilter_duplicates;
+
+  /// No description provided for @messageFilter_duplicatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The same text posted again or by several senders.'**
+  String get messageFilter_duplicatesSubtitle;
+
+  /// No description provided for @messageFilter_repeatedCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeated characters'**
+  String get messageFilter_repeatedCharacters;
+
+  /// No description provided for @messageFilter_repeatedCharactersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs of 20 or more identical characters. Spaces and digits are ignored.'**
+  String get messageFilter_repeatedCharactersSubtitle;
+
+  /// No description provided for @messageFilter_reasonRepeatedCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered: repeated characters'**
+  String get messageFilter_reasonRepeatedCharacters;
+
+  /// No description provided for @messageFilter_reasonDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered: repeated publication'**
+  String get messageFilter_reasonDuplicate;
+
+  /// No description provided for @messageFilter_reasonCrossSenderDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered: the same text from several senders'**
+  String get messageFilter_reasonCrossSenderDuplicate;
+
+  /// No description provided for @messageFilter_learning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn from spam feedback'**
+  String get messageFilter_learning;
+
+  /// No description provided for @messageFilter_learningHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a local model. Only manual feedback is saved.'**
+  String get messageFilter_learningHelp;
+
+  /// No description provided for @messageFilter_learningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual examples: {spam} spam, {notSpam} not spam'**
+  String messageFilter_learningSubtitle(int spam, int notSpam);
+
+  /// No description provided for @messageFilter_resetLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset learning'**
+  String get messageFilter_resetLearning;
+
+  /// No description provided for @messageFilter_resetLearningConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the examples and reset the learned model? Your rules and message history are kept.'**
+  String get messageFilter_resetLearningConfirm;
+
+  /// No description provided for @messageFilter_reasonLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtered: similar to messages marked as spam'**
+  String get messageFilter_reasonLearned;
+
+  /// No description provided for @messageFilter_learningSqlHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a local model and one SQLite training pool for all nodes.'**
+  String get messageFilter_learningSqlHelp;
+
+  /// No description provided for @messageFilter_enableLearningPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'To use the spam filter fully, enable learning. Enable it now?'**
+  String get messageFilter_enableLearningPrompt;
 }
 
 class _AppLocalizationsDelegate

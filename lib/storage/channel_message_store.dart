@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:meshcore_open/utils/app_logger.dart';
 
 import '../models/channel_message.dart';
+import '../models/message_filter.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
 import '../helpers/mcmp_app_codec.dart';
@@ -511,6 +512,11 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       'mcmpNameCollision': msg.mcmpNameCollision,
       'wasBinaryTransport': msg.wasBinaryTransport,
       'wasBlocked': msg.wasBlocked,
+      if (msg.filterVerdict case final verdict?) ...{
+        'filterReason': verdict.reason.name,
+        'filterDetail': verdict.detail,
+      },
+      if (msg.filterRestored) 'filterRestored': true,
       'binaryPacketBytes': msg.binaryPacketBytes,
       'rawPayload': msg.rawPayload != null
           ? base64Encode(msg.rawPayload!)
@@ -590,6 +596,7 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       }
     }
 
+    final filterReason = filterReasonFromJson(json['filterReason']);
     return ChannelMessage(
       senderKey: json['senderKey'] != null
           ? Uint8List.fromList(base64Decode(json['senderKey']))
@@ -641,6 +648,15 @@ class ChannelMessageStore with ChannelNameKeyedStore {
       mcmpNameCollision: json['mcmpNameCollision'] as bool? ?? false,
       wasBinaryTransport: json['wasBinaryTransport'] as bool? ?? false,
       wasBlocked: json['wasBlocked'] as bool? ?? false,
+      filterRestored: json['filterRestored'] == true,
+      filterVerdict: filterReason == null
+          ? null
+          : FilterVerdict(
+              reason: filterReason,
+              detail: json['filterDetail'] is String
+                  ? json['filterDetail'] as String
+                  : null,
+            ),
       binaryPacketBytes: json['binaryPacketBytes'] as int?,
       rawPayload: json['rawPayload'] is String
           ? Uint8List.fromList(base64Decode(json['rawPayload'] as String))

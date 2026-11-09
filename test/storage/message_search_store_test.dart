@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_order_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
@@ -90,6 +94,53 @@ void main() {
       await history.getString(MessageHistoryKind.channel, nameKey),
       isNull,
     );
+  });
+
+  test('U27b baseline: SQL search keeps the row and verdict', () async {
+    final channel = Channel.fromHex(1, 'Test', Channel.publicChannelPsk);
+    final store = ChannelMessageStore()
+      ..setPublicKeyHex = scope
+      ..replaceChannels([channel]);
+    final at = DateTime.utc(2026, 1, 2);
+    final visible = ChannelMessage(
+      messageId: 'visible',
+      channelIndex: channel.index,
+      senderName: 'Alice',
+      text: 'hello from Alice',
+      timestamp: at,
+      receivedAt: at,
+      isOutgoing: false,
+    );
+    final marked = ChannelMessage(
+      messageId: 'marked',
+      channelIndex: channel.index,
+      senderName: 'Bob',
+      text: 'hello from Bob',
+      timestamp: at.add(const Duration(seconds: 1)),
+      receivedAt: at.add(const Duration(seconds: 1)),
+      isOutgoing: false,
+      filterVerdict: const FilterVerdict(
+        reason: FilterReason.textRule,
+        detail: 'hello from Bob',
+      ),
+    );
+    await store.saveChannelMessages(channel.index, [visible, marked]);
+
+    final result = await store.loadChannelMessagesJsonForSearch(
+      channel.index,
+      normalizedQuery: 'hello',
+    );
+    expect(result, isNotNull);
+    final rows = (jsonDecode(result!) as List).cast<Map<String, dynamic>>();
+    expect(
+      rows.map((row) => row['messageId']),
+      unorderedEquals(['visible', 'marked']),
+    );
+    final markedRow = rows.singleWhere((row) => row['messageId'] == 'marked');
+    expect(markedRow['text'], marked.text);
+    expect(markedRow['filterReason'], 'textRule');
+    expect(markedRow['filterDetail'], 'hello from Bob');
+    expect(markedRow['wasBlocked'], isFalse);
   });
 
   test('read-only channel load does not migrate slot-based history', () async {

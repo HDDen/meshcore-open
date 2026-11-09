@@ -1,4 +1,5 @@
 import '../models/channel_message.dart';
+import '../services/message_filter/message_filter_rules.dart';
 
 abstract final class ChannelMessageTimelineHelper {
   static int compare(ChannelMessage a, ChannelMessage b) {
@@ -65,6 +66,8 @@ class ChannelMessageTimelineCache {
     required List<ChannelMessage> pending,
     required int filterRevision,
     required String filterKey,
+    bool hideFiltered = false,
+    MessageFilterRules? rules,
     required ChannelMessageMerger merge,
     required bool Function(ChannelMessage message) include,
   }) {
@@ -72,18 +75,22 @@ class ChannelMessageTimelineCache {
     if (cached != null &&
         cached.filterRevision == filterRevision &&
         cached.filterKey == filterKey &&
+        cached.hideFiltered == hideFiltered &&
+        identical(cached.rules, rules) &&
         _sameMessages(cached.primary, primary) &&
         _sameMessages(cached.secondary, secondary) &&
         _sameMessages(cached.pending, pending)) {
       return cached.timeline;
     }
 
-    final historical = secondary.isEmpty
-        ? primary
-        : merge(primary, secondary);
+    final stored = secondary.isEmpty ? primary : merge(primary, secondary);
+    final historical = rules == null
+        ? stored
+        : List<ChannelMessage>.unmodifiable(stored.map(rules.project));
     final timeline = <ChannelMessage>[
       for (final message in historical)
-        if (include(message)) message,
+        if ((!hideFiltered || !message.isFiltered) && include(message))
+          message,
       ...pending,
     ]..sort(ChannelMessageTimelineHelper.compare);
     final result = List<ChannelMessage>.unmodifiable(timeline);
@@ -93,9 +100,13 @@ class ChannelMessageTimelineCache {
       pending: List<ChannelMessage>.of(pending),
       filterRevision: filterRevision,
       filterKey: filterKey,
+      hideFiltered: hideFiltered,
+      rules: rules,
       // Its own object per rebuild, never the live primary list, so a caller
       // may index it by identity and see every change to the history.
-      merged: List<ChannelMessage>.unmodifiable(historical),
+      merged: rules == null
+          ? List<ChannelMessage>.unmodifiable(historical)
+          : historical,
       timeline: result,
     );
     return result;
@@ -126,6 +137,8 @@ class _ChannelMessageTimelineEntry {
     required this.pending,
     required this.filterRevision,
     required this.filterKey,
+    required this.hideFiltered,
+    required this.rules,
     required this.merged,
     required this.timeline,
   });
@@ -135,6 +148,8 @@ class _ChannelMessageTimelineEntry {
   final List<ChannelMessage> pending;
   final int filterRevision;
   final String filterKey;
+  final bool hideFiltered;
+  final MessageFilterRules? rules;
   final List<ChannelMessage> merged;
   final List<ChannelMessage> timeline;
 }

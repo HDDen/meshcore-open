@@ -302,6 +302,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                 normalizedQueries: normalizedQueries,
                 sources: batch.map((source) => source.workerSource).toList(),
                 roomSenderNamesByPrefix: roomSenderNamesByPrefix,
+                channelFilterRules: connector.messageFilterService?.rules,
               ),
               debugLabel: 'message-search',
             );
@@ -324,10 +325,16 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
               descriptor.type == MessageSearchEntryType.channel
               ? _channelTargetForSearchHit(connector, descriptor, hit)
               : null;
+          final targetChannel = channelTarget?.channel ?? descriptor.channel;
+          if (hit.isFiltered &&
+              targetChannel != null &&
+              connector.isChannelFilterEnabled(targetChannel)) {
+            continue;
+          }
           resultBatch.add(
             MessageSearchResult(
               type: descriptor.type,
-              channel: channelTarget?.channel ?? descriptor.channel,
+              channel: targetChannel,
               contact: descriptor.contact,
               messageId: channelTarget?.messageId ?? hit.messageId,
               timestamp: DateTime.fromMillisecondsSinceEpoch(hit.timestampMs),
@@ -413,6 +420,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         channelIndex: channel.index,
         scope: currentScope,
         normalizedQueries: normalizedQueries,
+        hideFiltered: candidates.every(connector.isChannelFilterEnabled),
         includeLegacyIndexFallback: true,
       );
       if (source != null) result.add(source);
@@ -449,6 +457,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
           channelIndex: matchedIndex,
           scope: scope,
           normalizedQueries: normalizedQueries,
+          hideFiltered: candidates.every(connector.isChannelFilterEnabled),
         );
         if (source != null) result.add(source);
       }
@@ -463,6 +472,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     required int channelIndex,
     required String scope,
     required List<String> normalizedQueries,
+    required bool hideFiltered,
     bool includeLegacyIndexFallback = false,
   }) async {
     final jsonString = await store.loadChannelMessagesJsonForSearch(
@@ -476,6 +486,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         sourceId: 'channel|$scope|${channel.name.trim()}',
         jsonString: jsonString,
         type: StoredMessageSearchType.channel,
+        hideFiltered: hideFiltered,
       ),
       type: MessageSearchEntryType.channel,
       channel: channel,

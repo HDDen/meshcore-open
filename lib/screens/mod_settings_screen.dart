@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
@@ -12,6 +13,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/low_battery_settings_card.dart';
 import '../widgets/sync_progress_overlay.dart';
+import 'message_filter_settings_screen.dart';
 import 'message_history_database_screen.dart';
 
 class ModSettingsScreen extends StatelessWidget {
@@ -19,6 +21,8 @@ class ModSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final connector = context.read<MeshCoreConnector?>();
+    final messageFilter = connector?.messageFilterService;
     return Scaffold(
       appBar: AppBar(
         title: AdaptiveAppBarTitle(context.l10n.settings_modSettings),
@@ -887,6 +891,23 @@ class ModSettingsScreen extends StatelessWidget {
                 SectionHeader(
                   context.l10n.settings_modSettingsMessageStorage,
                 ),
+                if (messageFilter != null)
+                  MeshCard(
+                    padding: EdgeInsets.zero,
+                    child: ListTile(
+                      leading: const Icon(Icons.filter_alt_outlined),
+                      title: Text(context.l10n.messageFilter_title),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MessageFilterSettingsScreen(
+                            service: messageFilter,
+                            channels: connector!.channels,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 MeshCard(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(

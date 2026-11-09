@@ -9038,4 +9038,151 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get holidayGreeting_newYear =>
       '새해 복 많이 받으세요|새해 복 많이 받아|새해 복 많이 받으십시오|새해 복 많이 받아요|해피 뉴 이어|해피 뉴이어|즐거운 새해|행복한 새해';
+
+  @override
+  String get messageFilter_title => 'Message filter';
+
+  @override
+  String get messageFilter_enabled => 'Filter messages';
+
+  @override
+  String get messageFilter_enabledSubtitle =>
+      'Applies to incoming channel messages';
+
+  @override
+  String get messageFilter_displayTitle => 'Filtered messages';
+
+  @override
+  String get messageFilter_displayHide => 'Hide filtered rows completely';
+
+  @override
+  String get messageFilter_displayHideHelp =>
+      'Review loaded filtered messages from the channel menu.';
+
+  @override
+  String get messageFilter_rulesSection => 'Your rules';
+
+  @override
+  String get messageFilter_rulesScope => 'Rule changes apply to new messages.';
+
+  @override
+  String get messageFilter_addRule => 'Add rule';
+
+  @override
+  String get messageFilter_editRule => 'Edit rule';
+
+  @override
+  String get messageFilter_rulePattern => 'Word, phrase or name';
+
+  @override
+  String get messageFilter_ruleWhere => 'Look in';
+
+  @override
+  String get messageFilter_ruleFieldText => 'Message text';
+
+  @override
+  String get messageFilter_ruleFieldSender => 'Sender name';
+
+  @override
+  String get messageFilter_ruleFieldBoth => 'Text and sender';
+
+  @override
+  String get messageFilter_ruleMatch => 'Match';
+
+  @override
+  String get messageFilter_ruleMatchContains => 'Contains';
+
+  @override
+  String get messageFilter_ruleMatchWholeWord => 'Whole word';
+
+  @override
+  String get messageFilter_ruleMatchExact => 'Exact';
+
+  @override
+  String get messageFilter_filteredMessagesEmpty =>
+      'No filtered messages in the loaded history.';
+
+  @override
+  String get messageFilter_ghostSingle => 'Hidden message · Tap to view';
+
+  @override
+  String get messageFilter_reasonManual => 'Marked as spam';
+
+  @override
+  String get messageFilter_notSpam => 'Not spam';
+
+  @override
+  String get messageFilter_markSpam => 'Mark as spam';
+
+  @override
+  String get messageFilter_channelToggle => 'Filter messages in these channels';
+
+  @override
+  String get messageFilter_ghostIconTooltip => 'Hidden by your message filter';
+
+  @override
+  String get messageFilter_saveError =>
+      'Could not save the message filter change.';
+
+  @override
+  String get messageFilter_loadOlder => 'Load older messages';
+
+  @override
+  String get messageFilter_automaticSection => 'Automatic checks';
+
+  @override
+  String get messageFilter_duplicates => 'Repeated publications';
+
+  @override
+  String get messageFilter_duplicatesSubtitle =>
+      'The same text posted again or by several senders.';
+
+  @override
+  String get messageFilter_repeatedCharacters => 'Repeated characters';
+
+  @override
+  String get messageFilter_repeatedCharactersSubtitle =>
+      'Runs of 20 or more identical characters. Spaces and digits are ignored.';
+
+  @override
+  String get messageFilter_reasonRepeatedCharacters =>
+      'Filtered: repeated characters';
+
+  @override
+  String get messageFilter_reasonDuplicate => 'Filtered: repeated publication';
+
+  @override
+  String get messageFilter_reasonCrossSenderDuplicate =>
+      'Filtered: the same text from several senders';
+
+  @override
+  String get messageFilter_learning => 'Learn from spam feedback';
+
+  @override
+  String get messageFilter_learningHelp =>
+      'Uses a local model. Only manual feedback is saved.';
+
+  @override
+  String messageFilter_learningSubtitle(int spam, int notSpam) {
+    return 'Manual examples: $spam spam, $notSpam not spam';
+  }
+
+  @override
+  String get messageFilter_resetLearning => 'Reset learning';
+
+  @override
+  String get messageFilter_resetLearningConfirm =>
+      'Clear the examples and reset the learned model? Your rules and message history are kept.';
+
+  @override
+  String get messageFilter_reasonLearned =>
+      'Filtered: similar to messages marked as spam';
+
+  @override
+  String get messageFilter_learningSqlHelp =>
+      'Uses a local model and one SQLite training pool for all nodes.';
+
+  @override
+  String get messageFilter_enableLearningPrompt =>
+      'To use the spam filter fully, enable learning. Enable it now?';
 }

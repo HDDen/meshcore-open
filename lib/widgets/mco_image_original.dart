@@ -133,7 +133,7 @@ class _MCOImageOriginalOrFallbackState
         ui.PixelFormat.rgba8888,
         completer.complete,
       );
-      return completer.future;
+      return await completer.future;
     } catch (_) {
       return null;
     }

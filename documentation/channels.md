@@ -211,6 +211,59 @@ When loading older saved settings without a separate nearby-repeater target, the
 | Mark as Unread | Incoming messages only | Marks this message and all subsequent incoming messages as unread |
 | Delete | All messages | Removes locally (not from mesh) |
 
+## Message filter
+
+Open **Mod settings → Message storage → Message filter** to enable the
+filter. It starts off. Rules match the text, sender name, or both, using a
+substring, whole word, or exact match. Rules apply to newly received channel
+posts, and you can exclude individual channels.
+
+Two optional checks start off and can be enabled separately. **Repeated
+publications** catches the same sender repeating a text of at least three
+words and ten characters within ten minutes. For texts of at least six
+words and ten characters, the third distinct sender within thirty minutes
+also triggers the filter. The tracker keeps up to 1,000 recent
+publications per channel. **Repeated characters** catches runs of at least
+twenty identical characters, excluding digits and whitespace. Restoring a
+post exempts that text from the publication check in that channel for the
+current session.
+
+**Learn from spam feedback** is a separate opt-in switch. When enabled,
+**Mark as spam** and **Not spam** label examples in the current profile.
+The local model needs at least two spam examples and an example of
+ordinary conversation before it can filter a post. Manual labels keep
+separate examples when different senders publish the same text. Ordinary and manually
+labelled examples are saved in one SQLite corpus for all nodes in the
+current app data folder. The app keeps up to 300 ordinary examples and
+writes them in short batches. It skips consecutive ordinary examples
+with the same sender and text. The same text from a different sender
+can become another example. Disabling learning clears the active model.
+**Reset learning** clears the SQL corpus and keeps rules and message
+history. The learning controls are available on platforms that use SQLite.
+
+Filtered posts stay in channel history. Choose between an expandable
+placeholder and hiding the row. To review loaded filtered posts, open
+**Filtered messages** from the channel menu. Use **Not spam** to restore a
+post. Long-press an incoming post and choose **Mark as spam** to filter it
+manually. On platforms with local learning, both actions ask to turn it on
+when it is off. Confirm to turn on learning and then apply the action.
+Cancel closes the prompt without applying the action. Cancelling **Not
+spam** keeps the text visible in the expanded preview, with its filter
+label. Disabling the filter shows posts with existing filter marks again.
+Sender blocks are independent.
+
+Adding or removing a manual rule also updates older posts in the chat
+and in search. On platforms with SQLite, the app saves changed rule marks
+for loaded posts one second after the last edit. Manual spam marks and
+automatic verdicts stay in place.
+A post restored with **Not spam** keeps its exception after reopening
+the app.
+
+The normal preview and text search skip filtered posts while the filter
+applies to the channel. New posts matched by a rule do not generate an
+unread count or a notification. In hide mode, **Load older messages** still
+opens earlier history when an entire page is filtered.
+
 ## Communities
 
 Community names in the channel-creation selector wrap onto multiple lines

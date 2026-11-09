@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import '../models/message_filter.dart';
+import '../services/message_filter/message_filter_rules.dart';
+
 import 'mcmp_app_codec.dart';
 import 'mcotxt_app_codec.dart';
 import 'message_text_codec.dart';
@@ -13,12 +16,14 @@ class StoredMessageSearchSource {
   final String jsonString;
   final StoredMessageSearchType type;
   final String contactName;
+  final bool hideFiltered;
 
   const StoredMessageSearchSource({
     required this.sourceId,
     required this.jsonString,
     required this.type,
     this.contactName = '',
+    this.hideFiltered = false,
   });
 }
 
@@ -27,12 +32,14 @@ class StoredMessageSearchRequest {
   final List<String> normalizedQueries;
   final List<StoredMessageSearchSource> sources;
   final Map<String, String> roomSenderNamesByPrefix;
+  final List<FilterRule>? channelFilterRules;
 
   const StoredMessageSearchRequest({
     this.normalizedQuery,
     this.normalizedQueries = const [],
     required this.sources,
     this.roomSenderNamesByPrefix = const {},
+    this.channelFilterRules,
   });
 
   List<String> get effectiveNormalizedQueries {
@@ -51,6 +58,7 @@ class StoredMessageSearchHit {
   final int identityTimestampMs;
   final String senderName;
   final String text;
+  final bool isFiltered;
 
   const StoredMessageSearchHit({
     required this.sourceId,
@@ -59,6 +67,7 @@ class StoredMessageSearchHit {
     required this.identityTimestampMs,
     required this.senderName,
     required this.text,
+    this.isFiltered = false,
   });
 }
 
@@ -67,11 +76,14 @@ List<StoredMessageSearchHit> searchStoredMessageBatch(
 ) {
   final results = <StoredMessageSearchHit>[];
   final normalizedQueries = request.effectiveNormalizedQueries;
+  final rules = request.channelFilterRules;
+  final matcher = rules == null ? null : MessageFilterRules(rules);
   for (final source in request.sources) {
     _searchStoredMessages(
       source: source,
       normalizedQueries: normalizedQueries,
       roomSenderNamesByPrefix: request.roomSenderNamesByPrefix,
+      channelRules: source.hideFiltered ? matcher : null,
       results: results,
     );
   }
@@ -83,6 +95,7 @@ void _searchStoredMessages({
   required List<String> normalizedQueries,
   required Map<String, String> roomSenderNamesByPrefix,
   required List<StoredMessageSearchHit> results,
+  required MessageFilterRules? channelRules,
 }) {
   dynamic decoded;
   try {
@@ -95,6 +108,11 @@ void _searchStoredMessages({
   for (final entry in decoded) {
     if (entry is! Map<String, dynamic>) continue;
     try {
+      final filterReason = source.type == StoredMessageSearchType.channel
+          ? filterReasonFromJson(entry['filterReason'])
+          : null;
+      var isFiltered = filterReason != null;
+      if (source.hideFiltered && channelRules == null && isFiltered) continue;
       final rawText = entry['text'];
       if (rawText is! String || _isMcoImageText(rawText)) continue;
       final text = _decodeStoredTextIfNeeded(rawText);
@@ -109,6 +127,22 @@ void _searchStoredMessages({
       final searchableText = '$senderName: $text'.toLowerCase();
       if (!normalizedQueries.any(searchableText.contains)) {
         continue;
+      }
+
+      if (channelRules != null &&
+          source.type == StoredMessageSearchType.channel) {
+        final verdict = channelRules.forHistory(
+          previous: filterReason == null
+              ? null
+              : FilterVerdict(reason: filterReason),
+          sender: senderName,
+          text: text,
+          isOutgoing: entry['isOutgoing'] == true,
+          wasBlocked: entry['wasBlocked'] == true,
+          restored: entry['filterRestored'] == true,
+        );
+        isFiltered = verdict != null;
+        if (isFiltered) continue;
       }
 
       results.add(
@@ -127,6 +161,7 @@ void _searchStoredMessages({
               : timestampMs,
           senderName: senderName,
           text: text,
+          isFiltered: isFiltered,
         ),
       );
     } catch (_) {

@@ -7,6 +7,7 @@ import '../helpers/mesh_compressor.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/message_text_codec.dart';
 import 'message_compression.dart';
+import 'message_filter.dart';
 import 'message.dart' show futureTimestampTolerance;
 import 'translation_support.dart';
 import '../utils/app_logger.dart';
@@ -77,6 +78,14 @@ class ChannelMessage {
   /// resurrect a marker or a `del:` command from the muted period, and
   /// revealing the text by hand must not either.
   final bool wasBlocked;
+
+  /// A separate verdict for this post. It never changes the sender's block.
+  final FilterVerdict? filterVerdict;
+
+  /// A manual restore keeps this particular post visible under current rules.
+  final bool filterRestored;
+
+  bool get isFiltered => filterVerdict != null;
 
   final int? binaryPacketBytes;
   final Uint8List? rawPayload;
@@ -153,6 +162,8 @@ class ChannelMessage {
     this.mcmpNameCollision = false,
     this.wasBinaryTransport = false,
     this.wasBlocked = false,
+    this.filterVerdict,
+    this.filterRestored = false,
     this.binaryPacketBytes,
     this.rawPayload,
     required this.timestamp,
@@ -262,6 +273,8 @@ class ChannelMessage {
     bool? mcmpNameCollision,
     bool? wasBinaryTransport,
     bool? wasBlocked,
+    Object? filterVerdict = _unset,
+    bool? filterRestored,
     Object? binaryPacketBytes = _unset,
     Uint8List? rawPayload,
     Object? sharedHistorySourceName = _unset,
@@ -325,6 +338,10 @@ class ChannelMessage {
       mcmpNameCollision: mcmpNameCollision ?? this.mcmpNameCollision,
       wasBinaryTransport: wasBinaryTransport ?? this.wasBinaryTransport,
       wasBlocked: wasBlocked ?? this.wasBlocked,
+      filterVerdict: filterVerdict == _unset
+          ? this.filterVerdict
+          : filterVerdict as FilterVerdict?,
+      filterRestored: filterRestored ?? this.filterRestored,
       binaryPacketBytes: binaryPacketBytes == _unset
           ? this.binaryPacketBytes
           : binaryPacketBytes as int?,

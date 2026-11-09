@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/contact_option_storage.dart';
 import '../helpers/deferred_channel_inbox.dart';
+import '../models/message_filter.dart';
 import '../models/pending_channel_frame.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
@@ -528,6 +529,32 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     if (kIsWeb) return;
     await _database!.fullVacuum();
   }
+
+  Future<({int spam, int notSpam})> filterTrainingLabelCounts() {
+    _requireInitialized();
+    return _database!.filterTrainingLabelCounts();
+  }
+
+  Future<List<FilterExample>> readFilterTrainingExamples() {
+    _requireInitialized();
+    return _database!.readFilterTrainingExamples();
+  }
+
+  Future<void> writeFilterTrainingExamples(
+    Iterable<FilterExample> examples, {
+    required bool manual,
+  }) => _persistenceWork.run(() async {
+    _requireInitialized();
+    await _database!.writeFilterTrainingExamples(
+      examples,
+      manual: manual,
+    );
+  });
+
+  Future<void> clearFilterTrainingExamples() => _persistenceWork.run(() async {
+    _requireInitialized();
+    await _database!.clearFilterTrainingExamples();
+  });
 
   Future<String?> getString(MessageHistoryKind kind, String key) async {
     _requireInitialized();
@@ -1593,6 +1620,12 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
       _directMarkerKeys.add(key);
     }
   });
+
+  Future<void> updateChannelRuleVerdicts(ChannelRuleVerdictUpdates updates) =>
+      _persistenceWork.run(() async {
+        _requireInitialized();
+        await _database!.updateChannelRuleVerdicts(updates);
+      });
 
   Future<void> replaceString(
     MessageHistoryKind kind,

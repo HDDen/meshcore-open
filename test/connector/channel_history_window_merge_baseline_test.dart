@@ -2,8 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/helpers/reply_target_index.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/message_filter.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Channel _channel(int index) =>
     Channel(index: index, name: 'Channel $index', psk: Uint8List(16)..[0] = index + 1);
@@ -33,6 +37,48 @@ void main() {
   });
   tearDown(() {
     connector.dispose();
+  });
+
+  test('U27b baseline: marked posts remain quote targets when off', () async {
+    SharedPreferences.setMockInitialValues({});
+    PrefsManager.reset();
+    addTearDown(PrefsManager.reset);
+    await PrefsManager.initialize();
+
+    final channel = _channel(1);
+    final messages = _history(1, 2);
+    const verdict = FilterVerdict(
+      reason: FilterReason.textRule,
+      detail: 'Message',
+    );
+    final original = messages.first.copyWith(filterVerdict: verdict);
+    final reply = messages.last.copyWith(
+      replyToMessageId: original.messageId,
+      replyToText: original.text,
+      replyToSenderName: original.senderName,
+    );
+    connector.setChannelMessagesForTest(channel.index, [original, reply]);
+
+    final transcript = connector.getChannelMessageTimeline(channel);
+    expect(transcript.map((message) => message.messageId), ['1:0', '1:1']);
+    expect(connector.getChannelMessageTimeline(channel), same(transcript));
+
+    final merged = connector.getChannelMergedMessages(channel);
+    final targets = ReplyTargetIndex();
+    expect(targets.find(merged, reply.replyToMessageId!), same(original));
+    expect(merged.first.filterVerdict, verdict);
+    expect(merged.first.text, 'Message 0');
+
+    final restored = original.copyWith(filterVerdict: null);
+    connector.setChannelMessagesForTest(channel.index, [restored, reply]);
+    expect(connector.getChannelMessageTimeline(channel), isNot(same(transcript)));
+    expect(
+      targets.find(
+        connector.getChannelMergedMessages(channel),
+        original.messageId,
+      ),
+      same(restored),
+    );
   });
 
   test('U10c: memory pressure retains the entire active paged window', () {

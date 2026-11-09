@@ -31,6 +31,7 @@ import 'services/image_codec_settings_store.dart';
 import 'services/received_image_blob_store_factory.dart';
 import 'services/received_image_store.dart';
 import 'services/storage_service.dart';
+import 'services/message_filter/message_filter_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/app_settings_service.dart';
@@ -211,7 +212,8 @@ Future<void> _startApplication() async {
   // Initialize services
   StartupTiming.mark('  service objects');
   final storage = StorageService();
-  final connector = MeshCoreConnector();
+  final messageFilter = MessageFilterService()..load();
+  final connector = MeshCoreConnector(messageFilterService: messageFilter);
   final pathHistoryService = PathHistoryService(storage);
   final retryService = MessageRetryService();
   final appSettingsService = AppSettingsService();
@@ -843,6 +845,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     iosAppPresentationActive.removeListener(_syncHolidayThemeForeground);
     widget.appSettingsService.setHolidayThemeForeground(false);
     widget.connector.removeListener(_handleConnectionStateChanged);
+    unawaited(widget.connector.flushChannelRuleVerdicts());
+    widget.connector.messageFilterService?.flushRecentClean();
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();
@@ -1035,6 +1039,12 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(widget.connector.flushChannelRuleVerdicts());
+      widget.connector.messageFilterService?.flushRecentClean();
+    }
     _syncHolidayThemeForeground();
     if (state == AppLifecycleState.resumed ||
         state == AppLifecycleState.paused ||

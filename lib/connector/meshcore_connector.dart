@@ -19,6 +19,7 @@ import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_
 
 import '../models/channel.dart';
 import '../models/channel_message.dart';
+import '../models/message_filter.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
 import '../models/direct_echo_observation.dart';
@@ -106,6 +107,9 @@ import '../services/image_chunk_transport.dart'
         senderPrefixFromKey;
 import '../services/image_codec_service.dart';
 import '../services/received_image_store.dart';
+import '../services/message_filter/channel_rule_verdict_writer.dart';
+import '../services/message_filter/message_filter_rules.dart';
+import '../services/message_filter/message_filter_service.dart';
 import '../services/message_retry_service.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
@@ -722,6 +726,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   BleDebugLogService? _bleDebugLogService;
   AppDebugLogService? _appDebugLogService;
   final ChannelMessageStore _channelMessageStore = ChannelMessageStore();
+  final MessageFilterService? _messageFilterService;
+  List<FilterRule>? _observedMessageFilterRules;
+  late final _channelRuleVerdictWriter = ChannelRuleVerdictWriter(
+    _collectChannelRuleVerdicts,
+    MessageHistoryStorage.instance.updateChannelRuleVerdicts,
+  );
   final SharedMessageHistoryHelper _sharedMessageHistoryHelper =
       SharedMessageHistoryHelper();
   final MessageStore _messageStore = MessageStore();
@@ -834,11 +844,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   MeshCoreConnector({
     MeshCoreTcpConnector? tcpConnector,
     MeshCoreUsbManager? usbManager,
-  }) : _usbManager = usbManager ?? MeshCoreUsbManager(),
+    MessageFilterService? messageFilterService,
+  }) : _messageFilterService = messageFilterService,
+       _usbManager = usbManager ?? MeshCoreUsbManager(),
        _tcpConnector = tcpConnector ?? MeshCoreTcpConnector() {
     MessageHistoryStorage.instance.attachBackgroundWorkTracker(_backgroundWork);
     _notificationService.attachBackgroundWorkTracker(_backgroundWork);
     _lastNotifyConnectionState = _notificationConnectionState;
+    _observedMessageFilterRules = _messageFilterService?.rules;
+    _messageFilterService?.addListener(_handleMessageFilterChanged);
     if (PlatformInfo.isIOS) {
       _lastAppLifecycleState = WidgetsBinding.instance.lifecycleState;
       _lastAppLifecycleStateAt = DateTime.now();
@@ -1406,6 +1420,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _clearOfflineHistoryData() {
+    unawaited(flushChannelRuleVerdicts());
     _contacts.clear();
     _discoveredContacts.clear();
     _channels.clear();
@@ -2412,6 +2427,170 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return newerMessages;
   }
 
+  MessageFilterService? get messageFilterService => _messageFilterService;
+
+  void _handleMessageFilterChanged() {
+    final rules = _messageFilterService!.rules;
+    if (!identical(rules, _observedMessageFilterRules)) {
+      _observedMessageFilterRules = rules;
+      if (!kIsWeb) _channelRuleVerdictWriter.schedule();
+    }
+    notifyListeners();
+  }
+
+  Future<void> flushChannelRuleVerdicts() =>
+      kIsWeb || _messageFilterService == null
+      ? Future.value()
+      : _channelRuleVerdictWriter.flush();
+
+  ChannelRuleVerdictUpdates _collectChannelRuleVerdicts() {
+    final filter = _messageFilterService;
+    final store = _channelMessageStore;
+    if (filter == null ||
+        !filter.settings.enabled ||
+        isOfflineSharedMode ||
+        store.publicKeyHex.isEmpty) {
+      return const {};
+    }
+    final updates = <String, Map<String, FilterVerdict?>>{};
+    final rules = filter.ruleMatcher;
+    for (final entry in _channelMessages.entries) {
+      final slot = entry.key;
+      if (!filter.appliesTo(store.channelIdentityForIndex(slot)?.pskId)) {
+        continue;
+      }
+      final keys = store.channelStorageKeys(store.keyFor, slot);
+      if (keys.isEmpty) continue;
+      final messages = entry.value;
+      for (var index = 0; index < messages.length; index++) {
+        final message = messages[index];
+        if (message.messageId.isEmpty ||
+            message.sharedHistorySourceName != null) {
+          continue;
+        }
+        final projected = rules.project(message);
+        if (identical(message, projected)) continue;
+        // Adopt the same projection before the database write yields so
+        // reaction and relay saves carry the updated verdict too.
+        messages[index] = projected;
+        for (final key in keys) {
+          (updates[key] ??= {})[message.messageId] = projected.filterVerdict;
+        }
+      }
+    }
+    return updates;
+  }
+
+  bool isChannelFilterEnabled(Channel channel) {
+    final filter = _messageFilterService;
+    return filter != null &&
+        filter.settings.enabled &&
+        filter.appliesTo(channel.storageId);
+  }
+
+  bool hidesFilteredChannelRows(Channel channel) =>
+      isChannelFilterEnabled(channel) &&
+      _messageFilterService!.settings.hideFiltered;
+
+  MessageFilterRules? _channelHistoryRules(Channel channel) {
+    final filter = _messageFilterService;
+    return filter != null && filter.appliesTo(channel.storageId)
+        ? filter.ruleMatcher
+        : null;
+  }
+
+  Iterable<ChannelMessage> getLoadedFilteredChannelMessages(Channel channel) {
+    final rules = _channelHistoryRules(channel);
+    if (rules == null) return const [];
+    return getLoadedChannelMessages(channel).reversed
+        .map(rules.project)
+        .where((message) => message.isFiltered);
+  }
+
+  ChannelMessage? latestChannelPreviewMessage(Channel channel) {
+    final messages = getChannelMessages(channel);
+    final rules = _channelHistoryRules(channel);
+    if (rules == null) return messages.lastOrNull;
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final message = rules.project(messages[i]);
+      if (!message.isFiltered) return message;
+    }
+    return null;
+  }
+
+  /// Updates only a loaded row belonging to this node and channel.
+  Future<bool> setChannelMessageFilterVerdict(
+    Channel channel,
+    ChannelMessage message,
+    FilterVerdict? verdict,
+  ) async {
+    final index = channel.index;
+    if (!isChannelFilterEnabled(channel) ||
+        isOfflineSharedMode ||
+        message.isOutgoing ||
+        message.sharedHistorySourceName != null ||
+        _channelMessageStore.channelIdentityForIndex(index) !=
+            ChannelIdentity.of(channel)) {
+      return false;
+    }
+    final messages = _channelMessages[index];
+    if (messages == null) return false;
+    final position = messages.indexWhere(
+      (candidate) => candidate.messageId == message.messageId,
+    );
+    if (position < 0) return false;
+    final previous = messages[position];
+    if (previous.isOutgoing ||
+        previous.wasBlocked ||
+        BlockedSenders.instance.hidesStoredMessage(previous, channel.name)) {
+      return false;
+    }
+    final restored = verdict == null;
+    if (previous.filterVerdict == verdict &&
+        previous.filterRestored == restored) {
+      return true;
+    }
+    final updated = previous.copyWith(
+      filterVerdict: verdict,
+      filterRestored: restored,
+    );
+    messages[position] = updated;
+    notifyListeners();
+    try {
+      await _channelMessageStore.saveChannelMessage(
+        index,
+        updated,
+        requireBinding: true,
+      );
+      final channelId = channel.storageId;
+      if (channelId != null) {
+        final filter = _messageFilterService;
+        if (verdict == null) {
+          filter?.allowRestoredText(channelId, previous.text);
+        }
+        if (filter != null &&
+            (verdict == null || verdict.reason == FilterReason.manual)) {
+          unawaited(filter.recordFeedback(
+            channelId,
+            previous.senderName,
+            previous.text,
+            spam: verdict != null,
+          ));
+        }
+      }
+      return true;
+    } catch (error) {
+      final current = _channelMessages[index];
+      final updatedPosition = current?.indexOf(updated) ?? -1;
+      if (updatedPosition >= 0) {
+        current![updatedPosition] = previous;
+        notifyListeners();
+      }
+      appLogger.warn('Could not save channel filter verdict: $error');
+      return false;
+    }
+  }
+
   List<ChannelMessage> getChannelMessages(Channel channel) {
     final primary = _channelMessages[channel.index] ?? [];
     if (isOfflineMode) return primary;
@@ -2446,6 +2625,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       pending: pending,
       filterRevision: BlockedSenders.instance.revision,
       filterKey: channelName,
+      hideFiltered: hidesFilteredChannelRows(channel),
+      rules: _channelHistoryRules(channel),
       merge: _mergeChannelMessages,
       include: (message) =>
           !BlockedSenders.instance.hidesMessageWidget(message, channelName),
@@ -15759,6 +15940,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    // The post may have been manually marked while translation was pending.
+    final filter = _messageFilterService;
+    if (filter != null &&
+        filter.settings.enabled &&
+        filter.appliesTo(
+          _channelMessageStore.channelIdentityForIndex(channelIndex)?.pskId,
+        )) {
+      final messages = _channelMessages[channelIndex];
+      if (messages != null) {
+        for (var i = messages.length - 1; i >= 0; i--) {
+          final stored = messages[i];
+          if (stored.messageId != message.messageId) continue;
+          if (stored.isFiltered) return;
+          break;
+        }
+      }
+    }
+
     final label = channelName ?? _channelDisplayName(channelIndex);
     // The chat will hide this body; a notification would put it straight back
     // on screen, so it is not raised at all.
@@ -18582,8 +18781,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return _ParsedText(senderName: 'Unknown', text: text);
   }
 
-  /// Stores [message], new or merged into the copy of it already there, and
-  /// returns whether it was new. Under [heardKey], the claim the copy holds
+  /// Stores [message], new or merged into the copy of it already there.
+  /// Returns true for a new post eligible for unread and notification work.
+  /// Under [heardKey], the claim the copy holds
   /// in the heard map is settled with what the message became, and abandoned
   /// when nothing was stored or applied, a failure included.
   Future<bool> _addChannelMessage(
@@ -18842,12 +19042,40 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     final existingIndex = _findChannelRepeatIndex(messages, processedMessage);
+    final filter = _messageFilterService;
+    String? filterChannelId;
     var isNew = true;
     if (existingIndex >= 0) {
       isNew = false;
       _mergeChannelRepeat(messages, existingIndex, processedMessage);
       _wakeChannelHopCheck(messages[existingIndex].messageId);
     } else {
+      // All copies have been accounted for. The filter sees each separate
+      // publication once, after the receive-time sender block.
+      if (filter != null &&
+          filter.hasActiveChecks &&
+          !processedMessage.isOutgoing &&
+          !processedMessage.wasBlocked &&
+          reactionInfo == null) {
+        final channelId =
+            _channelMessageStore.channelIdentityForIndex(channelIndex)?.pskId;
+        if (channelId != null) {
+          filterChannelId = channelId;
+          final verdict = filter.evaluate(
+            channelId: channelId,
+            sender: processedMessage.senderName,
+            text: processedMessage.text,
+            sentAt: processedMessage.timestamp,
+            receivedAt: processedMessage.receivedAt,
+            verifiedSenderKey: filter.settings.duplicates
+                ? BlockedSenders.verifiedKeyOf(processedMessage)
+                : null,
+          );
+          if (verdict != null) {
+            processedMessage = processedMessage.copyWith(filterVerdict: verdict);
+          }
+        }
+      }
       messages.add(processedMessage);
     }
 
@@ -18889,7 +19117,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }),
       );
     }
-    return isNew;
+    if (filterChannelId != null && !storedMessage.isFiltered) {
+      filter?.recordClean(
+        filterChannelId,
+        storedMessage.senderName,
+        storedMessage.text,
+      );
+    }
+    return isNew && !storedMessage.isFiltered;
   }
 
   ChannelMessage? _findMessageBySender(
@@ -19236,6 +19471,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Drops the conversation and channel history held in memory, so a
   /// different radio never shows or persists another radio's messages.
   void _clearSessionMessageState() {
+    unawaited(flushChannelRuleVerdicts());
     _conversations.clear();
     _loadedConversationKeys.clear();
     _channelMessages.clear();
@@ -19471,6 +19707,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void dispose() {
     _companionCli?.dispose();
+    _messageFilterService?.removeListener(_handleMessageFilterChanged);
+    unawaited(flushChannelRuleVerdicts());
     _appSettingsService?.removeListener(_syncLinkImageDefaults);
     if (PlatformInfo.isIOS) {
       WidgetsBinding.instance.removeObserver(this);

@@ -686,8 +686,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     }
 
     // Last message preview
-    final messages = connector.getChannelMessages(channel);
-    final lastMessage = messages.isNotEmpty ? messages.last : null;
+    final lastMessage = connector.latestChannelPreviewMessage(channel);
     // A hidden body stays hidden in this list too, or the preview puts back
     // exactly what the chat took away.
     final lastBlocked =

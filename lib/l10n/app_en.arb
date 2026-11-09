@@ -4842,5 +4842,59 @@
   "holidayGreeting_newYear": "Happy New Year|Happy New Year's",
   "@holidayGreeting_newYear": {
     "description": "Holiday greeting that plays the New Year's fireworks animation when it appears in a chat message. Matched in every app language and ignoring case and punctuation, so translate it as people actually write the greeting. Separate alternative phrasings with |."
-  }
+  },
+  "messageFilter_title": "Message filter",
+  "messageFilter_enabled": "Filter messages",
+  "messageFilter_enabledSubtitle": "Applies to incoming channel messages",
+  "messageFilter_displayTitle": "Filtered messages",
+  "messageFilter_displayHide": "Hide filtered rows completely",
+  "messageFilter_displayHideHelp": "Review loaded filtered messages from the channel menu.",
+  "messageFilter_rulesSection": "Your rules",
+  "messageFilter_rulesScope": "Rule changes apply to new messages.",
+  "messageFilter_addRule": "Add rule",
+  "messageFilter_editRule": "Edit rule",
+  "messageFilter_rulePattern": "Word, phrase or name",
+  "messageFilter_ruleWhere": "Look in",
+  "messageFilter_ruleFieldText": "Message text",
+  "messageFilter_ruleFieldSender": "Sender name",
+  "messageFilter_ruleFieldBoth": "Text and sender",
+  "messageFilter_ruleMatch": "Match",
+  "messageFilter_ruleMatchContains": "Contains",
+  "messageFilter_ruleMatchWholeWord": "Whole word",
+  "messageFilter_ruleMatchExact": "Exact",
+  "messageFilter_filteredMessagesEmpty": "No filtered messages in the loaded history.",
+  "messageFilter_ghostSingle": "Hidden message · Tap to view",
+  "messageFilter_reasonManual": "Marked as spam",
+  "messageFilter_notSpam": "Not spam",
+  "messageFilter_markSpam": "Mark as spam",
+  "messageFilter_channelToggle": "Filter messages in these channels",
+  "messageFilter_ghostIconTooltip": "Hidden by your message filter",
+  "messageFilter_saveError": "Could not save the message filter change.",
+  "messageFilter_loadOlder": "Load older messages",
+  "messageFilter_automaticSection": "Automatic checks",
+  "messageFilter_duplicates": "Repeated publications",
+  "messageFilter_duplicatesSubtitle": "The same text posted again or by several senders.",
+  "messageFilter_repeatedCharacters": "Repeated characters",
+  "messageFilter_repeatedCharactersSubtitle": "Runs of 20 or more identical characters. Spaces and digits are ignored.",
+  "messageFilter_reasonRepeatedCharacters": "Filtered: repeated characters",
+  "messageFilter_reasonDuplicate": "Filtered: repeated publication",
+  "messageFilter_reasonCrossSenderDuplicate": "Filtered: the same text from several senders",
+  "messageFilter_learning": "Learn from spam feedback",
+  "messageFilter_learningHelp": "Uses a local model. Only manual feedback is saved.",
+  "messageFilter_learningSubtitle": "Manual examples: {spam} spam, {notSpam} not spam",
+  "messageFilter_resetLearning": "Reset learning",
+  "messageFilter_resetLearningConfirm": "Clear the examples and reset the learned model? Your rules and message history are kept.",
+  "messageFilter_reasonLearned": "Filtered: similar to messages marked as spam",
+  "@messageFilter_learningSubtitle": {
+    "placeholders": {
+      "spam": {
+        "type": "int"
+      },
+      "notSpam": {
+        "type": "int"
+      }
+    }
+  },
+  "messageFilter_learningSqlHelp": "Uses a local model and one SQLite training pool for all nodes.",
+  "messageFilter_enableLearningPrompt": "To use the spam filter fully, enable learning. Enable it now?"
 }
