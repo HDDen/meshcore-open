@@ -3240,6 +3240,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '$hoursч $minutesм $secondsс';
+  }
+
+  @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
     return 'Всего: $total, flood: $flood, прямые: $direct';
   }

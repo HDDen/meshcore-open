@@ -5690,6 +5690,12 @@ abstract class AppLocalizations {
     int seconds,
   );
 
+  /// No description provided for @repeater_hoursMinsSecs.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m {seconds}s'**
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds);
+
   /// No description provided for @repeater_packetTxTotal.
   ///
   /// In en, this message translates to:

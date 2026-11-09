@@ -54,6 +54,7 @@ Pull-to-refresh re-fetches the full contact list from the device.
 A toolbar at the top provides:
 
 **Search**: Matches contact name (case-insensitive) or public key hex prefix. Debounced at 300ms.
+The search and group controls grow with the system text size.
 
 **Sort options**:
 - Latest Messages (by most recent message)

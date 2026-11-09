@@ -53,16 +53,20 @@ class _RuleDialogState extends State<_RuleDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final rule = widget.rule;
+    final labelRoom = MediaQuery.textScalerOf(context).scale(16);
     return AlertDialog(
       scrollable: true,
       title: Text(
         rule == null ? l10n.messageFilter_addRule : l10n.messageFilter_editRule,
       ),
+      // The floating label needs room above the field inside the viewport.
+      contentPadding: EdgeInsets.fromLTRB(24, labelRoom + 8, 24, 24),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _pattern,
+            scrollPadding: EdgeInsets.fromLTRB(20, 20 + labelRoom, 20, 20),
             minLines: 1,
             maxLines: 4,
             onChanged: (_) => setState(() {}),

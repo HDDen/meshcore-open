@@ -605,6 +605,7 @@
   "repeater_duplicates": "Дубликаты",
   "repeater_packetErrors": "Ошибки пакетов",
   "repeater_daysHoursMinsSecs": "{days} дн. {hours}ч {minutes}м {seconds}с",
+  "repeater_hoursMinsSecs": "{hours}ч {minutes}м {seconds}с",
   "repeater_packetTxTotal": "Всего: {total}, flood: {flood}, прямые: {direct}",
   "repeater_packetRxTotal": "Всего: {total}, flood: {flood}, прямые: {direct}",
   "repeater_duplicatesFloodDirect": "Flood: {flood}, прямые: {direct}",

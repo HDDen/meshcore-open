@@ -233,13 +233,14 @@ void main() {
       lastSeen: DateTime.utc(2026),
     ));
     await show(tester, const ContactsScreen(hideBackButton: true),
-        logicalSize: const Size(450, 820));
+        logicalSize: const Size(450, 820), textScale: 2);
     final l10n = AppLocalizations.of(
       tester.element(find.byType(ContactsScreen)),
     );
     await tester.tap(find.byTooltip(l10n.contacts_searchOpen));
     await tester.pumpAndSettle();
     final search = find.byType(TextField);
+    expect(tester.getSize(search).height, greaterThan(48));
     await tester.enterText(search, 'Synthetic');
     await tester.pump(const Duration(milliseconds: 350));
     expect(view.contactsSearchText, 'Synthetic');

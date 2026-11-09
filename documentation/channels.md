@@ -216,7 +216,9 @@ When loading older saved settings without a separate nearby-repeater target, the
 Open **Mod settings → Message storage → Message filter** to enable the
 filter. It starts off. Rules match the text, sender name, or both, using a
 substring, whole word, or exact match. Rules apply to newly received channel
-posts, and you can exclude individual channels.
+posts, and you can exclude individual channels. The rule editor scrolls
+while the keyboard is open and keeps the input label and action buttons
+accessible.
 
 Two optional checks start off and can be enabled separately. **Repeated
 publications** catches the same sender repeating a text of at least three

@@ -1325,6 +1325,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     UiViewStateService viewState,
     List<Contact> contacts,
     List<ContactGroup> sortedGroups,
+    double controlHeight,
   ) {
     final canManageGroups = _hasGroupStoreScope(connector);
     final selectedGroupName =
@@ -1414,7 +1415,7 @@ class _ContactsScreenState extends State<ContactsScreen>
         }),
       ],
       child: SizedBox(
-        height: 48,
+        height: controlHeight,
         child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(color: Theme.of(context).colorScheme.outline),
@@ -1585,6 +1586,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     final sortedGroups = _derivedSortedGroups;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final textHeight = MediaQuery.textScalerOf(context).scale(16) * 1.5;
+    final controlHeight = (textHeight + 20).clamp(48.0, 120.0);
     final searchControlsMinWidth = widget.batchOperationsMode ? 146.0 : 97.0;
     final searchControlsMaxWidth = widget.batchOperationsMode ? 169.0 : 120.0;
     final compactGroupWidth = (screenWidth * 0.21).clamp(76.0, 128.0);
@@ -1610,6 +1613,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   viewState,
                   contacts,
                   sortedGroups,
+                  controlHeight,
                 ),
               ),
               const SizedBox(width: 8),
@@ -1617,7 +1621,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 width: viewState.contactsSearchExpanded
                     ? searchExpandedWidth
                     : searchCollapsedWidth,
-                height: 48,
+                height: controlHeight,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     border: Border.all(

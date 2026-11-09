@@ -84,7 +84,10 @@ class QuickSwitchBar extends StatelessWidget {
               child: NavigationBar(
                 height: 60,
                 selectedIndex: selectedIndex,
-                onDestinationSelected: onDestinationSelected,
+                onDestinationSelected: (index) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  onDestinationSelected(index);
+                },
                 destinations: [
                   NavigationDestination(
                     icon: _buildIconWithBadge(

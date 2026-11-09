@@ -64,7 +64,7 @@ Three information cards:
 **System Information**:
 - Battery percentage and voltage (e.g. "85% / 3.95V"), using the battery chemistry set in the hub screen
 - Clock at login time
-- Uptime (days/hours/minutes/seconds)
+- Uptime (days/hours/minutes/seconds, with days omitted for durations under 24 hours)
 - Queue length
 - Debug flags (error event count)
 
@@ -74,8 +74,8 @@ Three information cards:
 - TX airtime and RX airtime
 
 **Packet Statistics**:
-- Packets sent and received, each broken down by flood vs. direct
-- Duplicates, broken down by flood vs. direct
+- Packets sent and received, with the total, flood and direct counts on separate lines
+- Duplicates, with separate lines for flood and direct counts when available
 - Channel utilization (% of uptime used by TX + RX)
 
 ### Key Interactions

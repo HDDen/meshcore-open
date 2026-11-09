@@ -379,15 +379,23 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final hours = (seconds % 86400) ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final secs = seconds % 60;
+    if (days == 0) return l10n.repeater_hoursMinsSecs(hours, minutes, secs);
     return l10n.repeater_daysHoursMinsSecs(days, hours, minutes, secs);
   }
+
+  // Counters use ungrouped integers. These commas separate translated parts.
+  static final _counterSeparator = RegExp(r'\s*[,\uFF0C\u3001\u060C]\s*');
+
+  String _counterLines(String value) => value.replaceAll(_counterSeparator, '\n');
 
   String _packetTxText() {
     if (_packetsSent == null) return '—';
     final l10n = context.l10n;
     final flood = _formatValue(_floodTx);
     final direct = _formatValue(_directTx);
-    return l10n.repeater_packetTxTotal(_packetsSent!, flood, direct);
+    return _counterLines(
+      l10n.repeater_packetTxTotal(_packetsSent!, flood, direct),
+    );
   }
 
   String _packetRxText() {
@@ -395,7 +403,9 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     final l10n = context.l10n;
     final flood = _formatValue(_floodRx);
     final direct = _formatValue(_directRx);
-    return l10n.repeater_packetRxTotal(_packetsRecv!, flood, direct);
+    return _counterLines(
+      l10n.repeater_packetRxTotal(_packetsRecv!, flood, direct),
+    );
   }
 
   String _chanUtilText() {
@@ -408,7 +418,7 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     if (_dupFlood != null || _dupDirect != null) {
       final flood = _formatValue(_dupFlood);
       final direct = _formatValue(_dupDirect);
-      return l10n.repeater_duplicatesFloodDirect(flood, direct);
+      return _counterLines(l10n.repeater_duplicatesFloodDirect(flood, direct));
     }
     if (_packetsRecv == null || _floodRx == null || _directRx == null) {
       return '—';
@@ -719,7 +729,8 @@ class _RepeaterStatusScreenState extends State<RepeaterStatusScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final textScaler = MediaQuery.textScalerOf(context);
-        if (constraints.maxWidth / textScaler.scale(1) < 320) {
+        final width = constraints.maxWidth;
+        if (width < 520 || width / textScaler.scale(1) < 320) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -1110,8 +1110,9 @@ within each day and splits at the unread divider. Every member ID resolves
 to the group row for quote navigation. The group opens the same lazy review
 list scoped to its posts, preserving per-post verdicts and restoration.
 The message menu can add an exact sender-name rule or prefill the shared
-rule editor with message text. The channel menu uses the same PSK-based
-exclusions as the filter settings screen.
+rule editor with message text. The editor reserves space for its floating
+label when the field is scrolled above the keyboard. The channel menu uses
+the same PSK-based exclusions as the filter settings screen.
 Optional automatic checks detect long runs of one character and separate
 publications of the same text. The publication tracker compares send times
 within each channel and uses local arrival time for expiration. It is
@@ -2916,7 +2917,7 @@ from the notifier's callback, which fires during another widget's build
 (`test/widgets/air_activity_dot_test.dart`).
 
 Every screen has its own app bar and its own dot, and the quick switch
-replaces one screen with another, so the flag has to be the connector's
+releases input focus and replaces one screen with another. The flag is the connector's
 answer for the whole window rather than something a widget keeps.
 `radioStatsAirActivityPulse` returns `_airtimeGrewInLastPoll`: the last stats
 frame of the polling run found the airtime grown over the frame before it,
@@ -3476,9 +3477,10 @@ guest/admin callbacks and login retries are unchanged. Regression coverage:
 ### Managed node status layout
 
 `RepeaterStatusScreen._buildStatGrid` preserves our content-sized two-column
-rows on wide screens. A `LayoutBuilder` selects one column when available
-width divided by `MediaQuery.textScalerOf(context).scale(1)` is below 320.
-The single-column `Column` stretches each existing `StatTile` to full width
+rows on wide screens. A `LayoutBuilder` selects one column below 520 logical
+pixels of available width or below 320 after dividing by the text scale.
+Packet counter summaries give each translated part a line. Durations under
+24 hours use the localized format without days. The single-column `Column` stretches each existing `StatTile` to full width
 and omits `IntrinsicHeight` and the unused right-hand cell. Paired rows retain
 their previous equal-height measurement and 8 px spacing. This screen passes
 `maxLabelLines: null` to `StatTile` so long labels wrap completely; the shared

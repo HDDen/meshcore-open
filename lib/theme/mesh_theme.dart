@@ -454,6 +454,10 @@ class MeshTheme {
           fontFamilyFallback: MeshFonts.sansFallback,
         );
 
+    final snackBarBackground = scheme.surfaceContainerHigh;
+    final snackBarForeground = readableAccent(
+      scheme.onSurface, snackBarBackground,
+    );
     return ThemeData(
       useMaterial3: true,
       extensions: [bubble, icons, map],
@@ -641,8 +645,10 @@ class MeshTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: scheme.surfaceContainerHigh,
-        contentTextStyle: TextStyle(color: scheme.onSurface),
+        backgroundColor: snackBarBackground,
+        contentTextStyle: TextStyle(color: snackBarForeground, fontSize: 16),
+        actionTextColor: snackBarForeground,
+        disabledActionTextColor: scheme.onSurfaceVariant,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(MeshRadii.md),

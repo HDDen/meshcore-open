@@ -250,11 +250,14 @@ Map<String, String> _expected(AppLocalizations l10n, {required bool room}) => {
   l10n.repeater_lastRssi: '-81 dBm',
   l10n.repeater_lastSnr: '7.25',
   l10n.repeater_noiseFloor: '-120 dBm',
-  l10n.repeater_txAirtime: l10n.repeater_daysHoursMinsSecs(0, 0, 1, 1),
-  if (!room) l10n.repeater_rxAirtime: l10n.repeater_daysHoursMinsSecs(0, 0, 2, 0),
-  l10n.repeater_sent: l10n.repeater_packetTxTotal(80, '50', '30'),
-  l10n.repeater_received: l10n.repeater_packetRxTotal(100, '60', '25'),
-  l10n.repeater_duplicates: l10n.repeater_duplicatesFloodDirect('3', '2'),
+  l10n.repeater_txAirtime: l10n.repeater_hoursMinsSecs(0, 1, 1),
+  if (!room) l10n.repeater_rxAirtime: l10n.repeater_hoursMinsSecs(0, 2, 0),
+  l10n.repeater_sent:
+      l10n.repeater_packetTxTotal(80, '50', '30').replaceAll(', ', '\n'),
+  l10n.repeater_received:
+      l10n.repeater_packetRxTotal(100, '60', '25').replaceAll(', ', '\n'),
+  l10n.repeater_duplicates:
+      l10n.repeater_duplicatesFloodDirect('3', '2').replaceAll(', ', '\n'),
   if (room) ...{
     l10n.room_postsStored: '7',
     l10n.room_postsPushed: '9',
@@ -268,13 +271,14 @@ void main() {
   for (final locale in ['en', 'ru']) {
     for (final type in [advTypeRepeater, advTypeRoom]) {
       for (final layout in [
-        (name: 'phone', size: const Size(320, 568), singleColumn: true),
-        (name: 'landscape', size: const Size(568, 360), singleColumn: true),
-        (name: 'desktop', size: const Size(1000, 800), singleColumn: false),
+        (name: 'phone', size: const Size(430, 740), singleColumn: true, scale: 1.0),
+        (name: 'phone', size: const Size(320, 568), singleColumn: true, scale: 2.0),
+        (name: 'landscape', size: const Size(568, 360), singleColumn: true, scale: 2.0),
+        (name: 'desktop', size: const Size(1000, 800), singleColumn: false, scale: 2.0),
       ]) {
         testWidgets(
           'U11b7: responsive status keeps complete fields without new requests '
-          '($locale, type=$type, ${layout.name}, scale=2)',
+          '($locale, type=$type, ${layout.name}, scale=${layout.scale})',
           (tester) async {
             await _withStatus(tester, locale, type, (radio, l10n) async {
               radio.incoming.add(_binaryStatus(radio));
@@ -340,7 +344,7 @@ void main() {
               expect(radio.writes, hasLength(1));
               expect(radio.outcomes, [true]);
               expect(tester.takeException(), isNull);
-            }, size: layout.size, textScale: 2);
+            }, size: layout.size, textScale: layout.scale);
           },
         );
       }

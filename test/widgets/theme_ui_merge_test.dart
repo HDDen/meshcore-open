@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/readable_accent.dart';
+import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/chat_background.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
@@ -172,6 +174,80 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  test('U29: Snackbar text and actions contrast with the themed surface', () {
+    final custom = MeshTheme.fromCustom(const CustomTheme(
+      id: 'custom:mid',
+      name: 'Mid',
+      background: Color(0xFF747474),
+      accent: Color(0xFF9C8787),
+    ));
+    for (final theme in [MeshTheme.light(), MeshTheme.dark(), custom]) {
+      final snackBar = theme.snackBarTheme;
+      final background = snackBar.backgroundColor!;
+      expect(meshContrastRatio(snackBar.actionTextColor!, background),
+          greaterThanOrEqualTo(4.5));
+      expect(meshContrastRatio(snackBar.contentTextStyle!.color!, background),
+          greaterThanOrEqualTo(4.5));
+    }
+  });
+
+  testWidgets('U29: Snackbar with an action still expires', (tester) async {
+    late BuildContext snackContext;
+    await tester.pumpWidget(MaterialApp(
+      theme: MeshTheme.light(),
+      home: Scaffold(
+        body: Builder(builder: (context) {
+          snackContext = context;
+          return const SizedBox();
+        }),
+      ),
+    ));
+    showDismissibleSnackBar(
+      snackContext,
+      content: const Text('Contact added'),
+      action: SnackBarAction(label: 'Undo', onPressed: () {}),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('U29: quick switch releases focus without changing the draft',
+      (tester) async {
+    final focus = FocusNode();
+    final controller = TextEditingController(text: 'Draft');
+    addTearDown(focus.dispose);
+    addTearDown(controller.dispose);
+    int? destination;
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('en'),
+      home: Scaffold(
+        body: TextField(focusNode: focus, controller: controller),
+        bottomNavigationBar: QuickSwitchBar(
+          selectedIndex: 0,
+          onDestinationSelected: (index) => destination = index,
+        ),
+      ),
+    ));
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(focus.hasFocus, isTrue);
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(QuickSwitchBar)),
+    );
+    await tester.tap(find.text(l10n.nav_channels));
+    await tester.pumpAndSettle();
+    expect(destination, 1);
+    expect(focus.hasFocus, isFalse);
+    expect(controller.text, 'Draft');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('U19b: custom palettes and icons resolve with stock fallbacks', (tester) async {
     const theme = CustomTheme(

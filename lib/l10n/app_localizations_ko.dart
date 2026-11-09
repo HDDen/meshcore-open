@@ -3117,6 +3117,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String repeater_hoursMinsSecs(int hours, int minutes, int seconds) {
+    return '${hours}h ${minutes}m ${seconds}s';
+  }
+
+  @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
     return '총: $total, 플러드: $flood, 직접: $direct';
   }

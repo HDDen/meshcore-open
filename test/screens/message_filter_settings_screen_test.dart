@@ -157,8 +157,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<EditableText>(find.byType(EditableText))
           .focusNode.hasFocus, isTrue);
-      expect(tester.widget<TextField>(input).decoration!.labelText,
-          l10n.messageFilter_rulePattern);
+      final label = find.text(l10n.messageFilter_rulePattern);
+      final viewport = find.byType(SingleChildScrollView);
+      expect(label, findsOneWidget);
+      expect(viewport, findsOneWidget);
+      final labelRect = tester.getRect(label);
+      final viewportRect = tester.getRect(viewport);
+      expect(labelRect.top, greaterThanOrEqualTo(viewportRect.top));
+      expect(labelRect.bottom, lessThanOrEqualTo(viewportRect.bottom));
+      expect(tester.widget<TextField>(input).scrollPadding.top,
+          greaterThanOrEqualTo(labelRect.height + 8));
 
       final save = find.widgetWithText(FilledButton, l10n.common_save);
       await tester.ensureVisible(save);
