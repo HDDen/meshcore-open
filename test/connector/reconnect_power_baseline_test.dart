@@ -170,8 +170,10 @@ void main() {
       expect(connector.attempts, isEmpty);
       for (final seconds in [1, 2, 4, 8, 16, 30, 30]) {
         final before = connector.attempts.length;
+        final scheduledAttempt = connector.reconnectAttemptsForTest;
         await tester.pump(Duration(milliseconds: seconds * 1000 - 1));
         expect(connector.attempts, hasLength(before));
+        expect(connector.reconnectAttemptsForTest, scheduledAttempt);
         await tester.pump(const Duration(milliseconds: 1));
         expect(connector.attempts, hasLength(before + 1));
         expect(connector.attempts.last, (
@@ -180,6 +182,7 @@ void main() {
           automatic: true,
         ));
         expect(connector.isAutoReconnectScheduled, isTrue);
+        expect(connector.reconnectAttemptsForTest, scheduledAttempt + 1);
       }
     });
   }

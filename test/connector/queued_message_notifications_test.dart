@@ -164,9 +164,9 @@ String _mcoImageText() {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 150));
 
-Future<void> _waitFor(bool Function() condition, String what) async {
+Future<void> _waitFor(FutureOr<bool> Function() condition, String what) async {
   final deadline = DateTime.now().add(const Duration(seconds: 5));
-  while (!condition()) {
+  while (!await condition()) {
     if (DateTime.now().isAfter(deadline)) fail('timed out waiting for $what');
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
@@ -760,8 +760,18 @@ Future<void> main() async {
       ));
       await _waitFor(() => plugin.shown.length == i + 1, 'initial notification');
     }
+    filter.flushRecentClean();
+    await _waitFor(() async {
+      final examples = await historyDatabase.readFilterTrainingExamples();
+      return texts.every((text) => examples.any(
+        (example) => example.sender == 'alice' &&
+            example.text == text && !example.spam,
+      ));
+    }, 'the three clean examples in SQLite');
+
     final initial = await history.loadChannelMessages(channel.index);
-    for (final message in initial.take(2)) {
+    for (final text in texts.take(2)) {
+      final message = initial.singleWhere((message) => message.text == text);
       expect(
         await connector.setChannelMessageFilterVerdict(
           channel,
@@ -780,6 +790,16 @@ Future<void> main() async {
       )?.reason == FilterReason.learned,
       'the learned model',
     );
+    final examples = await historyDatabase.readFilterTrainingExamples();
+    for (final (index, text) in texts.indexed) {
+      expect(
+        examples
+            .where((example) => example.sender == 'alice' && example.text == text)
+            .map((example) => example.spam),
+        [index < 2],
+        reason: 'training label for "$text"',
+      );
+    }
     final unreadBefore = connector.getUnreadCountForChannelIndex(channel.index);
     connector.handleFrameForTest(_channelMessageFrame(
       channelIndex: channel.index,
