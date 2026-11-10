@@ -3,23 +3,37 @@ import 'dart:convert';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
+import 'package:meshcore_open/models/app_settings.dart';
+import 'package:meshcore_open/models/app_settings_backup.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/screens/backup_export_screen.dart';
 import 'package:meshcore_open/screens/backup_restore_screen.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
-import 'package:meshcore_open/services/node_backup_snapshot.dart';
+import 'package:meshcore_open/services/backup_snapshot.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/backup_json_file.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final _key = List.filled(32, 'ab').join();
+
+class _NoPreferencesDirectory extends PathProviderPlatform {
+  @override
+  Future<String?> getApplicationSupportPath() async {
+    throw MissingPluginException('In-memory backup test preferences');
+  }
+}
 
 Channel _channel(int slot, String name, int key) =>
     Channel(index: slot, name: name, psk: Uint8List.fromList(List.filled(16, key)));
@@ -43,11 +57,12 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   String get deviceDisplayName => 'Test node';
 
   @override
-  Future<NodeBackupSnapshot?> snapshotNodeBackup({
+  Future<BackupSnapshot?> snapshotNodeBackup({
     required bool includeChannels,
     required bool includeContacts,
+    AppSettingsBackup? appSettings,
   }) async => ready
-      ? NodeBackupSnapshot(
+      ? BackupSnapshot(
           sourcePublicKey: _key,
           nodeName: deviceDisplayName,
           channels: includeChannels ? current : null,
@@ -64,6 +79,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
                 ]
               : null,
           createdAt: DateTime.utc(2026),
+          appSettings: appSettings,
         )
       : null;
 
@@ -189,6 +205,95 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('app settings export and confirmed restore work without a node',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    PrefsManager.reset();
+    addTearDown(PrefsManager.reset);
+    final service = AppSettingsService();
+    addTearDown(service.dispose);
+    final previousPaths = PathProviderPlatform.instance;
+    PathProviderPlatform.instance = _NoPreferencesDirectory();
+    addTearDown(() => PathProviderPlatform.instance = previousPaths);
+    await tester.runAsync(() async {
+      await PrefsManager.initialize();
+      await service.updateSettings(
+        AppSettings(enableTimeSeconds: true, tcpServerAddress: 'private-address'),
+      );
+    });
+    Future<void> show(Widget screen) => tester.pumpWidget(
+      ChangeNotifierProvider<AppSettingsService>.value(
+        value: service,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: screen,
+        ),
+      ),
+    );
+
+    String? contents;
+    await show(BackupExportScreen.appSettings(
+      saveFile: (value, name, {sharePositionOrigin}) async {
+        contents = value;
+        return BackupJsonSaveResult.saved;
+      },
+    ));
+    final l10n = tester.element(find.byType(BackupExportScreen)).l10n;
+    expect(find.text(l10n.channels_title), findsNothing);
+    await tester.tap(
+      find.widgetWithText(FilledButton, l10n.backupChannels_createBackup),
+    );
+    // The progress indicator keeps animating while the dialog awaits input.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    final passwordDialog = find.byType(AlertDialog);
+    expect(passwordDialog, findsOneWidget);
+    await _waitAfterTap(
+      tester,
+      find.descendant(
+        of: passwordDialog,
+        matching: find.widgetWithText(FilledButton, l10n.common_save),
+      ),
+      find.text(l10n.backupExport_saved),
+    );
+    expect(contents, isNot(contains('private-address')));
+
+    await tester.runAsync(
+      () => service.updateSettings(
+        service.settings.copyWith(enableTimeSeconds: false),
+      ),
+    );
+    await show(BackupRestoreScreen.appSettings(
+      pickFile: () async => XFile.fromData(
+        Uint8List.fromList(utf8.encode(contents!)),
+        name: 'settings.json',
+      ),
+    ));
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.appSettings_enableTimeSeconds),
+    );
+    final restore = find.text(l10n.backupChannels_apply);
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupAppSettings_confirm(1)), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(service.settings.enableTimeSeconds, isFalse);
+
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    await _waitAfterTap(
+      tester,
+      find.descendant(of: find.byType(AlertDialog), matching: restore),
+      find.text(l10n.backupAppSettings_applied(1)),
+    );
+    expect(service.settings.enableTimeSeconds, isTrue);
+    expect(service.settings.tcpServerAddress, 'private-address');
+  });
+
   testWidgets('contacts mode previews only available additions and confirms',
       (tester) async {
     final node = _Node();
@@ -253,7 +358,10 @@ void main() {
       ),
     );
     final l10n = tester.element(find.byType(BackupExportScreen)).l10n;
-    final create = find.text(l10n.backupChannels_createBackup);
+    final create = find.widgetWithText(
+      FilledButton,
+      l10n.backupChannels_createBackup,
+    );
     await tester.tap(create);
     await tester.pumpAndSettle();
     expect(find.text(l10n.backupExport_notReady), findsOneWidget);

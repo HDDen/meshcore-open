@@ -382,6 +382,18 @@ abstract class AppLocalizations {
   /// **'Choose which lists from the connected node to save in a JSON backup.'**
   String get backupExport_intro;
 
+  /// No description provided for @backupExport_createTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get backupExport_createTitle;
+
+  /// No description provided for @backupExport_pickSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what to include in the JSON backup.'**
+  String get backupExport_pickSections;
+
   /// No description provided for @backupExport_contactsHint.
   ///
   /// In en, this message translates to:
@@ -507,6 +519,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not finish restoring contacts. Refresh the preview to check the current contact list.'**
   String get backupContacts_applyFailed;
+
+  /// No description provided for @backupAppSettings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore app settings'**
+  String get backupAppSettings_title;
+
+  /// No description provided for @backupAppSettings_menu.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings backup'**
+  String get backupAppSettings_menu;
+
+  /// No description provided for @backupAppSettings_scope.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, theme, scale, and display preferences.'**
+  String get backupAppSettings_scope;
+
+  /// No description provided for @backupAppSettings_noSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no supported app settings.'**
+  String get backupAppSettings_noSupported;
+
+  /// No description provided for @backupAppSettings_noChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'These settings already match the backup.'**
+  String get backupAppSettings_noChanges;
+
+  /// No description provided for @backupAppSettings_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the displayed settings in the current app profile? Settings to change: {count}.'**
+  String backupAppSettings_confirm(int count);
+
+  /// No description provided for @backupAppSettings_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings restored: {count}.'**
+  String backupAppSettings_applied(int count);
+
+  /// No description provided for @backupAppSettings_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The settings changed. Refresh the preview.'**
+  String get backupAppSettings_changed;
+
+  /// No description provided for @backupAppSettings_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore app settings.'**
+  String get backupAppSettings_failed;
+
+  /// No description provided for @backupAppSettings_enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get backupAppSettings_enabled;
+
+  /// No description provided for @backupAppSettings_disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backupAppSettings_disabled;
 
   /// No description provided for @common_ok.
   ///

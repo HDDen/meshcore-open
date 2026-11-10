@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:mco_service/mco_service.dart';
 import 'package:uuid/uuid.dart';
 import '../models/app_settings.dart';
+import '../models/app_settings_backup.dart';
 import '../models/custom_theme.dart';
 import '../models/holiday_schedule.dart';
 import '../models/low_battery_alert_settings.dart';
@@ -145,6 +146,13 @@ class AppSettingsService extends ChangeNotifier {
     notifyListeners();
 
     await _saveSettings();
+  }
+
+  Future<bool> restoreAppSettingsBackup(AppSettingsBackupPreview preview) async {
+    final next = preview.applyTo(_settings);
+    if (next == null) return false;
+    if (!identical(next, _settings)) await updateSettings(next);
+    return true;
   }
 
   Future<void> _saveSettings() async {

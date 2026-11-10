@@ -171,6 +171,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Choose which lists from the connected node to save in a JSON backup.';
 
   @override
+  String get backupExport_createTitle => 'Create backup';
+
+  @override
+  String get backupExport_pickSections =>
+      'Choose what to include in the JSON backup.';
+
+  @override
   String get backupExport_contactsHint =>
       'Reads a complete contact list from the node before saving.';
 
@@ -257,6 +264,47 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get backupContacts_applyFailed =>
       'Could not finish restoring contacts. Refresh the preview to check the current contact list.';
+
+  @override
+  String get backupAppSettings_title => 'Restore app settings';
+
+  @override
+  String get backupAppSettings_menu => 'App settings backup';
+
+  @override
+  String get backupAppSettings_scope =>
+      'Language, theme, scale, and display preferences.';
+
+  @override
+  String get backupAppSettings_noSupported =>
+      'This backup contains no supported app settings.';
+
+  @override
+  String get backupAppSettings_noChanges =>
+      'These settings already match the backup.';
+
+  @override
+  String backupAppSettings_confirm(int count) {
+    return 'Restore the displayed settings in the current app profile? Settings to change: $count.';
+  }
+
+  @override
+  String backupAppSettings_applied(int count) {
+    return 'Settings restored: $count.';
+  }
+
+  @override
+  String get backupAppSettings_changed =>
+      'The settings changed. Refresh the preview.';
+
+  @override
+  String get backupAppSettings_failed => 'Could not restore app settings.';
+
+  @override
+  String get backupAppSettings_enabled => 'On';
+
+  @override
+  String get backupAppSettings_disabled => 'Off';
 
   @override
   String get common_ok => 'ОК';

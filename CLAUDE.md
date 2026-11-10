@@ -3096,6 +3096,15 @@ active node before opening the password dialog. Channel-only export
 uses the confirmed inventory. Selecting contacts requests a complete
 list and serializes the radio records ahead of any app-side merging.
 
+Portable display settings can be backed up separately from the scanner
+or included with the node lists. The v1 `mcoaDisplaySettings` section
+holds an allowlist of language, built-in theme mode, units, scaling and
+message display preferences. The importer accepts those fields from the
+upstream `appSettings` section too. MCOa uses its own section on export
+because upstream would otherwise replace the full settings map with
+this partial one. Restore checks the changed fields against the
+preview and saves through `AppSettingsService` to the active profile.
+
 Contact backup restore reuses the full contact sync with the current
 session's stores. It needs a declared count and the corresponding unique
 keys before it can write. An incomplete backup read keeps the prior

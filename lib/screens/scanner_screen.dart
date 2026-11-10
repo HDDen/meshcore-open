@@ -21,6 +21,8 @@ import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/scanner_tcp_navigation.dart';
 import '../review_mode/review_mode_entry.dart';
+import 'backup_export_screen.dart';
+import 'backup_restore_screen.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
 
@@ -200,6 +202,27 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
+          PopupMenuButton<bool>(
+            icon: const Icon(Icons.settings_backup_restore),
+            tooltip: context.l10n.backupAppSettings_menu,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: false,
+                child: Text(context.l10n.backupExport_createTitle),
+              ),
+              PopupMenuItem(
+                value: true,
+                child: Text(context.l10n.backupAppSettings_title),
+              ),
+            ],
+            onSelected: (restore) => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => restore
+                    ? const BackupRestoreScreen.appSettings()
+                    : const BackupExportScreen.appSettings(),
+              ),
+            ),
+          ),
           if (PlatformInfo.supportsUsbSerial)
             IconButton(
               icon: const Icon(Icons.usb),

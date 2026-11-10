@@ -178,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: _buildNavTileContent(
                     context,
                     icon: Icons.save_outlined,
-                    title: l10n.backupExport_title,
+                    title: l10n.backupExport_createTitle,
                   ),
                 ),
                 MeshCard(
@@ -205,6 +205,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context,
                     icon: Icons.person_add_alt_1_outlined,
                     title: l10n.backupContacts_title,
+                  ),
+                ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BackupRestoreScreen.appSettings(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.settings_backup_restore,
+                    title: l10n.backupAppSettings_title,
                   ),
                 ),
 

@@ -3,17 +3,19 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import 'backup_file_codec.dart';
 
-/// Radio lists recovered from a backup before choosing a restore destination.
+/// Supported data recovered from a backup before choosing a restore destination.
 class BackupImportPlan {
   BackupImportPlan._({
     required this.isOfficial,
     required this.sourcePublicKey,
     required List<Contact>? contacts,
     required List<Channel>? channels,
+    required this.appSettings,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -23,6 +25,7 @@ class BackupImportPlan {
   /// Null means that the file supplies no list. An empty list is explicit.
   final List<Contact>? contacts;
   final List<Channel>? channels;
+  final AppSettingsBackup? appSettings;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -43,6 +46,7 @@ class BackupImportPlanner {
   Future<BackupImportPlan> inspect(
     String contents, {
     required String password,
+    bool appSettingsOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -56,10 +60,14 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
-    final contacts = official
+    final contacts = appSettingsOnly
+        ? null
+        : official
         ? _officialList(payload, 'contacts')
         : _upstreamList(payload, 'contacts', publicKey);
-    final channels = official
+    final channels = appSettingsOnly
+        ? null
+        : official
         ? _officialList(payload, 'channels')
         : _upstreamList(payload, 'channels', publicKey);
 
@@ -68,6 +76,7 @@ class BackupImportPlanner {
     return BackupImportPlan._(
       isOfficial: official,
       sourcePublicKey: publicKey,
+      appSettings: official ? null : _readAppSettings(payload),
       contacts: contacts == null
           ? null
           : [
@@ -82,6 +91,28 @@ class BackupImportPlanner {
                   _readChannel(_readObject(row), official, index, channelSlots),
             ].where((channel) => !channel.isEmpty).toList(),
     );
+  }
+
+  static AppSettingsBackup? _readAppSettings(Map<String, Object?> payload) {
+    final items = _readList(payload['items']);
+    final name = items.contains(AppSettingsBackup.section)
+        ? AppSettingsBackup.section
+        : 'appSettings';
+    if (!items.contains(name)) return null;
+    final section = _readObject(payload['sections'])[name];
+    if (section == null) return null;
+    try {
+      final preferences = _readObject(section)['preferences'];
+      if (preferences == null) return null;
+      final raw = _readObject(preferences)['app_settings'];
+      if (raw == null) return null;
+      final values = raw is String ? jsonDecode(raw) : raw;
+      final backup = AppSettingsBackup.fromJson(_readObject(values));
+      return backup.isEmpty ? null : backup;
+    } on FormatException {
+      // An unusable settings section cannot invalidate a separate radio list.
+      return null;
+    }
   }
 
   static Map<String, Object?> _readDocument(String contents) {

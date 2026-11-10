@@ -119,7 +119,8 @@ import '../services/message_retry_service.dart';
 import '../services/experimental_route_chooser.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
-import '../services/node_backup_snapshot.dart';
+import '../models/app_settings_backup.dart';
+import '../services/backup_snapshot.dart';
 import '../services/background_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../services/translation_service.dart';
@@ -12644,9 +12645,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Reads the selected radio lists from the active node. A channel-only
   /// snapshot uses the already confirmed inventory without radio I/O.
-  Future<NodeBackupSnapshot?> snapshotNodeBackup({
+  Future<BackupSnapshot?> snapshotNodeBackup({
     required bool includeChannels,
     required bool includeContacts,
+    AppSettingsBackup? appSettings,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
@@ -12664,11 +12666,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final verified = includeContacts ? await _refreshBackupContacts() : null;
     if ((includeContacts && verified == null) || !canSnapshot()) return null;
 
-    return NodeBackupSnapshot(
+    return BackupSnapshot(
       sourcePublicKey: nodeKey,
       nodeName: deviceDisplayName,
       channels: includeChannels ? _channels : null,
       contacts: verified?.values.where((contact) => contact.publicKeyHex != nodeKey),
+      appSettings: appSettings,
       createdAt: DateTime.now(),
     );
   }

@@ -10,8 +10,10 @@ import '../connector/meshcore_connector.dart';
 import '../helpers/backup_channel_restore.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../l10n/l10n.dart';
+import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
+import '../services/app_settings_service.dart';
 import '../services/backup_file_codec.dart';
 import '../services/backup_import_planner.dart';
 import '../utils/backup_json_file.dart';
@@ -22,10 +24,11 @@ Future<XFile?> _pickBackupFile() =>
     openFile(acceptedTypeGroups: const [backupJsonFileType]);
 
 Future<BackupImportPlan> _inspectBackup(
-  ({String contents, String password}) input,
+  ({String contents, String password, bool appSettingsOnly}) input,
 ) => const BackupImportPlanner().inspect(
   input.contents,
   password: input.password,
+  appSettingsOnly: input.appSettingsOnly,
 );
 
 class _BackupFileTooLarge implements Exception {
@@ -44,19 +47,26 @@ Future<String> _readBackupFile(XFile file) async {
   return utf8.decode(bytes.takeBytes());
 }
 
+enum _BackupSection { channels, contacts, appSettings }
+
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen.channels({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _contactsOnly = false;
+  }) : _section = _BackupSection.channels;
 
   const BackupRestoreScreen.contacts({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _contactsOnly = true;
+  }) : _section = _BackupSection.contacts;
+
+  const BackupRestoreScreen.appSettings({
+    super.key,
+    this.pickFile = _pickBackupFile,
+  }) : _section = _BackupSection.appSettings;
 
   final Future<XFile?> Function() pickFile;
-  final bool _contactsOnly;
+  final _BackupSection _section;
 
   @override
   State<BackupRestoreScreen> createState() => _BackupRestoreScreenState();
@@ -72,9 +82,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   BackupChannelRestorePreview? _preview;
   ({String? nodeKey, List<Contact> contacts})? _contactSource;
   BackupContactRestorePreview? _contactPreview;
+  AppSettingsBackup? _settingsSource;
+  AppSettingsBackupPreview? _settingsPreview;
 
   bool get _busy => _reading || _applying;
-  bool get _hasSource => _source != null || _contactSource != null;
+  bool get _hasSource =>
+      _source != null || _contactSource != null || _settingsSource != null;
 
   Future<void> _chooseFile() async {
     if (_busy) return;
@@ -88,13 +101,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _preview = null;
         _contactSource = null;
         _contactPreview = null;
+        _settingsSource = null;
+        _settingsPreview = null;
         _notice = null;
       });
       final contents = await _readBackupFile(file);
       final plan = await _inspectWithPassword(contents);
       if (!mounted || plan == null) return;
       final l10n = context.l10n;
-      if (widget._contactsOnly) {
+      if (widget._section == _BackupSection.appSettings) {
+        final settings = plan.appSettings;
+        if (settings == null) {
+          setState(() => _notice = l10n.backupAppSettings_noSupported);
+          return;
+        }
+        _settingsSource = settings;
+      } else if (widget._section == _BackupSection.contacts) {
         final contacts = plan.contacts;
         if (contacts == null || contacts.isEmpty) {
           setState(() => _notice = l10n.backupContacts_noContacts);
@@ -133,7 +155,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       try {
         return await compute(
           _inspectBackup,
-          (contents: contents, password: password),
+          (
+            contents: contents,
+            password: password,
+            appSettingsOnly: widget._section == _BackupSection.appSettings,
+          ),
         );
       } on BackupPasswordException catch (error) {
         if (!mounted) return null;
@@ -189,6 +215,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   void _refreshPreview() {
+    if (_settingsSource case final source?) {
+      final settings = context.read<AppSettingsService>().settings;
+      setState(() {
+        _settingsPreview = source.preview(settings);
+        _notice = null;
+      });
+      return;
+    }
     final channels = _source;
     final contactSource = _contactSource;
     final connector = context.read<MeshCoreConnector>();
@@ -210,6 +244,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   Future<void> _confirmRestore({
     required String title,
     required String prompt,
+    required String failure,
     required Future<String> Function() apply,
   }) async {
     if (_busy) return;
@@ -244,18 +279,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (!mounted) return;
       setState(() => _notice = message);
     } catch (_) {
-      if (mounted) {
-        final l10n = context.l10n;
-        setState(() => _notice = widget._contactsOnly
-            ? l10n.backupContacts_applyFailed
-            : l10n.backupChannels_applyFailed);
-      }
+      if (mounted) setState(() => _notice = failure);
     } finally {
       if (mounted) {
         setState(() {
           _applying = false;
           _preview = null;
           _contactPreview = null;
+          _settingsPreview = null;
         });
       }
     }
@@ -267,6 +298,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return _confirmRestore(
       title: l10n.backupChannels_title,
       prompt: l10n.backupChannels_confirm(_destinationName!, count),
+      failure: l10n.backupChannels_applyFailed,
       apply: () async {
         final result = await connector.restoreBackupChannels(preview);
         return switch (result.status) {
@@ -289,6 +321,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return _confirmRestore(
       title: l10n.backupContacts_title,
       prompt: l10n.backupContacts_confirm(_destinationName!, count),
+      failure: l10n.backupContacts_applyFailed,
       apply: () async {
         final result = await connector.restoreBackupContacts(preview);
         return switch (result.status) {
@@ -304,6 +337,61 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             l10n.backupContacts_syncFailed(result.confirmed),
         };
       },
+    );
+  }
+
+  Future<void> _restoreAppSettings(AppSettingsBackupPreview preview) {
+    final service = context.read<AppSettingsService>();
+    final l10n = context.l10n;
+    final count = preview.changes.length;
+    return _confirmRestore(
+      title: l10n.backupAppSettings_title,
+      prompt: l10n.backupAppSettings_confirm(count),
+      failure: l10n.backupAppSettings_failed,
+      apply: () async {
+        final restored = await service.restoreAppSettingsBackup(preview);
+        return restored
+            ? l10n.backupAppSettings_applied(count)
+            : l10n.backupAppSettings_changed;
+      },
+    );
+  }
+
+  ListTile _settingsChange(MapEntry<String, Object?> change) {
+    final l10n = context.l10n;
+    final label = switch (change.key) {
+      'theme_mode' => l10n.appSettings_theme,
+      'language_override' => l10n.appSettings_language,
+      'unit_system' => l10n.appSettings_unitsTitle,
+      'ui_scale' => l10n.settings_modSettingsDPIchange,
+      'ui_scale_apply_to_icons' => l10n.settings_modSettingsDPIchangeToIcons,
+      'enable_time_seconds' => l10n.appSettings_enableTimeSeconds,
+      'show_keyboard_hiding_button' => l10n.appSettings_showKeyboardHidingButton,
+      'jump_to_oldest_unread' => l10n.appSettings_jumpToOldestUnread,
+      'show_hops' => l10n.chat_showHops,
+      'show_channel_preview_sender' => l10n.settings_modSettingsShowChannelPreviewSender,
+      'channels_unread_sorting' => l10n.settings_modSettingsVisualChannelsUnreadSorting,
+      'monochrome_sender_names' => l10n.settings_modSettingsMonochromeSenderNames,
+      'show_last_hop_signal' => l10n.settings_modSettingsLastHopSignal,
+      'region_on_hops_line' => l10n.appSettings_regionOnHopsLine,
+      _ => change.key,
+    };
+    final value = switch ((change.key, change.value)) {
+      ('theme_mode', 'system') => l10n.appSettings_themeSystem,
+      ('theme_mode', 'dark') => l10n.appSettings_themeDark,
+      ('theme_mode', 'light') => l10n.appSettings_themeLight,
+      ('language_override', null) => l10n.appSettings_languageSystem,
+      ('unit_system', 'metric') => l10n.appSettings_unitsMetric,
+      ('unit_system', 'imperial') => l10n.appSettings_unitsImperial,
+      ('ui_scale', final double scale) => '${(scale * 100).round()}%',
+      (_, true) => l10n.backupAppSettings_enabled,
+      (_, false) => l10n.backupAppSettings_disabled,
+      (_, final value) => value.toString(),
+    };
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      subtitle: Text(value),
     );
   }
 
@@ -330,6 +418,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final l10n = context.l10n;
     final preview = _preview;
     final contactPreview = _contactPreview;
+    final settingsPreview = _settingsPreview;
+    final (title, intro) = switch (widget._section) {
+      _BackupSection.channels => (l10n.backupChannels_title, l10n.backupChannels_intro),
+      _BackupSection.contacts => (l10n.backupContacts_title, l10n.backupContacts_intro),
+      _BackupSection.appSettings => (l10n.backupAppSettings_title, l10n.backupAppSettings_scope),
+    };
     final contactAdds = [
       if (contactPreview != null)
         for (final decision in contactPreview.decisions)
@@ -349,16 +443,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return PopScope(
       canPop: !_applying,
       child: Scaffold(
-        appBar: AppBar(title: Text(widget._contactsOnly
-            ? l10n.backupContacts_title
-            : l10n.backupChannels_title)),
+        appBar: AppBar(title: Text(title)),
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(widget._contactsOnly
-                  ? l10n.backupContacts_intro
-                  : l10n.backupChannels_intro),
+              Text(intro),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _busy ? null : _chooseFile,
@@ -377,8 +467,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Semantics(liveRegion: true, child: Text(notice)),
                 )
-              else if (_hasSource && preview == null && contactPreview == null)
-                Text(widget._contactsOnly
+              else if (_hasSource &&
+                  widget._section != _BackupSection.appSettings &&
+                  preview == null &&
+                  contactPreview == null)
+                Text(widget._section == _BackupSection.contacts
                     ? l10n.backupContacts_waitForNode
                     : l10n.backupChannels_waitForNode),
               if (preview != null || contactPreview != null)
@@ -429,6 +522,19 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     child: Text(l10n.backupChannels_apply),
                   ),
               ],
+              if (settingsPreview != null)
+                if (settingsPreview.changes.isEmpty)
+                  Text(l10n.backupAppSettings_noChanges)
+                else ...[
+                  for (final change in settingsPreview.changes.entries)
+                    _settingsChange(change),
+                  FilledButton(
+                    onPressed: _busy
+                        ? null
+                        : () => _restoreAppSettings(settingsPreview),
+                    child: Text(l10n.backupChannels_apply),
+                  ),
+                ],
             ],
           ),
         ),

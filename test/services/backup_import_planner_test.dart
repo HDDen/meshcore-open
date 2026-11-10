@@ -7,7 +7,7 @@ import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/models/contact.dart';
-import 'package:meshcore_open/services/node_backup_snapshot.dart';
+import 'package:meshcore_open/services/backup_snapshot.dart';
 
 final _sourceKey = List.filled(32, 'ab').join();
 final _contactKey = List.filled(32, 'cd').join();
@@ -49,7 +49,7 @@ void main() {
   test('export captures one v1 channel section and round-trips without unread state',
       () async {
     final channel = _channel(2, 'Mesh channel', 7)..unreadCount = 9;
-    final snapshot = NodeBackupSnapshot(
+    final snapshot = BackupSnapshot(
       sourcePublicKey: _sourceKey.toUpperCase(),
       nodeName: r'Нода:/\*',
       channels: [channel],
@@ -91,7 +91,7 @@ void main() {
       lastModified: DateTime.utc(2026, 1, 3),
       hasMessages: true,
     );
-    final snapshot = NodeBackupSnapshot(
+    final snapshot = BackupSnapshot(
       sourcePublicKey: _sourceKey,
       nodeName: 'Source',
       channels: null,

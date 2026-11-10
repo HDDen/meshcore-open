@@ -172,6 +172,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выберите, какие списки подключённой ноды сохранить в резервную копию JSON.';
 
   @override
+  String get backupExport_createTitle => 'Создание резервной копии';
+
+  @override
+  String get backupExport_pickSections =>
+      'Выберите данные для резервной копии JSON.';
+
+  @override
   String get backupExport_contactsHint =>
       'Перед сохранением приложение перечитает полный список контактов с ноды.';
 
@@ -258,6 +265,48 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backupContacts_applyFailed =>
       'Не удалось завершить восстановление контактов. Обновите предпросмотр, чтобы проверить текущий список.';
+
+  @override
+  String get backupAppSettings_title => 'Восстановление настроек приложения';
+
+  @override
+  String get backupAppSettings_menu => 'Резервная копия настроек приложения';
+
+  @override
+  String get backupAppSettings_scope =>
+      'Язык, тема, масштаб и параметры отображения.';
+
+  @override
+  String get backupAppSettings_noSupported =>
+      'В копии нет поддерживаемых настроек приложения.';
+
+  @override
+  String get backupAppSettings_noChanges =>
+      'Эти настройки уже совпадают с резервной копией.';
+
+  @override
+  String backupAppSettings_confirm(int count) {
+    return 'Восстановить показанные настройки в текущем профиле приложения? Настроек к изменению: $count.';
+  }
+
+  @override
+  String backupAppSettings_applied(int count) {
+    return 'Восстановлено настроек: $count.';
+  }
+
+  @override
+  String get backupAppSettings_changed =>
+      'Настройки изменились. Обновите предпросмотр.';
+
+  @override
+  String get backupAppSettings_failed =>
+      'Не удалось восстановить настройки приложения.';
+
+  @override
+  String get backupAppSettings_enabled => 'Включено';
+
+  @override
+  String get backupAppSettings_disabled => 'Выключено';
 
   @override
   String get common_ok => 'OK';

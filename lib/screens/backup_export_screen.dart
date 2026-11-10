@@ -4,19 +4,28 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
-import '../services/node_backup_snapshot.dart';
+import '../models/app_settings_backup.dart';
+import '../services/app_settings_service.dart';
+import '../services/backup_snapshot.dart';
 import '../utils/backup_json_file.dart';
 import '../utils/share_origin.dart';
 
 Future<String> _encodeBackup(
-  ({NodeBackupSnapshot snapshot, String password}) input,
+  ({BackupSnapshot snapshot, String password}) input,
 ) => input.snapshot.encode(password: input.password);
 
 class BackupExportScreen extends StatefulWidget {
   const BackupExportScreen({
     super.key,
     this.saveFile = saveBackupJson,
-  });
+  }) : _settingsOnly = false;
+
+  const BackupExportScreen.appSettings({
+    super.key,
+    this.saveFile = saveBackupJson,
+  }) : _settingsOnly = true;
+
+  final bool _settingsOnly;
 
   final Future<BackupJsonSaveResult> Function(
     String contents,
@@ -30,21 +39,30 @@ class BackupExportScreen extends StatefulWidget {
 
 class _BackupExportScreenState extends State<BackupExportScreen> {
   bool _busy = false;
-  bool _includeChannels = true;
+  late bool _includeChannels = !widget._settingsOnly;
   bool _includeContacts = false;
+  late bool _includeSettings = widget._settingsOnly;
   String? _notice;
 
+  bool get _hasSelection => _includeChannels || _includeContacts || _includeSettings;
+
   Future<void> _createBackup() async {
-    if (_busy || (!_includeChannels && !_includeContacts)) return;
+    if (_busy || !_hasSelection) return;
     setState(() {
       _busy = true;
       _notice = null;
     });
     try {
-      final snapshot = await context.read<MeshCoreConnector>().snapshotNodeBackup(
-        includeChannels: _includeChannels,
-        includeContacts: _includeContacts,
-      );
+      final settings = _includeSettings
+          ? AppSettingsBackup.capture(context.read<AppSettingsService>().settings)
+          : null;
+      final snapshot = _includeChannels || _includeContacts
+          ? await context.read<MeshCoreConnector>().snapshotNodeBackup(
+              includeChannels: _includeChannels,
+              includeContacts: _includeContacts,
+              appSettings: settings,
+            )
+          : BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
       if (!mounted) return;
       if (snapshot == null) {
         setState(() => _notice = context.l10n.backupExport_notReady);
@@ -84,7 +102,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
     }
   }
 
-  Future<String?> _askPassword(NodeBackupSnapshot snapshot) {
+  Future<String?> _askPassword(BackupSnapshot snapshot) {
     var password = '';
     var confirmation = '';
     return showDialog<String>(
@@ -93,14 +111,16 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         builder: (context, setDialogState) {
           final l10n = context.l10n;
           return AlertDialog(
-            title: Text(l10n.backupExport_title),
+            title: Text(l10n.backupExport_createTitle),
             scrollable: true,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.backupChannels_target(snapshot.nodeName)),
-                const SizedBox(height: 8),
+                if (snapshot.nodeName case final name?) ...[
+                  Text(l10n.backupChannels_target(name)),
+                  const SizedBox(height: 8),
+                ],
                 Text(snapshot.channelCount > 0
                     ? l10n.backupChannels_exportPasswordHint
                     : l10n.backupExport_passwordHint),
@@ -151,34 +171,45 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.backupExport_title)),
+      appBar: AppBar(title: Text(l10n.backupExport_createTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(l10n.backupExport_intro),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.channels_title),
-              value: _includeChannels,
-              onChanged: _busy
-                  ? null
-                  : (value) => setState(() => _includeChannels = value ?? false),
-            ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.contacts_title),
-              subtitle: Text(l10n.backupExport_contactsHint),
-              value: _includeContacts,
-              onChanged: _busy
-                  ? null
-                  : (value) => setState(() => _includeContacts = value ?? false),
-            ),
+            Text(l10n.backupExport_pickSections),
+            if (widget._settingsOnly)
+              Text(l10n.backupAppSettings_scope)
+            else ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.channels_title),
+                value: _includeChannels,
+                onChanged: _busy
+                    ? null
+                    : (value) => setState(() => _includeChannels = value ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.contacts_title),
+                subtitle: Text(l10n.backupExport_contactsHint),
+                value: _includeContacts,
+                onChanged: _busy
+                    ? null
+                    : (value) => setState(() => _includeContacts = value ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.settings_appSettings),
+                subtitle: Text(l10n.backupAppSettings_scope),
+                value: _includeSettings,
+                onChanged: _busy
+                    ? null
+                    : (value) => setState(() => _includeSettings = value ?? false),
+              ),
+            ],
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _busy || (!_includeChannels && !_includeContacts)
-                  ? null
-                  : _createBackup,
+              onPressed: _busy || !_hasSelection ? null : _createBackup,
               icon: const Icon(Icons.save_outlined),
               label: Text(l10n.backupChannels_createBackup),
             ),

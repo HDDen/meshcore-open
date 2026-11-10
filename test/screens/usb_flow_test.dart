@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
+import 'package:meshcore_open/screens/backup_export_screen.dart';
+import 'package:meshcore_open/screens/backup_restore_screen.dart';
 import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/screens/usb_screen.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -209,6 +211,23 @@ void main() {
     if (!PlatformInfo.isWeb) {
       expect(find.byTooltip(l10n.connectionChoiceTcpLabel), findsOneWidget);
     }
+
+    final backup = find.byTooltip(l10n.backupAppSettings_menu);
+    await tester.tap(backup);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.backupExport_createTitle));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackupExportScreen), findsOneWidget);
+    expect(find.text(l10n.channels_title), findsNothing);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(backup);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.backupAppSettings_title));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackupRestoreScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 60));
