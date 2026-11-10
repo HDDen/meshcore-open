@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
+import '../helpers/backup_channel_restore.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import 'backup_file_codec.dart';
@@ -22,6 +23,18 @@ class BackupImportPlan {
   /// Null means that the file supplies no list. An empty list is explicit.
   final List<Contact>? contacts;
   final List<Channel>? channels;
+
+  /// Keeps the node's slot for an existing PSK and proposes the backup name.
+  List<BackupChannelDecision> resolveChannels({
+    required Iterable<Channel> destination,
+    required int capacity,
+    required Set<int> unconfirmedSlots,
+  }) => resolveBackupChannels(
+    channels ?? const [],
+    destination: destination,
+    capacity: capacity,
+    unconfirmedSlots: unconfirmedSlots,
+  );
 }
 
 class BackupImportPlanner {

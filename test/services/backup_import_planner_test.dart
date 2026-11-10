@@ -1,12 +1,21 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 
 final _sourceKey = List.filled(32, 'ab').join();
 final _contactKey = List.filled(32, 'cd').join();
 final _psk = List.filled(16, 'ef').join();
+
+Channel _channel(int index, String name, int key) => Channel(
+  index: index,
+  name: name,
+  psk: Uint8List.fromList(List.filled(16, key)),
+);
 
 Map<String, Object?> _officialContact(Object? path) => {
   'public_key': _contactKey,
@@ -199,5 +208,174 @@ void main() {
       ),
       throwsFormatException,
     );
+  });
+
+  group('destination channel plan', () {
+    test('a matching PSK takes the backup name in its current slot',
+        () async {
+      final plan = await planner.inspect(
+        jsonEncode({
+          'public_key': _sourceKey,
+          'channels': [
+            {'name': 'Old name', 'secret': _psk},
+          ],
+        }),
+        password: '',
+      );
+      final moved = _channel(2, 'Current name', 0xef)..unreadCount = 7;
+      final decision = plan.resolveChannels(
+        destination: [_channel(0, 'Other channel', 1), moved],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      ).single;
+
+      expect(decision.action, BackupChannelAction.rename);
+      expect(decision.source.index, 0);
+      expect(decision.destination!.index, 2);
+      expect(decision.destination!.name, 'Old name');
+      expect(decision.destination!.pskHex, _psk);
+      expect(decision.destination!.unreadCount, 7);
+      expect(moved.name, 'Current name');
+    });
+
+    test('matching name disambiguates live slots with the same PSK', () {
+      final decisions = resolveBackupChannels(
+        [_channel(0, 'main', 1)],
+        destination: [_channel(1, 'Other label', 1), _channel(3, 'Main', 1)],
+        capacity: 4,
+        unconfirmedSlots: const {},
+      );
+      expect(decisions.single.action, BackupChannelAction.rename);
+      expect(decisions.single.destination!.index, 3);
+      expect(decisions.single.destination!.name, 'main');
+    });
+
+    test('a matching PSK and exact name need no write', () {
+      final current = _channel(2, 'Current name', 1);
+      final decision = resolveBackupChannels(
+        [_channel(0, 'Current name', 1)],
+        destination: [current],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      ).single;
+      expect(decision.action, BackupChannelAction.alreadyPresent);
+      expect(decision.destination, same(current));
+    });
+
+    test('a rename cannot take the name of a different PSK', () {
+      final decision = resolveBackupChannels(
+        [_channel(0, 'Backup name', 1)],
+        destination: [
+          _channel(1, 'Current name', 1),
+          _channel(2, 'backup name', 2),
+        ],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      ).single;
+      expect(decision.action, BackupChannelAction.nameConflict);
+      expect(decision.destination, isNull);
+    });
+
+    test('a rename and an addition cannot claim the same name', () {
+      final decisions = resolveBackupChannels(
+        [_channel(0, 'Backup name', 1), _channel(1, 'backup name', 2)],
+        destination: [_channel(2, 'Current name', 1)],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      );
+      expect(decisions.map((decision) => decision.action), [
+        BackupChannelAction.nameConflict,
+        BackupChannelAction.nameConflict,
+      ]);
+    });
+
+    test('a rename needs a confirmed slot', () {
+      final decision = resolveBackupChannels(
+        [_channel(0, 'Backup name', 1)],
+        destination: [_channel(2, 'Current name', 1)],
+        capacity: 3,
+        unconfirmedSlots: {2},
+      ).single;
+      expect(decision.action, BackupChannelAction.unconfirmedSlot);
+      expect(decision.destination, isNull);
+    });
+
+    test('backup aliases propose at most one rename for a live slot', () {
+      final decisions = resolveBackupChannels(
+        [_channel(0, 'Backup name', 1), _channel(1, 'Other name', 1)],
+        destination: [_channel(2, 'Current name', 1)],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      );
+      expect(decisions.map((decision) => decision.action), [
+        BackupChannelAction.rename,
+        BackupChannelAction.duplicateInBackup,
+      ]);
+      expect(decisions.first.destination!.name, 'Backup name');
+      expect(decisions.last.destination, same(decisions.first.destination));
+    });
+
+    test('a different PSK with the same name is a conflict', () {
+      final decisions = resolveBackupChannels(
+        [_channel(0, 'same name', 1)],
+        destination: [_channel(2, 'Same Name', 2)],
+        capacity: 3,
+        unconfirmedSlots: const {},
+      );
+      expect(decisions.single.action, BackupChannelAction.nameConflict);
+      expect(decisions.single.destination, isNull);
+    });
+
+    test('new channels keep free original slots before using fallbacks', () {
+      final decisions = resolveBackupChannels(
+        [
+          _channel(0, 'Displaced', 1),
+          _channel(1, 'Still free', 2),
+          _channel(2, 'No room', 3),
+        ],
+        destination: [_channel(0, 'On node', 4)],
+        capacity: 4,
+        unconfirmedSlots: {2},
+      );
+      expect(decisions.map((decision) => decision.action), [
+        BackupChannelAction.add,
+        BackupChannelAction.add,
+        BackupChannelAction.noFreeSlot,
+      ]);
+      expect(
+        decisions.map((decision) => decision.destination?.index),
+        [3, 1, null],
+      );
+    });
+
+    test('backup aliases share one proposed addition', () {
+      final decisions = resolveBackupChannels(
+        [_channel(0, 'Original', 1), _channel(1, 'Alias', 1)],
+        destination: const [],
+        capacity: 2,
+        unconfirmedSlots: const {},
+      );
+      expect(decisions.map((decision) => decision.action), [
+        BackupChannelAction.add,
+        BackupChannelAction.duplicateInBackup,
+      ]);
+      expect(decisions.last.source.name, 'Alias');
+      expect(decisions.last.destination, same(decisions.first.destination));
+    });
+
+    test('an absent channel section plans no changes', () async {
+      final plan = await planner.inspect(
+        jsonEncode({'public_key': _sourceKey, 'contacts': []}),
+        password: '',
+      );
+      expect(
+        plan.resolveChannels(
+          destination: [_channel(0, 'On node', 1)],
+          capacity: 1,
+          unconfirmedSlots: const {},
+        ),
+        isEmpty,
+      );
+    });
   });
 }
