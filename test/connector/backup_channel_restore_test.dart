@@ -10,6 +10,7 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/contact_group.dart';
 import 'package:meshcore_open/models/message.dart';
@@ -19,6 +20,7 @@ import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
+import 'package:meshcore_open/storage/community_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
 import 'package:meshcore_open/storage/contact_group_store.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
@@ -390,6 +392,68 @@ void main() {
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
     expect(radio.contactReads, reads);
+    expect(radio.contactWrites, isEmpty);
+  });
+
+  test('communities restore by shared key and preserve the current node profile', () async {
+    Community community(String id, String name, int key, List<String> hashtags) =>
+        Community(
+          id: id,
+          name: name,
+          secret: Uint8List.fromList(List.filled(32, key)),
+          createdAt: DateTime.utc(2026),
+          hashtagChannels: hashtags,
+        );
+
+    final active = CommunityStore()..setPublicKeyHex = _node;
+    final other = CommunityStore()..setPublicKeyHex = 'bb' * 32;
+    final local = community('same-id', 'Local', 1, ['local']);
+    final otherProfile = community('other', 'Other profile', 8, []);
+    await active.saveCommunities([local]);
+    await other.saveCommunities([otherProfile]);
+    final contactReads = radio.contactReads;
+
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: false,
+      includeCommunities: true,
+    ))!;
+    expect(snapshot.containsCommunityKeys, isTrue);
+    final exported = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      communitiesOnly: true,
+    );
+    expect(exported.communities!.map((item) => item.toJson()), [local.toJson()]);
+
+    final imported = community('same-id', 'Imported', 2, ['weather']);
+    final incoming = [
+      community('old-id', 'Old name', 1, ['old']),
+      imported,
+      community('another-id', 'Duplicate', 2, []),
+    ];
+    final stale = (await radio.connector.previewBackupCommunities(incoming))!;
+    final concurrent = community('edited', 'Added after preview', 3, []);
+    await active.saveCommunities([local, concurrent]);
+    expect(await radio.connector.restoreBackupCommunities(stale), isNull);
+    expect(radio.connector.communitiesBackupRevision, 0);
+
+    final preview = (await radio.connector.previewBackupCommunities(incoming))!;
+    expect(preview.skipped, 2);
+    expect(preview.added.single.id, isNot(local.id));
+    expect(await radio.connector.restoreBackupCommunities(preview), 1);
+    expect(await radio.connector.restoreBackupCommunities(preview), isNull);
+    expect(radio.connector.communitiesBackupRevision, 1);
+    final saved = await active.loadCommunities();
+    expect(saved.map((item) => item.toJson()), [
+      local.toJson(),
+      concurrent.toJson(),
+      {...imported.toJson(), 'id': preview.added.single.id},
+    ]);
+    expect((await other.loadCommunities()).single.toJson(), otherProfile.toJson());
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    expect(radio.contactReads, contactReads);
     expect(radio.contactWrites, isEmpty);
   });
 

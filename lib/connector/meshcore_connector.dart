@@ -18,6 +18,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_interface.dart';
 
 import '../models/channel.dart';
+import '../models/community.dart';
 import '../models/channel_message.dart';
 import '../models/message_filter.dart';
 import '../models/companion_radio_stats.dart';
@@ -53,6 +54,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
@@ -141,6 +143,7 @@ import '../storage/channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
 import '../storage/contact_region_store.dart';
 import '../storage/channel_store.dart';
+import '../storage/community_store.dart';
 import '../storage/connection_transport_preference_store.dart';
 import '../storage/contact_location_estimate_store.dart';
 import '../storage/contact_discovery_store.dart';
@@ -12795,7 +12798,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (isCurrent()) notifyListeners();
   }
 
-  bool get _canUseContactGroupsBackup =>
+  bool get _canUseNodeLocalBackup =>
       !_disposed &&
       isConnected &&
       !isOfflineMode &&
@@ -12803,7 +12806,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       selfPublicKeyHex.length == pubKeySize * 2 &&
       _persistedStateLoadedKey == selfPublicKeyHex;
 
-  Object get _contactGroupsBackupSession => (
+  Object get _nodeLocalBackupSession => (
     this,
     _channelInboxRevision,
     selfPublicKeyHex,
@@ -12815,11 +12818,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<BackupContactGroupsPreview?> previewBackupContactGroups(
     List<ContactGroup> incoming,
   ) async {
-    if (!_canUseContactGroupsBackup) return null;
-    final session = _contactGroupsBackupSession;
+    if (!_canUseNodeLocalBackup) return null;
+    final session = _nodeLocalBackupSession;
     final store = ContactGroupStore()..setPublicKeyHex = selfPublicKeyHex;
     final snapshot = await store.snapshotForBackup();
-    if (!_canUseContactGroupsBackup || _contactGroupsBackupSession != session) {
+    if (!_canUseNodeLocalBackup || _nodeLocalBackupSession != session) {
       return null;
     }
     return BackupContactGroupsPreview(
@@ -12832,7 +12835,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<int?> restoreBackupContactGroups(BackupContactGroupsPreview preview) async {
     bool isCurrent() =>
-        _canUseContactGroupsBackup && _contactGroupsBackupSession == preview.session;
+        _canUseNodeLocalBackup && _nodeLocalBackupSession == preview.session;
     if (!isCurrent()) return null;
     if (preview.added.isEmpty) return 0;
     final store = ContactGroupStore()..setPublicKeyHex = selfPublicKeyHex;
@@ -12849,14 +12852,55 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return preview.added.length;
   }
 
-  /// Captures the selected lists. Channels use the confirmed inventory and
-  /// discovery uses the local profile. Only selecting contacts reads the radio.
+  int _communitiesBackupRevision = 0;
+  int get communitiesBackupRevision => _communitiesBackupRevision;
+
+  Future<BackupCommunitiesPreview?> previewBackupCommunities(
+    List<Community> incoming,
+  ) async {
+    if (!_canUseNodeLocalBackup) return null;
+    final session = _nodeLocalBackupSession;
+    final store = CommunityStore()..setPublicKeyHex = selfPublicKeyHex;
+    final snapshot = await store.snapshotForBackup();
+    if (!_canUseNodeLocalBackup || _nodeLocalBackupSession != session) {
+      return null;
+    }
+    return BackupCommunitiesPreview(
+      session: session,
+      expectedValue: snapshot.value,
+      current: snapshot.communities,
+      incoming: incoming,
+    );
+  }
+
+  Future<int?> restoreBackupCommunities(BackupCommunitiesPreview preview) async {
+    bool isCurrent() =>
+        _canUseNodeLocalBackup && _nodeLocalBackupSession == preview.session;
+    if (!isCurrent()) return null;
+    if (preview.added.isEmpty) return 0;
+    final store = CommunityStore()..setPublicKeyHex = selfPublicKeyHex;
+    final applied = await store.restoreBackupCommunities(
+      expected: preview.expectedValue,
+      communities: preview.communities,
+      stillCurrent: isCurrent,
+    );
+    if (!applied) return null;
+    if (!_disposed) {
+      _communitiesBackupRevision++;
+      notifyListeners();
+    }
+    return preview.added.length;
+  }
+
+  /// Captures the selected lists. Channels use the confirmed inventory.
+  /// Only selecting contacts reads the radio.
   Future<BackupSnapshot?> snapshotNodeBackup({
     required bool includeChannels,
     required bool includeContacts,
     AppSettingsBackup? appSettings,
     bool includeDiscoveredContacts = false,
     bool includeContactGroups = false,
+    bool includeCommunities = false,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
@@ -12866,15 +12910,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (!includeChannels ||
             (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
         (!includeContacts || _canPreviewContactBackup) &&
-        (!includeContactGroups || _canUseContactGroupsBackup) &&
-        (!includeDiscoveredContacts ||
-            (!_disposed && isConnected && !isOfflineMode && !isReviewMode &&
-                nodeKey.length == pubKeySize * 2 &&
-                _persistedStateLoadedKey == nodeKey)) &&
+        (!(includeContactGroups || includeCommunities || includeDiscoveredContacts) ||
+            _canUseNodeLocalBackup) &&
         selfPublicKeyHex == nodeKey &&
         _channelInboxRevision == revision;
     if ((!includeChannels && !includeContacts &&
-            !includeDiscoveredContacts && !includeContactGroups) ||
+            !includeDiscoveredContacts && !includeContactGroups &&
+            !includeCommunities) ||
         !canSnapshot()) {
       return null;
     }
@@ -12883,6 +12925,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : null;
     final contactGroups = includeContactGroups
         ? (await (ContactGroupStore()..setPublicKeyHex = nodeKey).snapshotForBackup()).groups
+        : null;
+    if (!canSnapshot()) return null;
+    final communities = includeCommunities
+        ? (await (CommunityStore()..setPublicKeyHex = nodeKey).snapshotForBackup())
+            .communities
         : null;
     if (!canSnapshot()) return null;
     final verified = includeContacts ? await _refreshBackupContacts() : null;
@@ -12896,6 +12943,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       appSettings: appSettings,
       discoveredContactsJson: discoveredJson,
       contactGroups: contactGroups,
+      communities: communities,
       createdAt: DateTime.now(),
     );
   }

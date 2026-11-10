@@ -88,6 +88,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   final CommunityPskIndex _communityIndex = CommunityPskIndex();
   final Set<String> _expandedChannelGroups = <String>{};
   List<Community> _communities = [];
+  int _loadedCommunitiesBackupRevision = 0;
   List<ChannelGroup> _channelGroups = [];
   List<String> _manualScreenOrder = [];
   String _loadedChannelGroupsForPublicKey = '';
@@ -223,9 +224,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   Future<void> _loadCommunities() async {
     final connector = context.read<MeshCoreConnector>();
-    _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    final nodeKey = connector.selfPublicKeyHex;
+    final revision = connector.communitiesBackupRevision;
+    _loadedCommunitiesBackupRevision = revision;
+    _communityStore.setPublicKeyHex = nodeKey;
     final communities = await _communityStore.loadCommunities();
-    if (mounted) {
+    if (mounted && connector.selfPublicKeyHex == nodeKey &&
+        connector.communitiesBackupRevision == revision) {
       setState(() {
         _communities = communities;
         _communityIndex.initialize(communities);
@@ -354,6 +359,14 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   @override
   Widget build(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
+    if (_loadedCommunitiesBackupRevision != connector.communitiesBackupRevision) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            _loadedCommunitiesBackupRevision != connector.communitiesBackupRevision) {
+          unawaited(_loadCommunities());
+        }
+      });
+    }
     final viewState = context.watch<UiViewStateService>();
     final settingsService = context.watch<AppSettingsService>();
     final appSettings = settingsService.settings;

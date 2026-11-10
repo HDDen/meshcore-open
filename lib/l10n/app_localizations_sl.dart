@@ -339,6 +339,45 @@ class AppLocalizationsSl extends AppLocalizations {
   String get backupContactGroups_failed => 'Could not restore contact groups.';
 
   @override
+  String get backupCommunities_label => 'Communities';
+
+  @override
+  String get backupCommunities_title => 'Restore communities';
+
+  @override
+  String get backupCommunities_intro =>
+      'Choose a MeshCore Open backup with communities to add to the connected node’s profile. Restore their radio channels separately.';
+
+  @override
+  String get backupCommunities_empty => 'This backup contains no communities.';
+
+  @override
+  String get backupCommunities_passwordHint =>
+      'This backup contains shared community keys. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
+
+  @override
+  String backupCommunities_summary(int count, int skipped) {
+    return 'To add: $count. Communities with matching keys skipped: $skipped.';
+  }
+
+  @override
+  String backupCommunities_confirm(String node, int count) {
+    return 'Add these communities to the profile for “$node”? Communities to add: $count.';
+  }
+
+  @override
+  String backupCommunities_applied(int count) {
+    return 'Communities added: $count.';
+  }
+
+  @override
+  String get backupCommunities_changed =>
+      'The node or its community list changed. Refresh the preview.';
+
+  @override
+  String get backupCommunities_failed => 'Could not restore communities.';
+
+  @override
   String get backupAppSettings_title => 'Restore app settings';
 
   @override

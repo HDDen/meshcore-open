@@ -627,6 +627,66 @@ abstract class AppLocalizations {
   /// **'Could not restore contact groups.'**
   String get backupContactGroups_failed;
 
+  /// No description provided for @backupCommunities_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities'**
+  String get backupCommunities_label;
+
+  /// No description provided for @backupCommunities_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore communities'**
+  String get backupCommunities_title;
+
+  /// No description provided for @backupCommunities_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup with communities to add to the connected node’s profile. Restore their radio channels separately.'**
+  String get backupCommunities_intro;
+
+  /// No description provided for @backupCommunities_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no communities.'**
+  String get backupCommunities_empty;
+
+  /// No description provided for @backupCommunities_passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains shared community keys. Set a password to encrypt the file or leave it empty for unencrypted JSON.'**
+  String get backupCommunities_passwordHint;
+
+  /// No description provided for @backupCommunities_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'To add: {count}. Communities with matching keys skipped: {skipped}.'**
+  String backupCommunities_summary(int count, int skipped);
+
+  /// No description provided for @backupCommunities_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add these communities to the profile for “{node}”? Communities to add: {count}.'**
+  String backupCommunities_confirm(String node, int count);
+
+  /// No description provided for @backupCommunities_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Communities added: {count}.'**
+  String backupCommunities_applied(int count);
+
+  /// No description provided for @backupCommunities_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or its community list changed. Refresh the preview.'**
+  String get backupCommunities_changed;
+
+  /// No description provided for @backupCommunities_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore communities.'**
+  String get backupCommunities_failed;
+
   /// No description provided for @backupAppSettings_title.
   ///
   /// In en, this message translates to:

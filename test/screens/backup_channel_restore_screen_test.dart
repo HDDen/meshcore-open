@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/helpers/backup_communities.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
@@ -15,6 +16,7 @@ import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/app_settings_backup.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/screens/backup_export_screen.dart';
 import 'package:meshcore_open/screens/backup_restore_screen.dart';
@@ -51,6 +53,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   int contactWrites = 0;
   int historyWrites = 0;
   int discoveryWrites = 0;
+  int communityWrites = 0;
   ({bool direct, bool channels})? historyExportSelection;
   BackupChannelRestorePreview? appliedPreview;
   BackupChannelRestoreResult result = (
@@ -68,6 +71,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
     AppSettingsBackup? appSettings,
     bool includeDiscoveredContacts = false,
     bool includeContactGroups = false,
+    bool includeCommunities = false,
   }) async => ready
       ? BackupSnapshot(
           sourcePublicKey: _key,
@@ -171,6 +175,22 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   }
 
   @override
+  Future<BackupCommunitiesPreview?> previewBackupCommunities(
+    List<Community> incoming,
+  ) async => BackupCommunitiesPreview(
+    session: this,
+    expectedValue: null,
+    current: const [],
+    incoming: incoming,
+  );
+
+  @override
+  Future<int?> restoreBackupCommunities(BackupCommunitiesPreview preview) async {
+    communityWrites++;
+    return preview.added.length;
+  }
+
+  @override
   Future<BackupSnapshot?> snapshotMessageHistoryBackup({
     required bool includeDirect,
     required bool includeChannels,
@@ -258,6 +278,67 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  for (final language in ['ru', 'en']) {
+    testWidgets('community restore requires confirmation ($language)', (tester) async {
+      final node = _Node();
+      addTearDown(node.dispose);
+      final contents = await BackupSnapshot(
+        sourcePublicKey: _key,
+        createdAt: DateTime.utc(2026),
+        communities: [
+          Community(
+            id: 'local-id',
+            name: 'Neighborhood mesh',
+            secret: Uint8List.fromList(List.filled(32, 7)),
+            createdAt: DateTime.utc(2026),
+          ),
+        ],
+      ).encode(password: '');
+      await tester.pumpWidget(
+        ChangeNotifierProvider<MeshCoreConnector>.value(
+          value: node,
+          child: MaterialApp(
+            locale: Locale(language),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: BackupRestoreScreen.communities(
+              pickFile: () async => XFile.fromData(
+                Uint8List.fromList(utf8.encode(contents)),
+                name: 'communities.json',
+              ),
+            ),
+          ),
+        ),
+      );
+      final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+      await _waitAfterTap(
+        tester,
+        find.text(l10n.backupChannels_choose),
+        find.text(l10n.backupCommunities_summary(1, 0)),
+      );
+      expect(find.text('Neighborhood mesh'), findsOneWidget);
+      expect(node.communityWrites, 0);
+
+      final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+      await tester.ensureVisible(restore);
+      await tester.pump();
+      await tester.tap(restore);
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.backupCommunities_confirm('Test node', 1)), findsOneWidget);
+      await tester.tap(find.text(l10n.common_cancel));
+      await tester.pumpAndSettle();
+      expect(node.communityWrites, 0);
+
+      await tester.tap(restore);
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: restore));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.backupCommunities_applied(1)), findsOneWidget);
+      expect(node.communityWrites, 1);
+      expect(node.writes, 0);
+    });
+  }
+
   testWidgets('discovery backup is applied only after confirmation',
       (tester) async {
     final node = _Node();
@@ -577,6 +658,8 @@ void main() {
       FilledButton,
       l10n.backupChannels_createBackup,
     );
+    await tester.ensureVisible(create);
+    await tester.pump();
     await tester.tap(create);
     await tester.pumpAndSettle();
     expect(find.text(l10n.backupExport_notReady), findsOneWidget);
@@ -591,8 +674,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(contents, isNull);
 
-    await tester.tap(find.widgetWithText(CheckboxListTile, l10n.contacts_title));
+    final contacts = find.widgetWithText(CheckboxListTile, l10n.contacts_title);
+    await tester.ensureVisible(contacts);
+    await tester.pump();
+    await tester.tap(contacts);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(create);
+    await tester.pump();
     await tester.tap(create);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));

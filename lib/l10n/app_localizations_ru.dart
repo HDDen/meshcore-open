@@ -340,6 +340,45 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить группы контактов.';
 
   @override
+  String get backupCommunities_label => 'Сообщества';
+
+  @override
+  String get backupCommunities_title => 'Восстановление сообществ';
+
+  @override
+  String get backupCommunities_intro =>
+      'Выберите копию MeshCore Open с сообществами. Они будут добавлены в профиль подключённой ноды. Каналы этих сообществ восстанавливаются отдельно.';
+
+  @override
+  String get backupCommunities_empty => 'В копии нет сообществ.';
+
+  @override
+  String get backupCommunities_passwordHint =>
+      'Копия содержит общие ключи сообществ. Укажите пароль для шифрования файла или оставьте поле пустым, чтобы сохранить JSON без шифрования.';
+
+  @override
+  String backupCommunities_summary(int count, int skipped) {
+    return 'К добавлению: $count. Пропущено сообществ с совпадающим ключом: $skipped.';
+  }
+
+  @override
+  String backupCommunities_confirm(String node, int count) {
+    return 'Добавить эти сообщества в профиль ноды «$node»? К добавлению: $count.';
+  }
+
+  @override
+  String backupCommunities_applied(int count) {
+    return 'Добавлено сообществ: $count.';
+  }
+
+  @override
+  String get backupCommunities_changed =>
+      'Нода или список сообществ изменились. Обновите предпросмотр.';
+
+  @override
+  String get backupCommunities_failed => 'Не удалось восстановить сообщества.';
+
+  @override
   String get backupAppSettings_title => 'Восстановление настроек приложения';
 
   @override

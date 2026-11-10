@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
+import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
 import 'backup_file_codec.dart';
@@ -22,6 +24,7 @@ class BackupImportPlan {
     this.messageHistory,
     this.discoveredContactsJson,
     this.contactGroups,
+    this.communities,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -35,6 +38,7 @@ class BackupImportPlan {
   final BackupMessageHistory? messageHistory;
   final String? discoveredContactsJson;
   final List<ContactGroup>? contactGroups;
+  final List<Community>? communities;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -59,6 +63,7 @@ class BackupImportPlanner {
     bool messageHistoryOnly = false,
     bool discoveredContactsOnly = false,
     bool contactGroupsOnly = false,
+    bool communitiesOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -72,6 +77,23 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (communitiesOnly) {
+      final rows = official ? null : _upstreamList(
+        payload,
+        'communities',
+        publicKey,
+        sectionName: 'channels',
+        preferencePrefix: 'communities_v1',
+      );
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        communities: rows == null ? null : readBackupCommunities(rows),
+      );
+    }
     if (contactGroupsOnly) {
       final rows = official ? null : _upstreamList(
         payload,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../connector/meshcore_protocol.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
+import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
 import 'backup_file_codec.dart';
@@ -15,12 +16,14 @@ class BackupSnapshot {
     Iterable<Channel>? channels,
     Iterable<Contact>? contacts,
     Iterable<ContactGroup>? contactGroups,
+    Iterable<Community>? communities,
     String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
     required DateTime createdAt,
   }) : sourcePublicKey =
            channels == null && contacts == null &&
-               contactGroups == null && discoveredContactsJson == null
+               contactGroups == null && discoveredContactsJson == null &&
+               communities == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
@@ -29,6 +32,14 @@ class BackupSnapshot {
        _sections = {
          if (channels != null) 'channels': _channelRows(channels),
          if (contacts != null) 'contacts': _contactRows(contacts),
+         if (communities != null)
+           'communities': [
+             for (final community in communities)
+               {
+                 ...community.toJson(),
+                 'hashtag_channels': List<String>.of(community.hashtagChannels),
+               },
+           ],
          if (contactGroups != null)
            'contactGroups': [
              for (final group in contactGroups)
@@ -82,6 +93,7 @@ class BackupSnapshot {
       _historyRows?.isEmpty ??
       (_appSettings == null && _sections.values.every((rows) => rows.isEmpty));
   int get channelCount => _sections['channels']?.length ?? 0;
+  bool get containsCommunityKeys => _sections['communities']?.isNotEmpty ?? false;
 
   String get fileName {
     final safeName = (nodeName ?? '').replaceAll(_invalidFileNameChars, '-').trim();
@@ -107,6 +119,7 @@ class BackupSnapshot {
     for (final entry in _sections.entries) {
       final (section, prefix) = switch (entry.key) {
         'contactGroups' => ('contacts', 'contact_groups'),
+        'communities' => ('channels', 'communities_v1'),
         'discoveredContacts' => ('discoveredContacts', 'discovered_contacts'),
         final name => (name, name),
       };

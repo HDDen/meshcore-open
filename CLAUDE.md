@@ -3106,6 +3106,11 @@ Contact groups share the v1 contacts section under the scoped
 group names to the target node's local group list and preserves full
 member keys. A compare-and-set in the SQLite transaction verifies the
 preview, and the open contacts screen reloads after a successful import.
+Community backups use `communities_v1<scope>` in the v1 channels section.
+Restore matches the shared community key and appends missing communities to
+the connected node's local store. The SQLite write checks the preview's
+session and stored value. The channels screen reloads its community index
+after success. Restoring radio channels is a separate action.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

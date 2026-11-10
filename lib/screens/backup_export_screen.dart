@@ -50,6 +50,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   late bool _includeChannels = widget._mode == _BackupExportMode.selected;
   bool _includeContacts = false;
   bool _includeContactGroups = false;
+  bool _includeCommunities = false;
   bool _includeDiscoveredContacts = false;
   late bool _includeSettings = widget._mode == _BackupExportMode.appSettings;
   bool _includeDirectHistory = true;
@@ -60,7 +61,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   bool get _hasSelection => _historyOnly
       ? _includeDirectHistory || _includeChannelHistory
       : _includeChannels || _includeContacts || _includeContactGroups ||
-          _includeDiscoveredContacts || _includeSettings;
+          _includeDiscoveredContacts || _includeSettings || _includeCommunities;
 
   Future<BackupSnapshot?> _capture() async {
     if (_historyOnly) {
@@ -73,13 +74,14 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         ? AppSettingsBackup.capture(context.read<AppSettingsService>().settings)
         : null;
     if (_includeChannels || _includeContacts ||
-        _includeContactGroups || _includeDiscoveredContacts) {
+        _includeContactGroups || _includeDiscoveredContacts || _includeCommunities) {
       return context.read<MeshCoreConnector>().snapshotNodeBackup(
         includeChannels: _includeChannels,
         includeContacts: _includeContacts,
         appSettings: settings,
         includeDiscoveredContacts: _includeDiscoveredContacts,
         includeContactGroups: _includeContactGroups,
+        includeCommunities: _includeCommunities,
       );
     }
     return BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
@@ -163,9 +165,11 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                   Text(l10n.backupChannels_target(name)),
                   const SizedBox(height: 8),
                 ],
-                Text(snapshot.channelCount > 0
-                    ? l10n.backupChannels_exportPasswordHint
-                    : l10n.backupExport_passwordHint),
+                Text(snapshot.containsCommunityKeys
+                    ? l10n.backupCommunities_passwordHint
+                    : snapshot.channelCount > 0
+                        ? l10n.backupChannels_exportPasswordHint
+                        : l10n.backupExport_passwordHint),
                 TextField(
                   obscureText: true,
                   autocorrect: false,
@@ -276,6 +280,14 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                 value: _includeDiscoveredContacts,
                 onChanged: _busy ? null : (value) => setState(
                   () => _includeDiscoveredContacts = value ?? false,
+                ),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.backupCommunities_label),
+                value: _includeCommunities,
+                onChanged: _busy ? null : (value) => setState(
+                  () => _includeCommunities = value ?? false,
                 ),
               ),
               CheckboxListTile(

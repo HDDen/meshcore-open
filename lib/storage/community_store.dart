@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import '../helpers/backup_communities.dart';
 import '../models/community.dart';
 import '../utils/app_logger.dart';
+import 'message_history_storage.dart';
 import 'node_state.dart';
+import 'prefs_manager.dart';
 
 /// Persists communities per node: a `node_state` row named `communities`
 /// holding one JSON array, or the preference key `communities_v1<node>`
@@ -19,6 +22,54 @@ class CommunityStore {
       publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
+
+  Future<({String? value, List<Community> communities})> snapshotForBackup() async {
+    final value = NodeState.usesDatabase
+        ? await NodeState.read(
+            nodeKey: publicKeyHex,
+            name: _stateName,
+            preferenceKey: keyFor,
+          )
+        : _readBackupPreference();
+    if (value == null || value.isEmpty) {
+      return (value: value, communities: const <Community>[]);
+    }
+    Object? rows;
+    try {
+      rows = jsonDecode(value);
+    } on FormatException {
+      throw const FormatException('Invalid stored communities');
+    }
+    if (rows is! List<Object?>) {
+      throw const FormatException('Invalid stored communities');
+    }
+    return (value: value, communities: readBackupCommunities(rows));
+  }
+
+  String? _readBackupPreference() {
+    final prefs = PrefsManager.instance;
+    final value = prefs.getString(keyFor);
+    return value == null || value.isEmpty ? prefs.getString(_keyPrefix) : value;
+  }
+
+  Future<bool> restoreBackupCommunities({
+    required String? expected,
+    required List<Community> communities,
+    required bool Function() stillCurrent,
+  }) async {
+    final value = jsonEncode([for (final community in communities) community.toJson()]);
+    if (NodeState.usesDatabase) {
+      return MessageHistoryStorage.instance.replaceNodeStateIfUnchanged(
+        nodeKey: publicKeyHex,
+        name: _stateName,
+        expected: expected,
+        value: value,
+        stillCurrent: stillCurrent,
+      );
+    }
+    if (_readBackupPreference() != expected || !stillCurrent()) return false;
+    return PrefsManager.instance.setString(keyFor, value);
+  }
 
   /// Load all communities from storage
   Future<List<Community>> loadCommunities() async {
