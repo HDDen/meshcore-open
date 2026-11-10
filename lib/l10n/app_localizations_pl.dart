@@ -164,6 +164,69 @@ class AppLocalizationsPl extends AppLocalizations {
       'Could not save the channel backup.';
 
   @override
+  String get backupContacts_title => 'Restore contacts';
+
+  @override
+  String get backupContacts_intro =>
+      'Choose a MeshCore backup to preview contacts that can be added to the connected node.';
+
+  @override
+  String get backupContacts_noContacts =>
+      'This backup contains no contacts to restore.';
+
+  @override
+  String get backupContacts_waitForNode =>
+      'Connect to the node, wait for contact sync, then refresh the preview.';
+
+  @override
+  String backupContacts_summary(int add, int existing, int noRoom) {
+    return 'To add: $add. Already on the node: $existing. No space: $noRoom.';
+  }
+
+  @override
+  String backupContacts_skipped(int count) {
+    return 'Skipped the node’s own key or unsupported contact types: $count.';
+  }
+
+  @override
+  String get backupContacts_floodFallback =>
+      'Contacts with routes from another node or an unsupported hash width will start in Flood mode.';
+
+  @override
+  String backupContacts_confirm(String node, int count) {
+    return 'Add contacts to “$node”? Contacts to write: $count.';
+  }
+
+  @override
+  String backupContacts_applied(int count) {
+    return 'Contacts added and verified: $count.';
+  }
+
+  @override
+  String backupContacts_changed(int count) {
+    return 'The node or contact list changed. Writes confirmed: $count. Refresh the preview.';
+  }
+
+  @override
+  String backupContacts_overwriteUnsafe(int count) {
+    return 'The node must confirm that overwriting old contacts is off. Writes confirmed: $count.';
+  }
+
+  @override
+  String backupContacts_unconfirmed(int count) {
+    return 'Restore stopped after a command failed or went unanswered. Writes confirmed: $count. Refresh the preview.';
+  }
+
+  @override
+  String backupContacts_syncFailed(int count) {
+    return 'Could not verify the contact list. Writes confirmed: $count. Sync the contacts and refresh the preview.';
+  }
+
+  @override
+  String get backupContacts_applyFailed =>
+      'Could not finish restoring contacts. Refresh the preview to check the current contact list.';
+
+  @override
   String get common_ok => 'Dobrze';
 
   @override

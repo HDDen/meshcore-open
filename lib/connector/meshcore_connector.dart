@@ -52,6 +52,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_contact_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/channel_deletion_snapshot.dart';
 import '../helpers/contact_history_candidates.dart';
@@ -632,6 +633,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _maxContacts = _defaultMaxContacts;
   int _maxChannels = _defaultMaxChannels;
   int? _contactSyncTotal;
+  BackupContactInventoryRead? _backupContactRead;
+  bool _restoringBackupContacts = false;
+  int _autoAddConfigRevision = 0;
   int _contactSyncReceived = 0;
   bool _contactSyncUsesSinceFilter = false;
 
@@ -7433,6 +7437,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    _finishBackupContactRead(null);
     _loadedChannelCapacity = null;
     _finishBackupChannelSync(false);
     _pendingRawAdvert = null;
@@ -8647,6 +8652,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _contactSyncTimeout = null;
       _isLoadingContacts = false;
       _hasLoadedContacts = true;
+      _finishBackupContactRead(null);
       _preserveContactsOnRefresh = false;
       _contactSyncUsesSinceFilter = false;
       _contactsUnconfirmedBySync = null;
@@ -11681,6 +11687,208 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return true;
   }
 
+  bool get _canPreviewContactBackup =>
+      !_disposed &&
+      isConnected &&
+      !isOfflineMode &&
+      !isReviewMode &&
+      selfPublicKeyHex.length == pubKeySize * 2 &&
+      _hasCompletedSelfInfoHandshake &&
+      _persistedStateLoadedKey == selfPublicKeyHex &&
+      _hasLoadedContacts &&
+      !_isLoadingContacts &&
+      _backupContactRead == null;
+
+  BackupContactRestorePreview? previewBackupContactRestore({
+    required String? sourcePublicKey,
+    required Iterable<Contact> contacts,
+  }) {
+    if (!_canPreviewContactBackup ||
+        _restoringBackupContacts ||
+        _restoringBackupChannels) {
+      return null;
+    }
+    return BackupContactRestorePreview(
+      nodeKey: selfPublicKeyHex,
+      session: (this, _channelInboxRevision),
+      capacity: maxContacts,
+      supportsWidePaths: supportsPathHashMode,
+      currentKeys: _knownContactKeys,
+      sourcePublicKey: sourcePublicKey,
+      contacts: contacts,
+    );
+  }
+
+  /// Adds missing keys from an approved preview. The radio remains the
+  /// source of truth for the contact cache after a complete readback.
+  Future<BackupContactRestoreResult> restoreBackupContacts(
+    BackupContactRestorePreview preview,
+  ) async {
+    final confirmed = <String>{};
+    BackupContactRestoreResult result(BackupContactRestoreStatus status) =>
+        (confirmed: confirmed.length, status: status);
+    bool sameSession() =>
+        !_disposed &&
+        isConnected &&
+        !isOfflineMode &&
+        !isReviewMode &&
+        selfPublicKeyHex == preview.nodeKey &&
+        preview.session == (this, _channelInboxRevision);
+    bool sameInventory() =>
+        sameSession() &&
+        _canPreviewContactBackup &&
+        supportsPathHashMode == preview.supportsWidePaths &&
+        preview.matchesInventory(
+          _knownContactKeys.where((key) => !confirmed.contains(key)),
+          maxContacts,
+        );
+
+    if (_restoringBackupContacts ||
+        _restoringBackupChannels ||
+        !sameInventory()) {
+      return result(BackupContactRestoreStatus.destinationChanged);
+    }
+    final targets = [
+      for (final decision in preview.decisions)
+        if (decision.action == BackupContactAction.add) decision.contact,
+    ];
+    if (targets.isEmpty) return result(BackupContactRestoreStatus.completed);
+    if (!supportsAutoAddConfig) {
+      return result(BackupContactRestoreStatus.overwriteUnsafe);
+    }
+
+    Future<void> checkedSend(Uint8List frame, {bool checkOverwrite = true}) async {
+      var dispatched = false;
+      await _dispatchFrame(
+        frame,
+        waitForGenericAck: true,
+        beforeSend: () {
+          if (!sameInventory() || (checkOverwrite && _overwriteOldest)) {
+            throw StateError('Backup contact inventory changed');
+          }
+          dispatched = true;
+        },
+      );
+      if (!dispatched) throw StateError('Backup command was not sent');
+    }
+
+    _restoringBackupContacts = true;
+    try {
+      final before = await _refreshBackupContacts();
+      if (!sameSession()) return result(BackupContactRestoreStatus.destinationChanged);
+      if (before == null) return result(BackupContactRestoreStatus.syncFailed);
+      if (!sameInventory() || !preview.matchesInventory(before, maxContacts)) {
+        return result(BackupContactRestoreStatus.destinationChanged);
+      }
+
+      final configRevision = _autoAddConfigRevision;
+      try {
+        await checkedSend(buildGetAutoAddFlagsFrame(), checkOverwrite: false);
+      } catch (_) {
+        return result(sameInventory()
+            ? BackupContactRestoreStatus.overwriteUnsafe
+            : BackupContactRestoreStatus.destinationChanged);
+      }
+      if (!sameInventory()) return result(BackupContactRestoreStatus.destinationChanged);
+      if (_autoAddConfigRevision == configRevision || _overwriteOldest) {
+        return result(BackupContactRestoreStatus.overwriteUnsafe);
+      }
+
+      var status = BackupContactRestoreStatus.completed;
+      for (final contact in targets) {
+        try {
+          // Avoid replacing a contact the radio learned after the full read.
+          try {
+            await checkedSend(buildGetContactByKeyFrame(contact.publicKey));
+            status = BackupContactRestoreStatus.destinationChanged;
+            break;
+          } on CommandFailedException catch (error) {
+            if (error.errCode != errCodeNotFound) rethrow;
+          }
+          final pathLength = contact.pathLength < 0
+              ? 0xff
+              : _encodePathLenForWidth(
+                  contact.pathLength,
+                  contact.path,
+                  contact.pathHashWidth,
+                );
+          if (pathLength == null) {
+            throw const FormatException('Invalid backup contact path');
+          }
+          await checkedSend(buildUpdateContactPathFrame(
+            contact.publicKey,
+            contact.path,
+            pathLength,
+            type: contact.type,
+            flags: contact.flags,
+            name: contact.name,
+            lat: contact.latitude,
+            lon: contact.longitude,
+            lastAdvert: contact.lastSeen,
+          ));
+          confirmed.add(contact.publicKeyHex);
+        } catch (_) {
+          status = !sameInventory()
+              ? BackupContactRestoreStatus.destinationChanged
+              : _overwriteOldest
+              ? BackupContactRestoreStatus.overwriteUnsafe
+              : BackupContactRestoreStatus.writeUnconfirmed;
+          break;
+        }
+      }
+
+      if (!sameSession()) return result(BackupContactRestoreStatus.destinationChanged);
+      final after = await _refreshBackupContacts();
+      if (!sameSession()) return result(BackupContactRestoreStatus.destinationChanged);
+      if (status == BackupContactRestoreStatus.completed &&
+          (after == null ||
+              !after.containsAll(confirmed) ||
+              !preview.matchesInventory(after.difference(confirmed), maxContacts))) {
+        status = BackupContactRestoreStatus.syncFailed;
+      }
+      return result(status);
+    } finally {
+      _restoringBackupContacts = false;
+    }
+  }
+
+  Future<Set<String>?> _refreshBackupContacts() async {
+    if (_isLoadingContacts || _backupContactRead != null) return null;
+    final read = BackupContactInventoryRead();
+    _backupContactRead = read;
+    try {
+      return await getContacts(preserveExisting: true)
+          .then((_) => read.done.future)
+          .timeout(const Duration(seconds: 30), onTimeout: () => null);
+    } catch (_) {
+      if (identical(_backupContactRead, read)) _finishBackupContactRead(null);
+      return null;
+    } finally {
+      if (identical(_backupContactRead, read) && !_isLoadingContacts) {
+        _finishBackupContactRead(null);
+      }
+    }
+  }
+
+  Future<void> _completeBackupContactRead(
+    BackupContactInventoryRead read,
+    Set<String>? keys,
+    Future<void> persisted,
+  ) async {
+    try {
+      await persisted;
+    } catch (_) {
+      keys = null;
+    }
+    if (identical(_backupContactRead, read)) _finishBackupContactRead(keys);
+  }
+
+  void _finishBackupContactRead(Set<String>? keys) {
+    final read = _backupContactRead;
+    _backupContactRead = null;
+    read?.done.complete(keys);
+  }
+
   Future<void> addOrUpdateSharedContact({
     required Uint8List publicKey,
     required int type,
@@ -12467,6 +12675,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         preview.matchesInventory(_channels, _loadedChannelCapacity);
 
     if (_restoringBackupChannels ||
+        _restoringBackupContacts ||
         _channelEditsInProgress != 0 ||
         !sameInventory()) {
       return destinationChanged();
@@ -12810,6 +13019,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         } else {
           _contactSyncTotal = null;
         }
+        _backupContactRead?.start(
+          frame.length >= 5 && !_contactSyncUsesSinceFilter
+              ? _contactSyncTotal
+              : null,
+        );
         notifyListeners();
         break;
       case pushCodeAdvert:
@@ -12863,6 +13077,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         final contactWork = _contactSyncWork.current;
         _contactSyncTimeout?.cancel();
         _contactSyncTimeout = null;
+        final backupRead = _backupContactRead;
+        final verifiedKeys = backupRead?.verifiedKeys;
+        if (backupRead != null && verifiedKeys == null) {
+          // A partial backup preflight is not evidence that contacts vanished.
+          _contactsUnconfirmedBySync = null;
+        }
         _dropContactsMissingFromNode();
         _telemetryFixesDuringSync.clear();
         _isLoadingContacts = false;
@@ -12881,7 +13101,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         unawaited(updateKnownDiscovered());
         notifyListeners();
         unawaited(_refreshContactMessageSummaries());
-        unawaited(_persistContacts());
+        final persisted = _persistContacts();
+        if (backupRead == null) {
+          unawaited(persisted);
+        } else {
+          unawaited(_completeBackupContactRead(backupRead, verifiedKeys, persisted));
+        }
         unawaited(_flushDeferredChannelMessageSends());
         if (PlatformInfo.isWeb &&
             _activeTransport == MeshCoreTransportType.bluetooth &&
@@ -13969,6 +14194,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final isContactSync = countTowardSync && _isLoadingContacts;
       if (isContactSync) {
         _contactSyncReceived++;
+        _backupContactRead?.add(contactTmp.publicKeyHex);
       }
       if (listEquals(contactTmp.publicKey, _selfPublicKey)) {
         appLogger.info(
@@ -13976,14 +14202,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           tag: 'Connector',
         );
         notifyListeners();
-        unawaited(
-          removeContact(contactTmp).catchError(
-            (e) => appLogger.warn(
-              'Failed to remove self contact: $e',
-              tag: 'Connector',
+        if (_backupContactRead == null) {
+          unawaited(
+            removeContact(contactTmp).catchError(
+              (e) => appLogger.warn(
+                'Failed to remove self contact: $e',
+                tag: 'Connector',
+              ),
             ),
-          ),
-        );
+          );
+        }
         return;
       }
       final heldFix = _telemetryFixesDuringSync.remove(contactTmp.publicKeyHex);
@@ -20184,6 +20412,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelKeyHashCache.clear();
     _disposed = true;
     _finishBackupChannelSync(false);
+    _finishBackupContactRead(null);
     _cancelChannelHopControls();
     _selfInfoWork.finishCurrent();
     MessageHistoryStorage.instance.detachBackgroundWorkTracker(_backgroundWork);
@@ -20828,6 +21057,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _autoAddRoomServers = (flags & autoAddRoomServerFlag) != 0;
       _autoAddSensors = (flags & autoAddSensorFlag) != 0;
       _overwriteOldest = (flags & autoAddOverwriteOldestFlag) != 0;
+      _autoAddConfigRevision++;
       _autoAddMaxHops = frame.length > 2 ? frame[2] : null;
     } catch (e) {
       appLogger.error('Failed to parse auto-add config: $e', tag: 'Connector');

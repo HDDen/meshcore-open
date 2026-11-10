@@ -29,7 +29,7 @@ import '../widgets/settings_nav_tile_content.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
 import 'backup_channel_export_screen.dart';
-import 'backup_channel_restore_screen.dart';
+import 'backup_restore_screen.dart';
 import 'ble_debug_log_screen.dart';
 import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
@@ -185,13 +185,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const BackupChannelRestoreScreen(),
+                      builder: (_) => const BackupRestoreScreen.channels(),
                     ),
                   ),
                   child: _buildNavTileContent(
                     context,
                     icon: Icons.restore,
                     title: l10n.backupChannels_title,
+                  ),
+                ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BackupRestoreScreen.contacts(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.person_add_alt_1_outlined,
+                    title: l10n.backupContacts_title,
                   ),
                 ),
 

@@ -6,15 +6,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/review_mode/review_frames.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
+import 'package:meshcore_open/storage/contact_store.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
+import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +32,26 @@ Channel _channel(int index, String name, int key) => Channel(
   name: name,
   psk: Uint8List.fromList(List.filled(16, key)),
 );
+
+Contact _contact(int key, String name, {int pathLength = 1}) => Contact(
+  publicKey: Uint8List.fromList(List.filled(32, key)),
+  name: name,
+  type: advTypeChat,
+  pathLength: pathLength,
+  path: Uint8List.fromList(pathLength < 0 ? [] : [0x77]),
+  lastSeen: DateTime.utc(2026),
+);
+
+Uint8List _contactFrame(Contact contact) => buildUpdateContactPathFrame(
+  contact.publicKey,
+  contact.path,
+  contact.pathLength,
+  type: contact.type,
+  flags: contact.flags,
+  name: contact.name,
+  lastAdvert: contact.lastSeen,
+  lastModified: contact.lastSeen,
+)..[0] = respCodeContact;
 
 class _NoPreferencesDirectory extends PathProviderPlatform {
   @override
@@ -51,6 +76,15 @@ class _Radio {
   };
   final reads = <int>[];
   final writes = <Channel>[];
+  final contacts = {
+    _contact(0x81, 'Current contact').publicKeyHex:
+        _contact(0x81, 'Current contact'),
+  };
+  final contactWrites = <Contact>[];
+  bool overwriteOldest = false;
+  bool incompleteContactList = false;
+  Contact? newlyLearnedContact;
+  String? rejectedContactKey;
   final firstWrite = Completer<Channel>();
   bool holdFirstReply = false;
   bool ignoreAcceptedWrites = false;
@@ -82,6 +116,12 @@ class _Radio {
     }
   }
 
+  Future<void> syncContacts() async {
+    await connector.getContacts(preserveExisting: true);
+    expect(connector.hasLoadedContacts, isTrue);
+    expect(connector.isLoadingContacts, isFalse);
+  }
+
   void acknowledge(Channel channel) {
     if (!ignoreAcceptedWrites) slots[channel.index] = channel;
     connector.handleFrameForTest(ReviewFrames.ok());
@@ -90,7 +130,7 @@ class _Radio {
   Future<void> _write(Uint8List frame) async {
     switch (frame.first) {
       case cmdDeviceQuery:
-        connector.handleFrameForTest([respCodeDeviceInfo, 1, 16, 4]);
+        connector.handleFrameForTest([respCodeDeviceInfo, 8, 16, 4]);
       case cmdAppStart:
         connector.handleFrameForTest(ReviewFrames.selfInfo(
           publicKey: _publicKey,
@@ -108,6 +148,37 @@ class _Radio {
         connector.handleFrameForTest([respCodeBattAndStorage, 0x10, 0x0e]);
       case cmdGetCustomVar:
         connector.handleFrameForTest([respCodeCustomVars, 0]);
+      case cmdGetAutoAddConfig:
+        connector.handleFrameForTest([
+          respCodeAutoAddConfig,
+          if (overwriteOldest) autoAddOverwriteOldestFlag else 0,
+        ]);
+      case cmdGetContacts:
+        connector.handleFrameForTest(ReviewFrames.contactsStart(
+          contacts.length + (incompleteContactList ? 1 : 0),
+        ));
+        for (final contact in contacts.values) {
+          connector.handleFrameForTest(_contactFrame(contact));
+        }
+        connector.handleFrameForTest([respCodeEndOfContacts, 0, 0, 0, 0]);
+      case cmdGetContactByKey:
+        final key = pubKeyToHex(frame.sublist(1, 1 + pubKeySize));
+        final learned = newlyLearnedContact;
+        if (learned?.publicKeyHex == key) contacts[key] = learned!;
+        final contact = contacts[key];
+        connector.handleFrameForTest(
+          contact == null ? ReviewFrames.err(errCodeNotFound) : _contactFrame(contact),
+        );
+      case cmdAddUpdateContact:
+        final response = Uint8List.fromList(frame)..[0] = respCodeContact;
+        final contact = Contact.fromFrame(response)!;
+        contactWrites.add(contact);
+        if (contact.publicKeyHex == rejectedContactKey) {
+          connector.handleFrameForTest(ReviewFrames.err(errCodeTableFull));
+        } else {
+          contacts[contact.publicKeyHex] = contact;
+          connector.handleFrameForTest(ReviewFrames.ok());
+        }
       case cmdGetChannel:
         final index = frame[1];
         reads.add(index);
@@ -189,6 +260,100 @@ void main() {
     expect(radio.writes, isEmpty);
     radio.connector.resetSyncProgressForTest();
     expect(radio.connector.snapshotChannelBackup(), isNull);
+  });
+
+  group('contact backup restore', () {
+    test('keeps existing keys and saves only the confirmed new contact', () async {
+      await radio.syncContacts();
+      final current = _contact(0x81, 'Different name in the backup');
+      final added = _contact(0x82, 'New contact');
+      final history = MessageStore()..setPublicKeyHex = _node;
+      await history.saveMessages(current.publicKeyHex, [
+        Message(
+          senderKey: current.publicKey,
+          text: 'Existing conversation',
+          timestamp: DateTime.utc(2026),
+          isOutgoing: false,
+        ),
+      ]);
+      final preview = radio.connector.previewBackupContactRestore(
+        sourcePublicKey: List.filled(32, 'be').join(),
+        contacts: [current, added],
+      )!;
+      expect(preview.decisions.map((decision) => decision.action), [
+        BackupContactAction.alreadyPresent,
+        BackupContactAction.add,
+      ]);
+      expect(preview.decisions.last.usesFloodFallback, isTrue);
+      expect(
+        await radio.connector.restoreBackupContacts(preview),
+        (confirmed: 1, status: BackupContactRestoreStatus.completed),
+      );
+      expect(radio.contactWrites.single.publicKeyHex, added.publicKeyHex);
+      expect(radio.contactWrites.single.pathLength, -1);
+      final cached = await (ContactStore()..setPublicKeyHex = _node).loadContacts();
+      expect(cached.map((contact) => contact.name),
+          unorderedEquals(['Current contact', 'New contact']));
+      expect((await history.loadMessages(current.publicKeyHex)).single.text,
+          'Existing conversation');
+    });
+
+    test('rejects overwrite-oldest and incomplete reads before any write', () async {
+      await radio.syncContacts();
+      final preview = radio.connector.previewBackupContactRestore(
+        sourcePublicKey: _node,
+        contacts: [_contact(0x82, 'New')],
+      )!;
+      radio.overwriteOldest = true;
+      expect(
+        await radio.connector.restoreBackupContacts(preview),
+        (confirmed: 0, status: BackupContactRestoreStatus.overwriteUnsafe),
+      );
+      radio.overwriteOldest = false;
+      radio.incompleteContactList = true;
+      expect(
+        await radio.connector.restoreBackupContacts(preview),
+        (confirmed: 0, status: BackupContactRestoreStatus.syncFailed),
+      );
+      expect(radio.contactWrites, isEmpty);
+      final cached = await (ContactStore()..setPublicKeyHex = _node).loadContacts();
+      expect(cached.single.name, 'Current contact');
+    });
+
+    test('a key learned after preflight is never updated by restore', () async {
+      await radio.syncContacts();
+      final preview = radio.connector.previewBackupContactRestore(
+        sourcePublicKey: _node,
+        contacts: [_contact(0x82, 'From backup')],
+      )!;
+      radio.newlyLearnedContact = _contact(0x82, 'Just learned');
+      expect(
+        await radio.connector.restoreBackupContacts(preview),
+        (confirmed: 0, status: BackupContactRestoreStatus.destinationChanged),
+      );
+      expect(radio.contactWrites, isEmpty);
+      expect(radio.contacts[radio.newlyLearnedContact!.publicKeyHex]!.name,
+          'Just learned');
+    });
+
+    test('a rejection stops later writes and persists the accepted prefix', () async {
+      await radio.syncContacts();
+      final rejected = _contact(0x83, 'Rejected');
+      final preview = radio.connector.previewBackupContactRestore(
+        sourcePublicKey: _node,
+        contacts: [_contact(0x82, 'Added'), rejected, _contact(0x84, 'Later')],
+      )!;
+      radio.rejectedContactKey = rejected.publicKeyHex;
+      expect(
+        await radio.connector.restoreBackupContacts(preview),
+        (confirmed: 1, status: BackupContactRestoreStatus.writeUnconfirmed),
+      );
+      expect(radio.contactWrites.map((contact) => contact.name), ['Added', 'Rejected']);
+      expect(radio.contactWrites.first.path, [0x77]);
+      final cached = await (ContactStore()..setPublicKeyHex = _node).loadContacts();
+      expect(cached.map((contact) => contact.name),
+          unorderedEquals(['Current contact', 'Added']));
+    });
   });
 
   test('confirmed rename keeps slot, history and the other node cache', () async {

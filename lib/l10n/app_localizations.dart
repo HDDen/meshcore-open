@@ -370,6 +370,90 @@ abstract class AppLocalizations {
   /// **'Could not save the channel backup.'**
   String get backupChannels_exportFailed;
 
+  /// No description provided for @backupContacts_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore contacts'**
+  String get backupContacts_title;
+
+  /// No description provided for @backupContacts_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore backup to preview contacts that can be added to the connected node.'**
+  String get backupContacts_intro;
+
+  /// No description provided for @backupContacts_noContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no contacts to restore.'**
+  String get backupContacts_noContacts;
+
+  /// No description provided for @backupContacts_waitForNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the node, wait for contact sync, then refresh the preview.'**
+  String get backupContacts_waitForNode;
+
+  /// No description provided for @backupContacts_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'To add: {add}. Already on the node: {existing}. No space: {noRoom}.'**
+  String backupContacts_summary(int add, int existing, int noRoom);
+
+  /// No description provided for @backupContacts_skipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped the node’s own key or unsupported contact types: {count}.'**
+  String backupContacts_skipped(int count);
+
+  /// No description provided for @backupContacts_floodFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts with routes from another node or an unsupported hash width will start in Flood mode.'**
+  String get backupContacts_floodFallback;
+
+  /// No description provided for @backupContacts_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contacts to “{node}”? Contacts to write: {count}.'**
+  String backupContacts_confirm(String node, int count);
+
+  /// No description provided for @backupContacts_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts added and verified: {count}.'**
+  String backupContacts_applied(int count);
+
+  /// No description provided for @backupContacts_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or contact list changed. Writes confirmed: {count}. Refresh the preview.'**
+  String backupContacts_changed(int count);
+
+  /// No description provided for @backupContacts_overwriteUnsafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The node must confirm that overwriting old contacts is off. Writes confirmed: {count}.'**
+  String backupContacts_overwriteUnsafe(int count);
+
+  /// No description provided for @backupContacts_unconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore stopped after a command failed or went unanswered. Writes confirmed: {count}. Refresh the preview.'**
+  String backupContacts_unconfirmed(int count);
+
+  /// No description provided for @backupContacts_syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify the contact list. Writes confirmed: {count}. Sync the contacts and refresh the preview.'**
+  String backupContacts_syncFailed(int count);
+
+  /// No description provided for @backupContacts_applyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish restoring contacts. Refresh the preview to check the current contact list.'**
+  String get backupContacts_applyFailed;
+
   /// No description provided for @common_ok.
   ///
   /// In en, this message translates to:

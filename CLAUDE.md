@@ -3096,6 +3096,15 @@ key before opening the password dialog. The v1 file includes channel
 definitions only. Export uses the current connection state without sending
 radio commands or opening the offline profiles' storage.
 
+Contact backup restore reuses the full contact sync with the current
+session's stores. It needs a declared count and the corresponding unique
+keys before it can write. An incomplete backup read keeps the prior
+contact list. The radio must confirm that overwrite-oldest is off.
+Each addition checks the full key immediately before sending
+`CMD_ADD_UPDATE_CONTACT`, waits for its ACK, and uses readback to
+update SQLite. Routes from a different node or using an unsupported
+hash width start in Flood mode.
+
 The reads follow the group. `channelStorageKeys` gives the key of every name
 of the channel, its own first, and the message store reads over them
 (`storage_key IN`, `MessageHistoryStorage.getLatestStringForKeys` and its

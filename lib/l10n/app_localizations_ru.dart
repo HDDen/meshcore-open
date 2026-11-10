@@ -165,6 +165,69 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось сохранить резервную копию каналов.';
 
   @override
+  String get backupContacts_title => 'Восстановление контактов';
+
+  @override
+  String get backupContacts_intro =>
+      'Выберите резервную копию MeshCore, чтобы увидеть, какие контакты можно добавить на подключённую ноду.';
+
+  @override
+  String get backupContacts_noContacts =>
+      'В резервной копии нет контактов для восстановления.';
+
+  @override
+  String get backupContacts_waitForNode =>
+      'Подключитесь к ноде, дождитесь синхронизации контактов и обновите предпросмотр.';
+
+  @override
+  String backupContacts_summary(int add, int existing, int noRoom) {
+    return 'К добавлению: $add. Уже на ноде: $existing. Нет места: $noRoom.';
+  }
+
+  @override
+  String backupContacts_skipped(int count) {
+    return 'Пропущено записей с ключом этой ноды или неподдерживаемым типом контакта: $count.';
+  }
+
+  @override
+  String get backupContacts_floodFallback =>
+      'Для маршрутов с другой ноды или с неподдерживаемой шириной хэша будет выбран Flood.';
+
+  @override
+  String backupContacts_confirm(String node, int count) {
+    return 'Добавить контакты на ноду «$node»? К записи: $count.';
+  }
+
+  @override
+  String backupContacts_applied(int count) {
+    return 'Добавлено и проверено контактов: $count.';
+  }
+
+  @override
+  String backupContacts_changed(int count) {
+    return 'Нода или список контактов изменились. Подтверждено записей: $count. Обновите предпросмотр.';
+  }
+
+  @override
+  String backupContacts_overwriteUnsafe(int count) {
+    return 'Нода должна подтвердить, что перезапись старых контактов выключена. Подтверждено записей: $count.';
+  }
+
+  @override
+  String backupContacts_unconfirmed(int count) {
+    return 'Восстановление остановлено после отказа или отсутствия ответа. Подтверждено записей: $count. Обновите предпросмотр.';
+  }
+
+  @override
+  String backupContacts_syncFailed(int count) {
+    return 'Не удалось проверить список контактов. Подтверждено записей: $count. Синхронизируйте контакты и обновите предпросмотр.';
+  }
+
+  @override
+  String get backupContacts_applyFailed =>
+      'Не удалось завершить восстановление контактов. Обновите предпросмотр, чтобы проверить текущий список.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

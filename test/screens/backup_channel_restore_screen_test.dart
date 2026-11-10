@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/screens/backup_channel_export_screen.dart';
-import 'package:meshcore_open/screens/backup_channel_restore_screen.dart';
+import 'package:meshcore_open/screens/backup_restore_screen.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/services/channel_backup_snapshot.dart';
@@ -30,6 +32,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   ];
   bool ready = true;
   int writes = 0;
+  int contactWrites = 0;
   BackupChannelRestorePreview? appliedPreview;
   BackupChannelRestoreResult result = (
     confirmed: 2,
@@ -72,6 +75,30 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   }
 
   @override
+  BackupContactRestorePreview? previewBackupContactRestore({
+    required String? sourcePublicKey,
+    required Iterable<Contact> contacts,
+  }) => ready
+      ? BackupContactRestorePreview(
+          nodeKey: _key,
+          session: this,
+          capacity: 2,
+          supportsWidePaths: true,
+          currentKeys: [List.filled(32, '02').join()],
+          sourcePublicKey: sourcePublicKey,
+          contacts: contacts,
+        )
+      : null;
+
+  @override
+  Future<BackupContactRestoreResult> restoreBackupContacts(
+    BackupContactRestorePreview preview,
+  ) async {
+    contactWrites++;
+    return (confirmed: 1, status: BackupContactRestoreStatus.completed);
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -90,7 +117,12 @@ Future<AppLocalizations> _show(
   _Node node,
   String contents, {
   String language = 'en',
+  bool contactsMode = false,
 }) async {
+  Future<XFile?> pickFile() async => XFile.fromData(
+    Uint8List.fromList(utf8.encode(contents)),
+    name: 'backup.json',
+  );
   await tester.pumpWidget(
     ChangeNotifierProvider<MeshCoreConnector>.value(
       value: node,
@@ -98,16 +130,13 @@ Future<AppLocalizations> _show(
         locale: Locale(language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: BackupChannelRestoreScreen(
-          pickFile: () async => XFile.fromData(
-            Uint8List.fromList(utf8.encode(contents)),
-            name: 'backup.json',
-          ),
-        ),
+        home: contactsMode
+            ? BackupRestoreScreen.contacts(pickFile: pickFile)
+            : BackupRestoreScreen.channels(pickFile: pickFile),
       ),
     ),
   );
-  return tester.element(find.byType(BackupChannelRestoreScreen)).l10n;
+  return tester.element(find.byType(BackupRestoreScreen)).l10n;
 }
 
 Future<void> _waitAfterTap(
@@ -145,6 +174,47 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('contacts mode previews only available additions and confirms',
+      (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final contents = jsonEncode({
+      'public_key': List.filled(32, 'ee').join(),
+      'contacts': [
+        for (final key in ['02', '03', '04'])
+          {
+            'public_key': List.filled(32, key).join(),
+            'name': 'Contact $key',
+            'type': 1,
+            'out_path_list': 'ab',
+          },
+      ],
+    });
+    final l10n = await _show(tester, node, contents,
+        contactsMode: true, language: 'ru');
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupContacts_summary(1, 1, 1)),
+    );
+    expect(find.text(l10n.backupContacts_floodFallback), findsOneWidget);
+    expect(find.text('Contact 03'), findsOneWidget);
+    expect(find.text('Contact 02'), findsNothing);
+    expect(find.text('Contact 04'), findsNothing);
+    expect(node.contactWrites, 0);
+    await tester.tap(find.text(l10n.backupChannels_apply));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupContacts_confirm('Test node', 1)), findsOneWidget);
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text(l10n.backupChannels_apply),
+    ));
+    await tester.pumpAndSettle();
+    expect(node.contactWrites, 1);
+    expect(node.writes, 0);
+    expect(find.text(l10n.backupContacts_applied(1)), findsOneWidget);
+  });
+
   testWidgets('export requires a synced node and matching passwords',
       (tester) async {
     final node = _Node()..ready = false;
