@@ -1001,6 +1001,96 @@ Future<void> main() async {
     expect(saved.last.wasBlocked, isFalse);
   }, skip: skip);
 
+  test('U34 baseline: only inactive conversations count new posts as unread', () async {
+    final harness = await _Harness.start(notifications: false);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    final contact = await harness.addContact(aliceKey, 'Alice');
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    await connector.loadUnreadState();
+
+    Future<void> receive(int number) async {
+      connector.handleFrameForTest(_contactMessageFrame(
+        senderKey: aliceKey,
+        timestampSeconds: _timestamp + number,
+        text: 'Direct post $number',
+      ));
+      connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: channel.index,
+        timestampSeconds: _timestamp + number,
+        senderName: 'Alice',
+        text: 'Channel post $number',
+      ));
+      await _waitFor(() =>
+          connector.getLoadedMessages(contact).length == number &&
+          connector.getLoadedChannelMessages(channel).length == number,
+        'both incoming posts');
+    }
+
+    connector.setActiveContact(contact.publicKeyHex);
+    connector.setActiveChannel(channel.index);
+    await _settle();
+    await receive(1);
+    expect(connector.getUnreadCountForContact(contact), 0);
+    expect(connector.getUnreadCountForChannel(channel), 0);
+
+    connector.setActiveContact(null);
+    connector.setActiveChannel(null);
+    await receive(2);
+    expect(connector.getUnreadCountForContact(contact), 1);
+    expect(connector.getUnreadCountForChannel(channel), 1);
+
+    connector.setActiveContact(contact.publicKeyHex);
+    connector.setActiveChannel(channel.index);
+    expect(connector.getUnreadCountForContact(contact), 0);
+    expect(connector.getUnreadCountForChannel(channel), 0);
+  }, skip: skip);
+
+  test('U34: covered chat routes count incoming posts until the user returns', () async {
+    final harness = await _Harness.start(notifications: false);
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    final contact = await harness.addContact(aliceKey, 'Alice');
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    await connector.loadUnreadState();
+
+    var visible = true;
+    addTearDown(connector.trackContactChatRoute(contact.publicKeyHex, () => visible));
+    addTearDown(connector.trackChannelChatRoute(channel.index, () => visible));
+    connector.setActiveContact(contact.publicKeyHex);
+    connector.setActiveChannel(channel.index);
+    await _settle();
+
+    visible = false;
+    connector.handleFrameForTest(_contactMessageFrame(
+      senderKey: aliceKey,
+      timestampSeconds: _timestamp,
+      text: 'Direct post while covered',
+    ));
+    connector.handleFrameForTest(_channelMessageFrame(
+      channelIndex: channel.index,
+      timestampSeconds: _timestamp,
+      senderName: 'Alice',
+      text: 'Channel post while covered',
+    ));
+    await _waitFor(() =>
+        connector.getLoadedMessages(contact).isNotEmpty &&
+        connector.getLoadedChannelMessages(channel).isNotEmpty,
+      'both covered conversations');
+    expect(connector.getUnreadCountForContact(contact), 1);
+    expect(connector.getUnreadCountForChannel(channel), 1);
+
+    visible = true;
+    connector.setActiveContact(contact.publicKeyHex);
+    connector.setActiveChannel(channel.index);
+    expect(connector.getUnreadCountForContact(contact), 0);
+    expect(connector.getUnreadCountForChannel(channel), 0);
+  }, skip: skip);
+
   test('U34: bulk delete resolves projected rows and preserves unloaded history', () async {
     final harness = await _Harness.start();
     final connector = harness.connector;

@@ -41,6 +41,7 @@ import '../helpers/sync_background_work.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/channel_message_timeline_helper.dart';
 import '../helpers/channel_post_identity.dart';
+import '../helpers/chat_route_registry.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
@@ -843,6 +844,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<String, _RepeaterAckContext> _pendingRepeaterAcks = {};
   String? _activeContactKey;
   int? _activeChannelIndex;
+  final _contactChatRoutes = ChatRouteRegistry<String>();
+  final _channelChatRoutes = ChatRouteRegistry<int>();
   List<int> _channelOrder = [];
 
   int _storageUsedKb = -1;
@@ -1445,6 +1448,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _cachedChannelsUnreadTotal = 0;
     _activeContactKey = null;
     _activeChannelIndex = null;
+    _contactChatRoutes.clear();
+    _channelChatRoutes.clear();
     _resetSyncProgressState();
   }
 
@@ -3555,6 +3560,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelRegionStore.registerChannel(channel);
   }
 
+  VoidCallback trackContactChatRoute(
+    String contactKeyHex,
+    bool Function() isCurrent,
+  ) => _contactChatRoutes.add(contactKeyHex, isCurrent, onLastClose: () {
+    if (_disposed) return;
+    if (_activeContactKey == contactKeyHex) {
+      setActiveContact(null);
+    } else {
+      _trimContactHistoryWindow(contactKeyHex);
+    }
+  });
+
+  VoidCallback trackChannelChatRoute(int channelIndex, bool Function() isCurrent) =>
+      _channelChatRoutes.add(channelIndex, isCurrent, onLastClose: () {
+        if (_disposed) return;
+        if (_activeChannelIndex == channelIndex) {
+          setActiveChannel(null);
+        } else {
+          _trimChannelHistoryWindow(channelIndex);
+        }
+      });
+
   void setActiveContact(String? contactKeyHex) {
     final previousContactKey = _activeContactKey;
     if (previousContactKey != null && previousContactKey != contactKeyHex) {
@@ -3612,6 +3639,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _trimContactHistoryWindow(String contactKeyHex) {
+    if (_contactChatRoutes.contains(contactKeyHex)) return;
     final messages = _conversations[contactKeyHex];
     if (messages == null || messages.length <= _initialContactHistorySize) {
       return;
@@ -3622,6 +3650,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _trimChannelHistoryWindow(int channelIndex) {
+    if (_channelChatRoutes.contains(channelIndex)) return;
     final messages = _channelMessages[channelIndex];
     if (messages == null || messages.length <= _initialChannelHistorySize) {
       return;
@@ -18494,7 +18523,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     // Don't increment if user is viewing this channel
-    if (_activeChannelIndex == channelIndex) {
+    if (_channelChatRoutes.isVisible(channelIndex) ??
+        _activeChannelIndex == channelIndex) {
       _appDebugLogService?.info(
         'Skip unread increment: channel $channelIndex is active',
         tag: 'Unread',
@@ -18540,7 +18570,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     // Don't increment if user is viewing this contact
-    if (_activeContactKey == contactKey) {
+    if (_contactChatRoutes.isVisible(contactKey) ?? _activeContactKey == contactKey) {
       _appDebugLogService?.info(
         'Skip contact unread increment: contact $contactKey is active',
         tag: 'Unread',

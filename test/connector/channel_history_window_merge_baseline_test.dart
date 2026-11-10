@@ -105,6 +105,25 @@ void main() {
     expect(connector.getLoadedChannelMessages(_channel(2)), hasLength(450));
   });
 
+  test('U34: covered and duplicate routes retain pages until the last closes', () {
+    connector.setChannelMessagesForTest(1, _history(1, 1205));
+    final releaseFirst = connector.trackChannelChatRoute(1, () => false);
+    final releaseSecond = connector.trackChannelChatRoute(1, () => false);
+    connector.setActiveChannel(1);
+    connector.setActiveChannel(2);
+    connector.trimInactiveMessageHistoryWindows();
+    expect(connector.getLoadedChannelMessages(_channel(1)), hasLength(1205));
+
+    releaseFirst();
+    connector.trimInactiveMessageHistoryWindows();
+    expect(connector.getLoadedChannelMessages(_channel(1)), hasLength(1205));
+
+    releaseSecond();
+    final remaining = connector.getLoadedChannelMessages(_channel(1));
+    expect(remaining, hasLength(300));
+    expect(remaining.first.messageId, '1:905');
+  });
+
   test('U10c: inactive trimming is bounded and repeated calls are idempotent', () {
     connector.setChannelMessagesForTest(0, _history(0, 7));
     connector.setChannelMessagesForTest(1, _history(1, 1205));

@@ -108,6 +108,7 @@ import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
 import '../widgets/mention_chip.dart';
 import '../widgets/reply_quote_box.dart';
+import '../widgets/chat_route_activity.dart';
 import '../widgets/swipe_reply_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -139,7 +140,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _ignoreNextTextFieldFocus = false;
   String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
-  MeshCoreConnector? _connector;
+  final _routeActivity = ChatRouteActivity();
   StreamSubscription<void>? _mcmpSigningFailedSubscription;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
@@ -235,8 +236,10 @@ class _ChatScreenState extends State<ChatScreen> {
           _pendingUnreadScrollTarget = anchor;
         }
       });
-      connector.setActiveContact(keyHex);
-      _connector = connector;
+      _routeActivity.attach(
+        register: (isCurrent) => connector.trackContactChatRoute(keyHex, isCurrent),
+        activate: () => connector.setActiveContact(keyHex),
+      );
       _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
         (_) => _showMcmpSigningFailed(),
       );
@@ -279,6 +282,12 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _routeActivity.updateRoute(ModalRoute.of(context));
   }
 
   BuildContext? _tryGetMessageContext(String messageId) {
@@ -972,7 +981,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _holidayWatcher.dispose();
-    _connector?.setActiveContact(null);
+    _routeActivity.dispose();
     _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);

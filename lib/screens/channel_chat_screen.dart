@@ -84,6 +84,8 @@ import '../widgets/blocked_message_body.dart';
 import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/channel_filter_actions.dart';
 import '../widgets/channel_message_selection.dart';
+import '../widgets/chat_route_activity.dart';
+import '../widgets/swipe_reply_bubble.dart';
 import '../widgets/filtered_channel_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
@@ -194,6 +196,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ReceivedImageStore? _watchedImageStore;
   int _imageStoreVersion = 0;
   ModalRoute<dynamic>? _route;
+  final _routeActivity = ChatRouteActivity();
   final _messageContentCache =
       MessageContentCache<_ParsedChannelMessageContent>();
 
@@ -290,8 +293,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       setState(() {
         if (anchor != null) _unreadDividerMessageId = anchor.messageId;
       });
-      connector.setActiveChannel(idx);
       _connector = connector;
+      _routeActivity.attach(
+        register: (isCurrent) => connector.trackChannelChatRoute(idx, isCurrent),
+        activate: () => connector.setActiveChannel(idx),
+      );
       _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
         (_) => _showMcmpSigningFailed(),
       );
@@ -331,6 +337,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
+    _routeActivity.updateRoute(route);
     if (!identical(route, _route)) {
       _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
       _route = route;
@@ -511,7 +518,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     _holidayWatcher.dispose();
     _route?.secondaryAnimation?.removeStatusListener(_onCoveringRouteStatus);
     _watchedImageStore?.removeListener(_onImageStoreChanged);
-    _connector?.setActiveChannel(null);
+    _routeActivity.dispose();
     _mcmpSigningFailedSubscription?.cancel();
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.removeHandler(_handleDesktopKeyEvent);
@@ -2819,13 +2826,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // Our own bubbles take the swipe too: a reply may quote our own message
     // as it quotes anyone's. They keep the inset they had without it.
     if (!PlatformInfo.isDesktop) {
-      return _SwipeReplyBubble(
+      return SwipeReplyBubble(
         maxSwipeOffset: maxSwipeOffset,
         replySwipeThreshold: replySwipeThreshold,
-        horizontalPadding: isOutgoing ? 0 : 8,
-        onReplyTriggered: () => _setReplyingTo(message),
-        hintBuilder: ({required isStart}) =>
-            _buildReplySwipeHint(isStart: isStart, iconOnly: isOutgoing),
+        padding: EdgeInsets.symmetric(vertical: 3, horizontal: isOutgoing ? 0 : 8),
+        onReply: () => _setReplyingTo(message),
+        hint: _buildReplySwipeHint(isStart: false, iconOnly: isOutgoing),
         child: messageBody,
       );
     } else {
@@ -6439,162 +6445,6 @@ class _RegionSelectDialogState extends State<_RegionSelectDialog> {
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SwipeReplyBubble extends StatefulWidget {
-  final double maxSwipeOffset;
-  final double replySwipeThreshold;
-  final double horizontalPadding;
-  final VoidCallback onReplyTriggered;
-  final Widget Function({required bool isStart}) hintBuilder;
-  final Widget child;
-
-  const _SwipeReplyBubble({
-    required this.maxSwipeOffset,
-    required this.replySwipeThreshold,
-    required this.horizontalPadding,
-    required this.onReplyTriggered,
-    required this.hintBuilder,
-    required this.child,
-  });
-
-  @override
-  State<_SwipeReplyBubble> createState() => _SwipeReplyBubbleState();
-}
-
-class _SwipeReplyBubbleState extends State<_SwipeReplyBubble> {
-  Offset? _swipeStartPosition;
-  double _swipeOffset = 0;
-  double _maxSwipeDistance = 0;
-  int? _swipePointerId;
-  bool _swipeLockedToHorizontal = false;
-
-  void _handleSwipeStart(Offset position) {
-    _swipeStartPosition = position;
-    _maxSwipeDistance = 0;
-    if (_swipeOffset != 0) {
-      setState(() => _swipeOffset = 0);
-    }
-  }
-
-  void _handleSwipePointerDown(PointerDownEvent event) {
-    _swipePointerId = event.pointer;
-    _swipeLockedToHorizontal = false;
-    _handleSwipeStart(event.position);
-  }
-
-  void _handleSwipePointerMove(PointerMoveEvent event) {
-    if (_swipePointerId != event.pointer || _swipeStartPosition == null) {
-      return;
-    }
-
-    final dx = event.position.dx - _swipeStartPosition!.dx;
-
-    const axisLockThreshold = 12.0;
-    if (!_swipeLockedToHorizontal) {
-      if (-dx < axisLockThreshold) {
-        return;
-      }
-      _swipeLockedToHorizontal = true;
-    }
-
-    _handleSwipeUpdate(event.position);
-  }
-
-  void _handleSwipeUpdate(Offset position) {
-    if (_swipeStartPosition == null) return;
-
-    final dx = position.dx - _swipeStartPosition!.dx;
-    if (dx >= 0) return;
-
-    if (-dx < 6) return;
-
-    if (-dx > _maxSwipeDistance) {
-      _maxSwipeDistance = -dx;
-    }
-
-    final double clamped = dx.clamp(-widget.maxSwipeOffset, 0.0).toDouble();
-    final adjusted = _applySwipeResistance(clamped, widget.maxSwipeOffset);
-    if (adjusted != _swipeOffset) {
-      setState(() => _swipeOffset = adjusted);
-    }
-  }
-
-  void _handleSwipePointerUp(Offset position) {
-    if (_swipeLockedToHorizontal && _swipeStartPosition != null) {
-      final dx = position.dx - _swipeStartPosition!.dx;
-      final peak = math.max(
-        _maxSwipeDistance,
-        (-dx).clamp(0.0, double.infinity),
-      );
-      if (peak >= widget.replySwipeThreshold) {
-        widget.onReplyTriggered();
-        HapticFeedback.selectionClick();
-      }
-    }
-    _resetSwipe();
-  }
-
-  void _resetSwipe() {
-    if (_swipeOffset != 0) {
-      setState(() => _swipeOffset = 0);
-    }
-    _swipeStartPosition = null;
-    _maxSwipeDistance = 0;
-    _swipePointerId = null;
-    _swipeLockedToHorizontal = false;
-  }
-
-  double _applySwipeResistance(double rawOffset, double maxOffset) {
-    final abs = rawOffset.abs();
-    if (abs <= 0) return 0;
-    final norm = (abs / maxOffset).clamp(0.0, 1.0);
-    const deadZone = 0.18;
-    if (norm <= deadZone) {
-      return rawOffset.sign * maxOffset * (norm * 0.08);
-    }
-    final t = ((norm - deadZone) / (1 - deadZone)).clamp(0.0, 1.0);
-    final curved = t < 0.5
-        ? 16 * math.pow(t, 5)
-        : 1 - math.pow(-2 * t + 2, 5) / 2;
-    const deadZoneEnd = 0.0144;
-    return rawOffset.sign *
-        maxOffset *
-        (deadZoneEnd + curved * (1 - deadZoneEnd));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: _handleSwipePointerDown,
-      onPointerMove: _handleSwipePointerMove,
-      onPointerUp: (event) => _handleSwipePointerUp(event.position),
-      onPointerCancel: (_) => _resetSwipe(),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          vertical: 3,
-          horizontal: widget.horizontalPadding,
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: Opacity(
-                opacity: _swipeOffset.abs() / widget.maxSwipeOffset,
-                child: widget.hintBuilder(isStart: false),
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              transform: Matrix4.translationValues(_swipeOffset, 0, 0),
-              curve: Curves.easeOut,
-              child: widget.child,
             ),
           ],
         ),

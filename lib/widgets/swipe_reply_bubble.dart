@@ -5,11 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 
-/// Swipe a message to the left to answer it. The channel transcript has its
-/// own copy of this gesture, which came from upstream; this one serves the
-/// direct and room chats, where upstream has no replies. The row slides with
-/// a resistance curve over a hint, and letting go past [replySwipeThreshold]
-/// calls [onReply].
+/// Swipe a message to the left to answer it. The row slides with a resistance
+/// curve over a hint, and letting go past [replySwipeThreshold] calls [onReply].
 class SwipeReplyBubble extends StatefulWidget {
   final Widget child;
   final VoidCallback onReply;
@@ -19,6 +16,8 @@ class SwipeReplyBubble extends StatefulWidget {
   final bool iconOnlyHint;
   final double maxSwipeOffset;
   final double replySwipeThreshold;
+  final EdgeInsetsGeometry padding;
+  final Widget? hint;
 
   const SwipeReplyBubble({
     super.key,
@@ -27,6 +26,8 @@ class SwipeReplyBubble extends StatefulWidget {
     this.iconOnlyHint = false,
     this.maxSwipeOffset = 64,
     this.replySwipeThreshold = 64,
+    this.padding = EdgeInsets.zero,
+    this.hint,
   });
 
   @override
@@ -41,6 +42,7 @@ class _SwipeReplyBubbleState extends State<SwipeReplyBubble> {
   bool _swipeLockedToHorizontal = false;
 
   void _handlePointerDown(PointerDownEvent event) {
+    if (_swipePointerId != null) return;
     _swipePointerId = event.pointer;
     _swipeLockedToHorizontal = false;
     _swipeStartPosition = event.position;
@@ -55,10 +57,19 @@ class _SwipeReplyBubbleState extends State<SwipeReplyBubble> {
     if (_swipePointerId != event.pointer || start == null) return;
 
     final dx = event.position.dx - start.dx;
+    final dy = (event.position.dy - start.dy).abs();
     const axisLockThreshold = 12.0;
     if (!_swipeLockedToHorizontal) {
-      if (-dx < axisLockThreshold) return;
+      // Once the pointer starts to scroll, sideways drift cannot claim it.
+      if (dy >= axisLockThreshold && dy >= dx.abs()) {
+        _resetSwipe();
+        return;
+      }
+      if (-dx < axisLockThreshold || -dx < dy * 2) return;
       _swipeLockedToHorizontal = true;
+    } else if (dy > math.max(48.0, -dx)) {
+      _resetSwipe();
+      return;
     }
     if (dx >= 0 || -dx < 6) return;
 
@@ -73,6 +84,7 @@ class _SwipeReplyBubbleState extends State<SwipeReplyBubble> {
   }
 
   void _handlePointerUp(PointerUpEvent event) {
+    if (_swipePointerId != event.pointer) return;
     final start = _swipeStartPosition;
     if (_swipeLockedToHorizontal && start != null) {
       final dx = event.position.dx - start.dx;
@@ -148,23 +160,28 @@ class _SwipeReplyBubbleState extends State<SwipeReplyBubble> {
       onPointerDown: _handlePointerDown,
       onPointerMove: _handlePointerMove,
       onPointerUp: _handlePointerUp,
-      onPointerCancel: (_) => _resetSwipe(),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: Opacity(
-              opacity: _swipeOffset.abs() / widget.maxSwipeOffset,
-              child: _buildHint(context),
+      onPointerCancel: (event) {
+        if (_swipePointerId == event.pointer) _resetSwipe();
+      },
+      child: Padding(
+        padding: widget.padding,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: _swipeOffset.abs() / widget.maxSwipeOffset,
+                child: widget.hint ?? _buildHint(context),
+              ),
             ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            transform: Matrix4.translationValues(_swipeOffset, 0, 0),
-            curve: Curves.easeOut,
-            child: widget.child,
-          ),
-        ],
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              transform: Matrix4.translationValues(_swipeOffset, 0, 0),
+              curve: Curves.easeOut,
+              child: widget.child,
+            ),
+          ],
+        ),
       ),
     );
   }

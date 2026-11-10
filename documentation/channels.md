@@ -155,7 +155,7 @@ Messages also show a region label when known, independently of message tracing. 
 
 ### Replies (Channel Chat Only)
 
-- **Mobile**: Swipe an **incoming** message left to trigger reply (with haptic feedback). You cannot swipe your own outgoing messages. Swipe reply is not available on desktop.
+- **Mobile**: Swipe a message left to reply, including one you sent. A vertical scroll leaves the reply composer closed. A successful swipe gives haptic feedback.
 - **All platforms**: Long-press → "Reply"
 - Reply banner appears above the input bar with the quoted message (tap X to cancel)
 - A known original region is selected for the reply by default. Tap the region chip to cross it out and use the channel’s effective region instead. This temporary choice does not change channel settings; see [reply regions](regions.md#reply-using-the-original-region).
