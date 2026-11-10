@@ -870,6 +870,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_actions => '操作';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => '删除所有路径';
 
   @override

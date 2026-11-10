@@ -15,6 +15,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/radio_settings.dart';
+import 'package:meshcore_open/screens/export_screen.dart';
 import 'package:meshcore_open/screens/settings_screen.dart';
 import 'package:meshcore_open/services/app_debug_log_service.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -281,6 +282,49 @@ void main() {
   tearDown(PrefsManager.reset);
 
   for (final language in ['en', 'ru']) {
+    testWidgets('U35: Settings opens the GPX actions ($language)', (tester) async {
+      await _withScreen(
+        tester,
+        (connector, l10n) async {
+          final open = find.text(l10n.settings_export);
+          await _revealSetting(tester, open);
+          await tester.tap(open);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 350));
+
+          final screen = find.byType(ExportScreen);
+          expect(screen, findsOneWidget);
+          final messenger = ScaffoldMessenger.of(tester.element(screen));
+          for (final label in [
+            l10n.settings_gpxExportRepeaters,
+            l10n.settings_gpxExportContacts,
+            l10n.settings_gpxExportAll,
+          ]) {
+            final action = find.descendant(
+              of: screen,
+              matching: find.text(label),
+            );
+            await tester.ensureVisible(action);
+            await tester.pump();
+            await tester.tap(action.hitTestable());
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 300));
+            expect(
+              find.widgetWithText(SnackBar, l10n.settings_gpxExportNoContacts),
+              findsOneWidget,
+            );
+            messenger.removeCurrentSnackBar();
+            await tester.pump();
+          }
+          expect(connector.frames, isEmpty);
+          expect(tester.takeException(), isNull);
+        },
+        locale: Locale(language),
+        size: const Size(360, 640),
+        textScale: 1.5,
+      );
+    });
+
     for (final layout in [
       (name: 'phone', size: const Size(320, 568)),
       (name: 'landscape', size: const Size(568, 360)),

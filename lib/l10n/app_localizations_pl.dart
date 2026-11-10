@@ -914,6 +914,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_actions => 'Działania';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Usuń wszystkie trasy';
 
   @override

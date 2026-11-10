@@ -913,6 +913,12 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_actions => 'Действия';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Изтрий всички пътища';
 
   @override

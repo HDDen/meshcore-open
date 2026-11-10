@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:meshcore_open/utils/gpx_export.dart';
 import 'package:meshcore_open/widgets/elements_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -33,6 +32,7 @@ import 'backup_restore_screen.dart';
 import 'ble_debug_log_screen.dart';
 import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
+import 'export_screen.dart';
 import 'mod_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/app_update_controls.dart';
@@ -40,7 +40,6 @@ import '../utils/app_build_info.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
 import 'telemetry_screen.dart';
-import '../utils/share_origin.dart';
 
 /// Convert device coding-rate value (1-4 on some firmware, 5-8 on others)
 /// to the UI enum range (always 5-8).
@@ -222,10 +221,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
 
                 // EXPORT section
-                SectionHeader(l10n.settings_gpxExportRepeaters),
                 MeshCard(
-                  padding: EdgeInsets.zero,
-                  child: _buildExportCardContent(context, connector),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ExportScreen()),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.download_outlined,
+                    title: l10n.settings_export,
+                    subtitle: l10n.settings_exportSubtitle,
+                  ),
                 ),
 
                 // DEBUG section
@@ -791,73 +797,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           titleColor: MeshPalette.alert,
           iconColor: MeshPalette.alert,
           onTap: () => _confirmDeleteAllPaths(context, connector),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExportCardContent(
-    BuildContext context,
-    MeshCoreConnector connector,
-  ) {
-    final l10n = context.l10n;
-    return Column(
-      children: [
-        _tappableTile(
-          context,
-          icon: Icons.download_outlined,
-          title: l10n.settings_gpxExportRepeaters,
-          subtitle: l10n.settings_gpxExportRepeatersSubtitle,
-          onTap: () async {
-            final exporter = GpxExport(connector);
-            exporter.addRepeaters();
-            _gpxExport(
-              exporter,
-              l10n.map_repeater,
-              l10n.settings_gpxExportRepeatersRoom,
-              'meshcore_repeaters_',
-              l10n.settings_gpxExportShareText,
-              l10n.settings_gpxExportShareSubject,
-            );
-          },
-        ),
-        const Divider(height: 1, indent: 16),
-        _tappableTile(
-          context,
-          icon: Icons.download_outlined,
-          title: l10n.settings_gpxExportContacts,
-          subtitle: l10n.settings_gpxExportContactsSubtitle,
-          onTap: () async {
-            final exporter = GpxExport(connector);
-            exporter.addContacts();
-            _gpxExport(
-              exporter,
-              l10n.map_repeater,
-              l10n.settings_gpxExportChat,
-              'meshcore_contacts_',
-              l10n.settings_gpxExportShareText,
-              l10n.settings_gpxExportShareSubject,
-            );
-          },
-        ),
-        const Divider(height: 1, indent: 16),
-        _tappableTile(
-          context,
-          icon: Icons.download_outlined,
-          title: l10n.settings_gpxExportAll,
-          subtitle: l10n.settings_gpxExportAllSubtitle,
-          onTap: () async {
-            final exporter = GpxExport(connector);
-            exporter.addAll();
-            _gpxExport(
-              exporter,
-              l10n.map_repeater,
-              l10n.settings_gpxExportAllContacts,
-              'meshcore_all_',
-              l10n.settings_gpxExportShareText,
-              l10n.settings_gpxExportShareSubject,
-            );
-          },
         ),
       ],
     );
@@ -1455,51 +1394,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _formatAboutModLink(String text) {
     const url = 'https://t.me/mcoadvanced';
     return text.contains('\n$url') ? text : text.replaceFirst(url, '\n$url');
-  }
-
-  Future<void> _gpxExport(
-    GpxExport exporter,
-    String name,
-    String description,
-    String filename,
-    String shareText,
-    String subject,
-  ) async {
-    final l10n = context.l10n;
-    final result = await exporter.exportGPX(
-      name,
-      description,
-      filename,
-      shareText,
-      subject,
-      sharePositionOrigin: shareOriginOf(context),
-    );
-    if (!mounted) return;
-    switch (result) {
-      case gpxExportSuccess:
-        showDismissibleSnackBar(
-          context,
-          content: Text(l10n.settings_gpxExportSuccess),
-        );
-      case gpxExportNoContacts:
-        showDismissibleSnackBar(
-          context,
-          content: Text(l10n.settings_gpxExportNoContacts),
-        );
-        break;
-      case gpxExportNotAvailable:
-        showDismissibleSnackBar(
-          context,
-          content: Text(l10n.settings_gpxExportNotAvailable),
-        );
-        break;
-      case gpxExportFailed:
-        showDismissibleSnackBar(
-          context,
-          content: Text(l10n.settings_gpxExportError),
-        );
-        break;
-    }
   }
 
   void _editAutoAddConfig(BuildContext context, MeshCoreConnector connector) {

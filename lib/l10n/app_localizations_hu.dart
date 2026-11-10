@@ -907,6 +907,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_actions => 'Műveletek';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Az összes útvonal törlése';
 
   @override

@@ -912,6 +912,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_actions => 'Действия';
 
   @override
+  String get settings_export => 'Экспорт';
+
+  @override
+  String get settings_exportSubtitle => 'Экспорт контактов и репитеров в GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Удалить все маршруты';
 
   @override

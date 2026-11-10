@@ -908,6 +908,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_actions => 'Možné akcie';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Odstrániť všetky cesty';
 
   @override

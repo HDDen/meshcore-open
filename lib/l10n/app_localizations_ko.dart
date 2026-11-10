@@ -880,6 +880,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_actions => '작업';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => '모든 경로 삭제';
 
   @override

@@ -313,17 +313,20 @@ JSON-файл резервной копии размером до 32 МиБ. П�
 Flood. При отказе приложение останавливает запись и перечитывает список,
 чтобы сохранить в SQLite то, что действительно добавилось.
 
-## Export
+## Экспорт GPX
 
-Three GPX export options (not available on web):
+Откройте **Настройки → Экспорт**. Приложение создаёт файл GPX с точками
+для контактов, у которых есть координаты.
 
-| Option | Exports |
+| Вариант | Какие контакты попадут в файл |
 |---|---|
-| Export Repeaters | Repeaters and Rooms with GPS coordinates |
-| Export Contacts | Chat contacts with GPS coordinates |
-| Export All | All contacts with GPS coordinates |
+| Репитеры и серверы комнат | Репитеры и серверы комнат |
+| Companion-устройства | Контакты для переписки |
+| Все контакты | Все типы контактов |
 
-Each creates a `.gpx` file and opens the OS share sheet. Feedback via snackbar for four outcomes: success, no contacts with coordinates, feature not available (web), or error.
+На компьютере выберите место сохранения файла в системном диалоге.
+На телефоне откроется системное меню отправки. Экспорт GPX доступен
+в настольной и мобильной версиях приложения.
 
 ---
 

@@ -1642,6 +1642,18 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get settings_actions;
 
+  /// No description provided for @settings_export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get settings_export;
+
+  /// No description provided for @settings_exportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export contacts and repeaters as GPX'**
+  String get settings_exportSubtitle;
+
   /// No description provided for @settings_deleteAllPaths.
   ///
   /// In en, this message translates to:

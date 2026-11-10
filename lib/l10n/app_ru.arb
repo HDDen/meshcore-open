@@ -167,6 +167,8 @@
   "settings_privacyModeEnabled": "Режим конфиденциальности включен",
   "settings_privacyModeDisabled": "Режим конфиденциальности выключен",
   "settings_actions": "Действия",
+  "settings_export": "Экспорт",
+  "settings_exportSubtitle": "Экспорт контактов и репитеров в GPX",
   "settings_deleteAllPaths": "Удалить все маршруты",
   "settings_deleteAllPathsSubtitle": "Очистить все локальные данные о маршрутах в контактах. Маршруты на ноде затронуты не будут.",
   "settings_sendAdvertisement": "Отправить анонс",

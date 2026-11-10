@@ -906,6 +906,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_actions => 'Дії';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Видалити всі шляхи';
 
   @override

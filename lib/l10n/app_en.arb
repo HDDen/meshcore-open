@@ -335,6 +335,8 @@
   "settings_multiAckSubtitle": "Send extra ACKs for better delivery; uses more airtime",
   "settings_telemetryModeUpdated": "Telemetry mode updated",
   "settings_actions": "Actions",
+  "settings_export": "Export",
+  "settings_exportSubtitle": "Export contacts and repeaters as GPX",
   "settings_deleteAllPaths": "Delete All Paths",
   "settings_deleteAllPathsSubtitle": "Clear all local route data from contacts. Routes on the node will not be affected.",
   "settings_sendAdvertisement": "Send Advertisement",

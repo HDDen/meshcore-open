@@ -915,6 +915,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_actions => 'Actions';
 
   @override
+  String get settings_export => 'Export';
+
+  @override
+  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+
+  @override
   String get settings_deleteAllPaths => 'Supprimer tous les chemins';
 
   @override
