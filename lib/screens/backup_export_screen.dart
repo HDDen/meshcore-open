@@ -6,6 +6,7 @@ import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
 import '../services/app_settings_service.dart';
+import '../services/backup_file_codec.dart';
 import '../services/backup_snapshot.dart';
 import '../utils/backup_json_file.dart';
 import '../utils/share_origin.dart';
@@ -14,18 +15,25 @@ Future<String> _encodeBackup(
   ({BackupSnapshot snapshot, String password}) input,
 ) => input.snapshot.encode(password: input.password);
 
+enum _BackupExportMode { selected, appSettings, messageHistory }
+
 class BackupExportScreen extends StatefulWidget {
   const BackupExportScreen({
     super.key,
     this.saveFile = saveBackupJson,
-  }) : _settingsOnly = false;
+  }) : _mode = _BackupExportMode.selected;
 
   const BackupExportScreen.appSettings({
     super.key,
     this.saveFile = saveBackupJson,
-  }) : _settingsOnly = true;
+  }) : _mode = _BackupExportMode.appSettings;
 
-  final bool _settingsOnly;
+  const BackupExportScreen.messageHistory({
+    super.key,
+    this.saveFile = saveBackupJson,
+  }) : _mode = _BackupExportMode.messageHistory;
+
+  final _BackupExportMode _mode;
 
   final Future<BackupJsonSaveResult> Function(
     String contents,
@@ -39,12 +47,37 @@ class BackupExportScreen extends StatefulWidget {
 
 class _BackupExportScreenState extends State<BackupExportScreen> {
   bool _busy = false;
-  late bool _includeChannels = !widget._settingsOnly;
+  late bool _includeChannels = widget._mode == _BackupExportMode.selected;
   bool _includeContacts = false;
-  late bool _includeSettings = widget._settingsOnly;
+  late bool _includeSettings = widget._mode == _BackupExportMode.appSettings;
+  bool _includeDirectHistory = true;
+  bool _includeChannelHistory = true;
   String? _notice;
 
-  bool get _hasSelection => _includeChannels || _includeContacts || _includeSettings;
+  bool get _historyOnly => widget._mode == _BackupExportMode.messageHistory;
+  bool get _hasSelection => _historyOnly
+      ? _includeDirectHistory || _includeChannelHistory
+      : _includeChannels || _includeContacts || _includeSettings;
+
+  Future<BackupSnapshot?> _capture() async {
+    if (_historyOnly) {
+      return context.read<MeshCoreConnector>().snapshotMessageHistoryBackup(
+        includeDirect: _includeDirectHistory,
+        includeChannels: _includeChannelHistory,
+      );
+    }
+    final settings = _includeSettings
+        ? AppSettingsBackup.capture(context.read<AppSettingsService>().settings)
+        : null;
+    if (_includeChannels || _includeContacts) {
+      return context.read<MeshCoreConnector>().snapshotNodeBackup(
+        includeChannels: _includeChannels,
+        includeContacts: _includeContacts,
+        appSettings: settings,
+      );
+    }
+    return BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
+  }
 
   Future<void> _createBackup() async {
     if (_busy || !_hasSelection) return;
@@ -53,23 +86,20 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
       _notice = null;
     });
     try {
-      final settings = _includeSettings
-          ? AppSettingsBackup.capture(context.read<AppSettingsService>().settings)
-          : null;
-      final snapshot = _includeChannels || _includeContacts
-          ? await context.read<MeshCoreConnector>().snapshotNodeBackup(
-              includeChannels: _includeChannels,
-              includeContacts: _includeContacts,
-              appSettings: settings,
-            )
-          : BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
+      final snapshot = await _capture();
       if (!mounted) return;
       if (snapshot == null) {
-        setState(() => _notice = context.l10n.backupExport_notReady);
+        final l10n = context.l10n;
+        setState(() => _notice = _historyOnly
+            ? l10n.backupMessageHistory_exportNotReady
+            : l10n.backupExport_notReady);
         return;
       }
       if (snapshot.isEmpty) {
-        setState(() => _notice = context.l10n.backupExport_empty);
+        final l10n = context.l10n;
+        setState(() => _notice = _historyOnly
+            ? l10n.backupMessageHistory_exportEmpty
+            : l10n.backupExport_empty);
         return;
       }
       final password = await _askPassword(snapshot);
@@ -93,6 +123,10 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
           BackupJsonSaveResult.cancelled => null,
         };
       });
+    } on BackupFileTooLarge {
+      if (mounted) {
+        setState(() => _notice = context.l10n.backupMessageHistory_exportTooLarge);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _notice = context.l10n.backupExport_failed);
@@ -111,7 +145,9 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         builder: (context, setDialogState) {
           final l10n = context.l10n;
           return AlertDialog(
-            title: Text(l10n.backupExport_createTitle),
+            title: Text(_historyOnly
+                ? l10n.backupMessageHistory_exportTitle
+                : l10n.backupExport_createTitle),
             scrollable: true,
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -171,13 +207,36 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.backupExport_createTitle)),
+      appBar: AppBar(
+        title: Text(_historyOnly
+            ? l10n.backupMessageHistory_exportTitle
+            : l10n.backupExport_createTitle),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(l10n.backupExport_pickSections),
-            if (widget._settingsOnly)
+            Text(_historyOnly
+                ? l10n.backupMessageHistory_exportIntro
+                : l10n.backupExport_pickSections),
+            if (_historyOnly) ...[
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.backupMessageHistory_direct),
+                value: _includeDirectHistory,
+                onChanged: _busy
+                    ? null
+                    : (value) => setState(() => _includeDirectHistory = value ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.backupMessageHistory_channels),
+                value: _includeChannelHistory,
+                onChanged: _busy
+                    ? null
+                    : (value) => setState(() => _includeChannelHistory = value ?? false),
+              ),
+            ] else if (widget._mode == _BackupExportMode.appSettings)
               Text(l10n.backupAppSettings_scope)
             else ...[
               CheckboxListTile(

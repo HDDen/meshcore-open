@@ -19,8 +19,6 @@ import '../services/backup_file_codec.dart';
 import '../services/backup_import_planner.dart';
 import '../utils/backup_json_file.dart';
 
-const _maxBackupBytes = 32 * 1024 * 1024;
-
 Future<XFile?> _pickBackupFile() =>
     openFile(acceptedTypeGroups: const [backupJsonFileType]);
 
@@ -38,16 +36,12 @@ Future<BackupImportPlan> _inspectBackup(
   messageHistoryOnly: input.messageHistoryOnly,
 );
 
-class _BackupFileTooLarge implements Exception {
-  const _BackupFileTooLarge();
-}
-
 Future<String> _readBackupFile(XFile file) async {
-  if (await file.length() > _maxBackupBytes) throw const _BackupFileTooLarge();
+  if (await file.length() > backupMaxJsonBytes) throw const BackupFileTooLarge();
   final bytes = BytesBuilder(copy: false);
   await for (final chunk in file.openRead()) {
-    if (bytes.length + chunk.length > _maxBackupBytes) {
-      throw const _BackupFileTooLarge();
+    if (bytes.length + chunk.length > backupMaxJsonBytes) {
+      throw const BackupFileTooLarge();
     }
     bytes.add(chunk);
   }
@@ -158,7 +152,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _source = channels;
       }
       _refreshPreview();
-    } on _BackupFileTooLarge {
+    } on BackupFileTooLarge {
       if (mounted) {
         setState(() => _notice = context.l10n.backupChannels_fileTooLarge);
       }

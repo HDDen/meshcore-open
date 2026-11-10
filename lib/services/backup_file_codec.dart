@@ -3,6 +3,12 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 
+const backupMaxJsonBytes = 32 * 1024 * 1024;
+
+class BackupFileTooLarge implements Exception {
+  const BackupFileTooLarge();
+}
+
 class BackupPasswordException extends FormatException {
   const BackupPasswordException.required()
     : rejected = false,
@@ -32,9 +38,12 @@ class BackupFileCodec {
   Future<String> encode(
     Map<String, Object?> payload, {
     required String password,
+    bool compact = false,
   }) async {
     _validatePayload(payload);
-    if (password.isEmpty) return _json.convert(payload);
+    if (password.isEmpty) {
+      return compact ? jsonEncode(payload) : _json.convert(payload);
+    }
 
     final plaintext = utf8.encode(jsonEncode(payload));
     final random = Random.secure();

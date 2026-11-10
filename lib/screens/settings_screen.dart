@@ -233,6 +233,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.backupMessageHistory_title,
                     ),
                   ),
+                if (!kIsWeb)
+                  MeshCard(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BackupExportScreen.messageHistory(),
+                      ),
+                    ),
+                    child: _buildNavTileContent(
+                      context,
+                      icon: Icons.save_outlined,
+                      title: l10n.backupMessageHistory_exportTitle,
+                    ),
+                  ),
 
                 // EXPORT section
                 MeshCard(

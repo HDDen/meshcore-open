@@ -16,6 +16,7 @@ import '../models/companion_cli_entry.dart';
 import '../models/repeater_cli_entry.dart';
 import 'data_root.dart';
 import 'message_history_database.dart';
+import 'message_history_backup_snapshot.dart';
 import 'prefs_manager.dart';
 
 enum MessageHistoryKind { direct, channel }
@@ -1457,6 +1458,21 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
   /// and in a process that has not initialised the storage, such as a unit
   /// test.
   bool get hasDatabase => _initialized && _database != null;
+
+  Future<Map<String, List<String>>> snapshotBackupMessages({
+    required String scope,
+    required bool includeDirect,
+    required Map<String, List<String>> channelKeys,
+    required bool Function() stillCurrent,
+  }) => _persistenceWork.run(() async {
+    if (!hasDatabase) throw StateError('Message history database is not open');
+    return _database!.snapshotBackupMessages(
+      scope: scope,
+      includeDirect: includeDirect,
+      channelKeys: channelKeys,
+      stillCurrent: stillCurrent,
+    );
+  });
 
   Future<int> mergeBackupMessages(
     List<HistoryBackupBatch> histories, {

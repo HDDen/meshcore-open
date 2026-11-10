@@ -49,6 +49,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   int writes = 0;
   int contactWrites = 0;
   int historyWrites = 0;
+  ({bool direct, bool channels})? historyExportSelection;
   BackupChannelRestorePreview? appliedPreview;
   BackupChannelRestoreResult result = (
     confirmed: 2,
@@ -147,6 +148,15 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   }
 
   @override
+  Future<BackupSnapshot?> snapshotMessageHistoryBackup({
+    required bool includeDirect,
+    required bool includeChannels,
+  }) async {
+    historyExportSelection = (direct: includeDirect, channels: includeChannels);
+    return null;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -225,6 +235,48 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('history export sends only its own selections to the connector',
+      (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: node,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const BackupExportScreen.messageHistory(),
+        ),
+      ),
+    );
+    final l10n = tester.element(find.byType(BackupExportScreen)).l10n;
+    expect(find.text(l10n.backupMessageHistory_exportTitle), findsOneWidget);
+    expect(find.text(l10n.settings_appSettings), findsNothing);
+    final direct = find.widgetWithText(
+      CheckboxListTile,
+      l10n.backupMessageHistory_direct,
+    );
+    final channels = find.widgetWithText(
+      CheckboxListTile,
+      l10n.backupMessageHistory_channels,
+    );
+    final create = find.widgetWithText(
+      FilledButton,
+      l10n.backupChannels_createBackup,
+    );
+    await tester.tap(channels);
+    await tester.pump();
+    await tester.tap(direct);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(create).onPressed, isNull);
+    await tester.tap(direct);
+    await tester.pump();
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(node.historyExportSelection, (direct: true, channels: false));
+    expect(find.text(l10n.backupMessageHistory_exportNotReady), findsOneWidget);
+  });
+
   testWidgets('history import waits for the source node and confirmation',
       (tester) async {
     final node = _Node()..ready = false;

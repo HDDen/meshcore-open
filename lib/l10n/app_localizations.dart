@@ -634,6 +634,48 @@ abstract class AppLocalizations {
   /// **'Could not import message history. Refresh the preview.'**
   String get backupMessageHistory_failed;
 
+  /// No description provided for @backupMessageHistory_exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up message history'**
+  String get backupMessageHistory_exportTitle;
+
+  /// No description provided for @backupMessageHistory_exportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which message history to save for this node in a separate JSON file. Channel history is included when it can be uniquely matched to a channel key.'**
+  String get backupMessageHistory_exportIntro;
+
+  /// No description provided for @backupMessageHistory_direct.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct messages'**
+  String get backupMessageHistory_direct;
+
+  /// No description provided for @backupMessageHistory_channels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel messages'**
+  String get backupMessageHistory_channels;
+
+  /// No description provided for @backupMessageHistory_exportNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the node and wait for the selected data to finish syncing.'**
+  String get backupMessageHistory_exportNotReady;
+
+  /// No description provided for @backupMessageHistory_exportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no history to back up in the selected sections.'**
+  String get backupMessageHistory_exportEmpty;
+
+  /// No description provided for @backupMessageHistory_exportTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup exceeds the 32 MiB restore limit. Try backing up direct and channel history separately.'**
+  String get backupMessageHistory_exportTooLarge;
+
   /// No description provided for @common_ok.
   ///
   /// In en, this message translates to:

@@ -12651,7 +12651,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ChannelIdentities.instance.revision,
   );
 
-  bool _canImportMessageHistory(String nodeKey) =>
+  bool _canUseMessageHistoryBackup(String nodeKey) =>
       !_disposed &&
       isConnected &&
       !isOfflineMode &&
@@ -12660,17 +12660,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _persistedStateLoadedKey == nodeKey &&
       selfPublicKeyHex == nodeKey;
 
-  List<Channel> get _messageHistoryBackupChannels =>
+  bool get _hasMessageHistoryBackupChannels =>
       _hasBackupChannelInventory &&
-          !_restoringBackupChannels &&
-          _channelEditsInProgress == 0
-      ? _channels
-      : const [];
+      !_restoringBackupChannels &&
+      _channelEditsInProgress == 0;
+
+  List<Channel> get _messageHistoryBackupChannels =>
+      _hasMessageHistoryBackupChannels ? _channels : const [];
+
+  Map<int, ChannelIdentity?> get _messageHistoryBackupInventory => {
+    for (final channel in _messageHistoryBackupChannels)
+      channel.index: ChannelIdentity.of(channel),
+  };
 
   BackupMessageHistoryPreview? previewBackupMessageHistory(
     BackupMessageHistory source,
   ) {
-    if (!_canImportMessageHistory(source.nodeKey)) return null;
+    if (!_canUseMessageHistoryBackup(source.nodeKey)) return null;
     return source.preview(
       destination: _messageHistoryBackupChannels,
       session: _messageHistoryBackupSession,
@@ -12686,18 +12692,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         !mapEquals(current.channelTargets, preview.channelTargets)) {
       return null;
     }
-    final inventory = {
-      for (final channel in _messageHistoryBackupChannels)
-        channel.index: ChannelIdentity.of(channel),
-    };
+    final inventory = _messageHistoryBackupInventory;
     bool isCurrent() =>
-        _canImportMessageHistory(preview.source.nodeKey) &&
+        _canUseMessageHistoryBackup(preview.source.nodeKey) &&
         _messageHistoryBackupSession == preview.session &&
         (preview.channelTargets.isEmpty ||
-            mapEquals(inventory, {
-              for (final channel in _messageHistoryBackupChannels)
-                channel.index: ChannelIdentity.of(channel),
-            }));
+            mapEquals(inventory, _messageHistoryBackupInventory));
 
     final added = await MessageHistoryStorage.instance.mergeBackupMessages(
       current.batches,
@@ -12714,6 +12714,49 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
     return added;
+  }
+
+  Future<BackupSnapshot?> snapshotMessageHistoryBackup({
+    required bool includeDirect,
+    required bool includeChannels,
+  }) async {
+    final nodeKey = selfPublicKeyHex;
+    if ((!includeDirect && !includeChannels) ||
+        nodeKey.length != pubKeySize * 2 ||
+        !_canUseMessageHistoryBackup(nodeKey) ||
+        (includeChannels && !_hasMessageHistoryBackupChannels)) {
+      return null;
+    }
+    final scope = nodeKey.substring(0, 10);
+    final name = deviceDisplayName;
+    final session = _messageHistoryBackupSession;
+    final inventory = _messageHistoryBackupInventory;
+    final bindings = historyBackupChannelBindings(
+      scope,
+      includeChannels ? _messageHistoryBackupChannels : const [],
+    );
+    bool isCurrent() =>
+        _canUseMessageHistoryBackup(nodeKey) &&
+        _messageHistoryBackupSession == session &&
+        (!includeChannels ||
+            (_hasMessageHistoryBackupChannels &&
+                mapEquals(inventory, _messageHistoryBackupInventory)));
+    final rows = await MessageHistoryStorage.instance.snapshotBackupMessages(
+      scope: scope,
+      includeDirect: includeDirect,
+      channelKeys: {
+        for (final entry in bindings.entries)
+          'channel_messages_${scope}_${entry.key}': entry.value.keys,
+      },
+      stillCurrent: isCurrent,
+    );
+    if (!isCurrent()) return null;
+    return BackupSnapshot.messageHistory(
+      sourcePublicKey: nodeKey,
+      nodeName: name,
+      rows: rows,
+      createdAt: DateTime.now(),
+    );
   }
 
   Future<void> _refreshAfterMessageHistoryImport(

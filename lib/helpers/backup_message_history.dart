@@ -11,6 +11,41 @@ import '../storage/message_history_database.dart' show HistoryBackupBatch;
 import '../storage/message_history_storage.dart';
 import '../storage/message_store.dart';
 
+/// Bind the v1 PSK identifier to unambiguous local history keys.
+Map<String, ({int index, ChannelIdentity identity, List<String> keys})>
+historyBackupChannelBindings(String scope, Iterable<Channel> channels) {
+  final candidates = <String, List<({int index, ChannelIdentity identity})>>{};
+  final nameOwners = <String, Set<String>>{};
+  for (final channel in channels) {
+    final identity = ChannelIdentity.of(channel);
+    if (identity == null) continue;
+    (candidates[identity.pskId] ??= []).add((
+      index: channel.index,
+      identity: identity,
+    ));
+    for (final name in ChannelIdentities.instance.namesOf(identity)) {
+      (nameOwners[name] ??= {}).add(identity.pskId);
+    }
+  }
+  final prefix = 'channel_messages_$scope';
+  return {
+    for (final entry in candidates.entries)
+      if (entry.value.length == 1 &&
+          nameOwners[entry.value.single.identity.name]!.length == 1)
+        entry.key: (
+          index: entry.value.single.index,
+          identity: entry.value.single.identity,
+          keys: [
+            for (final name in ChannelIdentities.instance.namesOf(
+              entry.value.single.identity,
+            ))
+              if (nameOwners[name]!.length == 1)
+                ChannelNameKeyedStore.nameStorageKey(prefix, name),
+          ],
+        ),
+  };
+}
+
 class BackupMessageHistory {
   BackupMessageHistory._(this.nodeKey, this.direct, this.channels);
 
@@ -119,40 +154,20 @@ class BackupMessageHistory {
           messages: entry.value,
         ),
     ];
-    final candidates = <String, List<Channel>>{};
-    final nameOwners = <String, Set<String>>{};
-    for (final channel in destination) {
-      final identity = ChannelIdentity.of(channel);
-      if (identity == null) continue;
-      (candidates[identity.pskId] ??= []).add(channel);
-      for (final name in ChannelIdentities.instance.namesOf(identity)) {
-        (nameOwners[name] ??= {}).add(identity.pskId);
-      }
-    }
+    final bindings = historyBackupChannelBindings(scope, destination);
     final targets = <int, ChannelIdentity>{};
     var skipped = 0;
-    final prefix = 'channel_messages_$scope';
     for (final entry in channels.entries) {
-      final matches = candidates[entry.key];
-      if (matches == null || matches.length != 1) {
+      final target = bindings[entry.key];
+      if (target == null) {
         skipped += entry.value.length;
         continue;
       }
-      final target = matches.single;
-      final identity = ChannelIdentity.of(target)!;
-      if (nameOwners[identity.name]!.length != 1) {
-        skipped += entry.value.length;
-        continue;
-      }
-      targets[target.index] = identity;
+      targets[target.index] = target.identity;
       batches.add((
         kind: MessageHistoryKind.channel.index,
-        key: ChannelNameKeyedStore.nameStorageKey(prefix, identity.name),
-        aliases: [
-          for (final name in ChannelIdentities.instance.namesOf(identity).skip(1))
-            if (nameOwners[name]!.length == 1)
-              ChannelNameKeyedStore.nameStorageKey(prefix, name),
-        ],
+        key: target.keys.first,
+        aliases: target.keys.sublist(1),
         messages: entry.value,
       ));
     }

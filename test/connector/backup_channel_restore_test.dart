@@ -320,12 +320,31 @@ void main() {
     );
     expect(messages.single.text, 'Imported history');
     expect(messages.single.channelIndex, 2);
+    final snapshot = (await radio.connector.snapshotMessageHistoryBackup(
+      includeDirect: false,
+      includeChannels: true,
+    ))!;
+    final restored = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      messageHistoryOnly: true,
+    );
+    expect(restored.messageHistory!.direct, isEmpty);
+    expect(restored.messageHistory!.channels.keys, [id]);
+    expect(
+      restored.messageHistory!.channels[id]!.single['messageId'],
+      'imported',
+    );
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
     expect(radio.contactWrites, isEmpty);
 
     radio.connector.resetSyncProgressForTest();
     expect(await radio.connector.restoreBackupMessageHistory(preview), isNull);
+    expect(await radio.connector.snapshotMessageHistoryBackup(
+      includeDirect: false,
+      includeChannels: true,
+    ), isNull);
   });
 
   test('combined export reads contacts from the radio and rejects an incomplete read', () async {

@@ -3102,6 +3102,10 @@ match the current session and maps channel PSK IDs to unambiguous
 local names. A single SQLite transaction appends missing message IDs
 in the active profile and leaves existing rows intact. Incoming
 archive rows never enter the delivery queues.
+The separate history export reads selected conversations in one SQLite
+transaction, with indexed pages and the same channel binding rules.
+It emits only v1 message history sections and checks the 32 MiB
+restore limit before handing the file to the OS.
 
 Portable display settings can be backed up separately from the scanner
 or included with the node lists. The v1 `mcoaDisplaySettings` section

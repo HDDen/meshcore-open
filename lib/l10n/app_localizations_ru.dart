@@ -343,6 +343,31 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось импортировать историю сообщений. Обновите предпросмотр.';
 
   @override
+  String get backupMessageHistory_exportTitle => 'Копия истории сообщений';
+
+  @override
+  String get backupMessageHistory_exportIntro =>
+      'Выберите, какую историю этой ноды сохранить в отдельный файл JSON. История каналов включается, если её можно однозначно связать с ключом канала.';
+
+  @override
+  String get backupMessageHistory_direct => 'Личные сообщения';
+
+  @override
+  String get backupMessageHistory_channels => 'Сообщения каналов';
+
+  @override
+  String get backupMessageHistory_exportNotReady =>
+      'Подключитесь к ноде и дождитесь синхронизации выбранных данных.';
+
+  @override
+  String get backupMessageHistory_exportEmpty =>
+      'Для выбранных разделов нет истории, которую можно сохранить.';
+
+  @override
+  String get backupMessageHistory_exportTooLarge =>
+      'Копия превышает лимит восстановления в 32 МиБ. Попробуйте сохранить личную и канальную историю раздельно.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

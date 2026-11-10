@@ -341,6 +341,31 @@ class AppLocalizationsEs extends AppLocalizations {
       'Could not import message history. Refresh the preview.';
 
   @override
+  String get backupMessageHistory_exportTitle => 'Back up message history';
+
+  @override
+  String get backupMessageHistory_exportIntro =>
+      'Choose which message history to save for this node in a separate JSON file. Channel history is included when it can be uniquely matched to a channel key.';
+
+  @override
+  String get backupMessageHistory_direct => 'Direct messages';
+
+  @override
+  String get backupMessageHistory_channels => 'Channel messages';
+
+  @override
+  String get backupMessageHistory_exportNotReady =>
+      'Connect to the node and wait for the selected data to finish syncing.';
+
+  @override
+  String get backupMessageHistory_exportEmpty =>
+      'There is no history to back up in the selected sections.';
+
+  @override
+  String get backupMessageHistory_exportTooLarge =>
+      'The backup exceeds the 32 MiB restore limit. Try backing up direct and channel history separately.';
+
+  @override
   String get common_ok => 'Aceptar';
 
   @override
