@@ -3096,6 +3096,13 @@ active node before opening the password dialog. Channel-only export
 uses the confirmed inventory. Selecting contacts requests a complete
 list and serializes the radio records ahead of any app-side merging.
 
+The message-history restore route reads upstream v1 contact and channel
+history preferences as data. It requires the full source node key to
+match the current session and maps channel PSK IDs to unambiguous
+local names. A single SQLite transaction appends missing message IDs
+in the active profile and leaves existing rows intact. Incoming
+archive rows never enter the delivery queues.
+
 Portable display settings can be backed up separately from the scanner
 or included with the node lists. The v1 `mcoaDisplaySettings` section
 holds an allowlist of language, built-in theme mode, units, scaling and

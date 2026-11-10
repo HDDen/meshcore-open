@@ -1458,6 +1458,22 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
   /// test.
   bool get hasDatabase => _initialized && _database != null;
 
+  Future<int> mergeBackupMessages(
+    List<HistoryBackupBatch> histories, {
+    required bool Function() stillCurrent,
+  }) => _persistenceWork.run(() async {
+    if (!hasDatabase) throw StateError('Message history database is not open');
+    final result = await _database!.mergeBackupMessages(
+      histories,
+      stillCurrent: stillCurrent,
+    );
+    for (final entry in result.keys.entries) {
+      _keys[MessageHistoryKind.values[entry.key]]!.addAll(entry.value);
+    }
+    _directMarkerKeys.addAll(result.directMarkerKeys);
+    return result.added;
+  });
+
   MessageHistoryDatabase get _cliDatabase {
     if (!hasDatabase) {
       throw StateError('CLI history database is not open');

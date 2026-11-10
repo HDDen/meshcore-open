@@ -309,6 +309,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backupAppSettings_disabled => 'Выключено';
 
   @override
+  String get backupMessageHistory_title => 'Восстановление истории сообщений';
+
+  @override
+  String get backupMessageHistory_intro =>
+      'Выберите резервную копию MeshCore Open с историей сообщений этой ноды. Сообщения сохраняются в текущем профиле приложения.';
+
+  @override
+  String get backupMessageHistory_empty =>
+      'В файле нет поддерживаемой истории сообщений.';
+
+  @override
+  String get backupMessageHistory_waitForNode =>
+      'Подключитесь к ноде, из которой сделана копия, дождитесь синхронизации и обновите предпросмотр.';
+
+  @override
+  String backupMessageHistory_summary(int count, int skipped) {
+    return 'К проверке: $count. Пропущено сообщений из каналов без однозначного совпадения: $skipped.';
+  }
+
+  @override
+  String backupMessageHistory_confirm(String node, int count) {
+    return 'Импортировать историю ноды «$node»? Сообщений к проверке: $count. Совпадающие сообщения останутся без изменений.';
+  }
+
+  @override
+  String backupMessageHistory_applied(int count) {
+    return 'Добавлено сообщений: $count.';
+  }
+
+  @override
+  String get backupMessageHistory_failed =>
+      'Не удалось импортировать историю сообщений. Обновите предпросмотр.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

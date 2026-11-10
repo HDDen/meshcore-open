@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
+import 'package:meshcore_open/helpers/backup_message_history.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
@@ -47,6 +48,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   bool ready = true;
   int writes = 0;
   int contactWrites = 0;
+  int historyWrites = 0;
   BackupChannelRestorePreview? appliedPreview;
   BackupChannelRestoreResult result = (
     confirmed: 2,
@@ -130,6 +132,21 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   }
 
   @override
+  BackupMessageHistoryPreview? previewBackupMessageHistory(
+    BackupMessageHistory source,
+  ) => ready && source.nodeKey == _key
+      ? source.preview(destination: current, session: this)
+      : null;
+
+  @override
+  Future<int?> restoreBackupMessageHistory(
+    BackupMessageHistoryPreview preview,
+  ) async {
+    historyWrites++;
+    return preview.count;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -149,6 +166,7 @@ Future<AppLocalizations> _show(
   String contents, {
   String language = 'en',
   bool contactsMode = false,
+  bool historyMode = false,
 }) async {
   Future<XFile?> pickFile() async => XFile.fromData(
     Uint8List.fromList(utf8.encode(contents)),
@@ -161,7 +179,9 @@ Future<AppLocalizations> _show(
         locale: Locale(language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: contactsMode
+        home: historyMode
+            ? BackupRestoreScreen.messageHistory(pickFile: pickFile)
+            : contactsMode
             ? BackupRestoreScreen.contacts(pickFile: pickFile)
             : BackupRestoreScreen.channels(pickFile: pickFile),
       ),
@@ -205,6 +225,67 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('history import waits for the source node and confirmation',
+      (tester) async {
+    final node = _Node()..ready = false;
+    addTearDown(node.dispose);
+    final storageId = node.current[1].storageId;
+    final scope = _key.substring(0, 10);
+    final contents = jsonEncode({
+      'format': BackupFileCodec.payloadFormat,
+      'version': BackupFileCodec.formatVersion,
+      'sourcePublicKey': _key,
+      'items': ['channelHistory'],
+      'sections': {
+        'channels': {
+          'preferences': {
+            'channel_messages_${scope}_$storageId': [
+              {
+                'messageId': 'one',
+                'text': 'Saved channel message',
+                'senderName': 'Sender',
+                'timestamp': 1700000000000,
+                'isOutgoing': false,
+                'status': 1,
+              },
+            ],
+          },
+        },
+      },
+    });
+    final l10n = await _show(tester, node, contents, historyMode: true);
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupMessageHistory_waitForNode),
+    );
+    final apply = find.text(l10n.backupChannels_apply);
+    expect(apply, findsNothing);
+    node.ready = true;
+    await tester.tap(find.text(l10n.backupChannels_preview));
+    await tester.pump();
+    expect(find.text(l10n.backupMessageHistory_summary(1, 0)), findsOneWidget);
+
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupMessageHistory_confirm('Test node', 1)), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(node.historyWrites, 0);
+
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: apply,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupMessageHistory_applied(1)), findsOneWidget);
+    expect(node.historyWrites, 1);
+    expect(node.writes, 0);
+    expect(node.contactWrites, 0);
+  });
+
   testWidgets('app settings export and confirmed restore work without a node',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

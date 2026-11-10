@@ -146,6 +146,19 @@ class LegacyMessageHistoryEntry {
 typedef LegacyMessageValidator =
     void Function(int kind, Map<String, dynamic> message);
 
+typedef HistoryBackupBatch = ({
+  int kind,
+  String key,
+  List<String> aliases,
+  List<Map<String, dynamic>> messages,
+});
+
+typedef HistoryBackupWrite = ({
+  int added,
+  Map<int, Set<String>> keys,
+  Set<String> directMarkerKeys,
+});
+
 class LegacyMessageHistoryProgress {
   const LegacyMessageHistoryProgress({
     required this.completedHistories,
@@ -2360,6 +2373,57 @@ JOIN history_messages AS latest
     }
     return result;
   }
+
+  /// Appends missing messages, leaving existing IDs and their local metadata.
+  Future<HistoryBackupWrite> mergeBackupMessages(
+    List<HistoryBackupBatch> histories, {
+    required bool Function() stillCurrent,
+  }) => transaction(() async {
+    void checkDestination() {
+      if (!stillCurrent()) throw StateError('Backup history destination changed');
+    }
+
+    checkDestination();
+    var added = 0;
+    final keys = <int, Set<String>>{};
+    final markerKeys = <String>{};
+    for (final history in histories) {
+      checkDestination();
+      final idColumn = historyMessages.messageId;
+      final query = selectOnly(historyMessages)
+        ..addColumns([idColumn])
+        ..where(
+          historyMessages.kind.equals(history.kind) &
+              historyMessages.storageKey.isIn([history.key, ...history.aliases]),
+        );
+      final ids = (await query.map((row) => row.read(idColumn)!).get()).toSet();
+      final occurrences = <String, int>{};
+      final rows = <HistoryMessagesCompanion>[];
+      for (final message in history.messages) {
+        final storedId = message['messageId'] as String?;
+        final id = storedId == null || storedId.isEmpty
+            ? _messageIdFor(message, occurrences)
+            : storedId;
+        if (!ids.add(id)) continue;
+        final row = _companionFor(
+          history.kind,
+          history.key,
+          message,
+          messageId: id,
+        );
+        rows.add(row);
+        if (history.kind == 0 && row.containsMarker.value) {
+          markerKeys.add(history.key);
+        }
+      }
+      if (rows.isEmpty) continue;
+      await batch((batch) => batch.insertAll(historyMessages, rows));
+      added += rows.length;
+      (keys[history.kind] ??= {}).add(history.key);
+    }
+    checkDestination();
+    return (added: added, keys: keys, directMarkerKeys: markerKeys);
+  });
 
   Future<bool> upsertMessages(
     int kind,

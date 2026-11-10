@@ -52,6 +52,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_message_history.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/channel_deletion_snapshot.dart';
@@ -12641,6 +12642,110 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       current: _channels,
       source: source,
     );
+  }
+
+  Object get _messageHistoryBackupSession => (
+    this,
+    _channelInboxRevision,
+    ContactIdentities.instance.revision,
+    ChannelIdentities.instance.revision,
+  );
+
+  bool _canImportMessageHistory(String nodeKey) =>
+      !_disposed &&
+      isConnected &&
+      !isOfflineMode &&
+      !isReviewMode &&
+      MessageHistoryStorage.instance.hasDatabase &&
+      _persistedStateLoadedKey == nodeKey &&
+      selfPublicKeyHex == nodeKey;
+
+  List<Channel> get _messageHistoryBackupChannels =>
+      _hasBackupChannelInventory &&
+          !_restoringBackupChannels &&
+          _channelEditsInProgress == 0
+      ? _channels
+      : const [];
+
+  BackupMessageHistoryPreview? previewBackupMessageHistory(
+    BackupMessageHistory source,
+  ) {
+    if (!_canImportMessageHistory(source.nodeKey)) return null;
+    return source.preview(
+      destination: _messageHistoryBackupChannels,
+      session: _messageHistoryBackupSession,
+    );
+  }
+
+  Future<int?> restoreBackupMessageHistory(
+    BackupMessageHistoryPreview preview,
+  ) async {
+    final current = previewBackupMessageHistory(preview.source);
+    if (current == null ||
+        current.session != preview.session ||
+        !mapEquals(current.channelTargets, preview.channelTargets)) {
+      return null;
+    }
+    final inventory = {
+      for (final channel in _messageHistoryBackupChannels)
+        channel.index: ChannelIdentity.of(channel),
+    };
+    bool isCurrent() =>
+        _canImportMessageHistory(preview.source.nodeKey) &&
+        _messageHistoryBackupSession == preview.session &&
+        (preview.channelTargets.isEmpty ||
+            mapEquals(inventory, {
+              for (final channel in _messageHistoryBackupChannels)
+                channel.index: ChannelIdentity.of(channel),
+            }));
+
+    final added = await MessageHistoryStorage.instance.mergeBackupMessages(
+      current.batches,
+      stillCurrent: isCurrent,
+    );
+    if (added > 0 && isCurrent()) {
+      try {
+        await _refreshAfterMessageHistoryImport(preview, isCurrent);
+      } on Object {
+        appLogger.warn(
+          'Could not refresh the imported history view',
+          tag: 'Connector',
+        );
+      }
+    }
+    return added;
+  }
+
+  Future<void> _refreshAfterMessageHistoryImport(
+    BackupMessageHistoryPreview preview,
+    bool Function() isCurrent,
+  ) async {
+    _clearSharedMessageHistoryCache();
+    if (preview.source.direct.isNotEmpty) {
+      _conversationLoadGeneration++;
+      _loadedConversationKeys.clear();
+      _conversationLoadFutures.clear();
+      final active = _activeContactKey;
+      if (active != null) await _loadMessagesForContact(active);
+      if (!isCurrent()) return;
+      await _refreshContactMessageSummaries(persistChanges: false);
+    }
+    for (final index in preview.channelTargets.keys) {
+      if (!isCurrent()) return;
+      final persisted = await _channelMessageStore.loadLatestChannelMessages(
+        index,
+        limit: _initialChannelHistorySize,
+        allowLegacyMigration: false,
+      );
+      if (!isCurrent()) return;
+      final merged = {
+        for (final message in persisted) message.messageId: message,
+        for (final message in _channelMessages[index] ?? const <ChannelMessage>[])
+          message.messageId: message,
+      };
+      _channelMessages[index] = _orderedChannelMessages(merged.values.toList());
+    }
+    if (isCurrent()) notifyListeners();
   }
 
   /// Reads the selected radio lists from the active node. A channel-only

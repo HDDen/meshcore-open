@@ -12,6 +12,7 @@ import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/review_mode/review_frames.dart';
+import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
@@ -270,6 +271,61 @@ void main() {
       includeChannels: true,
       includeContacts: false,
     ), isNull);
+  });
+
+  test('history import checks the full source key and writes only to SQLite',
+      () async {
+    final id = radio.slots[2]!.storageId;
+    final scope = _node.substring(0, 10);
+    Future<BackupImportPlan> inspect(String node) async {
+      final contents = await const BackupFileCodec().encode({
+        'format': BackupFileCodec.payloadFormat,
+        'version': BackupFileCodec.formatVersion,
+        'sourcePublicKey': node,
+        'items': ['channelHistory'],
+        'sections': {
+          'channels': {
+            'preferences': {
+              'channel_messages_${scope}_$id': [
+                {
+                  'messageId': 'imported',
+                  'text': 'Imported history',
+                  'senderName': 'Sender',
+                  'timestamp': 1700000000000,
+                  'isOutgoing': false,
+                  'status': ChannelMessageStatus.sent.index,
+                  'channelIndex': 1,
+                },
+              ],
+            },
+          },
+        },
+      }, password: '');
+      return const BackupImportPlanner().inspect(
+        contents,
+        password: '',
+        messageHistoryOnly: true,
+      );
+    }
+
+    final foreign = await inspect(scope.padRight(64, 'b'));
+    expect(radio.connector.previewBackupMessageHistory(foreign.messageHistory!), isNull);
+    final source = (await inspect(_node)).messageHistory!;
+    final preview = radio.connector.previewBackupMessageHistory(source)!;
+    expect(preview.channelTargets.keys, [2]);
+    expect(await radio.connector.restoreBackupMessageHistory(preview), 1);
+    final messages = await radio.connector.loadLatestPersistedChannelMessages(
+      2,
+      limit: 10,
+    );
+    expect(messages.single.text, 'Imported history');
+    expect(messages.single.channelIndex, 2);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    expect(radio.contactWrites, isEmpty);
+
+    radio.connector.resetSyncProgressForTest();
+    expect(await radio.connector.restoreBackupMessageHistory(preview), isNull);
   });
 
   test('combined export reads contacts from the radio and rejects an incomplete read', () async {

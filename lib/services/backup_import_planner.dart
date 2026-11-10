@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
@@ -16,6 +17,7 @@ class BackupImportPlan {
     required List<Contact>? contacts,
     required List<Channel>? channels,
     required this.appSettings,
+    this.messageHistory,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -26,6 +28,7 @@ class BackupImportPlan {
   final List<Contact>? contacts;
   final List<Channel>? channels;
   final AppSettingsBackup? appSettings;
+  final BackupMessageHistory? messageHistory;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -47,6 +50,7 @@ class BackupImportPlanner {
     String contents, {
     required String password,
     bool appSettingsOnly = false,
+    bool messageHistoryOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -60,6 +64,16 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (messageHistoryOnly) {
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        messageHistory: official ? null : BackupMessageHistory.read(payload, publicKey),
+      );
+    }
     final contacts = appSettingsOnly
         ? null
         : official

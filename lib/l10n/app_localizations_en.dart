@@ -307,6 +307,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupAppSettings_disabled => 'Off';
 
   @override
+  String get backupMessageHistory_title => 'Restore message history';
+
+  @override
+  String get backupMessageHistory_intro =>
+      'Choose a MeshCore Open backup with this node’s message history. Messages are saved to the current app profile.';
+
+  @override
+  String get backupMessageHistory_empty =>
+      'This file contains no supported message history.';
+
+  @override
+  String get backupMessageHistory_waitForNode =>
+      'Connect to the node used to create the backup, wait for sync, and refresh the preview.';
+
+  @override
+  String backupMessageHistory_summary(int count, int skipped) {
+    return 'To check: $count. Messages skipped because their channel has no unique match: $skipped.';
+  }
+
+  @override
+  String backupMessageHistory_confirm(String node, int count) {
+    return 'Import message history for “$node”? Messages to check: $count. Existing messages with matching IDs will be kept.';
+  }
+
+  @override
+  String backupMessageHistory_applied(int count) {
+    return 'Messages added: $count.';
+  }
+
+  @override
+  String get backupMessageHistory_failed =>
+      'Could not import message history. Refresh the preview.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

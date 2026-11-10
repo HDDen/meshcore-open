@@ -586,6 +586,54 @@ abstract class AppLocalizations {
   /// **'Off'**
   String get backupAppSettings_disabled;
 
+  /// No description provided for @backupMessageHistory_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore message history'**
+  String get backupMessageHistory_title;
+
+  /// No description provided for @backupMessageHistory_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup with this node’s message history. Messages are saved to the current app profile.'**
+  String get backupMessageHistory_intro;
+
+  /// No description provided for @backupMessageHistory_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains no supported message history.'**
+  String get backupMessageHistory_empty;
+
+  /// No description provided for @backupMessageHistory_waitForNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the node used to create the backup, wait for sync, and refresh the preview.'**
+  String get backupMessageHistory_waitForNode;
+
+  /// No description provided for @backupMessageHistory_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'To check: {count}. Messages skipped because their channel has no unique match: {skipped}.'**
+  String backupMessageHistory_summary(int count, int skipped);
+
+  /// No description provided for @backupMessageHistory_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Import message history for “{node}”? Messages to check: {count}. Existing messages with matching IDs will be kept.'**
+  String backupMessageHistory_confirm(String node, int count);
+
+  /// No description provided for @backupMessageHistory_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages added: {count}.'**
+  String backupMessageHistory_applied(int count);
+
+  /// No description provided for @backupMessageHistory_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import message history. Refresh the preview.'**
+  String get backupMessageHistory_failed;
+
   /// No description provided for @common_ok.
   ///
   /// In en, this message translates to:
