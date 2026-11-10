@@ -215,13 +215,15 @@ There is no per-contact muting.
 
 The notification system prevents notification storms:
 - **Minimum interval**: 3 seconds between alerts
-- **Messages**: each direct or channel message always updates its conversation notification, so Reply stays available. Messages arriving within 3 seconds of the last alert update silently instead of alerting again.
+- **Messages**: the first update to a conversation posts immediately. Further messages in the same 800 ms window update that card together. The Android conversation card keeps the latest six messages and its reply actions.
+- **Sound**: Android, iOS and macOS update silently within the three-second interval and allow at most one audible conversation alert per radio queue drain.
 - **Advertisements batch window**: If multiple advertisement notifications arrive within 5 seconds, they are combined into a single summary notification on a fourth Android channel (`batch_summary`). The title is "MeshCore Activity" and the body lists the count (e.g., "3 new nodes"). Batch summaries are Android-only; queued notifications that overflow the batch window are silently dropped on other platforms
 
 ## Notification Clearing
 
 - **Opening a contact chat**: Cancels the OS notification and resets unread count
 - **Opening a channel**: Cancels the channel notification and resets unread count
+- **Switching radios or replacing a channel in a slot**: Clears stale cards and pending updates. After an app restart, clearing old cards depends on which active notifications the platform exposes.
 - **Opening Contacts screen**: Cancels all advertisement notifications
 
 ## Translation and image references

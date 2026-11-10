@@ -121,6 +121,7 @@ import '../services/background_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../services/translation_service.dart';
 import '../services/notification_reply.dart';
+import '../helpers/notification_conversation_work.dart';
 import '../services/notification_service.dart';
 import 'meshcore_connector_usb.dart';
 import 'meshcore_connector_tcp.dart';
@@ -639,6 +640,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _contactSyncTimeout;
   static const Duration _contactSyncIdleTimeout = Duration(seconds: 10);
   bool _isSyncingQueuedMessages = false;
+  NotificationQueueAlert? _queuedNotificationAlert;
 
   /// True only while draining the backlog accumulated before this connection.
   /// The firmware replays it in FIFO order but exposes only the untrusted
@@ -1650,6 +1652,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   bool get isSyncingQueuedMessages =>
       _isSyncingQueuedMessages || _isProcessingDeferredQueuedContactMessages;
+  NotificationQueueAlert? get _activeQueuedNotificationAlert =>
+      isSyncingQueuedMessages ? _queuedNotificationAlert : null;
   bool get isShowingQueuedMessageSyncProgress =>
       _deferQueuedContactMessagesUntilContacts && isSyncingQueuedMessages;
   bool get isSyncingChannels => _isSyncingChannels;
@@ -11827,6 +11831,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _pendingQueueSync = true;
       return;
     }
+    if (!_isSyncingQueuedMessages) {
+      _queuedNotificationAlert = NotificationQueueAlert();
+    }
     _isSyncingQueuedMessages = true;
     notifyListeners();
     await _requestNextQueuedMessage();
@@ -12377,6 +12384,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     await sendFrame(buildSetChannelFrame(index, '', Uint8List(16)));
     if (selfPublicKeyHex == deletion.nodeKey &&
         deletion.matches(_findChannelByIndex(index))) {
+      _showNotificationInBackground(
+        _notificationService.clearChannelNotification(index, getTotalUnreadCount()),
+      );
       _channelMessages.remove(index);
       _processedChannelReactions.remove(index);
     }
@@ -12956,6 +12966,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _clearSessionMessageState();
     }
     _messageStateOwnerKey = selfPublicKeyHex;
+    if (parsedSelfInfo) {
+      _showNotificationInBackground(_notificationService.bindRadio(
+        selfPublicKeyHex,
+        currentUnreadTotal: getTotalUnreadCount,
+      ));
+    }
 
     // A later SELF_INFO of this link session (refreshDeviceInfo after a
     // settings change) answers for the radio whose stores are bound and
@@ -14348,10 +14364,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           if (_recordInitialSyncMessageNotification()) return;
           final msg = message; // capture for closure
           final c = contact; // capture contact reference
+          final queueAlert = _activeQueuedNotificationAlert;
+          final notificationNode = selfPublicKeyHex;
           final translationResult = await translateContactMessage(
             msg.senderKeyHex,
             msg,
           );
+          if (notificationNode != selfPublicKeyHex) return;
           if (c?.type == advTypeChat) {
             final resolvedText =
                 (translationResult != null &&
@@ -14368,6 +14387,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     c != null && isContactUrlImagesEnabled(c.publicKeyHex),
                 contactId: msg.senderKeyHex,
                 badgeCount: getTotalUnreadCount(),
+                currentUnreadTotal: getTotalUnreadCount,
+                queueAlert: queueAlert,
               ),
             );
           } else if (c?.type == advTypeRoom) {
@@ -14386,6 +14407,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                     c != null && isContactUrlImagesEnabled(c.publicKeyHex),
                 contactId: msg.senderKeyHex,
                 badgeCount: getTotalUnreadCount(),
+                currentUnreadTotal: getTotalUnreadCount,
+                queueAlert: queueAlert,
               ),
             );
           }
@@ -16135,6 +16158,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         urlImagesEnabled: isChannelUrlImagesEnabled(channelIndex),
         channelIndex: message.channelIndex,
         badgeCount: getTotalUnreadCount(),
+        currentUnreadTotal: getTotalUnreadCount,
+        queueAlert: _activeQueuedNotificationAlert,
       ),
     );
   }
@@ -18247,6 +18272,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       (entry) => entry?.index == channel.index,
       orElse: () => null,
     );
+    final oldChannel = existingAtIndex ?? previousAtIndex ?? _cachedChannels
+        .where((entry) => entry.index == channel.index)
+        .firstOrNull;
+    if (oldChannel != null && !oldChannel.isEmpty &&
+        (channel.isEmpty || !listEquals(oldChannel.psk, channel.psk))) {
+      _showNotificationInBackground(
+        _notificationService.clearChannelNotification(
+          channel.index,
+          getTotalUnreadCount(),
+        ),
+      );
+    }
     if (previousAtIndex != null &&
         !previousAtIndex.isEmpty &&
         !listEquals(previousAtIndex.psk, channel.psk)) {

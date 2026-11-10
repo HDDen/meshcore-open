@@ -14,6 +14,7 @@ import '../helpers/background_work_tracker.dart';
 import '../helpers/gif_helper.dart';
 import '../helpers/marker_message.dart';
 import '../helpers/notification_background_work.dart';
+import '../helpers/notification_conversation_work.dart';
 import '../helpers/mcoimg_codec.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/message_url_image_helper.dart';
@@ -99,6 +100,12 @@ class NotificationService {
   // shows the conversation (Android MessagingStyle, used by Android Auto).
   static const _maxConversationMessages = 6;
   final Map<int, _Conversation> _conversations = {};
+  final _conversationWork = NotificationConversationWork();
+  final _conversationPosts = <int, DateTime>{};
+  final _conversationBatches = <int, _ConversationBatch>{};
+  final _conversationRevisions = <int, int>{};
+  int _conversationEpoch = 0;
+  String? _radioKey;
 
   // Single-subscription so actions that arrive before the connector listens
   // (e.g. during startup) are buffered instead of dropped.
@@ -128,6 +135,7 @@ class NotificationService {
   // (Added after getting notification-flooded while evaluating RF flood management. The irony.)
   static const _minNotificationInterval = Duration(seconds: 3);
   static const _batchWindow = Duration(seconds: 5);
+  static const _conversationWindow = Duration(milliseconds: 800);
 
   DateTime? _lastNotificationTime;
   DateTime Function() _rateLimitNow = DateTime.now;
@@ -140,6 +148,7 @@ class NotificationService {
     _suppressNotifications = suppress;
     if (suppress) {
       _pendingNotifications.clear();
+      _dropPendingConversationUpdates();
     }
   }
 
@@ -166,7 +175,8 @@ class NotificationService {
     _pendingNotifications.clear();
     _isBatchingActive = false;
     _suppressNotifications = false;
-    _conversations.clear();
+    _radioKey = null;
+    _invalidateConversations();
   }
 
   Future<void> initialize() async {
@@ -721,10 +731,11 @@ class NotificationService {
     String? imagePath,
     int? badge, [
     _MCOImageNotificationAttachment? attachment,
+    bool silent = false,
   ]) => DarwinNotificationDetails(
     presentAlert: true,
     presentBadge: true,
-    presentSound: true,
+    presentSound: !silent,
     badgeNumber: badge,
     attachments: _darwinAttachmentsFor(attachment, imagePath: imagePath),
   );
@@ -732,28 +743,25 @@ class NotificationService {
   Future<void> _showConversationNotificationImpl({
     required int id,
     required String payload,
-    required String title,
-    required bool isChannel,
-    required String message,
-    required bool urlImagesEnabled,
-    String? senderName,
-    int? badgeCount,
-    bool silent = false,
+    required List<_PendingNotification> updates,
+    required bool Function() isCurrent,
+    required bool silent,
   }) async {
-    if (!await _ensureCanNotify()) return;
+    if (!isCurrent() || !await _ensureCanNotify() || !isCurrent()) return;
+    final latest = updates.last;
+    final title = latest.title;
+    final isChannel = latest.type == _NotificationType.channelMessage;
+    final message = latest.body;
     final mcoAttachment = await _tryBuildMcoImageAttachment(message);
+    if (!isCurrent()) return;
     final imagePath = mcoAttachment == null
         ? await _resolveNotificationImagePath(
             message,
-            urlImagesEnabled: urlImagesEnabled,
+            urlImagesEnabled: latest.urlImagesEnabled,
           ).timeout(_notificationImageTimeout, onTimeout: () => null)
         : null;
-    final preview = mcoAttachment == null
-        ? formatNotificationText(message.trim(), _l10n)
-        : 'MCOimg';
-    final body = preview.isEmpty
-        ? _l10n.notification_receivedNewMessage
-        : preview;
+    if (!isCurrent()) return;
+    final badgeCount = latest.currentUnreadTotal?.call() ?? latest.badgeCount;
 
     final conversation =
         _conversations.putIfAbsent(
@@ -768,15 +776,20 @@ class NotificationService {
           ..badgeCount = badgeCount
           ..imagePath = imagePath
           ..mcoAttachment = mcoAttachment;
-    final sender = isChannel ? (senderName ?? title) : title;
-    conversation.add(
-      Message(
-        body,
-        DateTime.now(),
-        Person(key: isChannel ? 'sender:$sender' : payload, name: sender),
-      ),
-      _maxConversationMessages,
-    );
+    for (final update in updates) {
+      final preview = identical(update, latest) && mcoAttachment != null
+          ? 'MCOimg'
+          : formatNotificationText(update.body.trim(), _l10n);
+      final sender = isChannel ? (update.senderName ?? update.title) : update.title;
+      conversation.add(
+        Message(
+          preview.isEmpty ? _l10n.notification_receivedNewMessage : preview,
+          update.receivedAt,
+          Person(key: isChannel ? 'sender:$sender' : payload, name: sender),
+        ),
+        _maxConversationMessages,
+      );
+    }
 
     final notificationDetails = NotificationDetails(
       android: _androidConversationDetails(
@@ -784,8 +797,8 @@ class NotificationService {
         badgeCount: badgeCount,
         silent: silent,
       ),
-      iOS: _darwinDetails(imagePath, badgeCount, mcoAttachment),
-      macOS: _darwinDetails(imagePath, badgeCount, mcoAttachment),
+      iOS: _darwinDetails(imagePath, badgeCount, mcoAttachment, silent),
+      macOS: _darwinDetails(imagePath, badgeCount, mcoAttachment, silent),
       linux: _linuxDetailsFor(mcoAttachment),
       windows: _windowsDetailsFor(mcoAttachment),
     );
@@ -816,6 +829,19 @@ class NotificationService {
       ? reply.channelIndex!.hashCode
       : reply.contactKeyHex!.hashCode;
 
+  Future<void> _runConversationAction(
+    NotificationReply reply,
+    Future<void> Function(int id) action,
+  ) {
+    final id = _conversationId(reply);
+    _flushConversation(id, beforeAction: true);
+    final revision = _conversationRevision(id);
+    return _conversationWork.run(id, () async {
+      if (revision != _conversationRevision(id)) return;
+      await _backgroundWork.run(() => action(id));
+    });
+  }
+
   /// Adds the user's reply to the conversation notification. Android keeps
   /// showing a progress spinner on a replied notification until it is updated.
   /// Pass the current [badgeCount]: an update replaces the whole notification,
@@ -824,9 +850,8 @@ class NotificationService {
     NotificationReply reply,
     String text, {
     int? badgeCount,
-  }) => _backgroundWork.run(() async {
+  }) => _runConversationAction(reply, (id) async {
     if (!await _ensureInitialized()) return;
-    final id = _conversationId(reply);
     final conversation = _conversations[id];
     if (conversation == null) {
       await _notifications.cancel(id: id);
@@ -845,7 +870,7 @@ class NotificationService {
     NotificationReply reply,
     NotificationReplyFailure failure, {
     int? badgeCount,
-  }) => _backgroundWork.run(() async {
+  }) => _runConversationAction(reply, (id) async {
     if (!await _ensureInitialized()) return;
     final reason = switch (failure) {
       NotificationReplyFailure.notConnected =>
@@ -855,7 +880,6 @@ class NotificationService {
       NotificationReplyFailure.tooLong => _l10n.notification_replyTooLong,
       NotificationReplyFailure.sendFailed => _l10n.notification_replySendFailed,
     };
-    final id = _conversationId(reply);
     final conversation = _conversations[id];
     if (conversation != null) {
       conversation.badgeCount = badgeCount ?? conversation.badgeCount;
@@ -1040,11 +1064,87 @@ class NotificationService {
     unawaited(Future<void>.sync(() => handler(payload)));
   }
 
-  Future<void> cancelAll() => _backgroundWork.run(() async {
+  void _dropPendingConversationUpdates() {
+    for (final batch in _conversationBatches.values) {
+      batch.timer.cancel();
+    }
+    _conversationBatches.clear();
+    _conversationPosts.clear();
+  }
+
+  void _invalidateConversations() {
+    _conversationEpoch++;
+    _conversationRevisions.clear();
+    _dropPendingConversationUpdates();
     _conversations.clear();
-    await _notifications.cancelAll();
-    await _updateBadge(0);
-  });
+  }
+
+  Future<void> cancelAll() {
+    _invalidateConversations();
+    return _conversationWork.run(null, () => _backgroundWork.run(() async {
+      await _notifications.cancelAll();
+      await _updateBadge(0);
+    }));
+  }
+
+  static const _radioKeyPrefsKey = 'notifications_radio_key';
+  static const _licenseExpiryNotificationId = 0x4d434f4c;
+
+  /// Discard the previous node's conversation notifications. The key lives
+  /// in the current application profile, including portable profiles.
+  Future<void> bindRadio(
+    String radioKey, {
+    int Function()? currentUnreadTotal,
+  }) async {
+    if (radioKey.isEmpty || _radioKey == radioKey) return;
+    String? previous = _radioKey;
+    try {
+      previous ??= PrefsManager.instance.getString(_radioKeyPrefsKey);
+    } catch (_) {}
+    _radioKey = radioKey;
+    if (previous != null && previous != radioKey) {
+      final ids = {..._conversations.keys, ..._conversationPosts.keys};
+      _pendingTapPayload = null;
+      _lastNotificationTime = null;
+      _invalidateConversations();
+      await _conversationWork.run(null, () => _backgroundWork.run(() async {
+        if (!await _ensureInitialized()) return;
+        try {
+          final active = await _notifications.getActiveNotifications();
+          for (final notification in active) {
+            final id = notification.id;
+            final payload = notification.payload ?? '';
+            // The Windows plugin only returns IDs from its own toast history.
+            final windowsToast = PlatformInfo.isWindows &&
+                notification.title == null && notification.channelId == null;
+            if (id != null &&
+                id != _licenseExpiryNotificationId &&
+                (notification.channelId == 'messages' ||
+                    notification.channelId == 'channel_messages' ||
+                    payload.startsWith('message:') ||
+                    payload.startsWith('channel:') ||
+                    windowsToast)) {
+              ids.add(id);
+            }
+          }
+        } catch (e) {
+          debugPrint('Could not list notifications for the previous radio: $e');
+        }
+        for (final id in ids) {
+          try {
+            await _notifications.cancel(id: id);
+          } catch (e) {
+            debugPrint('Could not clear conversation notification: $e');
+          }
+        }
+        await _updateBadge(currentUnreadTotal?.call() ?? 0);
+      }));
+    }
+    if (_radioKey != radioKey) return;
+    try {
+      await PrefsManager.instance.setString(_radioKeyPrefsKey, radioKey);
+    } catch (_) {}
+  }
 
   Future<void> cancel(int id) => _backgroundWork.run(() async {
     await _notifications.cancel(id: id);
@@ -1069,7 +1169,7 @@ class NotificationService {
     );
     try {
       await _notifications.show(
-        id: 0x4d434f4c,
+        id: _licenseExpiryNotificationId,
         title: title,
         body: body,
         notificationDetails: details,
@@ -1085,23 +1185,25 @@ class NotificationService {
   Future<void> clearContactNotification(
     String contactId,
     int totalUnreadCount,
-  ) => _backgroundWork.run(() async {
-    if (!await _ensureInitialized()) return;
-    _conversations.remove(contactId.hashCode);
-    await _notifications.cancel(id: contactId.hashCode);
-    await _updateBadge(totalUnreadCount);
-  });
+  ) => _clearConversation(contactId.hashCode, totalUnreadCount);
 
   /// Cancel the notification for a specific channel and update the app badge.
   Future<void> clearChannelNotification(
     int channelIndex,
     int totalUnreadCount,
-  ) => _backgroundWork.run(() async {
-    if (!await _ensureInitialized()) return;
-    _conversations.remove(channelIndex.hashCode);
-    await _notifications.cancel(id: channelIndex.hashCode);
-    await _updateBadge(totalUnreadCount);
-  });
+  ) => _clearConversation(channelIndex.hashCode, totalUnreadCount);
+
+  Future<void> _clearConversation(int id, int totalUnreadCount) {
+    _conversationRevisions.update(id, (value) => value + 1, ifAbsent: () => 1);
+    _conversationBatches.remove(id)?.timer.cancel();
+    _conversationPosts.remove(id);
+    _conversations.remove(id);
+    return _conversationWork.run(id, () => _backgroundWork.run(() async {
+      if (!await _ensureInitialized()) return;
+      await _notifications.cancel(id: id);
+      await _updateBadge(totalUnreadCount);
+    }));
+  }
 
   static int _lowBatteryNotificationId(String deviceKey, int threshold) =>
       'low_battery:$deviceKey:$threshold'.hashCode;
@@ -1175,6 +1277,8 @@ class NotificationService {
     required bool urlImagesEnabled,
     String? contactId,
     int? badgeCount,
+    int Function()? currentUnreadTotal,
+    NotificationQueueAlert? queueAlert,
   }) async {
     if (_suppressNotifications) return;
 
@@ -1186,6 +1290,8 @@ class NotificationService {
         urlImagesEnabled: urlImagesEnabled,
         id: contactId,
         badgeCount: badgeCount,
+        currentUnreadTotal: currentUnreadTotal,
+        queueAlert: queueAlert,
       ),
     );
   }
@@ -1214,6 +1320,8 @@ class NotificationService {
     required bool urlImagesEnabled,
     int? channelIndex,
     int? badgeCount,
+    int Function()? currentUnreadTotal,
+    NotificationQueueAlert? queueAlert,
   }) async {
     if (_suppressNotifications) return;
 
@@ -1226,23 +1334,21 @@ class NotificationService {
         urlImagesEnabled: urlImagesEnabled,
         id: channelIndex?.toString(),
         badgeCount: badgeCount,
+        currentUnreadTotal: currentUnreadTotal,
+        queueAlert: queueAlert,
       ),
     );
   }
 
   Future<void> _queueNotification(_PendingNotification notification) async {
     final now = _rateLimitNow();
+    if (notification.type != _NotificationType.advert) {
+      _queueConversation(notification, now);
+      return;
+    }
     final throttled =
         _lastNotificationTime != null &&
         now.difference(_lastNotificationTime!) < _minNotificationInterval;
-
-    // Messages always update their conversation notification so the reply
-    // action stays available; during a burst they update silently.
-    if (notification.type != _NotificationType.advert) {
-      _showNotificationImmediately(notification, silent: throttled);
-      if (!throttled) _lastNotificationTime = now;
-      return;
-    }
 
     // If we recently showed a notification, start batching
     if (throttled) {
@@ -1264,7 +1370,88 @@ class NotificationService {
       '[Notification] sent immediately: ${notification.type.name} (${_getNotificationIdentifier(notification)})',
     );
     _lastNotificationTime = now;
-    await _showNotificationImmediately(notification);
+    await _showAdvertInBackground(notification);
+  }
+
+  void _queueConversation(_PendingNotification update, DateTime now) {
+    final id = update.conversationId;
+    if (id == null) {
+      _postConversation(update.type == _NotificationType.message
+          ? 0
+          : now.millisecondsSinceEpoch & 0x7FFFFFFF, [update]);
+      return;
+    }
+    final batch = _conversationBatches[id];
+    if (batch != null) {
+      batch.add(update, _maxConversationMessages);
+      return;
+    }
+    final lastPost = _conversationPosts[id];
+    final remaining = lastPost?.add(_conversationWindow).difference(now) ??
+        Duration.zero;
+    if (remaining <= Duration.zero && _conversationWork.pendingFor(id) == null) {
+      _conversationPosts[id] = now;
+      _postConversation(id, [update]);
+      return;
+    }
+    _conversationBatches[id] = _ConversationBatch(
+      Timer(remaining.isNegative ? Duration.zero : remaining,
+          () => _flushConversation(id)),
+      [update],
+    );
+  }
+
+  void _flushConversation(int id, {bool beforeAction = false}) {
+    final batch = _conversationBatches[id];
+    if (batch == null) return;
+    batch.timer.cancel();
+    final pending = _conversationWork.pendingFor(id);
+    if (!beforeAction && pending != null) {
+      // Keep replacing the same bounded batch while a slow show finishes.
+      unawaited(pending.then((_) {
+        if (identical(_conversationBatches[id], batch)) _flushConversation(id);
+      }));
+      return;
+    }
+    _conversationBatches.remove(id);
+    _conversationPosts[id] = _rateLimitNow();
+    _postConversation(id, batch.updates);
+  }
+
+  (int, int) _conversationRevision(int id) =>
+      (_conversationEpoch, _conversationRevisions[id] ?? 0);
+
+  void _postConversation(int id, List<_PendingNotification> updates) {
+    final now = _rateLimitNow();
+    final latest = updates.last;
+    final queueAlert = latest.queueAlert;
+    final silent = (queueAlert?.alerted ?? false) ||
+        (_lastNotificationTime != null &&
+            now.difference(_lastNotificationTime!) < _minNotificationInterval);
+    if (!silent) {
+      _lastNotificationTime = now;
+      queueAlert?.alerted = true;
+    }
+    final revision = _conversationRevision(id);
+    final isChannel = latest.type == _NotificationType.channelMessage;
+    final payload = isChannel ? 'channel:${latest.channelIndex}' : 'message:${latest.id}';
+    unawaited(_conversationWork.run(id, () async {
+      bool isCurrent() => revision == _conversationRevision(id);
+      if (!isCurrent()) return;
+      await _backgroundWork.run(() async {
+        try {
+          await _showConversationNotificationImpl(
+            id: id,
+            payload: payload,
+            updates: updates,
+            isCurrent: isCurrent,
+            silent: silent,
+          );
+        } catch (e) {
+          debugPrint('Failed to show conversation notification: $e');
+        }
+      });
+    }));
   }
 
   Future<void> _processBatch() async {
@@ -1277,7 +1464,7 @@ class NotificationService {
 
     if (batch.length == 1) {
       // Single notification, show normally
-      await _showNotificationImmediately(batch.first);
+      await _showAdvertInBackground(batch.first);
     } else {
       // Multiple notifications, show summary
       await _showBatchSummary(batch);
@@ -1286,48 +1473,14 @@ class NotificationService {
     _lastNotificationTime = _rateLimitNow();
   }
 
-  Future<void> _showNotificationImmediately(
-    _PendingNotification notification, {
-    bool silent = false,
-  }) => _backgroundWork.run(() async {
+  Future<void> _showAdvertInBackground(_PendingNotification notification) =>
+      _backgroundWork.run(() async {
     try {
-      switch (notification.type) {
-        case _NotificationType.message:
-          await _showConversationNotificationImpl(
-            id: notification.id?.hashCode ?? 0,
-            payload: 'message:${notification.id}',
-            title: notification.title,
-            isChannel: false,
-            message: notification.body,
-            urlImagesEnabled: notification.urlImagesEnabled,
-            badgeCount: notification.badgeCount,
-            silent: silent,
-          );
-          break;
-        case _NotificationType.advert:
-          await _showAdvertNotificationImpl(
-            contactName: notification.body,
-            contactType: notification.title,
-            contactId: notification.id,
-          );
-          break;
-        case _NotificationType.channelMessage:
-          final channelIndex = int.tryParse(notification.id ?? '');
-          await _showConversationNotificationImpl(
-            id:
-                channelIndex?.hashCode ??
-                DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF,
-            payload: 'channel:$channelIndex',
-            title: notification.title,
-            isChannel: true,
-            message: notification.body,
-            senderName: notification.senderName,
-            urlImagesEnabled: notification.urlImagesEnabled,
-            badgeCount: notification.badgeCount,
-            silent: silent,
-          );
-          break;
-      }
+      await _showAdvertNotificationImpl(
+        contactName: notification.body,
+        contactType: notification.title,
+        contactId: notification.id,
+      );
     } catch (e) {
       debugPrint('Failed to show immediate notification: $e');
     }
@@ -1449,6 +1602,14 @@ class _PendingNotification {
   final bool urlImagesEnabled;
   final String? id;
   final int? badgeCount;
+  final int Function()? currentUnreadTotal;
+  final NotificationQueueAlert? queueAlert;
+  final DateTime receivedAt = DateTime.now();
+
+  int? get channelIndex => int.tryParse(id ?? '');
+  int? get conversationId => type == _NotificationType.channelMessage
+      ? channelIndex?.hashCode
+      : id?.hashCode;
 
   _PendingNotification({
     required this.type,
@@ -1458,7 +1619,21 @@ class _PendingNotification {
     this.urlImagesEnabled = false,
     this.id,
     this.badgeCount,
+    this.currentUnreadTotal,
+    this.queueAlert,
   });
+}
+
+class _ConversationBatch {
+  _ConversationBatch(this.timer, this.updates);
+
+  final Timer timer;
+  final List<_PendingNotification> updates;
+
+  void add(_PendingNotification update, int max) {
+    updates.add(update);
+    if (updates.length > max) updates.removeAt(0);
+  }
 }
 
 class _Conversation {

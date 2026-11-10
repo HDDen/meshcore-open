@@ -199,6 +199,7 @@ class _NotificationPlugin {
   );
 
   final List<MethodCall> shown = [];
+  final List<int> cancelledIds = [];
 
   /// While set, `show` records its call and completes only with this.
   Completer<void>? hold;
@@ -214,6 +215,9 @@ class _NotificationPlugin {
               shown.add(call);
               final pending = hold;
               if (pending != null) await pending.future;
+              return null;
+            case 'cancel':
+              cancelledIds.add((call.arguments as Map)['id'] as int);
               return null;
             default:
               return null;
@@ -392,6 +396,7 @@ Future<void> main() async {
     await ChannelIdentities.instance.load();
     NotificationService().resetForTest();
     plugin.shown.clear();
+    plugin.cancelledIds.clear();
     plugin.hold = null;
     for (final file in _notificationPngs(tempDir)) {
       file.deleteSync();
@@ -1450,6 +1455,28 @@ Future<void> main() async {
       expect(arguments['title'], 'Test');
       expect(arguments['body'], 'Alice: hello');
       expect(arguments['payload'], 'channel:0');
+    });
+
+    test('U34: reusing a channel slot cancels the former notification', () async {
+      final harness = await _Harness.start();
+      final connector = harness.connector;
+      addTearDown(harness.settings.dispose);
+      addTearDown(connector.dispose);
+      await harness.addChannel(0, 'Old channel', _psk(1));
+      connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: 0,
+        timestampSeconds: _timestamp,
+        senderName: 'Alice',
+        text: 'Old post',
+      ));
+      await _waitFor(() => plugin.shown.length == 1, 'the old notification');
+
+      await harness.addChannel(0, 'Renamed channel', _psk(1));
+      expect(plugin.cancelledIds, isEmpty);
+      await harness.addChannel(0, 'Replacement', _psk(2));
+      await _waitFor(() => plugin.cancelledIds.isNotEmpty, 'slot notification cancellation');
+      expect(plugin.cancelledIds, [0.hashCode]);
+      expect(connector.channels.single.name, 'Replacement');
     });
 
     test('an MCOimg message carries the picture', () async {

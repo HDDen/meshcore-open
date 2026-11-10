@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:meshcore_open/helpers/message_url_image_helper.dart';
+import 'package:meshcore_open/helpers/notification_conversation_work.dart';
 import 'package:meshcore_open/services/notification_reply.dart';
 import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/data_root.dart';
@@ -25,8 +26,12 @@ class _NoPreferencesDirectory extends PathProviderPlatform {
 // Настоящий NotificationService, Android plugin через mock MethodChannel.
 // Без изображений/URL, файлов, сети, реальных разрешений и OS notification UI.
 class _Plugin {
+  _Plugin({this.launchPayload});
+
   static const channel = MethodChannel('dexterous.com/flutter/local_notifications');
   static const badge = MethodChannel('meshcore_open/app_badge');
+  final String? launchPayload;
+  List<Map<String, Object>> activeNotifications = [];
   bool allowed = true;
   final calls = <MethodCall>[];
   final finished = <MethodCall>[];
@@ -54,6 +59,14 @@ class _Plugin {
       if (call.method == 'areNotificationsEnabled') {
         return allowed;
       }
+      if (call.method == 'getActiveNotifications') return activeNotifications;
+      final launch = launchPayload;
+      if (call.method == 'getNotificationAppLaunchDetails' && launch != null) {
+        return {
+          'notificationLaunchedApp': true,
+          'notificationResponse': _tapResponse(launch),
+        };
+      }
       if (call.method == 'show' || call.method == 'cancel' || call.method == 'cancelAll') {
         calls.add(call);
         try {
@@ -77,6 +90,21 @@ class _Plugin {
     calls.clear();
     finished.clear();
   }
+
+  static Map<String, Object> _tapResponse(String payload) => {
+    'notificationId': 1,
+    'notificationResponseType': NotificationResponseType.selectedNotification.index,
+    'payload': payload,
+  };
+
+  Future<void> tap(String payload) => TestDefaultBinaryMessengerBinding
+      .instance.defaultBinaryMessenger.handlePlatformMessage(
+        channel.name,
+        channel.codec.encodeMethodCall(
+          MethodCall('didReceiveNotificationResponse', _tapResponse(payload)),
+        ),
+        null,
+      );
 }
 
 class _Result {
@@ -98,14 +126,16 @@ class _Harness {
   final _Plugin plugin;
   final NotificationService service;
 
-  Future<void> emit(String type) => switch (type) {
+  Future<void> emit(String type, {NotificationQueueAlert? queueAlert}) => switch (type) {
     'direct' => service.showMessageNotification(
       contactName: 'synthetic sender', contactId: 'synthetic-contact',
       message: 'synthetic text', urlImagesEnabled: false,
+      queueAlert: queueAlert,
     ),
     'channel' => service.showChannelMessageNotification(
       channelName: 'synthetic channel', channelIndex: 2, senderName: 'synthetic sender',
       message: 'synthetic text', urlImagesEnabled: false,
+      queueAlert: queueAlert,
     ),
     'advert' => service.showAdvertNotification(
       contactName: 'synthetic repeater', contactType: 'Repeater', contactId: 'synthetic-advert',
@@ -129,9 +159,12 @@ class _Harness {
   )!;
 }
 
-Future<void> _withNotification(WidgetTester tester,
-    Future<void> Function(_Harness h) check) async {
-  final plugin = _Plugin()..install();
+Future<void> _withNotification(
+  WidgetTester tester,
+  Future<void> Function(_Harness h) check, {
+  String? launchPayload,
+}) async {
+  final plugin = _Plugin(launchPayload: launchPayload)..install();
   final service = NotificationService();
   service.resetForTest();
   service.setSelfName(null);
@@ -189,6 +222,28 @@ void main() {
   tearDown(PrefsManager.reset);
 
   group('notification lifecycle baseline', () {
+    testWidgets('U34 baseline: cold and warm native taps reach the handler once', (
+      tester,
+    ) async {
+      const cold = 'message:synthetic-contact';
+      const warm = 'channel:2';
+      await _withNotification(tester, (h) async {
+        final received = <String>[];
+        h.service.setTapHandler(received.add);
+        await tester.pump();
+        expect(received, [cold]);
+
+        h.service.setTapHandler(received.add);
+        await tester.pump();
+        expect(received, [cold]);
+
+        await h.plugin.tap(warm);
+        await tester.pump();
+        expect(received, [cold, warm]);
+        expect(h.plugin.shown, isEmpty);
+      }, launchPayload: cold);
+    }, timeout: timeout);
+
     for (final language in ['en', 'ru']) {
       for (final type in ['direct', 'channel']) {
         testWidgets('U06c1: $type posts localized summaries ($language)', (
@@ -219,7 +274,7 @@ void main() {
                     ),
                     ('aeic:1:0a1b2c3d4e5f60', 'Sent an image'),
                   ];
-            for (final (input, expected) in cases) {
+            for (final (index, (input, expected)) in cases.indexed) {
               final operation = type == 'channel'
                   ? h.service.showChannelMessageNotification(
                       channelName: 'synthetic channel',
@@ -238,6 +293,11 @@ void main() {
               await tester.pump();
               expect(result.completed, isTrue);
               expect(result.error, isNull);
+              if (index != 0) {
+                // This is another update of the same conversation. Advance
+                // through the batch window before inspecting the native card.
+                await tester.pump(const Duration(milliseconds: 800));
+              }
               expect(h.plugin.shown, hasLength(1));
               final call = h.plugin.shown.single;
               final args = h.plugin.args(call);
@@ -441,6 +501,165 @@ void main() {
         expect(h.plugin.android(h.plugin.shown[1])['silent'], isTrue);
         expect(h.plugin.args(h.plugin.shown[0])['payload'], 'message:synthetic-contact');
         expect(h.plugin.args(h.plugin.shown[1])['payload'], 'channel:2');
+      });
+    }, timeout: timeout);
+
+    testWidgets('U34 baseline: channel bursts retain the latest six Android Auto messages', (
+      tester,
+    ) async {
+      await _withNotification(tester, (h) async {
+        Future<void> post(String text, int unread) => h.service.showChannelMessageNotification(
+          channelName: 'Synthetic channel',
+          channelIndex: 2,
+          senderName: 'Alice',
+          message: text,
+          urlImagesEnabled: false,
+          badgeCount: unread,
+        );
+
+        List<Object?> shownTexts(MethodCall call) {
+          final details = h.plugin.android(call);
+          expect(details['style'], AndroidNotificationStyle.messaging.index);
+          final style = details['styleInformation'] as Map<Object?, Object?>;
+          final messages = (style['messages'] as List<Object?>)
+              .cast<Map<Object?, Object?>>();
+          return messages.map((message) => message['text']).toList();
+        }
+
+        for (var i = 1; i <= 8; i++) {
+          final result = _Result(post('post $i', i));
+          await tester.pump();
+          expect(result.completed, isTrue);
+          expect(result.error, isNull);
+        }
+        await tester.pump(const Duration(seconds: 5));
+
+        final last = h.plugin.shown.last;
+        expect(h.plugin.args(last)['payload'], 'channel:2');
+        expect(h.plugin.android(last)['number'], 8);
+        expect(shownTexts(last), [for (var i = 3; i <= 8; i++) 'post $i']);
+
+        final clear = _Result(h.service.clearChannelNotification(2, 0));
+        await tester.pump();
+        expect(clear.completed, isTrue);
+        expect(clear.error, isNull);
+        final fresh = _Result(post('fresh post', 1));
+        await tester.pump();
+        expect(fresh.completed, isTrue);
+        expect(fresh.error, isNull);
+        await tester.pump(const Duration(seconds: 5));
+        expect(shownTexts(h.plugin.shown.last), ['fresh post']);
+      });
+    }, timeout: timeout);
+
+    testWidgets('U34: a burst posts immediately, then merges updates with the current badge', (
+      tester,
+    ) async {
+      await _withNotification(tester, (h) async {
+        var unread = 1;
+        for (var i = 1; i <= 3; i++) {
+          final result = _Result(h.service.showChannelMessageNotification(
+            channelName: 'Test',
+            channelIndex: 2,
+            senderName: 'Alice',
+            message: 'post $i',
+            urlImagesEnabled: false,
+            badgeCount: 1,
+            currentUnreadTotal: () => unread,
+          ));
+          await tester.pump();
+          expect(result.completed, isTrue);
+          expect(result.error, isNull);
+        }
+        expect(h.plugin.shown, hasLength(1));
+        expect(h.plugin.args(h.plugin.shown.single)['body'], 'Alice: post 1');
+        unread = 9;
+        await tester.pump(const Duration(milliseconds: 799));
+        expect(h.plugin.shown, hasLength(1));
+        await tester.pump(const Duration(milliseconds: 1));
+        expect(h.plugin.shown, hasLength(2));
+        final details = h.plugin.android(h.plugin.shown.last);
+        final style = details['styleInformation'] as Map<Object?, Object?>;
+        final messages = (style['messages'] as List<Object?>)
+            .cast<Map<Object?, Object?>>();
+        expect(messages.map((message) => message['text']), ['post 1', 'post 2', 'post 3']);
+        expect(details['number'], 9);
+        expect(details['silent'], isTrue);
+      });
+    }, timeout: timeout);
+
+    testWidgets('U34: a queue drain alerts once across different conversations', (tester) async {
+      await _withNotification(tester, (h) async {
+        final drain = NotificationQueueAlert();
+        await h.emit('direct', queueAlert: drain);
+        await tester.pump(const Duration(seconds: 4));
+        await h.emit('channel', queueAlert: drain);
+        await tester.pump(const Duration(seconds: 4));
+        await h.emit('channel', queueAlert: NotificationQueueAlert());
+        await tester.pump();
+        expect(h.plugin.shown.map((call) => h.plugin.android(call)['silent']),
+            [false, true, false]);
+      });
+    }, timeout: timeout);
+
+    testWidgets('U34: a slot clear drops its batch and follows a pending native show', (
+      tester,
+    ) async {
+      await _withNotification(tester, (h) async {
+        final gate = h.plugin.hold('show');
+        await h.emit('channel');
+        await tester.pump();
+        await h.emit('channel');
+        final clear = _Result(h.service.clearChannelNotification(2, 0));
+        final fresh = _Result(h.service.showChannelMessageNotification(
+          channelName: 'Replacement',
+          channelIndex: 2,
+          senderName: 'Alice',
+          message: 'fresh',
+          urlImagesEnabled: false,
+        ));
+        await tester.pump(const Duration(seconds: 1));
+        expect(clear.completed, isFalse);
+        expect(fresh.completed, isTrue);
+        expect(h.plugin.calls.map((call) => call.method), ['show']);
+
+        gate.complete();
+        await tester.pump();
+        expect(clear.completed, isTrue);
+        expect(clear.error, isNull);
+        expect(h.plugin.calls.map((call) => call.method), ['show', 'cancel', 'show']);
+        expect(h.plugin.args(h.plugin.shown.last)['title'], 'Replacement');
+        final style = h.plugin.android(h.plugin.shown.last)['styleInformation']
+            as Map<Object?, Object?>;
+        final messages = (style['messages'] as List<Object?>)
+            .cast<Map<Object?, Object?>>();
+        expect(messages.single['text'], 'fresh');
+      });
+    }, timeout: timeout);
+
+    testWidgets('U34: another radio clears stale cards from a previous launch', (tester) async {
+      await _withNotification(tester, (h) async {
+        final saved = _Result(PrefsManager.instance
+            .setString('notifications_radio_key', 'previous-radio')
+            .then<void>((_) {}));
+        await tester.pump();
+        expect(saved.completed, isTrue);
+        expect(saved.error, isNull);
+        h.plugin.activeNotifications = [
+          {'id': 14, 'channelId': 'channel_messages'},
+          {'id': 15, 'payload': 'message:old-contact'},
+          {'id': 16, 'channelId': 'license_expiry'},
+        ];
+        final switched = _Result(h.service.bindRadio('next-radio'));
+        await tester.pump();
+        expect(switched.completed, isTrue);
+        expect(switched.error, isNull);
+        expect(h.plugin.calls.map((call) => call.method), ['cancel', 'cancel']);
+        expect(h.plugin.calls.map((call) => h.plugin.args(call)['id']), [14, 15]);
+        final sameRadio = _Result(h.service.bindRadio('next-radio'));
+        await tester.pump();
+        expect(sameRadio.completed, isTrue);
+        expect(h.plugin.calls, hasLength(2));
       });
     }, timeout: timeout);
 
