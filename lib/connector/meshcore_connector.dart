@@ -40,6 +40,7 @@ import '../helpers/radio_send_background_work.dart';
 import '../helpers/sync_background_work.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/channel_message_timeline_helper.dart';
+import '../helpers/channel_post_identity.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/room_message_timeline_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
@@ -2543,7 +2544,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     if (position < 0) return false;
     final previous = messages[position];
-    if (previous.isOutgoing ||
+    if (channelPostIdentity(previous) != channelPostIdentity(message) ||
+        previous.isOutgoing ||
         previous.wasBlocked ||
         BlockedSenders.instance.hidesStoredMessage(previous, channel.name)) {
       return false;
@@ -2799,38 +2801,92 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Channel channel,
     ChannelMessage message,
   ) async {
+    unawaited(_deleteChannelMessage(channel, message, localOnly: false));
+  }
+
+  Future<bool> _deleteChannelMessage(
+    Channel channel,
+    ChannelMessage message, {
+    required bool localOnly,
+  }) async {
     _retriableChannelMessageSends.remove(message.messageId);
-    final pending = _pendingChannelSends.remove(message.messageId);
-    if (pending != null) {
+    final pending = _pendingChannelSends[message.messageId];
+    if (pending != null && (!localOnly || identical(pending.message, message))) {
+      _pendingChannelSends.remove(message.messageId);
       pending.timer?.cancel();
       notifyListeners();
-      return;
+      return true;
     }
     final channelIndex = channel.index;
+    final revision = _channelInboxRevision;
     var changed = false;
     final messages = _channelMessages[channelIndex];
+    Future<void>? write;
     if (messages != null && messages.remove(message)) {
       _cancelChannelNoRetransmissionWarning(message.messageId);
-      unawaited(
-        _channelMessageStore
-            .deleteChannelMessage(
-              channelIndex,
-              message.messageId,
-            )
-            .catchError((error, stackTrace) {
-              appLogger.warn(
-                'Could not delete channel message ${message.messageId}: '
-                '$error\n$stackTrace',
-                tag: 'MessageHistory',
-              );
-            }),
+      write = _channelMessageStore.deleteChannelMessage(
+        channelIndex,
+        message.messageId,
       );
       changed = true;
     }
-    if (_deleteSharedChannelMessage(channel, message)) {
+    if (!localOnly && _deleteSharedChannelMessage(channel, message)) {
       changed = true;
     }
     if (changed) notifyListeners();
+    try {
+      await write;
+    } catch (error, stackTrace) {
+      if (localOnly &&
+          !_disposed &&
+          revision == _channelInboxRevision &&
+          _channelMessageStore.channelIdentityForIndex(channelIndex) ==
+              ChannelIdentity.of(channel) &&
+          messages != null &&
+          identical(messages, _channelMessages[channelIndex]) &&
+          !messages.any((current) => current.messageId == message.messageId)) {
+        messages.add(message);
+        messages.sort(_compareChannelMessages);
+        notifyListeners();
+      }
+      appLogger.warn(
+        'Could not delete channel message ${message.messageId}: '
+        '$error\n$stackTrace',
+        tag: 'MessageHistory',
+      );
+      return false;
+    }
+    return changed;
+  }
+
+  /// Resolves displayed snapshots to current local rows and pending sends.
+  Future<bool> deleteSelectedChannelMessages(
+    Channel channel,
+    Iterable<ChannelMessage> selection,
+  ) async {
+    final identity = ChannelIdentity.of(channel);
+    if (isOfflineMode ||
+        identity == null ||
+        _channelMessageStore.channelIdentityForIndex(channel.index) != identity) {
+      return false;
+    }
+    final selected = selection
+        .where((message) => message.sharedHistorySourceName == null)
+        .map(channelPostIdentity)
+        .toSet();
+    final current = [
+      ...getLoadedChannelMessages(channel),
+      for (final pending in _pendingChannelSends.values)
+        if (pending.channel.index == channel.index &&
+            ChannelIdentity.of(pending.channel) == identity)
+          pending.message,
+    ];
+    final results = await Future.wait([
+      for (final message in current)
+        if (selected.remove(channelPostIdentity(message)))
+          _deleteChannelMessage(channel, message, localOnly: true),
+    ]);
+    return selected.isEmpty && results.every((deleted) => deleted);
   }
 
   /// Marks one already-received channel message as blocked.

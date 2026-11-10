@@ -118,7 +118,9 @@ class PathHistoryService extends ChangeNotifier {
       final generation = _historyGeneration;
       _ensureLoaded(contactPubKeyHex).then((_) {
         if (generation != _historyGeneration ||
-            !_cache.containsKey(contactPubKeyHex)) return;
+            !_cache.containsKey(contactPubKeyHex)) {
+          return;
+        }
         recordFloodPathAttribution(
           contactPubKeyHex: contactPubKeyHex,
           pathBytes: pathBytes,
@@ -190,7 +192,9 @@ class PathHistoryService extends ChangeNotifier {
       final generation = _historyGeneration;
       _ensureLoaded(contactPubKeyHex).then((_) {
         if (generation != _historyGeneration ||
-            !_cache.containsKey(contactPubKeyHex)) return;
+            !_cache.containsKey(contactPubKeyHex)) {
+          return;
+        }
         recordPathResult(
           contactPubKeyHex,
           selection,

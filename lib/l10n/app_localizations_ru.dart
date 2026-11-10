@@ -1846,6 +1846,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_messageDeleted => 'Сообщение удалено';
 
   @override
+  String get chat_selectMessages => 'Выбрать сообщения';
+
+  @override
+  String get chat_clearSelection => 'Снять выделение';
+
+  @override
+  String get chat_deleteSelectedFailed =>
+      'Не удалось удалить все выбранные сообщения.';
+
+  @override
+  String get chat_selectAll => 'Выбрать все загруженные сообщения';
+
+  @override
+  String chat_selectedCount(int count) {
+    return 'Выбрано: $count';
+  }
+
+  @override
+  String chat_confirmDeleteSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Удалить выбранные сообщения ($count)?',
+      one: 'Удалить выбранное сообщение ($count)?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chat_retryingMessage => 'Повтор отправки сообщения';
 
   @override

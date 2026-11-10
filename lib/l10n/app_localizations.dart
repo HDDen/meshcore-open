@@ -3280,6 +3280,42 @@ abstract class AppLocalizations {
   /// **'Message deleted'**
   String get chat_messageDeleted;
 
+  /// No description provided for @chat_selectMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Select messages'**
+  String get chat_selectMessages;
+
+  /// No description provided for @chat_clearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get chat_clearSelection;
+
+  /// No description provided for @chat_deleteSelectedFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some selected messages could not be deleted.'**
+  String get chat_deleteSelectedFailed;
+
+  /// No description provided for @chat_selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all loaded messages'**
+  String get chat_selectAll;
+
+  /// No description provided for @chat_selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String chat_selectedCount(int count);
+
+  /// No description provided for @chat_confirmDeleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Delete the selected message?} other{Delete {count} selected messages?}}'**
+  String chat_confirmDeleteSelected(int count);
+
   /// No description provided for @chat_retryingMessage.
   ///
   /// In en, this message translates to:

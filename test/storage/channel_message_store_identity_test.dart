@@ -217,6 +217,26 @@ Future<void> main() async {
     expect(await _idsUnder(newKey), ['b', 'd']);
   }, skip: skip);
 
+  test('U34 baseline: deleting from a loaded page preserves other SQL rows', () async {
+    await seedAndRename();
+    await store.saveChannelMessage(2, _message('c', 3));
+    final other = ChannelMessageStore()..setPublicKeyHex = _otherNode;
+    other.replaceChannels([_channel(2, 'Горы-2026')]);
+    await other.saveChannelMessage(2, _message('c', 3));
+
+    final selected = (await store.loadLatestChannelMessages(2, limit: 1)).single;
+    expect(selected.messageId, 'c');
+    await store.deleteChannelMessage(2, selected.messageId);
+
+    expect(await _idsUnder(newKey), isEmpty);
+    expect(await _idsUnder(oldKey), ['a', 'b']);
+    final otherKey = ChannelNameKeyedStore.nameStorageKey(
+      other.keyFor,
+      'Горы-2026',
+    );
+    expect(await _idsUnder(otherKey), ['c']);
+  }, skip: skip);
+
   test('clearing the channel removes every name; by names, another scope', () async {
     await seedAndRename();
     await store.saveChannelMessage(2, _message('c', 3));

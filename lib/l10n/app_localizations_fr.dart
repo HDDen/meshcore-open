@@ -1851,6 +1851,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_messageDeleted => 'Message supprimé';
 
   @override
+  String get chat_selectMessages => 'Select messages';
+
+  @override
+  String get chat_clearSelection => 'Clear selection';
+
+  @override
+  String get chat_deleteSelectedFailed =>
+      'Some selected messages could not be deleted.';
+
+  @override
+  String get chat_selectAll => 'Select all loaded messages';
+
+  @override
+  String chat_selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String chat_confirmDeleteSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count selected messages?',
+      one: 'Delete the selected message?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chat_retryingMessage => 'Nouvelle tentative d\'envoi du message';
 
   @override

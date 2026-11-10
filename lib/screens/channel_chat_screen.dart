@@ -83,6 +83,7 @@ import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/blocked_message_body.dart';
 import '../widgets/blocked_senders_sheet.dart';
 import '../widgets/channel_filter_actions.dart';
+import '../widgets/channel_message_selection.dart';
 import '../widgets/filtered_channel_message.dart';
 import '../widgets/byte_count_input.dart';
 import '../widgets/chat_day_separator.dart';
@@ -204,6 +205,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// Messages the user asked to see as typed, markup markers and all. Session
   /// only: leaving the channel restores the formatted view.
   final Set<String> _rawMarkupMessageIds = {};
+  final _messageSelection = ChannelMessageSelection();
 
   /// Blocked bodies the user tapped to read. Display only — a revealed body is
   /// still never parsed — and forgotten whenever the block list changes, so a
@@ -1023,11 +1025,37 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final connector = context.read<MeshCoreConnector>();
+    final nodeKey = context.select<MeshCoreConnector, String>(
+      (connector) => connector.selfPublicKeyHex,
+    );
+    final selecting = _messageSelection.isActive(connector, nodeKey);
+    return PopScope(
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && selecting && !_messageSelection.busy) {
+          setState(_messageSelection.clear);
+        }
+      },
+      child: _buildChat(context, selecting: selecting),
+    );
+  }
+
+  Widget _buildChat(BuildContext context, {required bool selecting}) {
+    final selectionBar = selecting
+        ? PreferredSize(
+            preferredSize: const Size.fromHeight(kToolbarHeight),
+            child: Consumer<MeshCoreConnector>(
+              builder: (context, connector, _) =>
+                  _buildMessageSelectionBar(context, connector),
+            ),
+          )
+        : null;
     return Focus(
       focusNode: _screenFocusNode,
       autofocus: PlatformInfo.isDesktop,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: selectionBar ?? AppBar(
           title: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => openRegionSelectDialog(widget.channel),
@@ -1455,7 +1483,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                                 double
                                               >((service) => service.scale);
                                           final message = row.message;
-                                          final bubble = group != null
+                                          final body = group != null
                                               ? FilteredChannelGroup(
                                                   messages: group,
                                                   channel: widget.channel,
@@ -1473,6 +1501,17 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                                   textScale,
                                                   settingsService,
                                                 );
+                                          final bubble = !selecting
+                                              ? body
+                                              : group == null &&
+                                                    message != null &&
+                                                    _canSelectMessage(connector, message)
+                                              ? ChannelSelectionRow(
+                                                  selected: _messageSelection.contains(message),
+                                                  onTap: () => _toggleMessageSelection(connector, message),
+                                                  child: body,
+                                                )
+                                              : IgnorePointer(child: body);
                                           // The list is reversed: the row
                                           // after this one is the older one.
                                           final startsDay =
@@ -1515,9 +1554,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   },
                 ),
               ),
-              Builder(
-                builder: (context) => _buildMessageComposer(context),
-              ),
+              if (!selecting)
+                Builder(
+                  builder: (context) => _buildMessageComposer(context),
+                ),
             ],
           ),
         ),
@@ -1597,6 +1637,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _handleEscapeNavigation() async {
+    final connector = context.read<MeshCoreConnector>();
+    if (_messageSelection.isActive(connector, connector.selfPublicKeyHex)) {
+      if (!_messageSelection.busy) setState(_messageSelection.clear);
+      return;
+    }
     if (await _returnFromReplyNavigation() || !mounted) return;
 
     ChatKeyboardNavigationHistory.rememberChannel(widget.channel);
@@ -1660,6 +1705,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         message: message,
         channel: widget.channel,
         connector: connector,
+        onSelect: () => _toggleMessageSelection(connector, message),
       );
     }
     final enableTracing = settingsService.settings.enableMessageTracing;
@@ -5324,6 +5370,96 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     );
   }
 
+  bool _canSelectMessage(MeshCoreConnector connector, ChannelMessage message) =>
+      !message.wasBlocked &&
+      !BlockedSenders.instance.hidesStoredMessage(
+        message,
+        connector.channelDisplayName(widget.channel.index),
+      );
+
+  void _toggleMessageSelection(
+    MeshCoreConnector connector,
+    ChannelMessage message,
+  ) {
+    _textFieldFocusNode.unfocus();
+    setState(() => _messageSelection.toggle(connector, message));
+  }
+
+  AppBar _buildMessageSelectionBar(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final channel = widget.channel;
+    final timeline = _messagesForDisplay(connector);
+    final rows = _transcriptRowsFor(
+      context,
+      timeline,
+      groupFiltered: connector.isChannelFilterEnabled(channel) &&
+          !connector.hidesFilteredChannelRows(channel),
+      connector: connector,
+    );
+    final selectable = [
+      for (final row in rows.reversed)
+        if (row.message case final message?
+            when row.filteredGroup == null &&
+                _canSelectMessage(connector, message))
+          message,
+    ];
+    final selected = selectable.where(_messageSelection.contains).toList();
+    final editable = connector.isChannelFilterEnabled(channel)
+        ? selected.where((message) =>
+            canSelectChannelVerdict(connector, channel, message))
+        : const <ChannelMessage>[];
+    final spam = MessageFilterService.learningAvailable
+        ? editable.where((message) => !message.isFiltered).toList()
+        : const <ChannelMessage>[];
+    final notSpam = editable.where((message) => message.isFiltered).toList();
+    final deletable = connector.isOfflineMode
+        ? const <ChannelMessage>[]
+        : selected
+            .where((message) => message.sharedHistorySourceName == null)
+            .toList();
+    return buildChannelSelectionAppBar(
+      context,
+      count: selected.length,
+      busy: _messageSelection.busy,
+      onClose: () => setState(_messageSelection.clear),
+      onSelectAll: () => setState(() => _messageSelection.selectAll(selectable)),
+      onCopy: () {
+        copySelectedChannelMessages(context, selected);
+        setState(_messageSelection.clear);
+      },
+      onDelete: deletable.isEmpty
+          ? null
+          : () => _messageSelection.run(
+              this.context,
+              setState,
+              () => deleteSelectedChannelMessages(
+                this.context, connector, channel, deletable,
+              ),
+            ),
+      onSpam: spam.isEmpty
+          ? null
+          : () => _messageSelection.run(
+              this.context,
+              setState,
+              () => saveChannelMessageVerdicts(
+                this.context, connector, channel, spam,
+                const FilterVerdict(reason: FilterReason.manual),
+              ),
+            ),
+      onNotSpam: notSpam.isEmpty
+          ? null
+          : () => _messageSelection.run(
+              this.context,
+              setState,
+              () => saveChannelMessageVerdicts(
+                this.context, connector, channel, notSpam, null,
+              ),
+            ),
+    );
+  }
+
   Future<void> _showMessageActions(ChannelMessage message) async {
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
@@ -5376,6 +5512,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (_canSelectMessage(connector, message))
+                  ListTile(
+                    leading: const Icon(Icons.check_circle_outline),
+                    title: Text(context.l10n.chat_selectMessages),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMessageSelection(connector, message);
+                    },
+                  ),
                 if (canFilterMessage && MessageFilterService.learningAvailable)
                   ListTile(
                     leading: const Icon(Icons.flag_outlined),

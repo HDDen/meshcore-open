@@ -867,6 +867,22 @@
   },
   "chat_messageCopied": "Message copied",
   "chat_messageDeleted": "Message deleted",
+  "chat_selectMessages": "Select messages",
+  "chat_clearSelection": "Clear selection",
+  "chat_deleteSelectedFailed": "Some selected messages could not be deleted.",
+  "chat_selectAll": "Select all loaded messages",
+  "chat_selectedCount": "{count} selected",
+  "@chat_selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "chat_confirmDeleteSelected": "{count, plural, one{Delete the selected message?} other{Delete {count} selected messages?}}",
+  "@chat_confirmDeleteSelected": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "chat_retryingMessage": "Retrying message",
   "chat_retryingMessageWait": "Please wait {seconds} seconds before resend",
   "chat_retryCount": "Retry {current}/{max}",

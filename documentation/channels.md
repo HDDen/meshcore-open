@@ -264,6 +264,15 @@ spam** keeps the text visible in the expanded preview, with its filter
 label. Disabling the filter shows posts with existing filter marks again.
 Sender blocks are independent.
 
+To act on several channel posts, long-press a message and choose
+**Select messages**. Tap other rows or use **Select all loaded messages**
+in the selection menu. You can copy the selection in chat order, delete
+local messages after confirmation, or apply an eligible spam action.
+Long-press a post in **Filtered messages** or in an expanded group to start
+selection there. **Not spam** asks once to enable learning for the selection.
+You can copy posts from shared history. Deleting posts and changing their
+spam marks through bulk selection are available for the current node's posts.
+
 Adding or removing a manual rule also updates older posts in the chat
 and in search. On platforms with SQLite, the app saves changed rule marks
 for loaded posts one second after the last edit. Manual spam marks and

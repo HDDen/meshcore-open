@@ -1111,6 +1111,11 @@ In placeholder mode the channel transcript groups adjacent filtered posts
 within each day and splits at the unread divider. Every member ID resolves
 to the group row for quote navigation. The group opens the same lazy review
 list scoped to its posts, preserving per-post verdicts and restoration.
+Channel selection uses the displayed post identity, including its shared
+history source. Bulk verdicts reuse the learning prompt once per action and
+the existing row-level feedback writes. Bulk delete resolves current local
+rows and pending sends, keeps shared copies and unloaded SQLite pages, and
+waits for the selected row writes. Shared posts can be copied from either list.
 The message menu can add an exact sender-name rule or prefill the shared
 rule editor with message text. The editor reserves space for its floating
 label when the field is scrolled above the keyboard. The channel menu uses

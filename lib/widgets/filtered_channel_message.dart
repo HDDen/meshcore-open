@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/blocked_senders.dart';
+import '../helpers/channel_post_identity.dart';
 import '../l10n/l10n.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/message_filter.dart';
 import '../services/message_filter/message_filter_service.dart';
+import 'channel_message_selection.dart';
 
 class FilteredChannelMessage extends StatelessWidget {
   const FilteredChannelMessage({
@@ -16,12 +18,14 @@ class FilteredChannelMessage extends StatelessWidget {
     required this.channel,
     required this.connector,
     this.initiallyExpanded = false,
+    this.onSelect,
   });
 
   final ChannelMessage message;
   final Channel channel;
   final MeshCoreConnector connector;
   final bool initiallyExpanded;
+  final VoidCallback? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +43,8 @@ class FilteredChannelMessage extends StatelessWidget {
       FilterReason.learned => l10n.messageFilter_reasonLearned,
     };
     final detail = verdict.detail;
-    return ExpansionTile(
-      key: PageStorageKey('filter:${message.messageId}'),
+    final tile = ExpansionTile(
+      key: PageStorageKey(channelPostIdentity(message)),
       initiallyExpanded: initiallyExpanded,
       leading: const Icon(Icons.filter_alt_outlined),
       title: Text(l10n.messageFilter_ghostSingle),
@@ -71,6 +75,9 @@ class FilteredChannelMessage extends StatelessWidget {
           ),
       ],
     );
+    return onSelect == null
+        ? tile
+        : GestureDetector(onLongPress: onSelect, child: tile);
   }
 }
 
@@ -81,11 +88,42 @@ Future<void> saveChannelMessageVerdict(
   ChannelMessage message,
   FilterVerdict? verdict,
 ) async {
+  await saveChannelMessageVerdicts(
+    context,
+    connector,
+    channel,
+    [message],
+    verdict,
+  );
+}
+
+bool canSelectChannelVerdict(
+  MeshCoreConnector connector,
+  Channel channel,
+  ChannelMessage message,
+) =>
+    !connector.isOfflineSharedMode &&
+    !message.isOutgoing &&
+    !message.wasBlocked &&
+    message.sharedHistorySourceName == null &&
+    !BlockedSenders.instance.isSenderBlocked(
+      message,
+      connector.channelDisplayName(channel.index),
+    );
+
+Future<bool> saveChannelMessageVerdicts(
+  BuildContext context,
+  MeshCoreConnector connector,
+  Channel channel,
+  List<ChannelMessage> messages,
+  FilterVerdict? verdict,
+) async {
+  final nodeKey = connector.selfPublicKeyHex;
   try {
     final service = connector.messageFilterService;
     final learningAvailable = MessageFilterService.learningAvailable;
     final markingSpam = verdict?.reason == FilterReason.manual;
-    if (markingSpam && (!learningAvailable || service == null)) return;
+    if (markingSpam && (!learningAvailable || service == null)) return false;
     if (learningAvailable &&
         service != null &&
         !service.learningEnabled &&
@@ -116,18 +154,23 @@ Future<void> saveChannelMessageVerdict(
           );
         },
       );
-      if (accepted != true || !context.mounted) return;
+      if (accepted != true ||
+          !context.mounted ||
+          connector.selfPublicKeyHex != nodeKey) {
+        return false;
+      }
       await service.updateSettings(service.settings.copyWith(learning: true));
-      if (!context.mounted || !service.learningEnabled) return;
+      if (!context.mounted || !service.learningEnabled) return false;
     }
 
-    if (await connector.setChannelMessageFilterVerdict(
-      channel,
-      message,
-      verdict,
-    )) {
-      return;
+    var saved = true;
+    for (final message in messages) {
+      if (!context.mounted || connector.selfPublicKeyHex != nodeKey) return false;
+      if (!await connector.setChannelMessageFilterVerdict(channel, message, verdict)) {
+        saved = false;
+      }
     }
+    if (saved) return true;
   } catch (_) {
     // Report a failed settings write in the same place as a failed verdict.
   }
@@ -136,6 +179,7 @@ Future<void> saveChannelMessageVerdict(
       SnackBar(content: Text(context.l10n.messageFilter_saveError)),
     );
   }
+  return false;
 }
 
 class FilteredChannelGroup extends StatelessWidget {
@@ -163,73 +207,135 @@ class FilteredChannelGroup extends StatelessWidget {
   }
 }
 
-// Same IDs can appear in combined history. Match the selected post rather
-// than including a different row from another group with a colliding ID.
-(String, DateTime, String, String, String?) _reviewIdentity(
-  ChannelMessage message,
-) => (
-  message.messageId,
-  message.timestamp,
-  message.senderName,
-  message.text,
-  message.sharedHistorySourceName,
-);
-
 Future<void> showFilteredChannelMessages(
   BuildContext context,
   Channel channel, {
   List<ChannelMessage>? group,
 }) {
-  final selectedPosts = group?.map(_reviewIdentity).toSet();
   return Navigator.of(context).push<void>(
     MaterialPageRoute(
-      builder: (context) => Scaffold(
-        appBar: AppBar(title: Text(context.l10n.messageFilter_displayTitle)),
-        body: SafeArea(
-          child: Consumer<MeshCoreConnector>(
-            builder: (context, connector, _) {
-              final name = connector.channelDisplayName(channel.index);
-              Iterable<ChannelMessage> candidates;
-              if (selectedPosts == null) {
-                candidates = connector.getLoadedFilteredChannelMessages(channel);
-              } else if (connector.isChannelFilterEnabled(channel)) {
-                candidates = connector
-                    .getChannelMergedMessages(channel)
-                    .reversed
-                    .where(
-                      (message) =>
-                          message.isFiltered &&
-                          selectedPosts.contains(_reviewIdentity(message)),
-                    );
-              } else {
-                candidates = const [];
-              }
-              final messages = candidates
-                  .where(
-                    (message) =>
-                        !message.wasBlocked &&
-                        !BlockedSenders.instance.hidesStoredMessage(message, name),
-                  )
-                  .toList(growable: false);
-              if (messages.isEmpty) {
-                return Center(
-                  child: Text(context.l10n.messageFilter_filteredMessagesEmpty),
-                );
-              }
-              return ListView.builder(
-                itemCount: messages.length,
-                itemBuilder: (context, index) => FilteredChannelMessage(
-                  key: ValueKey(messages[index].messageId),
-                  channel: channel,
-                  message: messages[index],
-                  connector: connector,
-                  initiallyExpanded: selectedPosts != null,
-                ),
-              );
-            },
-          ),
-        ),
+      builder: (context) => _FilteredChannelReview(
+        channel: channel,
+        group: group?.map(channelPostIdentity).toSet(),
       ),
     ),
   );
+}
+
+class _FilteredChannelReview extends StatefulWidget {
+  const _FilteredChannelReview({required this.channel, required this.group});
+
+  final Channel channel;
+  final Set<ChannelPostIdentity>? group;
+
+  @override
+  State<_FilteredChannelReview> createState() => _FilteredChannelReviewState();
+}
+
+class _FilteredChannelReviewState extends State<_FilteredChannelReview> {
+  final _selection = ChannelMessageSelection();
+
+  @override
+  Widget build(BuildContext context) {
+    final connector = context.watch<MeshCoreConnector>();
+    final channel = widget.channel;
+    final group = widget.group;
+    final name = connector.channelDisplayName(channel.index);
+    final Iterable<ChannelMessage> candidates;
+    if (group == null) {
+      candidates = connector.getLoadedFilteredChannelMessages(channel);
+    } else if (connector.isChannelFilterEnabled(channel)) {
+      candidates = connector
+          .getChannelMergedMessages(channel)
+          .reversed
+          .where((message) =>
+              message.isFiltered && group.contains(channelPostIdentity(message)));
+    } else {
+      candidates = const [];
+    }
+    final messages = candidates.where((message) =>
+        !message.wasBlocked &&
+        !BlockedSenders.instance.hidesStoredMessage(message, name)).toList();
+    final selecting = _selection.isActive(connector, connector.selfPublicKeyHex);
+    final selected = selecting
+        ? messages.reversed.where(_selection.contains).toList()
+        : const <ChannelMessage>[];
+    final editable = selected.where((message) =>
+        canSelectChannelVerdict(connector, channel, message)).toList();
+    final deletable = connector.isOfflineMode
+        ? const <ChannelMessage>[]
+        : selected
+            .where((message) => message.sharedHistorySourceName == null)
+            .toList();
+    void clear() => setState(_selection.clear);
+
+    return PopScope(
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && selecting && !_selection.busy) clear();
+      },
+      child: Scaffold(
+        appBar: selecting
+            ? buildChannelSelectionAppBar(
+                context,
+                count: selected.length,
+                busy: _selection.busy,
+                onClose: clear,
+                onSelectAll: () =>
+                    setState(() => _selection.selectAll(messages)),
+                onCopy: () {
+                  copySelectedChannelMessages(context, selected);
+                  clear();
+                },
+                onDelete: deletable.isEmpty
+                    ? null
+                    : () => _selection.run(
+                        context,
+                        setState,
+                        () => deleteSelectedChannelMessages(
+                          context, connector, channel, deletable,
+                        ),
+                      ),
+                onNotSpam: editable.isEmpty
+                    ? null
+                    : () => _selection.run(
+                        context,
+                        setState,
+                        () => saveChannelMessageVerdicts(
+                          context, connector, channel, editable, null,
+                        ),
+                      ),
+              )
+            : AppBar(title: Text(context.l10n.messageFilter_displayTitle)),
+        body: SafeArea(
+          child: messages.isEmpty
+              ? Center(child: Text(context.l10n.messageFilter_filteredMessagesEmpty))
+              : ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    void toggle() =>
+                        setState(() => _selection.toggle(connector, message));
+                    final tile = FilteredChannelMessage(
+                      channel: channel,
+                      message: message,
+                      connector: connector,
+                      initiallyExpanded: group != null,
+                      onSelect: toggle,
+                    );
+                    final key = ValueKey(channelPostIdentity(message));
+                    return selecting
+                        ? ChannelSelectionRow(
+                            key: key,
+                            selected: _selection.contains(message),
+                            onTap: toggle,
+                            child: tile,
+                          )
+                        : KeyedSubtree(key: key, child: tile);
+                  },
+                ),
+        ),
+      ),
+    );
+  }
 }

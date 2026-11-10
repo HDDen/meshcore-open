@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
+import 'package:flutter/services.dart' show SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -247,6 +248,94 @@ void main() {
     await node.flushChannelRuleVerdicts();
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('U34: channel selection copies loaded messages in chat order', (
+    tester,
+  ) async {
+    final node = _Node();
+    final settings = AppSettingsService();
+    final translation = TranslationService(settings);
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(translation.dispose);
+    addTearDown(scale.dispose);
+    final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    String? clipboard;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') {
+        clipboard = (call.arguments as Map)['text'] as String;
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+
+    final now = DateTime.utc(2026);
+    ChannelMessage post(String text, int seconds) {
+      final at = now.add(Duration(seconds: seconds));
+      return ChannelMessage(
+        messageId: text,
+        senderName: 'Alice',
+        text: text,
+        timestamp: at,
+        receivedAt: at,
+        isOutgoing: false,
+        status: ChannelMessageStatus.sent,
+      );
+    }
+    final posts = [post('First post', 0), post('Second post', 1)];
+    node.setChannelMessagesForTest(_channel.index, posts);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+          ChangeNotifierProvider<TranslationService>.value(value: translation),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChannelChatScreen(channel: _channel),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(AppBar)));
+    final bubble = find.byType(ChatBubbleBox).first;
+    await tester.longPressAt(tester.getTopLeft(bubble) + const Offset(12, 6));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.chat_selectMessages));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_selectedCount(1)), findsOneWidget);
+
+    final toolbarMenu = find.byTooltip(MaterialLocalizations.of(
+      tester.element(find.byType(AppBar)),
+    ).showMenuTooltip);
+    await tester.tap(toolbarMenu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.chat_selectAll));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_selectedCount(2)), findsOneWidget);
+
+    await tester.tap(find.byTooltip(l10n.common_delete));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_confirmDeleteSelected(2)), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_selectedCount(2)), findsOneWidget);
+    expect(node.getLoadedChannelMessages(_channel), posts);
+
+    await tester.tap(toolbarMenu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.common_copy));
+    await tester.pumpAndSettle();
+    expect(clipboard, 'Alice: First post\nAlice: Second post');
+    expect(find.text(l10n.chat_selectedCount(2)), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   for (final locale in ['ru', 'en']) {

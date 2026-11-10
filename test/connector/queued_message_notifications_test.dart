@@ -1001,6 +1001,65 @@ Future<void> main() async {
     expect(saved.last.wasBlocked, isFalse);
   }, skip: skip);
 
+  test('U34: bulk delete resolves projected rows and preserves unloaded history', () async {
+    final harness = await _Harness.start();
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final channel = connector.channels.single;
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(channel);
+    final other = ChannelMessageStore()
+      ..setPublicKeyHex = List.filled(32, 'ee').join()
+      ..registerChannel(channel);
+    ChannelMessage post(String id, int second) {
+      final time = DateTime.utc(2026, 1, 1, 0, 0, second);
+      return ChannelMessage(
+        channelIndex: channel.index,
+        messageId: id,
+        senderName: 'Alice',
+        text: 'Post $id',
+        timestamp: time,
+        receivedAt: time,
+        isOutgoing: false,
+      );
+    }
+
+    final older = post('older', 0);
+    final first = post('first', 1);
+    final second = post('second', 2);
+    final shared = post('shared', 3);
+    await history.saveChannelMessages(channel.index, [older, first, second]);
+    await other.saveChannelMessages(channel.index, [first, shared]);
+    connector.setChannelMessagesForTest(channel.index, [first, second]);
+    connector.scheduleChannelMessage(
+      channel,
+      'Delayed post',
+      inputText: 'Delayed post',
+      delaySeconds: 120,
+      region: '',
+    );
+    final pending = connector.getPendingChannelMessages(channel.index).single;
+
+    final deleted = await connector.deleteSelectedChannelMessages(channel, [
+      first,
+      second.copyWith(filterVerdict: const FilterVerdict(reason: FilterReason.textRule)),
+      shared.copyWith(sharedHistorySourceName: 'Another node'),
+      pending,
+    ]);
+    expect(deleted, isTrue);
+    expect(connector.getLoadedChannelMessages(channel), isEmpty);
+    expect(connector.getPendingChannelMessages(channel.index), isEmpty);
+    expect(connector.pendingChannelSendAt(pending.messageId), isNull);
+    expect((await history.loadChannelMessages(channel.index)).single.messageId, 'older');
+    expect(
+      (await other.loadChannelMessages(channel.index)).map((message) => message.messageId),
+      ['first', 'shared'],
+    );
+  }, skip: skip);
+
   test('U27e: current rules project immediately and persist after flush', () async {
     final filter = MessageFilterService();
     addTearDown(filter.dispose);
