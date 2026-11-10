@@ -129,6 +129,42 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось завершить восстановление. Обновите предпросмотр, чтобы проверить список каналов.';
 
   @override
+  String get backupChannels_exportTitle => 'Резервная копия каналов';
+
+  @override
+  String get backupChannels_exportIntro =>
+      'Сохраните имена, слоты и ключи каналов подключённой ноды в резервную копию JSON.';
+
+  @override
+  String get backupChannels_createBackup => 'Создать копию';
+
+  @override
+  String get backupChannels_exportPasswordHint =>
+      'Копия содержит ключи каналов. Укажите пароль, чтобы зашифровать файл. Оставьте поле пустым для сохранения JSON без шифрования.';
+
+  @override
+  String get backupChannels_repeatPassword => 'Повторите пароль';
+
+  @override
+  String get backupChannels_exportNotReady =>
+      'Подключитесь к ноде и дождитесь окончания синхронизации каналов.';
+
+  @override
+  String get backupChannels_exportEmpty =>
+      'На этой ноде нет каналов для резервного копирования.';
+
+  @override
+  String get backupChannels_exportSaved => 'Резервная копия каналов сохранена.';
+
+  @override
+  String get backupChannels_exportShared =>
+      'Резервная копия каналов передана в системное меню сохранения и отправки.';
+
+  @override
+  String get backupChannels_exportFailed =>
+      'Не удалось сохранить резервную копию каналов.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

@@ -6,6 +6,7 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
+import 'package:meshcore_open/services/channel_backup_snapshot.dart';
 
 final _sourceKey = List.filled(32, 'ab').join();
 final _contactKey = List.filled(32, 'cd').join();
@@ -43,6 +44,34 @@ Map<String, Object?> _upstream({
 
 void main() {
   const planner = BackupImportPlanner();
+
+  test('export captures one v1 channel section and round-trips without unread state',
+      () async {
+    final channel = _channel(2, 'Mesh channel', 7)..unreadCount = 9;
+    final snapshot = ChannelBackupSnapshot(
+      sourcePublicKey: _sourceKey.toUpperCase(),
+      nodeName: r'Нода:/\*',
+      channels: [channel],
+      createdAt: DateTime.utc(2026, 11, 10, 12, 30),
+    );
+    channel.psk.fillRange(0, channel.psk.length, 8);
+    final contents = await snapshot.encode(password: '');
+    final document = jsonDecode(contents) as Map<String, dynamic>;
+    expect(document['items'], ['channels']);
+    expect(document['sections'].keys, ['channels']);
+    final preferences = document['sections']['channels']['preferences'] as Map;
+    expect(preferences.keys, ['channelsababababab']);
+    expect(snapshot.fileName, contains('Нода'));
+    expect(snapshot.fileName, isNot(matches(r'[:/\\*]')));
+    expect(snapshot.fileName, endsWith('.json'));
+    final decoded = await planner.inspect(contents, password: '');
+    expect(decoded.sourcePublicKey, _sourceKey);
+    final restored = decoded.channels!.single;
+    expect(restored.index, 2);
+    expect(restored.name, 'Mesh channel');
+    expect(restored.psk, List.filled(16, 7));
+    expect(restored.unreadCount, 0);
+  });
 
   final routes = <(String?, int, int, List<int>)>[
     (null, -1, 1, []),

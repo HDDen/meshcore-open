@@ -12,19 +12,12 @@ import '../l10n/l10n.dart';
 import '../models/channel.dart';
 import '../services/backup_file_codec.dart';
 import '../services/backup_import_planner.dart';
+import '../utils/backup_json_file.dart';
 
 const _maxBackupBytes = 32 * 1024 * 1024;
 
-Future<XFile?> _pickBackupFile() => openFile(
-  acceptedTypeGroups: const [
-    XTypeGroup(
-      label: 'JSON',
-      extensions: ['json'],
-      mimeTypes: ['application/json'],
-      uniformTypeIdentifiers: ['public.json'],
-    ),
-  ],
-);
+Future<XFile?> _pickBackupFile() =>
+    openFile(acceptedTypeGroups: const [backupJsonFileType]);
 
 Future<BackupImportPlan> _inspectBackup(
   ({String contents, String password}) input,

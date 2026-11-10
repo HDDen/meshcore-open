@@ -118,6 +118,7 @@ import '../services/message_retry_service.dart';
 import '../services/experimental_route_chooser.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
+import '../services/channel_backup_snapshot.dart';
 import '../services/background_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../services/translation_service.dart';
@@ -12427,6 +12428,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       capacity: _loadedChannelCapacity!,
       current: _channels,
       source: source,
+    );
+  }
+
+  /// Exports the already confirmed list of the active node without radio I/O.
+  ChannelBackupSnapshot? snapshotChannelBackup() {
+    if (!_hasBackupChannelInventory ||
+        _restoringBackupChannels ||
+        _channelEditsInProgress != 0) {
+      return null;
+    }
+    return ChannelBackupSnapshot(
+      sourcePublicKey: selfPublicKeyHex,
+      nodeName: deviceDisplayName,
+      channels: _channels,
+      createdAt: DateTime.now(),
     );
   }
 

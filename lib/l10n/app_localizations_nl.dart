@@ -128,6 +128,42 @@ class AppLocalizationsNl extends AppLocalizations {
       'Could not finish restoring channels. Refresh the preview to check the current channels.';
 
   @override
+  String get backupChannels_exportTitle => 'Channel backup';
+
+  @override
+  String get backupChannels_exportIntro =>
+      'Save the connected node’s channel names, slots and keys to a JSON backup.';
+
+  @override
+  String get backupChannels_createBackup => 'Create backup';
+
+  @override
+  String get backupChannels_exportPasswordHint =>
+      'The backup includes channel keys. Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
+
+  @override
+  String get backupChannels_repeatPassword => 'Repeat password';
+
+  @override
+  String get backupChannels_exportNotReady =>
+      'Connect to the node and wait for the channel list to finish syncing.';
+
+  @override
+  String get backupChannels_exportEmpty =>
+      'There are no channels to back up on this node.';
+
+  @override
+  String get backupChannels_exportSaved => 'Channel backup saved.';
+
+  @override
+  String get backupChannels_exportShared =>
+      'The channel backup was offered in the system share sheet.';
+
+  @override
+  String get backupChannels_exportFailed =>
+      'Could not save the channel backup.';
+
+  @override
   String get common_ok => 'OK';
 
   @override

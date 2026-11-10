@@ -9,6 +9,7 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/review_mode/review_frames.dart';
+import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
@@ -167,6 +168,27 @@ void main() {
     await storage.resetForTesting();
     PrefsManager.reset();
     PathProviderPlatform.instance = savedPaths;
+  });
+
+  test('a backup captures the active node without requesting radio frames', () async {
+    final otherNode = List.filled(32, 'b2').join();
+    await (ChannelStore()..setPublicKeyHex = otherNode).saveChannels([
+      _channel(0, 'Other node only', 9),
+    ]);
+    final snapshot = radio.connector.snapshotChannelBackup()!;
+    expect(snapshot.sourcePublicKey, _node);
+    expect(snapshot.channelCount, 2);
+    expect(snapshot.fileName, contains('Restore target'));
+    final plan = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+    );
+    expect(plan.channels!.map((channel) => channel.name),
+        ['Unrelated', 'Current']);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    radio.connector.resetSyncProgressForTest();
+    expect(radio.connector.snapshotChannelBackup(), isNull);
   });
 
   test('confirmed rename keeps slot, history and the other node cache', () async {

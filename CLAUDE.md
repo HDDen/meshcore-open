@@ -3091,6 +3091,10 @@ It checks the preview against a fresh channel read before issuing any
 After the writes, channel sync verifies the reported slots and saves the
 SQLite cache for that node. A confirmed rename links the old and new names
 when readback agrees, even if another slot still holds the old name.
+Channel backup export snapshots that node's confirmed list and full public
+key before opening the password dialog. The v1 file includes channel
+definitions only. Export uses the current connection state without sending
+radio commands or opening the offline profiles' storage.
 
 The reads follow the group. `channelStorageKeys` gives the key of every name
 of the channel, its own first, and the message store reads over them

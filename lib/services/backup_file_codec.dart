@@ -21,9 +21,9 @@ class BackupPasswordException extends FormatException {
 class BackupFileCodec {
   const BackupFileCodec();
 
-  static const _format = 'meshcore-open-backup';
+  static const payloadFormat = 'meshcore-open-backup';
+  static const formatVersion = 1;
   static const _encryptedFormat = 'meshcore-open-encrypted-backup';
-  static const _version = 1;
   static const _kdf = 'PBKDF2-HMAC-SHA256';
   static const _cipher = 'AES-256-GCM';
   static const _iterations = 310000;
@@ -48,7 +48,7 @@ class BackupFileCodec {
     );
     return _json.convert({
       'format': _encryptedFormat,
-      'version': _version,
+      'version': formatVersion,
       'kdf': _kdf,
       'iterations': _iterations,
       'cipher': _cipher,
@@ -80,7 +80,7 @@ class BackupFileCodec {
     Map<String, Object?> envelope,
     String password,
   ) async {
-    if (envelope['version'] != _version ||
+    if (envelope['version'] != formatVersion ||
         envelope['kdf'] != _kdf ||
         envelope['cipher'] != _cipher) {
       throw const FormatException('Unsupported encrypted backup format');
@@ -133,8 +133,8 @@ class BackupFileCodec {
 
   static Map<String, Object?> _validatePayload(Object? payload) {
     if (payload is! Map<String, Object?> ||
-        payload['format'] != _format ||
-        payload['version'] != _version) {
+        payload['format'] != payloadFormat ||
+        payload['version'] != formatVersion) {
       throw const FormatException('Invalid or unsupported backup file');
     }
     final items = payload['items'];

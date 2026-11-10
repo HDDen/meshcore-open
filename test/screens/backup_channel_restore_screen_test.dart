@@ -9,8 +9,12 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/screens/backup_channel_export_screen.dart';
 import 'package:meshcore_open/screens/backup_channel_restore_screen.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
+import 'package:meshcore_open/services/backup_import_planner.dart';
+import 'package:meshcore_open/services/channel_backup_snapshot.dart';
+import 'package:meshcore_open/utils/backup_json_file.dart';
 import 'package:provider/provider.dart';
 
 final _key = List.filled(32, 'ab').join();
@@ -34,6 +38,16 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   String get deviceDisplayName => 'Test node';
+
+  @override
+  ChannelBackupSnapshot? snapshotChannelBackup() => ready
+      ? ChannelBackupSnapshot(
+          sourcePublicKey: _key,
+          nodeName: deviceDisplayName,
+          channels: current,
+          createdAt: DateTime.utc(2026),
+        )
+      : null;
 
   @override
   BackupChannelRestorePreview? previewBackupChannelRestore(
@@ -131,6 +145,73 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('export requires a synced node and matching passwords',
+      (tester) async {
+    final node = _Node()..ready = false;
+    addTearDown(node.dispose);
+    String? contents;
+    String? name;
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: node,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BackupChannelExportScreen(
+            saveFile: (value, fileName, {sharePositionOrigin}) async {
+              contents = value;
+              name = fileName;
+              return BackupJsonSaveResult.saved;
+            },
+          ),
+        ),
+      ),
+    );
+    final l10n = tester.element(find.byType(BackupChannelExportScreen)).l10n;
+    final create = find.text(l10n.backupChannels_createBackup);
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupChannels_exportNotReady), findsOneWidget);
+    expect(contents, isNull);
+
+    node.ready = true;
+    await tester.tap(create);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.backupChannels_target('Test node')), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(contents, isNull);
+
+    await tester.tap(create);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    const password = 'export-password';
+    final fields = find.byType(TextField);
+    expect(fields, findsOneWidget);
+    await tester.enterText(fields.first, password);
+    await tester.pump();
+    final save = find.ancestor(
+      of: find.text(l10n.common_save),
+      matching: find.byType(FilledButton),
+    );
+    expect(tester.widget<FilledButton>(save).onPressed, isNull);
+    await tester.enterText(fields.last, password);
+    await tester.pump();
+
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.common_save),
+      find.text(l10n.backupChannels_exportSaved),
+    );
+    expect(name, contains('Test node'));
+    expect(contents, isNot(contains('Current name')));
+    final decoded = await tester.runAsync(
+      () => const BackupImportPlanner().inspect(contents!, password: password),
+    );
+    expect(decoded!.channels!.map((channel) => channel.index), [0, 2, 3]);
+  });
+
   for (final language in ['ru', 'en']) {
     testWidgets('shows planned changes and writes only after confirmation ($language)',
         (tester) async {

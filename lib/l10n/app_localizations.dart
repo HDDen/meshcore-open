@@ -310,6 +310,66 @@ abstract class AppLocalizations {
   /// **'Could not finish restoring channels. Refresh the preview to check the current channels.'**
   String get backupChannels_applyFailed;
 
+  /// No description provided for @backupChannels_exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel backup'**
+  String get backupChannels_exportTitle;
+
+  /// No description provided for @backupChannels_exportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the connected node’s channel names, slots and keys to a JSON backup.'**
+  String get backupChannels_exportIntro;
+
+  /// No description provided for @backupChannels_createBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get backupChannels_createBackup;
+
+  /// No description provided for @backupChannels_exportPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup includes channel keys. Set a password to encrypt the file. Leave the field empty for a readable JSON backup.'**
+  String get backupChannels_exportPasswordHint;
+
+  /// No description provided for @backupChannels_repeatPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get backupChannels_repeatPassword;
+
+  /// No description provided for @backupChannels_exportNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the node and wait for the channel list to finish syncing.'**
+  String get backupChannels_exportNotReady;
+
+  /// No description provided for @backupChannels_exportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no channels to back up on this node.'**
+  String get backupChannels_exportEmpty;
+
+  /// No description provided for @backupChannels_exportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel backup saved.'**
+  String get backupChannels_exportSaved;
+
+  /// No description provided for @backupChannels_exportShared.
+  ///
+  /// In en, this message translates to:
+  /// **'The channel backup was offered in the system share sheet.'**
+  String get backupChannels_exportShared;
+
+  /// No description provided for @backupChannels_exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the channel backup.'**
+  String get backupChannels_exportFailed;
+
   /// No description provided for @common_ok.
   ///
   /// In en, this message translates to:
