@@ -627,6 +627,60 @@ abstract class AppLocalizations {
   /// **'Could not restore contact groups.'**
   String get backupContactGroups_failed;
 
+  /// No description provided for @backupContactSettings_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual contact settings'**
+  String get backupContactSettings_label;
+
+  /// No description provided for @backupContactSettings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore individual contact settings'**
+  String get backupContactSettings_title;
+
+  /// No description provided for @backupContactSettings_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup. Settings are matched to contacts by public key. The preview counts missing settings that can be added.'**
+  String get backupContactSettings_intro;
+
+  /// No description provided for @backupContactSettings_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no supported contact settings.'**
+  String get backupContactSettings_empty;
+
+  /// No description provided for @backupContactSettings_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings to add: {count}. Skipped: {skipped}.'**
+  String backupContactSettings_summary(int count, int skipped);
+
+  /// No description provided for @backupContactSettings_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add missing settings to the profile for “{node}”? Settings to add: {count}.'**
+  String backupContactSettings_confirm(String node, int count);
+
+  /// No description provided for @backupContactSettings_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact settings added: {count}.'**
+  String backupContactSettings_applied(int count);
+
+  /// No description provided for @backupContactSettings_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or its contact settings changed. Refresh the preview.'**
+  String get backupContactSettings_changed;
+
+  /// No description provided for @backupContactSettings_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore contact settings.'**
+  String get backupContactSettings_failed;
+
   /// No description provided for @backupCommunities_label.
   ///
   /// In en, this message translates to:

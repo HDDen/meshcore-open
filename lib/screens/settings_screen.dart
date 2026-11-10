@@ -210,6 +210,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
+                      builder: (_) => const BackupRestoreScreen.contactSettings(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.manage_accounts_outlined,
+                    title: l10n.backupContactSettings_title,
+                  ),
+                ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
                       builder: (_) => const BackupRestoreScreen.contactGroups(),
                     ),
                   ),

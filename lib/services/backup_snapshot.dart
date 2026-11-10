@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../connector/meshcore_protocol.dart';
+import '../helpers/backup_contact_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -16,6 +17,7 @@ class BackupSnapshot {
     Iterable<Channel>? channels,
     Iterable<Contact>? contacts,
     Iterable<ContactGroup>? contactGroups,
+    BackupContactSettings? contactSettings,
     Iterable<Community>? communities,
     String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
@@ -23,11 +25,12 @@ class BackupSnapshot {
   }) : sourcePublicKey =
            channels == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
-               communities == null
+               communities == null && contactSettings == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
        _appSettings = appSettings?.isEmpty == true ? null : appSettings,
+       _contactSettings = contactSettings?.isEmpty == true ? null : contactSettings,
        _historyRows = null,
        _sections = {
          if (channels != null) 'channels': _channelRows(channels),
@@ -51,12 +54,12 @@ class BackupSnapshot {
                Map<String, Object?>.from(row as Map),
            ],
        } {
-    if (_sections.isNotEmpty &&
+    if ((_sections.isNotEmpty || _contactSettings != null) &&
         (this.sourcePublicKey.length != pubKeySize * 2 ||
             _nonHex.hasMatch(this.sourcePublicKey))) {
       throw const FormatException('Invalid backup source key');
     }
-    if (_sections.isEmpty && _appSettings == null) {
+    if (_sections.isEmpty && _appSettings == null && contactSettings == null) {
       throw const FormatException('No selected backup sections');
     }
   }
@@ -70,6 +73,7 @@ class BackupSnapshot {
        createdAt = createdAt.toUtc(),
        _sections = const {},
        _appSettings = null,
+       _contactSettings = null,
        _historyRows = Map<String, List<String>>.unmodifiable({
          for (final entry in rows.entries)
            entry.key: List<String>.unmodifiable(entry.value),
@@ -87,11 +91,13 @@ class BackupSnapshot {
   final DateTime createdAt;
   final Map<String, List<Map<String, Object?>>> _sections;
   final AppSettingsBackup? _appSettings;
+  final BackupContactSettings? _contactSettings;
   final Map<String, List<String>>? _historyRows;
 
   bool get isEmpty =>
       _historyRows?.isEmpty ??
-      (_appSettings == null && _sections.values.every((rows) => rows.isEmpty));
+      (_appSettings == null && _contactSettings == null &&
+          _sections.values.every((rows) => rows.isEmpty));
   int get channelCount => _sections['channels']?.length ?? 0;
   bool get containsCommunityKeys => _sections['communities']?.isNotEmpty ?? false;
 
@@ -101,6 +107,8 @@ class BackupSnapshot {
     final stamp = createdAt.toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
     final kind = _historyRows != null
         ? 'history'
+        : _contactSettings != null
+        ? _sections.isEmpty && _appSettings == null ? 'contact-settings' : 'backup'
         : _sections.isEmpty
         ? 'settings'
         : _sections.length == 1 && _appSettings == null
@@ -114,7 +122,9 @@ class BackupSnapshot {
     if (_historyRows case final rows?) {
       return _encodeHistory(rows, password);
     }
-    final scope = _sections.isEmpty ? '' : sourcePublicKey.substring(0, 10);
+    final scope = _sections.isEmpty && _contactSettings == null
+        ? ''
+        : sourcePublicKey.substring(0, 10);
     final preferences = <String, Map<String, Object?>>{};
     for (final entry in _sections.entries) {
       final (section, prefix) = switch (entry.key) {
@@ -127,6 +137,9 @@ class BackupSnapshot {
       (preferences[section] ??= {})['$prefix$scope'] =
           entry.value.isEmpty ? '[]' : entry.value;
     }
+    if (_contactSettings case final settings?) {
+      (preferences['contacts'] ??= {}).addAll(settings.toPreferences(scope));
+    }
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
@@ -134,6 +147,7 @@ class BackupSnapshot {
       'sourcePublicKey': sourcePublicKey,
       'items': [
         ..._sections.keys,
+        if (_contactSettings != null) 'perContactSettings',
         if (_appSettings != null) AppSettingsBackup.section,
       ],
       'sections': {

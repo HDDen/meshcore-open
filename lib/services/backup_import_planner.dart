@@ -5,6 +5,7 @@ import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_restore.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
+import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -24,6 +25,7 @@ class BackupImportPlan {
     this.messageHistory,
     this.discoveredContactsJson,
     this.contactGroups,
+    this.contactSettings,
     this.communities,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
@@ -38,6 +40,7 @@ class BackupImportPlan {
   final BackupMessageHistory? messageHistory;
   final String? discoveredContactsJson;
   final List<ContactGroup>? contactGroups;
+  final BackupContactSettings? contactSettings;
   final List<Community>? communities;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
@@ -64,6 +67,7 @@ class BackupImportPlanner {
     bool discoveredContactsOnly = false,
     bool contactGroupsOnly = false,
     bool communitiesOnly = false,
+    bool contactSettingsOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -77,6 +81,24 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (contactSettingsOnly) {
+      final preferences = official ? null : _upstreamPreferences(
+        payload, 'perContactSettings', sectionName: 'contacts',
+      );
+      if (preferences != null && preferences.isNotEmpty && publicKey == null) {
+        throw const FormatException('Missing backup source public key');
+      }
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        contactSettings: preferences == null || publicKey == null
+            ? null
+            : BackupContactSettings.fromPreferences(preferences, publicKey.substring(0, 10)),
+      );
+    }
     if (communitiesOnly) {
       final rows = official ? null : _upstreamList(
         payload,
@@ -221,6 +243,18 @@ class BackupImportPlanner {
     String key,
   ) => payload.containsKey(key) ? _readList(payload[key]) : null;
 
+  static Map<String, Object?>? _upstreamPreferences(
+    Map<String, Object?> payload,
+    String name, {
+    String? sectionName,
+  }) {
+    if (!_readList(payload['items']).contains(name)) return null;
+    final section = _readObject(payload['sections'])[sectionName ?? name];
+    if (section == null) return null;
+    final rawPreferences = _readObject(section)['preferences'];
+    return rawPreferences == null ? null : _readObject(rawPreferences);
+  }
+
   static List<Object?>? _upstreamList(
     Map<String, Object?> payload,
     String name,
@@ -228,13 +262,8 @@ class BackupImportPlanner {
     String? sectionName,
     String? preferencePrefix,
   }) {
-    if (!_readList(payload['items']).contains(name)) return null;
-    final section = _readObject(payload['sections'])[sectionName ?? name];
-    if (section == null) return null;
-    final rawPreferences = _readObject(section)['preferences'];
-    if (rawPreferences == null) return null;
-    final preferences = _readObject(rawPreferences);
-    if (preferences.isEmpty) return null;
+    final preferences = _upstreamPreferences(payload, name, sectionName: sectionName);
+    if (preferences == null || preferences.isEmpty) return null;
     if (publicKey == null) {
       throw const FormatException('Missing backup source public key');
     }

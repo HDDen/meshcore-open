@@ -9,6 +9,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_communities.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
+import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -51,6 +52,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   bool ready = true;
   int writes = 0;
   int contactWrites = 0;
+  int contactSettingsWrites = 0;
   int historyWrites = 0;
   int discoveryWrites = 0;
   int communityWrites = 0;
@@ -72,6 +74,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
     bool includeDiscoveredContacts = false,
     bool includeContactGroups = false,
     bool includeCommunities = false,
+    bool includeContactSettings = false,
   }) async => ready
       ? BackupSnapshot(
           sourcePublicKey: _key,
@@ -172,6 +175,22 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   ) async {
     discoveryWrites++;
     return preview.contacts.length;
+  }
+
+  @override
+  BackupContactSettingsPreview? previewBackupContactSettings(
+    BackupContactSettings source,
+  ) => source.preview(
+    session: this,
+    destinationKeys: source.contacts,
+    current: BackupContactSettings({}),
+    hasCyr2LatProfile: (_) => false,
+  );
+
+  @override
+  Future<int?> restoreBackupContactSettings(BackupContactSettingsPreview preview) async {
+    contactSettingsWrites++;
+    return preview.additions.values.length;
   }
 
   @override
@@ -278,6 +297,48 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('individual contact settings require confirmation', (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final contents = await BackupSnapshot(
+      sourcePublicKey: _key,
+      contactSettings: BackupContactSettings({('cd' * 32, 'url_images_enabled'): '0'}),
+      createdAt: DateTime.utc(2026),
+    ).encode(password: '');
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: node,
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BackupRestoreScreen.contactSettings(
+            pickFile: () async => XFile.fromData(
+              Uint8List.fromList(utf8.encode(contents)),
+              name: 'contact-settings.json',
+            ),
+          ),
+        ),
+      ),
+    );
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupContactSettings_summary(1, 0)),
+    );
+    final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupContactSettings_confirm('Test node', 1)), findsOneWidget);
+    expect(node.contactSettingsWrites, 0);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: restore));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupContactSettings_applied(1)), findsOneWidget);
+    expect(node.contactSettingsWrites, 1);
+    expect(node.contactWrites, 0);
+  });
+
   for (final language in ['ru', 'en']) {
     testWidgets('community restore requires confirmation ($language)', (tester) async {
       final node = _Node();

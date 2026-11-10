@@ -300,6 +300,26 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     });
   }
 
+  Future<bool> restoreContactOptions(
+    List<ContactOptionRow> rows, {
+    required bool Function() stillCurrent,
+  }) async {
+    _requireInitialized();
+    final database = _database;
+    if (database == null) return false;
+    var applied = false;
+    await _queueContactOptionWrite(() async {
+      if (!await database.importContactOptions(rows, stillCurrent: stillCurrent)) {
+        return;
+      }
+      for (final row in rows) {
+        _contactOptions[(row.nodeKey, row.contactKey, row.name)] = row.value;
+      }
+      applied = true;
+    });
+    return applied;
+  }
+
   /// The oldest SMAZ setting has no node in its preference key. Assign it only
   /// when a real node first asks for it, retaining the old migration exclusion.
   Future<void> importLegacyContactSmaz(String nodeKey, String contactKey) {

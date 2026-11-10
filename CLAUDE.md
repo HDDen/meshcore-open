@@ -3111,6 +3111,11 @@ Restore matches the shared community key and appends missing communities to
 the connected node's local store. The SQLite write checks the preview's
 session and stored value. The channels screen reloads its community index
 after success. Restoring radio channels is a separate action.
+The v1 `perContactSettings` item uses scoped preferences in the `contacts`
+section. Restore matches full contact keys, fills missing settings and
+keeps a locally configured codec as a unit. The contact-option write queue
+rechecks the preview inside the SQLite transaction and updates the store
+cache after commit. The connector reloads the affected contacts' options.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

@@ -1,3 +1,4 @@
+import '../helpers/backup_contact_settings.dart';
 import '../helpers/contact_option_storage.dart';
 import '../helpers/contact_settings_snapshot.dart';
 import '../models/app_settings.dart';
@@ -93,6 +94,59 @@ class ContactSettingsStore {
   }
 
   ContactSettingsStore scopedCopy() => ContactSettingsStore()..publicKeyHex = publicKeyHex;
+
+  BackupContactSettings snapshotForBackup(Iterable<String> contacts) {
+    final values = <BackupContactOptionKey, String>{};
+    if (publicKeyHex.isEmpty) return BackupContactSettings(values);
+    final useLegacySmaz = canMigrateLegacyKeys(publicKeyHex);
+    for (final contact in contacts) {
+      for (final name in backupContactOptionNames) {
+        final stored = _read(name, contact) ??
+            (name == 'smaz_enabled' && useLegacySmaz
+                ? PrefsManager.instance.get('contact_smaz_$contact')
+                : null);
+        final value = name == 'mcmp_version' && stored is int && stored != 3
+            ? 2
+            : stored;
+        final encoded = contactOptionDefinitions[name]!.encode(value);
+        if (encoded != null) values[(contact, name)] = encoded;
+      }
+    }
+    return BackupContactSettings(values);
+  }
+
+  Future<bool> restoreBackupSettings(
+    BackupContactSettings additions, {
+    required bool Function() stillCurrent,
+    required bool Function() sessionIsCurrent,
+  }) async {
+    if (publicKeyHex.isEmpty) return false;
+    final storage = MessageHistoryStorage.instance;
+    if (storage.hasDatabase) {
+      return storage.restoreContactOptions(
+        [
+          for (final MapEntry(key: (contact, name), :value) in additions.values.entries)
+            ContactOptionRow(nodeKey: publicKeyHex, contactKey: contact, name: name, value: value),
+        ],
+        stillCurrent: stillCurrent,
+      );
+    }
+    final prefs = PrefsManager.instance;
+    if (!stillCurrent()) return false;
+    for (final MapEntry(key: (contact, name), :value) in additions.values.entries) {
+      final definition = contactOptionDefinitions[name]!;
+      final key = definition.legacyKey(publicKeyHex, contact);
+      if (!sessionIsCurrent() || prefs.containsKey(key)) return false;
+      final saved = await switch (definition.decode(value)) {
+        final bool value => prefs.setBool(key, value),
+        final int value => prefs.setInt(key, value),
+        final String value => prefs.setString(key, value),
+        _ => throw ArgumentError('Invalid backup contact setting'),
+      };
+      if (!saved) throw StateError('Could not save backup contact setting');
+    }
+    return true;
+  }
 
   Future<void> copySettings({required String from, required String to}) async {
     if (publicKeyHex.isEmpty || from == to) {

@@ -340,6 +340,44 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить группы контактов.';
 
   @override
+  String get backupContactSettings_label => 'Настройки отдельных контактов';
+
+  @override
+  String get backupContactSettings_title =>
+      'Восстановление настроек отдельных контактов';
+
+  @override
+  String get backupContactSettings_intro =>
+      'Выберите копию MeshCore Open. Настройки сопоставляются с контактами по публичному ключу. Предпросмотр покажет, сколько отсутствующих настроек можно добавить.';
+
+  @override
+  String get backupContactSettings_empty =>
+      'В копии нет поддерживаемых настроек контактов.';
+
+  @override
+  String backupContactSettings_summary(int count, int skipped) {
+    return 'Настроек к добавлению: $count. Пропущено: $skipped.';
+  }
+
+  @override
+  String backupContactSettings_confirm(String node, int count) {
+    return 'Добавить недостающие настройки в профиль ноды «$node»? К добавлению: $count.';
+  }
+
+  @override
+  String backupContactSettings_applied(int count) {
+    return 'Добавлено настроек контактов: $count.';
+  }
+
+  @override
+  String get backupContactSettings_changed =>
+      'Нода или настройки контактов изменились. Обновите предпросмотр.';
+
+  @override
+  String get backupContactSettings_failed =>
+      'Не удалось восстановить настройки контактов.';
+
+  @override
   String get backupCommunities_label => 'Сообщества';
 
   @override

@@ -339,6 +339,44 @@ class AppLocalizationsBg extends AppLocalizations {
   String get backupContactGroups_failed => 'Could not restore contact groups.';
 
   @override
+  String get backupContactSettings_label => 'Individual contact settings';
+
+  @override
+  String get backupContactSettings_title =>
+      'Restore individual contact settings';
+
+  @override
+  String get backupContactSettings_intro =>
+      'Choose a MeshCore Open backup. Settings are matched to contacts by public key. The preview counts missing settings that can be added.';
+
+  @override
+  String get backupContactSettings_empty =>
+      'This backup contains no supported contact settings.';
+
+  @override
+  String backupContactSettings_summary(int count, int skipped) {
+    return 'Settings to add: $count. Skipped: $skipped.';
+  }
+
+  @override
+  String backupContactSettings_confirm(String node, int count) {
+    return 'Add missing settings to the profile for “$node”? Settings to add: $count.';
+  }
+
+  @override
+  String backupContactSettings_applied(int count) {
+    return 'Contact settings added: $count.';
+  }
+
+  @override
+  String get backupContactSettings_changed =>
+      'The node or its contact settings changed. Refresh the preview.';
+
+  @override
+  String get backupContactSettings_failed =>
+      'Could not restore contact settings.';
+
+  @override
   String get backupCommunities_label => 'Communities';
 
   @override

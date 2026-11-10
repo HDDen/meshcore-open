@@ -976,8 +976,11 @@ WHERE node_key = ? AND name = ?
 
   /// Commit before deleting any source preferences. Existing SQL choices win
   /// on retry, including explicit false and empty quick-answer lists.
-  Future<void> importContactOptions(Iterable<ContactOptionRow> rows) =>
-      transaction(() async {
+  Future<bool> importContactOptions(
+    Iterable<ContactOptionRow> rows, {
+    bool Function()? stillCurrent,
+  }) => transaction(() async {
+        if (stillCurrent?.call() == false) return false;
         for (final row in rows) {
           await customInsert(
             'INSERT INTO contact_settings (node_key, contact_key, name, value) '
@@ -990,6 +993,7 @@ WHERE node_key = ? AND name = ?
             ],
           );
         }
+        return true;
       });
 
   /// A codec selection is a single transaction, including disabling the other

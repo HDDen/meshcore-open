@@ -56,6 +56,7 @@ import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
+import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_contact_restore.dart';
@@ -12892,6 +12893,52 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return preview.added.length;
   }
 
+  BackupContactSettingsPreview? previewBackupContactSettings(
+    BackupContactSettings source,
+  ) {
+    if (!_canUseNodeLocalBackup) return null;
+    final keys = source.contacts.where((key) =>
+        key != selfPublicKeyHex && _knownContactKeys.contains(key)).toSet();
+    return source.preview(
+      session: _nodeLocalBackupSession,
+      destinationKeys: keys,
+      current: _contactSettingsStore.snapshotForBackup(keys),
+      hasCyr2LatProfile: (id) =>
+          _appSettingsService?.getCyr2LatProfileById(id) != null,
+    );
+  }
+
+  Future<int?> restoreBackupContactSettings(BackupContactSettingsPreview preview) async {
+    bool sessionIsCurrent() =>
+        _canUseNodeLocalBackup && _nodeLocalBackupSession == preview.session;
+    if (!sessionIsCurrent()) return null;
+    final store = _contactSettingsStore.scopedCopy();
+    final additions = preview.additions;
+    if (additions.isEmpty) return 0;
+    var applied = false;
+    await _contactCompressionWrites.run(() async {
+      try {
+        applied = await store.restoreBackupSettings(
+          additions,
+          sessionIsCurrent: sessionIsCurrent,
+          stillCurrent: () {
+            if (!sessionIsCurrent()) return false;
+            final current = previewBackupContactSettings(preview.source);
+            return mapEquals(current?.additions.values, additions.values);
+          },
+        );
+      } finally {
+        if (sessionIsCurrent()) {
+          for (final key in additions.contacts) {
+            _contactMcmpEnabled.remove(key);
+          }
+          notifyListeners();
+        }
+      }
+    });
+    return applied ? additions.values.length : null;
+  }
+
   /// Captures the selected lists. Channels use the confirmed inventory.
   /// Only selecting contacts reads the radio.
   Future<BackupSnapshot?> snapshotNodeBackup({
@@ -12901,6 +12948,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool includeDiscoveredContacts = false,
     bool includeContactGroups = false,
     bool includeCommunities = false,
+    bool includeContactSettings = false,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
@@ -12910,13 +12958,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (!includeChannels ||
             (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
         (!includeContacts || _canPreviewContactBackup) &&
-        (!(includeContactGroups || includeCommunities || includeDiscoveredContacts) ||
+        (!(includeContactGroups || includeCommunities || includeDiscoveredContacts ||
+            includeContactSettings) ||
             _canUseNodeLocalBackup) &&
         selfPublicKeyHex == nodeKey &&
         _channelInboxRevision == revision;
     if ((!includeChannels && !includeContacts &&
             !includeDiscoveredContacts && !includeContactGroups &&
-            !includeCommunities) ||
+            !includeCommunities && !includeContactSettings) ||
         !canSnapshot()) {
       return null;
     }
@@ -12934,6 +12983,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!canSnapshot()) return null;
     final verified = includeContacts ? await _refreshBackupContacts() : null;
     if ((includeContacts && verified == null) || !canSnapshot()) return null;
+    final contactSettings = includeContactSettings
+        ? _contactSettingsStore.snapshotForBackup(
+            (verified?.keys ?? _knownContactKeys).where((key) => key != nodeKey),
+          )
+        : null;
 
     return BackupSnapshot(
       sourcePublicKey: nodeKey,
@@ -12944,6 +12998,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       discoveredContactsJson: discoveredJson,
       contactGroups: contactGroups,
       communities: communities,
+      contactSettings: contactSettings,
       createdAt: DateTime.now(),
     );
   }

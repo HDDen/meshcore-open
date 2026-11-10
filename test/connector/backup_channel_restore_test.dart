@@ -8,6 +8,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
+import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/community.dart';
@@ -22,6 +23,7 @@ import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/community_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
+import 'package:meshcore_open/storage/contact_settings_store.dart';
 import 'package:meshcore_open/storage/contact_group_store.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
@@ -392,6 +394,65 @@ void main() {
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
     expect(radio.contactReads, reads);
+    expect(radio.contactWrites, isEmpty);
+  });
+
+  test('contact options restore into SQLite without replacing a local codec', () async {
+    final first = radio.contacts.keys.single;
+    final second = _contact(0x82, 'Other contact');
+    radio.contacts[second.publicKeyHex] = second;
+    await radio.syncContacts();
+    final contactReads = radio.contactReads;
+    final local = ContactSettingsStore()..setPublicKeyHex = _node;
+    final foreign = ContactSettingsStore()..setPublicKeyHex = 'bb' * 32;
+    await radio.connector.setContactMCOtxtEnabled(first, true);
+    await foreign.saveSmazEnabled(first, true);
+    expect(radio.connector.isContactUrlImagesEnabled(first), isFalse);
+    expect(radio.connector.isContactCyr2LatEnabled(second.publicKeyHex), isFalse);
+
+    final missing = '93' * 32;
+    final source = BackupContactSettings({
+      (first, 'smaz_enabled'): '1',
+      (first, 'url_images_enabled'): '1',
+      (second.publicKeyHex, 'url_images_enabled'): '1',
+      (second.publicKeyHex, 'cyr2lat_enabled'): '1',
+      (second.publicKeyHex, 'cyr2lat_profile'): 'missing-profile',
+      (missing, 'url_images_enabled'): '1',
+    });
+    final stale = radio.connector.previewBackupContactSettings(source)!;
+    expect(stale.additions.values, hasLength(3));
+    await local.saveUrlImagesEnabled(second.publicKeyHex, false);
+    expect(await radio.connector.restoreBackupContactSettings(stale), isNull);
+    expect(await local.loadUrlImagesChoice(first), isNull);
+
+    final preview = radio.connector.previewBackupContactSettings(source)!;
+    expect(preview.skipped, 4);
+    expect(await radio.connector.restoreBackupContactSettings(preview), 2);
+    expect(radio.connector.isContactMCOtxtEnabled(first), isTrue);
+    expect(radio.connector.isContactSmazEnabled(first), isFalse);
+    expect(radio.connector.isContactUrlImagesEnabled(first), isTrue);
+    expect(radio.connector.isContactCyr2LatEnabled(second.publicKeyHex), isTrue);
+    expect(await local.loadUrlImagesChoice(second.publicKeyHex), isFalse);
+    expect(await foreign.loadUrlImagesChoice(first), isNull);
+    expect(await local.loadUrlImagesChoice(missing), isNull);
+
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: false,
+      includeContactSettings: true,
+    ))!;
+    final exported = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      contactSettingsOnly: true,
+    );
+    final values = exported.contactSettings!.values;
+    expect(values[(first, 'mcotxt_enabled')], '1');
+    expect(values[(second.publicKeyHex, 'url_images_enabled')], '0');
+    expect(values[(second.publicKeyHex, 'cyr2lat_profile')], isNull);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    expect(radio.contactReads, contactReads);
     expect(radio.contactWrites, isEmpty);
   });
 

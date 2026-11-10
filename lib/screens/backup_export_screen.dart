@@ -49,6 +49,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   bool _busy = false;
   late bool _includeChannels = widget._mode == _BackupExportMode.selected;
   bool _includeContacts = false;
+  bool _includeContactSettings = false;
   bool _includeContactGroups = false;
   bool _includeCommunities = false;
   bool _includeDiscoveredContacts = false;
@@ -61,7 +62,8 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   bool get _hasSelection => _historyOnly
       ? _includeDirectHistory || _includeChannelHistory
       : _includeChannels || _includeContacts || _includeContactGroups ||
-          _includeDiscoveredContacts || _includeSettings || _includeCommunities;
+          _includeDiscoveredContacts || _includeSettings || _includeCommunities ||
+          _includeContactSettings;
 
   Future<BackupSnapshot?> _capture() async {
     if (_historyOnly) {
@@ -74,7 +76,8 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         ? AppSettingsBackup.capture(context.read<AppSettingsService>().settings)
         : null;
     if (_includeChannels || _includeContacts ||
-        _includeContactGroups || _includeDiscoveredContacts || _includeCommunities) {
+        _includeContactGroups || _includeDiscoveredContacts || _includeCommunities ||
+        _includeContactSettings) {
       return context.read<MeshCoreConnector>().snapshotNodeBackup(
         includeChannels: _includeChannels,
         includeContacts: _includeContacts,
@@ -82,6 +85,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         includeDiscoveredContacts: _includeDiscoveredContacts,
         includeContactGroups: _includeContactGroups,
         includeCommunities: _includeCommunities,
+        includeContactSettings: _includeContactSettings,
       );
     }
     return BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
@@ -265,6 +269,14 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                 onChanged: _busy
                     ? null
                     : (value) => setState(() => _includeContacts = value ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.backupContactSettings_label),
+                value: _includeContactSettings,
+                onChanged: _busy ? null : (value) => setState(
+                  () => _includeContactSettings = value ?? false,
+                ),
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
