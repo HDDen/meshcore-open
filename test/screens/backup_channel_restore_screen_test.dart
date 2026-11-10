@@ -11,11 +11,11 @@ import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/contact.dart';
-import 'package:meshcore_open/screens/backup_channel_export_screen.dart';
+import 'package:meshcore_open/screens/backup_export_screen.dart';
 import 'package:meshcore_open/screens/backup_restore_screen.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
-import 'package:meshcore_open/services/channel_backup_snapshot.dart';
+import 'package:meshcore_open/services/node_backup_snapshot.dart';
 import 'package:meshcore_open/utils/backup_json_file.dart';
 import 'package:provider/provider.dart';
 
@@ -43,11 +43,26 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   String get deviceDisplayName => 'Test node';
 
   @override
-  ChannelBackupSnapshot? snapshotChannelBackup() => ready
-      ? ChannelBackupSnapshot(
+  Future<NodeBackupSnapshot?> snapshotNodeBackup({
+    required bool includeChannels,
+    required bool includeContacts,
+  }) async => ready
+      ? NodeBackupSnapshot(
           sourcePublicKey: _key,
           nodeName: deviceDisplayName,
-          channels: current,
+          channels: includeChannels ? current : null,
+          contacts: includeContacts
+              ? [
+                  Contact(
+                    publicKey: Uint8List.fromList(List.filled(32, 0x99)),
+                    name: 'Saved contact',
+                    type: 1,
+                    pathLength: -1,
+                    path: Uint8List(0),
+                    lastSeen: DateTime.utc(2026),
+                  ),
+                ]
+              : null,
           createdAt: DateTime.utc(2026),
         )
       : null;
@@ -215,7 +230,7 @@ void main() {
     expect(find.text(l10n.backupContacts_applied(1)), findsOneWidget);
   });
 
-  testWidgets('export requires a synced node and matching passwords',
+  testWidgets('exports both selected lists with a confirmed password',
       (tester) async {
     final node = _Node()..ready = false;
     addTearDown(node.dispose);
@@ -227,7 +242,7 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: BackupChannelExportScreen(
+          home: BackupExportScreen(
             saveFile: (value, fileName, {sharePositionOrigin}) async {
               contents = value;
               name = fileName;
@@ -237,11 +252,11 @@ void main() {
         ),
       ),
     );
-    final l10n = tester.element(find.byType(BackupChannelExportScreen)).l10n;
+    final l10n = tester.element(find.byType(BackupExportScreen)).l10n;
     final create = find.text(l10n.backupChannels_createBackup);
     await tester.tap(create);
     await tester.pumpAndSettle();
-    expect(find.text(l10n.backupChannels_exportNotReady), findsOneWidget);
+    expect(find.text(l10n.backupExport_notReady), findsOneWidget);
     expect(contents, isNull);
 
     node.ready = true;
@@ -253,6 +268,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(contents, isNull);
 
+    await tester.tap(find.widgetWithText(CheckboxListTile, l10n.contacts_title));
+    await tester.pumpAndSettle();
     await tester.tap(create);
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 300));
@@ -272,14 +289,16 @@ void main() {
     await _waitAfterTap(
       tester,
       find.text(l10n.common_save),
-      find.text(l10n.backupChannels_exportSaved),
+      find.text(l10n.backupExport_saved),
     );
     expect(name, contains('Test node'));
+    expect(name, startsWith('meshcore-backup-'));
     expect(contents, isNot(contains('Current name')));
     final decoded = await tester.runAsync(
       () => const BackupImportPlanner().inspect(contents!, password: password),
     );
     expect(decoded!.channels!.map((channel) => channel.index), [0, 2, 3]);
+    expect(decoded.contacts!.single.name, 'Saved contact');
   });
 
   for (final language in ['ru', 'en']) {

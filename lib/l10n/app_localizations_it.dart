@@ -164,6 +164,38 @@ class AppLocalizationsIt extends AppLocalizations {
       'Could not save the channel backup.';
 
   @override
+  String get backupExport_title => 'Back up contacts and channels';
+
+  @override
+  String get backupExport_intro =>
+      'Choose which lists from the connected node to save in a JSON backup.';
+
+  @override
+  String get backupExport_contactsHint =>
+      'Reads a complete contact list from the node before saving.';
+
+  @override
+  String get backupExport_passwordHint =>
+      'Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
+
+  @override
+  String get backupExport_notReady =>
+      'Could not verify the selected lists. Connect to the node, wait for sync, and try again.';
+
+  @override
+  String get backupExport_empty => 'The selected lists are empty on this node.';
+
+  @override
+  String get backupExport_saved => 'Backup saved.';
+
+  @override
+  String get backupExport_shared =>
+      'The backup was offered in the system share sheet.';
+
+  @override
+  String get backupExport_failed => 'Could not save the backup.';
+
+  @override
   String get backupContacts_title => 'Restore contacts';
 
   @override

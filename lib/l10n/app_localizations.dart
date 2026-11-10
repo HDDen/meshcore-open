@@ -370,6 +370,60 @@ abstract class AppLocalizations {
   /// **'Could not save the channel backup.'**
   String get backupChannels_exportFailed;
 
+  /// No description provided for @backupExport_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up contacts and channels'**
+  String get backupExport_title;
+
+  /// No description provided for @backupExport_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which lists from the connected node to save in a JSON backup.'**
+  String get backupExport_intro;
+
+  /// No description provided for @backupExport_contactsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads a complete contact list from the node before saving.'**
+  String get backupExport_contactsHint;
+
+  /// No description provided for @backupExport_passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a password to encrypt the file. Leave the field empty for a readable JSON backup.'**
+  String get backupExport_passwordHint;
+
+  /// No description provided for @backupExport_notReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify the selected lists. Connect to the node, wait for sync, and try again.'**
+  String get backupExport_notReady;
+
+  /// No description provided for @backupExport_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected lists are empty on this node.'**
+  String get backupExport_empty;
+
+  /// No description provided for @backupExport_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved.'**
+  String get backupExport_saved;
+
+  /// No description provided for @backupExport_shared.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup was offered in the system share sheet.'**
+  String get backupExport_shared;
+
+  /// No description provided for @backupExport_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the backup.'**
+  String get backupExport_failed;
+
   /// No description provided for @backupContacts_title.
   ///
   /// In en, this message translates to:

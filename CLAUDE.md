@@ -3091,10 +3091,10 @@ It checks the preview against a fresh channel read before issuing any
 After the writes, channel sync verifies the reported slots and saves the
 SQLite cache for that node. A confirmed rename links the old and new names
 when readback agrees, even if another slot still holds the old name.
-Channel backup export snapshots that node's confirmed list and full public
-key before opening the password dialog. The v1 file includes channel
-definitions only. Export uses the current connection state without sending
-radio commands or opening the offline profiles' storage.
+Backup export snapshots the selected lists and full public key of the
+active node before opening the password dialog. Channel-only export
+uses the confirmed inventory. Selecting contacts requests a complete
+list and serializes the radio records ahead of any app-side merging.
 
 Contact backup restore reuses the full contact sync with the current
 session's stores. It needs a declared count and the corresponding unique

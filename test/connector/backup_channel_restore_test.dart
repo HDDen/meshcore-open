@@ -81,6 +81,7 @@ class _Radio {
         _contact(0x81, 'Current contact'),
   };
   final contactWrites = <Contact>[];
+  int contactReads = 0;
   bool overwriteOldest = false;
   bool incompleteContactList = false;
   Contact? newlyLearnedContact;
@@ -154,6 +155,7 @@ class _Radio {
           if (overwriteOldest) autoAddOverwriteOldestFlag else 0,
         ]);
       case cmdGetContacts:
+        contactReads++;
         connector.handleFrameForTest(ReviewFrames.contactsStart(
           contacts.length + (incompleteContactList ? 1 : 0),
         ));
@@ -246,7 +248,11 @@ void main() {
     await (ChannelStore()..setPublicKeyHex = otherNode).saveChannels([
       _channel(0, 'Other node only', 9),
     ]);
-    final snapshot = radio.connector.snapshotChannelBackup()!;
+    final contactReads = radio.contactReads;
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: true,
+      includeContacts: false,
+    ))!;
     expect(snapshot.sourcePublicKey, _node);
     expect(snapshot.channelCount, 2);
     expect(snapshot.fileName, contains('Restore target'));
@@ -257,9 +263,40 @@ void main() {
     expect(plan.channels!.map((channel) => channel.name),
         ['Unrelated', 'Current']);
     expect(radio.reads, isEmpty);
+    expect(radio.contactReads, contactReads);
     expect(radio.writes, isEmpty);
     radio.connector.resetSyncProgressForTest();
-    expect(radio.connector.snapshotChannelBackup(), isNull);
+    expect(await radio.connector.snapshotNodeBackup(
+      includeChannels: true,
+      includeContacts: false,
+    ), isNull);
+  });
+
+  test('combined export reads contacts from the radio and rejects an incomplete read', () async {
+    await radio.syncContacts();
+    final key = radio.contacts.keys.single;
+    radio.contacts[key] = radio.contacts[key]!.copyWith(name: 'Name on radio');
+    final reads = radio.contactReads;
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: true,
+      includeContacts: true,
+    ))!;
+    final plan = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+    );
+    expect(plan.contacts!.single.name, 'Name on radio');
+    expect(plan.channels, hasLength(2));
+    expect(radio.contactReads, reads + 1);
+    expect(radio.reads, isEmpty);
+    expect(radio.contactWrites, isEmpty);
+    expect(radio.writes, isEmpty);
+
+    radio.incompleteContactList = true;
+    expect(await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: true,
+    ), isNull);
   });
 
   group('contact backup restore', () {

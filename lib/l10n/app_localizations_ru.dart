@@ -165,6 +165,38 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось сохранить резервную копию каналов.';
 
   @override
+  String get backupExport_title => 'Копия контактов и каналов';
+
+  @override
+  String get backupExport_intro =>
+      'Выберите, какие списки подключённой ноды сохранить в резервную копию JSON.';
+
+  @override
+  String get backupExport_contactsHint =>
+      'Перед сохранением приложение перечитает полный список контактов с ноды.';
+
+  @override
+  String get backupExport_passwordHint =>
+      'Укажите пароль, чтобы зашифровать файл. Оставьте поле пустым для сохранения JSON без шифрования.';
+
+  @override
+  String get backupExport_notReady =>
+      'Не удалось проверить выбранные списки. Подключитесь к ноде, дождитесь синхронизации и повторите попытку.';
+
+  @override
+  String get backupExport_empty => 'Выбранные списки на этой ноде пусты.';
+
+  @override
+  String get backupExport_saved => 'Резервная копия сохранена.';
+
+  @override
+  String get backupExport_shared =>
+      'Резервная копия передана в системное меню сохранения и отправки.';
+
+  @override
+  String get backupExport_failed => 'Не удалось сохранить резервную копию.';
+
+  @override
   String get backupContacts_title => 'Восстановление контактов';
 
   @override

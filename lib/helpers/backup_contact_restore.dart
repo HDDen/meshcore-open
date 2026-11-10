@@ -88,24 +88,24 @@ class BackupContactRestorePreview {
 
 /// Tracks the explicitly requested full list until END_OF_CONTACTS.
 class BackupContactInventoryRead {
-  final done = Completer<Set<String>?>();
-  final _keys = <String>{};
+  final done = Completer<Map<String, Contact>?>();
+  final _contacts = <String, Contact>{};
   int? _expected;
   int _received = 0;
 
   void start(int? count) {
     _expected = count;
     _received = 0;
-    _keys.clear();
+    _contacts.clear();
   }
 
-  void add(String key) {
+  void add(Contact contact) {
     _received++;
-    _keys.add(key);
+    _contacts[contact.publicKeyHex] = contact;
   }
 
-  Set<String>? get verifiedKeys =>
-      _expected == _received && _received == _keys.length
-      ? Set.unmodifiable(_keys)
+  Map<String, Contact>? get verifiedContacts =>
+      _expected == _received && _received == _contacts.length
+      ? Map.unmodifiable(_contacts)
       : null;
 }

@@ -119,7 +119,7 @@ import '../services/message_retry_service.dart';
 import '../services/experimental_route_chooser.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
-import '../services/channel_backup_snapshot.dart';
+import '../services/node_backup_snapshot.dart';
 import '../services/background_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../services/translation_service.dart';
@@ -11777,7 +11777,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final before = await _refreshBackupContacts();
       if (!sameSession()) return result(BackupContactRestoreStatus.destinationChanged);
       if (before == null) return result(BackupContactRestoreStatus.syncFailed);
-      if (!sameInventory() || !preview.matchesInventory(before, maxContacts)) {
+      if (!sameInventory() || !preview.matchesInventory(before.keys, maxContacts)) {
         return result(BackupContactRestoreStatus.destinationChanged);
       }
 
@@ -11842,8 +11842,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (!sameSession()) return result(BackupContactRestoreStatus.destinationChanged);
       if (status == BackupContactRestoreStatus.completed &&
           (after == null ||
-              !after.containsAll(confirmed) ||
-              !preview.matchesInventory(after.difference(confirmed), maxContacts))) {
+              !confirmed.every(after.containsKey) ||
+              !preview.matchesInventory(
+                after.keys.where((key) => !confirmed.contains(key)),
+                maxContacts,
+              ))) {
         status = BackupContactRestoreStatus.syncFailed;
       }
       return result(status);
@@ -11852,7 +11855,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<Set<String>?> _refreshBackupContacts() async {
+  Future<Map<String, Contact>?> _refreshBackupContacts() async {
     if (_isLoadingContacts || _backupContactRead != null) return null;
     final read = BackupContactInventoryRead();
     _backupContactRead = read;
@@ -11872,21 +11875,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _completeBackupContactRead(
     BackupContactInventoryRead read,
-    Set<String>? keys,
+    Map<String, Contact>? contacts,
     Future<void> persisted,
   ) async {
     try {
       await persisted;
     } catch (_) {
-      keys = null;
+      contacts = null;
     }
-    if (identical(_backupContactRead, read)) _finishBackupContactRead(keys);
+    if (identical(_backupContactRead, read)) _finishBackupContactRead(contacts);
   }
 
-  void _finishBackupContactRead(Set<String>? keys) {
+  void _finishBackupContactRead(Map<String, Contact>? contacts) {
     final read = _backupContactRead;
     _backupContactRead = null;
-    read?.done.complete(keys);
+    read?.done.complete(contacts);
   }
 
   Future<void> addOrUpdateSharedContact({
@@ -12639,17 +12642,33 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  /// Exports the already confirmed list of the active node without radio I/O.
-  ChannelBackupSnapshot? snapshotChannelBackup() {
-    if (!_hasBackupChannelInventory ||
-        _restoringBackupChannels ||
-        _channelEditsInProgress != 0) {
+  /// Reads the selected radio lists from the active node. A channel-only
+  /// snapshot uses the already confirmed inventory without radio I/O.
+  Future<NodeBackupSnapshot?> snapshotNodeBackup({
+    required bool includeChannels,
+    required bool includeContacts,
+  }) async {
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    bool canSnapshot() =>
+        !_restoringBackupChannels &&
+        !_restoringBackupContacts &&
+        (!includeChannels ||
+            (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
+        (!includeContacts || _canPreviewContactBackup) &&
+        selfPublicKeyHex == nodeKey &&
+        _channelInboxRevision == revision;
+    if ((!includeChannels && !includeContacts) || !canSnapshot()) {
       return null;
     }
-    return ChannelBackupSnapshot(
-      sourcePublicKey: selfPublicKeyHex,
+    final verified = includeContacts ? await _refreshBackupContacts() : null;
+    if ((includeContacts && verified == null) || !canSnapshot()) return null;
+
+    return NodeBackupSnapshot(
+      sourcePublicKey: nodeKey,
       nodeName: deviceDisplayName,
-      channels: _channels,
+      channels: includeChannels ? _channels : null,
+      contacts: verified?.values.where((contact) => contact.publicKeyHex != nodeKey),
       createdAt: DateTime.now(),
     );
   }
@@ -13078,8 +13097,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _contactSyncTimeout?.cancel();
         _contactSyncTimeout = null;
         final backupRead = _backupContactRead;
-        final verifiedKeys = backupRead?.verifiedKeys;
-        if (backupRead != null && verifiedKeys == null) {
+        final verifiedContacts = backupRead?.verifiedContacts;
+        if (backupRead != null && verifiedContacts == null) {
           // A partial backup preflight is not evidence that contacts vanished.
           _contactsUnconfirmedBySync = null;
         }
@@ -13105,7 +13124,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (backupRead == null) {
           unawaited(persisted);
         } else {
-          unawaited(_completeBackupContactRead(backupRead, verifiedKeys, persisted));
+          unawaited(_completeBackupContactRead(backupRead, verifiedContacts, persisted));
         }
         unawaited(_flushDeferredChannelMessageSends());
         if (PlatformInfo.isWeb &&
@@ -14194,7 +14213,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final isContactSync = countTowardSync && _isLoadingContacts;
       if (isContactSync) {
         _contactSyncReceived++;
-        _backupContactRead?.add(contactTmp.publicKeyHex);
+        _backupContactRead?.add(contactTmp);
       }
       if (listEquals(contactTmp.publicKey, _selfPublicKey)) {
         appLogger.info(

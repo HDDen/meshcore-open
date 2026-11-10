@@ -6,7 +6,8 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
-import 'package:meshcore_open/services/channel_backup_snapshot.dart';
+import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/services/node_backup_snapshot.dart';
 
 final _sourceKey = List.filled(32, 'ab').join();
 final _contactKey = List.filled(32, 'cd').join();
@@ -48,10 +49,11 @@ void main() {
   test('export captures one v1 channel section and round-trips without unread state',
       () async {
     final channel = _channel(2, 'Mesh channel', 7)..unreadCount = 9;
-    final snapshot = ChannelBackupSnapshot(
+    final snapshot = NodeBackupSnapshot(
       sourcePublicKey: _sourceKey.toUpperCase(),
       nodeName: r'Нода:/\*',
       channels: [channel],
+      contacts: null,
       createdAt: DateTime.utc(2026, 11, 10, 12, 30),
     );
     channel.psk.fillRange(0, channel.psk.length, 8);
@@ -71,6 +73,51 @@ void main() {
     expect(restored.name, 'Mesh channel');
     expect(restored.psk, List.filled(16, 7));
     expect(restored.unreadCount, 0);
+  });
+
+  test('contacts-only export preserves radio fields and omits local metadata', () async {
+    final contact = Contact(
+      publicKey: Uint8List.fromList(List.filled(32, 0xcd)),
+      name: 'Radio contact',
+      type: 1,
+      flags: 1,
+      pathLength: 1,
+      pathHashWidth: 3,
+      path: Uint8List.fromList([0x01, 0x02, 0x03]),
+      pathOverride: -1,
+      latitude: 51.5,
+      longitude: -0.1,
+      lastSeen: DateTime.utc(2026, 1, 2),
+      lastModified: DateTime.utc(2026, 1, 3),
+      hasMessages: true,
+    );
+    final snapshot = NodeBackupSnapshot(
+      sourcePublicKey: _sourceKey,
+      nodeName: 'Source',
+      channels: null,
+      contacts: [contact],
+      createdAt: DateTime.utc(2026),
+    );
+    contact.path[0] = 0xff;
+    final contents = await snapshot.encode(password: '');
+    final plan = await planner.inspect(contents, password: '');
+    final restored = plan.contacts!.single;
+    expect(plan.channels, isNull);
+    expect(snapshot.fileName, startsWith('meshcore-contacts-'));
+    expect(restored.publicKeyHex, _contactKey);
+    expect(restored.name, 'Radio contact');
+    expect(restored.type, 1);
+    expect(restored.flags, 1);
+    expect(restored.pathHashWidth, 3);
+    expect(restored.path, [1, 2, 3]);
+    expect(restored.latitude, 51.5);
+    expect(restored.longitude, -0.1);
+    expect(restored.lastSeen.millisecondsSinceEpoch,
+        contact.lastSeen.millisecondsSinceEpoch);
+    expect(restored.lastModified!.millisecondsSinceEpoch,
+        contact.lastModified!.millisecondsSinceEpoch);
+    expect(contents, isNot(contains('pathOverride')));
+    expect(contents, isNot(contains('hasMessages')));
   });
 
   final routes = <(String?, int, int, List<int>)>[
