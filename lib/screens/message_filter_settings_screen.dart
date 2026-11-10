@@ -130,6 +130,35 @@ class _MessageFilterSettingsScreenState
                       ),
                     ),
             ),
+            if (settings.duplicates)
+              ListTile(
+                title: Text(l10n.messageFilter_repeatSends),
+                subtitle: Text(
+                  l10n.messageFilter_repeatSendsSubtitle(settings.repeatSends),
+                ),
+                trailing: DropdownButton<int>(
+                  key: const ValueKey('messageFilter_repeatSends'),
+                  value: settings.repeatSends,
+                  onChanged: _saving || !settings.enabled
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          _save(
+                            () => service.updateSettings(
+                              settings.copyWith(repeatSends: value),
+                            ),
+                          );
+                        },
+                  items: [
+                    for (
+                      var sends = MessageFilterSettings.minRepeatSends;
+                      sends <= MessageFilterSettings.maxRepeatSends;
+                      sends++
+                    )
+                      DropdownMenuItem(value: sends, child: Text('$sends')),
+                  ],
+                ),
+              ),
             SwitchListTile(
               title: Text(l10n.messageFilter_repeatedCharacters),
               subtitle: Text(l10n.messageFilter_repeatedCharactersSubtitle),

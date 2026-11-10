@@ -13,12 +13,16 @@ void main() {
     String text = campaign,
     int sentMinutes = 0,
     int receivedMinutes = 0,
+    int sameSenderSends = MessageFilterSettings.minRepeatSends,
+    String? publicationId,
   }) => tracker.check(
     channelId: channel,
     sender: sender,
     textKey: text,
     sentAt: start.add(Duration(minutes: sentMinutes)),
     receivedAt: start.add(Duration(minutes: receivedMinutes)),
+    sameSenderSends: sameSenderSends,
+    publicationId: publicationId,
   );
 
   test('out-of-order matches use sender time and stay within one channel', () {
@@ -32,6 +36,78 @@ void main() {
     expect(
       check(tracker, sentMinutes: 21, receivedMinutes: 2),
       isNull,
+    );
+  });
+
+  test('U33 baseline: a gap over ten minutes starts a new run', () {
+    final tracker = DuplicateTracker();
+    expect(check(tracker), isNull);
+    expect(check(tracker, sentMinutes: 10), FilterReason.duplicate);
+    expect(check(tracker, sentMinutes: 21), isNull);
+    expect(check(tracker, sentMinutes: 31), FilterReason.duplicate);
+  });
+
+  test('U33: a late send can complete a run of three publications', () {
+    final tracker = DuplicateTracker();
+    FilterReason? publish(int minute) => check(
+      tracker,
+      sentMinutes: minute,
+      sameSenderSends: 3,
+      publicationId: 'packet-$minute',
+    );
+
+    expect(publish(0), isNull);
+    expect(publish(20), isNull);
+    expect(publish(20), isNull);
+    expect(publish(10), FilterReason.duplicate);
+    expect(publish(20), isNull);
+    expect(publish(31), isNull);
+  });
+
+  test('U33: five live sends can span forty minutes', () {
+    final tracker = DuplicateTracker();
+    for (final minute in [0, 10, 20, 30, 40]) {
+      expect(
+        check(
+          tracker,
+          sentMinutes: minute,
+          receivedMinutes: minute,
+          sameSenderSends: 5,
+        ),
+        minute == 40 ? FilterReason.duplicate : isNull,
+      );
+    }
+  });
+
+  test('U33: the single-sender threshold leaves the three-sender rule intact', () {
+    final tracker = DuplicateTracker();
+    expect(check(tracker, sender: 'A', sameSenderSends: 5), isNull);
+    expect(check(tracker, sender: 'B', sameSenderSends: 5), isNull);
+    expect(
+      check(tracker, sender: 'C', sameSenderSends: 5),
+      FilterReason.crossSenderDuplicate,
+    );
+
+    final expired = DuplicateTracker();
+    expect(check(expired, sender: 'A', sameSenderSends: 5), isNull);
+    expect(
+      check(expired, sender: 'B', receivedMinutes: 31, sameSenderSends: 5),
+      isNull,
+    );
+    expect(
+      check(expired, sender: 'C', receivedMinutes: 32, sameSenderSends: 5),
+      isNull,
+    );
+  });
+
+  test('U33: eviction releases a publication identity', () {
+    final tracker = DuplicateTracker(maxEntriesPerChannel: 1);
+    expect(check(tracker, publicationId: 'packet'), isNull);
+    expect(check(tracker, text: 'an unrelated newer publication'), isNull);
+    expect(check(tracker, publicationId: 'packet'), isNull);
+    expect(
+      check(tracker, sentMinutes: 1, publicationId: 'resend'),
+      FilterReason.duplicate,
     );
   });
 

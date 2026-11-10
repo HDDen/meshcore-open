@@ -105,9 +105,13 @@ class FilterExample {
 }
 
 class MessageFilterSettings {
+  static const minRepeatSends = 2;
+  static const maxRepeatSends = 5;
+
   final bool enabled;
   final bool hideFiltered;
   final bool duplicates;
+  final int repeatSends;
   final bool repeatedCharacters;
   final bool learning;
   final Set<String> excludedChannelIds;
@@ -116,6 +120,7 @@ class MessageFilterSettings {
     this.enabled = false,
     this.hideFiltered = false,
     this.duplicates = false,
+    this.repeatSends = minRepeatSends,
     this.repeatedCharacters = false,
     this.learning = false,
     this.excludedChannelIds = const <String>{},
@@ -125,6 +130,7 @@ class MessageFilterSettings {
     bool? enabled,
     bool? hideFiltered,
     bool? duplicates,
+    int? repeatSends,
     bool? repeatedCharacters,
     bool? learning,
     Set<String>? excludedChannelIds,
@@ -132,6 +138,10 @@ class MessageFilterSettings {
     enabled: enabled ?? this.enabled,
     hideFiltered: hideFiltered ?? this.hideFiltered,
     duplicates: duplicates ?? this.duplicates,
+    repeatSends: (repeatSends ?? this.repeatSends).clamp(
+      minRepeatSends,
+      maxRepeatSends,
+    ),
     repeatedCharacters: repeatedCharacters ?? this.repeatedCharacters,
     learning: learning ?? this.learning,
     excludedChannelIds: excludedChannelIds ?? this.excludedChannelIds,
@@ -141,6 +151,7 @@ class MessageFilterSettings {
     'enabled': enabled,
     'displayMode': hideFiltered ? 'hide' : 'placeholder',
     'duplicates': duplicates,
+    'repeatSends': repeatSends,
     'repeatedCharacters': repeatedCharacters,
     'learning': learning,
     'excludedChannelIds': excludedChannelIds.toList()..sort(),
@@ -148,10 +159,14 @@ class MessageFilterSettings {
 
   factory MessageFilterSettings.fromJson(Map<String, dynamic> json) {
     final excluded = json['excludedChannelIds'];
+    final sends = json['repeatSends'];
     return MessageFilterSettings(
       enabled: json['enabled'] == true,
       hideFiltered: json['displayMode'] == 'hide',
       duplicates: json['duplicates'] == true,
+      repeatSends: sends is int
+          ? sends.clamp(minRepeatSends, maxRepeatSends)
+          : minRepeatSends,
       repeatedCharacters: json['repeatedCharacters'] == true,
       learning: json['learning'] == true,
       excludedChannelIds: excluded is List

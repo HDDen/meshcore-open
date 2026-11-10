@@ -16127,6 +16127,18 @@ abstract class AppLocalizations {
   /// **'The same text posted again or by several senders.'**
   String get messageFilter_duplicatesSubtitle;
 
+  /// No description provided for @messageFilter_repeatSends.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends to count as a repeat'**
+  String get messageFilter_repeatSends;
+
+  /// Threshold for repeated posts from a single sender
+  ///
+  /// In en, this message translates to:
+  /// **'Flag send {count} and later sends of the same text by one sender, with gaps of up to 10 minutes.'**
+  String messageFilter_repeatSendsSubtitle(int count);
+
   /// No description provided for @messageFilter_repeatedCharacters.
   ///
   /// In en, this message translates to:

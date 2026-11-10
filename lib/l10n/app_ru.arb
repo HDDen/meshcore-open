@@ -3804,6 +3804,8 @@
   "messageFilter_automaticSection": "Автоматические проверки",
   "messageFilter_duplicates": "Повторные публикации",
   "messageFilter_duplicatesSubtitle": "Один и тот же текст опубликован снова или несколькими отправителями.",
+  "messageFilter_repeatSends": "Порог повторных публикаций",
+  "messageFilter_repeatSendsSubtitle": "Отмечать повтор с отправки № {count}, если один автор публикует тот же текст с паузами до 10 минут.",
   "messageFilter_repeatedCharacters": "Повторяющиеся символы",
   "messageFilter_repeatedCharactersSubtitle": "Цепочки из 20 и более одинаковых символов. Пробелы и цифры пропускаются.",
   "messageFilter_reasonRepeatedCharacters": "Скрыто: повторяющиеся символы",

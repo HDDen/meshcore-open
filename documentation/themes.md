@@ -72,6 +72,9 @@ and is off by default. When enabled, a fresh greeting near the end of the
 visible chat can play a short animation. The app recognizes greetings in its
 supported languages and plays effects year-round. Existing history stays quiet.
 
+Only one effect plays at a time across chats. Greetings arriving during
+an effect or in the five seconds after it stops are skipped.
+
 Touches pass through the effect. It stops when the app or chat loses
 visibility and follows the system's reduced-motion setting and the selected
 power profile.

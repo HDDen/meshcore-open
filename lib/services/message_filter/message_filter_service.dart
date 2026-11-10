@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../helpers/mention_autocomplete.dart';
 import '../../models/message_filter.dart';
 import '../../storage/message_filter_store.dart';
 import '../../utils/app_logger.dart';
@@ -156,6 +157,8 @@ class MessageFilterService extends ChangeNotifier {
     DateTime? sentAt,
     DateTime? receivedAt,
     String? verifiedSenderKey,
+    String? binaryPublicationKey,
+    bool isAddressed = false,
   }) {
     if (!hasActiveChecks || !appliesTo(channelId)) {
       return null;
@@ -168,7 +171,8 @@ class MessageFilterService extends ChangeNotifier {
     final checksRepeatedCharacters =
         _settings.repeatedCharacters &&
         body.length >= MessageFilterText.repeatedCharacterRun;
-    final duplicateCheck = _settings.duplicates;
+    final duplicateCheck =
+        _settings.duplicates && !isAddressed && !MentionText.has(body);
     final normalizedText = duplicateCheck || checksRepeatedCharacters
         ? MessageFilterText.normalize(body)
         : null;
@@ -191,6 +195,12 @@ class MessageFilterService extends ChangeNotifier {
         textKey: duplicateKey!,
         sentAt: sentAt ?? now,
         receivedAt: now,
+        sameSenderSends: _settings.repeatSends,
+        publicationId:
+            binaryPublicationKey ??
+            (sentAt == null
+                ? null
+                : (sentAt.millisecondsSinceEpoch ~/ 1000, text)),
       );
     }
 

@@ -454,6 +454,8 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
   automatic changes and manual overrides apply to one occurrence. Chat
   effects use the newest visible message, obey reduced motion, ticker mode
   and power policy, and are removed when the app or route loses visibility.
+  U33 shares one playing effect and a five-second pause across chats under
+  the root overlay. Skipped greetings have no queue or wake-up timer.
   Holiday JPEG XL assets are declared in all four profiles and read on use.
 - Системные панели следуют разрешённой теме через `AppSystemUi` в `lib/helpers/app_system_ui_style.dart`, подключённый в `MaterialApp.builder`: navigation bar/разделитель используют `colorScheme.surface`, значки — контрастную яркость, в тёмной теме системная контрастная подложка отключена, в светлой сохранена для тёмных участков карты. Корневой фон Flutter окрашен той же поверхностью под прозрачными панелями edge-to-edge; insets не расходуются, локальные стили полноэкранных страниц сохраняют приоритет. Исходные инварианты темы — `test/helpers/app_system_ui_style_baseline_test.dart`, регрессии цвета/фона/insets/возврата с тёмного экрана — `test/widgets/app_system_ui_test.dart`. Нативный результат требует проверки на Android; подробнее: `documentation/android-system-bars.md`.
 - `lib/theme/mesh_theme.dart` defines the warm-dark `MeshPalette` (phosphor-green accents) and **is wired** in `main.dart` via `MeshTheme.light()` / `MeshTheme.dark()`
@@ -1115,7 +1117,11 @@ label when the field is scrolled above the keyboard. The channel menu uses
 the same PSK-based exclusions as the filter settings screen.
 Optional automatic checks detect long runs of one character and separate
 publications of the same text. The publication tracker compares send times
-within each channel and uses local arrival time for expiration. It is
+within each channel and uses local arrival time for expiration. U33 counts
+2–5 distinct sends by one sender in a run with gaps of at most ten minutes.
+It compares exact publication identity separately from normalized text
+to skip inbox replays across node slots. Addressed messages bypass the
+repeat check while still passing through the other checks. The tracker is
 indexed by channel PSK and normalized text, capped at 1,000 publications
 per channel, and discarded when its switch or the master switch is turned off.
 The opt-in classifier uses upstream's n-gram logistic regression. The

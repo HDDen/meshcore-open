@@ -9627,6 +9627,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Один и тот же текст опубликован снова или несколькими отправителями.';
 
   @override
+  String get messageFilter_repeatSends => 'Порог повторных публикаций';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return 'Отмечать повтор с отправки № $count, если один автор публикует тот же текст с паузами до 10 минут.';
+  }
+
+  @override
   String get messageFilter_repeatedCharacters => 'Повторяющиеся символы';
 
   @override

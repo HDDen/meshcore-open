@@ -221,14 +221,20 @@ while the keyboard is open and keeps the input label and action buttons
 accessible.
 
 Two optional checks start off and can be enabled separately. **Repeated
-publications** catches the same sender repeating a text of at least three
-words and ten characters within ten minutes. For texts of at least six
-words and ten characters, the third distinct sender within thirty minutes
-also triggers the filter. The tracker keeps up to 1,000 recent
-publications per channel. **Repeated characters** catches runs of at least
-twenty identical characters, excluding digits and whitespace. Restoring a
-post exempts that text from the publication check in that channel for the
-current session.
+publications** catches a sender repeating a text of at least three words and
+ten characters. **Sends to count as a repeat** lets you choose 2–5 sends,
+with 2 as the default. A series continues while each gap between sends is
+at most ten minutes. For texts of at least six words and ten characters,
+the third distinct sender within thirty minutes also triggers the filter.
+
+Replies, bracketed mentions, and plain mentions of your own node or channel
+alias skip the repeat check. A publication synced from another radio does
+not count twice while it is still in the index. The tracker keeps up to
+1,000 recent publications per channel. Restoring a post exempts that text
+from the publication check in that channel for the current session.
+
+**Repeated characters** catches runs of at least twenty identical characters,
+excluding digits and whitespace.
 
 **Learn from spam feedback** is a separate opt-in switch. When enabled,
 **Mark as spam** and **Not spam** label examples in the current profile.

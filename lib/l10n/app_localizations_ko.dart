@@ -9193,6 +9193,14 @@ class AppLocalizationsKo extends AppLocalizations {
       'The same text posted again or by several senders.';
 
   @override
+  String get messageFilter_repeatSends => 'Sends to count as a repeat';
+
+  @override
+  String messageFilter_repeatSendsSubtitle(int count) {
+    return 'Flag send $count and later sends of the same text by one sender, with gaps of up to 10 minutes.';
+  }
+
+  @override
   String get messageFilter_repeatedCharacters => 'Repeated characters';
 
   @override

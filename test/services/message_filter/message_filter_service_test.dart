@@ -154,6 +154,133 @@ void main() {
     expect(reloaded.settings.repeatedCharacters, isFalse);
   });
 
+  test('U33 baseline: manual rules outrank repeat verdicts', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true),
+    );
+    await filter.replaceRules(const [_bonus]);
+
+    final start = DateTime.utc(2026, 1, 1);
+    const text = 'claim a bonus from the local mesh';
+    FilterReason? check(int minutes) {
+      final time = start.add(Duration(minutes: minutes));
+      return filter.evaluate(
+        channelId: 'test',
+        sender: 'Alice',
+        text: text,
+        sentAt: time,
+        receivedAt: time,
+      )?.reason;
+    }
+
+    expect(check(0), FilterReason.textRule);
+    expect(check(1), FilterReason.textRule);
+    await filter.replaceRules(const []);
+    expect(check(2), FilterReason.duplicate);
+
+    filter.allowRestoredText('test', text);
+    expect(check(3), isNull);
+    await filter.replaceRules(const [_bonus]);
+    expect(check(4), FilterReason.textRule);
+  });
+
+  test('U33 baseline: verified keys distinguish senders with the same name',
+      () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true),
+    );
+
+    final start = DateTime.utc(2026, 1, 1);
+    FilterReason? check(String key, String name, int minutes) {
+      final time = start.add(Duration(minutes: minutes));
+      return filter.evaluate(
+        channelId: 'test',
+        sender: name,
+        text: 'claim a bonus from the local mesh',
+        verifiedSenderKey: key,
+        sentAt: time,
+        receivedAt: time,
+      )?.reason;
+    }
+
+    expect(check('one', 'Alice', 0), isNull);
+    expect(check('two', 'Alice', 1), isNull);
+    expect(check('three', 'Alice', 2), FilterReason.crossSenderDuplicate);
+    expect(check('one', 'Renamed', 3), FilterReason.duplicate);
+  });
+
+  test('U33: an exact replay stays out of the same-sender threshold', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true, repeatSends: 3),
+    );
+    final time = DateTime.utc(2026, 1, 1);
+    FilterReason? check(String text, {String? binaryKey}) => filter.evaluate(
+      channelId: binaryKey == null ? 'text' : 'binary',
+      sender: 'Alice',
+      text: text,
+      sentAt: time,
+      receivedAt: time,
+      binaryPublicationKey: binaryKey,
+    )?.reason;
+
+    const text = 'join the local mesh channel today';
+    expect(check(text), isNull);
+    expect(check(text), isNull);
+    expect(check('$text!'), isNull);
+    expect(check('$text.'), FilterReason.duplicate);
+
+    expect(check(text, binaryKey: 'packet-one'), isNull);
+    expect(check(text, binaryKey: 'packet-one'), isNull);
+    expect(check(text, binaryKey: 'packet-two'), isNull);
+    expect(check(text, binaryKey: 'packet-three'), FilterReason.duplicate);
+  });
+
+  test('U33: addressed posts bypass only the repeat check', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(
+        enabled: true,
+        duplicates: true,
+        repeatedCharacters: true,
+      ),
+    );
+    await filter.replaceRules(const [_bonus]);
+
+    const text = 'join the local mesh channel today';
+    final start = DateTime.utc(2026, 1, 1);
+    FilterReason? check(String body, int seconds, {bool isAddressed = false}) =>
+        filter.evaluate(
+          channelId: 'test',
+          sender: 'Alice',
+          text: body,
+          sentAt: start.add(Duration(seconds: seconds)),
+          receivedAt: start.add(Duration(seconds: seconds)),
+          isAddressed: isAddressed,
+        )?.reason;
+
+    expect(check('@[Bob] $text', 0), isNull);
+    expect(check('$text @[Eve]', 1), isNull);
+    expect(check(text, 2, isAddressed: true), isNull);
+    expect(check(text, 3), isNull);
+    expect(check(text, 4), FilterReason.duplicate);
+    expect(check('claim a bonus @[Bob]', 5), FilterReason.textRule);
+    expect(check('а' * 20, 6, isAddressed: true), FilterReason.repeatedCharacters);
+  });
+
+  test('U33: legacy and invalid threshold settings fall back safely', () {
+    expect(MessageFilterSettings.fromJson({}).repeatSends, 2);
+    expect(MessageFilterSettings.fromJson({'repeatSends': '4'}).repeatSends, 2);
+    expect(MessageFilterSettings.fromJson({'repeatSends': 1}).repeatSends, 2);
+    expect(MessageFilterSettings.fromJson({'repeatSends': 9}).repeatSends, 5);
+  });
+
   test('structured messages bypass even a matching sender rule', () async {
     final filter = MessageFilterService();
     await filter.updateSettings(const MessageFilterSettings(enabled: true));

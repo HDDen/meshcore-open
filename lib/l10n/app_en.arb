@@ -4908,6 +4908,16 @@
   "messageFilter_automaticSection": "Automatic checks",
   "messageFilter_duplicates": "Repeated publications",
   "messageFilter_duplicatesSubtitle": "The same text posted again or by several senders.",
+  "messageFilter_repeatSends": "Sends to count as a repeat",
+  "messageFilter_repeatSendsSubtitle": "Flag send {count} and later sends of the same text by one sender, with gaps of up to 10 minutes.",
+  "@messageFilter_repeatSendsSubtitle": {
+    "description": "Threshold for repeated posts from a single sender",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "messageFilter_repeatedCharacters": "Repeated characters",
   "messageFilter_repeatedCharactersSubtitle": "Runs of 20 or more identical characters. Spaces and digits are ignored.",
   "messageFilter_reasonRepeatedCharacters": "Filtered: repeated characters",

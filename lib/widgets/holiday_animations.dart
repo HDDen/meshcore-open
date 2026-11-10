@@ -19,13 +19,28 @@ Duration holidayAnimationDuration(HolidayAnimation animation) =>
       HolidayAnimation.newYear => const Duration(milliseconds: 5600),
     };
 
+class _HolidayAnimationGate {
+  bool playing = false;
+  Duration? quietUntil;
+}
+
 /// One short effect owned by the currently visible chat.
 class HolidayTriggerWatcher with WidgetsBindingObserver {
   static const freshness = Duration(minutes: 2);
+  static const _quietPeriod = Duration(seconds: 5);
+  static final _gates = Expando<_HolidayAnimationGate>();
+
+  static final _clock = Stopwatch()..start();
+  static Duration _elapsedTime() => _clock.elapsed;
+  final Duration Function() _elapsed;
+
+  HolidayTriggerWatcher({Duration Function()? elapsed})
+    : _elapsed = elapsed ?? _elapsedTime;
 
   String? _newestId;
   DateTime? _openedAt;
   OverlayEntry? _entry;
+  _HolidayAnimationGate? _gate;
   AppSettingsService? _settings;
   ModalRoute<dynamic>? _route;
   ValueListenable<TickerModeData>? _tickerMode;
@@ -80,12 +95,18 @@ class HolidayTriggerWatcher with WidgetsBindingObserver {
       final route = ModalRoute.of(context);
       final overlay = Overlay.maybeOf(context, rootOverlay: true);
       if (route?.isCurrent == false || overlay == null) return;
+      final gate = _gates[overlay] ??= _HolidayAnimationGate();
+      final quietUntil = gate.quietUntil;
+      if (gate.playing || (quietUntil != null && _elapsed() < quietUntil)) {
+        return;
+      }
       final origin = _visibleMessageOrigin(messageContext(id), overlay);
       if (origin == null) return;
       if (_playedIds.length == 24) _playedIds.remove(_playedIds.first);
       _playedIds.add(id);
       _play(
         overlay,
+        gate,
         route,
         settings,
         TickerMode.getValuesNotifier(context),
@@ -127,6 +148,7 @@ class HolidayTriggerWatcher with WidgetsBindingObserver {
 
   void _play(
     OverlayState overlay,
+    _HolidayAnimationGate gate,
     ModalRoute<dynamic>? route,
     AppSettingsService settings,
     ValueListenable<TickerModeData> tickerMode,
@@ -144,6 +166,7 @@ class HolidayTriggerWatcher with WidgetsBindingObserver {
       ),
     );
     _entry = entry;
+    _gate = gate..playing = true;
     _settings = settings..addListener(_checkPolicy);
     _tickerMode = tickerMode..addListener(_checkPolicy);
     _route = route;
@@ -185,6 +208,10 @@ class HolidayTriggerWatcher with WidgetsBindingObserver {
     final entry = _entry;
     if (entry == null) return;
     _entry = null;
+    _gate
+      ?..playing = false
+      ..quietUntil = _elapsed() + _quietPeriod;
+    _gate = null;
     _route?.animation?.removeStatusListener(_onRouteExit);
     _route?.secondaryAnimation?.removeStatusListener(_onRouteCovered);
     _route = null;

@@ -56,8 +56,18 @@ void main() {
     final characters = find.widgetWithText(SwitchListTile, 'Repeated characters');
     await tester.scrollUntilVisible(duplicates, 100);
     expect(tester.widget<SwitchListTile>(duplicates).value, isFalse);
+    final repeatSends = find.byKey(const ValueKey('messageFilter_repeatSends'));
+    expect(repeatSends, findsNothing);
     await tester.tap(duplicates);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(repeatSends, 100);
+    expect(tester.widget<DropdownButton<int>>(repeatSends).value, 2);
+    await tester.tap(repeatSends);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('4').last);
+    await tester.pumpAndSettle();
+    expect(service.settings.repeatSends, 4);
+
     await tester.scrollUntilVisible(characters, 100);
     expect(tester.widget<SwitchListTile>(characters).value, isFalse);
     expect(service.settings.duplicates, isTrue);
@@ -91,6 +101,7 @@ void main() {
     expect(reloaded.rules.single.pattern, 'bonus');
     expect(reloaded.settings.enabled, isTrue);
     expect(reloaded.settings.learning, isTrue);
+    expect(reloaded.settings.repeatSends, 4);
     expect(reloaded.appliesTo(channel.storageId), isFalse);
 
     final savedRule = find.widgetWithText(ListTile, 'bonus');

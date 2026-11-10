@@ -21,6 +21,12 @@ void main() {
   });
   tearDown(PrefsManager.reset);
 
+  HolidayTriggerWatcher watcherFor(WidgetTester tester) {
+    final clock = tester.binding.clock;
+    final start = clock.now();
+    return HolidayTriggerWatcher(elapsed: () => clock.now().difference(start));
+  }
+
   Future<BuildContext> host(
     WidgetTester tester, {
     bool reducedMotion = false,
@@ -70,7 +76,7 @@ void main() {
   }
 
   testWidgets('U19c: only fresh visible greetings play, and only once', (tester) async {
-    final watcher = HolidayTriggerWatcher();
+    final watcher = watcherFor(tester);
     addTearDown(watcher.dispose);
     final context = await host(tester);
     await settings.setHolidayAnimationsEnabled(true);
@@ -90,8 +96,59 @@ void main() {
     expect(find.byType(HolidayAnimationView), findsNothing);
   });
 
+  testWidgets('U33 baseline: greetings during a playing effect are not queued',
+      (tester) async {
+    final watcher = watcherFor(tester);
+    addTearDown(watcher.dispose);
+    final context = await host(tester);
+    await settings.setHolidayAnimationsEnabled(true);
+    await send(tester, watcher, context, 'initial');
+
+    await send(tester, watcher, context, 'first');
+    expect(find.byType(HolidayAnimationView), findsOneWidget);
+    await send(tester, watcher, context, 'while-playing');
+    expect(find.byType(HolidayAnimationView), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(HolidayAnimationView), findsNothing);
+
+    await tester.pump(const Duration(seconds: 6));
+    expect(find.byType(HolidayAnimationView), findsNothing);
+    await send(tester, watcher, context, 'new-greeting');
+    expect(find.byType(HolidayAnimationView), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(HolidayAnimationView), findsNothing);
+  });
+
+  testWidgets('U33: two chats share the playing gate and five-second pause',
+      (tester) async {
+    final first = watcherFor(tester);
+    final second = watcherFor(tester);
+    addTearDown(first.dispose);
+    addTearDown(second.dispose);
+    final context = await host(tester);
+    await settings.setHolidayAnimationsEnabled(true);
+    await send(tester, first, context, 'initial-direct');
+    await send(tester, second, context, 'initial-channel');
+
+    await send(tester, first, context, 'playing');
+    await send(tester, second, context, 'during-playing');
+    expect(find.byType(HolidayAnimationView), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(HolidayAnimationView), findsNothing);
+
+    await tester.pump(const Duration(seconds: 4));
+    await send(tester, second, context, 'during-pause');
+    expect(find.byType(HolidayAnimationView), findsNothing);
+
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(HolidayAnimationView), findsNothing);
+    await send(tester, second, context, 'after-pause');
+    expect(find.byType(HolidayAnimationView), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('U19c: settings, reduced motion and power can block an effect', (tester) async {
-    final watcher = HolidayTriggerWatcher();
+    final watcher = watcherFor(tester);
     addTearDown(watcher.dispose);
     var context = await host(tester);
     await send(tester, watcher, context, 'initial');
@@ -117,7 +174,7 @@ void main() {
   });
 
   testWidgets('U19c: foreground loss or a covering route cancels the overlay', (tester) async {
-    final watcher = HolidayTriggerWatcher();
+    final watcher = watcherFor(tester);
     addTearDown(watcher.dispose);
     addTearDown(() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -133,6 +190,7 @@ void main() {
     await tester.pump();
     expect(find.byType(HolidayAnimationView, skipOffstage: false), findsNothing);
 
+    await tester.pump(const Duration(seconds: 5));
     await send(tester, watcher, context, 'next');
     expect(find.byType(HolidayAnimationView), findsOneWidget);
     unawaited(Navigator.of(context).push<void>(

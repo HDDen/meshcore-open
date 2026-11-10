@@ -277,6 +277,8 @@ class _RecordingMessageFilter extends MessageFilterService {
     DateTime? sentAt,
     DateTime? receivedAt,
     String? verifiedSenderKey,
+    String? binaryPublicationKey,
+    bool isAddressed = false,
   }) {
     evaluations++;
     return super.evaluate(
@@ -286,6 +288,8 @@ class _RecordingMessageFilter extends MessageFilterService {
       sentAt: sentAt,
       receivedAt: receivedAt,
       verifiedSenderKey: verifiedSenderKey,
+      binaryPublicationKey: binaryPublicationKey,
+      isAddressed: isAddressed,
     );
   }
 }
@@ -300,6 +304,7 @@ class _Harness {
   static Future<_Harness> start({
     bool notifications = true,
     MessageFilterService? messageFilterService,
+    int nodeSeed = 1,
   }) async {
     final connector = _QueueConnector(
       messageFilterService: messageFilterService,
@@ -317,7 +322,7 @@ class _Harness {
     // The handshake as a connection runs it: the request marks the answer
     // as the one that binds the stores to the node.
     await connector.refreshDeviceInfo();
-    connector.handleFrameForTest(_selfInfoFrame(_key(1), 'Me'));
+    connector.handleFrameForTest(_selfInfoFrame(_key(nodeSeed), 'Me'));
     await _settle();
     expect(connector.selfPublicKeyHex, isNotEmpty);
     return _Harness(connector, settings);
@@ -829,6 +834,96 @@ Future<void> main() async {
     expect(filter.evaluations, 2);
     expect(connector.getUnreadCountForChannelIndex(0), 1);
     expect(plugin.shown, hasLength(1));
+  }, skip: skip);
+
+  test('U33: a replay from another radio slot is not a new publication',
+      () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true),
+    );
+
+    const text = 'Anyone on the hill repeater?';
+    Future<List<ChannelMessage>> receive(
+      int nodeSeed,
+      int slot,
+      List<int> timestamps,
+    ) async {
+      final harness = await _Harness.start(
+        notifications: false,
+        messageFilterService: filter,
+        nodeSeed: nodeSeed,
+      );
+      final connector = harness.connector;
+      addTearDown(harness.settings.dispose);
+      addTearDown(connector.dispose);
+      await harness.addChannel(slot, 'Test', _psk(1));
+      final history = ChannelMessageStore()
+        ..setPublicKeyHex = connector.selfPublicKeyHex
+        ..registerChannel(connector.channels.single);
+      for (final timestamp in timestamps) {
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: slot,
+          timestampSeconds: timestamp,
+          senderName: 'Alice',
+          text: text,
+        ));
+        await _settle();
+      }
+      return history.loadChannelMessages(slot);
+    }
+
+    final original = await receive(1, 0, [_timestamp]);
+    expect(original.single.filterVerdict, isNull);
+    final replayAndResend = await receive(8, 3, [_timestamp, _timestamp + 10]);
+    expect(replayAndResend, hasLength(2));
+    expect(replayAndResend.first.filterVerdict, isNull);
+    expect(replayAndResend.last.filterVerdict?.reason, FilterReason.duplicate);
+  }, skip: skip);
+
+  test('U33: replies and plain mentions of our node remain visible', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    await filter.updateSettings(
+      const MessageFilterSettings(enabled: true, duplicates: true),
+    );
+    final harness = await _Harness.start(
+      notifications: false,
+      messageFilterService: filter,
+    );
+    final connector = harness.connector;
+    addTearDown(harness.settings.dispose);
+    addTearDown(connector.dispose);
+    await harness.addChannel(0, 'Test', _psk(1));
+    final history = ChannelMessageStore()
+      ..setPublicKeyHex = connector.selfPublicKeyHex
+      ..registerChannel(connector.channels.single);
+
+    const text = 'Anyone on the hill repeater?';
+    final texts = [
+      '@[Me] $text',
+      '@[Other] $text',
+      '$text @Me',
+      '$text @Me',
+      text,
+      text,
+    ];
+    for (final (index, body) in texts.indexed) {
+      connector.handleFrameForTest(_channelMessageFrame(
+        channelIndex: 0,
+        timestampSeconds: _timestamp + index * 10,
+        senderName: 'Alice',
+        text: body,
+      ));
+      await _settle();
+    }
+
+    final saved = await history.loadChannelMessages(0);
+    expect(saved, hasLength(texts.length));
+    expect(saved.first.replyToSenderName, 'Me');
+    expect(saved.take(5).every((message) => !message.isFiltered), isTrue);
+    expect(saved.last.filterVerdict?.reason, FilterReason.duplicate);
   }, skip: skip);
 
   test('U27b: hiding a page keeps its SQL cursor and the preview', () async {

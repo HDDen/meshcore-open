@@ -19089,15 +19089,32 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             _channelMessageStore.channelIdentityForIndex(channelIndex)?.pskId;
         if (channelId != null) {
           filterChannelId = channelId;
+          final checkRepeats = filter.settings.duplicates;
+          final rawPayload = processedMessage.rawPayload;
           final verdict = filter.evaluate(
             channelId: channelId,
             sender: processedMessage.senderName,
             text: processedMessage.text,
             sentAt: processedMessage.timestamp,
             receivedAt: processedMessage.receivedAt,
-            verifiedSenderKey: filter.settings.duplicates
+            verifiedSenderKey: checkRepeats
                 ? BlockedSenders.verifiedKeyOf(processedMessage)
                 : null,
+            // The radio slot can change across nodes while the channel PSK
+            // and the binary publication remain the same.
+            binaryPublicationKey: checkRepeats && rawPayload != null
+                ? _computeChannelDataHash(0, 0, rawPayload)
+                : null,
+            isAddressed: checkRepeats &&
+                (replyInfo != null ||
+                    processedMessage.replyToMessageId != null ||
+                    processedMessage.replyToSenderName != null ||
+                    processedMessage.containerReplyTimestamp != null ||
+                    (processedMessage.text.contains('@') &&
+                        _channelMessageMentionsSelf(
+                          channelIndex,
+                          processedMessage.text,
+                        ))),
           );
           if (verdict != null) {
             processedMessage = processedMessage.copyWith(filterVerdict: verdict);
