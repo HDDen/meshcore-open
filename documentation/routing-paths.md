@@ -51,6 +51,12 @@ Short prefixes can match several known nodes. An unresolved or ambiguous hop is 
 
 Contacts/messages persist hop count, path bytes, and width. Legacy contact records without width infer it from consistent hop and byte counts, falling back to one byte. `PathHistoryService` scores recent routes using delivery observations; automatic route rotation can select another route on retry when no manual override is active. Rotation follows the App Settings **Auto Route Rotation** toggle (`autoRouteRotationEnabled`, on by default).
 
+A timed-out route loses weight only when an unambiguous delivery
+acknowledgement for another attempt shows that the contact was reachable.
+A late acknowledgement credits the attempt it confirms. When every
+attempt goes unanswered, route weights stay as they were. Flood attempts
+keep their own delivery and timeout counts.
+
 A contact's path history retains up to 100 routes. Once full, a new route
 replaces the existing route with the lowest selection score, using the same
 reliability, latency, freshness and route-weight factors as automatic selection.

@@ -44,6 +44,8 @@ typedef AckHashMapping = ({
   PathSelection? pathSelection,
 });
 
+typedef _DeferredRouteFailure = ({int ackHash, PathSelection selection});
+
 /// What a PUSH_CODE_SEND_CONFIRMED resolved to: the message it delivered,
 /// its recipient, and the route of the attempt whose ACK hash it carried,
 /// null when matching relies on an unconfirmed attempt without a byte-identified
@@ -183,6 +185,9 @@ class MessageRetryService extends ChangeNotifier {
   /// container would produce a new timestamp and invalidate the signature.
   final Map<String, String> _preparedOutboundTexts = {};
   final Map<String, List<PathSelection>> _attemptPathHistory = {};
+  // A confirmed route timeout is only evidence against the route once an
+  // acknowledgement proves the contact was reachable.
+  final _deferredRouteFailures = <String, Map<int, _DeferredRouteFailure>>{};
   /// The attempts sent under each ACK hash, newest first. The firmware
   /// hashes only the two low bits of the attempt number, so attempts k and
   /// k+4 of one message share a hash, and an acknowledgement is matched to
@@ -1058,6 +1063,7 @@ class MessageRetryService extends ChangeNotifier {
 
   void clearPathAttemptHistory() {
     _attemptPathHistory.clear();
+    _deferredRouteFailures.clear();
   }
 
   void _startTimeoutTimer(String messageId, int timeoutMs) {
@@ -1088,6 +1094,7 @@ class MessageRetryService extends ChangeNotifier {
     _pendingContacts.remove(messageId);
     _preparedOutboundTexts.remove(messageId);
     _attemptPathHistory.remove(messageId);
+    _deferredRouteFailures.remove(messageId);
     _progressTrackers.remove(messageId);
     _retiredProgressPayloads.remove(messageId);
     _timeoutTimers.remove(messageId);
@@ -1106,7 +1113,6 @@ class MessageRetryService extends ChangeNotifier {
     final message = _pendingMessages[messageId];
     final contact = _pendingContacts[messageId];
     final config = _config;
-    final selection = message != null ? _selectionFromMessage(message) : null;
 
     if (message == null || contact == null) {
       debugPrint(
@@ -1122,20 +1128,11 @@ class MessageRetryService extends ChangeNotifier {
       'Timeout: No ACK received for "$shortText" to ${contact.name} (attempt ${message.retryCount}) → retrying',
       tag: 'AckHash',
     );
+    _recordAttemptTimeout(contact.publicKeyHex, message);
 
     if (message.retryCount < maxRetries - 1 &&
         _textFitsAttempt(message, contact, message.retryCount + 1)) {
       final backoffMs = retryBackoffMs(message.retryCount);
-
-      if (selection != null) {
-        _recordPathResultFromMessage(
-          contact.publicKeyHex,
-          message,
-          selection,
-          false,
-          null,
-        );
-      }
 
       final updatedMessage = message.copyWith(
         retryCount: message.retryCount + 1,
@@ -1172,14 +1169,6 @@ class MessageRetryService extends ChangeNotifier {
         config!.clearContactPath!(contact);
       }
 
-      _recordPathResultFromMessage(
-        contact.publicKeyHex,
-        message,
-        selection,
-        false,
-        null,
-      );
-
       config?.updateMessage(failedMessage);
 
       notifyListeners();
@@ -1194,6 +1183,26 @@ class MessageRetryService extends ChangeNotifier {
       _timeoutTimers[messageId] = Timer(_lateAckGracePeriod, () {
         _cleanupMessage(messageId);
       });
+    }
+  }
+
+  void _recordAttemptTimeout(String contactKey, Message message) {
+    final sent = expectedAcksFor(message.messageId)
+        .where((entry) => entry.attempt == message.retryCount)
+        .firstOrNull;
+    final confirmedRoute = sent?.selection;
+    if ((confirmedRoute ?? _selectionFromMessage(message))?.useFlood == true) {
+      // Flood statistics are separate from the weights of known routes.
+      _config?.recordPathResult?.call(contactKey, _floodSelection, false, null);
+    } else if (sent != null && confirmedRoute != null) {
+      final failures = _deferredRouteFailures.putIfAbsent(
+        message.messageId,
+        () => {},
+      );
+      failures[message.retryCount] = (
+        ackHash: sent.ackHash,
+        selection: confirmedRoute,
+      );
     }
   }
 
@@ -1383,12 +1392,48 @@ class MessageRetryService extends ChangeNotifier {
       // ACK never re-encodes a signed/compressed message just to measure it.
       final preparedOutboundText = _preparedOutboundTexts[matchedMessageId];
       final observationSelection = matchedPathSelection;
+      final routeFailures =
+          _deferredRouteFailures[matchedMessageId] ??
+          const <int, _DeferredRouteFailure>{};
+      final byte = ackAttemptByte;
+      bool matchesAttemptByte(int attempt) =>
+          byte == null || (byte < 4 ? attempt < 4 : attempt == byte);
+      // A shared hash can identify the route without identifying the
+      // attempt. Do not charge a timeout that may be this late ACK.
+      final chargeRouteFailures =
+          routeFailures.isNotEmpty &&
+          !ambiguousPath &&
+          observationSelection != null &&
+          mappings != null &&
+          matchesAttemptByte(ackedAttempt) &&
+          !mappings.any(
+            (entry) =>
+                entry.attemptIndex != ackedAttempt &&
+                matchesAttemptByte(entry.attemptIndex),
+          ) &&
+          !routeFailures.entries.any(
+            (entry) =>
+                entry.key != ackedAttempt &&
+                entry.value.ackHash == ackHash &&
+                matchesAttemptByte(entry.key),
+          );
 
       _cleanupMessage(matchedMessageId);
 
       config?.updateMessage(deliveredMessage);
 
       if (contact != null) {
+        if (chargeRouteFailures) {
+          for (final failure in routeFailures.entries) {
+            if (failure.key == ackedAttempt) continue;
+            config?.recordPathResult?.call(
+              contact.publicKeyHex,
+              failure.value.selection,
+              false,
+              null,
+            );
+          }
+        }
         if (!ambiguousPath) {
           _recordPathResultFromMessage(
             contact.publicKeyHex,
@@ -1517,6 +1562,7 @@ class MessageRetryService extends ChangeNotifier {
     _pendingContacts.clear();
     _preparedOutboundTexts.clear();
     _attemptPathHistory.clear();
+    _deferredRouteFailures.clear();
     _expectedAckHashes.clear();
     _expectedAttempts.clear();
     _ackHistory.clear();

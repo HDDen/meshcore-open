@@ -2413,6 +2413,14 @@ The node's own route is never written back before an attempt. The node sends by 
 
 A route the recipient returns is credited in the history as having just worked: `_handlePathUpdated` re-reads the contact through `_fetchContactSnapshotFromDevice` and hands its route to `_recordPathResult` as a success, the answer having come along the route our packet took. The node pushes PATH_UPDATED and, right after it, SEND_CONFIRMED for the acknowledgement the answer carried, and the re-read returns after both, so the flood attribution `_recordPathResult` gives at the acknowledgement always found the contact still without the route. Moving a pin to the route the recipient returned was considered and left out: the node keeps the last good route itself, and the app would be steering it (`test/services/direct_route_attempts_test.dart`, `test/connector/returned_route_test.dart`).
 
+U34 holds each routed timeout whose attempt had a confirmed SENT. A
+known-route ACK that identifies one attempt commits the other timeouts
+using the configured path weights. The acknowledged attempt earns its
+usual success credit. A shared hash may still credit a known route,
+while its deferred timeouts are discarded if the attempt is ambiguous.
+Timeouts stay available through late-ACK grace and are dropped on cleanup
+or history reset. Flood counts still record timeouts immediately.
+
 ### The route a direct message was delivered along
 
 An outgoing direct message or room post keeps the route its delivery was

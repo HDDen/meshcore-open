@@ -206,7 +206,8 @@ void main() {
       expect(acknowledged?.selection?.pathBytes, contact.path);
       expect(acknowledged?.selection?.hopCount, 2);
       expect(h.latest.status, MessageStatus.delivered);
-      final success = h.results.where((result) => result.success).single;
+      final success = h.results.single;
+      expect(success.success, isTrue);
       expect(success.selection.pathBytes, contact.path);
       expect(success.selection.hopCount, 2);
       // Delivery still credits the first attempt; ML must use that same route.
@@ -268,7 +269,7 @@ void main() {
       expect(h.hash(0), h.hash(4));
       expect(h.ack(0), isNotNull);
       expect(h.latest.status, MessageStatus.delivered);
-      expect(h.results.where((result) => result.success), isEmpty);
+      expect(h.results, isEmpty);
       expect(h.observations, isEmpty);
     });
   }, timeout: timeout);
@@ -290,6 +291,8 @@ void main() {
       expect(h.hash(0), h.hash(4));
       expect(h.ack(0)?.selection?.hopCount, 2);
       expect(h.latest.status, MessageStatus.delivered);
+      expect(h.results.single.success, isTrue,
+          reason: 'The shared hash cannot identify the timed-out attempt');
       expect(h.observations, [(hops: 2, bytes: 5, tripMs: 700)]);
     });
   }, timeout: timeout);

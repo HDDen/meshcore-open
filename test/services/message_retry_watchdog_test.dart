@@ -187,6 +187,65 @@ void main() {
     });
   }, timeout: timeout);
 
+  testWidgets('U34: a lost SENT cannot charge a route after a flood ACK', (tester) async {
+    await _withWatchdog(tester, (h) async {
+      await h.send(direct: true);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
+      expect(h.sends.last.attempt, 1);
+      expect(h.sends.last.flood, isTrue);
+      expect(h.sent(1), isTrue);
+      expect(h.ack(1), isNotNull);
+      expect(h.results.single.success, isTrue);
+      expect(h.results.single.path.useFlood, isTrue);
+      _expectReleased(h);
+    });
+  }, timeout: timeout);
+
+  testWidgets('U34: a reported flood timeout goes into flood statistics', (tester) async {
+    await _withWatchdog(tester, (h) async {
+      await h.send(direct: true);
+      await tester.pump();
+      expect(h.sends.single.flood, isFalse);
+      expect(h.sent(0, flood: true), isTrue);
+      await tester.pump(const Duration(seconds: 1));
+      expect(h.results.single.path.useFlood, isTrue);
+      expect(h.results.single.success, isFalse);
+
+      expect(h.ack(0)?.selection?.useFlood, isTrue);
+      expect(h.latest.status, MessageStatus.delivered);
+      _expectReleased(h);
+    });
+  }, timeout: timeout);
+
+  testWidgets('U34: a flood ACK during grace commits the route timeout', (tester) async {
+    await _withWatchdog(tester, (h) async {
+      await h.send(direct: true);
+      await tester.pump();
+      expect(h.sent(0, flood: false), isTrue);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(h.sends.last.attempt, 1);
+      expect(h.sent(1), isTrue);
+      await tester.pump(const Duration(seconds: 1));
+      expect(h.latest.status, MessageStatus.failed);
+      expect(h.results.single.path.useFlood, isTrue);
+      expect(h.results.single.success, isFalse);
+
+      expect(h.ack(1), isNotNull);
+      expect(h.latest.status, MessageStatus.delivered);
+      expect(
+        h.results.map((result) => (result.path.useFlood, result.success)),
+        [(true, false), (false, false), (true, true)],
+      );
+      expect(h.results[1].path.pathBytes, [0x11, 0x22, 0x33, 0x44]);
+      expect(h.ack(1), isNull);
+      expect(h.results, hasLength(3));
+      _expectReleased(h);
+    });
+  }, timeout: timeout);
+
   testWidgets('watchdog: a valid ACK before missing-SENT fallback delivers once', (tester) async {
     await _withWatchdog(tester, (h) async {
       await h.send(direct: true);
@@ -304,9 +363,11 @@ void main() {
               hops: lostFirst ? -1 : 2, bytes: _wireText.length, tripMs: 700,
             )]);
             expect(h.results.where((result) => result.success), hasLength(1));
+            expect(h.results.where((result) => !result.success), hasLength(3));
           } else {
             expect(acknowledged!.selection, isNull);
             _expectUnconfirmedRoute(h);
+            expect(h.results, isEmpty);
           }
           _expectReleased(h);
         });

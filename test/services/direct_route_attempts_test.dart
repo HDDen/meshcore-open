@@ -248,6 +248,7 @@ void main() {
     expect(node.message('hi').status, MessageStatus.failed);
     expect(node.log, ['set ', 'send 0 route', 'set ', 'send 1 route']);
     expect(node.contact.pathOverride, 0);
+    expect(node.credits, isEmpty);
   });
 
   group('automatic routing', () {
@@ -321,8 +322,33 @@ void main() {
     await pumpEventQueue();
 
     expect(node.message('hi').status, MessageStatus.delivered);
-    expect(node.credits, ['failed 10', 'worked 10']);
+    expect(node.credits, ['worked 10']);
   });
+
+  for (final floodAcknowledged in [false, true]) {
+    test('U34: route accounting after a direct timeout '
+        '(flood acknowledged: $floodAcknowledged)', () async {
+      final node = _Node(_contact(pathLength: 1, path: [0x10]));
+      final service = _serviceFor(node)..setMaxRetries(2);
+      addTearDown(service.dispose);
+
+      await _send(service, node, 'hi');
+      await _noAck(service, 'hi', 0);
+      expect(node.log, ['send 0 route', 'clear', 'send 1 flood']);
+      expect(node.credits, isEmpty);
+
+      if (floodAcknowledged) {
+        expect(service.updateMessageFromSent(_ackHash('hi', 1), 1000), isTrue);
+        expect(service.handleAckReceived(_ackHash('hi', 1), 1200), isNotNull);
+        expect(node.message('hi').status, MessageStatus.delivered);
+        expect(node.credits, ['failed 10', 'worked flood']);
+      } else {
+        await _noAck(service, 'hi', 1);
+        expect(node.message('hi').status, MessageStatus.failed);
+        expect(node.credits, ['failed flood']);
+      }
+    });
+  }
 
   group('automatic routing, no route on the node', () {
     test('every attempt floods without clearing, the history left '
