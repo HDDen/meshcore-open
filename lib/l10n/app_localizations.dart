@@ -160,6 +160,156 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get common_cancel;
 
+  /// No description provided for @backupChannels_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore channels'**
+  String get backupChannels_title;
+
+  /// No description provided for @backupChannels_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore backup to preview channel additions and renames on the connected node.'**
+  String get backupChannels_intro;
+
+  /// No description provided for @backupChannels_choose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup file'**
+  String get backupChannels_choose;
+
+  /// No description provided for @backupChannels_preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh preview'**
+  String get backupChannels_preview;
+
+  /// No description provided for @backupChannels_apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get backupChannels_apply;
+
+  /// No description provided for @backupChannels_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup password'**
+  String get backupChannels_password;
+
+  /// No description provided for @backupChannels_badPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'The password is incorrect or the backup is damaged.'**
+  String get backupChannels_badPassword;
+
+  /// No description provided for @backupChannels_fileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup of 32 MiB or less.'**
+  String get backupChannels_fileTooLarge;
+
+  /// No description provided for @backupChannels_invalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is invalid or uses an unsupported format.'**
+  String get backupChannels_invalidFile;
+
+  /// No description provided for @backupChannels_readFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the backup file.'**
+  String get backupChannels_readFailed;
+
+  /// No description provided for @backupChannels_noChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no channels to restore.'**
+  String get backupChannels_noChannels;
+
+  /// No description provided for @backupChannels_waitForNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the node, wait for channel sync, then refresh the preview.'**
+  String get backupChannels_waitForNode;
+
+  /// No description provided for @backupChannels_target.
+  ///
+  /// In en, this message translates to:
+  /// **'Node: {node}'**
+  String backupChannels_target(String node);
+
+  /// No description provided for @backupChannels_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to slot {slot}'**
+  String backupChannels_add(int slot);
+
+  /// No description provided for @backupChannels_rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename “{name}” in slot {slot}'**
+  String backupChannels_rename(String name, int slot);
+
+  /// No description provided for @backupChannels_existing.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in slot {slot}'**
+  String backupChannels_existing(int slot);
+
+  /// No description provided for @backupChannels_duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Same key as another backup entry for slot {slot}'**
+  String backupChannels_duplicate(int slot);
+
+  /// No description provided for @backupChannels_nameConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This name belongs to a different channel key.'**
+  String get backupChannels_nameConflict;
+
+  /// No description provided for @backupChannels_slotUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify the slot contents.'**
+  String get backupChannels_slotUnknown;
+
+  /// No description provided for @backupChannels_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply channel changes on “{node}”? Changes to write: {count}.'**
+  String backupChannels_confirm(String node, int count);
+
+  /// No description provided for @backupChannels_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel changes verified: {count}.'**
+  String backupChannels_applied(int count);
+
+  /// No description provided for @backupChannels_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or channel list changed. Commands confirmed: {count}. Refresh the preview.'**
+  String backupChannels_changed(int count);
+
+  /// No description provided for @backupChannels_unconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore stopped after a command failed or went unanswered. Commands confirmed: {count}. Refresh the preview to check the current channels.'**
+  String backupChannels_unconfirmed(int count);
+
+  /// No description provided for @backupChannels_syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify the channel list. Commands confirmed: {count}. Sync the channels and refresh the preview.'**
+  String backupChannels_syncFailed(int count);
+
+  /// No description provided for @backupChannels_applyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish restoring channels. Refresh the preview to check the current channels.'**
+  String get backupChannels_applyFailed;
+
   /// No description provided for @common_ok.
   ///
   /// In en, this message translates to:

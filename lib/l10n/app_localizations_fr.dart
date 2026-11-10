@@ -24,6 +24,110 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_cancel => 'Annuler';
 
   @override
+  String get backupChannels_title => 'Restore channels';
+
+  @override
+  String get backupChannels_intro =>
+      'Choose a MeshCore backup to preview channel additions and renames on the connected node.';
+
+  @override
+  String get backupChannels_choose => 'Choose a backup file';
+
+  @override
+  String get backupChannels_preview => 'Refresh preview';
+
+  @override
+  String get backupChannels_apply => 'Restore';
+
+  @override
+  String get backupChannels_password => 'Backup password';
+
+  @override
+  String get backupChannels_badPassword =>
+      'The password is incorrect or the backup is damaged.';
+
+  @override
+  String get backupChannels_fileTooLarge =>
+      'Choose a backup of 32 MiB or less.';
+
+  @override
+  String get backupChannels_invalidFile =>
+      'This backup is invalid or uses an unsupported format.';
+
+  @override
+  String get backupChannels_readFailed => 'Could not open the backup file.';
+
+  @override
+  String get backupChannels_noChannels =>
+      'This backup contains no channels to restore.';
+
+  @override
+  String get backupChannels_waitForNode =>
+      'Connect to the node, wait for channel sync, then refresh the preview.';
+
+  @override
+  String backupChannels_target(String node) {
+    return 'Node: $node';
+  }
+
+  @override
+  String backupChannels_add(int slot) {
+    return 'Add to slot $slot';
+  }
+
+  @override
+  String backupChannels_rename(String name, int slot) {
+    return 'Rename “$name” in slot $slot';
+  }
+
+  @override
+  String backupChannels_existing(int slot) {
+    return 'Already in slot $slot';
+  }
+
+  @override
+  String backupChannels_duplicate(int slot) {
+    return 'Same key as another backup entry for slot $slot';
+  }
+
+  @override
+  String get backupChannels_nameConflict =>
+      'This name belongs to a different channel key.';
+
+  @override
+  String get backupChannels_slotUnknown =>
+      'Could not verify the slot contents.';
+
+  @override
+  String backupChannels_confirm(String node, int count) {
+    return 'Apply channel changes on “$node”? Changes to write: $count.';
+  }
+
+  @override
+  String backupChannels_applied(int count) {
+    return 'Channel changes verified: $count.';
+  }
+
+  @override
+  String backupChannels_changed(int count) {
+    return 'The node or channel list changed. Commands confirmed: $count. Refresh the preview.';
+  }
+
+  @override
+  String backupChannels_unconfirmed(int count) {
+    return 'Restore stopped after a command failed or went unanswered. Commands confirmed: $count. Refresh the preview to check the current channels.';
+  }
+
+  @override
+  String backupChannels_syncFailed(int count) {
+    return 'Could not verify the channel list. Commands confirmed: $count. Sync the channels and refresh the preview.';
+  }
+
+  @override
+  String get backupChannels_applyFailed =>
+      'Could not finish restoring channels. Refresh the preview to check the current channels.';
+
+  @override
   String get common_ok => 'D\'accord';
 
   @override

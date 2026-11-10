@@ -68,6 +68,8 @@ class BackupChannelRestorePreview {
   final List<BackupChannelDecision> decisions;
   final Map<int, ({String name, String key})> _inventory;
 
+  String? currentNameAt(int slot) => _inventory[slot]?.name;
+
   bool matchesInventory(Iterable<Channel> channels, int? slotCount) {
     if (slotCount != capacity) return false;
     final current = _channelInventory(channels);

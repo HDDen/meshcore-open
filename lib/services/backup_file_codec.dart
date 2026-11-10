@@ -3,6 +3,18 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 
+class BackupPasswordException extends FormatException {
+  const BackupPasswordException.required()
+    : rejected = false,
+      super('Password required');
+
+  const BackupPasswordException.incorrectOrDamaged()
+    : rejected = true,
+      super('Wrong password or damaged backup');
+
+  final bool rejected;
+}
+
 /// Reads and writes the upstream v1 backup envelope.
 ///
 /// Section contents are validated by the restore plan before applying them.
@@ -77,7 +89,7 @@ class BackupFileCodec {
     if (iterations is! int || iterations < 100000 || iterations > 1000000) {
       throw const FormatException('Invalid password derivation settings');
     }
-    if (password.isEmpty) throw const FormatException('Password required');
+    if (password.isEmpty) throw const BackupPasswordException.required();
     final salt = _decodeField(envelope['salt'], length: 16);
     final nonce = _decodeField(envelope['nonce'], length: 12);
     final tag = _decodeField(envelope['tag'], length: 16);
@@ -90,7 +102,7 @@ class BackupFileCodec {
       );
       return _validatePayload(_decodeJson(utf8.decode(plaintext)));
     } on SecretBoxAuthenticationError {
-      throw const FormatException('Wrong password or damaged backup');
+      throw const BackupPasswordException.incorrectOrDamaged();
     } on FormatException {
       throw const FormatException('Invalid backup payload');
     }

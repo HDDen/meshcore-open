@@ -24,6 +24,111 @@ class AppLocalizationsRu extends AppLocalizations {
   String get common_cancel => 'Отмена';
 
   @override
+  String get backupChannels_title => 'Восстановление каналов';
+
+  @override
+  String get backupChannels_intro =>
+      'Выберите резервную копию MeshCore, чтобы увидеть, какие каналы будут добавлены или переименованы на подключённой ноде.';
+
+  @override
+  String get backupChannels_choose => 'Выбрать резервную копию';
+
+  @override
+  String get backupChannels_preview => 'Обновить предпросмотр';
+
+  @override
+  String get backupChannels_apply => 'Восстановить';
+
+  @override
+  String get backupChannels_password => 'Пароль резервной копии';
+
+  @override
+  String get backupChannels_badPassword =>
+      'Пароль неверен или резервная копия повреждена.';
+
+  @override
+  String get backupChannels_fileTooLarge =>
+      'Выберите резервную копию размером до 32 МиБ включительно.';
+
+  @override
+  String get backupChannels_invalidFile =>
+      'Резервная копия повреждена или её формат не поддерживается.';
+
+  @override
+  String get backupChannels_readFailed =>
+      'Не удалось открыть файл резервной копии.';
+
+  @override
+  String get backupChannels_noChannels =>
+      'В резервной копии нет каналов для восстановления.';
+
+  @override
+  String get backupChannels_waitForNode =>
+      'Подключитесь к ноде, дождитесь синхронизации каналов и обновите предпросмотр.';
+
+  @override
+  String backupChannels_target(String node) {
+    return 'Нода: $node';
+  }
+
+  @override
+  String backupChannels_add(int slot) {
+    return 'Добавить в слот $slot';
+  }
+
+  @override
+  String backupChannels_rename(String name, int slot) {
+    return 'Переименовать «$name» в слоте $slot';
+  }
+
+  @override
+  String backupChannels_existing(int slot) {
+    return 'Уже в слоте $slot';
+  }
+
+  @override
+  String backupChannels_duplicate(int slot) {
+    return 'Ключ уже указан в другой записи копии для слота $slot';
+  }
+
+  @override
+  String get backupChannels_nameConflict =>
+      'Это имя занято каналом с другим ключом.';
+
+  @override
+  String get backupChannels_slotUnknown =>
+      'Не удалось подтвердить содержимое слота.';
+
+  @override
+  String backupChannels_confirm(String node, int count) {
+    return 'Восстановить каналы на ноде «$node»? Изменений к записи: $count.';
+  }
+
+  @override
+  String backupChannels_applied(int count) {
+    return 'Проверено изменений каналов: $count.';
+  }
+
+  @override
+  String backupChannels_changed(int count) {
+    return 'Нода или список каналов изменились. Подтверждено команд: $count. Обновите предпросмотр.';
+  }
+
+  @override
+  String backupChannels_unconfirmed(int count) {
+    return 'Восстановление остановлено после отказа или отсутствия ответа. Подтверждено команд: $count. Обновите предпросмотр, чтобы проверить список каналов.';
+  }
+
+  @override
+  String backupChannels_syncFailed(int count) {
+    return 'Не удалось проверить список каналов. Подтверждено команд: $count. Синхронизируйте каналы и обновите предпросмотр.';
+  }
+
+  @override
+  String get backupChannels_applyFailed =>
+      'Не удалось завершить восстановление. Обновите предпросмотр, чтобы проверить список каналов.';
+
+  @override
   String get common_ok => 'OK';
 
   @override
