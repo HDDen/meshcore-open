@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
+import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -49,6 +50,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   int writes = 0;
   int contactWrites = 0;
   int historyWrites = 0;
+  int discoveryWrites = 0;
   ({bool direct, bool channels})? historyExportSelection;
   BackupChannelRestorePreview? appliedPreview;
   BackupChannelRestoreResult result = (
@@ -64,6 +66,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
     required bool includeChannels,
     required bool includeContacts,
     AppSettingsBackup? appSettings,
+    bool includeDiscoveredContacts = false,
   }) async => ready
       ? BackupSnapshot(
           sourcePublicKey: _key,
@@ -145,6 +148,25 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   ) async {
     historyWrites++;
     return preview.count;
+  }
+
+  @override
+  BackupDiscoveredContactsPreview? previewBackupDiscoveredContacts(String json) =>
+      ready ? BackupDiscoveredContactsPreview(
+        sourceJson: json,
+        current: const [],
+        knownContactKeys: const {},
+        nodeKey: _key,
+        capacity: 2,
+        session: this,
+      ) : null;
+
+  @override
+  Future<int?> restoreBackupDiscoveredContacts(
+    BackupDiscoveredContactsPreview preview,
+  ) async {
+    discoveryWrites++;
+    return preview.contacts.length;
   }
 
   @override
@@ -235,6 +257,65 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('discovery backup is applied only after confirmation',
+      (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final contents = jsonEncode({
+      'format': BackupFileCodec.payloadFormat,
+      'version': BackupFileCodec.formatVersion,
+      'sourcePublicKey': _key,
+      'items': ['discoveredContacts'],
+      'sections': {
+        'discoveredContacts': {
+          'preferences': {
+            'discovered_contacts${_key.substring(0, 10)}': [
+              {
+                'publicKey': base64Encode(List.filled(32, 0x21)),
+                'type': 2,
+                'name': 'Imported discovery',
+              },
+            ],
+          },
+        },
+      },
+    });
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: node,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BackupRestoreScreen.discoveredContacts(
+            pickFile: () async => XFile.fromData(
+              Uint8List.fromList(utf8.encode(contents)),
+              name: 'discovery-backup.json',
+            ),
+          ),
+        ),
+      ),
+    );
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupDiscoveredContacts_summary(1, 0, 0, 0)),
+    );
+    expect(node.discoveryWrites, 0);
+    final apply = find.text(l10n.backupChannels_apply);
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupDiscoveredContacts_confirm(1)), findsOneWidget);
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: apply,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.discoveredContacts_imported(1)), findsOneWidget);
+    expect(node.discoveryWrites, 1);
+    expect(node.contactWrites, 0);
+  });
+
   testWidgets('history export sends only its own selections to the connector',
       (tester) async {
     final node = _Node();

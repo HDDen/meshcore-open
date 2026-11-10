@@ -267,6 +267,39 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось завершить восстановление контактов. Обновите предпросмотр, чтобы проверить текущий список.';
 
   @override
+  String get backupDiscoveredContacts_label => 'Найденные узлы';
+
+  @override
+  String get backupDiscoveredContacts_title => 'Восстановление найденных узлов';
+
+  @override
+  String get backupDiscoveredContacts_intro =>
+      'Выберите резервную копию MeshCore Open с найденными узлами. Они будут добавлены в список обнаружения текущего профиля.';
+
+  @override
+  String backupDiscoveredContacts_confirm(int count) {
+    return 'Добавить найденные узлы в текущий профиль? К добавлению: $count.';
+  }
+
+  @override
+  String backupDiscoveredContacts_summary(
+    int count,
+    int skipped,
+    int invalid,
+    int noRoom,
+  ) {
+    return 'К добавлению: $count. Уже известны: $skipped. Нечитаемые записи: $invalid. Нет места: $noRoom.';
+  }
+
+  @override
+  String get backupDiscoveredContacts_changed =>
+      'Список контактов или найденных узлов изменился. Обновите предпросмотр.';
+
+  @override
+  String get backupDiscoveredContacts_failed =>
+      'Не удалось восстановить найденные узлы.';
+
+  @override
   String get backupAppSettings_title => 'Восстановление настроек приложения';
 
   @override

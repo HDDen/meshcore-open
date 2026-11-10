@@ -520,6 +520,53 @@ abstract class AppLocalizations {
   /// **'Could not finish restoring contacts. Refresh the preview to check the current contact list.'**
   String get backupContacts_applyFailed;
 
+  /// No description provided for @backupDiscoveredContacts_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovered nodes'**
+  String get backupDiscoveredContacts_label;
+
+  /// No description provided for @backupDiscoveredContacts_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore discovered nodes'**
+  String get backupDiscoveredContacts_title;
+
+  /// No description provided for @backupDiscoveredContacts_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup with discovered nodes. They will be added to the discovery list in the current app profile.'**
+  String get backupDiscoveredContacts_intro;
+
+  /// No description provided for @backupDiscoveredContacts_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add discovered nodes to the current profile? Nodes to add: {count}.'**
+  String backupDiscoveredContacts_confirm(int count);
+
+  /// No description provided for @backupDiscoveredContacts_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'To add: {count}. Already known: {skipped}. Unreadable entries: {invalid}. No space: {noRoom}.'**
+  String backupDiscoveredContacts_summary(
+    int count,
+    int skipped,
+    int invalid,
+    int noRoom,
+  );
+
+  /// No description provided for @backupDiscoveredContacts_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact or discovery list changed. Refresh the preview.'**
+  String get backupDiscoveredContacts_changed;
+
+  /// No description provided for @backupDiscoveredContacts_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore discovered nodes.'**
+  String get backupDiscoveredContacts_failed;
+
   /// No description provided for @backupAppSettings_title.
   ///
   /// In en, this message translates to:

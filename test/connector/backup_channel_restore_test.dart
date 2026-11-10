@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
@@ -345,6 +346,68 @@ void main() {
       includeDirect: false,
       includeChannels: true,
     ), isNull);
+  });
+
+  test('discovery backup merges into the active profile without radio commands',
+      () async {
+    await radio.syncContacts();
+    final reads = radio.contactReads;
+    final existing = _contact(0x81, 'Already on radio');
+    final found = _contact(0x92, 'Found locally');
+    final imported = _contact(0x93, 'From another profile');
+    void hear(Contact contact) => radio.connector.recordZeroHopDiscoveredContact(
+      publicKey: contact.publicKey,
+      type: advTypeRepeater,
+      name: contact.name,
+    );
+    hear(found);
+
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: false,
+      includeDiscoveredContacts: true,
+    ))!;
+    final saved = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      discoveredContactsOnly: true,
+    );
+    final savedRows = jsonDecode(saved.discoveredContactsJson!) as List<dynamic>;
+    expect(savedRows.map((row) => row['name']), contains('Found locally'));
+    expect(
+      savedRows.singleWhere((row) => row['name'] == 'Found locally'),
+      isNot(contains('path')),
+    );
+
+    final source = jsonEncode([
+      for (final contact in [existing, found, imported])
+        {
+          'publicKey': base64Encode(contact.publicKey),
+          'name': contact.name,
+          'type': advTypeRepeater,
+          'lastSeen': 1700000000000,
+          'isActive': true,
+        },
+    ]);
+    final stale = radio.connector.previewBackupDiscoveredContacts(source)!;
+    hear(_contact(0x94, 'Heard after preview'));
+    expect(await radio.connector.restoreBackupDiscoveredContacts(stale), isNull);
+    final preview = radio.connector.previewBackupDiscoveredContacts(source)!;
+    expect(preview.contacts.single.publicKeyHex, imported.publicKeyHex);
+    expect(await radio.connector.restoreBackupDiscoveredContacts(preview), 1);
+    final live = radio.connector.discoveredContacts.singleWhere(
+      (contact) => contact.publicKeyHex == imported.publicKeyHex,
+    );
+    expect(live.isActive, isFalse);
+    expect(radio.connector.knownContactKeys, isNot(contains(imported.publicKeyHex)));
+    final persisted = (await storage.loadDiscoveredContacts()).map(
+      (json) => jsonDecode(json)['name'],
+    );
+    expect(persisted, containsAll(['Found locally', 'Heard after preview', imported.name]));
+    expect(radio.contactReads, reads);
+    expect(radio.reads, isEmpty);
+    expect(radio.contactWrites, isEmpty);
+    expect(radio.writes, isEmpty);
   });
 
   test('combined export reads contacts from the radio and rejects an incomplete read', () async {

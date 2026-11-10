@@ -18,6 +18,7 @@ class BackupImportPlan {
     required List<Channel>? channels,
     required this.appSettings,
     this.messageHistory,
+    this.discoveredContactsJson,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -29,6 +30,7 @@ class BackupImportPlan {
   final List<Channel>? channels;
   final AppSettingsBackup? appSettings;
   final BackupMessageHistory? messageHistory;
+  final String? discoveredContactsJson;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -51,6 +53,7 @@ class BackupImportPlanner {
     required String password,
     bool appSettingsOnly = false,
     bool messageHistoryOnly = false,
+    bool discoveredContactsOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -64,6 +67,22 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (discoveredContactsOnly) {
+      final discovered = official ? null : _upstreamList(
+        payload,
+        'discoveredContacts',
+        publicKey,
+        preferencePrefix: 'discovered_contacts',
+      );
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        discoveredContactsJson: discovered == null ? null : jsonEncode(discovered),
+      );
+    }
     if (messageHistoryOnly) {
       return BackupImportPlan._(
         isOfficial: official,
@@ -161,8 +180,9 @@ class BackupImportPlanner {
   static List<Object?>? _upstreamList(
     Map<String, Object?> payload,
     String name,
-    String? publicKey,
-  ) {
+    String? publicKey, {
+    String? preferencePrefix,
+  }) {
     if (!_readList(payload['items']).contains(name)) return null;
     final section = _readObject(payload['sections'])[name];
     if (section == null) return null;
@@ -173,7 +193,7 @@ class BackupImportPlanner {
     if (publicKey == null) {
       throw const FormatException('Missing backup source public key');
     }
-    final key = '$name${publicKey.substring(0, 10).toLowerCase()}';
+    final key = '${preferencePrefix ?? name}${publicKey.substring(0, 10).toLowerCase()}';
     final entries = preferences.entries.where(
       (entry) => entry.key.toLowerCase() == key,
     );

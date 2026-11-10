@@ -266,6 +266,39 @@ class AppLocalizationsPt extends AppLocalizations {
       'Could not finish restoring contacts. Refresh the preview to check the current contact list.';
 
   @override
+  String get backupDiscoveredContacts_label => 'Discovered nodes';
+
+  @override
+  String get backupDiscoveredContacts_title => 'Restore discovered nodes';
+
+  @override
+  String get backupDiscoveredContacts_intro =>
+      'Choose a MeshCore Open backup with discovered nodes. They will be added to the discovery list in the current app profile.';
+
+  @override
+  String backupDiscoveredContacts_confirm(int count) {
+    return 'Add discovered nodes to the current profile? Nodes to add: $count.';
+  }
+
+  @override
+  String backupDiscoveredContacts_summary(
+    int count,
+    int skipped,
+    int invalid,
+    int noRoom,
+  ) {
+    return 'To add: $count. Already known: $skipped. Unreadable entries: $invalid. No space: $noRoom.';
+  }
+
+  @override
+  String get backupDiscoveredContacts_changed =>
+      'The contact or discovery list changed. Refresh the preview.';
+
+  @override
+  String get backupDiscoveredContacts_failed =>
+      'Could not restore discovered nodes.';
+
+  @override
   String get backupAppSettings_title => 'Restore app settings';
 
   @override

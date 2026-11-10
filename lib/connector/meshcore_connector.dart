@@ -52,6 +52,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
@@ -12791,12 +12792,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (isCurrent()) notifyListeners();
   }
 
-  /// Reads the selected radio lists from the active node. A channel-only
-  /// snapshot uses the already confirmed inventory without radio I/O.
+  /// Captures the selected lists. Channels use the confirmed inventory and
+  /// discovery uses the local profile. Only selecting contacts reads the radio.
   Future<BackupSnapshot?> snapshotNodeBackup({
     required bool includeChannels,
     required bool includeContacts,
     AppSettingsBackup? appSettings,
+    bool includeDiscoveredContacts = false,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
@@ -12806,11 +12808,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (!includeChannels ||
             (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
         (!includeContacts || _canPreviewContactBackup) &&
+        (!includeDiscoveredContacts ||
+            (!_disposed && isConnected && !isOfflineMode && !isReviewMode &&
+                nodeKey.length == pubKeySize * 2 &&
+                _persistedStateLoadedKey == nodeKey)) &&
         selfPublicKeyHex == nodeKey &&
         _channelInboxRevision == revision;
-    if ((!includeChannels && !includeContacts) || !canSnapshot()) {
+    if ((!includeChannels && !includeContacts && !includeDiscoveredContacts) ||
+        !canSnapshot()) {
       return null;
     }
+    final discoveredJson = includeDiscoveredContacts
+        ? exportDiscoveredContactsJson()
+        : null;
     final verified = includeContacts ? await _refreshBackupContacts() : null;
     if ((includeContacts && verified == null) || !canSnapshot()) return null;
 
@@ -12820,8 +12830,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       channels: includeChannels ? _channels : null,
       contacts: verified?.values.where((contact) => contact.publicKeyHex != nodeKey),
       appSettings: appSettings,
+      discoveredContactsJson: discoveredJson,
       createdAt: DateTime.now(),
     );
+  }
+
+  Object get _discoveredBackupSession => (
+    this,
+    _channelInboxRevision,
+    selfPublicKeyHex,
+    _contacts.version,
+    _discoveredContacts.version,
+    _discoveredContactsLimit,
+  );
+
+  BackupDiscoveredContactsPreview? previewBackupDiscoveredContacts(String json) {
+    if (_disposed || !isConnected || isOfflineMode || isReviewMode ||
+        selfPublicKeyHex.length != pubKeySize * 2 ||
+        _persistedStateLoadedKey != selfPublicKeyHex) {
+      return null;
+    }
+    return BackupDiscoveredContactsPreview(
+      sourceJson: json,
+      current: _discoveredContacts,
+      knownContactKeys: _knownContactKeys,
+      nodeKey: selfPublicKeyHex,
+      capacity: _discoveredContactsLimit,
+      session: _discoveredBackupSession,
+    );
+  }
+
+  Future<int?> restoreBackupDiscoveredContacts(
+    BackupDiscoveredContactsPreview preview,
+  ) async {
+    if (_disposed || !isConnected || isOfflineMode || isReviewMode ||
+        _discoveredBackupSession != preview.session) {
+      return null;
+    }
+    final result = await importDiscoveredContactsJson(preview.json);
+    return result.imported;
   }
 
   /// Applies only additions and same-PSK renames from a confirmed preview.

@@ -13,9 +13,11 @@ class BackupSnapshot {
     this.nodeName,
     Iterable<Channel>? channels,
     Iterable<Contact>? contacts,
+    String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
     required DateTime createdAt,
-  }) : sourcePublicKey = channels == null && contacts == null
+  }) : sourcePublicKey =
+           channels == null && contacts == null && discoveredContactsJson == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
@@ -24,6 +26,11 @@ class BackupSnapshot {
        _sections = {
          if (channels != null) 'channels': _channelRows(channels),
          if (contacts != null) 'contacts': _contactRows(contacts),
+         if (discoveredContactsJson != null)
+           'discoveredContacts': [
+             for (final row in jsonDecode(discoveredContactsJson) as List<dynamic>)
+               Map<String, Object?>.from(row as Map),
+           ],
        } {
     if (_sections.isNotEmpty &&
         (this.sourcePublicKey.length != pubKeySize * 2 ||
@@ -102,7 +109,7 @@ class BackupSnapshot {
           section.key: {
             // An empty list is a JSON string for upstream preferences.
             'preferences': {
-              '${section.key}$scope':
+              '${section.key == 'discoveredContacts' ? 'discovered_contacts' : section.key}$scope':
                   section.value.isEmpty ? '[]' : section.value,
             },
           },

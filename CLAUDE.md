@@ -3095,6 +3095,12 @@ Backup export snapshots the selected lists and full public key of the
 active node before opening the password dialog. Channel-only export
 uses the confirmed inventory. Selecting contacts requests a complete
 list and serializes the radio records ahead of any app-side merging.
+The discovered-nodes backup section uses the v1 source scope to find the
+file's list and applies it to the current profile's shared discovery
+store. It reuses the discovery import decoder, strips foreign routing
+and membership state, and previews the entries that fit without
+evicting any local nodes. The preview expires when the lists or
+connection change. Discovery-only export reads the local list.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

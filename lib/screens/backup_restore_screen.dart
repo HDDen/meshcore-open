@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../helpers/backup_channel_restore.dart';
 import '../helpers/backup_contact_restore.dart';
+import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
@@ -28,12 +29,14 @@ Future<BackupImportPlan> _inspectBackup(
     String password,
     bool appSettingsOnly,
     bool messageHistoryOnly,
+    bool discoveredContactsOnly,
   }) input,
 ) => const BackupImportPlanner().inspect(
   input.contents,
   password: input.password,
   appSettingsOnly: input.appSettingsOnly,
   messageHistoryOnly: input.messageHistoryOnly,
+  discoveredContactsOnly: input.discoveredContactsOnly,
 );
 
 Future<String> _readBackupFile(XFile file) async {
@@ -48,7 +51,7 @@ Future<String> _readBackupFile(XFile file) async {
   return utf8.decode(bytes.takeBytes());
 }
 
-enum _BackupSection { channels, contacts, appSettings, messageHistory }
+enum _BackupSection { channels, contacts, appSettings, messageHistory, discoveredContacts }
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen.channels({
@@ -71,6 +74,11 @@ class BackupRestoreScreen extends StatefulWidget {
     this.pickFile = _pickBackupFile,
   }) : _section = _BackupSection.messageHistory;
 
+  const BackupRestoreScreen.discoveredContacts({
+    super.key,
+    this.pickFile = _pickBackupFile,
+  }) : _section = _BackupSection.discoveredContacts;
+
   final Future<XFile?> Function() pickFile;
   final _BackupSection _section;
 
@@ -92,13 +100,16 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   AppSettingsBackupPreview? _settingsPreview;
   BackupMessageHistory? _historySource;
   BackupMessageHistoryPreview? _historyPreview;
+  String? _discoveredSource;
+  BackupDiscoveredContactsPreview? _discoveredPreview;
 
   bool get _busy => _reading || _applying;
   bool get _hasSource =>
       _source != null ||
       _contactSource != null ||
       _settingsSource != null ||
-      _historySource != null;
+      _historySource != null ||
+      _discoveredSource != null;
 
   Future<void> _chooseFile() async {
     if (_busy) return;
@@ -116,13 +127,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _settingsPreview = null;
         _historySource = null;
         _historyPreview = null;
+        _discoveredSource = null;
+        _discoveredPreview = null;
         _notice = null;
       });
       final contents = await _readBackupFile(file);
       final plan = await _inspectWithPassword(contents);
       if (!mounted || plan == null) return;
       final l10n = context.l10n;
-      if (widget._section == _BackupSection.messageHistory) {
+      if (widget._section == _BackupSection.discoveredContacts) {
+        final discovered = plan.discoveredContactsJson;
+        if (discovered == null || discovered == '[]') {
+          setState(() => _notice = l10n.discoveredContacts_importNoContacts);
+          return;
+        }
+        _discoveredSource = discovered;
+      } else if (widget._section == _BackupSection.messageHistory) {
         final history = plan.messageHistory;
         if (history == null) {
           setState(() => _notice = l10n.backupMessageHistory_empty);
@@ -180,6 +200,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             password: password,
             appSettingsOnly: widget._section == _BackupSection.appSettings,
             messageHistoryOnly: widget._section == _BackupSection.messageHistory,
+            discoveredContactsOnly: widget._section == _BackupSection.discoveredContacts,
           ),
         );
       } on BackupPasswordException catch (error) {
@@ -260,6 +281,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (_historySource case final history?) {
         _historyPreview = connector.previewBackupMessageHistory(history);
       }
+      if (_discoveredSource case final discovered?) {
+        _discoveredPreview = connector.previewBackupDiscoveredContacts(discovered);
+      }
       _destinationName = connector.deviceDisplayName;
       _notice = null;
     });
@@ -312,6 +336,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           _contactPreview = null;
           _settingsPreview = null;
           _historyPreview = null;
+          _discoveredPreview = null;
         });
       }
     }
@@ -398,6 +423,24 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     );
   }
 
+  Future<void> _restoreDiscoveredContacts(
+    BackupDiscoveredContactsPreview preview,
+  ) {
+    final connector = context.read<MeshCoreConnector>();
+    final l10n = context.l10n;
+    return _confirmRestore(
+      title: l10n.backupDiscoveredContacts_title,
+      prompt: l10n.backupDiscoveredContacts_confirm(preview.contacts.length),
+      failure: l10n.backupDiscoveredContacts_failed,
+      apply: () async {
+        final added = await connector.restoreBackupDiscoveredContacts(preview);
+        return added == null
+            ? l10n.backupDiscoveredContacts_changed
+            : l10n.discoveredContacts_imported(added);
+      },
+    );
+  }
+
   ListTile _settingsChange(MapEntry<String, Object?> change) {
     final l10n = context.l10n;
     final label = switch (change.key) {
@@ -461,6 +504,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final contactPreview = _contactPreview;
     final settingsPreview = _settingsPreview;
     final historyPreview = _historyPreview;
+    final discoveredPreview = _discoveredPreview;
     final (title, intro) = switch (widget._section) {
       _BackupSection.channels => (l10n.backupChannels_title, l10n.backupChannels_intro),
       _BackupSection.contacts => (l10n.backupContacts_title, l10n.backupContacts_intro),
@@ -468,6 +512,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _BackupSection.messageHistory => (
         l10n.backupMessageHistory_title,
         l10n.backupMessageHistory_intro,
+      ),
+      _BackupSection.discoveredContacts => (
+        l10n.backupDiscoveredContacts_title,
+        l10n.backupDiscoveredContacts_intro,
       ),
     };
     final contactAdds = [
@@ -517,10 +565,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   widget._section != _BackupSection.appSettings &&
                   preview == null &&
                   contactPreview == null &&
-                  historyPreview == null)
+                  historyPreview == null &&
+                  discoveredPreview == null)
                 Text(switch (widget._section) {
                   _BackupSection.contacts => l10n.backupContacts_waitForNode,
                   _BackupSection.messageHistory => l10n.backupMessageHistory_waitForNode,
+                  _BackupSection.discoveredContacts => l10n.backupContacts_waitForNode,
                   _ => l10n.backupChannels_waitForNode,
                 }),
               if (preview != null || contactPreview != null || historyPreview != null)
@@ -594,6 +644,21 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     onPressed: _busy
                         ? null
                         : () => _restoreMessageHistory(historyPreview),
+                    child: Text(l10n.backupChannels_apply),
+                  ),
+              ],
+              if (discoveredPreview != null) ...[
+                Text(l10n.backupDiscoveredContacts_summary(
+                  discoveredPreview.contacts.length,
+                  discoveredPreview.skipped,
+                  discoveredPreview.invalid,
+                  discoveredPreview.noRoom,
+                )),
+                if (discoveredPreview.contacts.isNotEmpty)
+                  FilledButton(
+                    onPressed: _busy
+                        ? null
+                        : () => _restoreDiscoveredContacts(discoveredPreview),
                     child: Text(l10n.backupChannels_apply),
                   ),
               ],
