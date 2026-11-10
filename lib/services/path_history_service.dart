@@ -1,11 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
+
+import '../connector/meshcore_protocol.dart' show maxPathHashWidth, maxPathSize;
 import '../models/contact.dart';
 import '../models/path_history.dart';
 import '../models/path_selection.dart';
+import 'experimental_route_chooser.dart';
 import 'storage_service.dart';
 
 class PathHistoryService extends ChangeNotifier {
   final StorageService _storage;
+  math.Random? _experimentalRandom;
   final Map<String, ContactPathHistory> _cache = {};
   final Map<String, int> _autoRotationIndex = {};
   final Map<String, _FloodStats> _floodStats = {};
@@ -105,11 +111,14 @@ class PathHistoryService extends ChangeNotifier {
     int? tripTimeMs,
     double successIncrement = 0.5,
     double maxWeight = 5.0,
+    bool trackAdaptiveEvidence = false,
   }) {
     if (pathBytes.isEmpty || hopCount < 0) return;
     if (!_cache.containsKey(contactPubKeyHex)) {
+      final generation = _historyGeneration;
       _ensureLoaded(contactPubKeyHex).then((_) {
-        if (!_cache.containsKey(contactPubKeyHex)) return;
+        if (generation != _historyGeneration ||
+            !_cache.containsKey(contactPubKeyHex)) return;
         recordFloodPathAttribution(
           contactPubKeyHex: contactPubKeyHex,
           pathBytes: pathBytes,
@@ -117,6 +126,7 @@ class PathHistoryService extends ChangeNotifier {
           tripTimeMs: tripTimeMs,
           successIncrement: successIncrement,
           maxWeight: maxWeight,
+          trackAdaptiveEvidence: trackAdaptiveEvidence,
         );
       });
       return;
@@ -128,6 +138,7 @@ class PathHistoryService extends ChangeNotifier {
 
     final currentWeight = existing?.routeWeight ?? 1.0;
     final newWeight = (currentWeight + successIncrement).clamp(0.0, maxWeight);
+    final now = DateTime.now();
 
     debugPrint(
       'Flood path attribution: crediting path [${pathBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join(',')}] '
@@ -143,7 +154,10 @@ class PathHistoryService extends ChangeNotifier {
       successCount: successCount,
       failureCount: failureCount,
       routeWeight: newWeight,
-      timestamp: DateTime.now(),
+      timestamp: now,
+      adaptiveEvidence: trackAdaptiveEvidence
+          ? addRouteEvidence(existing, success: true, now: now)
+          : null,
     );
   }
 
@@ -155,6 +169,7 @@ class PathHistoryService extends ChangeNotifier {
     double successIncrement = 0.5,
     double failureDecrement = 0.5,
     double maxWeight = 5.0,
+    bool trackAdaptiveEvidence = false,
   }) {
     if (selection.useFlood) {
       final stats = _floodStats.putIfAbsent(
@@ -172,8 +187,10 @@ class PathHistoryService extends ChangeNotifier {
     }
 
     if (!_cache.containsKey(contactPubKeyHex)) {
+      final generation = _historyGeneration;
       _ensureLoaded(contactPubKeyHex).then((_) {
-        if (!_cache.containsKey(contactPubKeyHex)) return;
+        if (generation != _historyGeneration ||
+            !_cache.containsKey(contactPubKeyHex)) return;
         recordPathResult(
           contactPubKeyHex,
           selection,
@@ -182,6 +199,7 @@ class PathHistoryService extends ChangeNotifier {
           successIncrement: successIncrement,
           failureDecrement: failureDecrement,
           maxWeight: maxWeight,
+          trackAdaptiveEvidence: trackAdaptiveEvidence,
         );
       });
       return;
@@ -205,6 +223,7 @@ class PathHistoryService extends ChangeNotifier {
       newWeight = newWeight.clamp(0.1, maxWeight);
     }
 
+    final now = success || trackAdaptiveEvidence ? DateTime.now() : null;
     _addPathRecord(
       contactPubKeyHex: contactPubKeyHex,
       hopCount: selection.hopCount,
@@ -214,7 +233,10 @@ class PathHistoryService extends ChangeNotifier {
       successCount: successCount,
       failureCount: failureCount,
       routeWeight: newWeight,
-      timestamp: success ? DateTime.now() : existing?.timestamp,
+      timestamp: success ? now : existing?.timestamp,
+      adaptiveEvidence: trackAdaptiveEvidence
+          ? addRouteEvidence(existing, success: success, now: now!)
+          : null,
     );
   }
 
@@ -223,12 +245,17 @@ class PathHistoryService extends ChangeNotifier {
     required int attemptIndex,
     required int maxRetries,
     List<PathSelection> recentSelections = const [],
+    RouteContext? experimentalContext,
   }) {
     if (maxRetries <= 0 || attemptIndex >= maxRetries - 1) {
       return const PathSelection(pathBytes: [], hopCount: -1, useFlood: true);
     }
 
-    final ranked = _getRankedPaths(contactPubKeyHex);
+    final ranked = experimentalContext == null
+        ? _getRankedPaths(contactPubKeyHex)
+        : (_cache[contactPubKeyHex]?.recentPaths ?? const <PathRecord>[])
+              .where(_isExperimentalCandidate)
+              .toList();
     if (ranked.isEmpty) {
       return const PathSelection(pathBytes: [], hopCount: -1, useFlood: true);
     }
@@ -239,26 +266,40 @@ class PathHistoryService extends ChangeNotifier {
         .where((selection) => !selection.useFlood)
         .map((selection) => selection.pathBytes)
         .toList();
-    final candidates = recentPaths.isEmpty
-        ? ranked
-        : ranked
-              .where(
-                (path) => !recentPaths.any(
-                  (recentPath) => _pathsEqual(path.pathBytes, recentPath),
-                ),
-              )
-              .toList();
-    final selected = candidates.isNotEmpty
-        ? (recentPaths.isEmpty
-              ? _selectRotatedCandidate(contactPubKeyHex, candidates)
-              : candidates.first)
-        : ranked.first;
+    bool tried(PathRecord path) =>
+        recentPaths.any((recent) => _pathsEqual(path.pathBytes, recent));
+    final PathRecord selected;
+    if (experimentalContext != null) {
+      selected = pickExperimentalRoute(
+        ranked,
+        random: _experimentalRandom ??= math.Random(),
+        now: DateTime.now(),
+        context: experimentalContext,
+        tried: tried,
+      );
+    } else if (recentPaths.isEmpty) {
+      selected = _selectRotatedCandidate(contactPubKeyHex, ranked);
+    } else {
+      selected = ranked.where((path) => !tried(path)).firstOrNull ?? ranked.first;
+    }
 
     return PathSelection(
       pathBytes: selected.pathBytes,
       hopCount: selected.hopCount,
       useFlood: false,
     );
+  }
+
+  bool _isExperimentalCandidate(PathRecord path) {
+    final hops = path.hopCount;
+    final bytes = path.pathBytes.length;
+    if (hops == 0) return bytes == 0;
+    return hops > 0 &&
+        hops <= 0x3f &&
+        bytes >= hops &&
+        bytes <= maxPathSize &&
+        bytes <= maxPathHashWidth * hops &&
+        bytes % hops == 0;
   }
 
   PathRecord _selectRotatedCandidate(
@@ -288,6 +329,7 @@ class PathHistoryService extends ChangeNotifier {
     double? routeWeight,
     double initialWeight = 1.0,
     DateTime? timestamp,
+    RouteEvidence? adaptiveEvidence,
   }) {
     if (_isClearingAllHistories) return;
     void add() => _addPathRecordInternal(
@@ -301,6 +343,7 @@ class PathHistoryService extends ChangeNotifier {
       routeWeight,
       initialWeight,
       timestamp,
+      adaptiveEvidence,
     );
 
     if (_cache.containsKey(contactPubKeyHex)) {
@@ -347,6 +390,7 @@ class PathHistoryService extends ChangeNotifier {
     double? routeWeight,
     double initialWeight,
     DateTime? timestamp,
+    RouteEvidence? adaptiveEvidence,
   ) {
     var history = _cache[contactPubKeyHex];
     if (history == null) return;
@@ -373,6 +417,7 @@ class PathHistoryService extends ChangeNotifier {
       successCount: successCount,
       failureCount: failureCount,
       routeWeight: routeWeight,
+      adaptiveEvidence: adaptiveEvidence ?? existing?.adaptiveEvidence,
     );
 
     final updatedPaths = List<PathRecord>.from(history.recentPaths);

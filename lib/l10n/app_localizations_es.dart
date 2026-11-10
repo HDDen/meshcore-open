@@ -1078,6 +1078,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Alternar entre las mejores rutas y el modo inundación';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Rotación de ruta automática habilitada';
 

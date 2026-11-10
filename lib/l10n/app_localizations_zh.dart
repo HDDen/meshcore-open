@@ -1006,6 +1006,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_autoRouteRotationSubtitle => '在最佳路径和泛洪模式之间切换';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled => '自动路径轮换已启用';
 
   @override

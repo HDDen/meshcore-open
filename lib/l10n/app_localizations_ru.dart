@@ -1079,6 +1079,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Циклически переключаться между лучшими маршрутами и режимом flood';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Экспериментальный выбор маршрута';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'При повторах выбирает маршрут с учётом недавних доставок и слышимости.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Автоматическое переключение маршрутов включено';
 

@@ -2421,6 +2421,15 @@ while its deferred timeouts are discarded if the attempt is ambiguous.
 Timeouts stay available through late-ACK grace and are dropped on cleanup
 or history reset. Flood counts still record timeouts immediately.
 
+U34 adds `experimentalRouteRanking`, off by default and effective only
+with automatic route rotation. `PathHistoryService.selectPathForAttempt`
+uses the Thompson sampler for intermediate retries with an experimental
+context. Normal selection and eviction still use the configured weights.
+The experiment records optional decaying evidence in the same node-scoped
+SQLite history JSON. Passive hearing uses at most 128 adverts or last-hop
+prefixes for two hours and is cleared when the active node changes or the
+setting is disabled. It requires no extra radio commands.
+
 ### The route a direct message was delivered along
 
 An outgoing direct message or room post keeps the route its delivery was

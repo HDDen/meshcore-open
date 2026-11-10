@@ -1027,6 +1027,14 @@ class AppLocalizationsKo extends AppLocalizations {
       '최적 경로와 플러드 모드 사이를 전환합니다.';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled => '자동 경로 순환이 활성화되었습니다.';
 
   @override

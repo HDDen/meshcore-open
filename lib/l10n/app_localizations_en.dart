@@ -1062,6 +1062,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cycle between best paths and flood mode';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Auto route rotation enabled';
 

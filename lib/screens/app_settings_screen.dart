@@ -607,123 +607,139 @@ class AppSettingsScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           alignment: Alignment.topCenter,
           child: autoRouteEnabled
-              ? Container(
+              ? Material(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  padding: const EdgeInsets.only(left: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(context.l10n.appSettings_maxRouteWeight),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.appSettings_maxRouteWeightSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService.settings.maxRouteWeight,
-                              min: 1,
-                              max: 10,
-                              divisions: 9,
-                              label: settingsService.settings.maxRouteWeight
-                                  .round()
-                                  .toString(),
-                              onChanged: (value) =>
-                                  settingsService.setMaxRouteWeight(value),
-                            ),
-                          ],
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(height: 1),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          title: Text(
+                            context.l10n.appSettings_experimentalRouteRanking,
+                          ),
+                          subtitle: Text(
+                            context.l10n.appSettings_experimentalRouteRankingHelp,
+                          ),
+                          value: settingsService.settings.experimentalRouteRanking,
+                          onChanged: settingsService.setExperimentalRouteRanking,
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_initialRouteWeight,
+                        const Divider(height: 1),
+                        ListTile(
+                          title: Text(context.l10n.appSettings_maxRouteWeight),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.l10n.appSettings_maxRouteWeightSubtitle,
+                              ),
+                              Slider(
+                                value: settingsService.settings.maxRouteWeight,
+                                min: 1,
+                                max: 10,
+                                divisions: 9,
+                                label: settingsService.settings.maxRouteWeight
+                                    .round()
+                                    .toString(),
+                                onChanged: (value) =>
+                                    settingsService.setMaxRouteWeight(value),
+                              ),
+                            ],
+                          ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_initialRouteWeightSubtitle,
-                            ),
-                            Slider(
-                              value:
-                                  settingsService.settings.initialRouteWeight,
-                              min: 0.5,
-                              max: 5.0,
-                              divisions: 9,
-                              label: settingsService.settings.initialRouteWeight
-                                  .toStringAsFixed(1),
-                              onChanged: (value) =>
-                                  settingsService.setInitialRouteWeight(value),
-                            ),
-                          ],
+                        const Divider(height: 1),
+                        ListTile(
+                          title: Text(
+                            context.l10n.appSettings_initialRouteWeight,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context
+                                    .l10n
+                                    .appSettings_initialRouteWeightSubtitle,
+                              ),
+                              Slider(
+                                value:
+                                    settingsService.settings.initialRouteWeight,
+                                min: 0.5,
+                                max: 5.0,
+                                divisions: 9,
+                                label: settingsService.settings.initialRouteWeight
+                                    .toStringAsFixed(1),
+                                onChanged: (value) =>
+                                    settingsService.setInitialRouteWeight(value),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_routeWeightSuccessIncrement,
+                        const Divider(height: 1),
+                        ListTile(
+                          title: Text(
+                            context.l10n.appSettings_routeWeightSuccessIncrement,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context
+                                    .l10n
+                                    .appSettings_routeWeightSuccessIncrementSubtitle,
+                              ),
+                              Slider(
+                                value: settingsService
+                                    .settings
+                                    .routeWeightSuccessIncrement,
+                                min: 0.1,
+                                max: 2.0,
+                                divisions: 19,
+                                label: settingsService
+                                    .settings
+                                    .routeWeightSuccessIncrement
+                                    .toStringAsFixed(1),
+                                onChanged: (value) => settingsService
+                                    .setRouteWeightSuccessIncrement(value),
+                              ),
+                            ],
+                          ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_routeWeightSuccessIncrementSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService
-                                  .settings
-                                  .routeWeightSuccessIncrement,
-                              min: 0.1,
-                              max: 2.0,
-                              divisions: 19,
-                              label: settingsService
-                                  .settings
-                                  .routeWeightSuccessIncrement
-                                  .toStringAsFixed(1),
-                              onChanged: (value) => settingsService
-                                  .setRouteWeightSuccessIncrement(value),
-                            ),
-                          ],
+                        const Divider(height: 1),
+                        ListTile(
+                          title: Text(
+                            context.l10n.appSettings_routeWeightFailureDecrement,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context
+                                    .l10n
+                                    .appSettings_routeWeightFailureDecrementSubtitle,
+                              ),
+                              Slider(
+                                value: settingsService
+                                    .settings
+                                    .routeWeightFailureDecrement,
+                                min: 0.1,
+                                max: 2.0,
+                                divisions: 19,
+                                label: settingsService
+                                    .settings
+                                    .routeWeightFailureDecrement
+                                    .toStringAsFixed(1),
+                                onChanged: (value) => settingsService
+                                    .setRouteWeightFailureDecrement(value),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: Text(
-                          context.l10n.appSettings_routeWeightFailureDecrement,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context
-                                  .l10n
-                                  .appSettings_routeWeightFailureDecrementSubtitle,
-                            ),
-                            Slider(
-                              value: settingsService
-                                  .settings
-                                  .routeWeightFailureDecrement,
-                              min: 0.1,
-                              max: 2.0,
-                              divisions: 19,
-                              label: settingsService
-                                  .settings
-                                  .routeWeightFailureDecrement
-                                  .toStringAsFixed(1),
-                              onChanged: (value) => settingsService
-                                  .setRouteWeightFailureDecrement(value),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 )
               : const SizedBox.shrink(),

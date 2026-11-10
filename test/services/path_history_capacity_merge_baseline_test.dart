@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/models/path_selection.dart';
+import 'package:meshcore_open/services/experimental_route_chooser.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 
@@ -207,6 +208,107 @@ void main() {
     expect(f.service.routesVersion, routes);
     expect(f.notifications, 0);
     expect(f.storage.writes, isEmpty);
+  });
+
+  test('U34 baseline: zero-hop history is kept outside the automatic ranking',
+      () async {
+    final direct = PathRecord(
+      hopCount: 0,
+      tripTimeMs: 300,
+      timestamp: _at,
+      wasFloodDiscovery: false,
+      pathBytes: const [],
+      successCount: 10,
+      failureCount: 0,
+      routeWeight: 5,
+    );
+    final relay = _record(1, width: 3, failures: 4, tripMs: 1800);
+    final f = await _loadFixture(
+      count: 2,
+      history: ContactPathHistory(
+        contactPubKeyHex: _key,
+        recentPaths: [direct, relay],
+      ),
+    );
+    final version = f.service.version;
+
+    final picked = f.service.selectPathForAttempt(
+      _key,
+      attemptIndex: 1,
+      maxRetries: 4,
+      recentSelections: [_selection(1, width: 3)],
+    );
+    expect(picked.useFlood, isFalse);
+    expect(picked.pathBytes, relay.pathBytes);
+    expect(picked.hopCount, relay.hopCount);
+    expect(f.service.peekRecentPaths(_key), [direct, relay]);
+    expect(f.service.version, version);
+    expect(f.storage.writes, isEmpty);
+  });
+
+  test('U34: experimental ranking can choose stored zero hops', () async {
+    final direct = PathRecord(
+      hopCount: 0,
+      tripTimeMs: 400,
+      timestamp: _at,
+      wasFloodDiscovery: false,
+      pathBytes: const [],
+      successCount: 8,
+      failureCount: 0,
+    );
+    final invalid = _record(2, width: 3);
+    final history = ContactPathHistory(
+      contactPubKeyHex: _key,
+      recentPaths: [
+        direct,
+        PathRecord(
+          hopCount: 1,
+          tripTimeMs: invalid.tripTimeMs,
+          timestamp: invalid.timestamp,
+          wasFloodDiscovery: false,
+          pathBytes: invalid.pathBytes,
+          successCount: invalid.successCount,
+          failureCount: invalid.failureCount,
+        ),
+      ],
+    );
+    final f = await _loadFixture(count: 2, history: history);
+    const context = RouteContext();
+    final picked = f.service.selectPathForAttempt(
+      _key,
+      attemptIndex: 1,
+      maxRetries: 3,
+      experimentalContext: context,
+    );
+    expect(picked.useFlood, isFalse);
+    expect(picked.hopCount, 0);
+    expect(picked.pathBytes, isEmpty);
+    expect(f.service.selectPathForAttempt(
+      _key,
+      attemptIndex: 2,
+      maxRetries: 3,
+      experimentalContext: context,
+    ).useFlood, isTrue);
+    expect(f.storage.writes, isEmpty);
+  });
+
+  test('U34: normal results preserve adaptive evidence without updating it',
+      () async {
+    final f = await _loadFixture(count: 1);
+    final route = _selection(0);
+    f.service.recordPathResult(
+      _key, route, success: true, trackAdaptiveEvidence: true,
+    );
+    final learned = f.service.peekRecentPaths(_key)!.single;
+    expect(learned.adaptiveEvidence, isNotNull);
+    expect(learned.successCount, 3);
+    f.service.recordPathAttempt(_key, route);
+    f.service.recordPathResult(_key, route, success: false);
+    final stored = f.storage.history.recentPaths.single;
+    expect(stored.adaptiveEvidence, learned.adaptiveEvidence);
+    expect(stored.successCount, 3);
+    expect(stored.failureCount, 2);
+    expect(stored.routeWeight, 3);
   });
 
   test('U12c baseline: ranking and retry diversity remain read-only at capacity', () async {

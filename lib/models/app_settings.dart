@@ -357,6 +357,10 @@ class AppSettings {
   final bool autoSendZeroHopAdvertOnGpsUpdate;
   final int gpsIntervalSeconds;
   final bool autoRouteRotationEnabled;
+  final bool experimentalRouteRanking;
+
+  bool get usesExperimentalRouteRanking =>
+      autoRouteRotationEnabled && experimentalRouteRanking;
   final double maxRouteWeight;
   final double initialRouteWeight;
   final double routeWeightSuccessIncrement;
@@ -831,6 +835,7 @@ class AppSettings {
     this.autoSendZeroHopAdvertOnGpsUpdate = false,
     this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = false,
+    this.experimentalRouteRanking = false,
     this.maxRouteWeight = defaultMaxRouteWeight,
     this.initialRouteWeight = defaultInitialRouteWeight,
     this.routeWeightSuccessIncrement = defaultRouteWeightSuccessIncrement,
@@ -1013,6 +1018,7 @@ class AppSettings {
           autoSendZeroHopAdvertOnGpsUpdate,
       'gps_interval_seconds': gpsIntervalSeconds,
       'auto_route_rotation_enabled': autoRouteRotationEnabled,
+      'experimental_route_ranking': experimentalRouteRanking,
       'max_route_weight': maxRouteWeight,
       'initial_route_weight': initialRouteWeight,
       'route_weight_success_increment': routeWeightSuccessIncrement,
@@ -1240,6 +1246,7 @@ class AppSettings {
           (json['gps_interval_seconds'] as num?)?.toInt() ?? 900,
       autoRouteRotationEnabled:
           json['auto_route_rotation_enabled'] as bool? ?? false,
+      experimentalRouteRanking: json['experimental_route_ranking'] == true,
       maxRouteWeight:
           (json['max_route_weight'] as num?)?.toDouble() ?? defaultMaxRouteWeight,
       initialRouteWeight:
@@ -1492,6 +1499,7 @@ class AppSettings {
     bool? autoSendZeroHopAdvertOnGpsUpdate,
     int? gpsIntervalSeconds,
     bool? autoRouteRotationEnabled,
+    bool? experimentalRouteRanking,
     double? maxRouteWeight,
     double? initialRouteWeight,
     double? routeWeightSuccessIncrement,
@@ -1682,6 +1690,8 @@ class AppSettings {
       gpsIntervalSeconds: gpsIntervalSeconds ?? this.gpsIntervalSeconds,
       autoRouteRotationEnabled:
           autoRouteRotationEnabled ?? this.autoRouteRotationEnabled,
+      experimentalRouteRanking:
+          experimentalRouteRanking ?? this.experimentalRouteRanking,
       maxRouteWeight: maxRouteWeight ?? this.maxRouteWeight,
       initialRouteWeight: initialRouteWeight ?? this.initialRouteWeight,
       routeWeightSuccessIncrement:

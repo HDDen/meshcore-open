@@ -1,3 +1,5 @@
+typedef RouteEvidence = ({double success, double failure, DateTime at});
+
 class PathRecord {
   final int hopCount;
   final int tripTimeMs;
@@ -7,6 +9,7 @@ class PathRecord {
   final int successCount;
   final int failureCount;
   final double routeWeight;
+  final RouteEvidence? adaptiveEvidence;
 
   PathRecord({
     required this.hopCount,
@@ -17,12 +20,14 @@ class PathRecord {
     required this.successCount,
     required this.failureCount,
     this.routeWeight = 1.0,
+    this.adaptiveEvidence,
   });
 
   String get displayText =>
       '$hopCount ${hopCount == 1 ? 'hop' : 'hops'} - ${(tripTimeMs / 1000).toStringAsFixed(2)}s';
 
   Map<String, dynamic> toJson() {
+    final evidence = adaptiveEvidence;
     return {
       'hop_count': hopCount,
       'trip_time_ms': tripTimeMs,
@@ -32,10 +37,28 @@ class PathRecord {
       'success_count': successCount,
       'failure_count': failureCount,
       'route_weight': routeWeight,
+      if (evidence != null) ...{
+        'recent_success': evidence.success,
+        'recent_failure': evidence.failure,
+        'stats_at': evidence.at.toIso8601String(),
+      },
     };
   }
 
   factory PathRecord.fromJson(Map<String, dynamic> json) {
+    final recentSuccess = json['recent_success'];
+    final recentFailure = json['recent_failure'];
+    final stamp = json['stats_at'];
+    final at = stamp is String ? DateTime.tryParse(stamp) : null;
+    final evidence = at != null &&
+            _validEvidence(recentSuccess) &&
+            _validEvidence(recentFailure)
+        ? (
+            success: (recentSuccess as num).toDouble(),
+            failure: (recentFailure as num).toDouble(),
+            at: at,
+          )
+        : null;
     return PathRecord(
       hopCount: json['hop_count'] as int,
       tripTimeMs: json['trip_time_ms'] as int,
@@ -48,8 +71,12 @@ class PathRecord {
       successCount: json['success_count'] as int? ?? 0,
       failureCount: json['failure_count'] as int? ?? 0,
       routeWeight: (json['route_weight'] as num?)?.toDouble() ?? 1.0,
+      adaptiveEvidence: evidence,
     );
   }
+
+  static bool _validEvidence(Object? value) =>
+      value is num && value.isFinite && value >= 0 && value <= 16;
 }
 
 class ContactPathHistory {

@@ -191,6 +191,8 @@
   "appSettings_pathsWillNotBeCleared": "Маршруты не будут автоматически сбрасываться",
   "appSettings_autoRouteRotation": "Автоматическое переключение маршрутов",
   "appSettings_autoRouteRotationSubtitle": "Циклически переключаться между лучшими маршрутами и режимом flood",
+  "appSettings_experimentalRouteRanking": "Экспериментальный выбор маршрута",
+  "appSettings_experimentalRouteRankingHelp": "При повторах выбирает маршрут с учётом недавних доставок и слышимости.",
   "appSettings_autoRouteRotationEnabled": "Автоматическое переключение маршрутов включено",
   "appSettings_autoRouteRotationDisabled": "Автоматическое переключение маршрутов отключено",
   "appSettings_battery": "Батарея",

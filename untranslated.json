@@ -1,5 +1,7 @@
 {
   "bg": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -105,6 +107,8 @@
   ],
 
   "de": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -210,6 +214,8 @@
   ],
 
   "es": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -315,6 +321,8 @@
   ],
 
   "fr": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -420,6 +428,8 @@
   ],
 
   "hu": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -525,6 +535,8 @@
   ],
 
   "it": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -630,6 +642,8 @@
   ],
 
   "ja": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -735,6 +749,8 @@
   ],
 
   "ko": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -840,6 +856,8 @@
   ],
 
   "nl": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -945,6 +963,8 @@
   ],
 
   "pl": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1050,6 +1070,8 @@
   ],
 
   "pt": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1155,6 +1177,8 @@
   ],
 
   "sk": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1260,6 +1284,8 @@
   ],
 
   "sl": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1365,6 +1391,8 @@
   ],
 
   "sv": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1470,6 +1498,8 @@
   ],
 
   "uk": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",
@@ -1575,6 +1605,8 @@
   ],
 
   "zh": [
+    "appSettings_experimentalRouteRanking",
+    "appSettings_experimentalRouteRankingHelp",
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
     "routing_modeDirect",

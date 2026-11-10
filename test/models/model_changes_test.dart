@@ -675,6 +675,82 @@ Future<void> main() async {
       );
     }, skip: skip);
 
+    test('U34 baseline: SQL route histories keep each radio’s evidence',
+        () async {
+      await _openHistoryStorage();
+      final contactKey = 'cd' * 32;
+      final firstRadio = 'ab' * 32;
+      final secondRadio = 'ef' * 32;
+      final storage = StorageService();
+      final observedAt = DateTime.utc(2026, 11, 7);
+
+      ContactPathHistory history({
+        required int hops,
+        required List<int> bytes,
+        required double weight,
+        RouteEvidence? evidence,
+      }) => ContactPathHistory(
+        contactPubKeyHex: contactKey,
+        recentPaths: [
+          PathRecord(
+            hopCount: hops,
+            tripTimeMs: 700,
+            timestamp: observedAt,
+            wasFloodDiscovery: false,
+            pathBytes: bytes,
+            successCount: 4,
+            failureCount: 1,
+            routeWeight: weight,
+            adaptiveEvidence: evidence,
+          ),
+        ],
+      );
+
+      final direct = history(
+        hops: 0,
+        bytes: const [],
+        weight: 4.5,
+        evidence: (success: 3.25, failure: 0.75, at: observedAt),
+      );
+      final routed = history(hops: 1, bytes: const [0x10, 0x20, 0x30], weight: 2);
+      storage.setPublicKeyHex = firstRadio;
+      await storage.savePathHistory(contactKey, direct);
+      storage.setPublicKeyHex = secondRadio;
+      expect(await storage.loadPathHistory(contactKey), isNull);
+      await storage.savePathHistory(contactKey, routed);
+
+      final reopened = StorageService()..setPublicKeyHex = firstRadio;
+      final restored = await reopened.loadPathHistory(contactKey);
+      expect(restored?.toJson(), direct.toJson());
+      expect(
+        restored?.recentPaths.single.adaptiveEvidence,
+        direct.recentPaths.single.adaptiveEvidence,
+      );
+      reopened.setPublicKeyHex = secondRadio;
+      expect(
+        (await reopened.loadPathHistory(contactKey))?.toJson(),
+        routed.toJson(),
+      );
+    }, skip: skip);
+
+    test('U34: experimental ranking is opt-in and needs rotation', () {
+      final legacy = AppSettings.fromJson(const {
+        'auto_route_rotation_enabled': true,
+        'max_route_weight': 8,
+      });
+      expect(legacy.experimentalRouteRanking, isFalse);
+      final enabled = legacy.copyWith(experimentalRouteRanking: true);
+      final reopened = AppSettings.fromJson(enabled.toJson());
+      expect(reopened.usesExperimentalRouteRanking, isTrue);
+      expect(reopened.maxRouteWeight, 8);
+
+      final paused = reopened.copyWith(autoRouteRotationEnabled: false);
+      expect(paused.usesExperimentalRouteRanking, isFalse);
+      expect(paused.experimentalRouteRanking, isTrue);
+      expect(paused.copyWith(autoRouteRotationEnabled: true)
+          .usesExperimentalRouteRanking, isTrue);
+    });
+
     test('automatic route switching is off unless stored on', () {
       expect(AppSettings().autoRouteRotationEnabled, isFalse);
       expect(AppSettings.fromJson(const {}).autoRouteRotationEnabled, isFalse);

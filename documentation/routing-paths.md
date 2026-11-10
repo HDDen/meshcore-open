@@ -49,7 +49,19 @@ Short prefixes can match several known nodes. An unresolved or ambiguous hop is 
 
 ## Storage and route selection
 
-Contacts/messages persist hop count, path bytes, and width. Legacy contact records without width infer it from consistent hop and byte counts, falling back to one byte. `PathHistoryService` scores recent routes using delivery observations; automatic route rotation can select another route on retry when no manual override is active. Rotation follows the App Settings **Auto Route Rotation** toggle (`autoRouteRotationEnabled`, on by default).
+Contacts and messages persist hop count, path bytes, and width. Legacy contact
+records infer width from consistent hop and byte counts, falling back to one byte.
+`PathHistoryService` scores recent routes using delivery observations.
+**Auto Route Rotation** in App Settings starts off. Enable it to try other
+paths from history on retries when no manual override is active.
+
+**Experimental route selection** is a separate switch under Auto Route
+Rotation. It starts off. When enabled, Thompson sampling chooses a path for
+intermediate retries from recent delivery results and passively heard
+neighbors. It can try a known zero-hop route. Delivery evidence loses half
+its weight each day and is stored with the contact's route history on the
+current node. The first attempt follows the node's route. The final attempt
+uses the usual Flood policy, and pinned routes take precedence.
 
 A timed-out route loses weight only when an unambiguous delivery
 acknowledgement for another attempt shows that the contact was reachable.

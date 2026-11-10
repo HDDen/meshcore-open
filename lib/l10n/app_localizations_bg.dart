@@ -1083,6 +1083,14 @@ class AppLocalizationsBg extends AppLocalizations {
       'Циклично превключване между най-добрите пътища и режим flood';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Автоматичната ротация на маршрутите е включена';
 

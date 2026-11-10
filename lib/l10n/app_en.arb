@@ -401,6 +401,8 @@
   "appSettings_pathsWillNotBeCleared": "Paths will not be auto-cleared",
   "appSettings_autoRouteRotation": "Auto Route Rotation",
   "appSettings_autoRouteRotationSubtitle": "Cycle between best paths and flood mode",
+  "appSettings_experimentalRouteRanking": "Experimental route selection",
+  "appSettings_experimentalRouteRankingHelp": "Use recent deliveries and nearby radio activity to choose a path for retries.",
   "appSettings_autoRouteRotationEnabled": "Auto route rotation enabled",
   "appSettings_autoRouteRotationDisabled": "Auto route rotation disabled",
   "appSettings_maxRouteWeight": "Max Route Weight",

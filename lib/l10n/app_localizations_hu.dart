@@ -1073,6 +1073,14 @@ class AppLocalizationsHu extends AppLocalizations {
       'Ciklikus váltás a legjobb útvonalak és a flood mód között';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Az automatikus útvonalváltás engedélyezve';
 

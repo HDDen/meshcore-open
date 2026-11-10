@@ -6,6 +6,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/models/path_selection.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -171,6 +172,28 @@ void main() {
     expect(record.pathBytes, [0x33]);
     expect(record.successCount, 1);
     expect(record.timestamp, isNotNull);
+    expect(record.adaptiveEvidence, isNull);
+  });
+
+  test('U34: a returned zero-hop route supplies evidence in experimental mode',
+      () async {
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    addTearDown(connector.dispose);
+    await settings.setAutoRouteRotationEnabled(true);
+    await settings.setExperimentalRouteRanking(true);
+    connector.attachAppSettingsServiceForTest(settings);
+    connector.written.clear();
+
+    await returnRoute([]);
+    final record = paths
+        .getRecentPaths(connector.contacts.single.publicKeyHex)
+        .single;
+    expect(record.hopCount, 0);
+    expect(record.pathBytes, isEmpty);
+    expect(record.adaptiveEvidence?.success, 1);
+    expect(record.adaptiveEvidence?.failure, 0);
+    expect(connector.written.map((frame) => frame.first), [cmdGetContactByKey]);
   });
 
   test('a route the history holds keeps its failures and gains the '

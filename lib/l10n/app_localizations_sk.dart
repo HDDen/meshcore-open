@@ -1076,6 +1076,14 @@ class AppLocalizationsSk extends AppLocalizations {
       'Cyklicky prepínať medzi najlepšími trasami a režimom flood';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Automatické striedanie trás je zapnuté';
 

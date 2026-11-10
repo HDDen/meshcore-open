@@ -1024,6 +1024,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_autoRouteRotationSubtitle => '最適な経路とフラッドモードを切り替えます';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled => '自動経路切り替えが有効です';
 
   @override

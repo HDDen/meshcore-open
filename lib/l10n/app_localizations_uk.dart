@@ -1075,6 +1075,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чергувати найкращі шляхи та режим «через всю мережу» (flood)';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Авторотація маршрутизації увімкнена';
 

@@ -1972,6 +1972,18 @@ abstract class AppLocalizations {
   /// **'Cycle between best paths and flood mode'**
   String get appSettings_autoRouteRotationSubtitle;
 
+  /// No description provided for @appSettings_experimentalRouteRanking.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental route selection'**
+  String get appSettings_experimentalRouteRanking;
+
+  /// No description provided for @appSettings_experimentalRouteRankingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Use recent deliveries and nearby radio activity to choose a path for retries.'**
+  String get appSettings_experimentalRouteRankingHelp;
+
   /// No description provided for @appSettings_autoRouteRotationEnabled.
   ///
   /// In en, this message translates to:

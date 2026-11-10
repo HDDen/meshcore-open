@@ -296,6 +296,30 @@ void main() {
   }
 
   for (final locale in ['en', 'ru']) {
+    testWidgets('U34: experimental route ranking preserves weights ($locale)',
+        (tester) async {
+      await _withSettings(tester, locale, (settings, l10n) async {
+        final option = await _revealSetting(
+          tester,
+          l10n.appSettings_experimentalRouteRanking,
+        );
+        final tile = find.widgetWithText(
+          SwitchListTile,
+          l10n.appSettings_experimentalRouteRanking,
+        );
+        expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+        await tester.tap(option);
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+        expect(settings.settings.usesExperimentalRouteRanking, isTrue);
+        expect(settings.settings.maxRouteWeight, 8);
+        expect(settings.writes, [('settings', null)]);
+      }, initialSettings: AppSettings(
+        autoRouteRotationEnabled: true,
+        maxRouteWeight: 8,
+      ));
+    });
+
     testWidgets('U19b baseline: stock theme choices remain reachable ($locale)', (
       tester,
     ) async {

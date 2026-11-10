@@ -739,6 +739,9 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(autoRouteRotationEnabled: value));
   }
 
+  Future<void> setExperimentalRouteRanking(bool value) =>
+      updateSettings(settings.copyWith(experimentalRouteRanking: value));
+
   Future<void> setMaxRouteWeight(double value) async {
     await updateSettings(_settings.copyWith(maxRouteWeight: value));
   }

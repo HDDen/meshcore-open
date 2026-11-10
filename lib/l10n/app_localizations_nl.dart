@@ -1072,6 +1072,14 @@ class AppLocalizationsNl extends AppLocalizations {
       'Afwisselen tussen de beste paden en floodmodus';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Automatische route rotatie ingeschakeld';
 

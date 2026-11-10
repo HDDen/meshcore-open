@@ -1081,6 +1081,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Alterner entre les meilleurs chemins et le mode flood';
 
   @override
+  String get appSettings_experimentalRouteRanking =>
+      'Experimental route selection';
+
+  @override
+  String get appSettings_experimentalRouteRankingHelp =>
+      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+
+  @override
   String get appSettings_autoRouteRotationEnabled =>
       'Rotation automatique du routage activée';
 

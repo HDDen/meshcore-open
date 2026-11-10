@@ -112,6 +112,7 @@ import '../services/message_filter/channel_rule_verdict_writer.dart';
 import '../services/message_filter/message_filter_rules.dart';
 import '../services/message_filter/message_filter_service.dart';
 import '../services/message_retry_service.dart';
+import '../services/experimental_route_chooser.dart';
 import '../services/path_history_service.dart';
 import '../services/app_settings_service.dart';
 import '../services/background_service.dart';
@@ -519,6 +520,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   double? _selfLatitude;
   double? _selfLongitude;
   final List<DirectRepeater> _directRepeaters = List.empty(growable: true);
+  ExperimentalRouteHearing? _experimentalRouteHearing;
+
   // Signal activity of repeaters seen as the last hop of any received packet
   // (not just adverts). Used by the "all repeater activity" SNR indicator.
   final List<DirectRepeater> _activeRepeaters = List.empty(growable: true);
@@ -1413,6 +1416,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _nodeIdentityStore.setPublicKeyHex = publicKeyHex;
     _unreadStore.setPublicKeyHex = publicKeyHex;
     _pathHistoryService?.setDevicePublicKey(publicKeyHex);
+    _experimentalRouteHearing?.bindRadio(publicKeyHex);
     _settingsSectionsService?.setActiveDeviceKey(
       publicKeyHex.isEmpty ? null : publicKeyHex,
     );
@@ -4462,6 +4466,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _handleAppSettingsChanged() {
     _syncLinkImageDefaults();
     _syncPowerSavingSettings();
+    if (!_usesExperimentalRoutes) _experimentalRouteHearing = null;
     final settings = _appSettingsService?.settings;
     _syncBackgroundTcpService();
     final noRetransmissionWarningSeconds =
@@ -5301,6 +5306,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       successIncrement: settings?.routeWeightSuccessIncrement ?? 0.2,
       failureDecrement: settings?.routeWeightFailureDecrement ?? 0.2,
       maxWeight: settings?.maxRouteWeight ?? 5.0,
+      trackAdaptiveEvidence: settings?.usesExperimentalRouteRanking == true,
     );
 
     // Flood path attribution: when a flood delivery succeeds, credit the
@@ -5321,6 +5327,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           tripTimeMs: tripTimeMs,
           successIncrement: settings?.routeWeightSuccessIncrement ?? 0.2,
           maxWeight: settings?.maxRouteWeight ?? 5.0,
+          trackAdaptiveEvidence: settings?.usesExperimentalRouteRanking == true,
         );
       }
 
@@ -5331,6 +5338,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
   }
+
+  bool get _usesExperimentalRoutes =>
+      _appSettingsService?.settings.usesExperimentalRouteRanking == true;
 
   /// A route from the history for a direct message's retry, or null when the
   /// history has none. The history is loaded first: `getRecentPaths` answers
@@ -5344,14 +5354,36 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) async {
     final service = _pathHistoryService;
     if (service == null) return null;
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
     await service.ensureLoaded([contactPubKeyHex]);
+    if (nodeKey != selfPublicKeyHex || revision != _channelInboxRevision) {
+      return null;
+    }
     if (service.getRecentPaths(contactPubKeyHex).isEmpty) return null;
 
+    RouteContext? experimentalContext;
+    if (_usesExperimentalRoutes) {
+      final contact = getContactByPubKeyHex(contactPubKeyHex);
+      final radioPath = contact != null && contact.pathLength >= 0
+          ? contact.path
+          : null;
+      final hearing = _experimentalRouteHearing;
+      hearing?.bindRadio(nodeKey);
+      experimentalContext =
+          hearing?.contextFor(
+            contactPubKeyHex,
+            now: DateTime.now(),
+            radioPath: radioPath,
+          ) ??
+          RouteContext(radioPath: radioPath);
+    }
     final selection = service.selectPathForAttempt(
       contactPubKeyHex,
       attemptIndex: attemptIndex,
       maxRetries: maxRetries,
       recentSelections: recentSelections,
+      experimentalContext: experimentalContext,
     );
     if (selection.useFlood) return null;
     service.recordPathAttempt(contactPubKeyHex, selection);
@@ -12873,6 +12905,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _nodeIdentityStore.setPublicKeyHex = selfPublicKeyHex;
     _unreadStore.setPublicKeyHex = selfPublicKeyHex;
     _pathHistoryService?.setDevicePublicKey(selfPublicKeyHex);
+    _experimentalRouteHearing?.bindRadio(selfPublicKeyHex);
     _settingsSectionsService?.setActiveDeviceKey(selfPublicKeyHex);
     _channelMessageStore.beginLegacyIndexMigration();
     _channelSettingsStore.beginLegacyIndexMigration();
@@ -20285,6 +20318,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final pubkeyPrefix = path.isNotEmpty
         ? path.sublist(pathStartIndex)
         : contact.publicKey.sublist(0, publicKeyPrefixEnd);
+    if (_usesExperimentalRoutes &&
+        selfPublicKeyHex.isNotEmpty &&
+        path.length % hashWidth == 0) {
+      final hearing = _experimentalRouteHearing ??= ExperimentalRouteHearing();
+      hearing.bindRadio(selfPublicKeyHex);
+      hearing.observe(
+        path.isEmpty ? contact.publicKeyHex : pubKeyToHex(pubkeyPrefix),
+        path.isEmpty ? contact.publicKey : pubkeyPrefix,
+        DateTime.now(),
+      );
+    }
     final contactKeyHex = _resolveDirectRepeaterContactKeyHex(
       contact,
       pubkeyPrefix,
