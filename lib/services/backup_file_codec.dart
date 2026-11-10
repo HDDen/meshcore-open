@@ -50,8 +50,13 @@ class BackupFileCodec {
   Future<Map<String, Object?>> decode(
     String contents, {
     required String password,
+  }) async => decodeEnvelope(_decodeJson(contents), password: password);
+
+  /// Decodes a parsed document so callers can dispatch between file formats.
+  Future<Map<String, Object?>> decodeEnvelope(
+    Object? decoded, {
+    required String password,
   }) async {
-    final decoded = _decodeJson(contents);
     if (decoded is Map<String, Object?> &&
         decoded['format'] == _encryptedFormat) {
       return _decrypt(decoded, password);
