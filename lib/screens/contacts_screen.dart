@@ -139,6 +139,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   MeshCoreConnector? _scopeSyncConnector;
   List<ContactGroup> _groups = [];
   String _loadedGroupScopeKeyHex = '';
+  int _loadedGroupBackupRevision = 0;
+  int _groupLoadGeneration = 0;
   Timer? _searchDebounce;
   String _contactsDerivedKey = '';
   String _contactsSnapshotKey = '';
@@ -390,15 +392,24 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   Future<void> _loadGroups() async {
-    final selfPublicKeyHex = context.read<MeshCoreConnector>().selfPublicKeyHex;
+    final connector = context.read<MeshCoreConnector>();
+    final selfPublicKeyHex = connector.selfPublicKeyHex;
     if (selfPublicKeyHex.isEmpty) {
       return;
     }
+    final revision = connector.contactGroupsBackupRevision;
+    final generation = ++_groupLoadGeneration;
     _groupStore.setPublicKeyHex = selfPublicKeyHex;
     final groups = await _groupStore.loadGroups();
-    if (!mounted) return;
+    if (!mounted ||
+        generation != _groupLoadGeneration ||
+        connector.selfPublicKeyHex != selfPublicKeyHex ||
+        connector.contactGroupsBackupRevision != revision) {
+      return;
+    }
     setState(() {
       _loadedGroupScopeKeyHex = selfPublicKeyHex;
+      _loadedGroupBackupRevision = revision;
       _groups = groups;
       _ensureValidSelectedGroup();
     });
@@ -409,6 +420,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     if (selfPublicKeyHex.isEmpty) {
       return;
     }
+    _groupLoadGeneration++;
     _groupStore.setPublicKeyHex = selfPublicKeyHex;
     await _groupStore.saveGroups(_groups);
   }
@@ -420,7 +432,8 @@ class _ContactsScreenState extends State<ContactsScreen>
   void _syncGroupScopeIfNeeded(MeshCoreConnector connector) {
     final selfPublicKeyHex = connector.selfPublicKeyHex;
     if (selfPublicKeyHex.isEmpty ||
-        selfPublicKeyHex == _loadedGroupScopeKeyHex) {
+        (selfPublicKeyHex == _loadedGroupScopeKeyHex &&
+            connector.contactGroupsBackupRevision == _loadedGroupBackupRevision)) {
       return;
     }
     _loadGroups();

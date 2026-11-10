@@ -1,7 +1,9 @@
 import 'dart:convert';
 import '../models/contact_group.dart';
 import '../utils/app_logger.dart';
+import 'message_history_storage.dart';
 import 'node_state.dart';
+import 'prefs_manager.dart';
 
 /// Contact groups per node: a `node_state` row named `contact_groups`, or
 /// the preference key `contact_groups<node>` where there is no database.
@@ -30,6 +32,49 @@ class ContactGroupStore {
         preferenceKey: keyFor,
       );
     }
+    return _decodeGroups(jsonString);
+  }
+
+  Future<({String? value, List<ContactGroup> groups})> snapshotForBackup() async {
+    final value = await _readBackupValue();
+    return (value: value, groups: _decodeGroups(value, strict: true));
+  }
+
+  Future<String?> _readBackupValue() {
+    if (!NodeState.usesDatabase) return Future.value(_readBackupPreference());
+    return NodeState.read(
+      nodeKey: publicKeyHex,
+      name: _keyPrefix,
+      preferenceKey: keyFor,
+    );
+  }
+
+  String? _readBackupPreference() {
+    final prefs = PrefsManager.instance;
+    final value = prefs.getString(keyFor);
+    return value == null || value.isEmpty ? prefs.getString(_keyPrefix) : value;
+  }
+
+  Future<bool> restoreBackupGroups({
+    required String? expected,
+    required List<ContactGroup> groups,
+    required bool Function() stillCurrent,
+  }) async {
+    final value = jsonEncode(groups.map((group) => group.toJson()).toList());
+    if (NodeState.usesDatabase) {
+      return MessageHistoryStorage.instance.replaceNodeStateIfUnchanged(
+        nodeKey: publicKeyHex,
+        name: _keyPrefix,
+        expected: expected,
+        value: value,
+        stillCurrent: stillCurrent,
+      );
+    }
+    if (_readBackupPreference() != expected || !stillCurrent()) return false;
+    return PrefsManager.instance.setString(keyFor, value);
+  }
+
+  List<ContactGroup> _decodeGroups(String? jsonString, {bool strict = false}) {
     if (jsonString == null || jsonString.isEmpty) {
       return [];
     }
@@ -37,14 +82,18 @@ class ContactGroupStore {
     try {
       final decoded = jsonDecode(jsonString);
       if (decoded is List) {
+        if (strict && decoded.any((row) => row is! Map<String, dynamic>)) {
+          throw const FormatException('Invalid saved contact groups');
+        }
         return decoded
             .whereType<Map<String, dynamic>>()
             .map(ContactGroup.fromJson)
             .toList();
       }
     } catch (_) {
-      // Return empty list on parse errors.
+      if (strict) rethrow;
     }
+    if (strict) throw const FormatException('Invalid saved contact groups');
     return [];
   }
 

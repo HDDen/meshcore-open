@@ -4,6 +4,7 @@ import '../connector/meshcore_protocol.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
+import '../models/contact_group.dart';
 import 'backup_file_codec.dart';
 
 /// Immutable selected data from the active profile and, optionally, its node.
@@ -13,11 +14,13 @@ class BackupSnapshot {
     this.nodeName,
     Iterable<Channel>? channels,
     Iterable<Contact>? contacts,
+    Iterable<ContactGroup>? contactGroups,
     String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
     required DateTime createdAt,
   }) : sourcePublicKey =
-           channels == null && contacts == null && discoveredContactsJson == null
+           channels == null && contacts == null &&
+               contactGroups == null && discoveredContactsJson == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
@@ -26,6 +29,11 @@ class BackupSnapshot {
        _sections = {
          if (channels != null) 'channels': _channelRows(channels),
          if (contacts != null) 'contacts': _contactRows(contacts),
+         if (contactGroups != null)
+           'contactGroups': [
+             for (final group in contactGroups)
+               {'name': group.name, 'members': List<String>.of(group.memberKeys)},
+           ],
          if (discoveredContactsJson != null)
            'discoveredContacts': [
              for (final row in jsonDecode(discoveredContactsJson) as List<dynamic>)
@@ -95,6 +103,17 @@ class BackupSnapshot {
       return _encodeHistory(rows, password);
     }
     final scope = _sections.isEmpty ? '' : sourcePublicKey.substring(0, 10);
+    final preferences = <String, Map<String, Object?>>{};
+    for (final entry in _sections.entries) {
+      final (section, prefix) = switch (entry.key) {
+        'contactGroups' => ('contacts', 'contact_groups'),
+        'discoveredContacts' => ('discoveredContacts', 'discovered_contacts'),
+        final name => (name, name),
+      };
+      // An empty list is a JSON string for upstream preferences.
+      (preferences[section] ??= {})['$prefix$scope'] =
+          entry.value.isEmpty ? '[]' : entry.value;
+    }
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
@@ -105,14 +124,8 @@ class BackupSnapshot {
         if (_appSettings != null) AppSettingsBackup.section,
       ],
       'sections': {
-        for (final section in _sections.entries)
-          section.key: {
-            // An empty list is a JSON string for upstream preferences.
-            'preferences': {
-              '${section.key == 'discoveredContacts' ? 'discovered_contacts' : section.key}$scope':
-                  section.value.isEmpty ? '[]' : section.value,
-            },
-          },
+        for (final section in preferences.entries)
+          section.key: {'preferences': section.value},
         if (_appSettings case final settings?)
           AppSettingsBackup.section: {
             'preferences': {'app_settings': settings.values},

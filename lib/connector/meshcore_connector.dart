@@ -22,6 +22,7 @@ import '../models/channel_message.dart';
 import '../models/message_filter.dart';
 import '../models/companion_radio_stats.dart';
 import '../models/contact.dart';
+import '../models/contact_group.dart';
 import '../models/direct_echo_observation.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
@@ -52,6 +53,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_contact_restore.dart';
@@ -144,6 +146,7 @@ import '../storage/contact_location_estimate_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
+import '../storage/contact_group_store.dart';
 import '../storage/message_store.dart';
 import '../storage/message_history_storage.dart';
 import '../storage/node_identity_store.dart';
@@ -12792,6 +12795,60 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (isCurrent()) notifyListeners();
   }
 
+  bool get _canUseContactGroupsBackup =>
+      !_disposed &&
+      isConnected &&
+      !isOfflineMode &&
+      !isReviewMode &&
+      selfPublicKeyHex.length == pubKeySize * 2 &&
+      _persistedStateLoadedKey == selfPublicKeyHex;
+
+  Object get _contactGroupsBackupSession => (
+    this,
+    _channelInboxRevision,
+    selfPublicKeyHex,
+  );
+
+  int _contactGroupsBackupRevision = 0;
+  int get contactGroupsBackupRevision => _contactGroupsBackupRevision;
+
+  Future<BackupContactGroupsPreview?> previewBackupContactGroups(
+    List<ContactGroup> incoming,
+  ) async {
+    if (!_canUseContactGroupsBackup) return null;
+    final session = _contactGroupsBackupSession;
+    final store = ContactGroupStore()..setPublicKeyHex = selfPublicKeyHex;
+    final snapshot = await store.snapshotForBackup();
+    if (!_canUseContactGroupsBackup || _contactGroupsBackupSession != session) {
+      return null;
+    }
+    return BackupContactGroupsPreview(
+      session: session,
+      expectedValue: snapshot.value,
+      current: snapshot.groups,
+      incoming: incoming,
+    );
+  }
+
+  Future<int?> restoreBackupContactGroups(BackupContactGroupsPreview preview) async {
+    bool isCurrent() =>
+        _canUseContactGroupsBackup && _contactGroupsBackupSession == preview.session;
+    if (!isCurrent()) return null;
+    if (preview.added.isEmpty) return 0;
+    final store = ContactGroupStore()..setPublicKeyHex = selfPublicKeyHex;
+    final applied = await store.restoreBackupGroups(
+      expected: preview.expectedValue,
+      groups: preview.groups,
+      stillCurrent: isCurrent,
+    );
+    if (!applied) return null;
+    if (!_disposed) {
+      _contactGroupsBackupRevision++;
+      notifyListeners();
+    }
+    return preview.added.length;
+  }
+
   /// Captures the selected lists. Channels use the confirmed inventory and
   /// discovery uses the local profile. Only selecting contacts reads the radio.
   Future<BackupSnapshot?> snapshotNodeBackup({
@@ -12799,6 +12856,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required bool includeContacts,
     AppSettingsBackup? appSettings,
     bool includeDiscoveredContacts = false,
+    bool includeContactGroups = false,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
@@ -12808,19 +12866,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (!includeChannels ||
             (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
         (!includeContacts || _canPreviewContactBackup) &&
+        (!includeContactGroups || _canUseContactGroupsBackup) &&
         (!includeDiscoveredContacts ||
             (!_disposed && isConnected && !isOfflineMode && !isReviewMode &&
                 nodeKey.length == pubKeySize * 2 &&
                 _persistedStateLoadedKey == nodeKey)) &&
         selfPublicKeyHex == nodeKey &&
         _channelInboxRevision == revision;
-    if ((!includeChannels && !includeContacts && !includeDiscoveredContacts) ||
+    if ((!includeChannels && !includeContacts &&
+            !includeDiscoveredContacts && !includeContactGroups) ||
         !canSnapshot()) {
       return null;
     }
     final discoveredJson = includeDiscoveredContacts
         ? exportDiscoveredContactsJson()
         : null;
+    final contactGroups = includeContactGroups
+        ? (await (ContactGroupStore()..setPublicKeyHex = nodeKey).snapshotForBackup()).groups
+        : null;
+    if (!canSnapshot()) return null;
     final verified = includeContacts ? await _refreshBackupContacts() : null;
     if ((includeContacts && verified == null) || !canSnapshot()) return null;
 
@@ -12831,6 +12895,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       contacts: verified?.values.where((contact) => contact.publicKeyHex != nodeKey),
       appSettings: appSettings,
       discoveredContactsJson: discoveredJson,
+      contactGroups: contactGroups,
       createdAt: DateTime.now(),
     );
   }

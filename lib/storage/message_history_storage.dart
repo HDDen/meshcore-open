@@ -1332,6 +1332,23 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     );
   }
 
+  Future<bool> replaceNodeStateIfUnchanged({
+    required String nodeKey,
+    required String name,
+    required String? expected,
+    required String value,
+    required bool Function() stillCurrent,
+  }) => _persistenceWork.run(() {
+    _requireInitialized();
+    return _database!.replaceNodeStateIfUnchanged(
+      nodeKey: nodeKey.toLowerCase(),
+      name: name,
+      expected: expected,
+      value: value,
+      stillCurrent: stillCurrent,
+    );
+  });
+
   Future<void> deleteNodeState(String nodeKey, String name) async {
     _requireInitialized();
     if (kIsWeb) return;

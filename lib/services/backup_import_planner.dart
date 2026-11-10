@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
+import '../models/contact_group.dart';
 import 'backup_file_codec.dart';
 
 /// Supported data recovered from a backup before choosing a restore destination.
@@ -19,6 +21,7 @@ class BackupImportPlan {
     required this.appSettings,
     this.messageHistory,
     this.discoveredContactsJson,
+    this.contactGroups,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -31,6 +34,7 @@ class BackupImportPlan {
   final AppSettingsBackup? appSettings;
   final BackupMessageHistory? messageHistory;
   final String? discoveredContactsJson;
+  final List<ContactGroup>? contactGroups;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -54,6 +58,7 @@ class BackupImportPlanner {
     bool appSettingsOnly = false,
     bool messageHistoryOnly = false,
     bool discoveredContactsOnly = false,
+    bool contactGroupsOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -67,6 +72,23 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (contactGroupsOnly) {
+      final rows = official ? null : _upstreamList(
+        payload,
+        'contactGroups',
+        publicKey,
+        sectionName: 'contacts',
+        preferencePrefix: 'contact_groups',
+      );
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        contactGroups: rows == null ? null : readBackupContactGroups(rows),
+      );
+    }
     if (discoveredContactsOnly) {
       final discovered = official ? null : _upstreamList(
         payload,
@@ -181,10 +203,11 @@ class BackupImportPlanner {
     Map<String, Object?> payload,
     String name,
     String? publicKey, {
+    String? sectionName,
     String? preferencePrefix,
   }) {
     if (!_readList(payload['items']).contains(name)) return null;
-    final section = _readObject(payload['sections'])[name];
+    final section = _readObject(payload['sections'])[sectionName ?? name];
     if (section == null) return null;
     final rawPreferences = _readObject(section)['preferences'];
     if (rawPreferences == null) return null;

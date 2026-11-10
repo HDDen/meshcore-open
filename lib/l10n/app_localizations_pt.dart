@@ -299,6 +299,46 @@ class AppLocalizationsPt extends AppLocalizations {
       'Could not restore discovered nodes.';
 
   @override
+  String get backupContactGroups_label => 'Contact groups';
+
+  @override
+  String get backupContactGroups_title => 'Restore contact groups';
+
+  @override
+  String get backupContactGroups_intro =>
+      'Choose a MeshCore Open backup with contact groups. New groups will be added to the connected node’s group list.';
+
+  @override
+  String get backupContactGroups_empty =>
+      'This backup contains no contact groups.';
+
+  @override
+  String get backupContactGroups_waitForNode =>
+      'Connect to the target node and refresh the preview.';
+
+  @override
+  String backupContactGroups_summary(int count, int skipped) {
+    return 'To add: $count. Groups with matching names skipped: $skipped.';
+  }
+
+  @override
+  String backupContactGroups_confirm(String node, int count) {
+    return 'Add groups to the profile for “$node”? Groups to add: $count.';
+  }
+
+  @override
+  String backupContactGroups_applied(int count) {
+    return 'Groups added: $count.';
+  }
+
+  @override
+  String get backupContactGroups_changed =>
+      'The node or its group list changed. Refresh the preview.';
+
+  @override
+  String get backupContactGroups_failed => 'Could not restore contact groups.';
+
+  @override
   String get backupAppSettings_title => 'Restore app settings';
 
   @override

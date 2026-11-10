@@ -300,6 +300,46 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить найденные узлы.';
 
   @override
+  String get backupContactGroups_label => 'Группы контактов';
+
+  @override
+  String get backupContactGroups_title => 'Восстановление групп контактов';
+
+  @override
+  String get backupContactGroups_intro =>
+      'Выберите копию MeshCore Open с группами контактов. Новые группы будут добавлены в список групп подключённой ноды.';
+
+  @override
+  String get backupContactGroups_empty => 'В копии нет групп контактов.';
+
+  @override
+  String get backupContactGroups_waitForNode =>
+      'Подключитесь к нужной ноде и обновите предпросмотр.';
+
+  @override
+  String backupContactGroups_summary(int count, int skipped) {
+    return 'К добавлению: $count. Пропущено групп с совпадающим именем: $skipped.';
+  }
+
+  @override
+  String backupContactGroups_confirm(String node, int count) {
+    return 'Добавить группы в профиль ноды «$node»? К добавлению: $count.';
+  }
+
+  @override
+  String backupContactGroups_applied(int count) {
+    return 'Добавлено групп: $count.';
+  }
+
+  @override
+  String get backupContactGroups_changed =>
+      'Нода или список групп изменились. Обновите предпросмотр.';
+
+  @override
+  String get backupContactGroups_failed =>
+      'Не удалось восстановить группы контактов.';
+
+  @override
   String get backupAppSettings_title => 'Восстановление настроек приложения';
 
   @override

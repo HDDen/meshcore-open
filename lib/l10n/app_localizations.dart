@@ -567,6 +567,66 @@ abstract class AppLocalizations {
   /// **'Could not restore discovered nodes.'**
   String get backupDiscoveredContacts_failed;
 
+  /// No description provided for @backupContactGroups_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact groups'**
+  String get backupContactGroups_label;
+
+  /// No description provided for @backupContactGroups_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore contact groups'**
+  String get backupContactGroups_title;
+
+  /// No description provided for @backupContactGroups_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup with contact groups. New groups will be added to the connected node’s group list.'**
+  String get backupContactGroups_intro;
+
+  /// No description provided for @backupContactGroups_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no contact groups.'**
+  String get backupContactGroups_empty;
+
+  /// No description provided for @backupContactGroups_waitForNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the target node and refresh the preview.'**
+  String get backupContactGroups_waitForNode;
+
+  /// No description provided for @backupContactGroups_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'To add: {count}. Groups with matching names skipped: {skipped}.'**
+  String backupContactGroups_summary(int count, int skipped);
+
+  /// No description provided for @backupContactGroups_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add groups to the profile for “{node}”? Groups to add: {count}.'**
+  String backupContactGroups_confirm(String node, int count);
+
+  /// No description provided for @backupContactGroups_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups added: {count}.'**
+  String backupContactGroups_applied(int count);
+
+  /// No description provided for @backupContactGroups_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or its group list changed. Refresh the preview.'**
+  String get backupContactGroups_changed;
+
+  /// No description provided for @backupContactGroups_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore contact groups.'**
+  String get backupContactGroups_failed;
+
   /// No description provided for @backupAppSettings_title.
   ///
   /// In en, this message translates to:

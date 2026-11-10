@@ -11,6 +11,7 @@ import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/contact_group.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/review_mode/review_frames.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
@@ -19,6 +20,7 @@ import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
+import 'package:meshcore_open/storage/contact_group_store.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/message_store.dart';
@@ -346,6 +348,49 @@ void main() {
       includeDirect: false,
       includeChannels: true,
     ), isNull);
+  });
+
+  test('contact group backup preserves local groups and rejects a stale preview',
+      () async {
+    final groups = ContactGroupStore()..setPublicKeyHex = _node;
+    final existing = ContactGroup(name: 'Local group', memberKeys: ['a2' * 32]);
+    await groups.saveGroups([existing]);
+    final reads = radio.contactReads;
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: false,
+      includeContactGroups: true,
+    ))!;
+    final plan = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      contactGroupsOnly: true,
+    );
+    expect(plan.contactGroups!.single.memberKeys, existing.memberKeys);
+
+    final incoming = [
+      ContactGroup(name: 'local GROUP', memberKeys: ['a3' * 32]),
+      ContactGroup(name: 'Imported group', memberKeys: ['a4' * 32]),
+    ];
+    final stale = (await radio.connector.previewBackupContactGroups(incoming))!;
+    final edited = ContactGroup(name: 'Just added', memberKeys: ['a5' * 32]);
+    await groups.saveGroups([existing, edited]);
+    expect(await radio.connector.restoreBackupContactGroups(stale), isNull);
+    expect(radio.connector.contactGroupsBackupRevision, 0);
+    final preview = (await radio.connector.previewBackupContactGroups(incoming))!;
+    expect(preview.skipped, 1);
+    expect(await radio.connector.restoreBackupContactGroups(preview), 1);
+    expect(radio.connector.contactGroupsBackupRevision, 1);
+    final saved = await groups.loadGroups();
+    expect(saved.map((group) => group.name), [
+      'Local group', 'Just added', 'Imported group',
+    ]);
+    expect(saved.first.memberKeys, existing.memberKeys);
+    expect(saved.last.memberKeys, ['a4' * 32]);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    expect(radio.contactReads, reads);
+    expect(radio.contactWrites, isEmpty);
   });
 
   test('discovery backup merges into the active profile without radio commands',

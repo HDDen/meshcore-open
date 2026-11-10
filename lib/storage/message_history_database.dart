@@ -1406,6 +1406,19 @@ ON CONFLICT(node_key, name) DO UPDATE SET value = excluded.value
     );
   }
 
+  Future<bool> replaceNodeStateIfUnchanged({
+    required String nodeKey,
+    required String name,
+    required String? expected,
+    required String value,
+    required bool Function() stillCurrent,
+  }) => transaction(() async {
+    final previous = await readNodeState(nodeKey, name);
+    if (previous != expected || !stillCurrent()) return false;
+    await writeNodeState(nodeKey: nodeKey, name: name, value: value);
+    return true;
+  });
+
   Future<void> deleteNodeState(String nodeKey, String name) async {
     await customUpdate(
       'DELETE FROM node_state WHERE node_key = ? AND name = ?',

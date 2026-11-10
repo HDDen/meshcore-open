@@ -67,6 +67,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
     required bool includeContacts,
     AppSettingsBackup? appSettings,
     bool includeDiscoveredContacts = false,
+    bool includeContactGroups = false,
   }) async => ready
       ? BackupSnapshot(
           sourcePublicKey: _key,

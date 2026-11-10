@@ -3101,6 +3101,11 @@ store. It reuses the discovery import decoder, strips foreign routing
 and membership state, and previews the entries that fit without
 evicting any local nodes. The preview expires when the lists or
 connection change. Discovery-only export reads the local list.
+Contact groups share the v1 contacts section under the scoped
+`contact_groups` preference key. The restore route appends missing
+group names to the target node's local group list and preserves full
+member keys. A compare-and-set in the SQLite transaction verifies the
+preview, and the open contacts screen reloads after a successful import.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to
