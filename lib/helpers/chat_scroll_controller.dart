@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart' show ScrollDirection;
 class ChatScrollController extends ScrollController {
   final ValueNotifier<bool> showJumpToBottom = ValueNotifier(false);
   VoidCallback? onScrollNearTop;
+  bool _capturing = false;
 
   static const _bottomThreshold = 100.0;
   static const _topThreshold = 50.0;
@@ -12,8 +13,12 @@ class ChatScrollController extends ScrollController {
     addListener(_handleScroll);
   }
 
+  void beginScrollCapture() => _capturing = true;
+
+  void endScrollCapture() => _capturing = false;
+
   void _handleScroll() {
-    if (!hasClients) return;
+    if (_capturing || !hasClients) return;
     final pos = position;
 
     // With reverse: true, position 0 is bottom, maxScrollExtent is top
@@ -112,7 +117,8 @@ class ChatScrollController extends ScrollController {
     // activity, which ends the drag under their finger or their fling, and
     // at the bottom exactly Flutter turns it into a jumpTo, which does the
     // same.
-    if (!showJumpToBottom.value &&
+    if (!_capturing &&
+        !showJumpToBottom.value &&
         hasClients &&
         position.maxScrollExtent > 0 &&
         !_readerIsScrolling) {

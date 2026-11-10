@@ -2,7 +2,10 @@ package com.meshcore.mcoadvanced
 
 import android.content.Context
 import android.net.wifi.WifiManager
+import android.os.Build
+import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterView
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
@@ -50,6 +53,16 @@ class MainActivity : FlutterActivity() {
     private val notificationPermissionFunctions by lazy {
         NotificationPermissionFunctions(this)
     }
+    private var scrollCapture: FlutterScrollCapture? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val engine = flutterEngine ?: return
+        val view = findViewById<FlutterView>(FLUTTER_VIEW_ID) ?: return
+        scrollCapture = FlutterScrollCapture(view, engine.dartExecutor.binaryMessenger)
+            .also { it.attach() }
+    }
 
     override fun provideFlutterEngine(context: Context): FlutterEngine? {
         return FlutterEngineCache.getInstance().get(ENGINE_CACHE_ID)
@@ -95,6 +108,14 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun shouldDestroyEngineWithHost(): Boolean = !retainEngine
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            scrollCapture?.detach()
+            scrollCapture = null
+        }
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
 
     override fun onDestroy() {
         if (!retainEngine) {

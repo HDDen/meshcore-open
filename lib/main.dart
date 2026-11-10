@@ -52,6 +52,7 @@ import 'package:mco_service/mco_service.dart';
 import 'services/ui_view_state_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'services/wardrive_service.dart';
+import 'services/scroll_capture_service.dart';
 import 'storage/data_root.dart';
 import 'storage/prefs_manager.dart';
 import 'storage/message_history_storage.dart';
@@ -157,6 +158,7 @@ Future<void> _startApplication() async {
   // this mode before Android 10, where the old layout remains.
   if (PlatformInfo.isAndroid) {
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    ScrollCaptureService.initialize();
   }
 
   // Initialize SharedPreferences cache
