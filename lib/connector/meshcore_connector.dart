@@ -51,6 +51,7 @@ import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
+import '../helpers/backup_channel_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/channel_deletion_snapshot.dart';
 import '../helpers/contact_history_candidates.dart';
@@ -692,9 +693,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _channelSyncRetries = 0;
   int _nextChannelIndexToRequest = 0;
   int _totalChannelsToRequest = 0;
+  int? _loadedChannelCapacity;
+  ({
+    Completer<bool> done,
+    List<({Channel previous, Channel target})> renames,
+  })? _backupChannelSync;
+  bool _restoringBackupChannels = false;
+  int _channelEditsInProgress = 0;
   List<Channel> _previousChannelsCache = [];
-  // Slots whose GET_CHANNEL timed out in the last sync with no cached copy:
-  // their contents are unknown, so UI must not treat them as free.
+  // Slots whose GET_CHANNEL timed out in the last sync, with or without cache.
+  // Their contents are unknown, so UI must not treat them as free.
   final Set<int> _unconfirmedChannelSlots = {};
   late final DeferredChannelInbox _deferredChannelInbox =
       DeferredChannelInbox(MessageHistoryStorage.instance);
@@ -7424,6 +7432,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    _loadedChannelCapacity = null;
+    _finishBackupChannelSync(false);
     _pendingRawAdvert = null;
     _pendingChannelBindingRequests.clear();
     _hasLoadedCachedChannelStorage = false;
@@ -7846,14 +7856,30 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? channelSendQueueId,
     bool expectsGenericAck = false,
     bool waitForGenericAck = false,
+  }) => _dispatchFrame(
+    data,
+    channelSendQueueId: channelSendQueueId,
+    expectsGenericAck: expectsGenericAck,
+    waitForGenericAck: waitForGenericAck,
+  );
+
+  Future<void> _dispatchFrame(
+    Uint8List data, {
+    String? channelSendQueueId,
+    bool expectsGenericAck = false,
+    bool waitForGenericAck = false,
+    void Function()? beforeSend,
   }) {
     final service = _settingsSectionsService;
-    Future<void> sendDirect() => _sendFrameDirect(
-      data,
-      channelSendQueueId: channelSendQueueId,
-      expectsGenericAck: expectsGenericAck,
-      waitForGenericAck: waitForGenericAck,
-    );
+    Future<void> sendDirect() {
+      beforeSend?.call();
+      return _sendFrameDirect(
+        data,
+        channelSendQueueId: channelSendQueueId,
+        expectsGenericAck: expectsGenericAck,
+        waitForGenericAck: waitForGenericAck,
+      );
+    }
     if (service == null) return sendDirect();
     return _packetBackgroundWork.dispatch(() => service.mcoX1(data, sendDirect));
   }
@@ -12040,6 +12066,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _isLoadingChannels = true;
     _isSyncingChannels = true;
     _hasLoadedChannels = false;
+    _loadedChannelCapacity = null;
     _previousChannelsCache = List<Channel>.from(_channels);
     _channels.clear();
     _unconfirmedChannelSlots.clear();
@@ -12116,20 +12143,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         '[ChannelSync] Max retries reached for channel $channelIndex, attempting cache restore',
       );
 
+      // A cached row may still be shown, but it cannot authorize a write.
+      _unconfirmedChannelSlots.add(channelIndex);
       // Try to restore this channel from cache
-      try {
-        final cachedChannel = _previousChannelsCache.firstWhere(
-          (c) => c.index == channelIndex,
+      final cachedChannel = _previousChannelsCache
+          .where((channel) => channel.index == channelIndex)
+          .firstOrNull;
+      if (cachedChannel != null && !cachedChannel.isEmpty) {
+        _channels.add(cachedChannel);
+        debugPrint(
+          '[ChannelSync] Restored channel $channelIndex (${cachedChannel.name}) from cache',
         );
-        if (!cachedChannel.isEmpty) {
-          _channels.add(cachedChannel);
-          debugPrint(
-            '[ChannelSync] Restored channel $channelIndex (${cachedChannel.name}) from cache',
-          );
-        }
-      } catch (e) {
-        // No cached copy: the slot's contents are unknown, not empty.
-        _unconfirmedChannelSlots.add(channelIndex);
       }
 
       // Move to next channel
@@ -12168,28 +12192,44 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// a channel moved to another slot is nothing. A slot whose channel gained
   /// names is read again, since its settings and history were loaded under
   /// its own name alone, and its shared copy is fetched anew.
-  Future<void> _reconcileChannelIdentities() async {
+  Future<void> _reconcileChannelIdentities(
+    bool Function() isCurrent,
+    List<({Channel previous, Channel target})> backupRenames,
+  ) async {
     // The first sync of a session has no list before it in memory; the one
     // the last session saved stands in, so an edit made elsewhere while the
     // app was away is seen as well.
-    final links = ChannelIdentityReconciler.diff(
-      _previousChannelsCache.isNotEmpty ? _previousChannelsCache : _cachedChannels,
-      _channels,
-    );
+    final links = {
+      ...ChannelIdentityReconciler.diff(
+        _previousChannelsCache.isNotEmpty
+            ? _previousChannelsCache
+            : _cachedChannels,
+        _channels,
+      ),
+      // An old name can still exist in a second slot with the same PSK.
+      // The set diff misses that rename, so use the verified slot as well.
+      for (final rename in backupRenames)
+        if (_hasSyncedBackupChannel(rename.target))
+          ?ChannelIdentityReconciler.linkFor(rename.previous, rename.target),
+    };
     if (links.isEmpty) return;
     final changed = <ChannelIdentity>{};
     for (final link in links) {
+      if (!isCurrent()) return;
       if (await ChannelIdentities.instance.link(link.from, link.to)) {
         changed.add(link.to);
       }
     }
     if (changed.isEmpty) return;
     for (final channel in List<Channel>.of(_channels)) {
+      if (!isCurrent()) return;
       final identity = ChannelIdentity.of(channel);
       if (identity == null || !changed.contains(identity)) continue;
       await _loadChannelSettingsForIndex(channel.index);
+      if (!isCurrent()) return;
       _channelMessages.remove(channel.index);
       await _loadChannelMessages(channel.index, notify: false);
+      if (!isCurrent()) return;
       _sharedChannelSecondaryMessages.remove(channel.index);
       _sharedChannelSecondaryIdentityKeys.remove(channel.index);
     }
@@ -12213,10 +12253,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     };
   }
 
-  Future<void> _completeChannelSync() =>
-      _channelSyncWork.run(_completeChannelSyncCore);
+  Future<void> _completeChannelSync() => _channelSyncWork.run(() async {
+    final waiter = _backupChannelSync;
+    final revision = _channelInboxRevision;
+    final phase = _channelSyncWork.current;
+    bool isCurrent() =>
+        !_disposed &&
+        revision == _channelInboxRevision &&
+        identical(phase, _channelSyncWork.current);
+    try {
+      await _completeChannelSyncCore(isCurrent, waiter?.renames ?? const []);
+    } catch (_) {
+      if (waiter == null) rethrow;
+      if (isCurrent()) _cleanupChannelSync(completed: false);
+    }
+  });
 
-  Future<void> _completeChannelSyncCore() async {
+  Future<void> _completeChannelSyncCore(
+    bool Function() isCurrent,
+    List<({Channel previous, Channel target})> backupRenames,
+  ) async {
     _channelSyncTimeout?.cancel();
 
     if (_pendingChannelSyncRestart) {
@@ -12228,17 +12284,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       '[ChannelSync] Sync complete: received ${_channels.length}/$_totalChannelsToRequest channels',
     );
 
-    await _reconcileChannelIdentities();
+    await _reconcileChannelIdentities(isCurrent, backupRenames);
+    if (!isCurrent()) return;
     // Images written before they carried a channel ID take the ID of the
     // channel their slot holds now, once; the store is app-wide, so the
     // first node synced claims them.
     await _stampImageChannelIds?.call({
       for (final channel in _channels) channel.index: ?channel.storageId,
     });
+    if (!isCurrent()) return;
 
     // Cache channels for offline use
     _cachedChannels = List<Channel>.from(_channels);
     await _channelStore.saveChannels(_channels);
+    if (!isCurrent()) return;
     _recalculateCachedChannelsUnreadTotal();
 
     _cleanupChannelSync(completed: true);
@@ -12251,6 +12310,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _cleanupChannelSync({required bool completed}) {
     final channelWork = _channelSyncWork.current;
+    _loadedChannelCapacity = completed ? _totalChannelsToRequest : null;
     _isSyncingChannels = false;
     _channelSyncInFlight = false;
     _isLoadingChannels = false;
@@ -12282,6 +12342,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       notifyListeners();
     }
     _channelSyncWork.finish(channelWork);
+    _finishBackupChannelSync(completed);
   }
 
   Future<void> _restartPendingChannelSync() =>
@@ -12338,7 +12399,178 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> setChannel(int index, String name, Uint8List psk) async {
+  bool get _hasBackupChannelInventory =>
+      !_disposed &&
+      isConnected &&
+      !isOfflineMode &&
+      !isReviewMode &&
+      selfPublicKeyHex.length == pubKeySize * 2 &&
+      _hasCompletedSelfInfoHandshake &&
+      _persistedStateLoadedKey == selfPublicKeyHex &&
+      _hasLoadedChannels &&
+      !_isSyncingChannels &&
+      _loadedChannelCapacity != null &&
+      _unconfirmedChannelSlots.isEmpty;
+
+  /// Prepares the exact edits to show before asking the user to confirm.
+  BackupChannelRestorePreview? previewBackupChannelRestore(
+    Iterable<Channel> source,
+  ) {
+    if (!_hasBackupChannelInventory ||
+        _restoringBackupChannels ||
+        _channelEditsInProgress != 0) {
+      return null;
+    }
+    return BackupChannelRestorePreview(
+      nodeKey: selfPublicKeyHex,
+      session: (this, _channelInboxRevision),
+      capacity: _loadedChannelCapacity!,
+      current: _channels,
+      source: source,
+    );
+  }
+
+  /// Applies only additions and same-PSK renames from a confirmed preview.
+  Future<BackupChannelRestoreResult> restoreBackupChannels(
+    BackupChannelRestorePreview preview,
+  ) async {
+    BackupChannelRestoreResult destinationChanged([int confirmed = 0]) => (
+      confirmed: confirmed,
+      status: BackupChannelRestoreStatus.destinationChanged,
+    );
+    bool sameSession() =>
+        !_disposed &&
+        isConnected &&
+        !isOfflineMode &&
+        !isReviewMode &&
+        selfPublicKeyHex == preview.nodeKey &&
+        preview.session == (this, _channelInboxRevision);
+    bool sameInventory() =>
+        sameSession() &&
+        _hasBackupChannelInventory &&
+        preview.matchesInventory(_channels, _loadedChannelCapacity);
+
+    if (_restoringBackupChannels ||
+        _channelEditsInProgress != 0 ||
+        !sameInventory()) {
+      return destinationChanged();
+    }
+    final targets = [
+      for (final decision in preview.decisions)
+        if (decision.action == BackupChannelAction.add ||
+            decision.action == BackupChannelAction.rename)
+          decision.destination!,
+    ];
+    if (targets.isEmpty) {
+      return (confirmed: 0, status: BackupChannelRestoreStatus.completed);
+    }
+
+    _restoringBackupChannels = true;
+    try {
+      final refreshed = await _refreshBackupChannels();
+      if (!sameSession()) return destinationChanged();
+      if (!refreshed || !_hasBackupChannelInventory) {
+        return (confirmed: 0, status: BackupChannelRestoreStatus.syncFailed);
+      }
+      if (!sameInventory()) return destinationChanged();
+      var confirmed = 0;
+      var status = BackupChannelRestoreStatus.completed;
+      final renames = <({Channel previous, Channel target})>[];
+      for (final target in targets) {
+        final previous = _channels
+            .where((channel) => channel.index == target.index)
+            .firstOrNull;
+        var dispatched = false;
+        try {
+          await _dispatchFrame(
+            buildSetChannelFrame(target.index, target.name, target.psk),
+            waitForGenericAck: true,
+            beforeSend: () {
+              if (!sameInventory()) {
+                throw StateError('Backup channel inventory changed');
+              }
+              dispatched = true;
+            },
+          );
+        } catch (_) {
+          status = sameInventory()
+              ? BackupChannelRestoreStatus.writeUnconfirmed
+              : BackupChannelRestoreStatus.destinationChanged;
+          break;
+        }
+        if (!dispatched) {
+          status = BackupChannelRestoreStatus.writeUnconfirmed;
+          break;
+        }
+        confirmed++;
+        if (!sameSession()) return destinationChanged(confirmed);
+        if (previous != null) {
+          renames.add((previous: previous, target: target));
+        }
+      }
+
+      if (!sameSession()) return destinationChanged(confirmed);
+      final synced = await _refreshBackupChannels(renames: renames);
+      if (!sameSession()) return destinationChanged(confirmed);
+      if (status == BackupChannelRestoreStatus.completed &&
+          (!synced || targets.any((target) => !_hasSyncedBackupChannel(target)))) {
+        status = BackupChannelRestoreStatus.syncFailed;
+      }
+      return (confirmed: confirmed, status: status);
+    } finally {
+      _restoringBackupChannels = false;
+    }
+  }
+
+  bool _hasSyncedBackupChannel(Channel target) =>
+      !_unconfirmedChannelSlots.contains(target.index) &&
+      _channels.any(
+        (channel) =>
+            channel.index == target.index &&
+            channel.name == target.name &&
+            channel.pskHex == target.pskHex,
+      );
+
+  Future<bool> _refreshBackupChannels({
+    List<({Channel previous, Channel target})> renames = const [],
+  }) async {
+    final waiter = Completer<bool>();
+    _backupChannelSync = (done: waiter, renames: renames);
+    try {
+      return await getChannels(force: true)
+          .then((_) => waiter.future)
+          .timeout(const Duration(seconds: 30), onTimeout: () => false);
+    } catch (_) {
+      return false;
+    } finally {
+      if (identical(_backupChannelSync?.done, waiter)) {
+        _backupChannelSync = null;
+      }
+    }
+  }
+
+  void _finishBackupChannelSync(bool completed) {
+    final waiter = _backupChannelSync;
+    _backupChannelSync = null;
+    waiter?.done.complete(completed);
+  }
+
+  Future<void> _runChannelEdit(Future<void> Function() edit) async {
+    if (_restoringBackupChannels) {
+      throw StateError('Backup channel restore in progress');
+    }
+    _channelEditsInProgress++;
+    try {
+      await edit();
+    } finally {
+      _channelEditsInProgress--;
+    }
+  }
+
+  Future<void> setChannel(int index, String name, Uint8List psk) =>
+      _runChannelEdit(() => _setChannel(index, name, psk));
+
+  Future<void> _setChannel(int index, String name, Uint8List psk) async {
     if (!isConnected) return;
 
     final previous = _findChannelByIndex(index);
@@ -12362,7 +12594,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// node's scope as well (the choice the deletion dialog offers while the
   /// shared channel history is on). A slot emptied by another app clears
   /// nothing: the history comes back when the channel is added again.
-  Future<void> deleteChannel(int index, {bool allNodes = false}) async {
+  Future<void> deleteChannel(int index, {bool allNodes = false}) =>
+      _runChannelEdit(() => _deleteChannel(index, allNodes: allNodes));
+
+  Future<void> _deleteChannel(int index, {required bool allNodes}) async {
     if (!isConnected) return;
 
     final channel = _findChannelByIndex(index);
@@ -12454,9 +12689,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     _bleDebugLogService?.logFrame(
-      incomingFrame,
+      _restoringBackupChannels
+          ? Uint8List.fromList([incomingFrame[0]])
+          : incomingFrame,
       outgoing: false,
-      note: 'raw FR01 fragment len=${incomingFrame.length}',
+      note: _restoringBackupChannels
+          ? 'FR01 payload withheld during channel restore'
+          : 'raw FR01 fragment len=${incomingFrame.length}',
     );
     final result = _southFrameFragmentReassembler.ingestDetailed(incomingFrame);
     final acceptedFragment = result.acceptedFragment;
@@ -18221,11 +18460,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _channelSyncInFlight = false;
         _channelSyncRetries = 0; // Reset retry counter on success
 
-        // Only add non-empty channels
-        if (!channel.isEmpty) {
-          await _applySyncedChannel(channel);
-        } else {
-          await _applySyncedChannel(channel);
+        final revision = _channelInboxRevision;
+        final phase = _channelSyncWork.current;
+        await _applySyncedChannel(channel);
+        if (_disposed ||
+            revision != _channelInboxRevision ||
+            !identical(phase, _channelSyncWork.current)) {
+          return;
         }
 
         // Move to next channel
@@ -19926,6 +20167,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearDirectEchoKey('dispose');
     _channelKeyHashCache.clear();
     _disposed = true;
+    _finishBackupChannelSync(false);
     _cancelChannelHopControls();
     _selfInfoWork.finishCurrent();
     MessageHistoryStorage.instance.detachBackgroundWorkTracker(_backgroundWork);

@@ -76,6 +76,12 @@ class BleDebugLogService extends ChangeNotifier {
       frame = Uint8List.fromList([code]);
       note = 'payload withheld';
     }
+    if ((outgoing && code == cmdSetChannel) ||
+        (!outgoing && code == respCodeChannelInfo)) {
+      // Both frames carry the 16-byte channel PSK after the name.
+      if (frame.length > 34) frame = Uint8List.sublistView(frame, 0, 34);
+      note = 'channel key withheld';
+    }
     if (code == cmdRunCliCommand || (!outgoing && code == respCodeCliReply)) {
       // Консоль хранит текст по выбору владельца; debug export — отдельный канал.
       frame = Uint8List.fromList([code]);

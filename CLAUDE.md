@@ -3085,6 +3085,13 @@ its key vanished altogether, to the one that appeared with its name; both
 changed is a new channel, a slot move is nothing. A slot whose channel gained
 names is read again at the end of the sync.
 
+Backup channel restore takes a preview tied to the current radio session.
+It checks the preview against a fresh channel read before issuing any
+`CMD_SET_CHANNEL` and waits for each command's ACK before sending the next.
+After the writes, channel sync verifies the reported slots and saves the
+SQLite cache for that node. A confirmed rename links the old and new names
+when readback agrees, even if another slot still holds the old name.
+
 The reads follow the group. `channelStorageKeys` gives the key of every name
 of the channel, its own first, and the message store reads over them
 (`storage_key IN`, `MessageHistoryStorage.getLatestStringForKeys` and its

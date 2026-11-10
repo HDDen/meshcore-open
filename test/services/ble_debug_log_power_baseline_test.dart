@@ -20,6 +20,25 @@ Uint8List _rawFrame(int sequence) => Uint8List.fromList([
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('channel writes and reads log the slot without the PSK', () {
+    final log = _log();
+    final write = buildSetChannelFrame(
+      3,
+      'Private',
+      Uint8List.fromList(List.filled(16, 0xf1)),
+    );
+    final read = Uint8List.fromList(write)..[0] = respCodeChannelInfo;
+
+    log.logFrame(write, outgoing: true);
+    log.logFrame(read, outgoing: false);
+
+    expect(log.entries.first.payload, write.sublist(0, 34));
+    expect(log.entries.last.payload, read.sublist(0, 34));
+    for (final entry in log.entries) {
+      expect(entry.description, contains('channel key withheld'));
+    }
+  });
+
   test('baseline: direction labels notes and unknown codes remain readable', () {
     final log = _log();
     log.logFrame(Uint8List.fromList([cmdAppStart]), outgoing: true, note: 'sample');

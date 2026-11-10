@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/channel.dart';
 
 enum BackupChannelAction {
@@ -15,6 +17,79 @@ typedef BackupChannelDecision = ({
   BackupChannelAction action,
   Channel? destination,
 });
+
+enum BackupChannelRestoreStatus {
+  completed,
+  destinationChanged,
+  writeUnconfirmed,
+  syncFailed,
+}
+
+typedef BackupChannelRestoreResult = ({
+  int confirmed,
+  BackupChannelRestoreStatus status,
+});
+
+/// The inventory and edits the user saw before confirming a restore.
+class BackupChannelRestorePreview {
+  factory BackupChannelRestorePreview({
+    required String nodeKey,
+    required Object session,
+    required int capacity,
+    required Iterable<Channel> current,
+    required Iterable<Channel> source,
+  }) {
+    final snapshot = current.map(_copyChannel).toList();
+    return BackupChannelRestorePreview._(
+      nodeKey,
+      session,
+      capacity,
+      _channelInventory(snapshot),
+      resolveBackupChannels(
+        source.map(_copyChannel),
+        destination: snapshot,
+        capacity: capacity,
+        unconfirmedSlots: const {},
+      ),
+    );
+  }
+
+  BackupChannelRestorePreview._(
+    this.nodeKey,
+    this.session,
+    this.capacity,
+    this._inventory,
+    this.decisions,
+  );
+
+  final String nodeKey;
+  final Object session;
+  final int capacity;
+  final List<BackupChannelDecision> decisions;
+  final Map<int, ({String name, String key})> _inventory;
+
+  bool matchesInventory(Iterable<Channel> channels, int? slotCount) {
+    if (slotCount != capacity) return false;
+    final current = _channelInventory(channels);
+    return current.length == _inventory.length &&
+        current.entries.every((entry) => _inventory[entry.key] == entry.value);
+  }
+}
+
+Channel _copyChannel(Channel channel) => Channel(
+  index: channel.index,
+  name: channel.name,
+  psk: Uint8List.fromList(channel.psk).asUnmodifiableView(),
+  unreadCount: channel.unreadCount,
+);
+
+Map<int, ({String name, String key})> _channelInventory(
+  Iterable<Channel> channels,
+) => {
+  for (final channel in channels)
+    if (!channel.isEmpty)
+      channel.index: (name: channel.name, key: channel.pskHex),
+};
 
 /// Resolves source channels against the destination's confirmed inventory.
 /// The backup's slot is a preference when adding a channel.
