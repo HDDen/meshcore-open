@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
@@ -5,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/contact_share_helper.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/widgets/shared_contact_message.dart';
 import 'package:meshcore_open/widgets/translated_message_content.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,19 +76,19 @@ class _Node extends MeshCoreConnector {
   }
 }
 
-Widget _app(_Node node, String text) =>
+Widget _app(_Node node, String text) => _shell(
+  node,
+  TranslatedMessageContent(displayText: text, style: const TextStyle()),
+);
+
+Widget _shell(_Node node, Widget body) =>
     ChangeNotifierProvider<MeshCoreConnector>.value(
       value: node,
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
-        home: Scaffold(
-          body: TranslatedMessageContent(
-            displayText: text,
-            style: const TextStyle(),
-          ),
-        ),
+        home: Scaffold(body: body),
       ),
     );
 
@@ -141,6 +144,54 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
+  });
+
+  testWidgets('U32: cards show status and only start one pending add',
+      (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final gate = Completer<void>();
+    var calls = 0;
+    await tester.pumpWidget(_shell(
+      node,
+      SharedContactMessage(
+        contact: SharedContactInfo(
+          publicKey: hexToPubKey(_addKey), type: advTypeChat, name: 'Relay',
+        ),
+        textStyle: const TextStyle(fontSize: 14),
+        metaColor: Colors.black,
+        textScale: 1,
+        onAddContact: () async {
+          calls++;
+          await gate.future;
+          node.held[_addKey] = _contact(_addKey, 'Relay');
+          node.notifyListeners();
+        },
+      ),
+    ));
+    final add = find.text('Add contact');
+    await tester.tap(add);
+    await tester.tap(add);
+    await tester.pump();
+    expect(calls, 1);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    gate.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Node already in contacts'), findsOneWidget);
+    final update = find.text('Update contact');
+    await tester.tap(update);
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+
+    node.self = _addKey;
+    node.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('It is you'), findsOneWidget);
+    expect(update, findsNothing);
+    expect(add, findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets("a tap on the app's link asks to add the contact and writes "

@@ -137,7 +137,7 @@ awaiting its reply.
 The Contacts screen has a single **three-dot overflow menu** (`⋮`) in the app bar:
 
 - Discovered Contacts — opens the DiscoveryScreen
-- Add Contact from Clipboard — reads a `meshcore://<hex>` URI from clipboard and imports it
+- Add Contact from Clipboard — imports a copied contact link or chat card
 - *(divider)*
 - Zero-Hop Advert — broadcasts your advertisement to immediately adjacent nodes
 - Flood Advert — broadcasts across the full mesh network
@@ -159,7 +159,13 @@ discovered contact copies its advert link locally.
 When the radio hears an advertisement, the contact appears automatically if auto-add is enabled for that type (configurable in Settings → Contact Settings).
 
 ### Import from Clipboard
-Overflow menu (or the FAB shortcut) → "Add Contact from Clipboard". Reads a `meshcore://<hex>` URI from clipboard and imports it to the device.
+Copy a contact link, a chat card, or message text containing a single card.
+Open the overflow menu or the person-add shortcut and select **Add Contact
+from Clipboard**. Check the contact details before confirming a card import.
+
+In direct and channel chats, a card shows when it contains your own key or
+the contact is already saved. You can explicitly update a saved contact after
+confirming. Updating keeps its stored route.
 
 ### Advertisement names and optional fields
 

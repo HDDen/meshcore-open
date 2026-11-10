@@ -6474,6 +6474,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get chat_addContact => 'Névjegy hozzáadása';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'A névjegy már létezik, lecseréli?';
 
   @override

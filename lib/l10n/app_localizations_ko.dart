@@ -6174,6 +6174,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chat_addContact => '연락처 추가';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => '연락처가 이미 있습니다. 바꿀까요?';
 
   @override

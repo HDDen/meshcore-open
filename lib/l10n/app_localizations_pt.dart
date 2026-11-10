@@ -6468,6 +6468,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chat_addContact => 'Adicionar contato';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'O contato já existe, substituir?';
 
   @override

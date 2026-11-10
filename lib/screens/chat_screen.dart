@@ -3395,6 +3395,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
     if (blockIfOffline(context, connector)) return;
+    final nodeKey = connector.selfPublicKeyHex;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -3430,6 +3431,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     try {
+      if (connector.selfPublicKeyHex != nodeKey) {
+        throw StateError('Connected radio changed');
+      }
       await connector.addOrUpdateSharedContact(
         publicKey: contact.publicKey,
         type: contact.type,
@@ -4065,12 +4069,9 @@ class _MessageBubble extends StatelessWidget {
                                   ),
                                   metaColor: metaColor,
                                   textScale: textScale,
-                                  onAddContact: () {
-                                    final handler = onAddSharedContact;
-                                    if (handler != null) {
-                                      unawaited(handler(sharedContact));
-                                    }
-                                  },
+                                  onAddContact: onAddSharedContact == null
+                                      ? null
+                                      : () => onAddSharedContact!(sharedContact),
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[

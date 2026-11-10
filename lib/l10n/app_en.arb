@@ -3580,6 +3580,7 @@
   "chat_sendSelfContact": "Send self contact",
   "chat_sendContact": "Share contact",
   "chat_addContact": "Add contact",
+  "chat_updateSharedContact": "Update contact",
   "chat_sureToReplaceContact": "Contact is already exists, replace it?",
   "contacts_addContactByPubkey": "Add contact by pubkey",
   "contacts_addContactByPubkey_contactType": "Contact type",

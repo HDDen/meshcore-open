@@ -6042,6 +6042,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_addContact => '添加联系人';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => '联系人已存在，要替换吗？';
 
   @override

@@ -6453,6 +6453,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get chat_addContact => 'Pridať kontakt';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'Kontakt už existuje, nahradiť ho?';
 
   @override

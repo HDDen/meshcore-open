@@ -40,6 +40,25 @@ String formatContactShareTextForContact(Contact contact) {
   );
 }
 
+final _sharedCardStart = RegExp(r'<[a-fA-F0-9]{64}:[1-4]:');
+final _embeddedCardName = RegExp(r'[^<>\r\n]*>');
+
+/// For clipboard import only. Chat rendering still requires a whole card.
+SharedContactInfo? findSharedContactInText(String text) {
+  final trimmed = text.trim();
+  final starts = _sharedCardStart.allMatches(trimmed).iterator;
+  if (!starts.moveNext()) return parseSharedContactText(trimmed);
+  final card = starts.current;
+  if (starts.moveNext()) return null;
+  // An exact card may contain angle brackets in its original name.
+  if (card.start == 0 && trimmed.endsWith('>')) {
+    return parseSharedContactText(trimmed);
+  }
+  final name = _embeddedCardName.matchAsPrefix(trimmed, card.end);
+  if (name == null) return null;
+  return parseSharedContactText(trimmed.substring(card.start, name.end));
+}
+
 SharedContactInfo? parseSharedContactText(String text) {
   final trimmed = text.trim();
   if (!trimmed.startsWith('<') || !trimmed.endsWith('>')) return null;

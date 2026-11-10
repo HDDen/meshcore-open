@@ -6511,6 +6511,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chat_addContact => 'Ajouter le contact';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact =>
       'Le contact existe déjà, le remplacer ?';
 

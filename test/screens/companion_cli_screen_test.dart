@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MissingPluginException;
+import 'package:flutter/services.dart' show MissingPluginException, SystemChannels;
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:mco_service/mco_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -95,6 +95,16 @@ class _Connector extends MeshCoreConnector {
   final history = _History();
   final writes = <List<int>>[];
   final channelOrders = <List<int>>[];
+  final sharedContactWrites = <({String key, int type, String name})>[];
+
+  @override
+  Future<void> addOrUpdateSharedContact({
+    required Uint8List publicKey,
+    required int type,
+    required String name,
+  }) async {
+    sharedContactWrites.add((key: pubKeyToHex(publicKey), type: type, name: name));
+  }
   final deletions = <({String key, bool keepMessages})>[];
   final deletionAckChoices = <bool>[];
   Object? deleteFailure;
@@ -244,6 +254,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ManualPathTraceScreen), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
+    expect(connector.writes, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('U32: a copied chat card uses the contact import confirmation',
+      (tester) async {
+    final key = 'ab' * 32;
+    final messenger = TestDefaultBinaryMessengerBinding
+        .instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.getData') {
+        return {'text': 'Sender: <$key:2:Север: репитер>'};
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await show(
+      tester,
+      ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
+        child: const ContactsScreen(hideBackButton: true),
+      ),
+    );
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ContactsScreen)),
+    );
+    Future<void> paste() async {
+      await tester.tap(find.byTooltip(l10n.contacts_moreOptions));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.contacts_addContactFromClipboard));
+      await tester.pumpAndSettle();
+    }
+
+    await paste();
+    expect(find.text('Север: репитер'), findsOneWidget);
+    expect(find.text(l10n.chat_addContact), findsOneWidget);
+    expect(connector.sharedContactWrites, isEmpty);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(connector.sharedContactWrites, isEmpty);
+
+    await paste();
+    await tester.tap(find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text(l10n.common_add),
+    ));
+    await tester.pumpAndSettle();
+    expect(connector.sharedContactWrites,
+        [(key: key, type: advTypeRepeater, name: 'Север: репитер')]);
     expect(connector.writes, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });

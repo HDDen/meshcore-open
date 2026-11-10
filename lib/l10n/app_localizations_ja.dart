@@ -6167,6 +6167,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chat_addContact => '連絡先を追加';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => '連絡先は既に存在します。置き換えますか？';
 
   @override

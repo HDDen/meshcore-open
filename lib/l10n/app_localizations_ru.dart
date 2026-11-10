@@ -6476,6 +6476,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_addContact => 'Добавить контакт';
 
   @override
+  String get chat_updateSharedContact => 'Обновить контакт';
+
+  @override
   String get chat_sureToReplaceContact => 'Контакт уже существует, заменить?';
 
   @override

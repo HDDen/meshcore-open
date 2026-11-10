@@ -2221,9 +2221,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                   ),
                                   metaColor: metaColor,
                                   textScale: textScale,
-                                  onAddContact: () => unawaited(
-                                    _addSharedContact(sharedContact),
-                                  ),
+                                  onAddContact: () =>
+                                      _addSharedContact(sharedContact),
                                 ),
                               ),
                               if (!enableTracing && isOutgoing) ...[
@@ -5758,6 +5757,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Future<void> _addSharedContact(SharedContactInfo contact) async {
     final connector = context.read<MeshCoreConnector>();
     if (blockIfOffline(context, connector)) return;
+    final nodeKey = connector.selfPublicKeyHex;
     final selfPublicKey = connector.selfPublicKey;
     if (selfPublicKey != null &&
         selfPublicKey.isNotEmpty &&
@@ -5793,6 +5793,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     }
 
     try {
+      if (connector.selfPublicKeyHex != nodeKey) {
+        throw StateError('Connected radio changed');
+      }
       await connector.addOrUpdateSharedContact(
         publicKey: contact.publicKey,
         type: contact.type,

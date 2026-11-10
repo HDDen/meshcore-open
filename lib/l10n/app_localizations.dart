@@ -10994,6 +10994,12 @@ abstract class AppLocalizations {
   /// **'Add contact'**
   String get chat_addContact;
 
+  /// No description provided for @chat_updateSharedContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Update contact'**
+  String get chat_updateSharedContact;
+
   /// No description provided for @chat_sureToReplaceContact.
   ///
   /// In en, this message translates to:

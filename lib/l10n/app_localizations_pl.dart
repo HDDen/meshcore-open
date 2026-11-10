@@ -6503,6 +6503,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chat_addContact => 'Dodaj kontakt';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'Kontakt już istnieje, zastąpić?';
 
   @override

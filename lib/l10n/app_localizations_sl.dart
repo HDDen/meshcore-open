@@ -6443,6 +6443,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get chat_addContact => 'Dodaj stik';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact =>
       'Stik že obstaja, ali naj se zamenja?';
 

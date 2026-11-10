@@ -563,6 +563,16 @@ class _ContactsScreenState extends State<ContactsScreen>
       return;
     }
     if (!text.startsWith('meshcore://')) {
+      final shared = findSharedContactInText(text);
+      if (shared != null) {
+        if (mounted) {
+          await ContactLinkImport.confirmAndAdd(
+            context,
+            ContactAddLink.fromShare(shared),
+          );
+        }
+        return;
+      }
       if (mounted) {
         showDismissibleSnackBar(
           context,

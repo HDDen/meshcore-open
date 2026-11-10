@@ -6490,6 +6490,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chat_addContact => 'Додати контакт';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'Контакт уже існує, замінити?';
 
   @override

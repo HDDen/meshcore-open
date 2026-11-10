@@ -625,6 +625,123 @@ Future<void> main() async {
       });
     }
 
+    test('U32 baseline: replacing a shared contact preserves node-owned data',
+        () async {
+      h.connector.handleFrameForTest(_contactFrame(
+        h.target.copyWith(latitude: 55.75, longitude: 37.625),
+      ));
+      final before = h.target;
+      expect(before.latitude, 55.75);
+      expect(before.longitude, 37.625);
+      expect(before.pathHashWidth, 3);
+      h.sent.clear();
+
+      await h.connector.addOrUpdateSharedContact(
+        publicKey: before.publicKey,
+        type: before.type,
+        name: 'New name from a card',
+      );
+
+      expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+      final radioCopy = h.radioContacts.singleWhere(
+        (contact) => contact.publicKeyHex == before.publicKeyHex,
+      );
+      for (final contact in [radioCopy, h.target]) {
+        expect(contact.name, 'New name from a card');
+        expect(contact.flags, before.flags);
+        expect(contact.path, before.path);
+        expect(contact.pathLength, before.pathLength);
+        expect(contact.pathHashWidth, before.pathHashWidth);
+        expect(contact.latitude, before.latitude);
+        expect(contact.longitude, before.longitude);
+        expect(contact.lastSeen.isAtSameMomentAs(before.lastSeen), isTrue);
+      }
+
+      h.addError = errCodeTableFull;
+      await expectLater(
+        h.connector.addOrUpdateSharedContact(
+          publicKey: before.publicKey,
+          type: before.type,
+          name: 'Rejected name',
+        ),
+        throwsA(isA<CommandFailedException>().having(
+          (error) => error.errCode, 'firmware error', errCodeTableFull,
+        )),
+      );
+      expect(h.target.name, 'New name from a card');
+      expect(h.target.path, before.path);
+      expect(h.sent.map((frame) => frame.first),
+          [cmdAddUpdateContact, cmdAddUpdateContact]);
+    });
+
+    test('U32: a second card cannot write while the first awaits ACK', () async {
+      final before = h.target;
+      h.holdAddAck = true;
+      final operation = _Operation(h.connector.addOrUpdateSharedContact(
+        publicKey: before.publicKey,
+        type: before.type,
+        name: 'First card',
+      ));
+      await _until(() => h.sent.isNotEmpty, 'shared contact ADD written');
+
+      await expectLater(
+        h.connector.addOrUpdateSharedContact(
+          publicKey: before.publicKey,
+          type: before.type,
+          name: 'Second card',
+        ),
+        throwsStateError,
+      );
+      expect(h.sent.map((frame) => frame.first), [cmdAddUpdateContact]);
+      expect(h.target.name, before.name);
+
+      h.connector.handleFrameForTest([respCodeOk]);
+      await operation.finish();
+      expect(h.target.name, 'First card');
+
+      h.holdAddAck = false;
+      await h.connector.addOrUpdateSharedContact(
+        publicKey: before.publicKey,
+        type: before.type,
+        name: 'Explicit update',
+      );
+      expect(h.target.name, 'Explicit update');
+      expect(h.target.path, before.path);
+      expect(h.sent.map((frame) => frame.first),
+          [cmdAddUpdateContact, cmdAddUpdateContact]);
+    });
+
+    test('U32: a card update keeps a route written while it was waiting',
+        () async {
+      final target = h.target;
+      final route = Uint8List.fromList([0x44]);
+      final gate = Completer<void>();
+      h.addWriteGate = gate;
+      final routeWrite = _Operation(
+        h.connector.setContactPath(target, route, 1, waitForAck: true),
+      );
+      await _until(() => h.sent.isNotEmpty, 'path write started');
+
+      final cardWrite = _Operation(h.connector.addOrUpdateSharedContact(
+        publicKey: target.publicKey,
+        type: target.type,
+        name: 'Card after route change',
+      ));
+      gate.complete();
+      await routeWrite.finish();
+      await cardWrite.finish();
+
+      final radioCopy = h.radioContacts.singleWhere(
+        (contact) => contact.publicKeyHex == target.publicKeyHex,
+      );
+      for (final contact in [radioCopy, h.target]) {
+        expect(contact.name, 'Card after route change');
+        expect(contact.path, route);
+        expect(contact.pathLength, 1);
+        expect(contact.pathHashWidth, 1);
+      }
+    });
+
     test('U13a baseline: discovery import activates only after ADD ACK', () async {
       final found = _contact(_linkedKey, 'Waiting for ACK');
       h.connector.handleFrameForTest(

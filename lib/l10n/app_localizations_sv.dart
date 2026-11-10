@@ -6441,6 +6441,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chat_addContact => 'Lägg till kontakt';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact => 'Kontakten finns redan, ersätta den?';
 
   @override

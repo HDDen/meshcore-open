@@ -6487,6 +6487,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get chat_addContact => 'Добавяне на контакт';
 
   @override
+  String get chat_updateSharedContact => 'Update contact';
+
+  @override
   String get chat_sureToReplaceContact =>
       'Контактът вече съществува, да се замени ли?';
 

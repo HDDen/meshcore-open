@@ -663,6 +663,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Serializes path operations (setContactPath/clearContactPath) to prevent
   // interleaved async calls from leaving in-memory state inconsistent with device.
   Future<void> _pathOpLock = Future.value();
+  final _sharedContactWrites = <(int, String)>{};
   final _contactRemovalGuard = ContactRemovalGuard();
   // Flood scope is a global firmware setting, so scoped channel sends must not
   // overlap or a message may inherit another channel's region.
@@ -954,12 +955,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  Contact? getContactByPubKeyHex(String contactPubKeyHex) {
-    return _contacts.cast<Contact?>().firstWhere(
-      (c) => c?.publicKeyHex == contactPubKeyHex,
-      orElse: () => null,
-    );
-  }
+  Contact? getContactByPubKeyHex(String contactPubKeyHex) =>
+      _contacts.byKey(contactPubKeyHex);
 
   Contact? _findContactByPubKeyHex(
     String contactPubKeyHex, {
@@ -11543,57 +11540,83 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       throw Exception("Not connected to a MeshCore device");
     }
 
-    final existingIndex = _contacts.indexWhere(
-      (contact) => listEquals(contact.publicKey, publicKey),
-    );
-    final existing = existingIndex >= 0 ? _contacts[existingIndex] : null;
-    final pathLength = existing == null
-        ? 0xFF
-        : (existing.pathLength < 0
-              ? 0xFF
-              : (_encodePathLenForWidth(
-                      existing.pathLength,
-                      existing.path,
-                      existing.pathHashWidth,
-                    ) ??
-                    0xFF));
-    final path = existing?.path ?? Uint8List(0);
-    final flags = existing?.flags ?? 0;
+    final key = pubKeyToHex(publicKey);
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    final writeKey = (revision, key);
+    if (!_sharedContactWrites.add(writeKey)) {
+      throw StateError('Shared contact update is already in progress');
+    }
 
-    await sendFrame(
-      buildUpdateContactPathFrame(
-        publicKey,
-        path,
-        pathLength,
-        type: type,
-        flags: flags,
-        name: name,
-        lat: existing?.latitude,
-        lon: existing?.longitude,
-        lastAdvert: existing?.lastSeen,
-        lastModified: existing?.lastModified ?? existing?.lastSeen,
-      ),
-      waitForGenericAck: true,
-    );
+    // This command carries the current route, so serialize it with path
+    // changes and read the route only after the previous command finishes.
+    final previous = _pathOpLock;
+    final lock = Completer<void>();
+    _pathOpLock = lock.future;
+    bool isCurrent() =>
+        !_disposed &&
+        isConnected &&
+        selfPublicKeyHex == nodeKey &&
+        _channelInboxRevision == revision;
 
-    _handleContactAdvert(
-      Contact(
-        publicKey: publicKey,
-        name: name,
-        type: type,
-        pathLength: existing?.pathLength ?? -1,
-        path: path,
-        pathHashWidth: existing?.pathHashWidth ?? 1,
-        latitude: existing?.latitude,
-        longitude: existing?.longitude,
-        // The advert time the node now holds, which the next path update
-        // sends back; the phone's clock there would break its replay guard.
-        lastSeen: existing?.lastSeen ?? DateTime.fromMillisecondsSinceEpoch(0),
-        lastModified: existing?.lastModified,
-        flags: flags,
-      ),
-    );
-    notifyListeners();
+    try {
+      await previous;
+      if (!isCurrent()) throw StateError('Connected radio changed');
+
+      final existing = _contacts.byKey(key);
+      final pathLength = existing == null
+          ? 0xFF
+          : (existing.pathLength < 0
+                ? 0xFF
+                : (_encodePathLenForWidth(
+                        existing.pathLength,
+                        existing.path,
+                        existing.pathHashWidth,
+                      ) ??
+                      0xFF));
+      final path = existing?.path ?? Uint8List(0);
+      final flags = existing?.flags ?? 0;
+
+      await sendFrame(
+        buildUpdateContactPathFrame(
+          publicKey,
+          path,
+          pathLength,
+          type: type,
+          flags: flags,
+          name: name,
+          lat: existing?.latitude,
+          lon: existing?.longitude,
+          lastAdvert: existing?.lastSeen,
+          lastModified: existing?.lastModified ?? existing?.lastSeen,
+        ),
+        waitForGenericAck: true,
+      );
+
+      if (!isCurrent()) throw StateError('Connected radio changed');
+
+      _handleContactAdvert(
+        Contact(
+          publicKey: publicKey,
+          name: name,
+          type: type,
+          pathLength: existing?.pathLength ?? -1,
+          path: path,
+          pathHashWidth: existing?.pathHashWidth ?? 1,
+          latitude: existing?.latitude,
+          longitude: existing?.longitude,
+          // The advert time the node now holds, which the next path update
+          // sends back; the phone's clock there would break its replay guard.
+          lastSeen: existing?.lastSeen ?? DateTime.fromMillisecondsSinceEpoch(0),
+          lastModified: existing?.lastModified,
+          flags: flags,
+        ),
+      );
+      notifyListeners();
+    } finally {
+      _sharedContactWrites.remove(writeKey);
+      lock.complete();
+    }
   }
 
   Future<void> clearContactPath(

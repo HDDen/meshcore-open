@@ -40,6 +40,14 @@ class ContactLinkImport {
     final replaces = connector.getContactByPubKeyHex(link.publicKeyHex) != null;
     if (!await _confirm(context, link, replaces: replaces)) return;
     if (!context.mounted) return;
+    if (!connector.isConnected) {
+      _warn(context, context.l10n.scanner_notConnected);
+      return;
+    }
+    if (connector.selfPublicKeyHex != selfKeyHex || connector.isOfflineMode) {
+      _warn(context, context.l10n.contacts_contactImportFailed);
+      return;
+    }
     try {
       switch (link) {
         // The app's own link carries no signature: the contact is written

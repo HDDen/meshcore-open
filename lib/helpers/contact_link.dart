@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
+import 'contact_share_helper.dart';
 
 /// A contact shared as a `meshcore://` link, in the two forms the mesh uses:
 ///
@@ -154,6 +155,13 @@ final class ContactAddLink extends ContactLink {
 
   @override
   final String name;
+
+  factory ContactAddLink.fromShare(SharedContactInfo share) => ContactAddLink._(
+    publicKey: share.publicKey,
+    publicKeyHex: share.publicKeyHex,
+    type: share.type,
+    name: share.name,
+  );
 
   static final RegExp _key = RegExp(r'^[0-9a-fA-F]{64}$');
 
