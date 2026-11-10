@@ -2830,6 +2830,10 @@ U34 сохраняет немедленный первый show беседы и 
 `NotificationConversationWork` упорядочивает show/reply/cancel по ID, а смена
 ноды дожидается старых операций и очищает устаревшие карточки до нового show.
 Чтение чата или смена канала в слоте инвалидирует ожидающий batch.
+Android использует `ic_stat_notification` для малой иконки уведомления.
+Имя ресурса передаётся в local-notifications, включая фоновые ответы.
+Flutter foreground task получает тот же drawable через application metadata,
+а нативный wardrive service берёт его напрямую из `R.drawable`.
 Пакет notificationWorkTests принят владельцем 23.10.2026. Отдельные badge,
 другие show entrypoints, background action isolate и завершение underlying image
 I/O после существующего timeout требуют отдельного охвата; CPU-политика прежняя.

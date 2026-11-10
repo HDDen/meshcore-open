@@ -83,7 +83,7 @@ class WardriveForegroundService : Service() {
             Notification.Builder(this)
         }
         return builder
-            .setSmallIcon(applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_stat_notification)
             .setContentTitle("MeshCore Wardrive")
             .setContentText("Collecting wardrive samples in the background")
             .setContentIntent(pendingIntent)

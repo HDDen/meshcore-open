@@ -15,6 +15,9 @@ const notificationReplyActionId = 'reply';
 const notificationMarkReadActionId = 'mark_read';
 const notificationMuteActionId = 'mute';
 
+// Android resolves the small icon by its drawable resource name.
+const androidNotificationSmallIcon = 'ic_stat_notification';
+
 /// Preference holding the app's language code, so the background isolate can
 /// localize its notices the same way the app does.
 const notificationLanguagePrefsKey = 'notification_language';
@@ -153,7 +156,7 @@ Future<void> notificationActionBackgroundHandler(
     final plugin = FlutterLocalNotificationsPlugin();
     await plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings(androidNotificationSmallIcon),
       ),
     );
     final l10n = await _backgroundLocalizations();
@@ -168,7 +171,7 @@ Future<void> notificationActionBackgroundHandler(
           channelDescription: 'New message notifications',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: androidNotificationSmallIcon,
         ),
       ),
     );

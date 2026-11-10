@@ -307,6 +307,9 @@ class BackgroundService {
         notificationText: _connectionLost
             ? l10n.app_connectionLostReconnect
             : l10n.background_serviceText,
+        notificationIcon: const NotificationIcon(
+          metaDataName: 'com.meshcore.mcoadvanced.NOTIFICATION_ICON',
+        ),
         callback: startCallback,
       );
       switch (result) {

@@ -33,6 +33,7 @@ class _Plugin {
   final String? launchPayload;
   List<Map<String, Object>> activeNotifications = [];
   bool allowed = true;
+  String? defaultIcon;
   final calls = <MethodCall>[];
   final finished = <MethodCall>[];
   final gates = <Completer<void>>[];
@@ -54,6 +55,7 @@ class _Plugin {
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(channel, (call) async {
       if (call.method == 'initialize') {
+        defaultIcon = args(call)['defaultIcon'] as String?;
         return true;
       }
       if (call.method == 'areNotificationsEnabled') {
@@ -373,6 +375,8 @@ void main() {
             expect(h.plugin.shown, hasLength(1));
 
             final details = h.plugin.android(h.plugin.shown.single);
+            expect(h.plugin.defaultIcon, 'ic_stat_notification');
+            expect(details['icon'], 'ic_stat_notification');
             expect(details['category'], 'msg');
             expect(details['style'], AndroidNotificationStyle.messaging.index);
             final style = details['styleInformation'] as Map<Object?, Object?>;

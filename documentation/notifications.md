@@ -4,6 +4,10 @@
 
 MeshCore Open provides both **system notifications** (push-style OS alerts) and **in-app unread badges** to inform users of new activity.
 
+On Android, message and service notifications use a monochrome icon in the
+status bar. The conversation's thumbnail and reply actions remain part of
+the expanded notification.
+
 ## Notification Types
 
 ### 1. Direct Message Notifications

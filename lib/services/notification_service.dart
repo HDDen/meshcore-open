@@ -183,7 +183,7 @@ class NotificationService {
     if (_isInitialized) return;
 
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      androidNotificationSmallIcon,
     );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -706,7 +706,7 @@ class NotificationService {
           : 'New message notifications',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: androidNotificationSmallIcon,
       number: badgeCount,
       silent: silent,
       category: AndroidNotificationCategory.message,
@@ -899,7 +899,7 @@ class NotificationService {
             channelDescription: 'New message notifications',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: androidNotificationSmallIcon,
           ),
         ),
         payload: conversation?.payload,
@@ -942,7 +942,7 @@ class NotificationService {
       channelDescription: 'New node advertisement notifications',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/ic_launcher',
+      icon: androidNotificationSmallIcon,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -1004,7 +1004,7 @@ class NotificationService {
             channelDescription: 'Low battery alerts for the connected device',
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: androidNotificationSmallIcon,
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -1162,7 +1162,7 @@ class NotificationService {
         channelDescription: 'License expiration reminders',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
-        icon: '@mipmap/ic_launcher',
+        icon: androidNotificationSmallIcon,
       ),
       iOS: DarwinNotificationDetails(presentAlert: true),
       macOS: DarwinNotificationDetails(presentAlert: true),
@@ -1560,7 +1560,7 @@ class NotificationService {
       channelDescription: 'Batched notification summaries',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/ic_launcher',
+      icon: androidNotificationSmallIcon,
     );
 
     const notificationDetails = NotificationDetails(android: androidDetails);

@@ -12,6 +12,7 @@ class _TaskBackend extends FlutterForegroundTaskPlatform {
   int starts = 0;
   int stops = 0;
   ForegroundTaskOptions? startedOptions;
+  NotificationIcon? startedIcon;
   final messages = <Map<String, Object?>>[];
   final notifications = <String?>[];
 
@@ -34,6 +35,7 @@ class _TaskBackend extends FlutterForegroundTaskPlatform {
   }) async {
     starts++;
     startedOptions = foregroundTaskOptions;
+    startedIcon = notificationIcon;
     running = true;
   }
 
@@ -147,6 +149,9 @@ void main() {
       expect(options.allowWakeLock, isTrue);
       expect(options.allowWifiLock, isFalse);
       expect(options.autoRunOnBoot, isFalse);
+      expect(options.stopWithTask, isNull);
+      expect(backend.startedIcon?.metaDataName,
+          'com.meshcore.mcoadvanced.NOTIFICATION_ICON');
       expect(backend.starts, 1);
       expect(retention, [true]);
       expect(backend.messages.single['monitor'], isTrue);
