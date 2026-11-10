@@ -1939,6 +1939,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get routing_modeFlood => '플러드';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => '수동';
 
   @override
@@ -1951,6 +1954,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get routing_modeManualHint => '항상 지정한 정확한 경로를 따릅니다.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => '현재 경로';

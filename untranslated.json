@@ -2,6 +2,8 @@
   "bg": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -105,6 +107,8 @@
   "de": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -208,6 +212,8 @@
   "es": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -311,6 +317,8 @@
   "fr": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -414,6 +422,8 @@
   "hu": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -517,6 +527,8 @@
   "it": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -620,6 +632,8 @@
   "ja": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -723,6 +737,8 @@
   "ko": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -826,6 +842,8 @@
   "nl": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -929,6 +947,8 @@
   "pl": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1032,6 +1052,8 @@
   "pt": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1135,6 +1157,8 @@
   "sk": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1238,6 +1262,8 @@
   "sl": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1341,6 +1367,8 @@
   "sv": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1444,6 +1472,8 @@
   "uk": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",
@@ -1547,6 +1577,8 @@
   "zh": [
     "appSettings_showOnlineLinks",
     "appSettings_showOnlineLinksSubtitle",
+    "routing_modeDirect",
+    "routing_modeDirectHint",
     "map_showOnlineLinks",
     "repeater_hoursMinsSecs",
     "chat_updateSharedContact",

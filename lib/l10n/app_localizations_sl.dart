@@ -2019,6 +2019,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get routing_modeFlood => 'Flood';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => 'Ročno';
 
   @override
@@ -2032,6 +2035,10 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Vedno pošilja natančno po poti, ki ste jo določili.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => 'Trenutna pot';

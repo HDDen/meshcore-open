@@ -229,6 +229,27 @@ void main() {
     });
   });
 
+  test('U34 baseline: a pinned zero-hop route is written on every attempt',
+      () async {
+    final settings = await _settings(clearOnLastFailure: true);
+    addTearDown(settings.dispose);
+    final node = _Node(_contact(pathOverride: 0, pathOverrideBytes: const []))
+      ..history.add([0x42]);
+    final service = _serviceFor(node, settings: settings)..setMaxRetries(2);
+    addTearDown(service.dispose);
+
+    await _send(service, node, 'hi');
+    await _noAck(service, 'hi', 0);
+    expect(node.log, ['set ', 'send 0 route', 'set ', 'send 1 route']);
+    expect(node.message('hi').pathLength, 0);
+    expect(node.message('hi').pathBytes, isEmpty);
+
+    await _noAck(service, 'hi', 1);
+    expect(node.message('hi').status, MessageStatus.failed);
+    expect(node.log, ['set ', 'send 0 route', 'set ', 'send 1 route']);
+    expect(node.contact.pathOverride, 0);
+  });
+
   group('automatic routing', () {
     test('the first attempt goes by the route the node holds', () async {
       final node = _Node(_contact(pathLength: 2, path: [0x10, 0x20]));

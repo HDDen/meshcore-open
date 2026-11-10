@@ -3586,6 +3586,12 @@ abstract class AppLocalizations {
   /// **'Flood'**
   String get routing_modeFlood;
 
+  /// No description provided for @routing_modeDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get routing_modeDirect;
+
   /// No description provided for @routing_modeManual.
   ///
   /// In en, this message translates to:
@@ -3609,6 +3615,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always sends along the exact path you set.'**
   String get routing_modeManualHint;
+
+  /// No description provided for @routing_modeDirectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends directly, without repeaters. Use this when the contact is in direct radio range.'**
+  String get routing_modeDirectHint;
 
   /// No description provided for @routing_currentRoute.
   ///

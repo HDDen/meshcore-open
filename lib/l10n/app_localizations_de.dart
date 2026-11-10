@@ -2029,6 +2029,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get routing_modeFlood => 'Flood';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => 'Manuell';
 
   @override
@@ -2042,6 +2045,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Sendet immer genau über den von Ihnen festgelegten Pfad.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => 'Aktuelle Route';

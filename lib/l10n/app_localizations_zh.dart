@@ -1903,6 +1903,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_modeFlood => '泛洪';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => '手动';
 
   @override
@@ -1913,6 +1916,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get routing_modeManualHint => '始终沿您设置的确切路径发送。';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => '当前路线';

@@ -1934,6 +1934,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get routing_modeFlood => 'フラッド';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => '手動';
 
   @override
@@ -1945,6 +1948,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get routing_modeManualHint => '常に、設定した正確な経路を使います。';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => '現在の経路';

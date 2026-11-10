@@ -2028,6 +2028,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_modeFlood => 'Flood';
 
   @override
+  String get routing_modeDirect => 'Прямой';
+
+  @override
   String get routing_modeManual => 'Вручную';
 
   @override
@@ -2041,6 +2044,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Всегда следует точно по указанному вами маршруту.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Отправляет напрямую, без репитеров. Используйте, если контакт в зоне прямой радиосвязи.';
 
   @override
   String get routing_currentRoute => 'Текущий маршрут';

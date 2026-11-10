@@ -2015,6 +2015,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get routing_modeFlood => 'Flood';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => 'Handmatig';
 
   @override
@@ -2028,6 +2031,10 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Verzendt altijd via het exacte pad dat u heeft ingesteld.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => 'Huidige route';

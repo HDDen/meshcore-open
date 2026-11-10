@@ -9148,6 +9148,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final updated = Contact.fromFrame(frame);
       if (updated == null) return;
       if (updated.publicKeyHex != contact.publicKeyHex) return;
+      // The node returns empty bytes for flood as well as for zero hops.
+      if (expectedLength == 0 && updated.pathLength != 0) return;
       final matchesLength = updated.path.length == expectedLength;
       final matchesBytes = _pathsEqual(updated.path, expectedPath);
       if (matchesLength && matchesBytes) {

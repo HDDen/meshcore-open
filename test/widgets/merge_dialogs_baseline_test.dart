@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +63,44 @@ class _Routes extends ChangeNotifier implements MeshCoreConnector {
   }
 }
 
+class _EditableRoutes extends _Routes {
+  _EditableRoutes(Contact contact) : super([contact]);
+
+  final writes = <({int? hops, List<int>? bytes})>[];
+  final verifications = <List<int>>[];
+  Future<bool>? verification;
+
+  @override
+  bool get isConnected => true;
+
+  @override
+  Future<void> setPathOverride(
+    Contact contact, {
+    int? pathLen,
+    Uint8List? pathBytes,
+  }) async {
+    expect(contact.publicKeyHex, entries.single.publicKeyHex);
+    writes.add((hops: pathLen, bytes: pathBytes?.toList()));
+    entries[0] = contact.copyWith(
+      pathOverride: pathLen,
+      pathOverrideBytes: pathBytes,
+      clearPathOverride: pathLen == null,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<bool> verifyContactPathOnDevice(
+    Contact contact,
+    Uint8List expectedPath, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    expect(contact.publicKeyHex, entries.single.publicKeyHex);
+    verifications.add(expectedPath.toList());
+    return await verification ?? true;
+  }
+}
+
 class _History extends ChangeNotifier implements PathHistoryService {
   final PathRecord record;
 
@@ -72,6 +112,16 @@ class _History extends ChangeNotifier implements PathHistoryService {
     pathBytes: [
       for (var i = 0; i < repeats; i++) ...[0xa1, 0xb2, 0xc3, 0xd4],
     ],
+    successCount: 1,
+    failureCount: 0,
+  );
+
+  _History.zeroHop() : record = PathRecord(
+    hopCount: 0,
+    tripTimeMs: 700,
+    timestamp: DateTime.utc(2026, 1, 1),
+    wasFloodDiscovery: false,
+    pathBytes: const [],
     successCount: 1,
     failureCount: 0,
   );
@@ -255,6 +305,154 @@ void main() {
         }
       });
     }
+
+    testWidgets('U34 baseline: applying zero-hop history pins and verifies it ($language)',
+        (tester) async {
+      final contact = _contact('Target', [0x11], advTypeChat);
+      final connector = _EditableRoutes(contact);
+      final history = _History.zeroHop();
+      addTearDown(connector.dispose);
+      addTearDown(history.dispose);
+      addTearDown(tester.view.reset);
+      try {
+        await _show(
+          tester,
+          Locale(language),
+          Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => ContactRoutingSheet.show(context, contact: contact),
+                child: const Text('Show routing'),
+              ),
+            ),
+          ),
+          wrap: (app) => MultiProvider(
+            providers: [
+              ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
+              ChangeNotifierProvider<PathHistoryService>.value(value: history),
+            ],
+            child: app,
+          ),
+        );
+        final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)));
+        await tester.tap(find.text('Show routing'));
+        await _settleDialog(tester);
+        expect(connector.writes, isEmpty);
+        expect(connector.verifications, isEmpty);
+
+        final directRecord = find.widgetWithText(ListTile, l10n.routing_directNoHops);
+        await tester.ensureVisible(directRecord);
+        await tester.tap(directRecord);
+        await _settleDialog(tester);
+        expect(connector.writes, hasLength(1));
+        expect(connector.writes.single.hops, 0);
+        expect(connector.writes.single.bytes, isEmpty);
+        expect(connector.verifications, [<int>[]]);
+        expect(connector.entries.single.pathOverride, 0);
+        expect(find.text(l10n.chat_pathDeviceConfirmed), findsOneWidget);
+        expect(find.text(l10n.routing_modeDirectHint), findsOneWidget);
+        expect(tester.widget<ListTile>(directRecord).onTap, isNull);
+
+        await tester.tap(find.text(l10n.routing_modeFlood));
+        await _settleDialog(tester);
+        expect(connector.entries.single.pathOverride, -1);
+        await tester.tap(find.text(l10n.routing_modeAuto));
+        await _settleDialog(tester);
+        expect(connector.entries.single.pathOverride, isNull);
+        expect(connector.writes.map((write) => write.hops), [0, -1, null]);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      }
+    });
+
+    testWidgets('U34: Direct is reachable on a narrow screen ($language)',
+        (tester) async {
+      final contact = _contact('Target', [0x11], advTypeChat);
+      final verified = Completer<bool>();
+      final connector = _EditableRoutes(contact)
+        ..verification = verified.future;
+      final history = _History.zeroHop();
+      addTearDown(connector.dispose);
+      addTearDown(history.dispose);
+      addTearDown(tester.view.reset);
+      try {
+        await _show(
+          tester,
+          Locale(language),
+          Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => ContactRoutingSheet.show(context, contact: contact),
+                child: const Text('Show routing'),
+              ),
+            ),
+          ),
+          size: const Size(320, 720),
+          textScale: 2,
+          wrap: (app) => MultiProvider(
+            providers: [
+              ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
+              ChangeNotifierProvider<PathHistoryService>.value(value: history),
+            ],
+            child: app,
+          ),
+        );
+        final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)));
+        await tester.tap(find.text('Show routing'));
+        await _settleDialog(tester);
+
+        final picker = find.byWidgetPredicate(
+          (widget) => widget is SegmentedButton<Object>,
+        );
+        expect(tester.widget<SegmentedButton<Object>>(picker).direction, Axis.vertical);
+        final direct = find.text(l10n.routing_modeDirect);
+        await tester.ensureVisible(direct);
+        await _settleDialog(tester);
+        await tester.tap(direct);
+        await _settleDialog(tester);
+        expect(connector.writes.single.hops, 0);
+        expect(connector.writes.single.bytes, isEmpty);
+        expect(connector.verifications, [<int>[]]);
+        expect(connector.entries.single.pathOverride, 0);
+
+        final flood = find.text(l10n.routing_modeFlood);
+        await tester.ensureVisible(flood);
+        await _settleDialog(tester);
+        final routeList = find.ancestor(
+          of: flood,
+          matching: find.byType(ListView),
+        );
+        final floodCenter = tester.getCenter(flood);
+        expect(tester.getRect(routeList).contains(floodCenter), isTrue);
+        await tester.tapAt(floodCenter);
+        await _settleDialog(tester);
+        expect(picker, findsOneWidget);
+        expect(connector.writes, hasLength(1));
+        expect(connector.entries.single.pathOverride, 0);
+
+        verified.complete(true);
+        await _settleDialog(tester);
+        final modePicker = tester.widget<SegmentedButton<Object>>(picker);
+        final directSegment = modePicker.segments.singleWhere(
+          (segment) => (segment.label as Text).data == l10n.routing_modeDirect,
+        );
+        expect(modePicker.selected, {directSegment.value});
+
+        await tester.ensureVisible(flood);
+        await _settleDialog(tester);
+        await tester.tap(flood);
+        await _settleDialog(tester);
+        expect(connector.writes.map((write) => write.hops), [0, -1]);
+        expect(connector.entries.single.pathOverride, -1);
+        expect(tester.takeException(), isNull);
+      } finally {
+        if (!verified.isCompleted) verified.complete(false);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      }
+    });
 
     for (final constrained in [false, true]) {
       testWidgets('${constrained ? 'U11b2: long route scrolls in a constrained dialog' : 'U11b2 baseline: route details retain per-path width and do not apply it'} ($language)', (tester) async {

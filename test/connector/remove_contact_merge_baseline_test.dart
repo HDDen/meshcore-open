@@ -523,6 +523,39 @@ Future<void> main() async {
       expect(await h.history.loadMessages(h.targetHex), hasLength(2));
     });
 
+    test('U34: zero-hop readback must report a direct route', () async {
+      final target = h.target;
+      final emptyPath = Uint8List(0);
+      final radioIndex = h.radioContacts.indexWhere(
+        (contact) => contact.publicKeyHex == target.publicKeyHex,
+      );
+      h.radioContacts[radioIndex] = target.copyWith(
+        pathLength: -1,
+        path: emptyPath,
+      );
+      expect(
+        await h.connector.verifyContactPathOnDevice(
+          target,
+          emptyPath,
+          timeout: const Duration(milliseconds: 150),
+        ),
+        isFalse,
+      );
+
+      h.radioContacts[radioIndex] = target.copyWith(
+        pathLength: 0,
+        path: emptyPath,
+      );
+      expect(
+        await h.connector.verifyContactPathOnDevice(target, emptyPath),
+        isTrue,
+      );
+      expect(h.sent.map((frame) => frame.first), [
+        cmdGetContactByKey,
+        cmdGetContactByKey,
+      ]);
+    });
+
     // U13a invariants were accepted on the unchanged import implementation.
     // Keep them when fixing the timestamp tail: the advert time and path
     // belong to the discovered node, independent of its import time.

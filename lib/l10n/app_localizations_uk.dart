@@ -2024,6 +2024,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get routing_modeFlood => 'Через всю мережу';
 
   @override
+  String get routing_modeDirect => 'Direct';
+
+  @override
   String get routing_modeManual => 'Вручну';
 
   @override
@@ -2037,6 +2040,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get routing_modeManualHint =>
       'Завжди доставляє точно за вказаним вами маршрутом.';
+
+  @override
+  String get routing_modeDirectHint =>
+      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => 'Поточний маршрут';

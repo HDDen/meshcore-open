@@ -1,6 +1,10 @@
 # Routing Paths
 
-MeshCore Open supports flood routing, direct paths, and routing overrides. Chat → Routing lets you choose Auto, Flood, or Manual and inspect recent paths. [Regions](regions.md) control the scope of channel floods; they do not replace direct-contact routing.
+Open **Chat → Routing** to choose **Auto**, **Flood**, **Direct**, or
+**Manual** and inspect recent paths. **Direct** pins a zero-hop route for
+every send and retry. The routing sheet confirms it when the node reports
+zero hops. You can use the same sheet from repeater and room-server login.
+Channel floods have their own scope settings. [Regions](regions.md)
 
 ## Hash widths and firmware capability
 
