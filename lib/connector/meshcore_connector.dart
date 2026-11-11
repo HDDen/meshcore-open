@@ -517,6 +517,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   String? _firmwareBuildDate;
   String? _boardName;
   int _pathHashByteWidth = 1;
+  int _radioBackupDeviceInfoLength = 0;
+  int? _confirmedPathHashByteWidth;
   CompanionRadioStats? _latestRadioStats;
   Stopwatch? _airtimeBumpStopwatch;
   int _prevTotalAirSecs = 0;
@@ -7447,6 +7449,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clearSharedMessageHistoryState();
     _bleInitialSyncStarted = false;
     _pathHashByteWidth = 1;
+    _radioBackupDeviceInfoLength = 0;
+    _confirmedPathHashByteWidth = null;
   }
 
   void _resetSyncProgressState() {
@@ -7818,6 +7822,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _clientRepeat = null;
     _rememberedNonRepeatRadioState = null;
     _firmwareVerCode = null;
+    _radioBackupDeviceInfoLength = 0;
+    _confirmedPathHashByteWidth = null;
     _firmwareVersion = null;
     _firmwareBuildDate = null;
     _boardName = null;
@@ -8286,12 +8292,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     await sendFrame(buildSetPathHashModeFrame(clampedMode));
     final nextWidth = clampedMode + 1;
     if (_pathHashByteWidth != nextWidth) {
-      _pathHashByteWidth = nextWidth;
-      _directRepeaters.clear();
-      _activeRepeaters.clear();
-      _bumpRepeaterActivity();
+      _confirmedPathHashByteWidth = null;
+      _adoptPathHashByteWidth(nextWidth);
       notifyListeners();
     }
+  }
+
+  void _adoptPathHashByteWidth(int width) {
+    if (_pathHashByteWidth == width) return;
+    _pathHashByteWidth = width;
+    _directRepeaters.clear();
+    _activeRepeaters.clear();
+    _bumpRepeaterActivity();
   }
 
   bool _isPathLenValidForCurrentMode(int pathLen, List<int> pathBytes) {
@@ -12830,7 +12842,28 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       advertLocation: _advertLocPolicy,
       multiAcks: _multiAcks,
     ),
+    tuning: _radioBackupDeviceInfoLength < 4 ||
+            (supportsAllowedRepeatFreq && _radioBackupDeviceInfoLength < 81)
+        ? null
+        : BackupNodeProfile.readRadioTuning(
+            frequencyKHz: _currentFreqHz,
+            bandwidthHz: _currentBwHz,
+            spreadingFactor: _currentSf,
+            codingRate: _currentCr,
+            clientRepeat: supportsAllowedRepeatFreq ? _clientRepeat : null,
+          ),
+    txPowerDbm: _currentTxPower,
+    pathHashByteWidth: _confirmedPathHashByteWidth,
   );
+
+  Set<BackupNodeProfilePart> get availableBackupRadioParts {
+    if (!_canUseNodeProfileBackup) return const {};
+    final current = _readNodeProfile();
+    return {
+      for (final part in BackupNodeProfilePart.radio)
+        if (current.value(part) != null) part,
+    };
+  }
 
   BackupSnapshot? snapshotNodeProfileBackup(Set<BackupNodeProfilePart> parts) {
     if (!_canUseNodeProfileBackup) return null;
@@ -12849,6 +12882,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   option.key: option.value,
             }).privacy
           : null,
+      tuning: parts.contains(BackupNodeProfilePart.tuning) ? profile.tuning : null,
+      txPowerDbm: parts.contains(BackupNodeProfilePart.txPower) ? profile.txPowerDbm : null,
+      pathHashByteWidth: parts.contains(BackupNodeProfilePart.pathHashWidth)
+          ? profile.pathHashByteWidth : null,
     );
     return BackupSnapshot(
       sourcePublicKey: selfPublicKeyHex,
@@ -12860,13 +12897,42 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   BackupNodeProfilePreview? previewBackupNodeProfile(BackupNodeProfile source) {
     if (!_canUseNodeProfileBackup) return null;
+    final before = _readNodeProfile();
     return BackupNodeProfilePreview(
       session: _nodeLocalBackupSession,
       nodeKey: selfPublicKeyHex,
-      before: _readNodeProfile(),
+      before: before,
       source: source,
       manualAddContactFlags: _manualAddContactFlags,
+      unavailable: {
+        for (final part in BackupNodeProfilePart.radio)
+          if (!_canRestoreBackupRadioPart(source, before, part)) part,
+      },
     );
+  }
+
+  bool _canRestoreBackupRadioPart(
+    BackupNodeProfile source,
+    BackupNodeProfile before,
+    BackupNodeProfilePart part,
+  ) {
+    if (source.value(part) == null) return true;
+    switch (part) {
+      case BackupNodeProfilePart.tuning:
+        final current = before.tuning;
+        if (current == null) return false;
+        final tuning = source.tuning!;
+        if ((tuning.clientRepeat ?? current.clientRepeat) != true) return true;
+        return current.clientRepeat != null &&
+            isAllowedRepeatFreqKHz(tuning.frequencyKHz, _allowedRepeatFreqRanges);
+      case BackupNodeProfilePart.txPower:
+        final maxPower = _maxTxPower;
+        return before.txPowerDbm != null && maxPower != null && source.txPowerDbm! <= maxPower;
+      case BackupNodeProfilePart.pathHashWidth:
+        return before.pathHashByteWidth != null;
+      case BackupNodeProfilePart.nodeName || BackupNodeProfilePart.position || BackupNodeProfilePart.privacy:
+        return true;
+    }
   }
 
   bool _restoringBackupNodeProfile = false;
@@ -12880,10 +12946,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (confirmed: confirmed, status: status);
     bool sameSession() =>
         _canUseNodeProfileBackup && _nodeLocalBackupSession == preview.session;
-    bool unchanged(BackupNodeProfilePart part) => sameSession() &&
-        _readNodeProfile().value(part) == preview.before.value(part) &&
-        (part != BackupNodeProfilePart.privacy ||
-            _manualAddContactFlags == preview.manualAddContactFlags);
+    bool unchanged(BackupNodeProfilePart part) {
+      if (!sameSession()) return false;
+      final current = _readNodeProfile();
+      return current.value(part) == preview.before.value(part) &&
+          _canRestoreBackupRadioPart(preview.source, current, part) &&
+          (part != BackupNodeProfilePart.privacy ||
+              _manualAddContactFlags == preview.manualAddContactFlags);
+    }
     final targets = BackupNodeProfilePart.values.where((part) =>
         parts.contains(part) && preview.changes.value(part) != null).toList();
     if (_restoringBackupNodeProfile || !sameSession() || !targets.every(unchanged)) {
@@ -12941,6 +13011,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           privacy.advertLocation!, privacy.multiAcks!,
           manualAddContactFlags: preview.manualAddContactFlags,
         );
+      case BackupNodeProfilePart.tuning:
+        final tuning = changes.tuning!;
+        return buildSetRadioParamsFrame(
+          tuning.frequencyKHz, tuning.bandwidthHz, tuning.spreadingFactor,
+          tuning.codingRate, clientRepeat: tuning.clientRepeat,
+        );
+      case BackupNodeProfilePart.txPower:
+        return buildSetRadioTxPowerFrame(changes.txPowerDbm!);
+      case BackupNodeProfilePart.pathHashWidth:
+        return buildSetPathHashModeFrame(changes.pathHashByteWidth! - 1);
     }
   }
 
@@ -12974,6 +13054,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _telemetryModeEnv = privacy.telemetryEnvironment!;
         _advertLocPolicy = privacy.advertLocation!;
         _multiAcks = privacy.multiAcks!;
+      case BackupNodeProfilePart.tuning:
+        final tuning = changes.tuning!;
+        _currentFreqHz = tuning.frequencyKHz;
+        _currentBwHz = tuning.bandwidthHz;
+        _currentSf = tuning.spreadingFactor;
+        _currentCr = tuning.codingRate;
+        _clientRepeat = tuning.clientRepeat;
+      case BackupNodeProfilePart.txPower:
+        _currentTxPower = changes.txPowerDbm!;
+      case BackupNodeProfilePart.pathHashWidth:
+        final width = changes.pathHashByteWidth!;
+        _confirmedPathHashByteWidth = width;
+        _adoptPathHashByteWidth(width);
     }
   }
 
@@ -14252,6 +14345,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _hasReceivedDeviceInfo = true;
     }
     _firmwareVerCode = frame[1];
+    _radioBackupDeviceInfoLength = frame.length;
 
     // RESP_CODE_DEVICE_INFO layout: [0]=code [1]=ver_code [2]=maxContacts/2
     // [3]=maxChannels [4..7]=ble_pin [8..19]=build date (12B, null-padded)
@@ -14265,18 +14359,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _clientRepeat = frame[80] != 0;
     }
     // Path hash mode v10+ (byte 81): width = mode + 1 byte(s) per hop
-    final previousPathHashByteWidth = _pathHashByteWidth;
-    if (frame.length >= 82) {
-      final mode = (frame[81] & 0xFF).clamp(0, 2);
-      _pathHashByteWidth = mode + 1;
-    } else {
-      _pathHashByteWidth = 1;
-    }
-    if (_pathHashByteWidth != previousPathHashByteWidth) {
-      _directRepeaters.clear();
-      _activeRepeaters.clear();
-      _bumpRepeaterActivity();
-    }
+    _confirmedPathHashByteWidth = supportsPathHashMode && frame.length >= 82 && frame[81] <= 2
+        ? frame[81] + 1 : null;
+    _adoptPathHashByteWidth(frame.length >= 82 ? frame[81].clamp(0, 2) + 1 : 1);
 
     // Firmware reports MAX_CONTACTS / 2 for v3+ device info.
     final reportedContacts = frame[2];
@@ -20821,6 +20906,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _batteryMillivolts = null;
     _batteryRequested = false;
     _pathHashByteWidth = 1;
+    _radioBackupDeviceInfoLength = 0;
+    _confirmedPathHashByteWidth = null;
     _maxContacts = _defaultMaxContacts;
     _maxChannels = _defaultMaxChannels;
     // The node may come back with other firmware, flashed while it was

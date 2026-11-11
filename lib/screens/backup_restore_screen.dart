@@ -771,6 +771,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       );
     }
 
+    Widget tuningDetails(BackupRadioTuning tuning) => Text(
+      '${(tuning.frequencyKHz / 1000).toStringAsFixed(3)} MHz · '
+      '${tuning.bandwidthHz / 1000} kHz · SF${tuning.spreadingFactor} · '
+      'CR 4/${tuning.codingRate}'
+      '${switch (tuning.clientRepeat) {
+        true => '\n${l10n.settings_clientRepeat} · ${l10n.backupAppSettings_enabled}',
+        false => '\n${l10n.settings_clientRepeat} · ${l10n.backupAppSettings_disabled}',
+        null => '',
+      }}',
+    );
+
     return [
       if (changes.nodeName case final name?)
         option(BackupNodeProfilePart.nodeName, l10n.settings_nodeName, Text(name)),
@@ -781,6 +792,22 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         )),
       if (changes.privacy case final privacy?)
         option(BackupNodeProfilePart.privacy, l10n.settings_privacy, privacyDetails(privacy)),
+      if (changes.tuning case final tuning?)
+        option(BackupNodeProfilePart.tuning, l10n.settings_radioSettings, tuningDetails(tuning)),
+      if (changes.txPowerDbm case final power?)
+        option(BackupNodeProfilePart.txPower, l10n.settings_txPower, Text('$power dBm')),
+      if (changes.pathHashByteWidth case final width?)
+        option(BackupNodeProfilePart.pathHashWidth, l10n.repeater_pathHashMode, Text(switch (width) {
+          1 => l10n.repeater_pathHashModeOption0,
+          2 => l10n.repeater_pathHashModeOption1,
+          _ => l10n.repeater_pathHashModeOption2,
+        })),
+      if (preview.unavailable.isNotEmpty)
+        Text(l10n.backupNodeProfile_radioUnavailable([
+          if (preview.unavailable.contains(BackupNodeProfilePart.tuning)) l10n.settings_radioSettings,
+          if (preview.unavailable.contains(BackupNodeProfilePart.txPower)) l10n.settings_txPower,
+          if (preview.unavailable.contains(BackupNodeProfilePart.pathHashWidth)) l10n.repeater_pathHashMode,
+        ].join(', '))),
     ];
   }
 
@@ -1103,16 +1130,15 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   ),
                 ],
               if (nodeProfile != null) ...[
-                if (nodeProfile.changes.isEmpty)
+                ..._nodeProfileChoices(nodeProfile),
+                if (nodeProfile.changes.isEmpty && nodeProfile.unavailable.isEmpty)
                   Text(l10n.backupNodeProfile_noChanges)
-                else ...[
-                  ..._nodeProfileChoices(nodeProfile),
+                else if (!nodeProfile.changes.isEmpty)
                   FilledButton(
                     onPressed: _busy || _selectedNodeProfileParts.isEmpty
                         ? null : () => _restoreNodeProfile(nodeProfile),
                     child: Text(l10n.backupChannels_apply),
                   ),
-                ],
               ],
               if (training != null) ...[
                 Text(l10n.backupFilterTraining_summary(

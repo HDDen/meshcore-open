@@ -153,7 +153,7 @@ class _Radio {
           name: 'Restore target',
           latitudeE6: 0,
           longitudeE6: 0,
-          frequencyHz: 869495000,
+          frequencyHz: 869495,
           bandwidthHz: 125000,
           spreadingFactor: 7,
           codingRate: 5,
@@ -205,7 +205,8 @@ class _Radio {
           name: channel.name,
           psk: channel.psk,
         ));
-      case cmdSetAdvertName || cmdSetAdvertLatLon || cmdSetOtherParams:
+      case cmdSetAdvertName || cmdSetAdvertLatLon || cmdSetOtherParams ||
+          cmdSetRadioParams || cmdSetRadioTxPower || cmdSetPathHashMode:
         profileWrites.add(List.of(frame));
         connector.handleFrameForTest(
           frame.first == rejectedProfileCommand ? ReviewFrames.err(6) : ReviewFrames.ok(),
@@ -307,6 +308,95 @@ void main() {
     expect(radio.connector.selfPublicKeyHex, _node);
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
+  });
+
+  test('radio restore keeps repeat and applies only ACK-confirmed fields', () async {
+    const tuning = BackupNodeProfilePart.tuning;
+    const power = BackupNodeProfilePart.txPower;
+    const width = BackupNodeProfilePart.pathHashWidth;
+    radio.connector.handleFrameForTest(Uint8List(82)
+      ..[0] = respCodeDeviceInfo
+      ..[1] = 10
+      ..[2] = 16
+      ..[3] = 4
+      ..[80] = 1);
+
+    final capture = radio.connector.snapshotNodeProfileBackup({tuning, width})!;
+    final initial = await const BackupImportPlanner().inspect(
+      await capture.encode(password: ''), password: '', nodeProfileOnly: true,
+    );
+    expect(initial.nodeProfile!.tuning?.clientRepeat, isTrue);
+    expect(initial.nodeProfile!.pathHashByteWidth, 1);
+    expect(initial.nodeProfile!.txPowerDbm, isNull);
+    expect(radio.profileWrites, isEmpty);
+
+    final source = BackupNodeProfile.fromBackup(radio: {
+      'frequencyHz': 869495,
+      'bandwidthHz': 250000,
+      'spreadingFactor': 8,
+      'codingRate': 6,
+      'txPowerDbm': 17,
+      'pathHashByteWidth': 3,
+    });
+    final preview = radio.connector.previewBackupNodeProfile(source)!;
+    expect(preview.unavailable, isEmpty);
+    expect(preview.changes.tuning?.clientRepeat, isTrue);
+    radio.rejectedProfileCommand = cmdSetPathHashMode;
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {tuning, width}), (
+      confirmed: 1, status: BackupNodeProfileStatus.writeUnconfirmed,
+    ));
+    expect(radio.profileWrites, [
+      buildSetRadioParamsFrame(869495, 250000, 8, 6, clientRepeat: true),
+      buildSetPathHashModeFrame(2),
+    ]);
+    expect(radio.connector.currentBwHz, 250000);
+    expect(radio.connector.currentTxPower, 14);
+    expect(radio.connector.pathHashByteWidth, 1);
+    expect(radio.reads, isEmpty);
+
+    radio.rejectedProfileCommand = null;
+    final retry = radio.connector.previewBackupNodeProfile(source)!;
+    expect(retry.changes.tuning, isNull);
+    expect(await radio.connector.restoreBackupNodeProfile(retry, {power, width}), (
+      confirmed: 2, status: BackupNodeProfileStatus.completed,
+    ));
+    expect(radio.profileWrites.skip(2), [
+      buildSetRadioTxPowerFrame(17), buildSetPathHashModeFrame(2),
+    ]);
+    expect(radio.connector.currentTxPower, 17);
+    expect(radio.connector.pathHashByteWidth, 3);
+  });
+
+  test('older radios accept tuning without a repeat byte and skip unsupported choices', () async {
+    const tuning = BackupNodeProfilePart.tuning;
+    const power = BackupNodeProfilePart.txPower;
+    const width = BackupNodeProfilePart.pathHashWidth;
+    final fields = {
+      'frequencyHz': 869495,
+      'bandwidthHz': 125000,
+      'spreadingFactor': 8,
+      'codingRate': 5,
+      'txPowerDbm': 23,
+      'pathHashByteWidth': 3,
+    };
+    final repeat = radio.connector.previewBackupNodeProfile(
+      BackupNodeProfile.fromBackup(radio: {...fields, 'clientRepeat': true}),
+    )!;
+    expect(repeat.changes.isEmpty, isTrue);
+    expect(repeat.unavailable, {tuning, power, width});
+
+    final source = BackupNodeProfile.fromBackup(radio: fields);
+    final legacy = radio.connector.previewBackupNodeProfile(source)!;
+    expect(legacy.unavailable, {power, width});
+    expect(await radio.connector.restoreBackupNodeProfile(legacy, {tuning, power, width}), (
+      confirmed: 1, status: BackupNodeProfileStatus.completed,
+    ));
+    expect(radio.profileWrites, [buildSetRadioParamsFrame(869495, 125000, 8, 5)]);
+
+    radio.connector.handleFrameForTest([respCodeDeviceInfo, 10, 16, 4]);
+    final unknown = radio.connector.previewBackupNodeProfile(source)!;
+    expect(unknown.changes.isEmpty, isTrue);
+    expect(unknown.unavailable, {tuning, power, width});
   });
 
   test('a backup captures the active node without requesting radio frames', () async {

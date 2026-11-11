@@ -270,6 +270,15 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final availableRadioParts = widget._mode == _BackupExportMode.nodeProfile
+        ? context.select<MeshCoreConnector, Set<BackupNodeProfilePart>>(
+            (connector) => connector.availableBackupRadioParts,
+          )
+        : const <BackupNodeProfilePart>{};
+    bool profilePartAvailable(BackupNodeProfilePart part) =>
+        !BackupNodeProfilePart.radio.contains(part) || availableRadioParts.contains(part);
+    final hasSelection = widget._mode == _BackupExportMode.nodeProfile
+        ? _nodeProfileParts.any(profilePartAvailable) : _hasSelection;
     return Scaffold(
       appBar: AppBar(
         title: Text(_title(context)),
@@ -288,12 +297,15 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                 (BackupNodeProfilePart.nodeName, l10n.settings_nodeName),
                 (BackupNodeProfilePart.position, l10n.settings_location),
                 (BackupNodeProfilePart.privacy, l10n.settings_privacy),
+                (BackupNodeProfilePart.tuning, l10n.settings_radioSettings),
+                (BackupNodeProfilePart.txPower, l10n.settings_txPower),
+                (BackupNodeProfilePart.pathHashWidth, l10n.repeater_pathHashMode),
               ])
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(label),
-                  value: _nodeProfileParts.contains(part),
-                  onChanged: _busy ? null : (value) => setState(() {
+                  value: profilePartAvailable(part) && _nodeProfileParts.contains(part),
+                  onChanged: _busy || !profilePartAvailable(part) ? null : (value) => setState(() {
                     if (value == true) {
                       _nodeProfileParts.add(part);
                     } else {
@@ -394,7 +406,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
             ],
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _busy || !_hasSelection ? null : _createBackup,
+              onPressed: _busy || !hasSelection ? null : _createBackup,
               icon: const Icon(Icons.save_outlined),
               label: Text(l10n.backupChannels_createBackup),
             ),

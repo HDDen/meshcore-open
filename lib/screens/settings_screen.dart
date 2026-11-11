@@ -47,18 +47,6 @@ int _toUiCodingRate(int deviceCr) {
   return deviceCr <= 4 ? deviceCr + 4 : deviceCr;
 }
 
-const Set<int> _defaultRepeatFreqsKHz = {433000, 869495, 918000};
-
-/// Whether the firmware accepts [freqKHz] for off-grid client repeat, using
-/// the ranges from CMD_GET_ALLOWED_REPEAT_FREQ when known.
-bool _isAllowedRepeatFreqKHz(MeshCoreConnector connector, int freqKHz) {
-  final ranges = connector.allowedRepeatFreqRanges;
-  if (ranges == null || ranges.isEmpty) {
-    return _defaultRepeatFreqsKHz.contains(freqKHz);
-  }
-  return ranges.any((r) => freqKHz >= r.lowKHz && freqKHz <= r.highKHz);
-}
-
 /// Lowest TX power companion firmware accepts (CMD_SET_RADIO_TX_POWER).
 const int _minTxPowerDbm = -9;
 
@@ -1999,7 +1987,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     final baseKHz = (baseFrequencyMHz * 1000).round();
     final ranges = widget.connector.allowedRepeatFreqRanges;
     final candidates = ranges == null || ranges.isEmpty
-        ? _defaultRepeatFreqsKHz
+        ? defaultRepeatFreqsKHz
         : {for (final r in ranges) baseKHz.clamp(r.lowKHz, r.highKHz)};
     final closestKHz = candidates.reduce(
       (a, b) => (a - baseKHz).abs() <= (b - baseKHz).abs() ? a : b,
@@ -2218,7 +2206,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
     final knownRepeat = widget.connector.clientRepeat != null;
 
     if (knownRepeat) {
-      if (_clientRepeat && !_isAllowedRepeatFreqKHz(widget.connector, freqHz)) {
+      if (_clientRepeat && !isAllowedRepeatFreqKHz(freqHz, widget.connector.allowedRepeatFreqRanges)) {
         showDismissibleSnackBar(
           context,
           content: Text(l10n.settings_clientRepeatFreqWarning),

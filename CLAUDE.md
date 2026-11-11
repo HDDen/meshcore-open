@@ -3134,11 +3134,13 @@ examples. It merges in one SQLite transaction, retains local manual labels,
 adds eligible rows within each cap, and preserves ordinary multiplicity
 on retry. The learning write queue serializes restore with live samples
 and only schedules a new fit when learning is active.
-The node profile backup carries the selected name, coordinates and telemetry
-privacy settings in the v1 node and location sections. It also reads the
-matching official MeshCore fields. Restore binds the preview to the session,
-checks each selected group at dispatch, and updates the connector after ACK.
-The other-params frame preserves the node's current contact flags.
+The node profile backup carries the selected name, coordinates, telemetry
+privacy and radio settings in the v1 node and location sections. It also
+reads the matching official MeshCore fields. Radio tuning, TX power and
+path hash width are selected separately. Restore binds the preview to the
+session, checks each selected group at dispatch, and updates the connector
+after ACK. A missing client-repeat field preserves the current value on
+supported firmware. The other-params frame preserves the current contact flags.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

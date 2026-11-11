@@ -1017,6 +1017,12 @@ abstract class AppLocalizations {
   /// **'The supported settings already match the connected node.'**
   String get backupNodeProfile_noChanges;
 
+  /// No description provided for @backupNodeProfile_radioUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable on the connected node: {settings}'**
+  String backupNodeProfile_radioUnavailable(String settings);
+
   /// No description provided for @backupNodeProfile_confirm.
   ///
   /// In en, this message translates to:

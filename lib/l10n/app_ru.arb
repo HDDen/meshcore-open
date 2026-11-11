@@ -155,6 +155,7 @@
   "backupNodeProfile_intro": "Выберите резервную копию и отметьте изменения, которые хотите применить на подключённой ноде.",
   "backupNodeProfile_empty": "В файле нет поддерживаемых настроек профиля ноды.",
   "backupNodeProfile_noChanges": "Поддерживаемые настройки уже совпадают с настройками ноды.",
+  "backupNodeProfile_radioUnavailable": "Для подключённой ноды недоступны: {settings}",
   "backupNodeProfile_confirm": "Записать выбранные настройки на ноду «{node}»? Изменений к записи: {count}.",
   "backupNodeProfile_applied": "Подтверждено изменений профиля ноды: {count}.",
   "backupNodeProfile_changed": "Нода или её настройки изменились. Подтверждено изменений: {count}. Обновите предпросмотр.",

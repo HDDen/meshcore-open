@@ -43,6 +43,83 @@ void main() {
     expect(v1.nodeProfile!.privacy, profile.privacy);
   });
 
+  test('radio fields round trip in the upstream v1 section', () async {
+    final profile = BackupNodeProfile.fromBackup(radio: {
+      'frequencyHz': 869495,
+      'bandwidthHz': 125000,
+      'spreadingFactor': 7,
+      'codingRate': 5,
+      'clientRepeat': false,
+      'txPowerDbm': -2,
+      'pathHashByteWidth': 3,
+    });
+    final snapshot = BackupSnapshot(
+      sourcePublicKey: _key,
+      nodeProfile: profile,
+      createdAt: DateTime.utc(2026),
+    );
+    final contents = await snapshot.encode(password: '');
+    final decoded = await const BackupFileCodec().decode(contents, password: '');
+    expect(decoded['items'], ['radioSettings']);
+    expect(decoded['sections'], {
+      'nodeSettings': {'radio': profile.radioValues},
+    });
+    final plan = await const BackupImportPlanner().inspect(
+      contents, password: '', nodeProfileOnly: true,
+    );
+    expect(plan.nodeProfile!.radioValues, profile.radioValues);
+  });
+
+  test('official radio settings normalize frequency and omit unknown options', () async {
+    for (final frequency in [869495, 869495000, 869.495, '869495']) {
+      final plan = await const BackupImportPlanner().inspect(
+        jsonEncode({
+          'public_key': _key,
+          'position_settings': {'latitude': '47.5', 'longitude': '7.8'},
+          'radio_settings': {
+            'frequency': frequency,
+            'bandwidth': 125000,
+            'spreading_factor': 7,
+            'coding_rate': 5,
+            'tx_power': 14,
+          },
+        }),
+        password: '', nodeProfileOnly: true,
+      );
+      expect(plan.nodeProfile!.position, (latitudeE6: 47500000, longitudeE6: 7800000));
+      expect(plan.nodeProfile!.radioValues, {
+        'frequencyHz': 869495,
+        'bandwidthHz': 125000,
+        'spreadingFactor': 7,
+        'codingRate': 5,
+        'txPowerDbm': 14,
+      });
+    }
+  });
+
+  test('rejects out-of-range radio fields and a malformed repeat flag', () {
+    const radio = {
+      'frequencyHz': 869495,
+      'bandwidthHz': 125000,
+      'spreadingFactor': 7,
+      'codingRate': 5,
+    };
+    for (final invalid in [
+      {'frequencyHz': 149999},
+      {'bandwidthHz': 125.5},
+      {'spreadingFactor': 13},
+      {'codingRate': 9},
+      {'clientRepeat': 'true'},
+      {'txPowerDbm': 128},
+      {'pathHashByteWidth': 4},
+    ]) {
+      expect(
+        () => BackupNodeProfile.fromBackup(radio: {...radio, ...invalid}),
+        throwsFormatException,
+      );
+    }
+  });
+
   test('rejects names beyond the firmware byte limit and invalid coordinates', () async {
     for (final fields in [
       {'name': 'Я' * 16},

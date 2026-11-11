@@ -185,6 +185,8 @@
   "backupNodeProfile_intro": "Choose a backup and select the changes to apply to the connected node.",
   "backupNodeProfile_empty": "This file contains no supported node profile settings.",
   "backupNodeProfile_noChanges": "The supported settings already match the connected node.",
+  "backupNodeProfile_radioUnavailable": "Unavailable on the connected node: {settings}",
+  "@backupNodeProfile_radioUnavailable": {"placeholders": {"settings": {"type": "String"}}},
   "backupNodeProfile_confirm": "Write the selected settings to “{node}”? Changes to write: {count}.",
   "@backupNodeProfile_confirm": { "placeholders": { "node": { "type": "String" }, "count": { "type": "int" } } },
   "backupNodeProfile_applied": "Node profile changes confirmed: {count}.",

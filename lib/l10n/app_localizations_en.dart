@@ -598,6 +598,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The supported settings already match the connected node.';
 
   @override
+  String backupNodeProfile_radioUnavailable(String settings) {
+    return 'Unavailable on the connected node: $settings';
+  }
+
+  @override
   String backupNodeProfile_confirm(String node, int count) {
     return 'Write the selected settings to “$node”? Changes to write: $count.';
   }

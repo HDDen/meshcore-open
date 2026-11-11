@@ -922,7 +922,7 @@ Uint8List buildSetChannelFrame(int channelIndex, String name, Uint8List psk) {
 // Build CMD_SET_RADIO_PARAMS frame
 // Format: [cmd][freq x4][bw x4][sf][cr] (pre-v9)
 //         [cmd][freq x4][bw x4][sf][cr][repeat] (firmware v9+)
-// freq: frequency in Hz (300000-2500000)
+// freq: frequency in kHz (150000-2500000)
 // bw: bandwidth in Hz (7000-500000)
 // sf: spreading factor (5-12)
 // cr: coding rate (5-8)
@@ -1035,6 +1035,15 @@ Uint8List buildGetAllowedRepeatFreqFrame() {
 }
 
 typedef RepeatFreqRange = ({int lowKHz, int highKHz});
+
+const Set<int> defaultRepeatFreqsKHz = {433000, 869495, 918000};
+
+bool isAllowedRepeatFreqKHz(int frequency, List<RepeatFreqRange>? ranges) {
+  if (ranges == null || ranges.isEmpty) {
+    return defaultRepeatFreqsKHz.contains(frequency);
+  }
+  return ranges.any((range) => frequency >= range.lowKHz && frequency <= range.highKHz);
+}
 
 // RESP_ALLOWED_REPEAT_FREQ: [code] then [lower_khz u32][upper_khz u32] pairs.
 List<RepeatFreqRange> parseAllowedRepeatFreqFrame(Uint8List frame) {

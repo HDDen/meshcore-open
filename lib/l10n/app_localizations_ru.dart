@@ -600,6 +600,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поддерживаемые настройки уже совпадают с настройками ноды.';
 
   @override
+  String backupNodeProfile_radioUnavailable(String settings) {
+    return 'Для подключённой ноды недоступны: $settings';
+  }
+
+  @override
   String backupNodeProfile_confirm(String node, int count) {
     return 'Записать выбранные настройки на ноду «$node»? Изменений к записи: $count.';
   }

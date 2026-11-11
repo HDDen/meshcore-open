@@ -317,25 +317,36 @@ class BackupImportPlanner {
     Map<String, Object?>? objectOrNull(Object? value) =>
         value == null ? null : _readObject(value);
     if (official) {
+      Object? officialNumber(Object? value) =>
+          value is String ? num.tryParse(value) ?? value : value;
+      Map<String, Object?>? readOfficialNumbers(Object? value) {
+        final fields = objectOrNull(value);
+        return fields?.map((key, value) => MapEntry(key, officialNumber(value)));
+      }
       final other = objectOrNull(payload['other_settings']);
       return BackupNodeProfile.fromBackup(
         name: payload['name'],
-        position: objectOrNull(payload['position_settings']),
-        privacy: {'advertLocation': other?['advert_location_policy']},
+        position: readOfficialNumbers(payload['position_settings']),
+        privacy: {'advertLocation': officialNumber(other?['advert_location_policy'])},
+        radio: readOfficialNumbers(payload['radio_settings']),
+        officialRadio: true,
       );
     }
     final items = _readList(payload['items']);
     final sections = _readObject(payload['sections']);
-    final node = items.contains('deviceName') ? objectOrNull(sections['nodeSettings']) : null;
+    final node = items.contains('deviceName') || items.contains('radioSettings')
+        ? objectOrNull(sections['nodeSettings']) : null;
+    final name = node?['name'];
     final location = items.contains('location') || items.contains('privacySettings')
         ? objectOrNull(sections['locationSettings'])
         : null;
     return BackupNodeProfile.fromBackup(
-      name: node?['name'],
+      name: items.contains('deviceName') ? name : null,
       position: items.contains('location') ? objectOrNull(location?['location']) : null,
       privacy: items.contains('privacySettings')
           ? objectOrNull(location?['privacySettings'])
           : null,
+      radio: items.contains('radioSettings') ? objectOrNull(node?['radio']) : null,
     );
   }
 

@@ -215,9 +215,12 @@ class BackupSnapshot {
     final name = profile?.nodeName;
     final position = profile?.position;
     final privacy = profile?.privacy;
+    final radio = profile?.radioValues;
+    final hasRadio = radio != null && radio.isNotEmpty;
     if (name != null) items.add('deviceName');
     if (position != null) items.add('location');
     if (privacy != null) items.add('privacySettings');
+    if (hasRadio) items.add('radioSettings');
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
@@ -231,7 +234,8 @@ class BackupSnapshot {
           AppSettingsBackup.section: {
             'preferences': {'app_settings': settings.values},
           },
-        if (name != null) 'nodeSettings': {'name': name},
+        if (name != null || hasRadio)
+          'nodeSettings': {'name': ?name, if (hasRadio) 'radio': radio},
         if (position != null || privacy != null)
           'locationSettings': {
             if (position != null) 'location': {

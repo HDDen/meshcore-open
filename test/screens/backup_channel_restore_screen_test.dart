@@ -89,7 +89,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
       BackupNodeProfilePreview(
         session: this,
         nodeKey: _key,
-        before: const BackupNodeProfile(nodeName: 'Test node'),
+        before: const BackupNodeProfile(nodeName: 'Test node', txPowerDbm: 14),
         source: source,
         manualAddContactFlags: 1,
       );
@@ -362,6 +362,7 @@ void main() {
       'public_key': _key,
       'name': 'From backup',
       'position_settings': {'latitude': 55, 'longitude': 37},
+      'radio_settings': {'tx_power': 17},
     });
     await tester.pumpWidget(ChangeNotifierProvider<MeshCoreConnector>.value(
       value: node,
@@ -382,6 +383,9 @@ void main() {
     );
     final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
     expect(tester.widget<FilledButton>(restore).onPressed, isNull);
+    final power = find.widgetWithText(CheckboxListTile, l10n.settings_txPower);
+    expect(tester.widget<CheckboxListTile>(power).value, isFalse);
+    expect(find.descendant(of: power, matching: find.text('17 dBm')), findsOneWidget);
     await tester.tap(find.widgetWithText(CheckboxListTile, l10n.settings_nodeName));
     await tester.pump();
     await tester.tap(restore);
