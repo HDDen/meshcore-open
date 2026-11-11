@@ -21,7 +21,7 @@ extension MessageHistoryBackupSnapshot on MessageHistoryDatabase {
     };
     final channelRows = <String, Map<String, String>>{};
     final directPrefix = 'messages_$scope';
-    final directKey = RegExp('^${directPrefix}[0-9a-f]{64}\$');
+    final directKey = RegExp('^$directPrefix[0-9a-f]{64}\$');
     var bytes = 0;
 
     void checkDestination() {

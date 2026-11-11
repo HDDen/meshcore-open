@@ -46,8 +46,8 @@ Future<Object?> _call(
   int? bottom,
 }) => service.handle(MethodCall(method, {
   'id': id,
-  if (top != null) 'top': top,
-  if (bottom != null) 'bottom': bottom,
+  'top': ?top,
+  'bottom': ?bottom,
 }));
 
 Future<void> _frames(WidgetTester tester) async {
