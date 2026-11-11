@@ -7,6 +7,7 @@ import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
+import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -29,6 +30,7 @@ class BackupImportPlan {
     this.contactSettings,
     this.channelSettings,
     this.communities,
+    this.messageFilter,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -45,6 +47,7 @@ class BackupImportPlan {
   final BackupContactSettings? contactSettings;
   final BackupChannelSettings? channelSettings;
   final List<Community>? communities;
+  final BackupMessageFilter? messageFilter;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -72,6 +75,7 @@ class BackupImportPlanner {
     bool communitiesOnly = false,
     bool contactSettingsOnly = false,
     bool channelSettingsOnly = false,
+    bool messageFilterOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -85,6 +89,20 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (messageFilterOnly) {
+      final preferences = official ? null :
+          _upstreamPreferences(payload, BackupMessageFilter.section) ??
+          _upstreamPreferences(payload, 'channelFilters', sectionName: 'channels');
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        messageFilter: preferences == null ? null :
+            BackupMessageFilter.fromPreferences(preferences),
+      );
+    }
     if (channelSettingsOnly) {
       final preferences = official ? null : _conversationPreferences(
         payload, 'channelSettings', 'channels', BackupChannelSettings.extensionSection,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../helpers/backup_message_filter.dart';
 import '../../helpers/mention_autocomplete.dart';
 import '../../models/message_filter.dart';
 import '../../storage/message_filter_store.dart';
@@ -22,7 +23,7 @@ class MessageFilterService extends ChangeNotifier {
   MessageFilterSettings _settings = const MessageFilterSettings();
   List<FilterRule> _rules = const [];
   MessageFilterRules? _ruleMatcher;
-  Future<void> _ruleWrites = Future<void>.value();
+  Future<void> _preferenceWrites = Future<void>.value();
   DuplicateTracker? _duplicates;
   MessageFilterLearning? _learning;
 
@@ -39,7 +40,13 @@ class MessageFilterService extends ChangeNotifier {
     unawaited(_syncLearning());
   }
 
-  Future<void> updateSettings(MessageFilterSettings settings) async {
+  Future<void> updateSettings(MessageFilterSettings settings) =>
+      _queuePreferenceWrite(() async {
+        await _saveSettings(settings);
+        notifyListeners();
+      });
+
+  Future<void> _saveSettings(MessageFilterSettings settings) async {
     final next = settings.copyWith(
       excludedChannelIds: Set.unmodifiable(settings.excludedChannelIds),
     );
@@ -47,16 +54,16 @@ class MessageFilterService extends ChangeNotifier {
     _settings = next;
     if (!next.enabled || !next.duplicates) _duplicates = null;
     await _syncLearning();
-    notifyListeners();
   }
 
-  Future<void> setChannelExcluded(String channelId, {required bool excluded}) {
-    final ids = {..._settings.excludedChannelIds};
-    final changed = excluded ? ids.add(channelId) : ids.remove(channelId);
-    return changed
-        ? updateSettings(_settings.copyWith(excludedChannelIds: ids))
-        : Future<void>.value();
-  }
+  Future<void> setChannelExcluded(String channelId, {required bool excluded}) =>
+      _queuePreferenceWrite(() async {
+        final ids = {..._settings.excludedChannelIds};
+        final changed = excluded ? ids.add(channelId) : ids.remove(channelId);
+        if (!changed) return;
+        await _saveSettings(_settings.copyWith(excludedChannelIds: ids));
+        notifyListeners();
+      });
 
   Future<void> addRule(FilterRule rule) =>
       _writeRules(() => [..._rules, rule]);
@@ -66,17 +73,40 @@ class MessageFilterService extends ChangeNotifier {
     return _writeRules(() => replacement);
   }
 
-  Future<void> _writeRules(List<FilterRule> Function() nextRules) {
-    final write = _ruleWrites.then((_) async {
-      final next = List<FilterRule>.unmodifiable(nextRules());
-      await _store.saveRules(next);
-      _rules = next;
-      _ruleMatcher = null;
-      notifyListeners();
-    });
-    _ruleWrites = write.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+  Future<void> _writeRules(List<FilterRule> Function() nextRules) =>
+      _queuePreferenceWrite(() async {
+        await _saveRules(nextRules());
+        notifyListeners();
+      });
+
+  Future<void> _saveRules(List<FilterRule> rules) async {
+    final next = List<FilterRule>.unmodifiable(rules);
+    await _store.saveRules(next);
+    _rules = next;
+    _ruleMatcher = null;
+  }
+
+  Future<T> _queuePreferenceWrite<T>(Future<T> Function() operation) {
+    final write = _preferenceWrites.then((_) => operation());
+    _preferenceWrites = write.then<void>((_) {}, onError: (Object _, StackTrace _) {});
     return write;
   }
+
+  Future<bool> restoreBackup(BackupMessageFilterPreview preview) =>
+      _queuePreferenceWrite(() async {
+        if (!identical(preview.baselineSettings, _settings) ||
+            !identical(preview.baselineRules, _rules)) return false;
+        try {
+          if (preview.changedSettings > 0) await _saveSettings(preview.settings);
+          if (preview.addedRules.isNotEmpty) {
+            await _saveRules([..._rules, ...preview.addedRules]);
+          }
+          return true;
+        } finally {
+          if (!identical(preview.baselineSettings, _settings) ||
+              !identical(preview.baselineRules, _rules)) notifyListeners();
+        }
+      });
 
   bool appliesTo(String? channelId) =>
       _settings.enabled &&

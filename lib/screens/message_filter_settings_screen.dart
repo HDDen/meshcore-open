@@ -5,6 +5,8 @@ import '../models/channel.dart';
 import '../models/message_filter.dart';
 import '../services/message_filter/message_filter_service.dart';
 import '../widgets/channel_filter_rule_dialog.dart';
+import 'backup_export_screen.dart';
+import 'backup_restore_screen.dart';
 
 class MessageFilterSettingsScreen extends StatefulWidget {
   const MessageFilterSettingsScreen({
@@ -88,7 +90,28 @@ class _MessageFilterSettingsScreenState
         ?channel.storageId: channel,
     };
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.messageFilter_title)),
+      appBar: AppBar(
+        title: Text(l10n.messageFilter_title),
+        actions: [
+          PopupMenuButton<bool>(
+            enabled: !_saving,
+            tooltip: l10n.backupMessageFilter_menu,
+            icon: const Icon(Icons.settings_backup_restore),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: false, child: Text(l10n.backupMessageFilter_exportTitle)),
+              PopupMenuItem(value: true, child: Text(l10n.backupMessageFilter_title)),
+            ],
+            onSelected: (restore) async {
+              await Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => restore
+                    ? BackupRestoreScreen.messageFilter(service)
+                    : BackupExportScreen.messageFilter(service),
+              ));
+              if (mounted) setState(() {});
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           children: [

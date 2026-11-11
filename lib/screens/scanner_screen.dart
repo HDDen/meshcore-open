@@ -26,6 +26,8 @@ import 'backup_restore_screen.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
 
+enum _ScannerBackupAction { exportSettings, restoreSettings, exportFilter, restoreFilter }
+
 /// Screen for scanning and connecting to MeshCore devices
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -202,24 +204,39 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
-          PopupMenuButton<bool>(
+          PopupMenuButton<_ScannerBackupAction>(
             icon: const Icon(Icons.settings_backup_restore),
             tooltip: context.l10n.backupAppSettings_menu,
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: false,
+                value: _ScannerBackupAction.exportSettings,
                 child: Text(context.l10n.backupExport_createTitle),
               ),
               PopupMenuItem(
-                value: true,
+                value: _ScannerBackupAction.restoreSettings,
                 child: Text(context.l10n.backupAppSettings_title),
               ),
+              if (_connector.messageFilterService != null) ...[
+                PopupMenuItem(
+                  value: _ScannerBackupAction.exportFilter,
+                  child: Text(context.l10n.backupMessageFilter_exportTitle),
+                ),
+                PopupMenuItem(
+                  value: _ScannerBackupAction.restoreFilter,
+                  child: Text(context.l10n.backupMessageFilter_title),
+                ),
+              ],
             ],
-            onSelected: (restore) => Navigator.of(context).push(
+            onSelected: (action) => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => restore
-                    ? const BackupRestoreScreen.appSettings()
-                    : const BackupExportScreen.appSettings(),
+                builder: (_) => switch (action) {
+                  _ScannerBackupAction.exportSettings => const BackupExportScreen.appSettings(),
+                  _ScannerBackupAction.restoreSettings => const BackupRestoreScreen.appSettings(),
+                  _ScannerBackupAction.exportFilter =>
+                    BackupExportScreen.messageFilter(_connector.messageFilterService!),
+                  _ScannerBackupAction.restoreFilter =>
+                    BackupRestoreScreen.messageFilter(_connector.messageFilterService!),
+                },
               ),
             ),
           ),

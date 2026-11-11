@@ -12,6 +12,7 @@ import 'package:meshcore_open/helpers/backup_communities.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
+import 'package:meshcore_open/helpers/backup_message_filter.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -20,12 +21,14 @@ import 'package:meshcore_open/models/app_settings_backup.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/screens/backup_export_screen.dart';
 import 'package:meshcore_open/screens/backup_restore_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/services/backup_snapshot.dart';
+import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/backup_json_file.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -320,6 +323,59 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('restores filter preferences without a node after confirmation', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    PrefsManager.reset();
+    addTearDown(PrefsManager.reset);
+    final previousPaths = PathProviderPlatform.instance;
+    PathProviderPlatform.instance = _NoPreferencesDirectory();
+    addTearDown(() => PathProviderPlatform.instance = previousPaths);
+    await tester.runAsync(PrefsManager.initialize);
+    final filter = MessageFilterService()..load();
+    addTearDown(filter.dispose);
+    const rule = FilterRule(id: 'advert', pattern: 'buy now');
+    final contents = await BackupSnapshot(
+      messageFilter: BackupMessageFilter.capture(
+        const MessageFilterSettings(enabled: true, learning: true, duplicates: true),
+        const [rule],
+      ),
+      createdAt: DateTime.utc(2026),
+    ).encode(password: '');
+
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: BackupRestoreScreen.messageFilter(
+        filter,
+        pickFile: () async => XFile.fromData(
+          Uint8List.fromList(utf8.encode(contents)), name: 'filter.json',
+        ),
+      ),
+    ));
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupMessageFilter_summary(1, 1)),
+    );
+    expect(filter.rules, isEmpty);
+    final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupMessageFilter_confirm), findsOneWidget);
+    expect(filter.settings.duplicates, isFalse);
+    await _waitAfterTap(
+      tester,
+      find.descendant(of: find.byType(AlertDialog), matching: restore),
+      find.text(l10n.backupMessageFilter_applied),
+    );
+    expect(filter.rules, [rule]);
+    expect(filter.settings.duplicates, isTrue);
+    expect(filter.settings.enabled, isFalse);
+    expect(filter.settings.learning, isFalse);
+  });
+
   testWidgets('channel settings preview includes order and requires confirmation', (tester) async {
     final node = _Node();
     addTearDown(node.dispose);

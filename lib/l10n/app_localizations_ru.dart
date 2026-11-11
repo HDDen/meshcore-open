@@ -499,6 +499,48 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить настройки приложения.';
 
   @override
+  String get backupMessageFilter_menu => 'Резервная копия спам-фильтра';
+
+  @override
+  String get backupMessageFilter_exportTitle => 'Создать копию спам-фильтра';
+
+  @override
+  String get backupMessageFilter_title => 'Восстановление спам-фильтра';
+
+  @override
+  String get backupMessageFilter_scope =>
+      'Правила, проверка повторов и повторяющихся символов, режим отображения и исключённые каналы.';
+
+  @override
+  String get backupMessageFilter_empty =>
+      'В файле нет поддерживаемых настроек или правил спам-фильтра.';
+
+  @override
+  String get backupMessageFilter_noChanges =>
+      'В копии нет новых правил или изменений настроек.';
+
+  @override
+  String backupMessageFilter_summary(int rules, int settings) {
+    return 'Правил к добавлению: $rules. Настроек к изменению: $settings.';
+  }
+
+  @override
+  String get backupMessageFilter_confirm =>
+      'Применить показанные изменения в текущем профиле приложения? Переключатели фильтра и обучения сохранят текущие значения.';
+
+  @override
+  String get backupMessageFilter_applied =>
+      'Настройки и правила спам-фильтра восстановлены.';
+
+  @override
+  String get backupMessageFilter_changed =>
+      'Спам-фильтр изменился. Обновите предпросмотр.';
+
+  @override
+  String get backupMessageFilter_failed =>
+      'Не удалось завершить восстановление спам-фильтра. Обновите предпросмотр.';
+
+  @override
   String get backupAppSettings_enabled => 'Включено';
 
   @override

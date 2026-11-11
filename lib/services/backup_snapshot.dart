@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_contact_settings.dart';
+import '../helpers/backup_message_filter.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -23,6 +24,7 @@ class BackupSnapshot {
     Iterable<Community>? communities,
     String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
+    BackupMessageFilter? messageFilter,
     required DateTime createdAt,
   }) : sourcePublicKey =
            channels == null && channelSettings == null && contacts == null &&
@@ -32,6 +34,7 @@ class BackupSnapshot {
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
        _appSettings = appSettings?.isEmpty == true ? null : appSettings,
+       _messageFilter = messageFilter?.isEmpty == true ? null : messageFilter,
        _contactSettings = contactSettings?.isEmpty == true ? null : contactSettings,
        _channelSettings = channelSettings?.isEmpty == true ? null : channelSettings,
        _historyRows = null,
@@ -63,7 +66,7 @@ class BackupSnapshot {
       throw const FormatException('Invalid backup source key');
     }
     if (_sections.isEmpty && _appSettings == null &&
-        contactSettings == null && channelSettings == null) {
+        contactSettings == null && channelSettings == null && messageFilter == null) {
       throw const FormatException('No selected backup sections');
     }
   }
@@ -77,6 +80,7 @@ class BackupSnapshot {
        createdAt = createdAt.toUtc(),
        _sections = const {},
        _appSettings = null,
+       _messageFilter = null,
        _contactSettings = null,
        _channelSettings = null,
        _historyRows = Map<String, List<String>>.unmodifiable({
@@ -96,6 +100,7 @@ class BackupSnapshot {
   final DateTime createdAt;
   final Map<String, List<Map<String, Object?>>> _sections;
   final AppSettingsBackup? _appSettings;
+  final BackupMessageFilter? _messageFilter;
   final BackupContactSettings? _contactSettings;
   final BackupChannelSettings? _channelSettings;
   final Map<String, List<String>>? _historyRows;
@@ -103,6 +108,7 @@ class BackupSnapshot {
   bool get isEmpty =>
       _historyRows?.isEmpty ??
       (_appSettings == null && _contactSettings == null && _channelSettings == null &&
+          _messageFilter == null &&
           _sections.values.every((rows) => rows.isEmpty));
   bool get _hasNodeData =>
       _sections.isNotEmpty || _contactSettings != null || _channelSettings != null;
@@ -111,6 +117,7 @@ class BackupSnapshot {
     if (_contactSettings != null) 'perContactSettings',
     if (_channelSettings != null) 'channelSettings',
     if (_appSettings != null) AppSettingsBackup.section,
+    if (_messageFilter != null) BackupMessageFilter.section,
   ];
   int get channelCount => _sections['channels']?.length ?? 0;
   bool get containsCommunityKeys => _sections['communities']?.isNotEmpty ?? false;
@@ -123,7 +130,7 @@ class BackupSnapshot {
     final kind = _historyRows != null
         ? 'history'
         : !_hasNodeData
-        ? 'settings'
+        ? _messageFilter != null && items.length == 1 ? 'message-filter' : 'settings'
         : items.length == 1
         ? switch (items.single) {
             'perContactSettings' => 'contact-settings',
@@ -178,6 +185,10 @@ class BackupSnapshot {
         settings.toPreferences(scope), settings.toPreferences(scope, forkOnly: true));
     }
     if (_appSettings != null) items.add(AppSettingsBackup.section);
+    if (_messageFilter case final filter?) {
+      items.add(BackupMessageFilter.section);
+      preferences[BackupMessageFilter.section] = filter.toPreferences();
+    }
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,

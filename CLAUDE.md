@@ -3122,6 +3122,12 @@ inherited options. Import writes name-keyed preferences and fills an absent
 channel order through `node_state`. The connector refreshes the affected
 slots after saving. MCOa-specific contact and channel preferences live in
 separate extension sections so upstream can validate the standard sections.
+Spam-filter backups read `channelFilters` preferences from upstream v1 and
+export `mcoaMessageFilter` to preserve the upstream corpus when handling a
+settings-only file. Restore merges user rules and excluded PSK IDs, applies
+display and duplicate options, and preserves both activation switches.
+Settings, rule edits and restore share the filter's preference write queue.
+The backup path does not access the SQLite training corpus.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

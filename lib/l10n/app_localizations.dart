@@ -861,6 +861,72 @@ abstract class AppLocalizations {
   /// **'Could not restore app settings.'**
   String get backupAppSettings_failed;
 
+  /// No description provided for @backupMessageFilter_menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam filter backup'**
+  String get backupMessageFilter_menu;
+
+  /// No description provided for @backupMessageFilter_exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up the spam filter'**
+  String get backupMessageFilter_exportTitle;
+
+  /// No description provided for @backupMessageFilter_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the spam filter'**
+  String get backupMessageFilter_title;
+
+  /// No description provided for @backupMessageFilter_scope.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules, duplicate and repeated-character checks, display mode, and excluded channels.'**
+  String get backupMessageFilter_scope;
+
+  /// No description provided for @backupMessageFilter_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains no supported spam filter settings or rules.'**
+  String get backupMessageFilter_empty;
+
+  /// No description provided for @backupMessageFilter_noChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup contains no new rules or settings changes.'**
+  String get backupMessageFilter_noChanges;
+
+  /// No description provided for @backupMessageFilter_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules to add: {rules}. Settings to change: {settings}.'**
+  String backupMessageFilter_summary(int rules, int settings);
+
+  /// No description provided for @backupMessageFilter_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply the preview to the current app profile? The filter and learning switches keep their current values.'**
+  String get backupMessageFilter_confirm;
+
+  /// No description provided for @backupMessageFilter_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam filter settings and rules restored.'**
+  String get backupMessageFilter_applied;
+
+  /// No description provided for @backupMessageFilter_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The spam filter has changed. Refresh the preview.'**
+  String get backupMessageFilter_changed;
+
+  /// No description provided for @backupMessageFilter_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish restoring the spam filter. Refresh the preview.'**
+  String get backupMessageFilter_failed;
+
   /// No description provided for @backupAppSettings_enabled.
   ///
   /// In en, this message translates to:

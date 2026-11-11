@@ -497,6 +497,48 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupAppSettings_failed => 'Could not restore app settings.';
 
   @override
+  String get backupMessageFilter_menu => 'Spam filter backup';
+
+  @override
+  String get backupMessageFilter_exportTitle => 'Back up the spam filter';
+
+  @override
+  String get backupMessageFilter_title => 'Restore the spam filter';
+
+  @override
+  String get backupMessageFilter_scope =>
+      'Rules, duplicate and repeated-character checks, display mode, and excluded channels.';
+
+  @override
+  String get backupMessageFilter_empty =>
+      'This file contains no supported spam filter settings or rules.';
+
+  @override
+  String get backupMessageFilter_noChanges =>
+      'The backup contains no new rules or settings changes.';
+
+  @override
+  String backupMessageFilter_summary(int rules, int settings) {
+    return 'Rules to add: $rules. Settings to change: $settings.';
+  }
+
+  @override
+  String get backupMessageFilter_confirm =>
+      'Apply the preview to the current app profile? The filter and learning switches keep their current values.';
+
+  @override
+  String get backupMessageFilter_applied =>
+      'Spam filter settings and rules restored.';
+
+  @override
+  String get backupMessageFilter_changed =>
+      'The spam filter has changed. Refresh the preview.';
+
+  @override
+  String get backupMessageFilter_failed =>
+      'Could not finish restoring the spam filter. Refresh the preview.';
+
+  @override
   String get backupAppSettings_enabled => 'On';
 
   @override

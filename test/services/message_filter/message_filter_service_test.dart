@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/backup_message_filter.dart';
 import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -36,6 +37,44 @@ void main() {
     final reloaded = MessageFilterService()..load();
     addTearDown(reloaded.dispose);
     expect(reloaded.rules, [_bonus, _sender]);
+  });
+
+  test('backup merges rules after queued writes and preserves opt-in and exclusions', () async {
+    final filter = MessageFilterService()..load();
+    addTearDown(filter.dispose);
+    const manual = FilterRule(id: 'existing', pattern: 'local rule');
+    final localChannel = 'ab' * 8;
+    final incomingChannel = 'cd' * 8;
+    await filter.addRule(_bonus);
+    final backup = BackupMessageFilter.capture(
+      MessageFilterSettings(
+        enabled: true, learning: true, duplicates: true,
+        excludedChannelIds: {incomingChannel},
+      ),
+      const [
+        FilterRule(id: 'same-text', pattern: ' BONUS ',
+          field: FilterRuleField.both, match: FilterRuleMatch.wholeWord),
+        _sender,
+      ],
+    );
+    final stale = backup.preview(filter.settings, filter.rules);
+    final edit = filter.addRule(manual);
+    expect(await filter.restoreBackup(stale), isFalse);
+    await edit;
+    await filter.setChannelExcluded(localChannel, excluded: true);
+    final preview = backup.preview(filter.settings, filter.rules);
+    expect(preview.addedRules, [_sender]);
+    expect(await filter.restoreBackup(preview), isTrue);
+    expect(filter.rules, [_bonus, manual, _sender]);
+    expect(filter.settings.enabled, isFalse);
+    expect(filter.settings.learning, isFalse);
+    expect(filter.settings.duplicates, isTrue);
+    expect(filter.settings.excludedChannelIds, {localChannel, incomingChannel});
+
+    final reloaded = MessageFilterService()..load();
+    addTearDown(reloaded.dispose);
+    expect(reloaded.rules, filter.rules);
+    expect(reloaded.settings.toJson(), filter.settings.toJson());
   });
 
   test('rules require opt-in and channel exclusions survive reload', () async {
