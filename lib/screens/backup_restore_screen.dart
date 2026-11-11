@@ -17,6 +17,7 @@ import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
+import '../helpers/backup_node_profile.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -46,6 +47,7 @@ Future<BackupImportPlan> _inspectBackup(
     bool channelSettingsOnly,
     bool messageFilterOnly,
     bool filterTrainingOnly,
+    bool nodeProfileOnly,
   }) input,
 ) => const BackupImportPlanner().inspect(
   input.contents,
@@ -59,6 +61,7 @@ Future<BackupImportPlan> _inspectBackup(
   channelSettingsOnly: input.channelSettingsOnly,
   messageFilterOnly: input.messageFilterOnly,
   filterTrainingOnly: input.filterTrainingOnly,
+  nodeProfileOnly: input.nodeProfileOnly,
 );
 
 Future<String> _readBackupFile(XFile file) async {
@@ -85,6 +88,7 @@ enum _BackupSection {
   channelSettings,
   messageFilter,
   filterTraining,
+  nodeProfile,
 }
 
 class BackupRestoreScreen extends StatefulWidget {
@@ -92,6 +96,11 @@ class BackupRestoreScreen extends StatefulWidget {
     super.key,
     this.pickFile = _pickBackupFile,
   }) : _section = _BackupSection.channels, _filter = null;
+
+  const BackupRestoreScreen.nodeProfile({
+    super.key,
+    this.pickFile = _pickBackupFile,
+  }) : _section = _BackupSection.nodeProfile, _filter = null;
 
   const BackupRestoreScreen.contacts({
     super.key,
@@ -168,6 +177,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   BackupMessageFilter? _filterSource;
   BackupMessageFilterPreview? _filterPreview;
   BackupFilterTraining? _trainingSource;
+  BackupNodeProfile? _nodeProfileSource;
+  BackupNodeProfilePreview? _nodeProfilePreview;
+  final _selectedNodeProfileParts = <BackupNodeProfilePart>{};
   BackupMessageHistory? _historySource;
   BackupMessageHistoryPreview? _historyPreview;
   String? _discoveredSource;
@@ -188,6 +200,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _contactSource != null ||
       _settingsSource != null ||
       _filterSource != null ||
+      _nodeProfileSource != null ||
       _historySource != null ||
       _discoveredSource != null ||
       _contactGroupsSource != null ||
@@ -212,6 +225,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _filterSource = null;
         _filterPreview = null;
         _trainingSource = null;
+        _nodeProfileSource = null;
+        _nodeProfilePreview = null;
+        _selectedNodeProfileParts.clear();
         _historySource = null;
         _historyPreview = null;
         _discoveredSource = null;
@@ -230,7 +246,14 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       final plan = await _inspectWithPassword(contents);
       if (!mounted || plan == null) return;
       final l10n = context.l10n;
-      if (widget._section == _BackupSection.filterTraining) {
+      if (widget._section == _BackupSection.nodeProfile) {
+        final profile = plan.nodeProfile;
+        if (profile == null || profile.isEmpty) {
+          setState(() => _notice = l10n.backupNodeProfile_empty);
+          return;
+        }
+        _nodeProfileSource = profile;
+      } else if (widget._section == _BackupSection.filterTraining) {
         final training = plan.filterTraining;
         if (training == null || training.isEmpty) {
           setState(() => _notice = l10n.backupFilterTraining_empty);
@@ -345,6 +368,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             channelSettingsOnly: widget._section == _BackupSection.channelSettings,
             messageFilterOnly: widget._section == _BackupSection.messageFilter,
             filterTrainingOnly: widget._section == _BackupSection.filterTraining,
+            nodeProfileOnly: widget._section == _BackupSection.nodeProfile,
           ),
         );
       } on BackupPasswordException catch (error) {
@@ -488,6 +512,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final contactSource = _contactSource;
     final connector = context.read<MeshCoreConnector>();
     setState(() {
+      if (_nodeProfileSource case final profile?) {
+        _nodeProfilePreview = connector.previewBackupNodeProfile(profile);
+        _selectedNodeProfileParts.clear();
+      }
       if (channels != null) {
         _preview = connector.previewBackupChannelRestore(channels);
       }
@@ -558,6 +586,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           _contactPreview = null;
           _settingsPreview = null;
           _filterPreview = null;
+          _nodeProfilePreview = null;
+          _selectedNodeProfileParts.clear();
           _historyPreview = null;
           _discoveredPreview = null;
           _contactGroupsPreview = null;
@@ -676,6 +706,82 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         return l10n.backupFilterTraining_applied(added);
       },
     );
+  }
+
+  Future<void> _restoreNodeProfile(BackupNodeProfilePreview preview) {
+    final connector = context.read<MeshCoreConnector>();
+    final l10n = context.l10n;
+    final selected = Set<BackupNodeProfilePart>.of(_selectedNodeProfileParts);
+    return _confirmRestore(
+      title: l10n.backupNodeProfile_title,
+      prompt: l10n.backupNodeProfile_confirm(_destinationName!, selected.length),
+      failure: l10n.backupNodeProfile_failed,
+      apply: () async {
+        final result = await connector.restoreBackupNodeProfile(preview, selected);
+        return switch (result.status) {
+          BackupNodeProfileStatus.completed => l10n.backupNodeProfile_applied(result.confirmed),
+          BackupNodeProfileStatus.destinationChanged => l10n.backupNodeProfile_changed(result.confirmed),
+          BackupNodeProfileStatus.writeUnconfirmed => l10n.backupNodeProfile_unconfirmed(result.confirmed),
+        };
+      },
+    );
+  }
+
+  List<Widget> _nodeProfileChoices(BackupNodeProfilePreview preview) {
+    final l10n = context.l10n;
+    final changes = preview.changes;
+    Widget option(BackupNodeProfilePart part, String title, Widget subtitle) =>
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(title),
+          subtitle: subtitle,
+          value: _selectedNodeProfileParts.contains(part),
+          onChanged: _busy ? null : (checked) => setState(() {
+            if (checked == true) {
+              _selectedNodeProfileParts.add(part);
+            } else {
+              _selectedNodeProfileParts.remove(part);
+            }
+          }),
+        );
+    String policy(int? mode) => switch (mode) {
+      0 => l10n.settings_denyAll,
+      1 => l10n.settings_allowByContact,
+      2 => l10n.settings_allowAll,
+      _ => '$mode',
+    };
+    Widget privacyDetails(BackupNodePrivacy privacy) {
+      final before = preview.before.privacy!;
+      final details = <(String, String)>[
+        if (privacy.telemetryBase != before.telemetryBase)
+          (l10n.settings_telemetryBaseMode, policy(privacy.telemetryBase)),
+        if (privacy.telemetryLocation != before.telemetryLocation)
+          (l10n.settings_telemetryLocationMode, policy(privacy.telemetryLocation)),
+        if (privacy.telemetryEnvironment != before.telemetryEnvironment)
+          (l10n.settings_telemetryEnvironmentMode, policy(privacy.telemetryEnvironment)),
+        if (privacy.advertLocation != before.advertLocation)
+          (l10n.settings_advertLocation, privacy.advertLocation == 1
+              ? l10n.backupAppSettings_enabled : l10n.backupAppSettings_disabled),
+        if (privacy.multiAcks != before.multiAcks)
+          (l10n.settings_multiAck, '${privacy.multiAcks}'),
+      ];
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [for (final (label, value) in details) Text('$label · $value')],
+      );
+    }
+
+    return [
+      if (changes.nodeName case final name?)
+        option(BackupNodeProfilePart.nodeName, l10n.settings_nodeName, Text(name)),
+      if (changes.position case final position?)
+        option(BackupNodeProfilePart.position, l10n.settings_location, Text(
+          '${(position.latitudeE6 / 1000000).toStringAsFixed(6)}, '
+          '${(position.longitudeE6 / 1000000).toStringAsFixed(6)}',
+        )),
+      if (changes.privacy case final privacy?)
+        option(BackupNodeProfilePart.privacy, l10n.settings_privacy, privacyDetails(privacy)),
+    ];
   }
 
   Future<void> _restoreDiscoveredContacts(
@@ -827,6 +933,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final settingsPreview = _settingsPreview;
     final filterPreview = _filterPreview;
     final training = _trainingSource;
+    final nodeProfile = _nodeProfilePreview;
     final historyPreview = _historyPreview;
     final discoveredPreview = _discoveredPreview;
     final groupsPreview = _contactGroupsPreview;
@@ -839,6 +946,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _BackupSection.appSettings => (l10n.backupAppSettings_title, l10n.backupAppSettings_scope),
       _BackupSection.messageFilter => (l10n.backupMessageFilter_title, l10n.backupMessageFilter_scope),
       _BackupSection.filterTraining => (l10n.backupFilterTraining_title, l10n.backupFilterTraining_scope),
+      _BackupSection.nodeProfile => (l10n.backupNodeProfile_title, l10n.backupNodeProfile_intro),
       _BackupSection.messageHistory => (
         l10n.backupMessageHistory_title,
         l10n.backupMessageHistory_intro,
@@ -918,6 +1026,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   communitiesPreview == null &&
                   contactSettingsPreview == null &&
                   channelSettingsPreview == null &&
+                  nodeProfile == null &&
                   !_readingLocalLists)
                 Text(switch (widget._section) {
                   _BackupSection.contacts => l10n.backupContacts_waitForNode,
@@ -926,12 +1035,13 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   _BackupSection.contactGroups => l10n.backupContactGroups_waitForNode,
                   _BackupSection.communities => l10n.backupContacts_waitForNode,
                   _BackupSection.contactSettings => l10n.backupContacts_waitForNode,
+                  _BackupSection.nodeProfile => l10n.backupContacts_waitForNode,
                   _ => l10n.backupChannels_waitForNode,
                 }),
               if (preview != null || contactPreview != null ||
                   historyPreview != null || groupsPreview != null ||
                   communitiesPreview != null || contactSettingsPreview != null ||
-                  channelSettingsPreview != null)
+                  channelSettingsPreview != null || nodeProfile != null)
                 Text(
                   l10n.backupChannels_target(_destinationName!),
                   style: Theme.of(context).textTheme.titleMedium,
@@ -992,6 +1102,18 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     child: Text(l10n.backupChannels_apply),
                   ),
                 ],
+              if (nodeProfile != null) ...[
+                if (nodeProfile.changes.isEmpty)
+                  Text(l10n.backupNodeProfile_noChanges)
+                else ...[
+                  ..._nodeProfileChoices(nodeProfile),
+                  FilledButton(
+                    onPressed: _busy || _selectedNodeProfileParts.isEmpty
+                        ? null : () => _restoreNodeProfile(nodeProfile),
+                    child: Text(l10n.backupChannels_apply),
+                  ),
+                ],
+              ],
               if (training != null) ...[
                 Text(l10n.backupFilterTraining_summary(
                   training.count(FilterTrainingKind.spam),

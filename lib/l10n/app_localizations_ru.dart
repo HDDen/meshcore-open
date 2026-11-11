@@ -578,6 +578,52 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить учебные примеры.';
 
   @override
+  String get backupNodeProfile_exportTitle => 'Создать копию профиля ноды';
+
+  @override
+  String get backupNodeProfile_exportIntro =>
+      'Выберите, какие настройки подключённой ноды сохранить. Если выбрать местоположение, в файл попадут координаты ноды.';
+
+  @override
+  String get backupNodeProfile_title => 'Восстановление профиля ноды';
+
+  @override
+  String get backupNodeProfile_intro =>
+      'Выберите резервную копию и отметьте изменения, которые хотите применить на подключённой ноде.';
+
+  @override
+  String get backupNodeProfile_empty =>
+      'В файле нет поддерживаемых настроек профиля ноды.';
+
+  @override
+  String get backupNodeProfile_noChanges =>
+      'Поддерживаемые настройки уже совпадают с настройками ноды.';
+
+  @override
+  String backupNodeProfile_confirm(String node, int count) {
+    return 'Записать выбранные настройки на ноду «$node»? Изменений к записи: $count.';
+  }
+
+  @override
+  String backupNodeProfile_applied(int count) {
+    return 'Подтверждено изменений профиля ноды: $count.';
+  }
+
+  @override
+  String backupNodeProfile_changed(int count) {
+    return 'Нода или её настройки изменились. Подтверждено изменений: $count. Обновите предпросмотр.';
+  }
+
+  @override
+  String backupNodeProfile_unconfirmed(int count) {
+    return 'Нода не подтвердила запись. Подтверждено изменений: $count. Обновите предпросмотр.';
+  }
+
+  @override
+  String get backupNodeProfile_failed =>
+      'Не удалось восстановить профиль ноды.';
+
+  @override
   String get backupAppSettings_enabled => 'Включено';
 
   @override

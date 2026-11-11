@@ -10,6 +10,7 @@ import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
+import '../helpers/backup_node_profile.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -33,6 +34,7 @@ class BackupImportPlan {
     this.communities,
     this.messageFilter,
     this.filterTraining,
+    this.nodeProfile,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -51,6 +53,7 @@ class BackupImportPlan {
   final List<Community>? communities;
   final BackupMessageFilter? messageFilter;
   final BackupFilterTraining? filterTraining;
+  final BackupNodeProfile? nodeProfile;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -80,6 +83,7 @@ class BackupImportPlanner {
     bool channelSettingsOnly = false,
     bool messageFilterOnly = false,
     bool filterTrainingOnly = false,
+    bool nodeProfileOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -93,6 +97,16 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (nodeProfileOnly) {
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        nodeProfile: _readNodeProfile(payload, official: official),
+      );
+    }
     if (filterTrainingOnly) {
       final local = official ? null : _upstreamPreferences(payload, BackupFilterTraining.section);
       final preferences = local ?? (official ? null :
@@ -295,6 +309,35 @@ class BackupImportPlanner {
 
   static bool _isOfficial(Map<String, Object?> document) =>
       !document.containsKey('format') && document.containsKey('public_key');
+
+  static BackupNodeProfile _readNodeProfile(
+    Map<String, Object?> payload, {
+    required bool official,
+  }) {
+    Map<String, Object?>? objectOrNull(Object? value) =>
+        value == null ? null : _readObject(value);
+    if (official) {
+      final other = objectOrNull(payload['other_settings']);
+      return BackupNodeProfile.fromBackup(
+        name: payload['name'],
+        position: objectOrNull(payload['position_settings']),
+        privacy: {'advertLocation': other?['advert_location_policy']},
+      );
+    }
+    final items = _readList(payload['items']);
+    final sections = _readObject(payload['sections']);
+    final node = items.contains('deviceName') ? objectOrNull(sections['nodeSettings']) : null;
+    final location = items.contains('location') || items.contains('privacySettings')
+        ? objectOrNull(sections['locationSettings'])
+        : null;
+    return BackupNodeProfile.fromBackup(
+      name: node?['name'],
+      position: items.contains('location') ? objectOrNull(location?['location']) : null,
+      privacy: items.contains('privacySettings')
+          ? objectOrNull(location?['privacySettings'])
+          : null,
+    );
+  }
 
   static List<Object?>? _officialList(
     Map<String, Object?> payload,

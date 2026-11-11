@@ -15,6 +15,7 @@ import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
 import 'package:meshcore_open/helpers/backup_filter_training.dart';
 import 'package:meshcore_open/helpers/backup_message_filter.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
+import 'package:meshcore_open/helpers/backup_node_profile.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
@@ -69,6 +70,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   int contactWrites = 0;
   int contactSettingsWrites = 0;
   int channelSettingsWrites = 0;
+  Set<BackupNodeProfilePart>? restoredProfileParts;
   int historyWrites = 0;
   int discoveryWrites = 0;
   int communityWrites = 0;
@@ -81,6 +83,25 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   String get deviceDisplayName => 'Test node';
+
+  @override
+  BackupNodeProfilePreview? previewBackupNodeProfile(BackupNodeProfile source) =>
+      BackupNodeProfilePreview(
+        session: this,
+        nodeKey: _key,
+        before: const BackupNodeProfile(nodeName: 'Test node'),
+        source: source,
+        manualAddContactFlags: 1,
+      );
+
+  @override
+  Future<BackupNodeProfileResult> restoreBackupNodeProfile(
+    BackupNodeProfilePreview preview,
+    Set<BackupNodeProfilePart> parts,
+  ) async {
+    restoredProfileParts = Set.of(parts);
+    return (confirmed: parts.length, status: BackupNodeProfileStatus.completed);
+  }
 
   @override
   Future<BackupSnapshot?> snapshotNodeBackup({
@@ -334,6 +355,45 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('node profile restore requires a selection and confirmation', (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final contents = jsonEncode({
+      'public_key': _key,
+      'name': 'From backup',
+      'position_settings': {'latitude': 55, 'longitude': 37},
+    });
+    await tester.pumpWidget(ChangeNotifierProvider<MeshCoreConnector>.value(
+      value: node,
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BackupRestoreScreen.nodeProfile(
+          pickFile: () async => XFile.fromData(
+            Uint8List.fromList(utf8.encode(contents)), name: 'node-profile.json',
+          ),
+        ),
+      ),
+    ));
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester, find.text(l10n.backupChannels_choose), find.text('From backup'),
+    );
+    final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+    expect(tester.widget<FilledButton>(restore).onPressed, isNull);
+    await tester.tap(find.widgetWithText(CheckboxListTile, l10n.settings_nodeName));
+    await tester.pump();
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupNodeProfile_confirm('Test node', 1)), findsOneWidget);
+    expect(node.restoredProfileParts, isNull);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: restore));
+    await tester.pumpAndSettle();
+    expect(node.restoredProfileParts, {BackupNodeProfilePart.nodeName});
+    expect(find.text(l10n.backupNodeProfile_applied(1)), findsOneWidget);
+  });
+
   testWidgets('corpus restore previews the classes before writing', (tester) async {
     final filter = _TrainingFilter();
     addTearDown(filter.dispose);

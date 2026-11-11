@@ -981,6 +981,72 @@ abstract class AppLocalizations {
   /// **'Could not restore training examples.'**
   String get backupFilterTraining_failed;
 
+  /// No description provided for @backupNodeProfile_exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up the node profile'**
+  String get backupNodeProfile_exportTitle;
+
+  /// No description provided for @backupNodeProfile_exportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which settings from the connected node to include. Selecting location includes the node’s coordinates in the file.'**
+  String get backupNodeProfile_exportIntro;
+
+  /// No description provided for @backupNodeProfile_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the node profile'**
+  String get backupNodeProfile_title;
+
+  /// No description provided for @backupNodeProfile_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup and select the changes to apply to the connected node.'**
+  String get backupNodeProfile_intro;
+
+  /// No description provided for @backupNodeProfile_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains no supported node profile settings.'**
+  String get backupNodeProfile_empty;
+
+  /// No description provided for @backupNodeProfile_noChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'The supported settings already match the connected node.'**
+  String get backupNodeProfile_noChanges;
+
+  /// No description provided for @backupNodeProfile_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the selected settings to “{node}”? Changes to write: {count}.'**
+  String backupNodeProfile_confirm(String node, int count);
+
+  /// No description provided for @backupNodeProfile_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Node profile changes confirmed: {count}.'**
+  String backupNodeProfile_applied(int count);
+
+  /// No description provided for @backupNodeProfile_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node or its settings changed. Changes confirmed: {count}. Refresh the preview.'**
+  String backupNodeProfile_changed(int count);
+
+  /// No description provided for @backupNodeProfile_unconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node did not confirm a write. Changes confirmed: {count}. Refresh the preview.'**
+  String backupNodeProfile_unconfirmed(int count);
+
+  /// No description provided for @backupNodeProfile_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore the node profile.'**
+  String get backupNodeProfile_failed;
+
   /// No description provided for @backupAppSettings_enabled.
   ///
   /// In en, this message translates to:

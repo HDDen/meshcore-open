@@ -5,6 +5,7 @@ import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
+import '../helpers/backup_node_profile.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -27,17 +28,19 @@ class BackupSnapshot {
     AppSettingsBackup? appSettings,
     BackupMessageFilter? messageFilter,
     BackupFilterTraining? filterTraining,
+    BackupNodeProfile? nodeProfile,
     required DateTime createdAt,
   }) : sourcePublicKey =
            channels == null && channelSettings == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
-               communities == null && contactSettings == null
+               communities == null && contactSettings == null && nodeProfile == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
        _appSettings = appSettings?.isEmpty == true ? null : appSettings,
        _messageFilter = messageFilter?.isEmpty == true ? null : messageFilter,
        _filterTraining = filterTraining?.isEmpty == true ? null : filterTraining,
+       _nodeProfile = nodeProfile?.isEmpty == true ? null : nodeProfile,
        _contactSettings = contactSettings?.isEmpty == true ? null : contactSettings,
        _channelSettings = channelSettings?.isEmpty == true ? null : channelSettings,
        _historyRows = null,
@@ -70,7 +73,7 @@ class BackupSnapshot {
     }
     if (_sections.isEmpty && _appSettings == null &&
         contactSettings == null && channelSettings == null && messageFilter == null &&
-        filterTraining == null) {
+        filterTraining == null && nodeProfile == null) {
       throw const FormatException('No selected backup sections');
     }
   }
@@ -86,6 +89,7 @@ class BackupSnapshot {
        _appSettings = null,
        _messageFilter = null,
        _filterTraining = null,
+       _nodeProfile = null,
        _contactSettings = null,
        _channelSettings = null,
        _historyRows = Map<String, List<String>>.unmodifiable({
@@ -107,6 +111,7 @@ class BackupSnapshot {
   final AppSettingsBackup? _appSettings;
   final BackupMessageFilter? _messageFilter;
   final BackupFilterTraining? _filterTraining;
+  final BackupNodeProfile? _nodeProfile;
   final BackupContactSettings? _contactSettings;
   final BackupChannelSettings? _channelSettings;
   final Map<String, List<String>>? _historyRows;
@@ -114,10 +119,11 @@ class BackupSnapshot {
   bool get isEmpty =>
       _historyRows?.isEmpty ??
       (_appSettings == null && _contactSettings == null && _channelSettings == null &&
-          _messageFilter == null && _filterTraining == null &&
+          _messageFilter == null && _filterTraining == null && _nodeProfile == null &&
           _sections.values.every((rows) => rows.isEmpty));
   bool get _hasNodeData =>
-      _sections.isNotEmpty || _contactSettings != null || _channelSettings != null;
+      _sections.isNotEmpty || _contactSettings != null || _channelSettings != null ||
+      _nodeProfile != null;
   List<String> get _items => [
     ..._sections.keys,
     if (_contactSettings != null) 'perContactSettings',
@@ -125,6 +131,7 @@ class BackupSnapshot {
     if (_appSettings != null) AppSettingsBackup.section,
     if (_messageFilter != null) BackupMessageFilter.section,
     if (_filterTraining != null) BackupFilterTraining.section,
+    if (_nodeProfile != null) 'node-profile',
   ];
   int get channelCount => _sections['channels']?.length ?? 0;
   bool get containsCommunityKeys => _sections['communities']?.isNotEmpty ?? false;
@@ -204,6 +211,13 @@ class BackupSnapshot {
       items.add(BackupFilterTraining.section);
       preferences[BackupFilterTraining.section] = training.toPreferences();
     }
+    final profile = _nodeProfile;
+    final name = profile?.nodeName;
+    final position = profile?.position;
+    final privacy = profile?.privacy;
+    if (name != null) items.add('deviceName');
+    if (position != null) items.add('location');
+    if (privacy != null) items.add('privacySettings');
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
@@ -216,6 +230,15 @@ class BackupSnapshot {
         if (_appSettings case final settings?)
           AppSettingsBackup.section: {
             'preferences': {'app_settings': settings.values},
+          },
+        if (name != null) 'nodeSettings': {'name': name},
+        if (position != null || privacy != null)
+          'locationSettings': {
+            if (position != null) 'location': {
+              'latitude': position.latitudeE6 / 1000000,
+              'longitude': position.longitudeE6 / 1000000,
+            },
+            if (privacy != null) 'privacySettings': BackupNodeProfile.privacyValues(privacy),
           },
       },
     }, password: password);

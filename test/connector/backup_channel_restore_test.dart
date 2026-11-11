@@ -10,6 +10,7 @@ import 'package:meshcore_open/helpers/backup_channel_restore.dart';
 import 'package:meshcore_open/helpers/backup_channel_settings.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
+import 'package:meshcore_open/helpers/backup_node_profile.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/community.dart';
@@ -88,6 +89,8 @@ class _Radio {
   };
   final reads = <int>[];
   final writes = <Channel>[];
+  final profileWrites = <List<int>>[];
+  int? rejectedProfileCommand;
   final contacts = {
     _contact(0x81, 'Current contact').publicKeyHex:
         _contact(0x81, 'Current contact'),
@@ -156,7 +159,7 @@ class _Radio {
           codingRate: 5,
           txPowerDbm: 14,
           maxTxPowerDbm: 22,
-        ));
+        )..[47] = 0x03); // SELF_INFO contact flags, including a reserved bit.
       case cmdGetBattAndStorage:
         connector.handleFrameForTest([respCodeBattAndStorage, 0x10, 0x0e]);
       case cmdGetCustomVar:
@@ -202,6 +205,11 @@ class _Radio {
           name: channel.name,
           psk: channel.psk,
         ));
+      case cmdSetAdvertName || cmdSetAdvertLatLon || cmdSetOtherParams:
+        profileWrites.add(List.of(frame));
+        connector.handleFrameForTest(
+          frame.first == rejectedProfileCommand ? ReviewFrames.err(6) : ReviewFrames.ok(),
+        );
       case cmdSetChannel:
         final response = Uint8List.fromList(frame)..[0] = respCodeChannelInfo;
         final channel = Channel.fromFrame(response)!;
@@ -253,6 +261,52 @@ void main() {
     await storage.resetForTesting();
     PrefsManager.reset();
     PathProviderPlatform.instance = savedPaths;
+  });
+
+  test('node profile applies selected writes on ACK and preserves contact flags', () async {
+    const name = BackupNodeProfilePart.nodeName;
+    const position = BackupNodeProfilePart.position;
+    const privacy = BackupNodeProfilePart.privacy;
+    final captured = radio.connector.snapshotNodeProfileBackup({name, position, privacy})!;
+    final initial = await const BackupImportPlanner().inspect(
+      await captured.encode(password: ''), password: '', nodeProfileOnly: true,
+    );
+    expect(initial.nodeProfile!.nodeName, 'Restore target');
+    expect(initial.nodeProfile!.position, (latitudeE6: 0, longitudeE6: 0));
+    expect(radio.profileWrites, isEmpty);
+    expect(radio.reads, isEmpty);
+
+    final source = BackupNodeProfile.fromBackup(
+      name: 'Restored',
+      position: {'latitude': 55, 'longitude': 37},
+      privacy: {'telemetryLocation': 1, 'advertLocation': 1},
+    );
+    final preview = radio.connector.previewBackupNodeProfile(source)!;
+    radio.rejectedProfileCommand = cmdSetAdvertLatLon;
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {name, position, privacy}), (
+      confirmed: 1, status: BackupNodeProfileStatus.writeUnconfirmed,
+    ));
+    expect(radio.profileWrites, [
+      buildSetAdvertNameFrame('Restored'),
+      buildSetAdvertLatLonFrame(55, 37),
+    ]);
+    expect(radio.connector.selfName, 'Restored');
+    expect(radio.connector.selfLatitude, 0);
+    expect(radio.connector.advertLocationPolicy, 0);
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {name, privacy}), (
+      confirmed: 0, status: BackupNodeProfileStatus.destinationChanged,
+    ));
+    expect(radio.profileWrites, hasLength(2));
+
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {privacy}), (
+      confirmed: 1, status: BackupNodeProfileStatus.completed,
+    ));
+    expect(radio.profileWrites.last, [cmdSetOtherParams, 0x03, 0x04, 1, 0]);
+    expect(radio.connector.telemetryModeLoc, 1);
+    expect(radio.connector.advertLocationPolicy, 1);
+    expect(radio.connector.selfPublicKeyHex, _node);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
   });
 
   test('a backup captures the active node without requesting radio frames', () async {

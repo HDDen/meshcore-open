@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/backup_message_filter.dart';
+import '../helpers/backup_node_profile.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
 import '../services/app_settings_service.dart';
@@ -17,7 +18,7 @@ Future<String> _encodeBackup(
   ({BackupSnapshot snapshot, String password}) input,
 ) => input.snapshot.encode(password: input.password);
 
-enum _BackupExportMode { selected, appSettings, messageHistory, messageFilter, filterTraining }
+enum _BackupExportMode { selected, appSettings, messageHistory, messageFilter, filterTraining, nodeProfile }
 
 class BackupExportScreen extends StatefulWidget {
   const BackupExportScreen({
@@ -47,6 +48,11 @@ class BackupExportScreen extends StatefulWidget {
     this.saveFile = saveBackupJson,
   }) : _mode = _BackupExportMode.filterTraining, _filter = filter;
 
+  const BackupExportScreen.nodeProfile({
+    super.key,
+    this.saveFile = saveBackupJson,
+  }) : _mode = _BackupExportMode.nodeProfile, _filter = null;
+
   final _BackupExportMode _mode;
   final MessageFilterService? _filter;
 
@@ -72,24 +78,31 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   late bool _includeSettings = widget._mode == _BackupExportMode.appSettings;
   bool _includeDirectHistory = true;
   bool _includeChannelHistory = true;
+  final _nodeProfileParts = {BackupNodeProfilePart.nodeName};
   String? _notice;
 
   bool get _historyOnly => widget._mode == _BackupExportMode.messageHistory;
   bool get _trainingOnly => widget._mode == _BackupExportMode.filterTraining;
-  bool get _hasSelection => _historyOnly
-      ? _includeDirectHistory || _includeChannelHistory
-      : _includeChannels || _includeContacts || _includeContactGroups ||
+  bool get _hasSelection => switch (widget._mode) {
+    _BackupExportMode.nodeProfile => _nodeProfileParts.isNotEmpty,
+    _BackupExportMode.messageHistory => _includeDirectHistory || _includeChannelHistory,
+    _ => _includeChannels || _includeContacts || _includeContactGroups ||
           _includeDiscoveredContacts || _includeSettings || _includeCommunities ||
-          _includeContactSettings || _includeChannelSettings || widget._filter != null;
+          _includeContactSettings || _includeChannelSettings || widget._filter != null,
+  };
 
   String _title(BuildContext context) => switch (widget._mode) {
     _BackupExportMode.messageHistory => context.l10n.backupMessageHistory_exportTitle,
     _BackupExportMode.messageFilter => context.l10n.backupMessageFilter_exportTitle,
     _BackupExportMode.filterTraining => context.l10n.backupFilterTraining_exportTitle,
+    _BackupExportMode.nodeProfile => context.l10n.backupNodeProfile_exportTitle,
     _ => context.l10n.backupExport_createTitle,
   };
 
   Future<BackupSnapshot?> _capture() async {
+    if (widget._mode == _BackupExportMode.nodeProfile) {
+      return context.read<MeshCoreConnector>().snapshotNodeProfileBackup(_nodeProfileParts);
+    }
     if (_trainingOnly) {
       final corpus = await widget._filter!.snapshotTrainingBackup();
       return BackupSnapshot(filterTraining: corpus, createdAt: DateTime.now());
@@ -265,11 +278,30 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (widget._filter == null)
+            if (widget._filter == null && widget._mode != _BackupExportMode.nodeProfile)
               Text(_historyOnly
                   ? l10n.backupMessageHistory_exportIntro
                   : l10n.backupExport_pickSections),
-            if (_historyOnly) ...[
+            if (widget._mode == _BackupExportMode.nodeProfile) ...[
+              Text(l10n.backupNodeProfile_exportIntro),
+              for (final (part, label) in [
+                (BackupNodeProfilePart.nodeName, l10n.settings_nodeName),
+                (BackupNodeProfilePart.position, l10n.settings_location),
+                (BackupNodeProfilePart.privacy, l10n.settings_privacy),
+              ])
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(label),
+                  value: _nodeProfileParts.contains(part),
+                  onChanged: _busy ? null : (value) => setState(() {
+                    if (value == true) {
+                      _nodeProfileParts.add(part);
+                    } else {
+                      _nodeProfileParts.remove(part);
+                    }
+                  }),
+                ),
+            ] else if (_historyOnly) ...[
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.backupMessageHistory_direct),

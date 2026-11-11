@@ -60,6 +60,7 @@ import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
+import '../helpers/backup_node_profile.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/channel_deletion_snapshot.dart';
@@ -632,7 +633,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _contactsStorageFull = false;
   final StreamController<void> _contactsFullController =
       StreamController<void>.broadcast();
-  bool _manualAddContacts = false;
+  int _manualAddContactFlags = 0x01;
   int _telemetryModeBase = 0;
   int _telemetryModeLoc = 0;
   int _telemetryModeEnv = 0;
@@ -12816,6 +12817,166 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     selfPublicKeyHex,
   );
 
+  bool get _canUseNodeProfileBackup =>
+      _canUseNodeLocalBackup && _hasCompletedSelfInfoHandshake && !_awaitingSelfInfo;
+
+  BackupNodeProfile _readNodeProfile() => BackupNodeProfile(
+    nodeName: _selfName,
+    position: BackupNodeProfile.readPosition(_selfLatitude, _selfLongitude),
+    privacy: (
+      telemetryBase: _telemetryModeBase,
+      telemetryLocation: _telemetryModeLoc,
+      telemetryEnvironment: _telemetryModeEnv,
+      advertLocation: _advertLocPolicy,
+      multiAcks: _multiAcks,
+    ),
+  );
+
+  BackupSnapshot? snapshotNodeProfileBackup(Set<BackupNodeProfilePart> parts) {
+    if (!_canUseNodeProfileBackup) return null;
+    final profile = _readNodeProfile();
+    final name = profile.nodeName;
+    final privacy = profile.privacy!;
+    final selected = BackupNodeProfile(
+      nodeName: parts.contains(BackupNodeProfilePart.nodeName) &&
+          name != null && BackupNodeProfile.validName(name) ? name : null,
+      position: parts.contains(BackupNodeProfilePart.position) ? profile.position : null,
+      privacy: parts.contains(BackupNodeProfilePart.privacy)
+          ? BackupNodeProfile.fromBackup(privacy: {
+              for (final option in BackupNodeProfile.privacyValues(privacy).entries)
+                if (option.value >= 0 &&
+                    option.value <= (option.key == 'advertLocation' ? 1 : 2))
+                  option.key: option.value,
+            }).privacy
+          : null,
+    );
+    return BackupSnapshot(
+      sourcePublicKey: selfPublicKeyHex,
+      nodeName: deviceDisplayName,
+      nodeProfile: selected,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  BackupNodeProfilePreview? previewBackupNodeProfile(BackupNodeProfile source) {
+    if (!_canUseNodeProfileBackup) return null;
+    return BackupNodeProfilePreview(
+      session: _nodeLocalBackupSession,
+      nodeKey: selfPublicKeyHex,
+      before: _readNodeProfile(),
+      source: source,
+      manualAddContactFlags: _manualAddContactFlags,
+    );
+  }
+
+  bool _restoringBackupNodeProfile = false;
+
+  Future<BackupNodeProfileResult> restoreBackupNodeProfile(
+    BackupNodeProfilePreview preview,
+    Set<BackupNodeProfilePart> parts,
+  ) async {
+    var confirmed = 0;
+    BackupNodeProfileResult result(BackupNodeProfileStatus status) =>
+        (confirmed: confirmed, status: status);
+    bool sameSession() =>
+        _canUseNodeProfileBackup && _nodeLocalBackupSession == preview.session;
+    bool unchanged(BackupNodeProfilePart part) => sameSession() &&
+        _readNodeProfile().value(part) == preview.before.value(part) &&
+        (part != BackupNodeProfilePart.privacy ||
+            _manualAddContactFlags == preview.manualAddContactFlags);
+    final targets = BackupNodeProfilePart.values.where((part) =>
+        parts.contains(part) && preview.changes.value(part) != null).toList();
+    if (_restoringBackupNodeProfile || !sameSession() || !targets.every(unchanged)) {
+      return result(BackupNodeProfileStatus.destinationChanged);
+    }
+
+    _restoringBackupNodeProfile = true;
+    try {
+      for (final part in targets) {
+        var dispatched = false;
+        try {
+          await _dispatchFrame(
+            _backupNodeProfileFrame(preview, part),
+            waitForGenericAck: true,
+            beforeSend: () {
+              if (!unchanged(part)) throw StateError('Backup node profile changed');
+              dispatched = true;
+            },
+          );
+        } catch (_) {
+          return result(unchanged(part)
+              ? BackupNodeProfileStatus.writeUnconfirmed
+              : BackupNodeProfileStatus.destinationChanged);
+        }
+        if (!dispatched) return result(BackupNodeProfileStatus.writeUnconfirmed);
+        confirmed++;
+        if (!sameSession()) return result(BackupNodeProfileStatus.destinationChanged);
+        await _adoptBackupNodeProfile(preview, part);
+      }
+      return result(BackupNodeProfileStatus.completed);
+    } finally {
+      _restoringBackupNodeProfile = false;
+      if (confirmed > 0 && sameSession()) notifyListeners();
+    }
+  }
+
+  Uint8List _backupNodeProfileFrame(
+    BackupNodeProfilePreview preview,
+    BackupNodeProfilePart part,
+  ) {
+    final changes = preview.changes;
+    switch (part) {
+      case BackupNodeProfilePart.nodeName:
+        return buildSetAdvertNameFrame(changes.nodeName!);
+      case BackupNodeProfilePart.position:
+        final position = changes.position!;
+        return buildSetAdvertLatLonFrame(
+          position.latitudeE6 / 1000000, position.longitudeE6 / 1000000,
+        );
+      case BackupNodeProfilePart.privacy:
+        final privacy = changes.privacy!;
+        return buildSetOtherParamsFrame(
+          (privacy.telemetryEnvironment! << 4) |
+              (privacy.telemetryLocation! << 2) | privacy.telemetryBase!,
+          privacy.advertLocation!, privacy.multiAcks!,
+          manualAddContactFlags: preview.manualAddContactFlags,
+        );
+    }
+  }
+
+  Future<void> _adoptBackupNodeProfile(
+    BackupNodeProfilePreview preview,
+    BackupNodeProfilePart part,
+  ) async {
+    final changes = preview.changes;
+    switch (part) {
+      case BackupNodeProfilePart.nodeName:
+        final name = changes.nodeName!;
+        _selfName = name;
+        _notificationService.setSelfName(name);
+        if (_activeTransport == MeshCoreTransportType.usb) {
+          _usbManager.updateConnectedLabel(name.trim());
+        }
+        final identityStore = NodeIdentityStore()..setPublicKeyHex = preview.nodeKey;
+        try {
+          await identityStore.saveName(name);
+        } catch (_) {
+          appLogger.warn('Could not cache the restored node name', tag: 'Backup');
+        }
+      case BackupNodeProfilePart.position:
+        final position = changes.position!;
+        _selfLatitude = position.latitudeE6 / 1000000;
+        _selfLongitude = position.longitudeE6 / 1000000;
+      case BackupNodeProfilePart.privacy:
+        final privacy = changes.privacy!;
+        _telemetryModeBase = privacy.telemetryBase!;
+        _telemetryModeLoc = privacy.telemetryLocation!;
+        _telemetryModeEnv = privacy.telemetryEnvironment!;
+        _advertLocPolicy = privacy.advertLocation!;
+        _multiAcks = privacy.multiAcks!;
+    }
+  }
+
   int _contactGroupsBackupRevision = 0;
   int get contactGroupsBackupRevision => _contactGroupsBackupRevision;
 
@@ -13879,7 +14040,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _telemetryModeLoc = telemetryFlag >> 2 & 0x03;
       _telemetryModeEnv = telemetryFlag >> 4 & 0x03;
 
-      _manualAddContacts = reader.readByte() & 0x01 == 0x00;
+      _manualAddContactFlags = reader.readByte();
 
       _currentFreqHz = reader.readUInt32LE();
       _currentBwHz = reader.readUInt32LE();
@@ -14516,7 +14677,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _checkManualAddContacts() async {
     // If manual add contacts is enabled, set auto add config and other params.
     // and disable it after
-    if (_manualAddContacts) {
+    if (_manualAddContactFlags & 0x01 == 0x00) {
       await sendFrame(
         buildSetAutoAddConfigFrame(
           autoAddChat: true,
@@ -14536,7 +14697,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _multiAcks,
         ),
       );
-      _manualAddContacts = false;
+      _manualAddContactFlags = 0x01;
     }
   }
 

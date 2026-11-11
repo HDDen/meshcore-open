@@ -576,6 +576,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not restore training examples.';
 
   @override
+  String get backupNodeProfile_exportTitle => 'Back up the node profile';
+
+  @override
+  String get backupNodeProfile_exportIntro =>
+      'Choose which settings from the connected node to include. Selecting location includes the node’s coordinates in the file.';
+
+  @override
+  String get backupNodeProfile_title => 'Restore the node profile';
+
+  @override
+  String get backupNodeProfile_intro =>
+      'Choose a backup and select the changes to apply to the connected node.';
+
+  @override
+  String get backupNodeProfile_empty =>
+      'This file contains no supported node profile settings.';
+
+  @override
+  String get backupNodeProfile_noChanges =>
+      'The supported settings already match the connected node.';
+
+  @override
+  String backupNodeProfile_confirm(String node, int count) {
+    return 'Write the selected settings to “$node”? Changes to write: $count.';
+  }
+
+  @override
+  String backupNodeProfile_applied(int count) {
+    return 'Node profile changes confirmed: $count.';
+  }
+
+  @override
+  String backupNodeProfile_changed(int count) {
+    return 'The node or its settings changed. Changes confirmed: $count. Refresh the preview.';
+  }
+
+  @override
+  String backupNodeProfile_unconfirmed(int count) {
+    return 'The node did not confirm a write. Changes confirmed: $count. Refresh the preview.';
+  }
+
+  @override
+  String get backupNodeProfile_failed => 'Could not restore the node profile.';
+
+  @override
   String get backupAppSettings_enabled => 'On';
 
   @override

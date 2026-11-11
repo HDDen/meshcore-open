@@ -1230,17 +1230,18 @@ Uint8List buildZeroHopContact(Uint8List pubKey) {
 }
 
 // Build CMD_SET_OTHER_PARAMS frame
-// Format: [cmd][allowTelemetryFlags][advertLocationPolicy][multiAcks]
+// Format: [cmd][contactFlags][allowTelemetryFlags][advertLocationPolicy][multiAcks]
 Uint8List buildSetOtherParamsFrame(
   int allowTelemetryFlags,
   int advertLocationPolicy,
-  int multiAcks,
-) {
+  int multiAcks, {
+  int manualAddContactFlags = 0x01,
+}) {
   final writer = BufferWriter();
   writer.writeByte(cmdSetOtherParams);
-  //Going forward the app will just set Auto Add Contacts to disabled, and use the filter flags
-  //Allow Auto Add Contacts use inverted logic (0x01 = disabled, 0x00 = enabled).
-  writer.writeByte(0x01);
+  // The default uses the dedicated filter flags. Restoring privacy can
+  // preserve the contact flags already reported by the node.
+  writer.writeByte(manualAddContactFlags);
   writer.writeByte(allowTelemetryFlags); // Allow Telemetry Flags
   writer.writeByte(advertLocationPolicy); // Advertisement Location Policy
   writer.writeByte(multiAcks); // Multi Acknowledgements
