@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/backup_node_profile.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
@@ -94,6 +95,35 @@ void main() {
         'codingRate': 5,
         'txPowerDbm': 14,
       });
+    }
+  });
+
+  test('upstream scope names derive a key and an explicit empty value clears it', () {
+    final old = BackupNodeProfile.fromBackup(radio: {'defaultFloodScope': '#uk'});
+    expect(old.defaultFloodScope, (
+      name: 'uk', keyHex: pubKeyToHex(floodScopeKeyForRegion('uk')),
+    ));
+    final clear = BackupNodeProfile.fromBackup(radio: {'defaultFloodScope': ''});
+    expect(clear.defaultFloodScope, emptyDefaultFloodScope);
+    expect(clear.radioValues, {'defaultFloodScope': ''});
+    final absent = BackupNodeProfile.fromBackup(radio: {'defaultFloodScope': null});
+    expect(absent.defaultFloodScope, isNull);
+    expect(absent.radioValues, isEmpty);
+  });
+
+  test('rejects malformed scopes instead of deriving another key or clearing them', () {
+    for (final radio in [
+      {'defaultFloodScopeKey': 'a1' * 16},
+      {'defaultFloodScope': '', 'defaultFloodScopeKey': 'a1' * 16},
+      {'defaultFloodScope': 'uk', 'defaultFloodScopeKey': 'a1'},
+      {'defaultFloodScope': 'uk', 'defaultFloodScopeKey': 'gg' * 16},
+      {'defaultFloodScope': 'uk', 'defaultFloodScopeKey': 1},
+      {'defaultFloodScope': 'я' * 16},
+      {'defaultFloodScope': 'uk\u0000extra'},
+      {'defaultFloodScope': '#'},
+      {'defaultFloodScope': '   '},
+    ]) {
+      expect(() => BackupNodeProfile.fromBackup(radio: radio), throwsFormatException);
     }
   });
 

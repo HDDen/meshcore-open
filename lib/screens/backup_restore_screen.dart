@@ -802,11 +802,23 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           2 => l10n.repeater_pathHashModeOption1,
           _ => l10n.repeater_pathHashModeOption2,
         })),
+      if (changes.defaultFloodScope case final scope?)
+        option(
+          BackupNodeProfilePart.defaultFloodScope,
+          l10n.settings_defaultRegionScope,
+          Text(switch (scope.name) {
+            '' => l10n.settings_defaultRegionScopeEmpty,
+            final name when name == preview.before.defaultFloodScope?.name =>
+              '$name · ${l10n.backupNodeProfile_floodScopeKeyChange}',
+            final name => name,
+          }),
+        ),
       if (preview.unavailable.isNotEmpty)
         Text(l10n.backupNodeProfile_radioUnavailable([
           if (preview.unavailable.contains(BackupNodeProfilePart.tuning)) l10n.settings_radioSettings,
           if (preview.unavailable.contains(BackupNodeProfilePart.txPower)) l10n.settings_txPower,
           if (preview.unavailable.contains(BackupNodeProfilePart.pathHashWidth)) l10n.repeater_pathHashMode,
+          if (preview.unavailable.contains(BackupNodeProfilePart.defaultFloodScope)) l10n.settings_defaultRegionScope,
         ].join(', '))),
     ];
   }

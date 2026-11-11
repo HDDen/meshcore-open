@@ -186,6 +186,7 @@
   "backupNodeProfile_empty": "This file contains no supported node profile settings.",
   "backupNodeProfile_noChanges": "The supported settings already match the connected node.",
   "backupNodeProfile_radioUnavailable": "Unavailable on the connected node: {settings}",
+  "backupNodeProfile_floodScopeKeyChange": "Region key will change",
   "@backupNodeProfile_radioUnavailable": {"placeholders": {"settings": {"type": "String"}}},
   "backupNodeProfile_confirm": "Write the selected settings to “{node}”? Changes to write: {count}.",
   "@backupNodeProfile_confirm": { "placeholders": { "node": { "type": "String" }, "count": { "type": "int" } } },

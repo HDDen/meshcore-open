@@ -122,7 +122,7 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 59 | CMD_GET_AUTO_ADD_CONFIG | Get auto-add configuration |
 | 61 | CMD_SET_PATH_HASH_MODE | Set path hash width (bytes per hop) |
 | 62 | CMD_SEND_CHANNEL_DATA | Send a typed channel `GROUP_DATA` payload |
-| 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope |
+| 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope with `[63, name31, key16]`, or clear it with `[63]` |
 | 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
 | 66 | CMD_RUN_CLI_COMMAND | Локальный CLI подключённой companion-ноды, MeshCore 1.18+, firmware code 14+ |
 
@@ -161,7 +161,7 @@ GPS-опрос пропускает тик при активной синхро�
 | 24 | RESP_CODE_STATS | Companion radio stats |
 | 25 | RESP_CODE_AUTO_ADD_CONFIG | Auto-add flags |
 | 27 | RESP_CODE_CHANNEL_DATA_RECV | Incoming typed channel data |
-| 28 | RESP_CODE_DEFAULT_FLOOD_SCOPE | Current default flood scope |
+| 28 | RESP_CODE_DEFAULT_FLOOD_SCOPE | `[28, name31, key16]` for a configured default scope, `[28]` when unset |
 | 29 | RESP_CODE_CLI_REPLY | Текст ответа локального CompanionCLI |
 | 0x80 | PUSH_CODE_ADVERT | Known contact re-seen |
 | 0x81 | PUSH_CODE_PATH_UPDATED | Better path found; carries the 32-byte public key of the updated contact |

@@ -815,6 +815,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// key; a contact absent here goes out under the node's default scope.
   final Map<String, Region> _contactRegions = {};
   String? _defaultRegionScope;
+  DefaultFloodScope? _confirmedDefaultFloodScope;
+  int _defaultFloodScopeWriteRevision = 0;
   bool _hasLoadedDefaultRegionScope = false;
   Future<void>? _defaultRegionScopeRefreshFuture;
   String? _contactSettingsCacheScope;
@@ -3394,11 +3396,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool channelSendCarriesTransportCodes(int channelIndex) =>
       _outgoingChannelRegion(channelIndex).isNotEmpty;
 
-  void _setDefaultRegionScopeCache(String? region) {
-    final normalized = region?.trim();
-    _defaultRegionScope = normalized == null || normalized.isEmpty
-        ? null
-        : normalized;
+  void _setDefaultRegionScopeCache(DefaultFloodScope? scope) {
+    _confirmedDefaultFloodScope = scope;
+    final name = scope?.name.trim() ?? '';
+    final region = name.startsWith('#') ? name.substring(1) : name;
+    _defaultRegionScope = region.isEmpty ? null : region;
+  }
+
+  void _adoptDefaultFloodScopeWrite(DefaultFloodScope scope) {
+    _defaultFloodScopeWriteRevision++;
+    _setDefaultRegionScopeCache(scope);
+    _hasLoadedDefaultRegionScope = true;
   }
 
   Future<void> _refreshDefaultRegionScope() async {
@@ -3418,10 +3426,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           tag: 'Regions',
         );
       } finally {
-        if (isConnected) {
-          _hasLoadedDefaultRegionScope = true;
-        }
         if (identical(_defaultRegionScopeRefreshFuture, refresh)) {
+          if (isConnected) _hasLoadedDefaultRegionScope = true;
           _defaultRegionScopeRefreshFuture = null;
         }
       }
@@ -4196,35 +4202,38 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<String?> getDefaultRegionScope() async {
     if (!isConnected) return null;
 
-    final completer = Completer<String?>();
+    final session = _channelInboxRevision;
+    final writeRevision = _defaultFloodScopeWriteRevision;
+    final completer = Completer<DefaultFloodScope?>();
+    // The timer can fire while the command is still queued for dispatch.
+    completer.future.ignore();
     late final StreamSubscription<Uint8List> subscription;
     late final Timer timeout;
 
-    void complete(String? region) {
-      if (!completer.isCompleted) completer.complete(region);
-    }
-
-    void completeError(Object error) {
-      if (!completer.isCompleted) completer.completeError(error);
-    }
-
     subscription = receivedFrames.listen((frame) {
-      if (frame.isEmpty) return;
-      if (frame[0] == respCodeDefaultFloodScope) {
-        complete(parseDefaultFloodScopeFrame(frame));
+      if (!completer.isCompleted && frame.isNotEmpty && frame[0] == respCodeDefaultFloodScope) {
+        completer.complete(parseDefaultFloodScopeFrame(frame));
       }
     });
 
     timeout = Timer(_commandAckTimeout, () {
-      completeError(TimeoutException('Default region scope request timed out'));
+      if (!completer.isCompleted) {
+        completer.completeError(TimeoutException('Default region scope request timed out'));
+      }
     });
 
     try {
       await sendFrame(buildGetDefaultFloodScopeFrame());
-      final region = await completer.future;
-      _setDefaultRegionScopeCache(region);
-      _hasLoadedDefaultRegionScope = true;
-      return region;
+      final scope = await completer.future;
+      if (_disposed || !isConnected || _channelInboxRevision != session) return null;
+      if (scope == null) throw const FormatException('Invalid default flood scope reply');
+      if (_defaultFloodScopeWriteRevision == writeRevision) {
+        final changed = scope != _confirmedDefaultFloodScope || !_hasLoadedDefaultRegionScope;
+        _setDefaultRegionScopeCache(scope);
+        _hasLoadedDefaultRegionScope = true;
+        if (changed) notifyListeners();
+      }
+      return _defaultRegionScope ?? '';
     } finally {
       timeout.cancel();
       await subscription.cancel();
@@ -4232,12 +4241,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> setDefaultRegionScope(String? region) async {
-    await sendFrame(
-      buildSetDefaultFloodScopeFrame(region),
+    final scope = defaultFloodScopeForRegion(region);
+    final session = _channelInboxRevision;
+    void checkSession() {
+      if (_disposed || !isConnected || _channelInboxRevision != session) {
+        throw StateError('Default flood scope destination changed');
+      }
+    }
+    await _dispatchFrame(
+      buildSetDefaultFloodScopeFrame(scope.name, keyHex: scope.keyHex),
       waitForGenericAck: true,
+      beforeSend: checkSession,
     );
-    _setDefaultRegionScopeCache(region);
-    _hasLoadedDefaultRegionScope = true;
+    checkSession();
+    _adoptDefaultFloodScopeWrite(scope);
+    notifyListeners();
   }
 
   Future<void> _loadChannelOrder({
@@ -7455,6 +7473,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    _confirmedDefaultFloodScope = null;
+    _defaultRegionScopeRefreshFuture = null;
     _finishBackupContactRead(null);
     _loadedChannelCapacity = null;
     _finishBackupChannelSync(false);
@@ -12854,6 +12874,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           ),
     txPowerDbm: _currentTxPower,
     pathHashByteWidth: _confirmedPathHashByteWidth,
+    defaultFloodScope: _confirmedDefaultFloodScope,
   );
 
   Set<BackupNodeProfilePart> get availableBackupRadioParts {
@@ -12886,6 +12907,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       txPowerDbm: parts.contains(BackupNodeProfilePart.txPower) ? profile.txPowerDbm : null,
       pathHashByteWidth: parts.contains(BackupNodeProfilePart.pathHashWidth)
           ? profile.pathHashByteWidth : null,
+      defaultFloodScope: parts.contains(BackupNodeProfilePart.defaultFloodScope)
+          ? profile.defaultFloodScope : null,
     );
     return BackupSnapshot(
       sourcePublicKey: selfPublicKeyHex,
@@ -12930,6 +12953,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         return before.txPowerDbm != null && maxPower != null && source.txPowerDbm! <= maxPower;
       case BackupNodeProfilePart.pathHashWidth:
         return before.pathHashByteWidth != null;
+      case BackupNodeProfilePart.defaultFloodScope:
+        return before.defaultFloodScope != null;
       case BackupNodeProfilePart.nodeName || BackupNodeProfilePart.position || BackupNodeProfilePart.privacy:
         return true;
     }
@@ -13021,6 +13046,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         return buildSetRadioTxPowerFrame(changes.txPowerDbm!);
       case BackupNodeProfilePart.pathHashWidth:
         return buildSetPathHashModeFrame(changes.pathHashByteWidth! - 1);
+      case BackupNodeProfilePart.defaultFloodScope:
+        final scope = changes.defaultFloodScope!;
+        return buildSetDefaultFloodScopeFrame(scope.name, keyHex: scope.keyHex);
     }
   }
 
@@ -13067,6 +13095,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         final width = changes.pathHashByteWidth!;
         _confirmedPathHashByteWidth = width;
         _adoptPathHashByteWidth(width);
+      case BackupNodeProfilePart.defaultFloodScope:
+        _adoptDefaultFloodScopeWrite(changes.defaultFloodScope!);
     }
   }
 

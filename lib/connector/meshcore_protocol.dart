@@ -1322,41 +1322,76 @@ Uint8List buildGetDefaultFloodScopeFrame() {
   return Uint8List.fromList([cmdGetDefaultFloodScope]);
 }
 
-Uint8List buildSetDefaultFloodScopeFrame(String? region) {
-  final normalized = region?.trim() ?? '';
-  if (normalized.isEmpty) {
-    return Uint8List.fromList([cmdSetDefaultFloodScope]);
-  }
+typedef DefaultFloodScope = ({String name, String keyHex});
 
+const DefaultFloodScope emptyDefaultFloodScope = (name: '', keyHex: '');
+const _defaultFloodScopeNameSize = 31;
+const _defaultFloodScopeKeySize = 16;
+final _defaultFloodScopeKeyPattern = RegExp(r'^[0-9a-fA-F]{32}$');
+
+bool isValidDefaultFloodScope(DefaultFloodScope scope) => scope.name.isEmpty
+    ? scope.keyHex.isEmpty
+    : !scope.name.contains('\u0000') &&
+          utf8.encode(scope.name).length < _defaultFloodScopeNameSize &&
+          scope.keyHex.length == _defaultFloodScopeKeySize * 2 &&
+          _defaultFloodScopeKeyPattern.hasMatch(scope.keyHex);
+
+DefaultFloodScope defaultFloodScopeForRegion(String? region) {
+  final normalized = region?.trim() ?? '';
+  if (normalized.isEmpty) return emptyDefaultFloodScope;
   final displayName = normalized.startsWith('#')
       ? normalized.substring(1)
       : normalized;
-  if (utf8.encode(displayName).length > 30) {
+  final scope = (
+    name: displayName,
+    keyHex: pubKeyToHex(floodScopeKeyForRegion('#$displayName')),
+  );
+  if (!isValidDefaultFloodScope(scope)) {
     throw ArgumentError.value(
       displayName,
       'region',
-      'Default flood scope name must fit into 30 UTF-8 bytes',
+      'Default flood scope requires a name of 1 to 30 UTF-8 bytes',
     );
   }
-  final scopedName = '#$displayName';
-  final hash = crypto.sha256.convert(utf8.encode(scopedName)).bytes;
-  final scope = Uint8List.fromList(hash.sublist(0, 16));
+  return scope;
+}
+
+/// With an explicit key the name is the exact value stored by the radio.
+Uint8List buildSetDefaultFloodScopeFrame(String? region, {String? keyHex}) {
+  final scope = keyHex == null
+      ? defaultFloodScopeForRegion(region)
+      : (name: region ?? '', keyHex: keyHex);
+  if (!isValidDefaultFloodScope(scope)) {
+    throw ArgumentError('Invalid default flood scope');
+  }
+  if (scope.name.isEmpty) return Uint8List.fromList([cmdSetDefaultFloodScope]);
   final writer = BufferWriter();
   writer.writeByte(cmdSetDefaultFloodScope);
-  writer.writeCString(displayName, 31);
-  writer.writeBytes(scope);
+  writer.writeCString(scope.name, _defaultFloodScopeNameSize);
+  writer.writeHex(scope.keyHex);
   return writer.toBytes();
 }
 
-String? parseDefaultFloodScopeFrame(Uint8List frame) {
+/// A one-byte reply reports an unset scope. A malformed reply is unknown.
+DefaultFloodScope? parseDefaultFloodScopeFrame(Uint8List frame) {
   if (frame.isEmpty || frame[0] != respCodeDefaultFloodScope) return null;
-  if (frame.length < 1 + 31 + 16) return '';
-
-  final reader = BufferReader(frame);
-  reader.skipBytes(1);
-  final name = reader.readCStringGreedy(31).trim();
-  if (name.isEmpty) return '';
-  return name.startsWith('#') ? name.substring(1) : name;
+  if (frame.length == 1) return emptyDefaultFloodScope;
+  const keyStart = 1 + _defaultFloodScopeNameSize;
+  if (frame.length < keyStart + _defaultFloodScopeKeySize) return null;
+  final end = frame.indexOf(0, 1);
+  if (end <= 1 || end >= keyStart) return null;
+  try {
+    final name = utf8.decode(Uint8List.sublistView(frame, 1, end));
+    if (utf8.encode(name).length != end - 1) return null;
+    return (
+      name: name,
+      keyHex: pubKeyToHex(
+        Uint8List.sublistView(frame, keyStart, keyStart + _defaultFloodScopeKeySize),
+      ),
+    );
+  } on FormatException {
+    return null;
+  }
 }
 
 /// The 16-byte scope key of a region: SHA-256 of its `#name`.

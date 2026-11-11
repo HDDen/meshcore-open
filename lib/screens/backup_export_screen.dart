@@ -300,6 +300,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                 (BackupNodeProfilePart.tuning, l10n.settings_radioSettings),
                 (BackupNodeProfilePart.txPower, l10n.settings_txPower),
                 (BackupNodeProfilePart.pathHashWidth, l10n.repeater_pathHashMode),
+                (BackupNodeProfilePart.defaultFloodScope, l10n.settings_defaultRegionScope),
               ])
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,

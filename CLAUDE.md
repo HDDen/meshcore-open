@@ -3136,8 +3136,12 @@ on retry. The learning write queue serializes restore with live samples
 and only schedules a new fit when learning is active.
 The node profile backup carries the selected name, coordinates, telemetry
 privacy and radio settings in the v1 node and location sections. It also
-reads the matching official MeshCore fields. Radio tuning, TX power and
-path hash width are selected separately. Restore binds the preview to the
+reads the matching official MeshCore fields. Radio tuning, TX power, path
+hash width and the node's default flood scope are selected separately.
+The default scope is captured after a valid reply or confirmed write. Its
+v1 `radio` section includes `defaultFloodScope` and the exact key as
+`defaultFloodScopeKey`. Name-only backups derive the key from the name, and
+an empty name explicitly clears the scope. Restore binds the preview to the
 session, checks each selected group at dispatch, and updates the connector
 after ACK. A missing client-repeat field preserves the current value on
 supported firmware. The other-params frame preserves the current contact flags.

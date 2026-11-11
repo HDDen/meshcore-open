@@ -8,9 +8,10 @@ enum BackupNodeProfilePart {
   privacy,
   tuning,
   txPower,
-  pathHashWidth;
+  pathHashWidth,
+  defaultFloodScope;
 
-  static const radio = [tuning, txPower, pathHashWidth];
+  static const radio = [tuning, txPower, pathHashWidth, defaultFloodScope];
 }
 
 typedef BackupNodePosition = ({int latitudeE6, int longitudeE6});
@@ -37,6 +38,7 @@ class BackupNodeProfile {
     this.tuning,
     this.txPowerDbm,
     this.pathHashByteWidth,
+    this.defaultFloodScope,
   });
 
   factory BackupNodeProfile.fromBackup({
@@ -104,7 +106,27 @@ class BackupNodeProfile {
       tuning: tuning,
       txPowerDbm: txPowerDbm,
       pathHashByteWidth: pathHashByteWidth,
+      defaultFloodScope: officialRadio ? null : _readDefaultFloodScope(radio),
     );
+  }
+
+  static DefaultFloodScope? _readDefaultFloodScope(Map<String, Object?>? radio) {
+    final name = radio?['defaultFloodScope'];
+    final key = radio?['defaultFloodScopeKey'];
+    if (name == null && key == null) return null;
+    const invalidScope = FormatException('Invalid backup default flood scope');
+    if (name is! String || (key != null && key is! String)) throw invalidScope;
+    if (key is String) {
+      final scope = (name: name, keyHex: key.toLowerCase());
+      if (!isValidDefaultFloodScope(scope)) throw invalidScope;
+      return scope;
+    }
+    if (name.isNotEmpty && name.trim().isEmpty) throw invalidScope;
+    try {
+      return defaultFloodScopeForRegion(name);
+    } on ArgumentError {
+      throw invalidScope;
+    }
   }
 
   static int? _wholeNumber(Object? value) =>
@@ -174,6 +196,7 @@ class BackupNodeProfile {
   final BackupRadioTuning? tuning;
   final int? txPowerDbm;
   final int? pathHashByteWidth;
+  final DefaultFloodScope? defaultFloodScope;
 
   bool get isEmpty => BackupNodeProfilePart.values.every((part) => value(part) == null);
 
@@ -187,6 +210,10 @@ class BackupNodeProfile {
     },
     'txPowerDbm': ?txPowerDbm,
     'pathHashByteWidth': ?pathHashByteWidth,
+    if (defaultFloodScope case final scope?) ...{
+      'defaultFloodScope': scope.name,
+      if (scope.name.isNotEmpty) 'defaultFloodScopeKey': scope.keyHex,
+    },
   };
 
   Object? value(BackupNodeProfilePart part) => switch (part) {
@@ -196,6 +223,7 @@ class BackupNodeProfile {
     BackupNodeProfilePart.tuning => tuning,
     BackupNodeProfilePart.txPower => txPowerDbm,
     BackupNodeProfilePart.pathHashWidth => pathHashByteWidth,
+    BackupNodeProfilePart.defaultFloodScope => defaultFloodScope,
   };
 
   BackupNodeProfile changesFrom(
@@ -231,6 +259,8 @@ class BackupNodeProfile {
           ? null : txPowerDbm,
       pathHashByteWidth: unavailable.contains(BackupNodeProfilePart.pathHashWidth) ||
           pathHashByteWidth == current.pathHashByteWidth ? null : pathHashByteWidth,
+      defaultFloodScope: unavailable.contains(BackupNodeProfilePart.defaultFloodScope) ||
+          defaultFloodScope == current.defaultFloodScope ? null : defaultFloodScope,
     );
   }
 }

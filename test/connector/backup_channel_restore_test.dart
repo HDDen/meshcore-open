@@ -90,6 +90,8 @@ class _Radio {
   final reads = <int>[];
   final writes = <Channel>[];
   final profileWrites = <List<int>>[];
+  int defaultScopeReads = 0;
+  List<int> defaultScopeReply = [respCodeDefaultFloodScope];
   int? rejectedProfileCommand;
   final contacts = {
     _contact(0x81, 'Current contact').publicKeyHex:
@@ -169,6 +171,9 @@ class _Radio {
           respCodeAutoAddConfig,
           if (overwriteOldest) autoAddOverwriteOldestFlag else 0,
         ]);
+      case cmdGetDefaultFloodScope:
+        defaultScopeReads++;
+        connector.handleFrameForTest(defaultScopeReply);
       case cmdGetContacts:
         contactReads++;
         connector.handleFrameForTest(ReviewFrames.contactsStart(
@@ -206,7 +211,8 @@ class _Radio {
           psk: channel.psk,
         ));
       case cmdSetAdvertName || cmdSetAdvertLatLon || cmdSetOtherParams ||
-          cmdSetRadioParams || cmdSetRadioTxPower || cmdSetPathHashMode:
+          cmdSetRadioParams || cmdSetRadioTxPower || cmdSetPathHashMode ||
+          cmdSetDefaultFloodScope:
         profileWrites.add(List.of(frame));
         connector.handleFrameForTest(
           frame.first == rejectedProfileCommand ? ReviewFrames.err(6) : ReviewFrames.ok(),
@@ -397,6 +403,79 @@ void main() {
     final unknown = radio.connector.previewBackupNodeProfile(source)!;
     expect(unknown.changes.isEmpty, isTrue);
     expect(unknown.unavailable, {tuning, power, width});
+  });
+
+  test('default scope uses the exact radio key and changes only after ACK', () async {
+    const part = BackupNodeProfilePart.defaultFloodScope;
+    final key = 'a7' * 16;
+    final otherKey = 'f1' * 16;
+    radio.defaultScopeReply = [
+      respCodeDefaultFloodScope, 0x23, 0x75, 0x6b, // #uk
+      ...List.filled(28, 0),
+      ...List.filled(16, 0xa7),
+    ];
+    expect(await radio.connector.getDefaultRegionScope(), 'uk');
+    final snapshot = radio.connector.snapshotNodeProfileBackup({part})!;
+    final plan = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''), password: '', nodeProfileOnly: true,
+    );
+    final captured = plan.nodeProfile!;
+    expect(captured.defaultFloodScope, (name: '#uk', keyHex: key));
+    expect(radio.connector.previewBackupNodeProfile(captured)!.changes.isEmpty, isTrue);
+
+    final source = BackupNodeProfile.fromBackup(radio: {
+      'defaultFloodScope': '#uk',
+      'defaultFloodScopeKey': otherKey,
+    });
+    final preview = radio.connector.previewBackupNodeProfile(source)!;
+    expect(preview.changes.defaultFloodScope, source.defaultFloodScope);
+    radio.rejectedProfileCommand = cmdSetDefaultFloodScope;
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {part}), (
+      confirmed: 0, status: BackupNodeProfileStatus.writeUnconfirmed,
+    ));
+    expect(radio.connector.previewBackupNodeProfile(captured)!.changes.isEmpty, isTrue);
+
+    radio.rejectedProfileCommand = null;
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {part}), (
+      confirmed: 1, status: BackupNodeProfileStatus.completed,
+    ));
+    final expected = [
+      cmdSetDefaultFloodScope, 0x23, 0x75, 0x6b,
+      ...List.filled(28, 0),
+      ...List.filled(16, 0xf1),
+    ];
+    expect(radio.profileWrites, [expected, expected]);
+    expect(radio.connector.previewBackupNodeProfile(source)!.changes.isEmpty, isTrue);
+    expect(await radio.connector.restoreBackupNodeProfile(preview, {part}), (
+      confirmed: 0, status: BackupNodeProfileStatus.destinationChanged,
+    ));
+
+    final cleared = BackupNodeProfile.fromBackup(radio: {'defaultFloodScope': ''});
+    final clear = radio.connector.previewBackupNodeProfile(cleared)!;
+    expect(await radio.connector.restoreBackupNodeProfile(clear, {part}), (
+      confirmed: 1, status: BackupNodeProfileStatus.completed,
+    ));
+    expect(radio.profileWrites.last, [cmdSetDefaultFloodScope]);
+    expect(radio.connector.defaultRegionScopeLabel, isNull);
+    expect(radio.connector.previewBackupNodeProfile(cleared)!.changes.isEmpty, isTrue);
+    expect(radio.defaultScopeReads, 1);
+  });
+
+  test('a truncated default scope reply does not establish an unset scope', () async {
+    const part = BackupNodeProfilePart.defaultFloodScope;
+    final source = BackupNodeProfile.fromBackup(radio: {'defaultFloodScope': 'uk'});
+    radio.defaultScopeReply = [respCodeDefaultFloodScope, 0x75];
+    await expectLater(radio.connector.getDefaultRegionScope(), throwsFormatException);
+    expect(radio.connector.availableBackupRadioParts, isNot(contains(part)));
+    expect(radio.connector.previewBackupNodeProfile(source)!.unavailable, {part});
+    expect(radio.profileWrites, isEmpty);
+
+    radio.defaultScopeReply = [respCodeDefaultFloodScope];
+    expect(await radio.connector.getDefaultRegionScope(), '');
+    expect(radio.connector.availableBackupRadioParts, contains(part));
+    final preview = radio.connector.previewBackupNodeProfile(source)!;
+    expect(preview.before.defaultFloodScope, emptyDefaultFloodScope);
+    expect(preview.changes.defaultFloodScope, source.defaultFloodScope);
   });
 
   test('a backup captures the active node without requesting radio frames', () async {
