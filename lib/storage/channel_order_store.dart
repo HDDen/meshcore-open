@@ -1,6 +1,8 @@
 import 'dart:convert';
 import '../utils/app_logger.dart';
+import 'message_history_storage.dart';
 import 'node_state.dart';
+import 'prefs_manager.dart';
 
 /// The user's channel order per node: a `node_state` row named
 /// `channel_order`, or the preference key `channel_order_<node>` where there
@@ -14,6 +16,33 @@ class ChannelOrderStore {
       publicKeyHex = value.length > 10 ? value.substring(0, 10) : '';
 
   String get keyFor => '$_keyPrefix$publicKeyHex';
+
+  Future<String?> readBackupOrder() => NodeState.read(
+    nodeKey: publicKeyHex,
+    name: _stateName,
+    preferenceKey: keyFor,
+  );
+
+  Future<bool> restoreBackupOrder(
+    List<int> order, {
+    required bool Function() stillCurrent,
+  }) async {
+    final value = jsonEncode(order);
+    if (NodeState.usesDatabase) {
+      return MessageHistoryStorage.instance.replaceNodeStateIfUnchanged(
+        nodeKey: publicKeyHex,
+        name: _stateName,
+        expected: null,
+        value: value,
+        stillCurrent: stillCurrent,
+      );
+    }
+    final prefs = PrefsManager.instance;
+    if (!stillCurrent() || prefs.containsKey(keyFor) || prefs.containsKey(_keyPrefix)) {
+      return false;
+    }
+    return prefs.setString(keyFor, value);
+  }
 
   Future<void> saveChannelOrder(List<int> order) async {
     if (publicKeyHex.isEmpty) {
@@ -33,11 +62,7 @@ class ChannelOrderStore {
       appLogger.warn('Public key hex is not set. Cannot load channel order.');
       return [];
     }
-    String? jsonString = await NodeState.read(
-      nodeKey: publicKeyHex,
-      name: _stateName,
-      preferenceKey: keyFor,
-    );
+    String? jsonString = await readBackupOrder();
     if ((jsonString == null || jsonString.isEmpty) && allowLegacyMigration) {
       jsonString = await NodeState.takeOverLegacyPreference(
         legacyKey: _keyPrefix,

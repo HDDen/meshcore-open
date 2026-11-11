@@ -54,6 +54,7 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
@@ -141,6 +142,7 @@ import '../storage/channel_identity_store.dart';
 import '../storage/contact_identity_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
+import '../storage/backup_channel_settings_store.dart';
 import '../storage/channel_region_store.dart';
 import '../storage/contact_region_store.dart';
 import '../storage/channel_store.dart';
@@ -4828,10 +4830,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ChannelSettingsStore? settingsStore,
     ChannelRegionStore? regionStore,
     String? expectedPublicKeyHex,
+    bool Function()? stillCurrent,
   }) async {
     final channelSettingsStore = settingsStore ?? _channelSettingsStore;
     final channelRegionStore = regionStore ?? _channelRegionStore;
-    _channelCyr2LatProfileId.remove(channelIndex);
     final mcmpEnabled = await channelSettingsStore.loadMcmpEnabled(
       channelIndex,
     );
@@ -4870,10 +4872,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       channelIndex,
     );
     final region = await channelRegionStore.loadRegion(channelIndex);
-    if (expectedPublicKeyHex != null &&
-        expectedPublicKeyHex != selfPublicKeyHex) {
+    if ((expectedPublicKeyHex != null && expectedPublicKeyHex != selfPublicKeyHex) ||
+        stillCurrent?.call() == false) {
       return;
     }
+    _channelCyr2LatProfileId.remove(channelIndex);
     _channelMcmpEnabled[channelIndex] = mcmpEnabled;
     _channelMcmpVersion[channelIndex] = mcmpVersion == 3 ? 3 : 2;
     _channelMcmpUseSign[channelIndex] = mcmpUseSign;
@@ -12939,6 +12942,127 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return applied ? additions.values.length : null;
   }
 
+  bool _restoringBackupChannelSettings = false;
+
+  bool get _canUseChannelSettingsBackup =>
+      _hasBackupChannelInventory && !_restoringBackupChannels &&
+      _channelEditsInProgress == 0;
+
+  Future<BackupChannelSettingsPreview?> previewBackupChannelSettings(
+    BackupChannelSettings source,
+  ) async {
+    if (!_canUseChannelSettingsBackup) return null;
+    final session = _nodeLocalBackupSession;
+    final nodeKey = selfPublicKeyHex;
+    final orderStore = ChannelOrderStore()..setPublicKeyHex = nodeKey;
+    final savedOrder = source.order.isEmpty ? null : await orderStore.readBackupOrder();
+    if (!_canUseChannelSettingsBackup || _nodeLocalBackupSession != session) return null;
+    final bindings = backupChannelBindings(_channels);
+    final store = BackupChannelSettingsStore(nodeKey.substring(0, 10), _channels);
+    final ids = {for (final (id, _) in source.values.keys) id};
+    final affected = bindings.values.where((channel) => ids.contains(channel.id));
+    final current = store.read(affected, includeInherited: true);
+    // Channel edits update the active codec before persisting all its flags.
+    for (final channel in affected) {
+      final slot = channel.slot;
+      for (final (option, enabled) in [
+        (BackupChannelOption.mcmp, _channelMcmpEnabled[slot]),
+        (BackupChannelOption.mcotxt, _channelMCOtxtEnabled[slot]),
+        (BackupChannelOption.smaz, _channelSmazEnabled[slot]),
+        (BackupChannelOption.cyr2lat, _channelCyr2LatEnabled[slot]),
+      ]) {
+        if (enabled == true) current[(channel.id, option)] = true;
+      }
+    }
+    final regions = RegionStore().loadRegions().toSet();
+    return source.preview(
+      session: session,
+      bindings: bindings,
+      current: current,
+      canRestoreOrder: savedOrder == null && _channelOrder.isEmpty,
+      hasCyr2LatProfile: (id) => _appSettingsService?.getCyr2LatProfileById(id) != null,
+      hasRegion: (region) => region.isEmpty || region == kUnscopedRegion ||
+          regions.contains(region),
+    );
+  }
+
+  Future<({int count, bool completed})?> restoreBackupChannelSettings(
+    BackupChannelSettingsPreview preview,
+  ) async {
+    bool sessionIsCurrent() => _canUseChannelSettingsBackup &&
+        _nodeLocalBackupSession == preview.session;
+    bool channelIsCurrent(BackupChannelBinding channel) => sessionIsCurrent() &&
+        backupChannelBindings(_channels)[channel.id] == channel;
+
+    if (_restoringBackupChannelSettings || !sessionIsCurrent()) return null;
+    if (preview.count == 0) return (count: 0, completed: true);
+    final nodeKey = selfPublicKeyHex;
+    _restoringBackupChannelSettings = true;
+    final changed = <BackupChannelBinding>{};
+    var count = 0;
+    try {
+      final current = await previewBackupChannelSettings(preview.source);
+      if (current == null || !sessionIsCurrent() ||
+          !mapEquals(current.writes, preview.writes) ||
+          !listEquals(current.order, preview.order)) {
+        return null;
+      }
+      final store = BackupChannelSettingsStore(nodeKey.substring(0, 10), _channels);
+      bool enablesCodec(MapEntry<BackupChannelWriteKey, Object> entry) =>
+          entry.key.$2.codecFlag && entry.value == true;
+      // Enable a codec only after its associated options have been saved.
+      final writes = preview.writes.entries;
+      for (final entry in [...writes.where((entry) => !enablesCodec(entry)),
+        ...writes.where(enablesCodec)]) {
+        final channel = entry.key.$1;
+        if (!channelIsCurrent(channel) || !await store.writeIfMissing(entry.key, entry.value)) {
+          return (count: count, completed: false);
+        }
+        changed.add(channel);
+        count++;
+      }
+      if (preview.order.isNotEmpty) {
+        final slots = [for (final channel in preview.order) channel.slot];
+        final orderStore = ChannelOrderStore()..setPublicKeyHex = nodeKey;
+        final saved = await orderStore.restoreBackupOrder(
+          slots,
+          stillCurrent: () => _channelOrder.isEmpty && preview.order.every(channelIsCurrent),
+        );
+        if (!saved) return (count: count, completed: false);
+        if (sessionIsCurrent() && _channelOrder.isEmpty) {
+          _channelOrder = slots;
+          _applyChannelOrder();
+        }
+        count++;
+      }
+      return (count: count, completed: true);
+    } catch (_) {
+      return (count: count, completed: false);
+    } finally {
+      try {
+        if (sessionIsCurrent()) {
+          final settings = ChannelSettingsStore()..setPublicKeyHex = nodeKey;
+          final regions = ChannelRegionStore()..setPublicKeyHex = nodeKey;
+          settings.replaceChannels(_channels);
+          regions.replaceChannels(_channels);
+          settings.finishLegacyIndexMigration();
+          regions.finishLegacyIndexMigration();
+          for (final channel in changed.where(channelIsCurrent)) {
+            await _loadChannelSettingsForIndex(
+              channel.slot,
+              settingsStore: settings,
+              regionStore: regions,
+              stillCurrent: () => channelIsCurrent(channel),
+            );
+          }
+          if (sessionIsCurrent() && count > 0) notifyListeners();
+        }
+      } finally {
+        _restoringBackupChannelSettings = false;
+      }
+    }
+  }
+
   /// Captures the selected lists. Channels use the confirmed inventory.
   /// Only selecting contacts reads the radio.
   Future<BackupSnapshot?> snapshotNodeBackup({
@@ -12949,13 +13073,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool includeContactGroups = false,
     bool includeCommunities = false,
     bool includeContactSettings = false,
+    bool includeChannelSettings = false,
   }) async {
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
     bool canSnapshot() =>
         !_restoringBackupChannels &&
         !_restoringBackupContacts &&
-        (!includeChannels ||
+        (!(includeChannels || includeChannelSettings) ||
             (_hasBackupChannelInventory && _channelEditsInProgress == 0)) &&
         (!includeContacts || _canPreviewContactBackup) &&
         (!(includeContactGroups || includeCommunities || includeDiscoveredContacts ||
@@ -12965,7 +13090,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _channelInboxRevision == revision;
     if ((!includeChannels && !includeContacts &&
             !includeDiscoveredContacts && !includeContactGroups &&
-            !includeCommunities && !includeContactSettings) ||
+            !includeCommunities && !includeContactSettings && !includeChannelSettings) ||
         !canSnapshot()) {
       return null;
     }
@@ -12988,6 +13113,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             (verified?.keys ?? _knownContactKeys).where((key) => key != nodeKey),
           )
         : null;
+    BackupChannelSettings? channelSettings;
+    if (includeChannelSettings) {
+      final order = await (ChannelOrderStore()..setPublicKeyHex = nodeKey)
+          .loadChannelOrder(allowLegacyMigration: false);
+      if (!canSnapshot()) return null;
+      final bindings = backupChannelBindings(_channels);
+      final idsBySlot = {for (final channel in bindings.values) channel.slot: channel.id};
+      final store = BackupChannelSettingsStore(nodeKey.substring(0, 10), _channels);
+      channelSettings = BackupChannelSettings(
+        store.read(bindings.values, includeInherited: false),
+        {for (final slot in order) ?idsBySlot[slot]},
+      );
+    }
 
     return BackupSnapshot(
       sourcePublicKey: nodeKey,
@@ -12999,6 +13137,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       contactGroups: contactGroups,
       communities: communities,
       contactSettings: contactSettings,
+      channelSettings: channelSettings,
       createdAt: DateTime.now(),
     );
   }

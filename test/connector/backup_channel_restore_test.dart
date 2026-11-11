@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/helpers/backup_channel_settings.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
@@ -20,6 +21,8 @@ import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
+import 'package:meshcore_open/storage/channel_order_store.dart';
+import 'package:meshcore_open/storage/channel_settings_store.dart';
 import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/community_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
@@ -29,6 +32,7 @@ import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/storage/region_store.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -394,6 +398,84 @@ void main() {
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
     expect(radio.contactReads, reads);
+    expect(radio.contactWrites, isEmpty);
+  });
+
+  test('channel settings and order follow PSK and keep existing choices', () async {
+    final channels = radio.connector.channels;
+    final first = channels.singleWhere((channel) => channel.index == 0);
+    final second = channels.singleWhere((channel) => channel.index == 2);
+    final contactReads = radio.contactReads;
+    await PrefsManager.instance.setStringList(RegionStore.key, ['#north']);
+    final local = ChannelSettingsStore()..setPublicKeyHex = _node;
+    local.replaceChannels(channels);
+    await local.saveMCOtxtEnabled(first.index, true);
+    final foreign = ChannelSettingsStore()..setPublicKeyHex = 'bb' * 32;
+    foreign.replaceChannels(channels);
+    await foreign.saveUrlImagesEnabled(first.index, false);
+    await radio.connector.loadChannelSettings(
+      channelBindings: channels,
+      allowLegacyMigration: false,
+    );
+    expect(radio.connector.isChannelMCOtxtEnabled(first.index), isTrue);
+    expect(await local.loadUrlImagesChoice(first.index), isFalse);
+
+    final source = BackupChannelSettings({
+      (first.storageId!, BackupChannelOption.smaz): true,
+      (first.storageId!, BackupChannelOption.urlImages): true,
+      (second.storageId!, BackupChannelOption.urlImages): true,
+      (second.storageId!, BackupChannelOption.region): '#north',
+      (second.storageId!, BackupChannelOption.cyr2latProfile): 'unknown',
+    }, [second.storageId!, first.storageId!]);
+    final stale = (await radio.connector.previewBackupChannelSettings(source))!;
+    final secondBinding = (slot: second.index, id: second.storageId!, name: second.name);
+    expect(stale.writes, {
+      (secondBinding, BackupChannelOption.urlImages): true,
+      (secondBinding, BackupChannelOption.region): '#north',
+    });
+    expect(stale.order.map((channel) => channel.slot), [2, 0]);
+    await local.saveUrlImagesEnabled(2, false);
+    expect(await radio.connector.restoreBackupChannelSettings(stale), isNull);
+    expect(radio.connector.getChannelRegion(2), isEmpty);
+
+    final preview = (await radio.connector.previewBackupChannelSettings(source))!;
+    expect(preview.count, 2);
+    expect(preview.order.map((channel) => channel.slot), [2, 0]);
+    expect(await radio.connector.restoreBackupChannelSettings(preview), (
+      count: 2, completed: true,
+    ));
+    expect(radio.connector.getChannelRegion(2), '#north');
+    expect(radio.connector.isChannelMCOtxtEnabled(0), isTrue);
+    expect(radio.connector.isChannelSmazEnabled(0), isFalse);
+    expect(await local.loadUrlImagesChoice(2), isFalse);
+    expect(await foreign.loadUrlImagesChoice(0), isFalse);
+    final order = ChannelOrderStore()..setPublicKeyHex = _node;
+    expect(await order.loadChannelOrder(), [2, 0]);
+    expect(radio.connector.channels.map((channel) => channel.index), [2, 0]);
+    final savedOrder = (await radio.connector.previewBackupChannelSettings(
+      BackupChannelSettings({}, [first.storageId!, second.storageId!]),
+    ))!;
+    expect(savedOrder.order, isEmpty);
+    expect(savedOrder.skipped, 1);
+
+    final snapshot = (await radio.connector.snapshotNodeBackup(
+      includeChannels: false,
+      includeContacts: false,
+      includeChannelSettings: true,
+    ))!;
+    final exported = await const BackupImportPlanner().inspect(
+      await snapshot.encode(password: ''),
+      password: '',
+      channelSettingsOnly: true,
+    );
+    final settings = exported.channelSettings!;
+    expect(settings.order, [second.storageId, first.storageId]);
+    expect(settings.values[(second.storageId, BackupChannelOption.region)], '#north');
+    expect(settings.values[(second.storageId, BackupChannelOption.urlImages)], isFalse);
+    expect(settings.values[(first.storageId, BackupChannelOption.urlImages)], isNull);
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+    expect(radio.contactReads, contactReads);
     expect(radio.contactWrites, isEmpty);
   });
 

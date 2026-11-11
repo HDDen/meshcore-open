@@ -27,6 +27,11 @@ const _codecOptions = {
 };
 
 class BackupContactSettings {
+  static const extensionSection = 'mcoaPerContactSettings';
+  static const _upstreamOptions = {
+    'smaz_enabled', 'cyr2lat_enabled', 'cyr2lat_profile', 'url_images_enabled',
+  };
+
   BackupContactSettings(Map<BackupContactOptionKey, String> values)
     : values = Map.unmodifiable(values);
 
@@ -55,10 +60,11 @@ class BackupContactSettings {
   bool get isEmpty => values.isEmpty;
   Set<String> get contacts => {for (final (contact, _) in values.keys) contact};
 
-  Map<String, Object?> toPreferences(String scope) => {
+  Map<String, Object?> toPreferences(String scope, {bool forkOnly = false}) => {
     for (final MapEntry(key: (contact, name), :value) in values.entries)
-      contactOptionDefinitions[name]!.legacyKey(scope, contact):
-          contactOptionDefinitions[name]!.decode(value),
+      if (_upstreamOptions.contains(name) != forkOnly)
+        contactOptionDefinitions[name]!.legacyKey(scope, contact):
+            contactOptionDefinitions[name]!.decode(value),
   };
 
   BackupContactSettingsPreview preview({

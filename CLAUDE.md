@@ -3116,6 +3116,12 @@ section. Restore matches full contact keys, fills missing settings and
 keeps a locally configured codec as a unit. The contact-option write queue
 rechecks the preview inside the SQLite transaction and updates the store
 cache after commit. The connector reloads the affected contacts' options.
+The v1 `channelSettings` item carries settings and order by PSK-derived ID.
+MCOa resolves unique IDs to its current channel names and keeps existing or
+inherited options. Import writes name-keyed preferences and fills an absent
+channel order through `node_state`. The connector refreshes the affected
+slots after saving. MCOa-specific contact and channel preferences live in
+separate extension sections so upstream can validate the standard sections.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

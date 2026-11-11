@@ -378,6 +378,52 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить настройки контактов.';
 
   @override
+  String get backupChannelSettings_label => 'Настройки и порядок каналов';
+
+  @override
+  String get backupChannelSettings_title =>
+      'Восстановление настроек и порядка каналов';
+
+  @override
+  String get backupChannelSettings_intro =>
+      'Выберите копию MeshCore Open. Настройки и порядок сопоставляются по ключам каналов. Текущие настройки и сохранённый порядок имеют приоритет.';
+
+  @override
+  String get backupChannelSettings_empty =>
+      'В копии нет поддерживаемых настроек или порядка каналов.';
+
+  @override
+  String backupChannelSettings_summary(int count, int skipped) {
+    return 'Изменений к применению: $count. Пропущено: $skipped.';
+  }
+
+  @override
+  String get backupChannelSettings_includesOrder => 'Включает порядок каналов.';
+
+  @override
+  String backupChannelSettings_confirm(String node, int count) {
+    return 'Применить показанные изменения в профиле ноды «$node»? Изменений: $count.';
+  }
+
+  @override
+  String backupChannelSettings_applied(int count) {
+    return 'Применено изменений для каналов: $count.';
+  }
+
+  @override
+  String backupChannelSettings_partial(int count) {
+    return 'Применено изменений для каналов: $count. Восстановление прервано. Обновите предпросмотр.';
+  }
+
+  @override
+  String get backupChannelSettings_changed =>
+      'Нода, её каналы или их настройки изменились. Обновите предпросмотр.';
+
+  @override
+  String get backupChannelSettings_failed =>
+      'Не удалось восстановить настройки каналов.';
+
+  @override
   String get backupCommunities_label => 'Сообщества';
 
   @override

@@ -377,6 +377,52 @@ class AppLocalizationsFr extends AppLocalizations {
       'Could not restore contact settings.';
 
   @override
+  String get backupChannelSettings_label => 'Channel settings and order';
+
+  @override
+  String get backupChannelSettings_title =>
+      'Restore channel settings and order';
+
+  @override
+  String get backupChannelSettings_intro =>
+      'Choose a MeshCore Open backup. Settings and order are matched by channel key. Existing settings and a saved order take priority.';
+
+  @override
+  String get backupChannelSettings_empty =>
+      'This backup contains no supported channel settings or order.';
+
+  @override
+  String backupChannelSettings_summary(int count, int skipped) {
+    return 'Changes to add: $count. Skipped: $skipped.';
+  }
+
+  @override
+  String get backupChannelSettings_includesOrder => 'Includes channel order.';
+
+  @override
+  String backupChannelSettings_confirm(String node, int count) {
+    return 'Apply the preview to the profile for “$node”? Changes to add: $count.';
+  }
+
+  @override
+  String backupChannelSettings_applied(int count) {
+    return 'Channel changes applied: $count.';
+  }
+
+  @override
+  String backupChannelSettings_partial(int count) {
+    return 'Channel changes applied: $count. Restore stopped early. Refresh the preview.';
+  }
+
+  @override
+  String get backupChannelSettings_changed =>
+      'The node, its channels, or their settings changed. Refresh the preview.';
+
+  @override
+  String get backupChannelSettings_failed =>
+      'Could not restore channel settings.';
+
+  @override
   String get backupCommunities_label => 'Communities';
 
   @override

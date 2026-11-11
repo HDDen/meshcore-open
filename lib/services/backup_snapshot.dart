@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../connector/meshcore_protocol.dart';
+import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_contact_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -15,6 +16,7 @@ class BackupSnapshot {
     String? sourcePublicKey,
     this.nodeName,
     Iterable<Channel>? channels,
+    BackupChannelSettings? channelSettings,
     Iterable<Contact>? contacts,
     Iterable<ContactGroup>? contactGroups,
     BackupContactSettings? contactSettings,
@@ -23,7 +25,7 @@ class BackupSnapshot {
     AppSettingsBackup? appSettings,
     required DateTime createdAt,
   }) : sourcePublicKey =
-           channels == null && contacts == null &&
+           channels == null && channelSettings == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
                communities == null && contactSettings == null
            ? ''
@@ -31,6 +33,7 @@ class BackupSnapshot {
        createdAt = createdAt.toUtc(),
        _appSettings = appSettings?.isEmpty == true ? null : appSettings,
        _contactSettings = contactSettings?.isEmpty == true ? null : contactSettings,
+       _channelSettings = channelSettings?.isEmpty == true ? null : channelSettings,
        _historyRows = null,
        _sections = {
          if (channels != null) 'channels': _channelRows(channels),
@@ -54,12 +57,13 @@ class BackupSnapshot {
                Map<String, Object?>.from(row as Map),
            ],
        } {
-    if ((_sections.isNotEmpty || _contactSettings != null) &&
+    if (_hasNodeData &&
         (this.sourcePublicKey.length != pubKeySize * 2 ||
             _nonHex.hasMatch(this.sourcePublicKey))) {
       throw const FormatException('Invalid backup source key');
     }
-    if (_sections.isEmpty && _appSettings == null && contactSettings == null) {
+    if (_sections.isEmpty && _appSettings == null &&
+        contactSettings == null && channelSettings == null) {
       throw const FormatException('No selected backup sections');
     }
   }
@@ -74,6 +78,7 @@ class BackupSnapshot {
        _sections = const {},
        _appSettings = null,
        _contactSettings = null,
+       _channelSettings = null,
        _historyRows = Map<String, List<String>>.unmodifiable({
          for (final entry in rows.entries)
            entry.key: List<String>.unmodifiable(entry.value),
@@ -92,12 +97,21 @@ class BackupSnapshot {
   final Map<String, List<Map<String, Object?>>> _sections;
   final AppSettingsBackup? _appSettings;
   final BackupContactSettings? _contactSettings;
+  final BackupChannelSettings? _channelSettings;
   final Map<String, List<String>>? _historyRows;
 
   bool get isEmpty =>
       _historyRows?.isEmpty ??
-      (_appSettings == null && _contactSettings == null &&
+      (_appSettings == null && _contactSettings == null && _channelSettings == null &&
           _sections.values.every((rows) => rows.isEmpty));
+  bool get _hasNodeData =>
+      _sections.isNotEmpty || _contactSettings != null || _channelSettings != null;
+  List<String> get _items => [
+    ..._sections.keys,
+    if (_contactSettings != null) 'perContactSettings',
+    if (_channelSettings != null) 'channelSettings',
+    if (_appSettings != null) AppSettingsBackup.section,
+  ];
   int get channelCount => _sections['channels']?.length ?? 0;
   bool get containsCommunityKeys => _sections['communities']?.isNotEmpty ?? false;
 
@@ -105,14 +119,17 @@ class BackupSnapshot {
     final safeName = (nodeName ?? '').replaceAll(_invalidFileNameChars, '-').trim();
     final stem = String.fromCharCodes(safeName.runes.take(40)).trim();
     final stamp = createdAt.toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+    final items = _items;
     final kind = _historyRows != null
         ? 'history'
-        : _contactSettings != null
-        ? _sections.isEmpty && _appSettings == null ? 'contact-settings' : 'backup'
-        : _sections.isEmpty
+        : !_hasNodeData
         ? 'settings'
-        : _sections.length == 1 && _appSettings == null
-        ? _sections.keys.single
+        : items.length == 1
+        ? switch (items.single) {
+            'perContactSettings' => 'contact-settings',
+            'channelSettings' => 'channel-settings',
+            final name => name,
+          }
         : 'backup';
     final name = ['meshcore-$kind', if (stem.isNotEmpty) stem, stamp].join('-');
     return '$name.json';
@@ -122,9 +139,7 @@ class BackupSnapshot {
     if (_historyRows case final rows?) {
       return _encodeHistory(rows, password);
     }
-    final scope = _sections.isEmpty && _contactSettings == null
-        ? ''
-        : sourcePublicKey.substring(0, 10);
+    final scope = _hasNodeData ? sourcePublicKey.substring(0, 10) : '';
     final preferences = <String, Map<String, Object?>>{};
     for (final entry in _sections.entries) {
       final (section, prefix) = switch (entry.key) {
@@ -137,19 +152,38 @@ class BackupSnapshot {
       (preferences[section] ??= {})['$prefix$scope'] =
           entry.value.isEmpty ? '[]' : entry.value;
     }
-    if (_contactSettings case final settings?) {
-      (preferences['contacts'] ??= {}).addAll(settings.toPreferences(scope));
+    final items = [..._sections.keys];
+    void addSettings(
+      String item,
+      String section,
+      String extension,
+      Map<String, Object?> upstream,
+      Map<String, Object?> fork,
+    ) {
+      if (upstream.isNotEmpty) {
+        items.add(item);
+        (preferences[section] ??= {}).addAll(upstream);
+      }
+      if (fork.isNotEmpty) {
+        items.add(extension);
+        preferences[extension] = fork;
+      }
     }
+    if (_contactSettings case final settings?) {
+      addSettings('perContactSettings', 'contacts', BackupContactSettings.extensionSection,
+        settings.toPreferences(scope), settings.toPreferences(scope, forkOnly: true));
+    }
+    if (_channelSettings case final settings?) {
+      addSettings('channelSettings', 'channels', BackupChannelSettings.extensionSection,
+        settings.toPreferences(scope), settings.toPreferences(scope, forkOnly: true));
+    }
+    if (_appSettings != null) items.add(AppSettingsBackup.section);
     return const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
       'createdAt': createdAt.toIso8601String(),
       'sourcePublicKey': sourcePublicKey,
-      'items': [
-        ..._sections.keys,
-        if (_contactSettings != null) 'perContactSettings',
-        if (_appSettings != null) AppSettingsBackup.section,
-      ],
+      'items': items,
       'sections': {
         for (final section in preferences.entries)
           section.key: {'preferences': section.value},

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
+import 'package:meshcore_open/helpers/backup_channel_settings.dart';
 import 'package:meshcore_open/helpers/backup_communities.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
@@ -53,6 +54,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   int writes = 0;
   int contactWrites = 0;
   int contactSettingsWrites = 0;
+  int channelSettingsWrites = 0;
   int historyWrites = 0;
   int discoveryWrites = 0;
   int communityWrites = 0;
@@ -75,6 +77,7 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
     bool includeContactGroups = false,
     bool includeCommunities = false,
     bool includeContactSettings = false,
+    bool includeChannelSettings = false,
   }) async => ready
       ? BackupSnapshot(
           sourcePublicKey: _key,
@@ -175,6 +178,26 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
   ) async {
     discoveryWrites++;
     return preview.contacts.length;
+  }
+
+  @override
+  Future<BackupChannelSettingsPreview?> previewBackupChannelSettings(
+    BackupChannelSettings source,
+  ) async => source.preview(
+    session: this,
+    bindings: backupChannelBindings(current),
+    current: const {},
+    canRestoreOrder: true,
+    hasCyr2LatProfile: (_) => false,
+    hasRegion: (_) => false,
+  );
+
+  @override
+  Future<({int count, bool completed})?> restoreBackupChannelSettings(
+    BackupChannelSettingsPreview preview,
+  ) async {
+    channelSettingsWrites++;
+    return (count: preview.count, completed: true);
   }
 
   @override
@@ -297,6 +320,52 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('channel settings preview includes order and requires confirmation', (tester) async {
+    final node = _Node();
+    addTearDown(node.dispose);
+    final first = node.current[0].storageId!;
+    final second = node.current[1].storageId!;
+    final contents = await BackupSnapshot(
+      sourcePublicKey: _key,
+      channelSettings: BackupChannelSettings(
+        {(first, BackupChannelOption.urlImages): false}, [second, first],
+      ),
+      createdAt: DateTime.utc(2026),
+    ).encode(password: '');
+    await tester.pumpWidget(
+      ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: node,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BackupRestoreScreen.channelSettings(
+            pickFile: () async => XFile.fromData(
+              Uint8List.fromList(utf8.encode(contents)),
+              name: 'channel-settings.json',
+            ),
+          ),
+        ),
+      ),
+    );
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupChannelSettings_summary(2, 0)),
+    );
+    expect(find.text(l10n.backupChannelSettings_includesOrder), findsOneWidget);
+    expect(node.channelSettingsWrites, 0);
+    final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupChannelSettings_confirm('Test node', 2)), findsOneWidget);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: restore));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.backupChannelSettings_applied(2)), findsOneWidget);
+    expect(node.channelSettingsWrites, 1);
+    expect(node.writes, 0);
+  });
+
   testWidgets('individual contact settings require confirmation', (tester) async {
     final node = _Node();
     addTearDown(node.dispose);

@@ -48,6 +48,7 @@ class BackupExportScreen extends StatefulWidget {
 class _BackupExportScreenState extends State<BackupExportScreen> {
   bool _busy = false;
   late bool _includeChannels = widget._mode == _BackupExportMode.selected;
+  bool _includeChannelSettings = false;
   bool _includeContacts = false;
   bool _includeContactSettings = false;
   bool _includeContactGroups = false;
@@ -63,7 +64,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
       ? _includeDirectHistory || _includeChannelHistory
       : _includeChannels || _includeContacts || _includeContactGroups ||
           _includeDiscoveredContacts || _includeSettings || _includeCommunities ||
-          _includeContactSettings;
+          _includeContactSettings || _includeChannelSettings;
 
   Future<BackupSnapshot?> _capture() async {
     if (_historyOnly) {
@@ -77,7 +78,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         : null;
     if (_includeChannels || _includeContacts ||
         _includeContactGroups || _includeDiscoveredContacts || _includeCommunities ||
-        _includeContactSettings) {
+        _includeContactSettings || _includeChannelSettings) {
       return context.read<MeshCoreConnector>().snapshotNodeBackup(
         includeChannels: _includeChannels,
         includeContacts: _includeContacts,
@@ -86,6 +87,7 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
         includeContactGroups: _includeContactGroups,
         includeCommunities: _includeCommunities,
         includeContactSettings: _includeContactSettings,
+        includeChannelSettings: _includeChannelSettings,
       );
     }
     return BackupSnapshot(appSettings: settings, createdAt: DateTime.now());
@@ -260,6 +262,14 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                 onChanged: _busy
                     ? null
                     : (value) => setState(() => _includeChannels = value ?? false),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.backupChannelSettings_label),
+                value: _includeChannelSettings,
+                onChanged: _busy ? null : (value) => setState(
+                  () => _includeChannelSettings = value ?? false,
+                ),
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,

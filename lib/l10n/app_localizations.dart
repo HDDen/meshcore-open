@@ -681,6 +681,72 @@ abstract class AppLocalizations {
   /// **'Could not restore contact settings.'**
   String get backupContactSettings_failed;
 
+  /// No description provided for @backupChannelSettings_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel settings and order'**
+  String get backupChannelSettings_label;
+
+  /// No description provided for @backupChannelSettings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore channel settings and order'**
+  String get backupChannelSettings_title;
+
+  /// No description provided for @backupChannelSettings_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a MeshCore Open backup. Settings and order are matched by channel key. Existing settings and a saved order take priority.'**
+  String get backupChannelSettings_intro;
+
+  /// No description provided for @backupChannelSettings_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains no supported channel settings or order.'**
+  String get backupChannelSettings_empty;
+
+  /// No description provided for @backupChannelSettings_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes to add: {count}. Skipped: {skipped}.'**
+  String backupChannelSettings_summary(int count, int skipped);
+
+  /// No description provided for @backupChannelSettings_includesOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes channel order.'**
+  String get backupChannelSettings_includesOrder;
+
+  /// No description provided for @backupChannelSettings_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply the preview to the profile for “{node}”? Changes to add: {count}.'**
+  String backupChannelSettings_confirm(String node, int count);
+
+  /// No description provided for @backupChannelSettings_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel changes applied: {count}.'**
+  String backupChannelSettings_applied(int count);
+
+  /// No description provided for @backupChannelSettings_partial.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel changes applied: {count}. Restore stopped early. Refresh the preview.'**
+  String backupChannelSettings_partial(int count);
+
+  /// No description provided for @backupChannelSettings_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The node, its channels, or their settings changed. Refresh the preview.'**
+  String get backupChannelSettings_changed;
+
+  /// No description provided for @backupChannelSettings_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore channel settings.'**
+  String get backupChannelSettings_failed;
+
   /// No description provided for @backupCommunities_label.
   ///
   /// In en, this message translates to:
