@@ -30,6 +30,7 @@ import '../services/backup_file_codec.dart';
 import '../services/backup_import_planner.dart';
 import '../services/message_filter/message_filter_service.dart';
 import '../utils/backup_json_file.dart';
+import '../widgets/backup_model_offers.dart';
 
 Future<XFile?> _pickBackupFile() =>
     openFile(acceptedTypeGroups: const [backupJsonFileType]);
@@ -1141,6 +1142,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     child: Text(l10n.backupChannels_apply),
                   ),
                 ],
+              if (_settingsSource case final settings?)
+                BackupModelOffers(backup: settings, busy: _busy),
               if (nodeProfile != null) ...[
                 ..._nodeProfileChoices(nodeProfile),
                 if (nodeProfile.changes.isEmpty && nodeProfile.unavailable.isEmpty)

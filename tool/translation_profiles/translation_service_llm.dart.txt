@@ -65,6 +65,7 @@ class TranslationService extends ChangeNotifier {
   String? _downloadFileName;
 
   bool get isBusy => _isBusy;
+  bool get supportsModelDownload => BuildFeatures.llmTranslationEnabled && !kIsWeb;
   bool get isDownloading => _isDownloading;
   String? get lastError => _lastError;
   int get downloadedBytes => _downloadedBytes;

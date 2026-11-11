@@ -3165,6 +3165,10 @@ upstream `appSettings` section too. MCOa uses its own section on export
 because upstream would otherwise replace the full settings map with
 this partial one. Restore checks the changed fields against the
 preview and saves through `AppSettingsService` to the active profile.
+The settings backup may carry catalog IDs for translation and AEIC models.
+They are hints for the restore preview. Only an explicit confirmation starts
+the standard downloader, using the destination build's preset URL and model
+store. Model paths, download records and custom URLs are excluded.
 
 Contact backup restore reuses the full contact sync with the current
 session's stores. It needs a declared count and the corresponding unique

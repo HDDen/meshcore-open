@@ -40,6 +40,7 @@ class TranslationService extends ChangeNotifier {
   }) : _fileStore = fileStore ?? TranslationFileStore();
 
   bool get isBusy => false;
+  bool get supportsModelDownload => false;
   bool get isDownloading => false;
   String? get lastError => null;
   int get downloadedBytes => 0;

@@ -861,6 +861,24 @@ abstract class AppLocalizations {
   /// **'Could not restore app settings.'**
   String get backupAppSettings_failed;
 
+  /// No description provided for @backupAppSettings_missingModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing model: {name}'**
+  String backupAppSettings_missingModel(String name);
+
+  /// No description provided for @backupAppSettings_downloadModelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Download {name} and select it for this profile? This requires an internet connection.'**
+  String backupAppSettings_downloadModelConfirm(String name);
+
+  /// No description provided for @backupAppSettings_modelDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download the model.'**
+  String get backupAppSettings_modelDownloadFailed;
+
   /// No description provided for @backupMessageFilter_menu.
   ///
   /// In en, this message translates to:
@@ -1022,6 +1040,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unavailable on the connected node: {settings}'**
   String backupNodeProfile_radioUnavailable(String settings);
+
+  /// No description provided for @backupNodeProfile_floodScopeKeyChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Region key will change'**
+  String get backupNodeProfile_floodScopeKeyChange;
 
   /// No description provided for @backupNodeProfile_confirm.
   ///

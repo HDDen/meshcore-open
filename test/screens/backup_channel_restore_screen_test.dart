@@ -24,6 +24,7 @@ import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/community.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message_filter.dart';
+import 'package:meshcore_open/models/translation_support.dart';
 import 'package:meshcore_open/screens/backup_export_screen.dart';
 import 'package:meshcore_open/screens/backup_restore_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -31,6 +32,7 @@ import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/services/backup_snapshot.dart';
 import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
+import 'package:meshcore_open/services/translation_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/backup_json_file.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -53,6 +55,35 @@ class _TrainingFilter extends MessageFilterService {
   Future<int> restoreTrainingBackup(BackupFilterTraining backup) async {
     restored = backup;
     return backup.rows.length;
+  }
+}
+
+class _Translation extends TranslationService {
+  _Translation(super.settings);
+
+  final downloads = <({String url, String? fileName, String? id})>[];
+  final _installed = <TranslationModelRecord>[];
+
+  @override
+  bool get supportsModelDownload => true;
+
+  @override
+  List<TranslationModelRecord> get availableModels => _installed;
+
+  @override
+  Future<TranslationModelRecord> downloadModel({
+    required String sourceUrl,
+    String? fileName,
+    String? id,
+  }) async {
+    downloads.add((url: sourceUrl, fileName: fileName, id: id));
+    final model = TranslationModelRecord(
+      id: id!, name: fileName!, sourceUrl: sourceUrl, localPath: 'installed.gguf',
+      downloadedAt: DateTime.utc(2026), fileSizeBytes: 1,
+    );
+    _installed.add(model);
+    notifyListeners();
+    return model;
   }
 }
 
@@ -355,6 +386,63 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('model-only upstream settings require confirmation and use the local catalog', (tester) async {
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    final translation = _Translation(settings);
+    addTearDown(translation.dispose);
+    final preset = translationPresetModels.first;
+    final contents = await const BackupFileCodec().encode({
+      'format': BackupFileCodec.payloadFormat,
+      'version': BackupFileCodec.formatVersion,
+      'sourcePublicKey': '',
+      'items': ['appSettings'],
+      'sections': {
+        'appSettings': {
+          'preferences': {
+            'app_settings': {
+              'translation_selected_model_id': preset.id,
+              'translation_model_source_url': 'https://backup.invalid/model.gguf',
+            },
+          },
+        },
+      },
+    }, password: '');
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: settings),
+        ChangeNotifierProvider<TranslationService>.value(value: translation),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BackupRestoreScreen.appSettings(
+          pickFile: () async => XFile.fromData(utf8.encode(contents), name: 'settings.json'),
+        ),
+      ),
+    ));
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    final offer = find.text(l10n.backupAppSettings_missingModel(translationModelFriendlyName(preset)));
+    await _waitAfterTap(tester, find.text(l10n.backupChannels_choose), offer);
+    expect(translation.downloads, isEmpty);
+    expect(settings.settings.translationSelectedModelId, isNull);
+
+    final download = find.widgetWithText(OutlinedButton, l10n.translation_downloadModel);
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(translation.downloads, isEmpty);
+
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, l10n.translation_downloadModel));
+    await tester.pumpAndSettle();
+    expect(translation.downloads, [(url: preset.sourceUrl, fileName: preset.name, id: preset.id)]);
+    expect(offer, findsNothing);
+  });
+
   testWidgets('node profile restore requires a selection and confirmation', (tester) async {
     final node = _Node();
     addTearDown(node.dispose);

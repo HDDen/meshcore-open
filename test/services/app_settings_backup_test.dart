@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/app_settings_backup.dart';
+import 'package:meshcore_open/models/image_codec_support.dart';
+import 'package:meshcore_open/models/translation_support.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
@@ -80,6 +82,37 @@ void main() {
       'items': <String>[],
     }, password: '');
     expect((await planner.inspect(unselected, password: '')).appSettings, isNull);
+  });
+
+  test('selected presets are portable hints without paths, URLs or settings changes', () async {
+    final image = imageCodecPresetModels.first;
+    final translation = translationPresetModels.first;
+    final settings = AppSettings(
+      imageCodecSelectedModelId: image.id,
+      translationSelectedModelId: translation.id,
+      imageCodecModelSourceUrl: 'https://private.invalid/model.onnx',
+      translationModelSourceUrl: 'https://private.invalid/model.gguf',
+    );
+    final snapshot = BackupSnapshot(
+      createdAt: DateTime.utc(2026),
+      appSettings: AppSettingsBackup.capture(settings),
+    );
+    final encoded = await snapshot.encode(password: '');
+    expect(encoded, isNot(contains('private.invalid')));
+    expect(encoded, isNot(contains('local_path')));
+    final restored = (await const BackupImportPlanner().inspect(
+      encoded, password: '', appSettingsOnly: true,
+    )).appSettings!;
+    expect(restored.imageCodecPreset, same(image));
+    expect(restored.translationPreset, same(translation));
+    expect(restored.preview(AppSettings()).changes, isEmpty);
+
+    final unsupported = AppSettingsBackup.fromJson({
+      'translation_selected_model_id': 'custom-model',
+      'image_codec_selected_model_id': {'id': image.id},
+      'translation_model_source_url': translation.sourceUrl,
+    });
+    expect(unsupported.isEmpty, isTrue);
   });
 
   test('restore checks the preview and saves into the current preferences',

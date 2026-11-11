@@ -11,7 +11,11 @@ bool isImageCodecPresetComplete(
       model.id == spec.id &&
       model.localPath.isNotEmpty &&
       model.bundleVersion >= kImageCodecBundleVersion &&
-      spec.assets.every((asset) => model.assetFileNames.contains(asset.fileName));
+      spec.assets.every((asset) {
+        final role = model.assetRoles[asset.fileName];
+        return model.assetFileNames.contains(asset.fileName) &&
+            (role == null || role == asset.role);
+      });
 }
 
 /// Preserve old/custom single-file models, but never treat a registered

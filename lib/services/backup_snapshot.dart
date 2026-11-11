@@ -232,7 +232,7 @@ class BackupSnapshot {
           section.key: {'preferences': section.value},
         if (_appSettings case final settings?)
           AppSettingsBackup.section: {
-            'preferences': {'app_settings': settings.values},
+            'preferences': {'app_settings': settings.toJson()},
           },
         if (name != null || hasRadio)
           'nodeSettings': {'name': ?name, if (hasRadio) 'radio': radio},

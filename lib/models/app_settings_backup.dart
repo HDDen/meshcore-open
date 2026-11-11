@@ -1,5 +1,7 @@
 import '../l10n/app_localizations.dart';
 import 'app_settings.dart';
+import 'image_codec_support.dart';
+import 'translation_support.dart';
 
 /// The portable display preferences supported by the v1 backup.
 class AppSettingsBackup {
@@ -19,13 +21,32 @@ class AppSettingsBackup {
           'unit_system': json['unit_system'],
         if (json['ui_scale'] case final num scale when scale >= 0.5 && scale <= 2)
           'ui_scale': scale.toDouble(),
-      });
+      }),
+      imageCodecPreset = imageCodecPresetModels
+          .where((preset) => preset.id == json['image_codec_selected_model_id'])
+          .firstOrNull,
+      translationPreset = translationPresetModels
+          .where((preset) => preset.id == json['translation_selected_model_id'])
+          .firstOrNull;
 
   factory AppSettingsBackup.capture(AppSettings settings) =>
-      AppSettingsBackup.fromJson(_read(settings));
+      AppSettingsBackup.fromJson({
+        ..._read(settings),
+        'image_codec_selected_model_id': settings.imageCodecSelectedModelId,
+        'translation_selected_model_id': settings.translationSelectedModelId,
+      });
 
   final Map<String, Object?> values;
-  bool get isEmpty => values.isEmpty;
+  final ImageCodecModelSpec? imageCodecPreset;
+  final TranslationModelRecord? translationPreset;
+  bool get isEmpty =>
+      values.isEmpty && imageCodecPreset == null && translationPreset == null;
+
+  Map<String, Object?> toJson() => {
+    ...values,
+    'image_codec_selected_model_id': ?imageCodecPreset?.id,
+    'translation_selected_model_id': ?translationPreset?.id,
+  };
 
   static const _themes = {'system', 'light', 'dark'};
   static const _booleanKeys = {

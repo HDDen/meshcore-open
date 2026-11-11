@@ -9,6 +9,7 @@ void main() {
     List<String>? files,
     int version = kImageCodecBundleVersion,
     String? path,
+    Map<String, ImageCodecAssetRole> roles = const {},
   }) => ImageCodecModelRecord(
     id: preset.id,
     name: preset.fileName,
@@ -17,6 +18,7 @@ void main() {
     downloadedAt: DateTime.utc(2026),
     fileSizeBytes: preset.totalSizeBytes,
     assetFileNames: files ?? preset.assets.map((asset) => asset.fileName).toList(),
+    assetRoles: roles,
     bundleVersion: version,
   );
 
@@ -31,6 +33,16 @@ void main() {
       ),
       isTrue,
     );
+  });
+
+  test('a recorded role must agree with the catalog', () {
+    final decoder = preset.graph;
+    expect(isImageCodecPresetComplete(preset, record(roles: {
+      decoder.fileName: ImageCodecAssetRole.entropyGraph,
+    })), isFalse);
+    expect(isImageCodecPresetComplete(preset, record(roles: {
+      for (final asset in preset.assets) asset.fileName: asset.role,
+    })), isTrue);
   });
 
   for (final missing in preset.assets) {

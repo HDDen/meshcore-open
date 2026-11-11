@@ -499,6 +499,20 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось восстановить настройки приложения.';
 
   @override
+  String backupAppSettings_missingModel(String name) {
+    return 'Модель не установлена: $name';
+  }
+
+  @override
+  String backupAppSettings_downloadModelConfirm(String name) {
+    return 'Скачать $name и выбрать эту модель для текущего профиля? Потребуется подключение к интернету.';
+  }
+
+  @override
+  String get backupAppSettings_modelDownloadFailed =>
+      'Не удалось скачать модель.';
+
+  @override
   String get backupMessageFilter_menu => 'Резервная копия спам-фильтра';
 
   @override
@@ -603,6 +617,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String backupNodeProfile_radioUnavailable(String settings) {
     return 'Для подключённой ноды недоступны: $settings';
   }
+
+  @override
+  String get backupNodeProfile_floodScopeKeyChange => 'Ключ региона изменится';
 
   @override
   String backupNodeProfile_confirm(String node, int count) {

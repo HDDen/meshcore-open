@@ -497,6 +497,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get backupAppSettings_failed => 'Could not restore app settings.';
 
   @override
+  String backupAppSettings_missingModel(String name) {
+    return 'Missing model: $name';
+  }
+
+  @override
+  String backupAppSettings_downloadModelConfirm(String name) {
+    return 'Download $name and select it for this profile? This requires an internet connection.';
+  }
+
+  @override
+  String get backupAppSettings_modelDownloadFailed =>
+      'Could not download the model.';
+
+  @override
   String get backupMessageFilter_menu => 'Spam filter backup';
 
   @override
@@ -601,6 +615,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String backupNodeProfile_radioUnavailable(String settings) {
     return 'Unavailable on the connected node: $settings';
   }
+
+  @override
+  String get backupNodeProfile_floodScopeKeyChange => 'Region key will change';
 
   @override
   String backupNodeProfile_confirm(String node, int count) {
