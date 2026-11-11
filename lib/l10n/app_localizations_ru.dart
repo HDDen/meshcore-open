@@ -541,6 +541,43 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось завершить восстановление спам-фильтра. Обновите предпросмотр.';
 
   @override
+  String get backupFilterTraining_exportTitle =>
+      'Создать копию учебных примеров';
+
+  @override
+  String get backupFilterTraining_title => 'Восстановление учебных примеров';
+
+  @override
+  String get backupFilterTraining_scope =>
+      'Примеры с отметками «Спам» и «Не спам» и обычные сообщения из текущего профиля приложения.';
+
+  @override
+  String get backupFilterTraining_empty =>
+      'Нет подходящих учебных примеров для переноса.';
+
+  @override
+  String get backupFilterTraining_passwordHint =>
+      'Копия содержит фрагменты сообщений и имена отправителей. Укажите пароль для шифрования файла или оставьте поле пустым, чтобы сохранить JSON без шифрования.';
+
+  @override
+  String backupFilterTraining_summary(int spam, int notSpam, int ordinary) {
+    return 'В файле: спам — $spam, не спам — $notSpam, обычные сообщения — $ordinary.';
+  }
+
+  @override
+  String get backupFilterTraining_confirm =>
+      'Добавить примеры в учебный корпус текущего профиля? Местные ручные отметки имеют приоритет. Будут добавлены примеры, для которых есть место.';
+
+  @override
+  String backupFilterTraining_applied(int count) {
+    return 'Добавлено учебных примеров: $count.';
+  }
+
+  @override
+  String get backupFilterTraining_failed =>
+      'Не удалось восстановить учебные примеры.';
+
+  @override
   String get backupAppSettings_enabled => 'Включено';
 
   @override

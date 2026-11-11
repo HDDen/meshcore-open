@@ -104,6 +104,24 @@ class FilterExample {
       '${sender.length}:$sender$text';
 }
 
+// The order is the persisted SQLite `kind` value.
+enum FilterTrainingKind {
+  ordinary(300),
+  notSpam(200),
+  spam(200);
+
+  const FilterTrainingKind(this.capacity);
+
+  final int capacity;
+}
+
+typedef FilterTrainingRow = ({
+  String sender,
+  String text,
+  FilterTrainingKind kind,
+  String? sourceKey,
+});
+
 class MessageFilterSettings {
   static const minRepeatSends = 2;
   static const maxRepeatSends = 5;

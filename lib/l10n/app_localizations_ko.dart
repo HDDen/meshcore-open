@@ -539,6 +539,43 @@ class AppLocalizationsKo extends AppLocalizations {
       'Could not finish restoring the spam filter. Refresh the preview.';
 
   @override
+  String get backupFilterTraining_exportTitle =>
+      'Back up spam training examples';
+
+  @override
+  String get backupFilterTraining_title => 'Restore spam training examples';
+
+  @override
+  String get backupFilterTraining_scope =>
+      'Manual spam and not-spam examples and ordinary messages from the current app profile.';
+
+  @override
+  String get backupFilterTraining_empty =>
+      'There are no supported training examples to transfer.';
+
+  @override
+  String get backupFilterTraining_passwordHint =>
+      'This backup contains message excerpts and sender names. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
+
+  @override
+  String backupFilterTraining_summary(int spam, int notSpam, int ordinary) {
+    return 'In the file: spam $spam, not spam $notSpam, ordinary messages $ordinary.';
+  }
+
+  @override
+  String get backupFilterTraining_confirm =>
+      'Add examples to the training data in the current profile? Local manual labels take priority. Only examples that fit within the limits are added.';
+
+  @override
+  String backupFilterTraining_applied(int count) {
+    return 'Training examples added: $count.';
+  }
+
+  @override
+  String get backupFilterTraining_failed =>
+      'Could not restore training examples.';
+
+  @override
   String get backupAppSettings_enabled => 'On';
 
   @override

@@ -14,6 +14,7 @@ import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../helpers/backup_discovered_contacts.dart';
+import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
 import '../l10n/l10n.dart';
@@ -22,6 +23,7 @@ import '../models/channel.dart';
 import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
+import '../models/message_filter.dart';
 import '../services/app_settings_service.dart';
 import '../services/backup_file_codec.dart';
 import '../services/backup_import_planner.dart';
@@ -43,6 +45,7 @@ Future<BackupImportPlan> _inspectBackup(
     bool contactSettingsOnly,
     bool channelSettingsOnly,
     bool messageFilterOnly,
+    bool filterTrainingOnly,
   }) input,
 ) => const BackupImportPlanner().inspect(
   input.contents,
@@ -55,6 +58,7 @@ Future<BackupImportPlan> _inspectBackup(
   contactSettingsOnly: input.contactSettingsOnly,
   channelSettingsOnly: input.channelSettingsOnly,
   messageFilterOnly: input.messageFilterOnly,
+  filterTrainingOnly: input.filterTrainingOnly,
 );
 
 Future<String> _readBackupFile(XFile file) async {
@@ -80,6 +84,7 @@ enum _BackupSection {
   contactSettings,
   channelSettings,
   messageFilter,
+  filterTraining,
 }
 
 class BackupRestoreScreen extends StatefulWidget {
@@ -134,6 +139,12 @@ class BackupRestoreScreen extends StatefulWidget {
     this.pickFile = _pickBackupFile,
   }) : _section = _BackupSection.messageFilter, _filter = filter;
 
+  const BackupRestoreScreen.filterTraining(
+    MessageFilterService filter, {
+    super.key,
+    this.pickFile = _pickBackupFile,
+  }) : _section = _BackupSection.filterTraining, _filter = filter;
+
   final Future<XFile?> Function() pickFile;
   final _BackupSection _section;
   final MessageFilterService? _filter;
@@ -156,6 +167,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   AppSettingsBackupPreview? _settingsPreview;
   BackupMessageFilter? _filterSource;
   BackupMessageFilterPreview? _filterPreview;
+  BackupFilterTraining? _trainingSource;
   BackupMessageHistory? _historySource;
   BackupMessageHistoryPreview? _historyPreview;
   String? _discoveredSource;
@@ -199,6 +211,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _settingsPreview = null;
         _filterSource = null;
         _filterPreview = null;
+        _trainingSource = null;
         _historySource = null;
         _historyPreview = null;
         _discoveredSource = null;
@@ -217,7 +230,15 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       final plan = await _inspectWithPassword(contents);
       if (!mounted || plan == null) return;
       final l10n = context.l10n;
-      if (widget._section == _BackupSection.messageFilter) {
+      if (widget._section == _BackupSection.filterTraining) {
+        final training = plan.filterTraining;
+        if (training == null || training.isEmpty) {
+          setState(() => _notice = l10n.backupFilterTraining_empty);
+          return;
+        }
+        setState(() => _trainingSource = training);
+        return;
+      } else if (widget._section == _BackupSection.messageFilter) {
         final filter = plan.messageFilter;
         if (filter == null || filter.isEmpty) {
           setState(() => _notice = l10n.backupMessageFilter_empty);
@@ -323,6 +344,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             contactSettingsOnly: widget._section == _BackupSection.contactSettings,
             channelSettingsOnly: widget._section == _BackupSection.channelSettings,
             messageFilterOnly: widget._section == _BackupSection.messageFilter,
+            filterTrainingOnly: widget._section == _BackupSection.filterTraining,
           ),
         );
       } on BackupPasswordException catch (error) {
@@ -641,6 +663,21 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     );
   }
 
+  Future<void> _restoreFilterTraining(BackupFilterTraining training) {
+    final filter = widget._filter!;
+    final l10n = context.l10n;
+    return _confirmRestore(
+      title: l10n.backupFilterTraining_title,
+      prompt: l10n.backupFilterTraining_confirm,
+      failure: l10n.backupFilterTraining_failed,
+      apply: () async {
+        final added = await filter.restoreTrainingBackup(training);
+        if (mounted) setState(() => _trainingSource = null);
+        return l10n.backupFilterTraining_applied(added);
+      },
+    );
+  }
+
   Future<void> _restoreDiscoveredContacts(
     BackupDiscoveredContactsPreview preview,
   ) {
@@ -789,6 +826,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     final contactPreview = _contactPreview;
     final settingsPreview = _settingsPreview;
     final filterPreview = _filterPreview;
+    final training = _trainingSource;
     final historyPreview = _historyPreview;
     final discoveredPreview = _discoveredPreview;
     final groupsPreview = _contactGroupsPreview;
@@ -800,6 +838,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       _BackupSection.contacts => (l10n.backupContacts_title, l10n.backupContacts_intro),
       _BackupSection.appSettings => (l10n.backupAppSettings_title, l10n.backupAppSettings_scope),
       _BackupSection.messageFilter => (l10n.backupMessageFilter_title, l10n.backupMessageFilter_scope),
+      _BackupSection.filterTraining => (l10n.backupFilterTraining_title, l10n.backupFilterTraining_scope),
       _BackupSection.messageHistory => (
         l10n.backupMessageHistory_title,
         l10n.backupMessageHistory_intro,
@@ -953,6 +992,17 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                     child: Text(l10n.backupChannels_apply),
                   ),
                 ],
+              if (training != null) ...[
+                Text(l10n.backupFilterTraining_summary(
+                  training.count(FilterTrainingKind.spam),
+                  training.count(FilterTrainingKind.notSpam),
+                  training.count(FilterTrainingKind.ordinary),
+                )),
+                FilledButton(
+                  onPressed: _busy ? null : () => _restoreFilterTraining(training),
+                  child: Text(l10n.backupChannels_apply),
+                ),
+              ],
               if (filterPreview != null) ...[
                 if (filterPreview.isEmpty)
                   Text(l10n.backupMessageFilter_noChanges)

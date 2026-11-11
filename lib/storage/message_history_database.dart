@@ -545,6 +545,93 @@ SELECT sender, text, kind FROM filter_training_corpus ORDER BY id
     ];
   }
 
+  Future<List<FilterTrainingRow>> readFilterTrainingCorpus() async {
+    final rows = await customSelect('''
+SELECT sender, text, kind, source_key FROM filter_training_corpus ORDER BY id
+''').get();
+    return [
+      for (final row in rows)
+        (
+          sender: row.read<String>('sender'),
+          text: row.read<String>('text'),
+          kind: FilterTrainingKind.values[row.read<int>('kind')],
+          sourceKey: row.readNullable<String>('source_key'),
+        ),
+    ];
+  }
+
+  Future<int> restoreFilterTrainingCorpus(List<FilterTrainingRow> incoming) =>
+      transaction(() async {
+        final existing = await readFilterTrainingCorpus();
+        final counts = <FilterTrainingKind, int>{};
+        final labels = <String, FilterTrainingKind>{};
+        final identities = <(String, String)>{};
+        for (final row in existing) {
+          if (row.kind == FilterTrainingKind.ordinary) continue;
+          labels[row.text] = row.kind;
+          identities.add((row.text, row.sender));
+          counts.update(row.kind, (count) => count + 1, ifAbsent: () => 1);
+        }
+
+        // Allocate free manual slots to the newest eligible rows first.
+        final manual = <int>[];
+        for (var index = incoming.length - 1; index >= 0; index--) {
+          final row = incoming[index];
+          if (row.kind == FilterTrainingKind.ordinary) continue;
+          final label = labels[row.text];
+          final count = counts[row.kind] ?? 0;
+          if (count >= row.kind.capacity || (label != null && label != row.kind) ||
+              !identities.add((row.text, row.sender))) continue;
+          labels[row.text] = row.kind;
+          counts[row.kind] = count + 1;
+          manual.add(index);
+        }
+
+        (String, String, String) ordinaryKey(FilterTrainingRow row) => (
+          row.sender, row.text,
+          row.sourceKey ?? FilterExample.sourceKeyFor(row.sender, row.text),
+        );
+        final copies = <(String, String, String), int>{};
+        var ordinaryCount = 0;
+        for (final row in existing) {
+          if (row.kind != FilterTrainingKind.ordinary || labels.containsKey(row.text)) continue;
+          ordinaryCount++;
+          copies.update(ordinaryKey(row), (count) => count + 1, ifAbsent: () => 1);
+        }
+        final missing = <int>[];
+        for (final (index, row) in incoming.indexed) {
+          if (row.kind != FilterTrainingKind.ordinary || labels.containsKey(row.text)) continue;
+          final key = ordinaryKey(row);
+          final count = copies[key] ?? 0;
+          if (count > 0) {
+            copies[key] = count - 1;
+          } else {
+            missing.add(index);
+          }
+        }
+        final overflow = (ordinaryCount + missing.length - FilterTrainingKind.ordinary.capacity)
+            .clamp(0, missing.length);
+        final positions = [...missing.skip(overflow), ...manual]..sort();
+        final additions = [for (final index in positions) incoming[index]];
+        if (additions.isEmpty) return 0;
+        await batch((batch) {
+          for (final text in {for (final index in manual) incoming[index].text}) {
+            batch.customStatement(
+              'DELETE FROM filter_training_corpus WHERE text = ? AND kind = 0', [text],
+            );
+          }
+          for (final row in additions) {
+            batch.customStatement(
+              'INSERT INTO filter_training_corpus (sender, text, kind, source_key) '
+              'VALUES (?, ?, ?, ?)',
+              [row.sender, row.text, row.kind.index,
+                row.kind == FilterTrainingKind.ordinary ? ordinaryKey(row).$3 : null],
+            );
+          }
+        });
+        return additions.length;
+      });
+
   Future<void> writeFilterTrainingExamples(
     Iterable<FilterExample> examples, {
     required bool manual,
@@ -594,7 +681,7 @@ WHERE kind = ? AND id NOT IN (
   ORDER BY id DESC LIMIT ?
 )
 """,
-          [kind, kind, manual ? 200 : 300],
+          [kind, kind, FilterTrainingKind.values[kind].capacity],
         );
       }
     });

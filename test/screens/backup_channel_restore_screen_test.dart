@@ -12,6 +12,7 @@ import 'package:meshcore_open/helpers/backup_communities.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/helpers/backup_discovered_contacts.dart';
+import 'package:meshcore_open/helpers/backup_filter_training.dart';
 import 'package:meshcore_open/helpers/backup_message_filter.dart';
 import 'package:meshcore_open/helpers/backup_message_history.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -41,6 +42,16 @@ class _NoPreferencesDirectory extends PathProviderPlatform {
   @override
   Future<String?> getApplicationSupportPath() async {
     throw MissingPluginException('In-memory backup test preferences');
+  }
+}
+
+class _TrainingFilter extends MessageFilterService {
+  BackupFilterTraining? restored;
+
+  @override
+  Future<int> restoreTrainingBackup(BackupFilterTraining backup) async {
+    restored = backup;
+    return backup.rows.length;
   }
 }
 
@@ -323,6 +334,43 @@ Future<void> _openConfirm(
 }
 
 void main() {
+  testWidgets('corpus restore previews the classes before writing', (tester) async {
+    final filter = _TrainingFilter();
+    addTearDown(filter.dispose);
+    final snapshot = BackupSnapshot(
+      filterTraining: BackupFilterTraining(const [
+        (sender: 'alice', text: 'example', kind: FilterTrainingKind.spam, sourceKey: null),
+      ]),
+      createdAt: DateTime.utc(2026),
+    );
+    final contents = await snapshot.encode(password: '');
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: BackupRestoreScreen.filterTraining(
+        filter,
+        pickFile: () async => XFile.fromData(
+          Uint8List.fromList(utf8.encode(contents)), name: 'training.json',
+        ),
+      ),
+    ));
+    final l10n = tester.element(find.byType(BackupRestoreScreen)).l10n;
+    await _waitAfterTap(
+      tester,
+      find.text(l10n.backupChannels_choose),
+      find.text(l10n.backupFilterTraining_summary(1, 0, 0)),
+    );
+    final restore = find.widgetWithText(FilledButton, l10n.backupChannels_apply);
+    await tester.tap(restore);
+    await tester.pumpAndSettle();
+    expect(filter.restored, isNull);
+    expect(find.text(l10n.backupFilterTraining_confirm), findsOneWidget);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: restore));
+    await tester.pumpAndSettle();
+    expect(filter.restored!.rows.single.text, 'example');
+    expect(find.text(l10n.backupFilterTraining_applied(1)), findsOneWidget);
+  });
+
   testWidgets('restores filter preferences without a node after confirmation', (tester) async {
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();

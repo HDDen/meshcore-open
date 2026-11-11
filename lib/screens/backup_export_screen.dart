@@ -17,7 +17,7 @@ Future<String> _encodeBackup(
   ({BackupSnapshot snapshot, String password}) input,
 ) => input.snapshot.encode(password: input.password);
 
-enum _BackupExportMode { selected, appSettings, messageHistory, messageFilter }
+enum _BackupExportMode { selected, appSettings, messageHistory, messageFilter, filterTraining }
 
 class BackupExportScreen extends StatefulWidget {
   const BackupExportScreen({
@@ -40,6 +40,12 @@ class BackupExportScreen extends StatefulWidget {
     super.key,
     this.saveFile = saveBackupJson,
   }) : _mode = _BackupExportMode.messageFilter, _filter = filter;
+
+  const BackupExportScreen.filterTraining(
+    MessageFilterService filter, {
+    super.key,
+    this.saveFile = saveBackupJson,
+  }) : _mode = _BackupExportMode.filterTraining, _filter = filter;
 
   final _BackupExportMode _mode;
   final MessageFilterService? _filter;
@@ -69,19 +75,25 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
   String? _notice;
 
   bool get _historyOnly => widget._mode == _BackupExportMode.messageHistory;
+  bool get _trainingOnly => widget._mode == _BackupExportMode.filterTraining;
   bool get _hasSelection => _historyOnly
       ? _includeDirectHistory || _includeChannelHistory
       : _includeChannels || _includeContacts || _includeContactGroups ||
           _includeDiscoveredContacts || _includeSettings || _includeCommunities ||
           _includeContactSettings || _includeChannelSettings || widget._filter != null;
 
-  String _title(BuildContext context) => _historyOnly
-      ? context.l10n.backupMessageHistory_exportTitle
-      : widget._filter != null
-      ? context.l10n.backupMessageFilter_exportTitle
-      : context.l10n.backupExport_createTitle;
+  String _title(BuildContext context) => switch (widget._mode) {
+    _BackupExportMode.messageHistory => context.l10n.backupMessageHistory_exportTitle,
+    _BackupExportMode.messageFilter => context.l10n.backupMessageFilter_exportTitle,
+    _BackupExportMode.filterTraining => context.l10n.backupFilterTraining_exportTitle,
+    _ => context.l10n.backupExport_createTitle,
+  };
 
   Future<BackupSnapshot?> _capture() async {
+    if (_trainingOnly) {
+      final corpus = await widget._filter!.snapshotTrainingBackup();
+      return BackupSnapshot(filterTraining: corpus, createdAt: DateTime.now());
+    }
     if (widget._filter case final filter?) {
       return BackupSnapshot(
         messageFilter: BackupMessageFilter.capture(filter.settings, filter.rules),
@@ -132,9 +144,11 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
       }
       if (snapshot.isEmpty) {
         final l10n = context.l10n;
-        setState(() => _notice = _historyOnly
-            ? l10n.backupMessageHistory_exportEmpty
-            : l10n.backupExport_empty);
+        setState(() => _notice = switch (widget._mode) {
+          _BackupExportMode.messageHistory => l10n.backupMessageHistory_exportEmpty,
+          _BackupExportMode.filterTraining => l10n.backupFilterTraining_empty,
+          _ => l10n.backupExport_empty,
+        });
         return;
       }
       final password = await _askPassword(snapshot);
@@ -190,7 +204,9 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                   Text(l10n.backupChannels_target(name)),
                   const SizedBox(height: 8),
                 ],
-                Text(snapshot.containsCommunityKeys
+                Text(_trainingOnly
+                    ? l10n.backupFilterTraining_passwordHint
+                    : snapshot.containsCommunityKeys
                     ? l10n.backupCommunities_passwordHint
                     : snapshot.channelCount > 0
                         ? l10n.backupChannels_exportPasswordHint
@@ -270,7 +286,9 @@ class _BackupExportScreenState extends State<BackupExportScreen> {
                     ? null
                     : (value) => setState(() => _includeChannelHistory = value ?? false),
               ),
-            ] else if (widget._filter != null)
+            ] else if (_trainingOnly)
+              Text(l10n.backupFilterTraining_scope)
+            else if (widget._filter != null)
               Text(l10n.backupMessageFilter_scope)
             else if (widget._mode == _BackupExportMode.appSettings)
               Text(l10n.backupAppSettings_scope)

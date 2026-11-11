@@ -561,6 +561,17 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     return _database!.readFilterTrainingExamples();
   }
 
+  Future<List<FilterTrainingRow>> readFilterTrainingCorpus() {
+    _requireInitialized();
+    return _database!.readFilterTrainingCorpus();
+  }
+
+  Future<int> restoreFilterTrainingCorpus(List<FilterTrainingRow> incoming) =>
+      _persistenceWork.run(() {
+        _requireInitialized();
+        return _database!.restoreFilterTrainingCorpus(incoming);
+      });
+
   Future<void> writeFilterTrainingExamples(
     Iterable<FilterExample> examples, {
     required bool manual,

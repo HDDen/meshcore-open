@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/backup_filter_training.dart';
 import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/services/message_filter/ngram_spam_classifier.dart';
@@ -34,6 +35,26 @@ class _Store extends MessageFilterStore {
 
   @override
   Future<void> saveRules(List<FilterRule> rules) async {}
+
+  @override
+  bool get trainingBackupAvailable => true;
+
+  @override
+  Future<int> restoreTrainingCorpus(List<FilterTrainingRow> rows) async {
+    for (final row in rows) {
+      final example = FilterExample(
+        sender: row.sender,
+        text: row.text,
+        spam: row.kind == FilterTrainingKind.spam,
+      );
+      if (row.kind == FilterTrainingKind.ordinary) {
+        recentClean.add(example);
+      } else {
+        labels = [...labels, example];
+      }
+    }
+    return rows.length;
+  }
 
   @override
   Future<({int spam, int notSpam})> loadTrainingLabelCounts() async {
@@ -93,6 +114,42 @@ FilterReason? _score(MessageFilterService service, {String channel = 'test'}) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('training restore fits only while learning is enabled', (tester) async {
+    final store = _Store();
+    var jobs = 0;
+    final filter = MessageFilterService(store: store, trainer: (_) async {
+      jobs++;
+      return _readyModel;
+    })..load();
+    addTearDown(filter.dispose);
+
+    FilterTrainingRow row(FilterExample example) => (
+      sender: example.sender,
+      text: example.text,
+      kind: example.spam ? FilterTrainingKind.spam : FilterTrainingKind.ordinary,
+      sourceKey: null,
+    );
+    expect(await filter.restoreTrainingBackup(BackupFilterTraining([
+      row(_spamA), row(_spamB), row(_clean),
+    ])), 3);
+    await tester.pump(const Duration(seconds: 1));
+    expect(filter.settings.enabled, isFalse);
+    expect(filter.settings.learning, isFalse);
+    expect(filter.spamExampleCount, 2);
+    expect(jobs, 0);
+
+    await filter.updateSettings(const MessageFilterSettings(enabled: true, learning: true));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(jobs, 1);
+    expect(await filter.restoreTrainingBackup(BackupFilterTraining([
+      row(const FilterExample(sender: 'alice', text: 'another message', spam: true)),
+    ])), 1);
+    expect(jobs, 1);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(jobs, 2);
+    expect(filter.spamExampleCount, 3);
+  });
 
   testWidgets('U27d: learning off skips loading, scoring, writes and jobs', (
     tester,

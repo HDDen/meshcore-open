@@ -26,7 +26,9 @@ import 'backup_restore_screen.dart';
 import 'channels_screen.dart';
 import 'usb_screen.dart';
 
-enum _ScannerBackupAction { exportSettings, restoreSettings, exportFilter, restoreFilter }
+enum _ScannerBackupAction {
+  exportSettings, restoreSettings, exportFilter, restoreFilter, exportTraining, restoreTraining,
+}
 
 /// Screen for scanning and connecting to MeshCore devices
 class ScannerScreen extends StatefulWidget {
@@ -226,6 +228,16 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
                   child: Text(context.l10n.backupMessageFilter_title),
                 ),
               ],
+              if (_connector.messageFilterService?.trainingBackupAvailable == true) ...[
+                PopupMenuItem(
+                  value: _ScannerBackupAction.exportTraining,
+                  child: Text(context.l10n.backupFilterTraining_exportTitle),
+                ),
+                PopupMenuItem(
+                  value: _ScannerBackupAction.restoreTraining,
+                  child: Text(context.l10n.backupFilterTraining_title),
+                ),
+              ],
             ],
             onSelected: (action) => Navigator.of(context).push(
               MaterialPageRoute(
@@ -236,6 +248,10 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
                     BackupExportScreen.messageFilter(_connector.messageFilterService!),
                   _ScannerBackupAction.restoreFilter =>
                     BackupRestoreScreen.messageFilter(_connector.messageFilterService!),
+                  _ScannerBackupAction.exportTraining =>
+                    BackupExportScreen.filterTraining(_connector.messageFilterService!),
+                  _ScannerBackupAction.restoreTraining =>
+                    BackupRestoreScreen.filterTraining(_connector.messageFilterService!),
                 },
               ),
             ),

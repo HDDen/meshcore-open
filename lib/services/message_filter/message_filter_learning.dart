@@ -20,7 +20,6 @@ class MessageFilterLearning {
   static const _cleanFlushDelay = Duration(seconds: 5);
   static const _minSpamExamples = 2;
   static const _trainingDelay = Duration(milliseconds: 250);
-  static const _exampleTextLimit = 500;
 
   final MessageFilterStore _store;
   final SpamTrainer _trainer;
@@ -108,12 +107,14 @@ class MessageFilterLearning {
   void recordClean(String sender, String text) {
     if (!_enabled) return;
     final trimmed = text.trim();
-    final sample = trimmed.length > _exampleTextLimit
-        ? trimmed.substring(0, _exampleTextLimit)
+    final sample = trimmed.length > MessageFilterText.trainingTextLimit
+        ? trimmed.substring(0, MessageFilterText.trainingTextLimit)
         : trimmed;
     final sourceKey = FilterExample.sourceKeyFor(sender, sample);
     if (_pendingClean.lastOrNull?.sourceKey == sourceKey) return;
-    final example = _example(sender, sample, spam: false, sourceKey: sourceKey);
+    final example = MessageFilterText.trainingExample(
+      sender, sample, spam: false, sourceKey: sourceKey,
+    );
     if (example.text.isEmpty) return;
     _pendingClean.add(example);
     _limitPendingClean();
@@ -165,7 +166,7 @@ class MessageFilterLearning {
 
   Future<void> recordFeedback(String sender, String text, {required bool spam}) {
     if (!_enabled) return Future<void>.value();
-    final example = _example(sender, text, spam: spam);
+    final example = MessageFilterText.trainingExample(sender, text, spam: spam);
     if (example.text.isEmpty) return Future<void>.value();
     final activation = _activation;
     return _enqueueWrite(() async {
@@ -189,37 +190,30 @@ class MessageFilterLearning {
     _clearModel();
   });
 
+  Future<List<FilterTrainingRow>> snapshotCorpus() {
+    flushRecentClean();
+    return _enqueueWrite(_store.loadTrainingCorpus);
+  }
+
+  Future<int> restoreCorpus(List<FilterTrainingRow> rows) => _enqueueWrite(() async {
+    final added = await _store.restoreTrainingCorpus(rows);
+    if (added > 0) {
+      _counts = await _store.loadTrainingLabelCounts();
+      _initialized = true;
+      if (_enabled) _requestTraining();
+    }
+    return added;
+  });
+
   static void _logStorageError(Object error) {
     appLogger.warn('Channel spam corpus storage failed: $error', tag: 'MessageFilter');
   }
 
-  Future<void> _enqueueWrite(Future<void> Function() operation) {
+  Future<T> _enqueueWrite<T>(Future<T> Function() operation) {
     final result = _writes.then((_) => operation());
     // Keep later writes usable if this particular write fails.
     _writes = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});
     return result;
-  }
-
-  static FilterExample _example(
-    String sender,
-    String text, {
-    required bool spam,
-    String? sourceKey,
-  }) {
-    String boundedNormalized(String value, int maxLength) {
-      final prefix = value.length > maxLength ? value.substring(0, maxLength) : value;
-      final normalized = MessageFilterText.normalize(prefix);
-      return normalized.length > maxLength
-          ? normalized.substring(0, maxLength)
-          : normalized;
-    }
-
-    return FilterExample(
-      sender: boundedNormalized(sender, 100),
-      text: boundedNormalized(text, _exampleTextLimit),
-      spam: spam,
-      sourceKey: sourceKey,
-    );
   }
 
   void _requestTraining() {

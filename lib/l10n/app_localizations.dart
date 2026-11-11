@@ -927,6 +927,60 @@ abstract class AppLocalizations {
   /// **'Could not finish restoring the spam filter. Refresh the preview.'**
   String get backupMessageFilter_failed;
 
+  /// No description provided for @backupFilterTraining_exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up spam training examples'**
+  String get backupFilterTraining_exportTitle;
+
+  /// No description provided for @backupFilterTraining_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore spam training examples'**
+  String get backupFilterTraining_title;
+
+  /// No description provided for @backupFilterTraining_scope.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual spam and not-spam examples and ordinary messages from the current app profile.'**
+  String get backupFilterTraining_scope;
+
+  /// No description provided for @backupFilterTraining_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no supported training examples to transfer.'**
+  String get backupFilterTraining_empty;
+
+  /// No description provided for @backupFilterTraining_passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains message excerpts and sender names. Set a password to encrypt the file or leave it empty for unencrypted JSON.'**
+  String get backupFilterTraining_passwordHint;
+
+  /// No description provided for @backupFilterTraining_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'In the file: spam {spam}, not spam {notSpam}, ordinary messages {ordinary}.'**
+  String backupFilterTraining_summary(int spam, int notSpam, int ordinary);
+
+  /// No description provided for @backupFilterTraining_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add examples to the training data in the current profile? Local manual labels take priority. Only examples that fit within the limits are added.'**
+  String get backupFilterTraining_confirm;
+
+  /// No description provided for @backupFilterTraining_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Training examples added: {count}.'**
+  String backupFilterTraining_applied(int count);
+
+  /// No description provided for @backupFilterTraining_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore training examples.'**
+  String get backupFilterTraining_failed;
+
   /// No description provided for @backupAppSettings_enabled.
   ///
   /// In en, this message translates to:

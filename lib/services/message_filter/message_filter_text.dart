@@ -10,6 +10,30 @@ import '../../models/message_filter.dart';
 class MessageFilterText {
   MessageFilterText._();
 
+  static const trainingTextLimit = 500;
+
+  static FilterExample trainingExample(
+    String sender,
+    String text, {
+    required bool spam,
+    String? sourceKey,
+  }) {
+    String boundedNormalized(String value, int maxLength) {
+      final prefix = value.length > maxLength ? value.substring(0, maxLength) : value;
+      final normalized = normalize(prefix);
+      return normalized.length > maxLength
+          ? normalized.substring(0, maxLength)
+          : normalized;
+    }
+
+    return FilterExample(
+      sender: boundedNormalized(sender, 100),
+      text: boundedNormalized(text, trainingTextLimit),
+      spam: spam,
+      sourceKey: sourceKey,
+    );
+  }
+
   static final RegExp _whitespace = RegExp(r'\s+', unicode: true);
   static final RegExp _mention = RegExp(r'@\[[^\]]*\]');
   static final RegExp _nonWordChars = RegExp(

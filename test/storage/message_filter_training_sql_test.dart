@@ -5,6 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 
+FilterTrainingRow _row(String sender, String text, FilterTrainingKind kind) => (
+  sender: sender, text: text, kind: kind,
+  sourceKey: kind == FilterTrainingKind.ordinary
+      ? FilterExample.sourceKeyFor(sender, text)
+      : null,
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -44,6 +51,57 @@ void main() {
 
     await database.clearFilterTrainingExamples();
     expect(await database.readFilterTrainingExamples(), isEmpty);
+  });
+
+  test('corpus merge preserves local labels, authors and ordinary multiplicity', () async {
+    final directory = await Directory.systemTemp.createTemp('mcoa-filter-backup-');
+    addTearDown(() => directory.delete(recursive: true));
+    final file = File.fromUri(directory.uri.resolve('history.sqlite'));
+    MessageHistoryDatabase open() => MessageHistoryDatabase.withExecutor(NativeDatabase(file));
+    var database = open();
+    addTearDown(() => database.close());
+    const ordinary = FilterTrainingKind.ordinary;
+    const spam = FilterTrainingKind.spam;
+    const notSpam = FilterTrainingKind.notSpam;
+
+    final first = _row('alice', 'hello', ordinary);
+    final second = _row('bob', 'hello', ordinary);
+    final localLabel = _row('alice', 'local label', notSpam);
+    await database.restoreFilterTrainingCorpus([
+      first, _row('alice', 'classify this', ordinary), localLabel,
+    ]);
+    final incoming = [
+      first,
+      _row('carol', 'local label', spam),
+      _row('bob', 'local label', notSpam),
+      second,
+      first,
+      _row('alice', 'classify this', spam),
+      _row('carol', 'classify this', ordinary),
+    ];
+    expect(await database.restoreFilterTrainingCorpus(incoming), 4);
+    await database.close();
+    database = open();
+    final saved = await database.readFilterTrainingCorpus();
+    expect(saved, [first, localLabel, incoming[2], second, first, incoming[5]]);
+    expect(await database.filterTrainingLabelCounts(), (spam: 1, notSpam: 2));
+    expect(await database.restoreFilterTrainingCorpus(incoming), 0);
+    expect(await database.readFilterTrainingCorpus(), saved);
+  });
+
+  test('corpus merge fills free capacity without evicting local rows', () async {
+    final database = MessageHistoryDatabase.withExecutor(NativeDatabase.memory());
+    addTearDown(database.close);
+    const spam = FilterTrainingKind.spam;
+    final local = [for (var index = 0; index < spam.capacity - 1; index++)
+      _row('alice', 'local $index', spam),
+    ];
+    await database.restoreFilterTrainingCorpus(local);
+    final newest = _row('bob', 'newer backup entry', spam);
+    expect(await database.restoreFilterTrainingCorpus([
+      _row('bob', 'older backup entry', spam), newest,
+    ]), 1);
+    expect(await database.readFilterTrainingCorpus(), [...local, newest]);
   });
 
   test('ordinary examples skip only adjacent copies across batches', () async {

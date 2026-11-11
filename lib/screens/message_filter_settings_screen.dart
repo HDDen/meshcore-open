@@ -8,6 +8,8 @@ import '../widgets/channel_filter_rule_dialog.dart';
 import 'backup_export_screen.dart';
 import 'backup_restore_screen.dart';
 
+enum _FilterBackupAction { exportSettings, restoreSettings, exportTraining, restoreTraining }
+
 class MessageFilterSettingsScreen extends StatefulWidget {
   const MessageFilterSettingsScreen({
     super.key,
@@ -93,19 +95,38 @@ class _MessageFilterSettingsScreenState
       appBar: AppBar(
         title: Text(l10n.messageFilter_title),
         actions: [
-          PopupMenuButton<bool>(
+          PopupMenuButton<_FilterBackupAction>(
             enabled: !_saving,
             tooltip: l10n.backupMessageFilter_menu,
             icon: const Icon(Icons.settings_backup_restore),
             itemBuilder: (_) => [
-              PopupMenuItem(value: false, child: Text(l10n.backupMessageFilter_exportTitle)),
-              PopupMenuItem(value: true, child: Text(l10n.backupMessageFilter_title)),
+              PopupMenuItem(
+                value: _FilterBackupAction.exportSettings,
+                child: Text(l10n.backupMessageFilter_exportTitle),
+              ),
+              PopupMenuItem(
+                value: _FilterBackupAction.restoreSettings,
+                child: Text(l10n.backupMessageFilter_title),
+              ),
+              if (service.trainingBackupAvailable) ...[
+                PopupMenuItem(
+                  value: _FilterBackupAction.exportTraining,
+                  child: Text(l10n.backupFilterTraining_exportTitle),
+                ),
+                PopupMenuItem(
+                  value: _FilterBackupAction.restoreTraining,
+                  child: Text(l10n.backupFilterTraining_title),
+                ),
+              ],
             ],
-            onSelected: (restore) async {
+            onSelected: (action) async {
               await Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => restore
-                    ? BackupRestoreScreen.messageFilter(service)
-                    : BackupExportScreen.messageFilter(service),
+                builder: (_) => switch (action) {
+                  _FilterBackupAction.exportSettings => BackupExportScreen.messageFilter(service),
+                  _FilterBackupAction.restoreSettings => BackupRestoreScreen.messageFilter(service),
+                  _FilterBackupAction.exportTraining => BackupExportScreen.filterTraining(service),
+                  _FilterBackupAction.restoreTraining => BackupRestoreScreen.filterTraining(service),
+                },
               ));
               if (mounted) setState(() {});
             },

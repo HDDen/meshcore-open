@@ -7,6 +7,7 @@ import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
+import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
 import '../models/app_settings_backup.dart';
@@ -31,6 +32,7 @@ class BackupImportPlan {
     this.channelSettings,
     this.communities,
     this.messageFilter,
+    this.filterTraining,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -48,6 +50,7 @@ class BackupImportPlan {
   final BackupChannelSettings? channelSettings;
   final List<Community>? communities;
   final BackupMessageFilter? messageFilter;
+  final BackupFilterTraining? filterTraining;
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -76,6 +79,7 @@ class BackupImportPlanner {
     bool contactSettingsOnly = false,
     bool channelSettingsOnly = false,
     bool messageFilterOnly = false,
+    bool filterTrainingOnly = false,
   }) async {
     final document = _readDocument(contents);
     final official = _isOfficial(document);
@@ -89,6 +93,20 @@ class BackupImportPlanner {
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
         : pubKeyToHex(_readHex(rawKey, length: pubKeySize));
+    if (filterTrainingOnly) {
+      final local = official ? null : _upstreamPreferences(payload, BackupFilterTraining.section);
+      final preferences = local ?? (official ? null :
+          _upstreamPreferences(payload, 'channelFilters', sectionName: 'channels'));
+      return BackupImportPlan._(
+        isOfficial: official,
+        sourcePublicKey: publicKey,
+        contacts: null,
+        channels: null,
+        appSettings: null,
+        filterTraining: preferences == null ? null :
+            BackupFilterTraining.fromPreferences(preferences, upstream: local == null),
+      );
+    }
     if (messageFilterOnly) {
       final preferences = official ? null :
           _upstreamPreferences(payload, BackupMessageFilter.section) ??

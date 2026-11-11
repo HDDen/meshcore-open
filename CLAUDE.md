@@ -3127,7 +3127,13 @@ export `mcoaMessageFilter` to preserve the upstream corpus when handling a
 settings-only file. Restore merges user rules and excluded PSK IDs, applies
 display and duplicate options, and preserves both activation switches.
 Settings, rule edits and restore share the filter's preference write queue.
-The backup path does not access the SQLite training corpus.
+The settings-only backup does not access the SQLite training corpus. A
+separate `mcoaFilterTraining` file holds all three training classes, with
+their order and ordinary source keys. Restore also reads upstream v1
+examples. It merges in one SQLite transaction, retains local manual labels,
+adds eligible rows within each cap, and preserves ordinary multiplicity
+on retry. The learning write queue serializes restore with live samples
+and only schedules a new fit when learning is active.
 
 The message-history restore route reads upstream v1 contact and channel
 history preferences as data. It requires the full source node key to

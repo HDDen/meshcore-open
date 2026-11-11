@@ -54,6 +54,14 @@ class MessageFilterStore {
   Future<List<FilterExample>> loadTrainingExamples() =>
       MessageHistoryStorage.instance.readFilterTrainingExamples();
 
+  bool get trainingBackupAvailable => MessageHistoryStorage.instance.hasDatabase;
+
+  Future<List<FilterTrainingRow>> loadTrainingCorpus() =>
+      MessageHistoryStorage.instance.readFilterTrainingCorpus();
+
+  Future<int> restoreTrainingCorpus(List<FilterTrainingRow> incoming) =>
+      MessageHistoryStorage.instance.restoreFilterTrainingCorpus(incoming);
+
   Future<void> saveTrainingExamples(
     Iterable<FilterExample> examples, {
     required bool manual,

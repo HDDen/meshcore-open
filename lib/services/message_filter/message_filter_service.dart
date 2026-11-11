@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../helpers/backup_filter_training.dart';
 import '../../helpers/backup_message_filter.dart';
 import '../../helpers/mention_autocomplete.dart';
 import '../../models/message_filter.dart';
@@ -126,6 +127,20 @@ class MessageFilterService extends ChangeNotifier {
       learningAvailable && _settings.enabled && _settings.learning;
   int get spamExampleCount => _learning?.spamCount ?? 0;
   int get notSpamExampleCount => _learning?.notSpamCount ?? 0;
+
+  bool get trainingBackupAvailable => learningAvailable && _store.trainingBackupAvailable;
+
+  Future<BackupFilterTraining> snapshotTrainingBackup() async {
+    if (!trainingBackupAvailable) throw StateError('Training corpus is unavailable');
+    return BackupFilterTraining(await _getLearning().snapshotCorpus());
+  }
+
+  Future<int> restoreTrainingBackup(BackupFilterTraining backup) async {
+    if (!trainingBackupAvailable) throw StateError('Training corpus is unavailable');
+    final count = await _getLearning().restoreCorpus(backup.rows);
+    if (count > 0) notifyListeners();
+    return count;
+  }
 
   MessageFilterLearning _getLearning() =>
       _learning ??= MessageFilterLearning(_store, trainer: _trainer);
