@@ -1705,7 +1705,6 @@ class _MapScreenState extends State<MapScreen>
                     hiddenCount: hiddenCount,
                     pinCount: sharedMarkers.length,
                   ),
-                if (_isBuildingPathTrace) _buildPathTraceOverlay(),
                 if (showOnline &&
                     !_isBuildingPathTrace &&
                     selectedContact == null &&
@@ -1725,6 +1724,7 @@ class _MapScreenState extends State<MapScreen>
                     ),
                   ),
                 ),
+                if (_isBuildingPathTrace) _buildPathTraceOverlay(),
                 if (selectedContact != null && !_isBuildingPathTrace)
                   _buildSelectedNodeCard(context, selectedContact, connector),
               ],

@@ -1961,7 +1961,8 @@ target placement, route slicing, manual normalization, whole-hop undo,
 Labeled controls expose round-trip/as-entered mode and the last completed
 result. The introductory `map_pathTraceAddMoreHint` is commented out per the
 2026-11-05 review. The header chevron hides or shows the builder controls
-while keeping the route and mode active. **Delete** removes the last hop.
+while keeping the route and mode active. The panel is above the map buttons
+and takes taps where it covers them. **Delete** removes the last hop.
 Each edit/new run advances a revision; callbacks also check radio,
 route, width and mode, so A-to-B-to-A edits cannot accept an old completion.
 `SavedPathTraceResult.matchesRequest` additionally verifies the response tag,

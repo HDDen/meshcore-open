@@ -471,6 +471,62 @@ void main() {
       }
     });
 
+    testWidgets('path trace panel covers overlapping wardrive buttons', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 470);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+
+      try {
+        final connector = _TraceBuilderConnector(1);
+        await _Harness.pump(
+          tester,
+          nodes: [],
+          zoom: 15,
+          connectorOverride: connector,
+          screenOverride: MapScreen(
+            initialTracePath: Uint8List.fromList([0x10, 0x11, 0x20, 0x21]),
+            initialTraceHashByteWidth: 2,
+          ),
+        );
+
+        final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+        final panel = find.ancestor(
+          of: find.text(l10n.contacts_pathTrace),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is DecoratedBox && widget.key is GlobalKey,
+          ),
+        );
+        expect(panel, findsOneWidget);
+        final panelRect = tester.getRect(panel);
+        final panelRender = tester.renderObject(panel);
+        final buttons = [
+          find.byTooltip(l10n.map_wardrive),
+          find.byTooltip(l10n.map_wardriveZeroHopDiscovery),
+        ];
+
+        for (final button in buttons) {
+          final overlap = tester.getRect(button).intersect(panelRect);
+          expect(overlap.isEmpty, isFalse);
+          final targets = tester.hitTestOnBinding(overlap.center).path
+              .map((entry) => entry.target);
+          expect(targets, contains(panelRender));
+          expect(targets, isNot(contains(tester.renderObject(button))));
+        }
+
+        await tester.tap(find.widgetWithIcon(IconButton, Icons.expand_more));
+        await _pumpFrames(tester);
+        for (final button in buttons) {
+          expect(button.hitTestable(), findsOneWidget);
+        }
+        expect(connector.sentFrames, isEmpty);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
+
     testWidgets('U06b3: close, reopen and a new map preserve the session draft and mode', (tester) async {
       final view = UiViewStateService();
       addTearDown(view.dispose);
