@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/chat_route_registry.dart';
 import 'package:meshcore_open/helpers/contact_history_candidates.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/app_settings.dart';
@@ -64,6 +65,7 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   final flagWrites = <(bool?, bool?, bool?)>[];
   final loads = <Symbol>[];
   final activeContacts = <String?>[];
+  final routes = ChatRouteRegistry<String>();
   final compression = <String, bool>{
     'mcmp': false, 'mcotxt': false, 'smaz': false, 'cyr2lat': true,
   };
@@ -71,6 +73,18 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   int indicatorLeases = 0;
 
   void _key(Object? key) => expect(key, target.publicKeyHex);
+
+  @override
+  VoidCallback trackContactChatRoute(String contactKeyHex, bool Function() isCurrent) {
+    _key(contactKeyHex);
+    return routes.add(contactKeyHex, isCurrent, onLastClose: () => setActiveContact(null));
+  }
+
+  @override
+  void setActiveContact(String? contactKeyHex) {
+    if (contactKeyHex != null) _key(contactKeyHex);
+    activeContacts.add(contactKeyHex);
+  }
 
   @override
   Future<void> setContactFlags(Contact contact, {
@@ -107,14 +121,6 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
       return member == #getMessages
           ? const <Message>[]
           : Future<List<ContactHistoryCandidate>>.value(const []);
-    }
-    if (member == #setActiveContact) {
-      final key = args.single as String?;
-      if (key != null) {
-        _key(key);
-      }
-      activeContacts.add(key);
-      return null;
     }
     if (member == #acquireRadioStatsPolling) {
       // The indicator's existing lease lifecycle must balance at teardown;
@@ -223,6 +229,8 @@ Future<void> _withChat(WidgetTester tester, String locale, int type,
   tester.view.physicalSize = size;
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
+  final key = radio.target.publicKeyHex;
+  late final bool signingListenerRemains;
   try {
     await tester.pumpWidget(MultiProvider(
       providers: [
@@ -250,6 +258,9 @@ Future<void> _withChat(WidgetTester tester, String locale, int type,
       ),
     ));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(radio.activeContacts, [key]);
+    expect(radio.routes.isVisible(key), isTrue);
     expect(radio.profileWrites, isEmpty);
     expect(radio.compressionWrites, isEmpty);
     expect(radio.flagWrites, isEmpty);
@@ -258,15 +269,21 @@ Future<void> _withChat(WidgetTester tester, String locale, int type,
     expect(settings.value.toJson(), initialSettings);
     expect(tester.takeException(), isNull);
   } finally {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-    expect(radio.activeContacts, [radio.target.publicKeyHex, null]);
-    expect(radio.failures.hasListener, isFalse);
-    expect(radio.indicatorLeases, 0);
-    radio.dispose();
-    scale.dispose();
-    settings.dispose();
+    try {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      signingListenerRemains = radio.failures.hasListener;
+    } finally {
+      radio.dispose();
+      scale.dispose();
+      settings.dispose();
+    }
   }
+  expect(radio.routes.contains(key), isFalse);
+  expect(radio.activeContacts.last, isNull);
+  expect(radio.activeContacts.take(radio.activeContacts.length - 1), everyElement(key));
+  expect(signingListenerRemains, isFalse);
+  expect(radio.indicatorLeases, 0);
 }
 
 Future<void> _open(WidgetTester tester, _Radio radio) async {

@@ -96,7 +96,9 @@ class MessageFilterService extends ChangeNotifier {
   Future<bool> restoreBackup(BackupMessageFilterPreview preview) =>
       _queuePreferenceWrite(() async {
         if (!identical(preview.baselineSettings, _settings) ||
-            !identical(preview.baselineRules, _rules)) return false;
+            !identical(preview.baselineRules, _rules)) {
+          return false;
+        }
         try {
           if (preview.changedSettings > 0) await _saveSettings(preview.settings);
           if (preview.addedRules.isNotEmpty) {
@@ -105,7 +107,9 @@ class MessageFilterService extends ChangeNotifier {
           return true;
         } finally {
           if (!identical(preview.baselineSettings, _settings) ||
-              !identical(preview.baselineRules, _rules)) notifyListeners();
+              !identical(preview.baselineRules, _rules)) {
+            notifyListeners();
+          }
         }
       });
 

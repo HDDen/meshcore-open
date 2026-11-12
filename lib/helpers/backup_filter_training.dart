@@ -69,7 +69,9 @@ class BackupFilterTraining {
       if (count == row.kind.capacity) continue;
       if (row.kind != FilterTrainingKind.ordinary &&
           (newestLabels[row.text]?.$2 != row.kind ||
-              !seenManual.add((row.text, row.sender)))) continue;
+              !seenManual.add((row.text, row.sender)))) {
+        continue;
+      }
       rows.add(row);
       counts[row.kind] = count + 1;
     }

@@ -581,7 +581,9 @@ SELECT sender, text, kind, source_key FROM filter_training_corpus ORDER BY id
           final label = labels[row.text];
           final count = counts[row.kind] ?? 0;
           if (count >= row.kind.capacity || (label != null && label != row.kind) ||
-              !identities.add((row.text, row.sender))) continue;
+              !identities.add((row.text, row.sender))) {
+            continue;
+          }
           labels[row.text] = row.kind;
           counts[row.kind] = count + 1;
           manual.add(index);
