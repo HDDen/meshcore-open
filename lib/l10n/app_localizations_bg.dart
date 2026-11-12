@@ -3214,7 +3214,8 @@ class AppLocalizationsBg extends AppLocalizations {
   String get map_manageServer => 'Управление на сървъра';
 
   @override
-  String get map_tapToAdd => 'Докоснете възлите, за да ги добавите към пътя.';
+  String get map_tapToAdd =>
+      'Докоснете възлите или въведете хеш тук, за да ги добавите към маршрута.';
 
   @override
   String get map_runTrace => 'Стартирай проследяването на пътя';

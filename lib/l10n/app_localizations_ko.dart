@@ -3105,7 +3105,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get map_manageServer => '서버 관리';
 
   @override
-  String get map_tapToAdd => '노드에 클릭하여 경로에 추가합니다.';
+  String get map_tapToAdd => '노드를 탭하거나 여기에 해시를 입력해 경로에 추가하세요.';
 
   @override
   String get map_runTrace => '경로 추적';

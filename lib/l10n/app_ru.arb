@@ -1158,7 +1158,7 @@
   "settings_gpxExportShareText": "Данные карты экспортированы из meshcore-open",
   "settings_gpxExportShareSubject": "meshcore-open экспорт данных карты GPX",
   "pathTrace_someHopsNoLocation": "У одного или нескольких хопов не указано местоположение!",
-  "map_tapToAdd": "Нажимайте на узлы, чтобы добавить их в путь.",
+  "map_tapToAdd": "Нажимайте на узлы либо пропишите хэш сюда, чтобы добавить их в путь.",
   "map_removeLast": "Удалить последний",
   "map_pathTraceCancelled": "Отмена трассировки пути",
   "map_regionRequestPathMustEndWithTarget": "Маршрут должен оканчиваться целевым репитером",

@@ -3194,7 +3194,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String get map_manageServer => 'Upravljaj strežnik';
 
   @override
-  String get map_tapToAdd => 'Pritisnite na vozlišča, da jih dodate poti.';
+  String get map_tapToAdd =>
+      'Tapnite vozlišča ali sem vnesite zgoščeno vrednost, da jih dodate na pot.';
 
   @override
   String get map_runTrace => 'Zaženi sledenje poti';

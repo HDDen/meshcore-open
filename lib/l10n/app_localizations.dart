@@ -5490,7 +5490,7 @@ abstract class AppLocalizations {
   /// No description provided for @map_tapToAdd.
   ///
   /// In en, this message translates to:
-  /// **'Tap on nodes to add them to the path.'**
+  /// **'Tap nodes or enter a hash here to add them to the path.'**
   String get map_tapToAdd;
 
   /// No description provided for @map_runTrace.

@@ -1761,7 +1761,7 @@
   "pathTrace_clearTooltip": "Rensa väg",
   "map_pathTraceCancelled": "Sökvägsspårning avbruten.",
   "map_runTrace": "Kör sökvägsspårning",
-  "map_tapToAdd": "Tryck på noder för att lägga till dem i sökvägen.",
+  "map_tapToAdd": "Tryck på noder eller ange en hash här för att lägga till dem i rutten.",
   "map_removeLast": "Ta bort sista",
   "scanner_enableBluetooth": "Aktivera Bluetooth",
   "scanner_bluetoothOffMessage": "Vänligen aktivera Bluetooth för att söka efter enheter.",

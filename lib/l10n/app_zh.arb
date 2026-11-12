@@ -1793,7 +1793,7 @@
   "settings_gpxExportShareText": "来自 MeshCore Open (Advanced mod) 的地图数据导出",
   "settings_gpxExportShareSubject": "MeshCore Open (Advanced mod) GPX 地图数据导出",
   "pathTrace_someHopsNoLocation": "某些跳缺少位置信息！",
-  "map_tapToAdd": "点击节点以添加到路径",
+  "map_tapToAdd": "点击节点或在此输入哈希值，将其添加到路径。",
   "pathTrace_clearTooltip": "清除路径",
   "map_pathTraceCancelled": "路径追踪已取消",
   "map_removeLast": "移除最后一个",

@@ -3199,7 +3199,8 @@ class AppLocalizationsSk extends AppLocalizations {
   String get map_manageServer => 'Spravovať server';
 
   @override
-  String get map_tapToAdd => 'Kliknite na uzly, aby ste ich pridali k ceste.';
+  String get map_tapToAdd =>
+      'Ťuknite na uzly alebo sem zadajte hash, aby ste ich pridali do trasy.';
 
   @override
   String get map_runTrace => 'Spustiť trasovanie cesty';

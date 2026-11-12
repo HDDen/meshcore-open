@@ -3184,7 +3184,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get map_tapToAdd =>
-      'Tryck på noder för att lägga till dem i sökvägen.';
+      'Tryck på noder eller ange en hash här för att lägga till dem i rutten.';
 
   @override
   String get map_runTrace => 'Kör sökvägsspårning';

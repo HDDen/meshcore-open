@@ -3063,7 +3063,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_manageServer => '管理服务器';
 
   @override
-  String get map_tapToAdd => '点击节点以添加到路径';
+  String get map_tapToAdd => '点击节点或在此输入哈希值，将其添加到路径。';
 
   @override
   String get map_runTrace => '运行路径追踪';

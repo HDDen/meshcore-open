@@ -3206,7 +3206,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get map_manageServer => 'Gestionar el servidor';
 
   @override
-  String get map_tapToAdd => 'Toque los nodos para añadirlos a la ruta.';
+  String get map_tapToAdd =>
+      'Toque los nodos o introduzca aquí un hash para añadirlos a la ruta.';
 
   @override
   String get map_runTrace => 'Ejecutar traza de ruta';

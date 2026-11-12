@@ -3171,7 +3171,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map_manageServer => 'Manage Server';
 
   @override
-  String get map_tapToAdd => 'Tap on nodes to add them to the path.';
+  String get map_tapToAdd =>
+      'Tap nodes or enter a hash here to add them to the path.';
 
   @override
   String get map_runTrace => 'Run path trace';

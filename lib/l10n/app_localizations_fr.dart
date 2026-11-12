@@ -3211,7 +3211,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get map_tapToAdd =>
-      'Appuyez sur les nœuds pour les ajouter au chemin.';
+      'Appuyez sur les nœuds ou saisissez un hash ici pour les ajouter au chemin.';
 
   @override
   String get map_runTrace => 'Exécuter le traçage de chemin';

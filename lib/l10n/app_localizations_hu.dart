@@ -3200,7 +3200,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get map_tapToAdd =>
-      'Érintse meg a csomópontokat, hogy hozzáadja őket az útvonalhoz.';
+      'Érintse meg a csomópontokat, vagy írjon be ide egy hash-t, hogy hozzáadja őket az útvonalhoz.';
 
   @override
   String get map_runTrace => 'Útvonal-nyomkövetés indítása';

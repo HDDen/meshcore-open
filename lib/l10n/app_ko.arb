@@ -886,7 +886,7 @@
   "map_sharedPin": "공유된 핀",
   "map_joinRoom": "방에 참여",
   "map_manageRepeater": "리피터 관리",
-  "map_tapToAdd": "노드에 클릭하여 경로에 추가합니다.",
+  "map_tapToAdd": "노드를 탭하거나 여기에 해시를 입력해 경로에 추가하세요.",
   "map_runTrace": "경로 추적",
   "map_removeLast": "마지막 항목 삭제",
   "map_pathTraceCancelled": "경로 추적 기능이 취소되었습니다.",

@@ -1887,7 +1887,7 @@
   "pathTrace_someHopsNoLocation": "Uno o más de los saltos carecen de una ubicación",
   "pathTrace_clearTooltip": "Borrar ruta",
   "map_runTrace": "Ejecutar traza de ruta",
-  "map_tapToAdd": "Toque los nodos para añadirlos a la ruta.",
+  "map_tapToAdd": "Toque los nodos o introduzca aquí un hash para añadirlos a la ruta.",
   "map_removeLast": "Eliminar último",
   "map_pathTraceCancelled": "Traza de ruta cancelada.",
   "scanner_bluetoothOffMessage": "Por favor, active el Bluetooth para escanear dispositivos.",

@@ -1801,7 +1801,7 @@
   "settings_gpxExportAllContacts": "Усі місця контактів",
   "settings_gpxExportShareSubject": "експорт даних карти meshcore-open у форматі GPX",
   "pathTrace_someHopsNoLocation": "Один або декілька переходів не мають даних про геопозицію!",
-  "map_tapToAdd": "Натисніть на вузли, щоб додати їх до шляху",
+  "map_tapToAdd": "Натискайте на вузли або введіть тут хеш, щоб додати їх до шляху.",
   "map_runTrace": "Виконати трасування шляху",
   "pathTrace_clearTooltip": "Очистити шлях",
   "map_removeLast": "Видалити останній",

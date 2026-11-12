@@ -861,7 +861,7 @@
   "map_sharedPin": "Megosztott jelölő",
   "map_joinRoom": "Csatlakozás a szobához",
   "map_manageRepeater": "Átjátszó kezelése",
-  "map_tapToAdd": "Érintse meg a csomópontokat, hogy hozzáadja őket az útvonalhoz.",
+  "map_tapToAdd": "Érintse meg a csomópontokat, vagy írjon be ide egy hash-t, hogy hozzáadja őket az útvonalhoz.",
   "map_runTrace": "Útvonal-nyomkövetés indítása",
   "map_removeLast": "Utolsó eltávolítása",
   "map_pathTraceCancelled": "Útvonal-nyomkövetés megszakítva.",

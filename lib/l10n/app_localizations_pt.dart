@@ -3206,7 +3206,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get map_manageServer => 'Gerenciar o servidor';
 
   @override
-  String get map_tapToAdd => 'Toque nos nós para adicioná-los ao caminho.';
+  String get map_tapToAdd =>
+      'Toque nos nós ou introduza aqui um hash para os adicionar ao caminho.';
 
   @override
   String get map_runTrace => 'Executar Traçado de Caminho';

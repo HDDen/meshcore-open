@@ -3098,7 +3098,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get map_manageServer => 'サーバーを管理';
 
   @override
-  String get map_tapToAdd => 'ノードをタップして経路に追加します。';
+  String get map_tapToAdd => 'ノードをタップするか、ここにハッシュを入力して経路に追加します。';
 
   @override
   String get map_runTrace => '経路トレースを実行';

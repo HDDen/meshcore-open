@@ -3208,7 +3208,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get map_manageServer => 'Управление сервером';
 
   @override
-  String get map_tapToAdd => 'Нажимайте на узлы, чтобы добавить их в путь.';
+  String get map_tapToAdd =>
+      'Нажимайте на узлы либо пропишите хэш сюда, чтобы добавить их в путь.';
 
   @override
   String get map_runTrace => 'Запустить трассировку пути';

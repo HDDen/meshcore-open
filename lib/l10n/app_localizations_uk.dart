@@ -3202,7 +3202,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String get map_manageServer => 'Керувати сервером';
 
   @override
-  String get map_tapToAdd => 'Натисніть на вузли, щоб додати їх до шляху';
+  String get map_tapToAdd =>
+      'Натискайте на вузли або введіть тут хеш, щоб додати їх до шляху.';
 
   @override
   String get map_runTrace => 'Виконати трасування шляху';

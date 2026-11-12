@@ -1793,7 +1793,7 @@
   "settings_gpxExportNotAvailable": "Ni podprto na vaši napravi/operacijskem sistemu",
   "settings_gpxExportShareSubject": "meshcore-open izvoz podatkov GPX karte",
   "pathTrace_someHopsNoLocation": "Enemu ali več skokom manjka lokacija!",
-  "map_tapToAdd": "Pritisnite na vozlišča, da jih dodate poti.",
+  "map_tapToAdd": "Tapnite vozlišča ali sem vnesite zgoščeno vrednost, da jih dodate na pot.",
   "map_removeLast": "Odstrani Zadnji",
   "map_runTrace": "Zaženi sledenje poti",
   "pathTrace_clearTooltip": "Počisti pot",

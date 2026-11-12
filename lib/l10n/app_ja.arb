@@ -904,7 +904,7 @@
   "map_sharedPin": "共有ピン",
   "map_joinRoom": "部屋に参加する",
   "map_manageRepeater": "リピータの管理",
-  "map_tapToAdd": "ノードをタップして経路に追加します。",
+  "map_tapToAdd": "ノードをタップするか、ここにハッシュを入力して経路に追加します。",
   "map_runTrace": "経路トレースを実行",
   "map_removeLast": "最後を削除",
   "map_pathTraceCancelled": "経路トレースはキャンセルされました",

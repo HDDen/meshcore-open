@@ -3223,7 +3223,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get map_manageServer => 'Zarządzaj serwerem';
 
   @override
-  String get map_tapToAdd => 'Kliknij na węzły, aby dodać je do ścieżki.';
+  String get map_tapToAdd =>
+      'Dotknij węzłów lub wpisz tutaj skrót, aby dodać je do ścieżki.';
 
   @override
   String get map_runTrace => 'Uruchom śledzenie ścieżki';

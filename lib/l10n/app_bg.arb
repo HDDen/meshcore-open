@@ -1797,7 +1797,7 @@
   "pathTrace_clearTooltip": "Изчисти пътя",
   "map_removeLast": "Премахни последното",
   "map_runTrace": "Стартирай проследяването на пътя",
-  "map_tapToAdd": "Докоснете възлите, за да ги добавите към пътя.",
+  "map_tapToAdd": "Докоснете възлите или въведете хеш тук, за да ги добавите към маршрута.",
   "scanner_bluetoothOff": "Bluetooth е изключен.",
   "scanner_enableBluetooth": "Активирайте Bluetooth",
   "scanner_bluetoothOffMessage": "Моля, активирайте Bluetooth, за да сканирате за устройства.",

@@ -1878,7 +1878,7 @@
   "settings_gpxExportShareText": "Données de carte exportées à partir de meshcore-open",
   "settings_gpxExportShareSubject": "Export des données de carte GPX de meshcore-open",
   "pathTrace_someHopsNoLocation": "Un ou plusieurs des sauts manquent d'une localisation !",
-  "map_tapToAdd": "Appuyez sur les nœuds pour les ajouter au chemin.",
+  "map_tapToAdd": "Appuyez sur les nœuds ou saisissez un hash ici pour les ajouter au chemin.",
   "pathTrace_clearTooltip": "Effacer le chemin",
   "map_pathTraceCancelled": "Traçage de chemin annulé",
   "map_removeLast": "Supprimer le dernier",

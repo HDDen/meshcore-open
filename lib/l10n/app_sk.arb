@@ -1794,7 +1794,7 @@
   "settings_gpxExportShareSubject": "meshcore-open export mapových údajov GPX",
   "pathTrace_someHopsNoLocation": "Jednému alebo viacerým skokom chýba poloha!",
   "pathTrace_clearTooltip": "Zmazať cestu",
-  "map_tapToAdd": "Kliknite na uzly, aby ste ich pridali k ceste.",
+  "map_tapToAdd": "Ťuknite na uzly alebo sem zadajte hash, aby ste ich pridali do trasy.",
   "map_removeLast": "Odstrániť posledný",
   "map_runTrace": "Spustiť trasovanie cesty",
   "map_pathTraceCancelled": "Trasovanie cesty bolo zrušené.",

@@ -1890,7 +1890,7 @@
   "settings_gpxExportShareText": "GPX-Kartendaten aus meshcore-open exportiert",
   "pathTrace_someHopsNoLocation": "Bei einem oder mehreren Hops fehlt der Standort!",
   "map_removeLast": "Letztes entfernen",
-  "map_tapToAdd": "Tippen Sie auf Knoten, um sie zum Pfad hinzuzufügen.",
+  "map_tapToAdd": "Tippen Sie auf Knoten oder geben Sie hier einen Hash ein, um sie zum Pfad hinzuzufügen.",
   "map_runTrace": "Pfadverfolgung starten",
   "pathTrace_clearTooltip": "Pfad löschen",
   "map_pathTraceCancelled": "Pfadverfolgung abgebrochen.",

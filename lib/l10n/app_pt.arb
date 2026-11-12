@@ -1762,7 +1762,7 @@
   "map_pathTraceCancelled": "Rastreamento de caminho cancelado.",
   "pathTrace_clearTooltip": "Limpar caminho",
   "map_removeLast": "Remover Último",
-  "map_tapToAdd": "Toque nos nós para adicioná-los ao caminho.",
+  "map_tapToAdd": "Toque nos nós ou introduza aqui um hash para os adicionar ao caminho.",
   "scanner_enableBluetooth": "Ative o Bluetooth",
   "scanner_bluetoothOff": "Bluetooth está desativado",
   "scanner_bluetoothOffMessage": "Por favor, ative o Bluetooth para escanear por dispositivos.",

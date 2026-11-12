@@ -3192,7 +3192,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get map_tapToAdd =>
-      'Tik op knooppunten om ze toe te voegen aan het pad';
+      'Tik op knooppunten of voer hier een hash in om ze aan het pad toe te voegen.';
 
   @override
   String get map_runTrace => 'Padtracering starten';

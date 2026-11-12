@@ -3204,7 +3204,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get map_manageServer => 'Gestisci server';
 
   @override
-  String get map_tapToAdd => 'Tocca i nodi per aggiungerli al percorso.';
+  String get map_tapToAdd =>
+      'Tocca i nodi o inserisci qui un hash per aggiungerli al percorso.';
 
   @override
   String get map_runTrace => 'Esegui tracciamento percorso';

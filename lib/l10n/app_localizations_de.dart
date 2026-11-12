@@ -3206,7 +3206,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get map_tapToAdd =>
-      'Tippen Sie auf Knoten, um sie zum Pfad hinzuzufügen.';
+      'Tippen Sie auf Knoten oder geben Sie hier einen Hash ein, um sie zum Pfad hinzuzufügen.';
 
   @override
   String get map_runTrace => 'Pfadverfolgung starten';
