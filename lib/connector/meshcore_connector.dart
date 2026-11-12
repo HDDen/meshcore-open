@@ -4674,12 +4674,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       required owner,
       required canSend,
       required sendWithoutBoost,
+      required onSendingBoosted,
     }) => _sendMessageDirect(
       contact, text, attempt, timestampSeconds,
       useFlood: useFlood,
       powerOwner: owner,
       canSend: canSend,
       sendWithoutBoost: sendWithoutBoost,
+      onSendingBoosted: onSendingBoosted,
     ),
     releaseTxPower: _releaseTxPower,
     addMessage: _addMessage,
@@ -5195,6 +5197,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Object? powerOwner,
     bool Function()? canSend,
     bool sendWithoutBoost = true,
+    VoidCallback? onSendingBoosted,
   }) async {
     if (!isConnected) throw StateError('Not connected');
     if (text.isEmpty) throw ArgumentError('Empty message text');
@@ -5202,10 +5205,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       try {
         await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
         if (canSend?.call() == false) return null;
+        var boosted = false;
         if (powerOwner != null) {
           final session = txPowerSession;
           final target = _directTxPowerTarget;
-          var boosted = false;
           if (target != null) {
             try {
               boosted = await _acquireAdaptiveTxPower(
@@ -5235,13 +5238,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         );
         final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
         if (region.isNotEmpty) {
-          return await _sendScopedContactFrame(frame, region, canSend: canSend);
+          return await _sendScopedContactFrame(
+            frame,
+            region,
+            canSend: canSend,
+            onSending: boosted ? onSendingBoosted : null,
+          );
         }
         final sentByRadioAt = DateTime.now();
         // Waiting for SENT lets an ERR (unknown contact, packet pool full,
         // text too long for this attempt) fail the message at once instead
         // of after its ACK timeout.
         try {
+          if (boosted) onSendingBoosted?.call();
           await _sendFrameAndWaitForCommandAck(frame);
         } on TimeoutException catch (e) {
           appLogger.warn('No SENT reply for message: $e', tag: 'Connector');
@@ -10112,6 +10121,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           if (isResend && !_channelResendWanted(messageId, hopControl!)) {
             return;
           }
+          TxPowerSession? boostedSession;
           if (isResend) {
             final liveSettings = _appSettingsService?.settings;
             final adaptive = liveSettings?.adaptiveTxPower;
@@ -10128,11 +10138,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               requestedBoost = true;
               try {
                 final control = hopControl!;
-                await _acquireAdaptiveTxPower(
+                final session = txPowerSession;
+                if (await _acquireAdaptiveTxPower(
                   control,
                   target,
                   canProceed: () => _channelResendWanted(messageId, control),
-                );
+                )) {
+                  boostedSession = session;
+                }
               } catch (error) {
                 appLogger.warn('TX power boost was not confirmed: $error', tag: 'Connector');
               }
@@ -10178,18 +10191,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             hopControl!.lastAttemptAt = _channelResendNow();
             _incrementChannelResendCount(messageId);
           }
-          if (binaryFrame != null) {
-            await _sendFrameAndWaitForCommandAck(
-              binaryFrame,
-              channelSendQueueId: isResend ? null : messageId,
-            );
-            return;
-          }
-          // Stamp the outgoing packet with the actual send time and align the
-          // stored message.timestamp to the exact value that went on the air,
-          // so replies to our own message resolve by exact-timestamp matching.
+          // Stamp text with the actual send time so replies to our own
+          // message resolve by exact-timestamp matching.
           await _sendFrameAndWaitForCommandAck(
-            _channelTextFrame(
+            binaryFrame ?? _channelTextFrame(
               channel,
               outboundText,
               senderName: senderName,
@@ -10199,6 +10204,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             ),
             channelSendQueueId: isResend ? null : messageId,
           );
+          if (boostedSession != null && txPowerSession == boostedSession) {
+            _markChannelSentWithTxPowerBoost(channel.index, messageId);
+          }
         }, region: pending.region ?? _channelSendScope(channel.index));
     }
     try {
@@ -11448,7 +11456,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               ),
             )
             .attempts
-            .add((attempt: expected.attempt, selection: expected.selection));
+            .add((
+              attempt: expected.attempt,
+              selection: expected.selection,
+              sentWithTxPowerBoost: expected.sentWithTxPowerBoost,
+            ));
       }
       while (_stoppedSendAcks.length > 64) {
         _stoppedSendAcks.remove(_stoppedSendAcks.keys.first);
@@ -11646,6 +11658,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       notifyListeners();
       return;
     }
+  }
+
+  void _markChannelSentWithTxPowerBoost(int channelIndex, String messageId) {
+    final messages = _channelMessages[channelIndex];
+    if (messages == null) return;
+    final index = messages.indexWhere((message) => message.messageId == messageId);
+    if (index < 0 || messages[index].sentWithTxPowerBoost) return;
+    final updated = messages[index].copyWith(sentWithTxPowerBoost: true);
+    messages[index] = updated;
+    unawaited(_channelMessageStore.saveChannelMessage(channelIndex, updated));
+    notifyListeners();
   }
 
   /// Aligns an outgoing message's packet timestamp to the value that was
@@ -19686,6 +19709,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // acknowledgement is still worth the double tick.
       final stopped = _stoppedSendAcks.remove(ackHashToHex(ackHash));
       if (stopped != null) {
+        final candidates = stopped.attempts.where((entry) =>
+            ackAttemptByte == null || (ackAttemptByte < 4
+                ? entry.attempt < 4 : entry.attempt == ackAttemptByte));
+        final sentWithTxPowerBoost =
+            candidates.any((entry) => entry.sentWithTxPowerBoost) &&
+            candidates.map((entry) => entry.attempt).toSet().length == 1;
         _updateStoredContactMessage(
           stopped.contactKeyHex,
           stopped.messageId,
@@ -19693,6 +19722,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             status: MessageStatus.delivered,
             deliveredAt: DateTime.now(),
             tripTimeMs: tripTimeMs,
+            sentWithTxPowerBoost:
+                current.sentWithTxPowerBoost || sentWithTxPowerBoost,
             deliveryProgressCompletedSteps: current.deliveryProgressTotalSteps,
           ),
         );
@@ -22580,7 +22611,11 @@ class _RawPacket {
 typedef _StoppedSend = ({
   String contactKeyHex,
   String messageId,
-  List<({int attempt, PathSelection? selection})> attempts,
+  List<({
+    int attempt,
+    PathSelection? selection,
+    bool sentWithTxPowerBoost,
+  })> attempts,
 });
 
 class _PacketRegionResolution {

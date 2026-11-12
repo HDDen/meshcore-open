@@ -16,6 +16,7 @@ import 'package:meshcore_open/services/chat_text_scale_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
+import 'package:meshcore_open/widgets/tx_power_boost_badge.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -139,6 +140,78 @@ void main() {
 
   for (final inChannel in [false, true]) {
     final scope = inChannel ? 'channel' : 'contact';
+    testWidgets('TX power boost appears after send details in the $scope bubble',
+        (tester) async {
+      final node = _PagedNode();
+      final settings = AppSettingsService();
+      final scale = ChatTextScaleService();
+      addTearDown(node.dispose);
+      addTearDown(settings.dispose);
+      addTearDown(scale.dispose);
+
+      const boostedText = 'Outgoing message sent with a power boost';
+      const regularText = 'Outgoing message sent with normal power';
+      if (inChannel) {
+        node.setChannelMessagesForTest(_channel.index, [
+          _channelPost('normal', regularText, 1).copyWith(isOutgoing: true),
+          _channelPost('boosted', boostedText, 2).copyWith(
+            isOutgoing: true,
+            resendCount: 2,
+            sentWithTxPowerBoost: true,
+          ),
+        ]);
+      } else {
+        node._recentDirect
+          ..clear()
+          ..addAll([
+            _directPost('normal', regularText, 1).copyWith(isOutgoing: true),
+            _directPost('boosted', boostedText, 2).copyWith(
+              isOutgoing: true,
+              tripTimeMs: 1200,
+              sentWithTxPowerBoost: true,
+            ),
+          ]);
+      }
+
+      await settings.updateSettings(
+        settings.settings.copyWith(enableMessageTracing: true),
+      );
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: inChannel
+              ? ChannelChatScreen(channel: _channel)
+              : ChatScreen(contact: _contact),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final badge = find.byType(TxPowerBoostBadge);
+      expect(badge, findsOneWidget);
+      expect(find.byTooltip('Sent with boosted TX power'), findsOneWidget);
+      final metadata = tester.element(badge).findAncestorWidgetOfExactType<Wrap>()!;
+      final previous = metadata.children.indexWhere(
+        (widget) => widget is Text && widget.data == (inChannel ? '3' : '1.2s'),
+      );
+      expect(previous, isNonNegative);
+      expect(metadata.children.indexWhere((widget) => widget is TxPowerBoostBadge),
+        greaterThan(previous));
+
+      await settings.updateSettings(
+        settings.settings.copyWith(enableMessageTracing: false),
+      );
+      await tester.pumpAndSettle();
+      expect(badge, findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 2));
+    });
     testWidgets('U34 baseline: search opens and pages to an old $scope message', (
       tester,
     ) async {

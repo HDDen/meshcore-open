@@ -97,6 +97,7 @@ class Message {
   final List<int> sentByRadioWaitSeconds;
   final DateTime? deliveredAt;
   final int? tripTimeMs;
+  final bool sentWithTxPowerBoost;
   final int? pathLength;
   final Uint8List pathBytes;
   final int deliveryProgressTotalSteps;
@@ -201,6 +202,7 @@ class Message {
     List<int>? sentByRadioWaitSeconds,
     this.deliveredAt,
     this.tripTimeMs,
+    this.sentWithTxPowerBoost = false,
     this.pathLength,
     Uint8List? pathBytes,
     this.deliveryProgressTotalSteps = 0,
@@ -251,6 +253,7 @@ class Message {
     List<int>? sentByRadioWaitSeconds,
     DateTime? deliveredAt,
     int? tripTimeMs,
+    bool? sentWithTxPowerBoost,
     int? pathLength,
     Uint8List? pathBytes,
     int? deliveryProgressTotalSteps,
@@ -381,6 +384,7 @@ class Message {
           sentByRadioWaitSeconds ?? this.sentByRadioWaitSeconds,
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
+      sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
       pathLength: pathLength ?? this.pathLength,
       pathBytes: pathBytes ?? this.pathBytes,
       deliveryProgressTotalSteps:

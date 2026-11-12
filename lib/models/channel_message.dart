@@ -102,6 +102,7 @@ class ChannelMessage {
   /// Repeated transmissions of this packet under the resend-until-N-hops
   /// setting: 0 for an incoming message and for one sent once.
   final int resendCount;
+  final bool sentWithTxPowerBoost;
   final int? pathLength;
   final int? pathHashWidth;
   final Uint8List pathBytes;
@@ -175,6 +176,7 @@ class ChannelMessage {
     this.repeats = const [],
     this.repeatCount = 0,
     this.resendCount = 0,
+    this.sentWithTxPowerBoost = false,
     this.pathLength,
     this.pathHashWidth,
     Uint8List? pathBytes,
@@ -237,6 +239,7 @@ class ChannelMessage {
     List<Repeat>? repeats,
     int? repeatCount,
     int? resendCount,
+    bool? sentWithTxPowerBoost,
     int? pathLength,
     int? pathHashWidth,
     Uint8List? pathBytes,
@@ -364,6 +367,7 @@ class ChannelMessage {
       repeats: repeats ?? this.repeats,
       repeatCount: repeatCount ?? this.repeatCount,
       resendCount: resendCount ?? this.resendCount,
+      sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
       pathLength: pathLength ?? this.pathLength,
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,

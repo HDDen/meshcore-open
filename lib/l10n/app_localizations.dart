@@ -13579,6 +13579,8 @@ abstract class AppLocalizations {
 
   String get adaptiveTxPowerTryLna => 'Try switching LNA';
 
+  String get messageSentWithTxPowerBoost => 'Sent with boosted TX power';
+
   /// No description provided for @adaptiveTxPowerRecovery.
   ///
   /// In en, this message translates to:

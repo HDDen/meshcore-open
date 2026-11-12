@@ -34,7 +34,8 @@ final _time = DateTime.fromMillisecondsSinceEpoch(_timestamp * 1000);
 typedef _Send = ({int attempt, bool flood, bool boosted});
 
 class _Retry {
-  _Retry({int attempts = 2, int floodRetries = 0, bool enabled = true})
+  _Retry({int attempts = 2, int floodRetries = 0, bool enabled = true,
+    bool boostConfirmed = true})
     : settings = _Settings(enabled: enabled, floodRetries: floodRetries) {
     service.setMaxRetries(attempts);
     service.initialize(RetryServiceConfig(
@@ -57,10 +58,15 @@ class _Retry {
         required owner,
         required canSend,
         required sendWithoutBoost,
+        required onSendingBoosted,
       }) async {
         if (!canSend()) return null;
-        owners.add(owner);
-        return send(text, attempt, timestamp, flood: useFlood, boosted: true);
+        if (!boostConfirmed && !sendWithoutBoost) return null;
+        if (boostConfirmed) {
+          owners.add(owner);
+          onSendingBoosted();
+        }
+        return send(text, attempt, timestamp, flood: useFlood, boosted: boostConfirmed);
       },
     ));
   }
@@ -139,6 +145,7 @@ void main() {
     expect(retry.owners, hasLength(1));
     expect(retry.service.handleAckReceived(retry.hash(1), 10), isNotNull);
     expect(retry.latest.status, MessageStatus.delivered);
+    expect(retry.latest.sentWithTxPowerBoost, isTrue);
     expect(retry.owners, isEmpty);
     expect(retry.releases, 2);
   });
@@ -162,6 +169,25 @@ void main() {
     expect(retry.service.handleAckReceived(retry.hash(2), 10), isNotNull);
     expect(retry.owners, isEmpty);
   });
+
+  for (final boostConfirmed in [true, false]) {
+    testWidgets('only an accepted boost on the acknowledged Flood attempt is marked '
+        '(boost confirmed: $boostConfirmed)', (tester) async {
+      final retry = _Retry(floodRetries: 1, boostConfirmed: boostConfirmed);
+      addTearDown(retry.dispose);
+      await retry.start(forceFlood: true);
+      await tester.pump();
+      await tester.pump(ackWait);
+      await tester.pump();
+      expect(retry.sends.last.boosted, boostConfirmed);
+      expect(retry.latest.sentWithTxPowerBoost, isFalse);
+      // A late ACK for the ordinary attempt must not claim the newer boost.
+      final ackedAttempt = boostConfirmed ? 0 : 1;
+      expect(retry.service.handleAckReceived(retry.hash(ackedAttempt), 10), isNotNull);
+      expect(retry.latest.status, MessageStatus.delivered);
+      expect(retry.latest.sentWithTxPowerBoost, isFalse);
+    });
+  }
 
   testWidgets('a late ACK stops the route repeat before Flood', (tester) async {
     final retry = _Retry();

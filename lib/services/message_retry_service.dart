@@ -43,6 +43,7 @@ typedef AckHashMapping = ({
   DateTime timestamp,
   int attemptIndex,
   PathSelection? pathSelection,
+  bool sentWithTxPowerBoost,
 });
 
 typedef _DeferredRouteFailure = ({int ackHash, PathSelection selection});
@@ -66,6 +67,7 @@ typedef _ExpectedAttempt = ({
   String messageId,
   int attempt,
   PathSelection selection,
+  bool Function()? usedTxPowerBoost,
 });
 
 /// What the node needs before an attempt: its route written, its route
@@ -101,6 +103,7 @@ class RetryServiceConfig {
     required Object owner,
     required bool Function() canSend,
     required bool sendWithoutBoost,
+    required void Function() onSendingBoosted,
   })? sendBoostedMessage;
   final Future<void> Function(Object owner)? releaseTxPower;
   final void Function(String, Message) addMessage;
@@ -752,6 +755,7 @@ class MessageRetryService extends ChangeNotifier {
     if (!repeating) _recordAttemptPathHistory(messageId, selection);
 
     final attempt = message.retryCount;
+    var sendingBoosted = false;
     final timestampSeconds = message.timestamp.millisecondsSinceEpoch ~/ 1000;
 
     // Compute expected ACK hash that device will return in RESP_CODE_SENT
@@ -786,6 +790,7 @@ class MessageRetryService extends ChangeNotifier {
         messageId: messageId,
         attempt: attempt,
         selection: selection,
+        usedTxPowerBoost: boost ? () => sendingBoosted : null,
       ));
 
       final shortText = message.text.length > 20
@@ -813,6 +818,7 @@ class MessageRetryService extends ChangeNotifier {
             owner: _txPowerOwners.putIfAbsent(messageId, Object.new),
             canSend: canSend,
             sendWithoutBoost: !repeating,
+            onSendingBoosted: () => sendingBoosted = true,
           )
         : await config.sendMessage(
             contact, outboundText, attempt, timestampSeconds, useFlood: useFlood,
@@ -944,6 +950,7 @@ class MessageRetryService extends ChangeNotifier {
       timestamp: DateTime.now(),
       attemptIndex: expected.attempt,
       pathSelection: isFlood == true ? _floodSelection : expected.selection,
+      sentWithTxPowerBoost: expected.usedTxPowerBoost?.call() == true,
     ));
 
     // Add this ACK hash to the list of expected ACKs for this message (for history)
@@ -1004,7 +1011,12 @@ class MessageRetryService extends ChangeNotifier {
   /// for, one entry per attempt with its number and the route it went by,
   /// the attempts sharing a hash newest first, for a caller that stops
   /// tracking the message but still wants to recognise a late one.
-  List<({int ackHash, int attempt, PathSelection? selection})> expectedAcksFor(
+  List<({
+    int ackHash,
+    int attempt,
+    PathSelection? selection,
+    bool sentWithTxPowerBoost,
+  })> expectedAcksFor(
     String messageId,
   ) => [
     for (final ackHash in _expectedAckHashes[messageId] ?? const <int>[])
@@ -1014,6 +1026,7 @@ class MessageRetryService extends ChangeNotifier {
             ackHash: ackHash,
             attempt: mapping.attemptIndex,
             selection: mapping.pathSelection,
+            sentWithTxPowerBoost: mapping.sentWithTxPowerBoost,
           ),
   ];
 
@@ -1029,6 +1042,7 @@ class MessageRetryService extends ChangeNotifier {
         timestamp: timestamp,
         attemptIndex: mapping.attemptIndex,
         pathSelection: mapping.pathSelection,
+        sentWithTxPowerBoost: mapping.sentWithTxPowerBoost,
       );
     }
   }
@@ -1495,10 +1509,30 @@ class MessageRetryService extends ChangeNotifier {
 
       _timeoutTimers[matchedMessageId]?.cancel();
 
+      final byte = ackAttemptByte;
+      bool matchesAttemptByte(int attempt) =>
+          byte == null || (byte < 4 ? attempt < 4 : attempt == byte);
+      final ackCandidates = mappings?.where(
+        (entry) => matchesAttemptByte(entry.attemptIndex),
+      );
+      // A normal send and its boosted replay can use the exact same packet.
+      // Mark an accepted boosted copy of this attempt. A hash collision with
+      // a different logical attempt leaves the boost unconfirmed.
+      final sentWithTxPowerBoost = ackCandidates != null &&
+          ackCandidates.any((entry) => entry.sentWithTxPowerBoost) &&
+          ackCandidates.every((entry) =>
+              entry.messageId == matchedMessageId &&
+              entry.attemptIndex == ackedAttempt) &&
+          !(unconfirmedAttempts?.any((entry) =>
+              matchesAttemptByte(entry.attempt) &&
+              (entry.messageId != matchedMessageId ||
+                  entry.attempt != ackedAttempt)) ?? false);
+
       final deliveredMessage = message.copyWith(
         status: MessageStatus.delivered,
         deliveredAt: DateTime.now(),
         tripTimeMs: tripTimeMs,
+        sentWithTxPowerBoost: sentWithTxPowerBoost,
         deliveryProgressCompletedSteps:
             message.deliveryProgressTotalSteps,
       );
@@ -1511,9 +1545,6 @@ class MessageRetryService extends ChangeNotifier {
       final routeFailures =
           _deferredRouteFailures[matchedMessageId] ??
           const <int, _DeferredRouteFailure>{};
-      final byte = ackAttemptByte;
-      bool matchesAttemptByte(int attempt) =>
-          byte == null || (byte < 4 ? attempt < 4 : attempt == byte);
       // A shared hash can identify the route without identifying the
       // attempt. Do not charge a timeout that may be this late ACK.
       final chargeRouteFailures =

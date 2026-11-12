@@ -3777,6 +3777,9 @@ attempt can replay once, automatic final Flood can replay up to the channel
 retry budget, and forced Flood boosts the tail of its existing attempt budget.
 The companion confirms enqueue before airtime and saves its global power in
 flash. Other packets transmitted during a boost share the higher power.
+Successful boosted sends keep a local lightning badge in history. Channel
+messages mark a boosted resend accepted by the node. Direct messages mark
+an acknowledged attempt with an accepted boosted copy.
 The optional LNA switch uses CompanionCLI before raising power. After a
 confirmed RX gain off, it requests on and restores off after the last boosted
 series ends. An interrupted restore is remembered per node for one reconnect

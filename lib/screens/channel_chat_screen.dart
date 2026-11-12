@@ -105,6 +105,7 @@ import '../widgets/image_send_preview_sheet.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
+import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_chip.dart';
@@ -1890,6 +1891,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final showFailureVisual =
         message.status == ChannelMessageStatus.failed ||
         hasNoRetransmissionWarning;
+    final showTxPowerBoostBadge = isOutgoing &&
+        message.status == ChannelMessageStatus.sent &&
+        message.sentWithTxPowerBoost;
 
     final isHighlighted = _highlightedMessageId == message.messageId;
     final bubbleTheme = MeshBubbleTheme.of(context);
@@ -2666,6 +2670,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ],
+                                if (showTxPowerBoostBadge) ...[
+                                  const SizedBox(width: 4),
+                                  TxPowerBoostBadge(
+                                    size: 12 * textScale,
+                                    color: metaColor,
+                                  ),
+                                ],
                                 // Under the resend setting the sent check
                                 // mark is left out: the attempt badge already
                                 // says the message went out.
@@ -2750,7 +2761,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               ],
                             ),
                           ),
-                        ],
+                        ] else if (showTxPowerBoostBadge)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              isMediaMessage ? 8 : 0, 3, 0, 0,
+                            ),
+                            child: TxPowerBoostBadge(
+                              size: 12 * textScale,
+                              color: metaColor,
+                            ),
+                          ),
                         if (hasNoRetransmissionWarning) ...[
                           const SizedBox(height: 3),
                           Padding(

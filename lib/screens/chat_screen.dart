@@ -83,6 +83,7 @@ import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
+import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
@@ -3708,6 +3709,9 @@ class _MessageBubble extends StatelessWidget {
         ? scheme.onErrorContainer
         : (isOutgoing ? bubbleTheme.meInk : scheme.onSurface);
     final metaColor = textColor.withValues(alpha: 0.65);
+    final showTxPowerBoostBadge = isOutgoing &&
+        message.status == MessageStatus.delivered &&
+        message.sentWithTxPowerBoost;
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     // An incoming message decoded from its echo (DirectEchoRecovery) carries
     // the same bar while the packet is still on its way to the node.
@@ -4493,6 +4497,11 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                if (showTxPowerBoostBadge)
+                                  TxPowerBoostBadge(
+                                    size: 12 * textScale,
+                                    color: metaColor,
+                                  ),
                                 if (mcoImageBadgeLabel != null) ...[
                                   const SizedBox(width: 4),
                                   Text(
@@ -4552,7 +4561,16 @@ class _MessageBubble extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ],
+                        ] else if (showTxPowerBoostBadge)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              isMediaMessage ? 8 : 0, 3, 0, 0,
+                            ),
+                            child: TxPowerBoostBadge(
+                              size: 12 * textScale,
+                              color: metaColor,
+                            ),
+                          ),
                         if (pendingSendAt != null &&
                             pendingSendDelaySeconds != null &&
                             onCancelPendingSend != null)
