@@ -1901,8 +1901,9 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
       }
     }
 
-    if (widget.connector.currentTxPower != null) {
-      _txPowerController.text = widget.connector.currentTxPower.toString();
+    final configuredTxPower = widget.connector.configuredTxPower;
+    if (configuredTxPower != null) {
+      _txPowerController.text = configuredTxPower.toString();
     }
 
     _pathHashByteWidth = widget.connector.pathHashByteWidth;
@@ -2233,7 +2234,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
         );
         return;
       }
-      await widget.connector.sendFrame(buildSetRadioTxPowerFrame(txPower));
+      await widget.connector.setRadioTxPower(txPower);
       // setPathHashMode is optimistic; presets leave the requested width alone.
       final requestedPathHashWidth = _showPathHashSelector &&
               widget.connector.supportsPathHashMode &&
@@ -2341,7 +2342,7 @@ class _RadioSettingsDialogState extends State<_RadioSettingsDialog> {
         c.currentSf == sf &&
         c.currentCr != null &&
         _toUiCodingRate(c.currentCr!) == cr &&
-        c.currentTxPower == txPower &&
+        c.configuredTxPower == txPower &&
         (clientRepeat == null || c.clientRepeat == clientRepeat);
   }
 

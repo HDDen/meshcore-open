@@ -1,3 +1,4 @@
+import 'adaptive_tx_power_settings.dart';
 import 'custom_theme.dart';
 import 'image_codec_support.dart';
 import 'translation_support.dart';
@@ -371,6 +372,7 @@ class AppSettings {
   final int maxMessageRetries;
   final int channelResendTimeoutSeconds;
   final bool channelMinHopsEnabled;
+  final AdaptiveTxPowerSettings adaptiveTxPower;
   final int channelMinHops;
   final int channelMinHopsRetries;
 
@@ -847,6 +849,7 @@ class AppSettings {
     this.maxMessageRetries = defaultMaxMessageRetries,
     int? channelResendTimeoutSeconds,
     this.channelMinHopsEnabled = false,
+    this.adaptiveTxPower = const AdaptiveTxPowerSettings(),
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
     this.channelMinHopsDelaySeconds = 30,
@@ -1031,6 +1034,7 @@ class AppSettings {
       'max_message_retries': maxMessageRetries,
       'channel_resend_timeout_seconds': channelResendTimeoutSeconds,
       'channel_min_hops_enabled': channelMinHopsEnabled,
+      'adaptive_tx_power': adaptiveTxPower.toJson(),
       'channel_min_hops': channelMinHops,
       'channel_min_hops_retries': channelMinHopsRetries,
       'channel_min_hops_delay_seconds': channelMinHopsDelaySeconds,
@@ -1268,6 +1272,7 @@ class AppSettings {
           json['max_message_retries'] as int? ?? defaultMaxMessageRetries,
       channelResendTimeoutSeconds: json['channel_resend_timeout_seconds'],
       channelMinHopsEnabled: json['channel_min_hops_enabled'] as bool? ?? false,
+      adaptiveTxPower: AdaptiveTxPowerSettings.fromJson(json['adaptive_tx_power']),
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
       channelMinHopsDelaySeconds:
@@ -1514,6 +1519,7 @@ class AppSettings {
     int? maxMessageRetries,
     int? channelResendTimeoutSeconds,
     bool? channelMinHopsEnabled,
+    AdaptiveTxPowerSettings? adaptiveTxPower,
     int? channelMinHops,
     int? channelMinHopsRetries,
     int? channelMinHopsDelaySeconds,
@@ -1712,6 +1718,7 @@ class AppSettings {
           channelResendTimeoutSeconds ?? this.channelResendTimeoutSeconds,
       channelMinHopsEnabled:
           channelMinHopsEnabled ?? this.channelMinHopsEnabled,
+      adaptiveTxPower: adaptiveTxPower ?? this.adaptiveTxPower,
       channelMinHops: channelMinHops ?? this.channelMinHops,
       channelMinHopsRetries:
           channelMinHopsRetries ?? this.channelMinHopsRetries,

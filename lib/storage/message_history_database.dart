@@ -1986,6 +1986,25 @@ ON CONFLICT(sample_id, endpoint_url) DO NOTHING
     );
   }
 
+  String _adaptiveTxPowerKey(String nodeKey) => 'adaptive_tx_power:$nodeKey';
+
+  Future<int?> readAdaptiveTxPowerBaseline(String nodeKey) async {
+    final key = _adaptiveTxPowerKey(nodeKey);
+    final values = await _metadataValues({key});
+    return int.tryParse(values[key] ?? '');
+  }
+
+  Future<void> writeAdaptiveTxPowerBaseline(String nodeKey, int? power) async {
+    final key = _adaptiveTxPowerKey(nodeKey);
+    if (power == null) {
+      await (delete(historyMetadata)..where((row) => row.key.equals(key))).go();
+      return;
+    }
+    await into(historyMetadata).insertOnConflictUpdate(
+      HistoryMetadataCompanion.insert(key: key, value: power.toString()),
+    );
+  }
+
   Future<Map<String, String>> _metadataValues(Set<String> keys) async {
     final query = select(historyMetadata)..where((row) => row.key.isIn(keys));
     return {for (final row in await query.get()) row.key: row.value};

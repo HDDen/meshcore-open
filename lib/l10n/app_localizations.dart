@@ -13541,6 +13541,22 @@ abstract class AppLocalizations {
   /// **'Suppress phantom channels'**
   String get settings_modSettingsSuppressPhantomChannels;
 
+  String get adaptiveTxPower => 'Adaptive TX Power';
+
+  String get adaptiveTxPowerRequiresMinHops =>
+      'Enable channel retries by minimum hop count to use this setting.';
+
+  String get adaptiveTxPowerTarget => 'Increase TX power to';
+
+  String get adaptiveTxPowerChannelRetries => 'Boost the last N channel retries';
+
+  String get adaptiveTxPowerDirect => 'Use for direct messages';
+
+  String get adaptiveTxPowerFloodRetries => 'Boost the last N forced Flood attempts';
+
+  String adaptiveTxPowerRecovery(int count, int initial) =>
+      'Radio power is $count dBm. Restore it to $initial dBm?';
+
   /// No description provided for @settings_modSettingsSuppressPhantomChannelsDscr.
   ///
   /// In en, this message translates to:

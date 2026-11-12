@@ -110,6 +110,7 @@ import '../helpers/gps_app_start_guard.dart';
 import '../helpers/ble_connection_priority.dart';
 import '../models/ble_power_options.dart';
 import '../helpers/smaz.dart';
+import '../services/adaptive_tx_power.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
 import '../services/linux_ble_error_classifier.dart';
@@ -509,6 +510,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   String? _selfName;
   int? _currentTxPower;
   int? _maxTxPower;
+  late final _adaptiveTxPower = AdaptiveTxPower(
+    currentSession: () => txPowerSession,
+    currentPower: () => _currentTxPower!,
+    maximumPower: () => _maxTxPower ?? 22,
+    readBaseline: MessageHistoryStorage.instance.readAdaptiveTxPowerBaseline,
+    writeBaseline: MessageHistoryStorage.instance.writeAdaptiveTxPowerBaseline,
+    setPower: _applyTxPower,
+  );
   int? _currentFreqHz;
   int? _currentBwHz;
   int? _currentSf;
@@ -1286,7 +1295,59 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   List<DirectRepeater> get directRepeaters => _directRepeaters;
   List<DirectRepeater> get activeRepeaters => _activeRepeaters;
   int? get currentTxPower => _currentTxPower;
+  int? get configuredTxPower => _adaptiveTxPower.leasedBaseline ?? _currentTxPower;
   int? get maxTxPower => _maxTxPower;
+
+  TxPowerSession? get txPowerSession =>
+      !_disposed && isConnected && _selfPublicKeyHex.isNotEmpty &&
+          _currentTxPower != null
+      ? (nodeKey: _selfPublicKeyHex, revision: _channelInboxRevision)
+      : null;
+
+  Future<TxPowerRecovery?> pendingTxPowerRecovery() =>
+      _adaptiveTxPower.pendingRecovery();
+
+  Future<void> resolveTxPowerRecovery(
+    TxPowerRecovery recovery, {
+    required bool restore,
+  }) => _runChannelCommandLocked(
+    () => _adaptiveTxPower.resolveRecovery(recovery, restore: restore),
+  );
+
+  Future<void> setRadioTxPower(int power, {void Function()? validate}) {
+    final session = txPowerSession;
+    return _runChannelCommandLocked(() async {
+      if (session == null || txPowerSession != session) {
+        throw StateError('Radio session changed');
+      }
+      await _adaptiveTxPower.setManualPower(power, validate: validate);
+      if (txPowerSession == session) notifyListeners();
+    });
+  }
+
+  Future<void> _applyTxPower(TxPowerSession session, int power) async {
+    void checkSession() {
+      if (txPowerSession != session) throw StateError('Radio session changed');
+    }
+
+    checkSession();
+    await _dispatchFrame(
+      buildSetRadioTxPowerFrame(power),
+      waitForGenericAck: true,
+      beforeSend: checkSession,
+    );
+    checkSession();
+    _currentTxPower = power;
+    notifyListeners();
+  }
+
+  Future<void> _releaseTxPower(Object owner) async {
+    try {
+      await _runChannelCommandLocked(() => _adaptiveTxPower.release(owner));
+    } catch (error) {
+      appLogger.warn('TX power restore was not confirmed: $error', tag: 'Connector');
+    }
+  }
 
   int get pathHashByteWidth => _pathHashByteWidth;
 
@@ -4552,6 +4613,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   RetryServiceConfig _retryServiceConfig() => RetryServiceConfig(
     backgroundWorkTracker: _backgroundWork,
     sendMessage: _sendMessageDirect,
+    canBoostDirectTxPower: () {
+      final target = _directTxPowerTarget;
+      return target != null && _adaptiveTxPower.canRaise(target);
+    },
+    sendBoostedMessage: (
+      contact, text, attempt, timestampSeconds, {
+      required useFlood,
+      required owner,
+      required canSend,
+      required sendWithoutBoost,
+    }) => _sendMessageDirect(
+      contact, text, attempt, timestampSeconds,
+      useFlood: useFlood,
+      powerOwner: owner,
+      canSend: canSend,
+      sendWithoutBoost: sendWithoutBoost,
+    ),
+    releaseTxPower: _releaseTxPower,
     addMessage: _addMessage,
     updateMessage: _updateMessage,
     findContact: getContactByPubKeyHex,
@@ -5046,18 +5125,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// went unanswered and nothing went out. The node's ERR and a lost link
   /// are thrown: the retry service fails the message on the first and keeps
   /// it for the reconnect on the second, sending being paused by then.
+  int? get _directTxPowerTarget {
+    final settings = _appSettingsService?.settings;
+    if (settings == null || !settings.channelMinHopsEnabled ||
+        !settings.adaptiveTxPower.enabled || !settings.adaptiveTxPower.directEnabled ||
+        !MessageHistoryStorage.instance.hasAdaptiveTxPowerJournal) {
+      return null;
+    }
+    return settings.adaptiveTxPower.targetDbm;
+  }
+
   Future<DateTime?> _sendMessageDirect(
     Contact contact,
     String text,
     int attempt,
     int timestampSeconds, {
     required bool useFlood,
+    Object? powerOwner,
+    bool Function()? canSend,
+    bool sendWithoutBoost = true,
   }) async {
     if (!isConnected) throw StateError('Not connected');
     if (text.isEmpty) throw ArgumentError('Empty message text');
     return _runChannelCommandLocked(() async {
       try {
         await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
+        if (canSend?.call() == false) return null;
+        if (powerOwner != null) {
+          final target = _directTxPowerTarget;
+          var boosted = false;
+          if (target != null) {
+            try {
+              boosted = await _adaptiveTxPower.acquire(powerOwner, target);
+            } catch (error) {
+              appLogger.warn('TX power boost was not confirmed: $error', tag: 'Connector');
+            }
+          }
+          if (!boosted && !sendWithoutBoost) return null;
+          if (canSend?.call() == false) return null;
+        }
         final outboundText = prepareContactOutboundText(
           contact,
           text,
@@ -5071,7 +5177,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         );
         final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
         if (region.isNotEmpty) {
-          return await _sendScopedContactFrame(frame, region);
+          return await _sendScopedContactFrame(frame, region, canSend: canSend);
         }
         final sentByRadioAt = DateTime.now();
         // Waiting for SENT lets an ERR (unknown contact, packet pool full,
@@ -6336,7 +6442,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required Future<void> Function() resend,
     required int minHops,
     required int maxResends,
-  }) => _resendUntilMinHops(messageId, () async {
+  }) => _resendUntilMinHops(messageId, (_) async {
     final control = _channelHopControls[messageId];
     if (control == null || !_channelResendWanted(messageId, control)) {
       return;
@@ -9884,8 +9990,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       return;
     }
-    _retriableChannelMessageSends[message.messageId] =
-        _DeferredChannelMessageSend(
+    final pendingSend = _DeferredChannelMessageSend(
           channel: channel,
           messageId: message.messageId,
           text: messageText,
@@ -9902,9 +10007,29 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           replyToTimestamp: replyToTimestamp,
           region: region,
         );
+    _retriableChannelMessageSends[message.messageId] = pendingSend;
     _pendingChannelSentQueue.add(message.messageId);
     notifyListeners();
 
+    await _sendChannelWithHopChecks(
+      pendingSend,
+      outboundText: outboundText,
+      binaryFrame: binaryFrame,
+      outgoingRegion: outgoingRegion,
+      reportInitialFailure: true,
+    );
+  });
+
+  Future<void> _sendChannelWithHopChecks(
+    _DeferredChannelMessageSend pending, {
+    required String outboundText,
+    required Uint8List? binaryFrame,
+    required String outgoingRegion,
+    required bool reportInitialFailure,
+  }) async {
+    final messageId = pending.messageId;
+    final channel = pending.channel;
+    final senderName = pending.senderName;
     // A resend reuses the packet time, so it is the same packet: repeaters
     // that forwarded it already drop the copy and recipients see it once. The
     // echo registry and the heard-packet map were fed by the first send, and
@@ -9916,22 +10041,46 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final hopControl = minHopsSettings == null ? null : ChannelResendControl(
       minHops: minHopsSettings.channelMinHops);
     int? sentTimestampSeconds;
-    Future<void> transmit({bool isResend = false}) async {
-      if (isResend && !_channelResendWanted(message.messageId, hopControl!)) {
+    var requestedBoost = false;
+    Future<void> transmit({int resend = 0}) async {
+      final isResend = resend > 0;
+      if (isResend && !_channelResendWanted(messageId, hopControl!)) {
         return;
       }
       await _runScopedChannelSend(() async {
           await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
           // Scope/очередь и radio quiet могли ждать: отмена и достаточное эхо
           // проверяются снова непосредственно перед повторной передачей.
-          if (isResend && !_channelResendWanted(message.messageId, hopControl!)) {
+          if (isResend && !_channelResendWanted(messageId, hopControl!)) {
             return;
+          }
+          if (isResend) {
+            final liveSettings = _appSettingsService?.settings;
+            final adaptive = liveSettings?.adaptiveTxPower;
+            final target = adaptive?.targetDbm;
+            if (liveSettings?.channelMinHopsEnabled == true &&
+                adaptive?.enabled == true &&
+                target != null &&
+                MessageHistoryStorage.instance.hasAdaptiveTxPowerJournal &&
+                AdaptiveTxPower.isInLastRetries(
+                  retry: resend,
+                  maxRetries: minHopsSettings!.channelMinHopsRetries,
+                  boostedRetries: adaptive!.channelRetries,
+                )) {
+              requestedBoost = true;
+              try {
+                await _adaptiveTxPower.acquire(hopControl!, target);
+              } catch (error) {
+                appLogger.warn('TX power boost was not confirmed: $error', tag: 'Connector');
+              }
+              if (!_channelResendWanted(messageId, hopControl!)) return;
+            }
           }
           if (!isResend) {
             final sentByRadioAt = DateTime.now();
             final resendUntilMinHops = hopControl != null;
             _markChannelMessageSentByRadio(
-              message.messageId,
+              messageId,
               sentByRadioAt,
               // Under the resend setting the warning waits for the resends.
               deferNoRetransmissionWarning: resendUntilMinHops,
@@ -9939,9 +10088,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             if (hopControl != null) {
               // The attempt badge spins from the radio transmission on; the
               // resend loop keeps the entry once the node has taken the frame.
-              _registerChannelHopControl(message.messageId, hopControl);
+              _registerChannelHopControl(messageId, hopControl);
               hopControl.lastAttemptAt = sentByRadioAt;
-              _channelHopChecks[message.messageId] = (
+              _channelHopChecks[messageId] = (
                 resends: 0,
                 maxResends: minHopsSettings!.channelMinHopsRetries,
               );
@@ -9951,25 +10100,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             sentTimestampSeconds = seconds;
             _updateChannelMessagePacketTimestamp(
               channel.index,
-              message.messageId,
+              messageId,
               seconds,
               packetHash: binaryFrame == null
                   ? _computeContentHash(
                       channel.index,
                       seconds,
-                      '$senderName: $messageText',
+                      '$senderName: ${pending.text}',
                     )
                   : null,
             );
           }
           if (isResend) {
             hopControl!.lastAttemptAt = _channelResendNow();
-            _incrementChannelResendCount(message.messageId);
+            _incrementChannelResendCount(messageId);
           }
           if (binaryFrame != null) {
             await _sendFrameAndWaitForCommandAck(
               binaryFrame,
-              channelSendQueueId: isResend ? null : message.messageId,
+              channelSendQueueId: isResend ? null : messageId,
             );
             return;
           }
@@ -9985,40 +10134,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               timestampSeconds: sentTimestampSeconds,
               registerEcho: !isResend,
             ),
-            channelSendQueueId: isResend ? null : message.messageId,
+            channelSendQueueId: isResend ? null : messageId,
           );
-        }, region: region ?? _channelSendScope(channel.index));
+        }, region: pending.region ?? _channelSendScope(channel.index));
     }
     try {
       await transmit();
     } catch (_) {
       // The hop check registered at the radio transmission, if it got there.
       hopControl?.cancel();
-      if (identical(_channelHopControls[message.messageId], hopControl)) {
-        _channelHopControls.remove(message.messageId);
+      if (identical(_channelHopControls[messageId], hopControl)) {
+        _channelHopControls.remove(messageId);
       }
-      _channelHopChecks.remove(message.messageId);
+      _channelHopChecks.remove(messageId);
       _channelResendRevision++;
       // A failed or timed-out SET_FLOOD_SCOPE (or text send) means no OK/ERR
       // will resolve this message, so fail it here instead of leaving it
       // pending forever.
-      _pendingChannelSentQueue.remove(message.messageId);
-      _markPendingChannelMessageFailedById(message.messageId);
+      if (reportInitialFailure) {
+        _pendingChannelSentQueue.remove(messageId);
+        _markPendingChannelMessageFailedById(messageId);
+      }
       rethrow;
     }
 
     if (minHopsSettings != null) {
       unawaited(
         _resendUntilMinHops(
-          message.messageId,
-          () => transmit(isResend: true),
+          messageId,
+          (retry) => transmit(resend: retry),
+          onFinished: () async {
+            if (requestedBoost) await _releaseTxPower(hopControl!);
+          },
           minHops: minHopsSettings.channelMinHops,
           maxResends: minHopsSettings.channelMinHopsRetries,
           control: hopControl,
         ),
       );
     }
-  });
+  }
 
   /// How long to listen for a channel message to come back through the mesh
   /// before resending it: the "wait before resending" setting under the hop
@@ -10033,7 +10187,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// поскольку отсутствие достаточного эхо не доказывает потерю сообщения.
   Future<void> _resendUntilMinHops(
     String messageId,
-    Future<void> Function() resend, {
+    Future<void> Function(int retry) resend, {
+    Future<void> Function()? onFinished,
     required int minHops,
     required int maxResends,
     ChannelResendControl? control,
@@ -10110,7 +10265,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _channelResendRevision++;
         notifyListeners();
         try {
-          await resend();
+          await resend(attempt + 1);
           if (run.cancelled) { return; }
           // Прежняя cadence: следующее окно начинается после callback/ACK.
           // Для отмены отдельно известен момент фактической передачи кадра.
@@ -10135,6 +10290,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final warningSince = run.cancelled
           ? (run.lastAttemptAt ?? lastAttemptAt) : lastAttemptAt;
       run.cancel();
+      if (onFinished != null) await onFinished();
       if (identical(_channelHopControls[messageId], run)) {
         _channelHopControls.remove(messageId);
         _channelHopChecks.remove(messageId);
@@ -10377,6 +10533,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _pendingChannelSentQueue.add(pending.messageId);
     }
     notifyListeners();
+
+    final settings = _appSettingsService?.settings;
+    if (!shouldBypassAckAndRetry &&
+        settings?.channelMinHopsEnabled == true &&
+        settings?.adaptiveTxPower.enabled == true) {
+      await _sendChannelWithHopChecks(
+        pending,
+        outboundText: outboundText,
+        binaryFrame: binaryFrame,
+        outgoingRegion: outgoingRegion,
+        reportInitialFailure: false,
+      );
+      return;
+    }
 
     await _runScopedChannelSend(
       () async {
@@ -12922,7 +13092,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             codingRate: _currentCr,
             clientRepeat: supportsAllowedRepeatFreq ? _clientRepeat : null,
           ),
-    txPowerDbm: _currentTxPower,
+    txPowerDbm: configuredTxPower,
     pathHashByteWidth: _confirmedPathHashByteWidth,
     defaultFloodScope: _confirmedDefaultFloodScope,
   );
@@ -13040,14 +13210,20 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       for (final part in targets) {
         var dispatched = false;
         try {
-          await _dispatchFrame(
-            _backupNodeProfileFrame(preview, part),
-            waitForGenericAck: true,
-            beforeSend: () {
-              if (!unchanged(part)) throw StateError('Backup node profile changed');
-              dispatched = true;
-            },
-          );
+          void validate() {
+            if (!unchanged(part)) throw StateError('Backup node profile changed');
+            dispatched = true;
+          }
+
+          if (part == BackupNodeProfilePart.txPower) {
+            await setRadioTxPower(preview.changes.txPowerDbm!, validate: validate);
+          } else {
+            await _dispatchFrame(
+              _backupNodeProfileFrame(preview, part),
+              waitForGenericAck: true,
+              beforeSend: validate,
+            );
+          }
         } catch (_) {
           return result(unchanged(part)
               ? BackupNodeProfileStatus.writeUnconfirmed
@@ -13140,7 +13316,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _currentCr = tuning.codingRate;
         _clientRepeat = tuning.clientRepeat;
       case BackupNodeProfilePart.txPower:
-        _currentTxPower = changes.txPowerDbm!;
+        // setRadioTxPower has already applied or journaled the setting.
+        break;
       case BackupNodeProfilePart.pathHashWidth:
         final width = changes.pathHashByteWidth!;
         _confirmedPathHashByteWidth = width;

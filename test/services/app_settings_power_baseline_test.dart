@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/models/adaptive_tx_power_settings.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -58,6 +59,31 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  test('adaptive TX power defaults off and follows the channel retry setting', () async {
+    final service = await _loadSettings();
+    expect(service.settings.adaptiveTxPower.enabled, isFalse);
+
+    await service.updateSettings(service.settings.copyWith(
+      adaptiveTxPower: const AdaptiveTxPowerSettings(
+        enabled: true,
+        targetDbm: 18,
+        channelRetries: 3,
+        directEnabled: true,
+      ),
+    ));
+    await service.setChannelMinHopsRetries(2);
+    expect(service.settings.adaptiveTxPower.channelRetries, 2);
+    await service.setChannelMinHopsEnabled(false);
+    await service.setChannelMinHopsEnabled(true);
+
+    final reopened = await _loadSettings();
+    final adaptive = reopened.settings.adaptiveTxPower;
+    expect(adaptive.enabled, isFalse);
+    expect(adaptive.channelRetries, 2);
+    expect(adaptive.targetDbm, 18);
+    expect(adaptive.directEnabled, isTrue);
+  });
 
   test('legacy preferences preserve radio and delivery settings', () async {
     final service = await _loadSettings();

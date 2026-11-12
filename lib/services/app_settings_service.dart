@@ -163,6 +163,21 @@ class AppSettingsService extends ChangeNotifier {
   }
 
   AppSettings _normalizeRuntimeDependentSettings(AppSettings settings) {
+    final adaptive = settings.adaptiveTxPower;
+    final enabled = settings.channelMinHopsEnabled && adaptive.enabled;
+    final channelRetries = adaptive.channelRetries
+        .clamp(0, settings.channelMinHopsRetries.clamp(0, 10)).toInt();
+    final forcedFloodRetries = adaptive.forcedFloodRetries
+        .clamp(0, settings.maxMessageRetries.clamp(0, 10)).toInt();
+    if (enabled != adaptive.enabled ||
+        channelRetries != adaptive.channelRetries ||
+        forcedFloodRetries != adaptive.forcedFloodRetries) {
+      settings = settings.copyWith(adaptiveTxPower: adaptive.copyWith(
+        enabled: enabled,
+        channelRetries: channelRetries,
+        forcedFloodRetries: forcedFloodRetries,
+      ));
+    }
     if (!ChannelBinaryDataHelper.isAvailable && settings.channelsSendAsBinary) {
       return settings.copyWith(channelsSendAsBinary: false);
     }

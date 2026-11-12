@@ -1,23 +1,36 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
+import 'package:meshcore_open/models/adaptive_tx_power_settings.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/message_history_database.dart';
+import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _channel = Channel(index: 0, name: 'synthetic', psk: Uint8List(16));
 
 /// Настоящие sendChannelMessage, scope lock и ACK dispatcher; только writer
-/// синтетический. Пустой ключ ноды не позволяет открыть реальное хранилище.
+/// синтетический. Тесты с SELF_INFO используют SQLite в памяти.
 class _Node extends MeshCoreConnector {
-  _Node() {
+  _Node({int? txPower}) {
+    if (txPower != null) {
+      final info = Uint8List(64);
+      info[0] = respCodeSelfInfo;
+      info[2] = txPower;
+      info[3] = 22;
+      info.fillRange(4, 36, 0x11);
+      info.setRange(58, 62, 'Node'.codeUnits);
+      handleFrameForTest(info);
+    }
     setFrameWriterForTest((frame) async {
       frames.add(List<int>.of(frame));
       final isData = frame[0] == cmdSendChannelTxtMsg || frame[0] == cmdSendChannelData;
@@ -71,6 +84,80 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  group('adaptive TX power', () {
+    final storage = MessageHistoryStorage.instance;
+
+    setUp(() async {
+      await storage.resetForTesting();
+      await storage.initializeAndMigrate(
+        databaseFactory: () => MessageHistoryDatabase.withExecutor(
+          NativeDatabase.memory(),
+        ),
+      );
+    });
+    tearDown(storage.resetForTesting);
+
+    testWidgets('raises power before the last two channel retries and restores it',
+        (tester) async {
+      final node = _Node(txPower: 11);
+      final settings = AppSettingsService();
+      try {
+        await settings.updateSettings(AppSettings(
+          channelMinHopsEnabled: true,
+          channelMinHopsRetries: 3,
+          channelMinHopsDelaySeconds: 20,
+          noRetransmissionWarningSeconds: 0,
+          adaptiveTxPower: const AdaptiveTxPowerSettings(
+            enabled: true,
+            targetDbm: 18,
+            channelRetries: 2,
+          ),
+        ));
+        node.attachAppSettingsServiceForTest(settings);
+        await _until(tester, () => node.channels.any((channel) =>
+          channel.index == _channel.index && channel.name == _channel.name) &&
+          node.backgroundWorkSnapshot.countFor(BackgroundWorkKind.channelSync) == 0,
+          stage: 'CHANNEL_INFO settings/history');
+        final wallStart = DateTime.now();
+        final fakeStart = tester.binding.clock.now();
+        node.setChannelResendClockForTest(() =>
+          wallStart.add(tester.binding.clock.now().difference(fakeStart)));
+
+        await node.sendChannelMessage(_channel, 'adaptive TX test', region: '');
+        await tester.pump(const Duration(seconds: 21));
+        await _until(tester, () => node.transmissions == 2, stage: 'normal retry');
+        expect(node.currentTxPower, 11);
+
+        await tester.pump(const Duration(seconds: 21));
+        await _until(tester, () => node.transmissions == 3, stage: 'first boost');
+        expect(node.currentTxPower, 18);
+        expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), 11);
+
+        await tester.pump(const Duration(seconds: 21));
+        await _until(tester, () => node.transmissions == 4, stage: 'second boost');
+        await tester.pump(const Duration(seconds: 21));
+        await _until(tester, () => node.currentTxPower == 11, stage: 'restore');
+        expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
+        expect(node.frames.where((frame) =>
+          frame[0] == cmdSetRadioTxPower || frame[0] == cmdSendChannelTxtMsg,
+        ).map((frame) => frame[0] == cmdSetRadioTxPower
+            ? (frame[0], frame[1])
+            : (frame[0], null)), [
+          (cmdSendChannelTxtMsg, null),
+          (cmdSendChannelTxtMsg, null),
+          (cmdSetRadioTxPower, 18),
+          (cmdSendChannelTxtMsg, null),
+          (cmdSendChannelTxtMsg, null),
+          (cmdSetRadioTxPower, 11),
+        ]);
+      } finally {
+        node.dispose();
+        settings.dispose();
+        await tester.pump(const Duration(seconds: 21));
+      }
+    });
+  });
 
   for (final stage in ['first ACK', 'retry scope', 'retry ACK']) {
     testWidgets('stop at $stage prevents all later transmissions and retains sent history', (tester) async {

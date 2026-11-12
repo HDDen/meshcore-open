@@ -15,6 +15,7 @@ import '../helpers/direct_progress_rx_parser.dart';
 import '../helpers/mcmp_app_codec.dart';
 import '../helpers/mcotxt_app_codec.dart';
 import '../helpers/mesh_compressor.dart';
+import 'adaptive_tx_power.dart';
 import 'app_settings_service.dart';
 import 'app_debug_log_service.dart';
 
@@ -73,6 +74,12 @@ enum _NodeRouteStep { none, write, clear }
 
 typedef _AttemptRoute = ({PathSelection selection, _NodeRouteStep step});
 
+typedef _BoostedRepeats = ({
+  _AttemptRoute route,
+  int remaining,
+  bool repeating,
+});
+
 class RetryServiceConfig {
   /// Sends one attempt; [useFlood] says how the attempt is routed, which the
   /// connector needs to scope a flood send with the contact's region.
@@ -84,6 +91,18 @@ class RetryServiceConfig {
     required bool useFlood,
   })
   sendMessage;
+  final bool Function()? canBoostDirectTxPower;
+  final Future<DateTime?> Function(
+    Contact,
+    String,
+    int,
+    int, {
+    required bool useFlood,
+    required Object owner,
+    required bool Function() canSend,
+    required bool sendWithoutBoost,
+  })? sendBoostedMessage;
+  final Future<void> Function(Object owner)? releaseTxPower;
   final void Function(String, Message) addMessage;
   final void Function(Message) updateMessage;
   final Function(Contact)? clearContactPath;
@@ -129,6 +148,9 @@ class RetryServiceConfig {
 
   const RetryServiceConfig({
     required this.sendMessage,
+    this.canBoostDirectTxPower,
+    this.sendBoostedMessage,
+    this.releaseTxPower,
     required this.addMessage,
     required this.updateMessage,
     this.clearContactPath,
@@ -179,6 +201,8 @@ class MessageRetryService extends ChangeNotifier {
   final Map<String, Timer> _timeoutTimers = {};
   final Map<String, Message> _pendingMessages = {};
   final Map<String, Contact> _pendingContacts = {};
+  final Map<String, Object> _txPowerOwners = {};
+  final Map<String, _BoostedRepeats> _boostedRepeats = {};
 
   /// Exact wire text prepared (and possibly signed) once at compose time.
   /// Automatic retries must reuse it byte-for-byte: re-encoding a signed MCMP
@@ -257,6 +281,9 @@ class MessageRetryService extends ChangeNotifier {
     if (paused) {
       _retryWork.finishAll();
       _sendingGeneration++;
+      for (final id in _txPowerOwners.keys.toList()) {
+        _finishTxPower(id);
+      }
       for (final timer in _timeoutTimers.values) {
         timer.cancel();
       }
@@ -481,7 +508,15 @@ class MessageRetryService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _finishTxPower(String messageId) {
+    final owner = _txPowerOwners.remove(messageId);
+    final release = _config?.releaseTxPower;
+    if (owner != null && release != null) unawaited(release(owner));
+  }
+
   void _onMessageResolved(String messageId, String contactKey) {
+    _boostedRepeats.remove(messageId);
+    _finishTxPower(messageId);
     if (_resolvedMessages.contains(messageId)) return;
     _resolvedMessages.add(messageId);
     _retryWork.finish(messageId);
@@ -611,7 +646,11 @@ class MessageRetryService extends ChangeNotifier {
         config.findContact?.call(queuedContact.publicKeyHex) ?? queuedContact;
     _pendingContacts[messageId] = contact;
 
-    var route = _plannedRoute(message, contact);
+    final repeat = _boostedRepeats[messageId];
+    final repeating = repeat?.repeating ?? false;
+    var route = repeating
+        ? repeat!.route
+        : _plannedRoute(message, contact);
     if (route == null) {
       route = await _historyRoute(message, contact);
       // The pick may have waited for the history to load.
@@ -624,6 +663,47 @@ class MessageRetryService extends ChangeNotifier {
     }
     final selection = route.selection;
     final useFlood = selection.useFlood;
+    final adaptive = config.appSettingsService?.settings;
+    final canBoost = adaptive != null &&
+        adaptive.channelMinHopsEnabled &&
+        adaptive.adaptiveTxPower.enabled &&
+        adaptive.adaptiveTxPower.directEnabled &&
+        config.sendBoostedMessage != null &&
+        config.canBoostDirectTxPower?.call() == true;
+    final forcedFlood = useFlood && contact.pathOverride != null;
+    final boost = repeating || (canBoost && forcedFlood &&
+        AdaptiveTxPower.isInLastRetries(
+          retry: message.retryCount + 1,
+          maxRetries: _textFitsAttempt(message, contact, maxRetries - 1)
+              ? maxRetries
+              : maxFullLengthTextAttempt + 1,
+          boostedRetries: adaptive.adaptiveTxPower.forcedFloodRetries,
+        ));
+    if (canBoost && !repeating && !forcedFlood) {
+      final repeats = !useFlood
+          ? 1
+          : _isLastAttempt(message, contact)
+          ? adaptive.channelMinHopsRetries
+          : 0;
+      if (repeats > 0) {
+        // Repeat the same packet by the same route. Only a new logical
+        // attempt can rotate paths or advance the retry number.
+        final step = useFlood
+            ? _NodeRouteStep.clear
+            : _NodeRouteStep.write;
+        _boostedRepeats[messageId] = (
+          route: (selection: selection, step: step),
+          remaining: repeats,
+          repeating: false,
+        );
+      }
+    }
+    final routeStep = !repeating
+        ? route.step
+        : useFlood
+        ? (contact.pathLength < 0 ? _NodeRouteStep.none : _NodeRouteStep.clear)
+        : (_sameRoute(resolvePathSelection(contact), selection) &&
+            contact.pathOverride == null ? _NodeRouteStep.none : _NodeRouteStep.write);
 
     final attemptStartedAt = DateTime.now();
     final hopCount = useFlood ? -1 : selection.hopCount;
@@ -639,7 +719,7 @@ class MessageRetryService extends ChangeNotifier {
     _retireProgressTracker(messageId);
     config.updateMessage(progressMessage);
 
-    switch (route.step) {
+    switch (routeStep) {
       case _NodeRouteStep.write:
         await config.setContactPath?.call(
           contact,
@@ -669,7 +749,7 @@ class MessageRetryService extends ChangeNotifier {
     }
     if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
 
-    _recordAttemptPathHistory(messageId, selection);
+    if (!repeating) _recordAttemptPathHistory(messageId, selection);
 
     final attempt = message.retryCount;
     final timestampSeconds = message.timestamp.millisecondsSinceEpoch ~/ 1000;
@@ -720,14 +800,30 @@ class MessageRetryService extends ChangeNotifier {
     // Send the exact prepared wire text when available; the connector's
     // prepare step is a no-op on already-encoded containers, so automatic
     // retries reuse the signed body byte-for-byte.
-    final sentByRadioAt = await config.sendMessage(
-      contact,
-      _preparedOutboundTexts[messageId] ?? message.text,
-      attempt,
-      timestampSeconds,
-      useFlood: useFlood,
-    );
+    final outboundText = _preparedOutboundTexts[messageId] ?? message.text;
+    bool canSend() =>
+        !_sendingPaused && sendingGeneration == _sendingGeneration &&
+        !_resolvedMessages.contains(messageId) &&
+        _pendingMessages[messageId]?.retryCount == attempt;
+
+    final sentByRadioAt = boost
+        ? await config.sendBoostedMessage!(
+            contact, outboundText, attempt, timestampSeconds,
+            useFlood: useFlood,
+            owner: _txPowerOwners.putIfAbsent(messageId, Object.new),
+            canSend: canSend,
+            sendWithoutBoost: !repeating,
+          )
+        : await config.sendMessage(
+            contact, outboundText, attempt, timestampSeconds, useFlood: useFlood,
+          );
     if (_sendingPaused || sendingGeneration != _sendingGeneration) return;
+    if (repeating && sentByRadioAt == null && canSend()) {
+      _boostedRepeats.remove(messageId);
+      _finishTxPower(messageId);
+      _handleTimeout(messageId);
+      return;
+    }
     if (sentByRadioAt != null) {
       final currentMessage = _pendingMessages[messageId];
       if (currentMessage != null) {
@@ -1080,6 +1176,8 @@ class MessageRetryService extends ChangeNotifier {
   }
 
   void _cleanupMessage(String messageId) {
+    _boostedRepeats.remove(messageId);
+    _finishTxPower(messageId);
     _moveAckHashesToHistory(messageId);
     for (final mappings in _ackHashToMessageId.values) {
       mappings.removeWhere((mapping) => mapping.messageId == messageId);
@@ -1128,6 +1226,24 @@ class MessageRetryService extends ChangeNotifier {
       'Timeout: No ACK received for "$shortText" to ${contact.name} (attempt ${message.retryCount}) → retrying',
       tag: 'AckHash',
     );
+    final repeat = _boostedRepeats.remove(messageId);
+    if (repeat != null && repeat.remaining > 0 &&
+        config?.canBoostDirectTxPower?.call() == true) {
+      _boostedRepeats[messageId] = (
+        route: repeat.route,
+        remaining: repeat.remaining - 1,
+        repeating: true,
+      );
+      final pending = message.copyWith(status: MessageStatus.pending);
+      _pendingMessages[messageId] = pending;
+      config?.updateMessage(pending);
+      _attemptSendOrFail(messageId);
+      return;
+    }
+    if (repeat != null || _txPowerOwners.containsKey(messageId) &&
+        config?.canBoostDirectTxPower?.call() != true) {
+      _finishTxPower(messageId);
+    }
     _recordAttemptTimeout(contact.publicKeyHex, message);
 
     if (message.retryCount < maxRetries - 1 &&
@@ -1550,6 +1666,10 @@ class MessageRetryService extends ChangeNotifier {
 
   @override
   void dispose() {
+    for (final id in _txPowerOwners.keys.toList()) {
+      _finishTxPower(id);
+    }
+    _boostedRepeats.clear();
     _retryWork.close();
     _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _pendingMessageCountDisposed = true;

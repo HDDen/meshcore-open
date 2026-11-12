@@ -3767,6 +3767,17 @@ target when `channelMinHopsCountRepeaters` is on. Its independent target is
 `channelMinHopsRepeaterCount` (2–10, default 2), shown below the toggle by
 `widgets/channel_resend_repeater_settings.dart`; the toggle subtitle uses this
 target too. Both nearby-repeater controls are read live by the resend loop.
+Adaptive TX power is off by default and requires channel minimum-hop retries.
+It leases the stock companion's global TX power only for the selected retry
+windows. The original power is committed to profile SQLite per node before
+raising it. Echoes, ACKs, timeouts and cancellations end the relevant leases.
+The last lease restores the baseline. Reconnection checks the persisted
+baseline against SELF_INFO. Direct messages can opt in separately: a routed
+attempt can replay once, automatic final Flood can replay up to the channel
+retry budget, and forced Flood boosts the tail of its existing attempt budget.
+The companion confirms enqueue before airtime and saves its global power in
+flash. Other packets transmitted during a boost share the higher power.
+
 Older JSON without the new field inherits `channelMinHops`, clamped to 2–10;
 subsequent changes to either target leave the other unchanged (2026-10-21).
 Согласование покрытия и предупреждения (2026-10-22):

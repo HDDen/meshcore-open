@@ -34,6 +34,7 @@ import 'services/storage_service.dart';
 import 'services/message_filter/message_filter_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
+import 'services/adaptive_tx_power.dart';
 import 'services/app_settings_service.dart';
 import 'services/chat_background_service.dart';
 import 'services/app_update_service.dart';
@@ -697,6 +698,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   bool _hadReadyConnection = false;
   bool _recoveringConnection = false;
   bool _scannerNavigationScheduled = false;
+  TxPowerSession? _txPowerRecoveryChecked;
+  bool _txPowerRecoveryShowing = false;
   bool _directEchoRecoveryPromptScheduled = false;
   bool _directEchoRecoveryPromptShowing = false;
 
@@ -781,6 +784,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         ),
       );
       unawaited(_showMessageHistoryMigrationWarning());
+      if (widget.connector.isSessionReady) _maybeScheduleTxPowerRecovery();
       _maybeScheduleDirectEchoRecoveryPrompt();
     });
   }
@@ -916,7 +920,72 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     if (connector.isSessionReady) {
       _hadReadyConnection = true;
       unawaited(connector.resumePendingOutgoingMessages());
+      _maybeScheduleTxPowerRecovery();
       _maybeScheduleDirectEchoRecoveryPrompt();
+    }
+  }
+
+  void _maybeScheduleTxPowerRecovery() {
+    final session = widget.connector.txPowerSession;
+    if (session == null || session == _txPowerRecoveryChecked ||
+        _txPowerRecoveryShowing) {
+      return;
+    }
+    _txPowerRecoveryChecked = session;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_showTxPowerRecovery(session));
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  Future<void> _showTxPowerRecovery(TxPowerSession session) async {
+    final connector = widget.connector;
+    final context = MeshCoreApp._navigatorKey.currentContext;
+    if (context == null || connector.txPowerSession != session) {
+      if (_txPowerRecoveryChecked == session) _txPowerRecoveryChecked = null;
+      return;
+    }
+    _txPowerRecoveryShowing = true;
+    try {
+      final recovery = await connector.pendingTxPowerRecovery();
+      if (!context.mounted || recovery == null ||
+          recovery.session != session || connector.txPowerSession != session) {
+        return;
+      }
+      final l10n = AppLocalizations.of(context);
+      final restore = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Text(l10n.adaptiveTxPowerRecovery(
+            recovery.current,
+            recovery.initial,
+          )),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.common_ok),
+            ),
+          ],
+        ),
+      );
+      if (mounted && restore != null) {
+        await connector.resolveTxPowerRecovery(recovery, restore: restore);
+      }
+    } catch (error) {
+      debugPrint('TX power recovery failed: $error');
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).settings_radioSettingsNotApplied),
+        ));
+      }
+    } finally {
+      _txPowerRecoveryShowing = false;
+      if (mounted && connector.isSessionReady) _maybeScheduleTxPowerRecovery();
     }
   }
 

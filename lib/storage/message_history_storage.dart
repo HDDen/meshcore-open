@@ -1521,6 +1521,32 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
   /// test.
   bool get hasDatabase => _initialized && _database != null;
 
+  bool get hasAdaptiveTxPowerJournal => hasDatabase || (kIsWeb && _initialized);
+
+  static String _webTxPowerKey(String nodeKey) => 'adaptive_tx_power:$nodeKey';
+
+  Future<int?> readAdaptiveTxPowerBaseline(String nodeKey) async {
+    if (kIsWeb && _initialized) {
+      return PrefsManager.instance.getInt(_webTxPowerKey(nodeKey));
+    }
+    return _database?.readAdaptiveTxPowerBaseline(nodeKey);
+  }
+
+  Future<void> writeAdaptiveTxPowerBaseline(String nodeKey, int? power) async {
+    if (kIsWeb && _initialized) {
+      final prefs = PrefsManager.instance;
+      final key = _webTxPowerKey(nodeKey);
+      final saved = power == null
+          ? await prefs.remove(key)
+          : await prefs.setInt(key, power);
+      if (!saved) throw StateError('TX power journal write failed');
+      return;
+    }
+    final database = _database;
+    if (database == null) throw StateError('TX power journal is unavailable');
+    await database.writeAdaptiveTxPowerBaseline(nodeKey, power);
+  }
+
   Future<Map<String, List<String>>> snapshotBackupMessages({
     required String scope,
     required bool includeDirect,

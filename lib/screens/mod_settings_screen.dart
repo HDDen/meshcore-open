@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
+import '../models/adaptive_tx_power_settings.dart';
 import '../models/app_settings.dart';
 import '../services/app_settings_service.dart';
 import 'package:mco_service/mco_service.dart';
@@ -509,8 +510,9 @@ class ModSettingsScreen extends StatelessWidget {
                             ),
                             SizedBox(
                               width: 64,
-                              child: _ExactQuoteLimitField(
+                              child: _BoundedNumberField(
                                 value: settings.exactQuoteLimit,
+                                normalize: AppSettings.normalizeExactQuoteLimit,
                                 onChanged: settingsService.setExactQuoteLimit,
                               ),
                             ),
@@ -600,6 +602,7 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setSuppressPhantomChannels,
                   ),
                 ),
+                _AdaptiveTxPowerSettingsCard(settingsService: settingsService),
                 if (PlatformInfo.isAndroid || PlatformInfo.isIOS)
                   MeshCard(
                     padding: EdgeInsets.zero,
@@ -965,19 +968,118 @@ class ModSettingsScreen extends StatelessWidget {
 /// Numeric box for the exact-quote budget. Keeps its own controller so typing
 /// is not fought by rebuilds, and commits on submit or on losing focus,
 /// clamping into [AppSettings.minExactQuoteLimit] … [AppSettings.maxExactQuoteLimit].
-class _ExactQuoteLimitField extends StatefulWidget {
-  const _ExactQuoteLimitField({required this.value, required this.onChanged});
+class _AdaptiveTxPowerSettingsCard extends StatelessWidget {
+  const _AdaptiveTxPowerSettingsCard({required this.settingsService});
 
-  final int value;
-  final ValueChanged<int> onChanged;
+  final AppSettingsService settingsService;
 
   @override
-  State<_ExactQuoteLimitField> createState() => _ExactQuoteLimitFieldState();
+  Widget build(BuildContext context) {
+    final settings = settingsService.settings;
+    final adaptive = settings.adaptiveTxPower;
+    final available = settings.channelMinHopsEnabled;
+    final enabled = available && adaptive.enabled;
+    final radioPower = context.select<MeshCoreConnector?, int?>(
+      (connector) => connector?.configuredTxPower,
+    );
+    final target = adaptive.targetDbm ??
+        (radioPower == null ? null : AdaptiveTxPowerSettings.normalizeTarget(radioPower));
+    final l10n = context.l10n;
+
+    void update(AdaptiveTxPowerSettings next) {
+      settingsService.updateSettings(settingsService.settings.copyWith(
+        adaptiveTxPower: next,
+      ));
+    }
+
+    Widget retrySlider(
+      String title,
+      int value,
+      int max,
+      ValueChanged<int> onChanged,
+    ) => ListTile(
+      title: Text('$title ($value)'),
+      subtitle: Slider(
+        value: value.clamp(0, max).toDouble(),
+        min: 0,
+        max: max.toDouble(),
+        divisions: max > 0 ? max : null,
+        label: value.toString(),
+        onChanged: max > 0 ? (value) => onChanged(value.toInt()) : null,
+      ),
+    );
+
+    return MeshCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          SwitchListTile(
+            secondary: const Icon(Icons.bolt_outlined),
+            title: Text(l10n.adaptiveTxPower),
+            subtitle: available ? null : Text(l10n.adaptiveTxPowerRequiresMinHops),
+            value: enabled,
+            onChanged: available
+                ? (value) => update(adaptive.copyWith(enabled: value))
+                : null,
+          ),
+          if (enabled) ...[
+            ListTile(
+              title: Text(l10n.adaptiveTxPowerTarget),
+              trailing: SizedBox(
+                width: 80,
+                child: _BoundedNumberField(
+                  value: target,
+                  normalize: AdaptiveTxPowerSettings.normalizeTarget,
+                  suffixText: 'dBm',
+                  onChanged: (value) => update(adaptive.copyWith(targetDbm: value)),
+                ),
+              ),
+            ),
+            retrySlider(
+              l10n.adaptiveTxPowerChannelRetries,
+              adaptive.channelRetries,
+              settings.channelMinHopsRetries.clamp(0, 10).toInt(),
+              (value) => update(adaptive.copyWith(channelRetries: value)),
+            ),
+            SwitchListTile(
+              title: Text(l10n.adaptiveTxPowerDirect),
+              value: adaptive.directEnabled,
+              onChanged: (value) => update(adaptive.copyWith(directEnabled: value)),
+            ),
+            if (adaptive.directEnabled)
+              retrySlider(
+                l10n.adaptiveTxPowerFloodRetries,
+                adaptive.forcedFloodRetries,
+                settings.maxMessageRetries.clamp(0, 10).toInt(),
+                (value) => update(adaptive.copyWith(forcedFloodRetries: value)),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
-class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
+class _BoundedNumberField extends StatefulWidget {
+  const _BoundedNumberField({
+    required this.value,
+    required this.normalize,
+    required this.onChanged,
+    this.suffixText,
+  });
+
+  final int? value;
+  final int Function(int) normalize;
+  final ValueChanged<int> onChanged;
+  final String? suffixText;
+
+  @override
+  State<_BoundedNumberField> createState() => _BoundedNumberFieldState();
+}
+
+class _BoundedNumberFieldState extends State<_BoundedNumberField> {
   late final TextEditingController _controller = TextEditingController(
-    text: widget.value.toString(),
+    text: widget.value?.toString() ?? '',
   );
   final FocusNode _focusNode = FocusNode();
 
@@ -992,10 +1094,10 @@ class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
   }
 
   @override
-  void didUpdateWidget(_ExactQuoteLimitField oldWidget) {
+  void didUpdateWidget(_BoundedNumberField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.value != oldWidget.value && !_focusNode.hasFocus) {
-      _controller.text = widget.value.toString();
+      _controller.text = widget.value?.toString() ?? '';
     }
   }
 
@@ -1016,11 +1118,10 @@ class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
     final parsed = int.tryParse(_controller.text.trim());
     final resolved = parsed == null
         ? widget.value
-        : AppSettings.normalizeExactQuoteLimit(parsed);
-    if (_controller.text != resolved.toString()) {
-      _controller.text = resolved.toString();
-    }
-    if (resolved != widget.value) widget.onChanged(resolved);
+        : widget.normalize(parsed);
+    final text = resolved?.toString() ?? '';
+    if (_controller.text != text) _controller.text = text;
+    if (resolved != null && resolved != widget.value) widget.onChanged(resolved);
   }
 
   @override
@@ -1035,10 +1136,11 @@ class _ExactQuoteLimitFieldState extends State<_ExactQuoteLimitField> {
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(3),
       ],
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         isDense: true,
-        border: OutlineInputBorder(),
-        contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        suffixText: widget.suffixText,
       ),
       onSubmitted: (_) => _focusNode.unfocus(),
       onTapOutside: (_) => _focusNode.unfocus(),
