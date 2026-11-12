@@ -29,6 +29,7 @@
         android:label="MCO Advanced"
         android:name=".McoaApplication"
         android:icon="@mipmap/ic_launcher"
+        android:resizeableActivity="true"
         android:fullBackupContent="@xml/mco_backup_rules"
         android:dataExtractionRules="@xml/mco_data_extraction_rules">
         <meta-data
