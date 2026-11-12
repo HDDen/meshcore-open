@@ -5,6 +5,7 @@ class AdaptiveTxPowerSettings {
     this.channelRetries = 0,
     this.directEnabled = false,
     this.forcedFloodRetries = 0,
+    this.tryLna = false,
   });
 
   final bool enabled;
@@ -12,6 +13,7 @@ class AdaptiveTxPowerSettings {
   final int channelRetries;
   final bool directEnabled;
   final int forcedFloodRetries;
+  final bool tryLna;
 
   static const minTargetDbm = 2;
   static const maxTargetDbm = 22;
@@ -28,6 +30,7 @@ class AdaptiveTxPowerSettings {
       channelRetries: _retryCount(json['channel_retries']),
       directEnabled: json['direct_enabled'] == true,
       forcedFloodRetries: _retryCount(json['forced_flood_retries']),
+      tryLna: json['try_lna'] == true,
     );
   }
 
@@ -39,6 +42,7 @@ class AdaptiveTxPowerSettings {
     'channel_retries': channelRetries,
     'direct_enabled': directEnabled,
     'forced_flood_retries': forcedFloodRetries,
+    'try_lna': tryLna,
   };
 
   AdaptiveTxPowerSettings copyWith({
@@ -47,11 +51,13 @@ class AdaptiveTxPowerSettings {
     int? channelRetries,
     bool? directEnabled,
     int? forcedFloodRetries,
+    bool? tryLna,
   }) => AdaptiveTxPowerSettings(
     enabled: enabled ?? this.enabled,
     targetDbm: targetDbm ?? this.targetDbm,
     channelRetries: channelRetries ?? this.channelRetries,
     directEnabled: directEnabled ?? this.directEnabled,
     forcedFloodRetries: forcedFloodRetries ?? this.forcedFloodRetries,
+    tryLna: tryLna ?? this.tryLna,
   );
 }

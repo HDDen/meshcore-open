@@ -4283,6 +4283,7 @@
   "adaptiveTxPowerTarget": "Increase TX power to",
   "adaptiveTxPowerChannelRetries": "Boost the last N channel retries",
   "adaptiveTxPowerDirect": "Use for direct messages",
+  "adaptiveTxPowerTryLna": "Try switching LNA",
   "adaptiveTxPowerFloodRetries": "Boost the last N forced Flood attempts",
   "adaptiveTxPowerRecovery": "Radio power is {count} dBm. Restore it to {initial} dBm?",
   "@adaptiveTxPowerRecovery": {

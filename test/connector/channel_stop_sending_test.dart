@@ -21,7 +21,14 @@ final _channel = Channel(index: 0, name: 'synthetic', psk: Uint8List(16));
 /// Настоящие sendChannelMessage, scope lock и ACK dispatcher; только writer
 /// синтетический. Тесты с SELF_INFO используют SQLite в памяти.
 class _Node extends MeshCoreConnector {
-  _Node({int? txPower}) {
+  _Node({int? txPower, bool cliSupported = false}) {
+    if (cliSupported) {
+      final device = Uint8List(80);
+      device[0] = respCodeDeviceInfo;
+      device[1] = 14;
+      device.setRange(60, 66, '1.18.0'.codeUnits);
+      handleFrameForTest(device);
+    }
     if (txPower != null) {
       final info = Uint8List(64);
       info[0] = respCodeSelfInfo;
@@ -33,6 +40,19 @@ class _Node extends MeshCoreConnector {
     }
     setFrameWriterForTest((frame) async {
       frames.add(List<int>.of(frame));
+      if (frame.first == cmdRunCliCommand) {
+        final command = String.fromCharCodes(frame.skip(4));
+        final response = switch (command) {
+          'get radio.fem.rxgain' => '> off',
+          'set radio.fem.rxgain on' => 'OK - LoRa FEM RX gain on',
+          'set radio.fem.rxgain off' => 'OK - LoRa FEM RX gain off',
+          _ => 'Error: unsupported',
+        };
+        handleFrameForTest([
+          respCodeCliReply, ...frame.sublist(1, 4), ...response.codeUnits,
+        ]);
+        return;
+      }
       final isData = frame[0] == cmdSendChannelTxtMsg || frame[0] == cmdSendChannelData;
       if ((holdScope && frame[0] == cmdSetFloodScope) || (holdData && isData)) {
         holdScope = false;
@@ -98,65 +118,80 @@ void main() {
     });
     tearDown(storage.resetForTesting);
 
-    testWidgets('raises power before the last two channel retries and restores it',
-        (tester) async {
-      final node = _Node(txPower: 11);
-      final settings = AppSettingsService();
-      try {
-        await settings.updateSettings(AppSettings(
-          channelMinHopsEnabled: true,
-          channelMinHopsRetries: 3,
-          channelMinHopsDelaySeconds: 20,
-          noRetransmissionWarningSeconds: 0,
-          adaptiveTxPower: const AdaptiveTxPowerSettings(
-            enabled: true,
-            targetDbm: 18,
-            channelRetries: 2,
-          ),
-        ));
-        node.attachAppSettingsServiceForTest(settings);
-        await _until(tester, () => node.channels.any((channel) =>
-          channel.index == _channel.index && channel.name == _channel.name) &&
-          node.backgroundWorkSnapshot.countFor(BackgroundWorkKind.channelSync) == 0,
-          stage: 'CHANNEL_INFO settings/history');
-        final wallStart = DateTime.now();
-        final fakeStart = tester.binding.clock.now();
-        node.setChannelResendClockForTest(() =>
-          wallStart.add(tester.binding.clock.now().difference(fakeStart)));
+    for (final (cliSupported, tryLna) in [(false, true), (true, false), (true, true)]) {
+      final usesLna = cliSupported && tryLna;
+      testWidgets('boosted channel retries use LNA only when enabled and supported '
+          '(CLI: $cliSupported, option: $tryLna)', (tester) async {
+        final node = _Node(txPower: 11, cliSupported: cliSupported);
+        final settings = AppSettingsService();
+        try {
+          await settings.updateSettings(AppSettings(
+            channelMinHopsEnabled: true,
+            channelMinHopsRetries: 3,
+            channelMinHopsDelaySeconds: 20,
+            noRetransmissionWarningSeconds: 0,
+            channelsSendAsBinary: false,
+            adaptiveTxPower: AdaptiveTxPowerSettings(
+              enabled: true,
+              targetDbm: 18,
+              channelRetries: 2,
+              tryLna: tryLna,
+            ),
+          ));
+          node.attachAppSettingsServiceForTest(settings);
+          await _until(tester, () => node.channels.any((channel) =>
+            channel.index == _channel.index && channel.name == _channel.name) &&
+            node.backgroundWorkSnapshot.countFor(BackgroundWorkKind.channelSync) == 0,
+            stage: 'CHANNEL_INFO settings/history');
+          final wallStart = DateTime.now();
+          final fakeStart = tester.binding.clock.now();
+          node.setChannelResendClockForTest(() =>
+            wallStart.add(tester.binding.clock.now().difference(fakeStart)));
 
-        await node.sendChannelMessage(_channel, 'adaptive TX test', region: '');
-        await tester.pump(const Duration(seconds: 21));
-        await _until(tester, () => node.transmissions == 2, stage: 'normal retry');
-        expect(node.currentTxPower, 11);
+          await node.sendChannelMessage(_channel, 'adaptive TX test', region: '');
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.transmissions == 2, stage: 'normal retry');
+          expect(node.currentTxPower, 11);
 
-        await tester.pump(const Duration(seconds: 21));
-        await _until(tester, () => node.transmissions == 3, stage: 'first boost');
-        expect(node.currentTxPower, 18);
-        expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), 11);
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.transmissions == 3, stage: 'first boost');
+          expect(node.currentTxPower, 18);
+          expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), 11);
 
-        await tester.pump(const Duration(seconds: 21));
-        await _until(tester, () => node.transmissions == 4, stage: 'second boost');
-        await tester.pump(const Duration(seconds: 21));
-        await _until(tester, () => node.currentTxPower == 11, stage: 'restore');
-        expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
-        expect(node.frames.where((frame) =>
-          frame[0] == cmdSetRadioTxPower || frame[0] == cmdSendChannelTxtMsg,
-        ).map((frame) => frame[0] == cmdSetRadioTxPower
-            ? (frame[0], frame[1])
-            : (frame[0], null)), [
-          (cmdSendChannelTxtMsg, null),
-          (cmdSendChannelTxtMsg, null),
-          (cmdSetRadioTxPower, 18),
-          (cmdSendChannelTxtMsg, null),
-          (cmdSendChannelTxtMsg, null),
-          (cmdSetRadioTxPower, 11),
-        ]);
-      } finally {
-        node.dispose();
-        settings.dispose();
-        await tester.pump(const Duration(seconds: 21));
-      }
-    });
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.transmissions == 4, stage: 'second boost');
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.currentTxPower == 11 &&
+            (!usesLna || node.frames.last.first == cmdRunCliCommand),
+            stage: 'restore');
+          expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
+          final commands = [
+            for (final frame in node.frames)
+              if (frame.first == cmdSetRadioTxPower)
+                'TX ${frame[1]}'
+              else if (frame.first == cmdSendChannelTxtMsg)
+                'send'
+              else if (frame.first == cmdRunCliCommand)
+                String.fromCharCodes(frame.skip(4)),
+          ];
+          expect(commands, [
+            'send',
+            'send',
+            if (usesLna) ...['get radio.fem.rxgain', 'set radio.fem.rxgain on'],
+            'TX 18',
+            'send',
+            'send',
+            'TX 11',
+            if (usesLna) 'set radio.fem.rxgain off',
+          ]);
+          if (usesLna) expect(node.companionCli.entries(shared: true), isEmpty);
+        } finally {
+          node.dispose();
+          settings.dispose();
+          await tester.pump(const Duration(seconds: 21));
+        }
+      });
+    }
   });
 
   for (final stage in ['first ACK', 'retry scope', 'retry ACK']) {

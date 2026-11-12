@@ -29,11 +29,12 @@ class CompanionCliSession extends ChangeNotifier {
   Completer<Uint8List>? _reply;
   String? _prefix;
   String? _activeNode;
-  bool _busy = false;
+  Completer<void>? _operationDone;
+  bool Function()? _canSend;
   bool _disposed = false;
-  bool get busy => _busy;
+  bool get busy => _operationDone != null;
   bool isActive(String prefix) => !_disposed && _prefix == prefix &&
-      _activeNode == nodeKey() && available();
+      _activeNode == nodeKey() && available() && _canSend?.call() != false;
   List<CompanionCliEntry> entries({required bool shared}) => List.unmodifiable(
     _entries.where((entry) => shared || entry.nodeKey == nodeKey()));
 
@@ -69,7 +70,7 @@ class CompanionCliSession extends ChangeNotifier {
     if (reply == null || reply.isCompleted || prefix == null) {
       return;
     }
-    if (nodeKey() != _activeNode || !available()) {
+    if (!isActive(prefix)) {
       return;
     }
     if (frame.isNotEmpty && frame.first == 1) {
@@ -82,32 +83,62 @@ class CompanionCliSession extends ChangeNotifier {
   void connectionChanged() {
     final reply = _reply;
     if (reply != null && !reply.isCompleted &&
-        (!available() || nodeKey() != _activeNode)) {
+        (_prefix == null || !isActive(_prefix!))) {
       reply.completeError(const CompanionCliException('disconnected'));
     }
     _changed();
   }
 
-  Future<void> sendCommand(String command) async {
+  Future<void> sendCommand(String command) {
+    return _runExclusive(() {
+      final prefix = _tags.allocate();
+      final frame = buildCompanionCliFrame(command, prefix);
+      return _execute(command, prefix, frame);
+    });
+  }
+
+  /// Automated commands share the manual console's tags and wire queue.
+  /// Keep the slot across a read followed by a conditional write.
+  Future<void> runTransient(
+    Future<void> Function(Future<String> Function(String) sendCommand) action, {
+    required bool Function() canSend,
+  }) async {
+    final capturedNode = nodeKey();
+    bool sameSession() => nodeKey() == capturedNode && canSend();
+
+    while (sameSession() && _operationDone != null) {
+      await _operationDone!.future;
+    }
+    if (!sameSession()) throw const CompanionCliException('disconnected');
+    await _runExclusive(() => action((command) {
+      final prefix = _tags.allocate();
+      return _exchange(
+        buildCompanionCliFrame(command, prefix),
+        prefix,
+        capturedNode,
+        canSend: sameSession,
+      );
+    }));
+  }
+
+  Future<void> _runExclusive(Future<void> Function() operation) async {
     if (_disposed || !available() || nodeKey().isEmpty) {
       throw const CompanionCliException('unavailable');
     }
-    if (_busy) {
-      throw const CompanionCliException('busy');
-    }
-    final prefix = _tags.allocate();
-    final frame = buildCompanionCliFrame(command, prefix);
-    _busy = true;
+    if (busy) throw const CompanionCliException('busy');
+    final done = Completer<void>();
+    _operationDone = done;
     _changed();
     try {
       final work = runWork;
       if (work == null) {
-        await _execute(command, prefix, frame);
+        await operation();
       } else {
-        await work(() => _execute(command, prefix, frame));
+        await work(operation);
       }
     } finally {
-      _busy = false;
+      _operationDone = null;
+      done.complete();
       _changed();
     }
   }
@@ -135,32 +166,51 @@ class CompanionCliSession extends ChangeNotifier {
       await _history.save(entry, revision: revision);
       return;
     }
-    _activeNode = capturedNode;
-    _prefix = prefix;
-    final reply = Completer<Uint8List>();
-    _reply = reply;
-    // Ответ/разрыв может прийти ещё до завершения transport write.
-    unawaited(reply.future.catchError((Object _) => Uint8List(0)));
-    _changed();
     try {
-      await send(frame).timeout(timeout);
-      final result = await reply.future.timeout(timeout);
-      entry = entry.finish(CompanionCliStatus.replied, response: companionCliReplyText(result));
+      final response = await _exchange(frame, prefix, capturedNode);
+      entry = entry.finish(CompanionCliStatus.replied, response: response);
     } on TimeoutException {
-      onTimeout?.call(prefix);
       entry = entry.finish(CompanionCliStatus.failed, failure: 'timeout');
     } on CompanionCliException catch (error) {
       entry = entry.finish(error.code == 'disconnected'
         ? CompanionCliStatus.disconnected : CompanionCliStatus.failed, failure: error.code);
     } catch (_) {
       entry = entry.finish(CompanionCliStatus.failed, failure: 'sendFailed');
+    }
+    _replace(entry, revision);
+    await _history.save(entry, revision: revision);
+  }
+
+  Future<String> _exchange(
+    Uint8List frame,
+    String prefix,
+    String capturedNode, {
+    bool Function()? canSend,
+  }) async {
+    if (_disposed || !available() || nodeKey() != capturedNode ||
+        canSend?.call() == false) {
+      throw const CompanionCliException('disconnected');
+    }
+    _activeNode = capturedNode;
+    _prefix = prefix;
+    _canSend = canSend;
+    final reply = Completer<Uint8List>();
+    _reply = reply;
+    // A reply or disconnect can arrive before the transport write completes.
+    unawaited(reply.future.catchError((Object _) => Uint8List(0)));
+    _changed();
+    try {
+      await send(frame).timeout(timeout);
+      return companionCliReplyText(await reply.future.timeout(timeout));
+    } on TimeoutException {
+      onTimeout?.call(prefix);
+      rethrow;
     } finally {
       _reply = null;
       _prefix = null;
       _activeNode = null;
+      _canSend = null;
     }
-    _replace(entry, revision);
-    await _history.save(entry, revision: revision);
   }
 
   void _replace(CompanionCliEntry entry, int revision) {

@@ -979,8 +979,12 @@ class _AdaptiveTxPowerSettingsCard extends StatelessWidget {
     final adaptive = settings.adaptiveTxPower;
     final available = settings.channelMinHopsEnabled;
     final enabled = available && adaptive.enabled;
-    final radioPower = context.select<MeshCoreConnector?, int?>(
-      (connector) => connector?.configuredTxPower,
+    final (radioPower, supportsLnaOption) = context.select<
+        MeshCoreConnector?, (int?, bool)>(
+      (connector) => (
+        connector?.configuredTxPower,
+        connector?.supportsCompanionCli == true,
+      ),
     );
     final target = adaptive.targetDbm ??
         (radioPower == null ? null : AdaptiveTxPowerSettings.normalizeTarget(radioPower));
@@ -1052,6 +1056,12 @@ class _AdaptiveTxPowerSettingsCard extends StatelessWidget {
                 adaptive.forcedFloodRetries,
                 settings.maxMessageRetries.clamp(0, 10).toInt(),
                 (value) => update(adaptive.copyWith(forcedFloodRetries: value)),
+              ),
+            if (supportsLnaOption)
+              SwitchListTile(
+                title: Text(l10n.adaptiveTxPowerTryLna),
+                value: adaptive.tryLna,
+                onChanged: (value) => update(adaptive.copyWith(tryLna: value)),
               ),
           ],
         ],

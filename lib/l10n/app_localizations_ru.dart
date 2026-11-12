@@ -8110,6 +8110,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.';
 
   @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Подавлять фантомные каналы';
+
+  @override
   String get adaptiveTxPower => 'Адаптивный TX Power';
 
   @override
@@ -8120,21 +8124,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adaptiveTxPowerTarget => 'Увеличить TXP до';
 
   @override
-  String get adaptiveTxPowerChannelRetries => 'Увеличивать для последних N попыток отправки';
+  String get adaptiveTxPowerChannelRetries =>
+      'Увеличивать для последних N попыток отправки';
 
   @override
   String get adaptiveTxPowerDirect => 'Использовать для личных сообщений';
 
   @override
-  String get adaptiveTxPowerFloodRetries => 'Увеличивать для последних N попыток принудительного Flood';
+  String get adaptiveTxPowerTryLna => 'Пробовать переключать LNA';
 
   @override
-  String adaptiveTxPowerRecovery(int count, int initial) =>
-      'Мощность радиомодуля — $count dBm. Вернуть к $initial dBm?';
+  String get adaptiveTxPowerFloodRetries =>
+      'Увеличивать для последних N попыток принудительного Flood';
 
   @override
-  String get settings_modSettingsSuppressPhantomChannels =>
-      'Подавлять фантомные каналы';
+  String adaptiveTxPowerRecovery(int count, int initial) {
+    return 'Мощность радиомодуля — $count dBm. Вернуть к $initial dBm?';
+  }
 
   @override
   String get settings_modSettingsSuppressPhantomChannelsDscr =>

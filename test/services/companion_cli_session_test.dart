@@ -78,6 +78,35 @@ void main() {
     expect(sent.length, 1);
   });
 
+  test('transient read and write wait for the console and skip history', () async {
+    final consoleWrite = Completer<void>();
+    final manualStarted = Completer<void>();
+    writer = (frame) async {
+      final command = utf8.decode(frame.sublist(4));
+      if (command == 'ver') {
+        manualStarted.complete();
+        await consoleWrite.future;
+      }
+      session.observeReply(_answer(frame, command == 'ver' ? '1.18.0' : '> off'));
+    };
+    final manual = session.sendCommand('ver');
+    final transient = session.runTransient((send) async {
+      expect(await send('get radio.fem.rxgain'), '> off');
+      await expectLater(session.sendCommand('board'), throwsException);
+      await send('set radio.fem.rxgain on');
+    }, canSend: () => connected);
+    await manualStarted.future;
+    expect(sent, hasLength(1));
+    consoleWrite.complete();
+    await manual;
+    await transient;
+    expect(sent.map((frame) => utf8.decode(frame.sublist(4))),
+      ['ver', 'get radio.fem.rxgain', 'set radio.fem.rxgain on']);
+    expect(history.rows.values.single.command, 'ver');
+    expect(sent.map((frame) => utf8.decode(frame.sublist(1, 3))).toSet(),
+      hasLength(3));
+  });
+
   testWidgets('a late response never completes the next operation and no command is retried', (tester) async {
     final first = session.sendCommand('ver');
     await tester.pump();

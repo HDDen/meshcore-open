@@ -7768,6 +7768,32 @@ class AppLocalizationsKo extends AppLocalizations {
       'Suppress phantom channels';
 
   @override
+  String get adaptiveTxPower => 'Adaptive TX Power';
+
+  @override
+  String get adaptiveTxPowerRequiresMinHops =>
+      'Enable channel retries by minimum hop count to use this setting.';
+
+  @override
+  String get adaptiveTxPowerTarget => 'Increase TX power to';
+
+  @override
+  String get adaptiveTxPowerChannelRetries =>
+      'Boost the last N channel retries';
+
+  @override
+  String get adaptiveTxPowerDirect => 'Use for direct messages';
+
+  @override
+  String get adaptiveTxPowerFloodRetries =>
+      'Boost the last N forced Flood attempts';
+
+  @override
+  String adaptiveTxPowerRecovery(int count, int initial) {
+    return 'Radio power is $count dBm. Restore it to $initial dBm?';
+  }
+
+  @override
   String get settings_modSettingsSuppressPhantomChannelsDscr =>
       'Ignore messages from unnamed channel slots with an all-zero key.';
 

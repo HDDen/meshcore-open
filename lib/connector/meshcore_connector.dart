@@ -110,6 +110,7 @@ import '../helpers/gps_app_start_guard.dart';
 import '../helpers/ble_connection_priority.dart';
 import '../models/ble_power_options.dart';
 import '../helpers/smaz.dart';
+import '../services/adaptive_lna.dart';
 import '../services/adaptive_tx_power.dart';
 import '../services/app_debug_log_service.dart';
 import '../services/ble_debug_log_service.dart';
@@ -517,6 +518,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     readBaseline: MessageHistoryStorage.instance.readAdaptiveTxPowerBaseline,
     writeBaseline: MessageHistoryStorage.instance.writeAdaptiveTxPowerBaseline,
     setPower: _applyTxPower,
+  );
+  late final _adaptiveLna = AdaptiveLna(
+    currentSession: () => txPowerSession,
+    runCli: _runLnaCli,
   );
   int? _currentFreqHz;
   int? _currentBwHz;
@@ -1341,11 +1346,57 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  Future<void> _releaseTxPower(Object owner) async {
+  Future<void> _runLnaCli(TxPowerSession session, LnaCliAction action) async {
+    bool canSend() => txPowerSession == session &&
+        !isOfflineMode && supportsCompanionCli;
+    if (!canSend()) throw const CompanionCliException('unavailable');
+    await companionCli.runTransient(action, canSend: canSend);
+  }
+
+  Future<bool> _acquireAdaptiveTxPower(
+    Object owner,
+    int target, {
+    required bool Function() canProceed,
+  }) => _adaptiveTxPower.acquire(
+    owner,
+    target,
+    canProceed: canProceed,
+    beforeRaise: (session) async {
+      try {
+        await _adaptiveLna.acquire(
+          owner,
+          session,
+          enabled: supportsCompanionCli &&
+              _appSettingsService?.settings.adaptiveTxPower.tryLna == true,
+          canProceed: canProceed,
+        );
+      } catch (error) {
+        appLogger.warn(
+          'Could not enable LNA for retries: $error',
+          tag: 'Connector',
+        );
+      }
+    },
+  );
+
+  Future<void> _releaseTxPower(Object owner) => _runChannelCommandLocked(() async {
     try {
-      await _runChannelCommandLocked(() => _adaptiveTxPower.release(owner));
+      await _adaptiveTxPower.release(owner);
     } catch (error) {
       appLogger.warn('TX power restore was not confirmed: $error', tag: 'Connector');
+    }
+    try {
+      await _adaptiveLna.release(owner);
+    } catch (error) {
+      appLogger.warn('LNA restore was not confirmed: $error', tag: 'Connector');
+    }
+  });
+
+  Future<void> _restoreLnaAfterReconnect(TxPowerSession session) async {
+    try {
+      await _runChannelCommandLocked(() => _adaptiveLna.restoreAfterReconnect(session));
+    } catch (error) {
+      appLogger.warn('LNA restore after reconnect failed: $error', tag: 'Connector');
     }
   }
 
@@ -5152,16 +5203,23 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
         if (canSend?.call() == false) return null;
         if (powerOwner != null) {
+          final session = txPowerSession;
           final target = _directTxPowerTarget;
           var boosted = false;
           if (target != null) {
             try {
-              boosted = await _adaptiveTxPower.acquire(powerOwner, target);
+              boosted = await _acquireAdaptiveTxPower(
+                powerOwner,
+                target,
+                canProceed: () => canSend?.call() != false,
+              );
             } catch (error) {
               appLogger.warn('TX power boost was not confirmed: $error', tag: 'Connector');
             }
           }
-          if (!boosted && !sendWithoutBoost) return null;
+          if (txPowerSession != session || (!boosted && !sendWithoutBoost)) {
+            return null;
+          }
           if (canSend?.call() == false) return null;
         }
         final outboundText = prepareContactOutboundText(
@@ -10069,7 +10127,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                 )) {
               requestedBoost = true;
               try {
-                await _adaptiveTxPower.acquire(hopControl!, target);
+                final control = hopControl!;
+                await _acquireAdaptiveTxPower(
+                  control,
+                  target,
+                  canProceed: () => _channelResendWanted(messageId, control),
+                );
               } catch (error) {
                 appLogger.warn('TX power boost was not confirmed: $error', tag: 'Connector');
               }
@@ -10965,6 +11028,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!isSessionReady || _isFlushingPendingOutgoingMessages) return;
     _isFlushingPendingOutgoingMessages = true;
     try {
+      final session = txPowerSession;
+      if (supportsCompanionCli && session != null &&
+          _adaptiveLna.needsReconnectRestore(session)) {
+        await _restoreLnaAfterReconnect(session);
+        if (!isSessionReady || txPowerSession != session) return;
+      }
       final now = DateTime.now();
       final contactIds = List<String>.from(_pendingContactSends.keys);
       for (final messageId in contactIds) {

@@ -71,12 +71,17 @@ class AdaptiveTxPower {
   bool _hasUnconfirmedBaseline(TxPowerSession session) =>
       _session == session && _owners.isEmpty && _powerUnconfirmed;
 
-  Future<bool> acquire(Object owner, int target) {
+  Future<bool> acquire(
+    Object owner,
+    int target, {
+    Future<void> Function(TxPowerSession session)? beforeRaise,
+    bool Function()? canProceed,
+  }) {
     final requestedSession = currentSession();
     return _locked(() async {
       final session = _session;
       if (session == null || session != requestedSession ||
-          _hasUnconfirmedBaseline(session)) {
+          _hasUnconfirmedBaseline(session) || canProceed?.call() == false) {
         return false;
       }
       final power = _targetPower(target);
@@ -85,11 +90,17 @@ class AdaptiveTxPower {
       if (_owners.isEmpty) {
         // An interrupted session must be resolved before opening another lease.
         if (await readBaseline(session.nodeKey) != null) return false;
-        if (currentSession() != session) return false;
+        if (currentSession() != session || canProceed?.call() == false) {
+          return false;
+        }
         await writeBaseline(session.nodeKey, current);
         _baseline = current;
       }
       _owners.add(owner);
+      if (beforeRaise != null) await beforeRaise(session);
+      if (currentSession() != session || canProceed?.call() == false) {
+        return false;
+      }
       if (_powerUnconfirmed || power > current) {
         await _apply(session, power);
       }

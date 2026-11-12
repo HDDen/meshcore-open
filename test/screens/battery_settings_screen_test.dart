@@ -7,7 +7,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
+import 'package:meshcore_open/models/adaptive_tx_power_settings.dart';
+import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/screens/mod_settings_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -87,6 +91,82 @@ void main() {
       }
     });
   }
+
+  testWidgets('LNA is the last option and follows CompanionCLI support',
+      (tester) async {
+    final settings = AppSettingsService();
+    final connector = MeshCoreConnector();
+    final sections = _Sections();
+    void reportFirmware(String version) {
+      final info = List<int>.filled(80, 0);
+      info[0] = respCodeDeviceInfo;
+      info[1] = 14;
+      info.setRange(60, 60 + version.length, version.codeUnits);
+      connector.handleFrameForTest(info);
+    }
+
+    try {
+      await settings.updateSettings(AppSettings(
+        channelMinHopsEnabled: true,
+        adaptiveTxPower: const AdaptiveTxPowerSettings(
+          enabled: true,
+          directEnabled: true,
+        ),
+      ));
+      reportFirmware('1.17.1');
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: settings),
+          ChangeNotifierProvider.value(value: connector),
+          ChangeNotifierProvider<SettingsSectionsService>.value(value: sections),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModSettingsScreen(),
+        ),
+      ));
+      final screen = tester.element(find.byType(ModSettingsScreen));
+      final l10n = AppLocalizations.of(screen);
+      final lna = find.widgetWithText(SwitchListTile, 'Пробовать переключать LNA');
+      final scrollable = find.descendant(of: find.byType(ListView),
+          matching: find.byType(Scrollable)).first;
+      await tester.scrollUntilVisible(find.text(l10n.adaptiveTxPower), 250,
+        scrollable: scrollable);
+      expect(lna, findsNothing);
+
+      reportFirmware('1.18.0');
+      expect(connector.supportsCompanionCli, isTrue);
+      await tester.pump(UiNotificationBatcher.minimum);
+      await tester.scrollUntilVisible(lna, 150, scrollable: scrollable);
+      expect(tester.widget<SwitchListTile>(lna).value, isFalse);
+      expect(tester.getTopLeft(lna).dy,
+        greaterThan(tester.getTopLeft(find.text(l10n.adaptiveTxPowerDirect)).dy));
+      await tester.tap(lna);
+      await tester.pump();
+      expect(settings.settings.adaptiveTxPower.tryLna, isTrue);
+
+      final stored = AppSettingsService();
+      try {
+        await stored.loadSettings();
+        expect(stored.settings.adaptiveTxPower.tryLna, isTrue);
+      } finally {
+        stored.dispose();
+      }
+
+      reportFirmware('1.17.1');
+      expect(connector.supportsCompanionCli, isFalse);
+      await tester.pump(UiNotificationBatcher.minimum);
+      expect(lna, findsNothing);
+      expect(settings.settings.adaptiveTxPower.tryLna, isTrue);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      connector.dispose();
+      sections.dispose();
+      settings.dispose();
+    }
+  });
 
   for (final scale in [1.0, 1.5]) {
     testWidgets('battery levels scroll, persist and survive disabling at scale $scale', (tester) async {

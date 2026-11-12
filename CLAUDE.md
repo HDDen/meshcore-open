@@ -3777,6 +3777,10 @@ attempt can replay once, automatic final Flood can replay up to the channel
 retry budget, and forced Flood boosts the tail of its existing attempt budget.
 The companion confirms enqueue before airtime and saves its global power in
 flash. Other packets transmitted during a boost share the higher power.
+The optional LNA switch uses CompanionCLI before raising power. After a
+confirmed RX gain off, it requests on and restores off after the last boosted
+series ends. An interrupted restore is remembered per node for one reconnect
+attempt in the same app process.
 
 Older JSON without the new field inherits `channelMinHops`, clamped to 2–10;
 subsequent changes to either target leave the other unchanged (2026-10-21).

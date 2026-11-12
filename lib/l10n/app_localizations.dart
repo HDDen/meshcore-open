@@ -13541,21 +13541,49 @@ abstract class AppLocalizations {
   /// **'Suppress phantom channels'**
   String get settings_modSettingsSuppressPhantomChannels;
 
-  String get adaptiveTxPower => 'Adaptive TX Power';
+  /// No description provided for @adaptiveTxPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive TX Power'**
+  String get adaptiveTxPower;
 
-  String get adaptiveTxPowerRequiresMinHops =>
-      'Enable channel retries by minimum hop count to use this setting.';
+  /// No description provided for @adaptiveTxPowerRequiresMinHops.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable channel retries by minimum hop count to use this setting.'**
+  String get adaptiveTxPowerRequiresMinHops;
 
-  String get adaptiveTxPowerTarget => 'Increase TX power to';
+  /// No description provided for @adaptiveTxPowerTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase TX power to'**
+  String get adaptiveTxPowerTarget;
 
-  String get adaptiveTxPowerChannelRetries => 'Boost the last N channel retries';
+  /// No description provided for @adaptiveTxPowerChannelRetries.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost the last N channel retries'**
+  String get adaptiveTxPowerChannelRetries;
 
-  String get adaptiveTxPowerDirect => 'Use for direct messages';
+  /// No description provided for @adaptiveTxPowerDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Use for direct messages'**
+  String get adaptiveTxPowerDirect;
 
-  String get adaptiveTxPowerFloodRetries => 'Boost the last N forced Flood attempts';
+  /// No description provided for @adaptiveTxPowerFloodRetries.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost the last N forced Flood attempts'**
+  String get adaptiveTxPowerFloodRetries;
 
-  String adaptiveTxPowerRecovery(int count, int initial) =>
-      'Radio power is $count dBm. Restore it to $initial dBm?';
+  String get adaptiveTxPowerTryLna => 'Try switching LNA';
+
+  /// No description provided for @adaptiveTxPowerRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio power is {count} dBm. Restore it to {initial} dBm?'**
+  String adaptiveTxPowerRecovery(int count, int initial);
 
   /// No description provided for @settings_modSettingsSuppressPhantomChannelsDscr.
   ///
