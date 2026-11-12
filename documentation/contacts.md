@@ -71,6 +71,9 @@ The search and group controls grow with the system text size.
 
 **Filter options**:
 - All, Favorites, Users, Repeaters, Room Servers, Unread Only
+- **Только контакты ноды** (по умолчанию выключен). На общем экране скрывает
+  репитеры из кэша, от которых в текущем подключении ещё не получен адверт.
+  Полученный адверт сразу возвращает репитер в список с учётом остальных фильтров.
 
 ## Contact Groups
 

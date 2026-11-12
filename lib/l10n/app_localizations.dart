@@ -9343,6 +9343,12 @@ abstract class AppLocalizations {
   /// **'Unread only'**
   String get listFilter_unreadOnly;
 
+  /// No description provided for @listFilter_nodeContactsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Node contacts only'**
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
   /// No description provided for @listFilter_newGroup.
   ///
   /// In en, this message translates to:

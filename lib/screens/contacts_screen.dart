@@ -1340,6 +1340,11 @@ class _ContactsScreenState extends State<ContactsScreen>
     });
   }
 
+  bool get _supportsNodeContactsFilter =>
+      !widget.batchOperationsMode &&
+      !widget.selectionMode &&
+      widget.initialSearchQuery == null;
+
   Widget _buildFilterButton(
     BuildContext context,
     UiViewStateService viewState,
@@ -1348,6 +1353,9 @@ class _ContactsScreenState extends State<ContactsScreen>
       sortOption: viewState.contactsSortOption,
       typeFilter: viewState.contactsTypeFilter,
       showUnreadOnly: viewState.contactsShowUnreadOnly,
+      nodeContactsOnly: viewState.contactsNodeOnly,
+      onNodeContactsOnlyChanged:
+          _supportsNodeContactsFilter ? viewState.setContactsNodeOnly : null,
       onSortChanged: (value) {
         viewState.setContactsSortOption(value);
       },
@@ -1536,18 +1544,22 @@ class _ContactsScreenState extends State<ContactsScreen>
     for (final group in _groups) {
       groupsByName.putIfAbsent(group.name, () => group);
     }
+    final nodeContactsOnly =
+        _supportsNodeContactsFilter && viewState.contactsNodeOnly;
     final derivedKey = _contactsDerivedKeyFor(
       connector,
       viewState,
       contacts,
       groupsByName,
       context.l10n.localeName,
+      nodeContactsOnly: nodeContactsOnly,
     );
     if (_contactsDerivedKey != derivedKey) {
       _derivedFilteredContacts = _filterAndSortContacts(
         contacts,
         connector,
         viewState,
+        nodeContactsOnly: nodeContactsOnly,
       );
       _derivedContactItems = _buildContactListItems(
         context,
@@ -1859,8 +1871,9 @@ class _ContactsScreenState extends State<ContactsScreen>
     UiViewStateService viewState,
     List<Contact> contacts,
     Map<String, ContactGroup> groupsByName,
-    String localeName,
-  ) {
+    String localeName, {
+    required bool nodeContactsOnly,
+  }) {
     final groupsKey = groupsByName.values
         .map((group) => '${group.name}\u0000${group.memberKeys.join(',')}')
         .join('|');
@@ -1881,6 +1894,8 @@ class _ContactsScreenState extends State<ContactsScreen>
       viewState.contactsSortOption.name,
       viewState.contactsTypeFilter.name,
       viewState.contactsShowUnreadOnly,
+      nodeContactsOnly,
+      if (nodeContactsOnly) connector.sessionRepeaterAdvertsRevision,
       widget.batchOperationsMode,
       widget.selectionMode,
       connector.selfPublicKeyHex,
@@ -1931,9 +1946,15 @@ class _ContactsScreenState extends State<ContactsScreen>
   List<Contact> _filterAndSortContacts(
     List<Contact> contacts,
     MeshCoreConnector connector,
-    UiViewStateService viewState,
-  ) {
+    UiViewStateService viewState, {
+    required bool nodeContactsOnly,
+  }) {
     var filtered = contacts.where((contact) {
+      if (nodeContactsOnly &&
+          _localContactKeys.contains(contact.publicKeyHex) &&
+          !connector.heardRepeaterAdvertThisSession(contact.publicKeyHex)) {
+        return false;
+      }
       if (viewState.contactsSearchText.isEmpty) return true;
       return matchesContactQuery(contact, viewState.contactsSearchText);
     }).toList();

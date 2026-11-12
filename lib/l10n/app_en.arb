@@ -2890,6 +2890,7 @@
   "listFilter_repeaters": "Repeaters",
   "listFilter_roomServers": "Room servers",
   "listFilter_unreadOnly": "Unread only",
+  "listFilter_nodeContactsOnly": "Node contacts only",
   "listFilter_newGroup": "New group",
   "pathTrace_you": "You",
   "pathTrace_failed": "Path trace failed.",

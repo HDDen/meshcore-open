@@ -890,6 +890,45 @@ Future<void> main() async {
       }
     }
 
+    for (final signedRxLog in [false, true]) {
+      test('repeater adverts count once per radio session (RX log=$signedRxLog)', () async {
+        final keys = await Ed25519().newKeyPairFromSeed(List<int>.filled(32, 0xDB));
+        final key = Uint8List.fromList((await keys.extractPublicKey()).bytes);
+        final keyHex = pubKeyToHex(key);
+        const name = 'Cached repeater';
+        final frame = signedRxLog
+            ? await _signedRxAdvert(
+                keys,
+                type: advTypeRepeater,
+                name: name,
+                path: Uint8List(0),
+                width: 1,
+              )
+            : _contactFrame(_contact(key, name), code: pushCodeNewAdvert);
+
+        expect(h.connector.heardRepeaterAdvertThisSession(keyHex), isFalse);
+        await h.connector.handleFrameForTest(frame);
+        expect(h.connector.heardRepeaterAdvertThisSession(keyHex), isTrue);
+        expect(h.connector.localRepeaters.map((contact) => contact.publicKeyHex),
+          contains(keyHex));
+
+        h.connector.resetSyncProgressForTest();
+        expect(h.connector.heardRepeaterAdvertThisSession(keyHex), isFalse);
+        expect(h.connector.localRepeaters.map((contact) => contact.publicKeyHex),
+          contains(keyHex));
+        final advertRevision = h.connector.sessionRepeaterAdvertsRevision;
+        final discoveryRevision = h.connector.discoveredRevision;
+        await h.connector.handleFrameForTest(frame);
+        expect(h.connector.heardRepeaterAdvertThisSession(keyHex), isTrue);
+        expect(h.connector.sessionRepeaterAdvertsRevision, advertRevision + 1);
+        expect(h.connector.discoveredRevision, discoveryRevision);
+
+        await h.connector.handleFrameForTest(frame);
+        expect(h.connector.sessionRepeaterAdvertsRevision, advertRevision + 1);
+        expect(h.sent, isEmpty);
+      });
+    }
+
     test('U29 baseline: signed adverts keep names, features and reverse hops', () async {
       const cases = [
         (type: advTypeChat, width: 1),

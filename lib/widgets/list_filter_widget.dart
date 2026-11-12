@@ -105,6 +105,10 @@ class _ToggleUnreadAction extends _ContactsFilterAction {
   const _ToggleUnreadAction();
 }
 
+class _ToggleNodeContactsAction extends _ContactsFilterAction {
+  const _ToggleNodeContactsAction();
+}
+
 class ContactsFilterMenu extends StatelessWidget {
   final ContactSortOption sortOption;
   final ContactTypeFilter typeFilter;
@@ -112,6 +116,8 @@ class ContactsFilterMenu extends StatelessWidget {
   final ValueChanged<ContactSortOption> onSortChanged;
   final ValueChanged<ContactTypeFilter> onTypeFilterChanged;
   final ValueChanged<bool> onUnreadOnlyChanged;
+  final bool nodeContactsOnly;
+  final ValueChanged<bool>? onNodeContactsOnlyChanged;
 
   const ContactsFilterMenu({
     super.key,
@@ -121,6 +127,8 @@ class ContactsFilterMenu extends StatelessWidget {
     required this.onSortChanged,
     required this.onTypeFilterChanged,
     required this.onUnreadOnlyChanged,
+    this.nodeContactsOnly = false,
+    this.onNodeContactsOnlyChanged,
   });
 
   @override
@@ -182,6 +190,12 @@ class ContactsFilterMenu extends StatelessWidget {
               label: l10n.listFilter_unreadOnly,
               checked: showUnreadOnly,
             ),
+            if (onNodeContactsOnlyChanged != null)
+              SortFilterMenuOption(
+                value: const _ToggleNodeContactsAction(),
+                label: l10n.listFilter_nodeContactsOnly,
+                checked: nodeContactsOnly,
+              ),
           ],
         ),
       ],
@@ -193,6 +207,8 @@ class ContactsFilterMenu extends StatelessWidget {
             onTypeFilterChanged(filter);
           case _ToggleUnreadAction():
             onUnreadOnlyChanged(!showUnreadOnly);
+          case _ToggleNodeContactsAction():
+            onNodeContactsOnlyChanged?.call(!nodeContactsOnly);
         }
       },
     );

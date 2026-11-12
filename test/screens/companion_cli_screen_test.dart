@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/companion_cli_protocol.dart';
+import 'package:meshcore_open/helpers/session_repeater_adverts.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
@@ -167,6 +168,12 @@ class _Connector extends MeshCoreConnector {
   @override
   List<Contact> get localRepeaters => localRepeaterData;
   final localRepeaterData = <Contact>[];
+  final repeaterAdverts = SessionRepeaterAdverts();
+  @override
+  int get sessionRepeaterAdvertsRevision => repeaterAdverts.revision;
+  @override
+  bool heardRepeaterAdvertThisSession(String publicKeyHex) =>
+      repeaterAdverts.contains(publicKeyHex);
   @override
   List<Channel> get channels => channelData;
   @override
@@ -1251,6 +1258,104 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  Contact filterRepeater(int seed, String name) => Contact(
+    publicKey: Uint8List.fromList(List<int>.filled(32, seed)),
+    name: name,
+    type: advTypeRepeater,
+    pathLength: -1,
+    path: Uint8List(0),
+    lastSeen: DateTime.utc(2026),
+  );
+
+  testWidgets('node contacts filter keeps repeaters heard in the session', (
+    tester,
+  ) async {
+    final stored = filterRepeater(0x52, 'Stored repeater');
+    final cached = filterRepeater(0x53, 'Cached repeater');
+    final heard = filterRepeater(0x54, 'Heard repeater');
+    connector.contactData.add(stored);
+    connector.localRepeaterData.addAll([cached, heard]);
+    connector.repeaterAdverts.record(heard.publicKeyHex);
+    await show(tester, const ContactsScreen(hideBackButton: true), locale: 'ru');
+    await tester.pumpAndSettle();
+
+    final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+    final option = find.text('Только контакты ноды');
+    final checkedItem = find.ancestor(
+      of: option,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is CheckedPopupMenuItem<Object?>,
+      ),
+    );
+    Future<void> openFilters() async {
+      await tester.tap(find.byTooltip(l10n.listFilter_tooltip));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text(cached.name), findsOneWidget);
+    await openFilters();
+    expect(
+      tester.getTopLeft(option).dy,
+      greaterThan(tester.getTopLeft(find.text(l10n.listFilter_unreadOnly)).dy),
+    );
+    expect(tester.widget<CheckedPopupMenuItem<Object?>>(checkedItem).checked, isFalse);
+    await tester.tap(option);
+    await tester.pumpAndSettle();
+    expect(find.text(cached.name), findsNothing);
+    expect(find.text(stored.name), findsOneWidget);
+    expect(find.text(heard.name), findsOneWidget);
+
+    // The advert arrives without altering the cached row or its timestamp.
+    connector.repeaterAdverts.record(cached.publicKeyHex);
+    connector.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text(cached.name), findsOneWidget);
+
+    connector.repeaterAdverts.clear();
+    connector.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.text(cached.name), findsNothing);
+    expect(find.text(heard.name), findsNothing);
+    expect(find.text(stored.name), findsOneWidget);
+
+    final reopenedView = UiViewStateService();
+    addTearDown(reopenedView.dispose);
+    await reopenedView.initialize();
+    expect(reopenedView.contactsNodeOnly, isTrue);
+    await openFilters();
+    expect(tester.widget<CheckedPopupMenuItem<Object?>>(checkedItem).checked, isTrue);
+    await tester.tap(option);
+    await tester.pumpAndSettle();
+    expect(find.text(cached.name), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  for (final (name, screen) in [
+    ('batch operations', const ContactsBatchOperationsScreen()),
+    ('contact picker', const ContactsScreen(selectionMode: true)),
+    ('named lookup', const ContactsScreen(initialSearchQuery: 'Cached repeater')),
+  ]) {
+    testWidgets('node contacts filter stays out of $name', (tester) async {
+      final cached = filterRepeater(0x53, 'Cached repeater');
+      connector.localRepeaterData.add(cached);
+      view.setContactsNodeOnly(true);
+      await show(tester, screen);
+      await tester.pumpAndSettle();
+
+      final cachedRow = find.byKey(ValueKey(cached.publicKeyHex));
+      expect(
+        find.descendant(of: cachedRow, matching: find.text(cached.name)),
+        findsOneWidget,
+      );
+      final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+      await tester.tap(find.byTooltip(l10n.listFilter_tooltip));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.listFilter_unreadOnly), findsOneWidget);
+      expect(find.text(l10n.listFilter_nodeContactsOnly), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 
   for (final includeNodeContact in [false, true]) {
     testWidgets('batch delete includes selected cached repeaters (mixed=$includeNodeContact)', (tester) async {

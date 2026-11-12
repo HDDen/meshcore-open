@@ -18,6 +18,7 @@ class UiViewStateService extends ChangeNotifier {
   static const _keyContactsSelectedGroupName = 'ui_contacts_selected_group';
   static const _keyContactsSortOption = 'ui_contacts_sort_option';
   static const _keyContactsShowUnreadOnly = 'ui_contacts_show_unread_only';
+  static const _keyContactsNodeOnly = 'ui_contacts_node_only';
   static const _keyContactsTypeFilter = 'ui_contacts_type_filter';
   static const _keyChannelsSortOption = 'ui_channels_sort_option';
   static const _keyChannelsSortIndexLegacy = 'ui_channels_sort_index';
@@ -29,6 +30,7 @@ class UiViewStateService extends ChangeNotifier {
   bool _contactsSearchExpanded = false;
   ContactSortOption _contactsSortOption = ContactSortOption.lastSeen;
   bool _contactsShowUnreadOnly = false;
+  bool _contactsNodeOnly = false;
   ContactTypeFilter _contactsTypeFilter = ContactTypeFilter.all;
 
   String _channelsSearchText = '';
@@ -46,6 +48,7 @@ class UiViewStateService extends ChangeNotifier {
   bool get contactsSearchExpanded => _contactsSearchExpanded;
   ContactSortOption get contactsSortOption => _contactsSortOption;
   bool get contactsShowUnreadOnly => _contactsShowUnreadOnly;
+  bool get contactsNodeOnly => _contactsNodeOnly;
   ContactTypeFilter get contactsTypeFilter => _contactsTypeFilter;
   String get channelsSearchText => _channelsSearchText;
   ChannelSortOption get channelsSortOption => _channelsSortOption;
@@ -71,6 +74,7 @@ class UiViewStateService extends ChangeNotifier {
 
     _contactsShowUnreadOnly =
         prefs.getBool(_keyContactsShowUnreadOnly) ?? false;
+    _contactsNodeOnly = prefs.getBool(_keyContactsNodeOnly) ?? false;
 
     final typeStr = prefs.getString(_keyContactsTypeFilter);
     if (typeStr != null) {
@@ -151,6 +155,13 @@ class UiViewStateService extends ChangeNotifier {
     _contactsShowUnreadOnly = value;
     notifyListeners();
     unawaited(PrefsManager.instance.setBool(_keyContactsShowUnreadOnly, value));
+  }
+
+  void setContactsNodeOnly(bool value) {
+    if (_contactsNodeOnly == value) return;
+    _contactsNodeOnly = value;
+    notifyListeners();
+    unawaited(PrefsManager.instance.setBool(_keyContactsNodeOnly, value));
   }
 
   void setContactsTypeFilter(ContactTypeFilter value) {

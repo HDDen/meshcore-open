@@ -85,6 +85,7 @@ import '../helpers/contact_share_helper.dart';
 import '../helpers/contact_merge_helper.dart';
 import '../helpers/advert_feature_fields.dart';
 import '../helpers/advert_signature.dart';
+import '../helpers/session_repeater_adverts.dart';
 import '../helpers/contact_telemetry_location.dart';
 import '../helpers/key_indexed_list.dart';
 import '../helpers/key_prefix_match.dart';
@@ -386,6 +387,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final KeyIndexedList<Contact> _discoveredContacts = KeyIndexedList<Contact>(
     (contact) => contact.publicKeyHex,
   );
+  final _sessionRepeaterAdverts = SessionRepeaterAdverts();
   Future<void>? _contactCacheLoadFuture;
   int _contactCacheLoadGeneration = 0;
   final List<Channel> _channels = [];
@@ -1066,6 +1068,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Changes whenever the discovered list changes, whichever path changes it.
   int get discoveredRevision => _discoveredContacts.version;
+
+  /// Changes independently of the cache, including when an identical advert
+  /// is heard for the first time in this connection.
+  int get sessionRepeaterAdvertsRevision => _sessionRepeaterAdverts.revision;
+
+  bool heardRepeaterAdvertThisSession(String publicKeyHex) =>
+      _sessionRepeaterAdverts.contains(publicKeyHex);
 
   /// Repeaters the app has heard whose adverts the node did not keep, listed
   /// with the node's own contacts. They live in the app's discovered list,
@@ -7488,6 +7497,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    _sessionRepeaterAdverts.clear();
     _confirmedDefaultFloodScope = null;
     _defaultRegionScopeRefreshFuture = null;
     _finishBackupContactRead(null);
@@ -13861,11 +13871,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // map keeps showing where the node used to be. The request never
         // leaves the device: the node answers it out of its own contact table.
         if (frame.length >= 1 + pubKeySize) {
-          unawaited(
-            getContactByKey(
-              frame.sublist(1, 1 + pubKeySize),
-            ).catchError(_logTimerSendError),
-          );
+          final key = frame.sublist(1, 1 + pubKeySize);
+          final keyHex = pubKeyToHex(key);
+          if (_contacts.byKey(keyHex)?.type == advTypeRepeater) {
+            _sessionRepeaterAdverts.record(keyHex);
+          }
+          unawaited(getContactByKey(key).catchError(_logTimerSendError));
         }
         break;
       case pushCodeNewAdvert:
@@ -14981,6 +14992,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final contact = Contact.fromFrame(frame);
     if (contact == null || listEquals(contact.publicKey, _selfPublicKey)) {
       return;
+    }
+    if (contact.type == advTypeRepeater) {
+      _sessionRepeaterAdverts.record(contact.publicKeyHex);
     }
     _handleDiscovery(contact, frame);
     notifyListeners();
@@ -21535,6 +21549,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    final firstRepeaterAdvert =
+        type == advTypeRepeater && _sessionRepeaterAdverts.record(contactKeyHex);
+
     // Check if this is a new contact
     final isNewContact = !_knownContactKeys.contains(contactKeyHex);
 
@@ -21567,6 +21584,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         path,
         pathHashWidth: pathHashWidth,
       );
+      // Re-hearing a cached advert can leave every discovery field unchanged.
+      if (firstRepeaterAdvert) notifyListeners();
       return;
     }
 

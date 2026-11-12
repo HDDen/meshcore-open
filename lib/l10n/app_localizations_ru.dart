@@ -5545,6 +5545,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get listFilter_unreadOnly => 'Только непрочитанные';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Только контакты ноды';
+
+  @override
   String get listFilter_newGroup => 'Новая группа';
 
   @override
