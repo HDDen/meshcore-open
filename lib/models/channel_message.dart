@@ -103,6 +103,7 @@ class ChannelMessage {
   /// setting: 0 for an incoming message and for one sent once.
   final int resendCount;
   final bool sentWithTxPowerBoost;
+  final bool sentWithAdaptiveLna;
   final int? pathLength;
   final int? pathHashWidth;
   final Uint8List pathBytes;
@@ -177,6 +178,7 @@ class ChannelMessage {
     this.repeatCount = 0,
     this.resendCount = 0,
     this.sentWithTxPowerBoost = false,
+    this.sentWithAdaptiveLna = false,
     this.pathLength,
     this.pathHashWidth,
     Uint8List? pathBytes,
@@ -240,6 +242,7 @@ class ChannelMessage {
     int? repeatCount,
     int? resendCount,
     bool? sentWithTxPowerBoost,
+    bool? sentWithAdaptiveLna,
     int? pathLength,
     int? pathHashWidth,
     Uint8List? pathBytes,
@@ -368,6 +371,7 @@ class ChannelMessage {
       repeatCount: repeatCount ?? this.repeatCount,
       resendCount: resendCount ?? this.resendCount,
       sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
+      sentWithAdaptiveLna: sentWithAdaptiveLna ?? this.sentWithAdaptiveLna,
       pathLength: pathLength ?? this.pathLength,
       pathHashWidth: pathHashWidth ?? this.pathHashWidth,
       pathBytes: pathBytes ?? this.pathBytes,

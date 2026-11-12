@@ -3779,7 +3779,8 @@ The companion confirms enqueue before airtime and saves its global power in
 flash. Other packets transmitted during a boost share the higher power.
 Successful boosted sends keep a local lightning badge in history. Channel
 messages mark a boosted resend accepted by the node. Direct messages mark
-an acknowledged attempt with an accepted boosted copy.
+an acknowledged attempt with an accepted boosted copy. The badge is red when
+that copy used LNA confirmed enabled by the app during the boost.
 The optional LNA switch uses CompanionCLI before raising power. After a
 confirmed RX gain off, it requests on and restores off after the last boosted
 series ends. An interrupted restore is remembered per node for one reconnect

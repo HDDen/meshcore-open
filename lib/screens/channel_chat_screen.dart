@@ -2673,6 +2673,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                 if (showTxPowerBoostBadge) ...[
                                   const SizedBox(width: 4),
                                   TxPowerBoostBadge(
+                                    withLna: message.sentWithAdaptiveLna,
                                     size: 12 * textScale,
                                     color: metaColor,
                                   ),
@@ -2767,6 +2768,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                               isMediaMessage ? 8 : 0, 3, 0, 0,
                             ),
                             child: TxPowerBoostBadge(
+                              withLna: message.sentWithAdaptiveLna,
                               size: 12 * textScale,
                               color: metaColor,
                             ),

@@ -204,6 +204,7 @@ void main() {
           expect(saved, hasLength(1));
           expect(saved.single.messageId, node.getChannelMessages(_channel).single.messageId);
           expect(saved.single.sentWithTxPowerBoost, isTrue);
+          expect(saved.single.sentWithAdaptiveLna, usesLna);
           final commands = [
             for (final frame in node.frames)
               if (frame.first == cmdSetRadioTxPower)

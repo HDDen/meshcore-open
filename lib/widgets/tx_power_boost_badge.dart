@@ -7,14 +7,18 @@ class TxPowerBoostBadge extends StatelessWidget {
     super.key,
     required this.size,
     required this.color,
+    required this.withLna,
   });
 
   final double size;
   final Color color;
+  final bool withLna;
 
   @override
   Widget build(BuildContext context) => Tooltip(
-    message: context.l10n.messageSentWithTxPowerBoost,
-    child: Icon(Icons.bolt, size: size, color: color),
+    message: withLna
+        ? context.l10n.messageSentWithTxPowerBoostAndLna
+        : context.l10n.messageSentWithTxPowerBoost,
+    child: Icon(Icons.bolt, size: size, color: withLna ? Colors.red : color),
   );
 }

@@ -98,6 +98,7 @@ class Message {
   final DateTime? deliveredAt;
   final int? tripTimeMs;
   final bool sentWithTxPowerBoost;
+  final bool sentWithAdaptiveLna;
   final int? pathLength;
   final Uint8List pathBytes;
   final int deliveryProgressTotalSteps;
@@ -203,6 +204,7 @@ class Message {
     this.deliveredAt,
     this.tripTimeMs,
     this.sentWithTxPowerBoost = false,
+    this.sentWithAdaptiveLna = false,
     this.pathLength,
     Uint8List? pathBytes,
     this.deliveryProgressTotalSteps = 0,
@@ -254,6 +256,7 @@ class Message {
     DateTime? deliveredAt,
     int? tripTimeMs,
     bool? sentWithTxPowerBoost,
+    bool? sentWithAdaptiveLna,
     int? pathLength,
     Uint8List? pathBytes,
     int? deliveryProgressTotalSteps,
@@ -385,6 +388,7 @@ class Message {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
       sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
+      sentWithAdaptiveLna: sentWithAdaptiveLna ?? this.sentWithAdaptiveLna,
       pathLength: pathLength ?? this.pathLength,
       pathBytes: pathBytes ?? this.pathBytes,
       deliveryProgressTotalSteps:

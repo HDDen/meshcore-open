@@ -3121,6 +3121,7 @@
   "adaptiveTxPowerDirect": "Использовать для личных сообщений",
   "adaptiveTxPowerTryLna": "Пробовать переключать LNA",
   "messageSentWithTxPowerBoost": "Отправлено с повышенной мощностью",
+  "messageSentWithTxPowerBoostAndLna": "Отправлено с повышенной мощностью и включением LNA",
   "adaptiveTxPowerFloodRetries": "Увеличивать для последних N попыток принудительного Flood",
   "adaptiveTxPowerRecovery": "Мощность радиомодуля — {count} dBm. Вернуть к {initial} dBm?",
   "settings_modSettingsSuppressPhantomChannelsDscr": "Игнорировать сообщения из безымянных слотов каналов с нулевым ключом.",

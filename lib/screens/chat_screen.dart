@@ -4499,6 +4499,7 @@ class _MessageBubble extends StatelessWidget {
                                 ],
                                 if (showTxPowerBoostBadge)
                                   TxPowerBoostBadge(
+                                    withLna: message.sentWithAdaptiveLna,
                                     size: 12 * textScale,
                                     color: metaColor,
                                   ),
@@ -4567,6 +4568,7 @@ class _MessageBubble extends StatelessWidget {
                               isMediaMessage ? 8 : 0, 3, 0, 0,
                             ),
                             child: TxPowerBoostBadge(
+                              withLna: message.sentWithAdaptiveLna,
                               size: 12 * textScale,
                               color: metaColor,
                             ),

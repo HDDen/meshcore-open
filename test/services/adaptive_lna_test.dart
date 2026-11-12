@@ -39,6 +39,7 @@ void main() {
       final radio = _Radio()..readReply = reply;
       final owner = Object();
       await radio.lna.acquire(owner, _session, enabled: true);
+      expect(radio.lna.enabledByApp, isFalse);
       await radio.lna.release(owner);
       expect(radio.commands, [_get]);
     });
@@ -53,8 +54,10 @@ void main() {
       await radio.lna.acquire(second, _session, enabled: true);
       await radio.lna.acquire(first, _session, enabled: true);
       await radio.lna.release(firstFinishesFirst ? first : second);
+      expect(radio.lna.enabledByApp, isTrue);
       expect(radio.commands, [_get, _on]);
       await radio.lna.release(firstFinishesFirst ? second : first);
+      expect(radio.lna.enabledByApp, isFalse);
       expect(radio.commands, [_get, _on, _off]);
     });
   }
@@ -95,6 +98,7 @@ void main() {
     final owner = Object();
     await expectLater(radio.lna.acquire(owner, _session, enabled: true),
       throwsStateError);
+    expect(radio.lna.enabledByApp, isFalse);
     await radio.lna.release(owner);
     expect(radio.commands, [_get, _on, _off]);
   });

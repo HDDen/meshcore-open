@@ -4285,6 +4285,7 @@
   "adaptiveTxPowerDirect": "Use for direct messages",
   "adaptiveTxPowerTryLna": "Try switching LNA",
   "messageSentWithTxPowerBoost": "Sent with boosted TX power",
+  "messageSentWithTxPowerBoostAndLna": "Sent with boosted TX power and LNA enabled by the app",
   "adaptiveTxPowerFloodRetries": "Boost the last N forced Flood attempts",
   "adaptiveTxPowerRecovery": "Radio power is {count} dBm. Restore it to {initial} dBm?",
   "@adaptiveTxPowerRecovery": {

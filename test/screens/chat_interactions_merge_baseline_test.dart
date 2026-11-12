@@ -151,6 +151,7 @@ void main() {
 
       const boostedText = 'Outgoing message sent with a power boost';
       const regularText = 'Outgoing message sent with normal power';
+      const lnaText = 'Outgoing message sent with a power boost and LNA';
       if (inChannel) {
         node.setChannelMessagesForTest(_channel.index, [
           _channelPost('normal', regularText, 1).copyWith(isOutgoing: true),
@@ -158,6 +159,12 @@ void main() {
             isOutgoing: true,
             resendCount: 2,
             sentWithTxPowerBoost: true,
+          ),
+          _channelPost('lna', lnaText, 3).copyWith(
+            isOutgoing: true,
+            resendCount: 2,
+            sentWithTxPowerBoost: true,
+            sentWithAdaptiveLna: true,
           ),
         ]);
       } else {
@@ -169,6 +176,12 @@ void main() {
               isOutgoing: true,
               tripTimeMs: 1200,
               sentWithTxPowerBoost: true,
+            ),
+            _directPost('lna', lnaText, 3).copyWith(
+              isOutgoing: true,
+              tripTimeMs: 1200,
+              sentWithTxPowerBoost: true,
+              sentWithAdaptiveLna: true,
             ),
           ]);
       }
@@ -193,9 +206,20 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final badge = find.byType(TxPowerBoostBadge);
+      final badges = find.byType(TxPowerBoostBadge);
+      expect(badges, findsNWidgets(2));
+      final badge = find.ancestor(
+        of: find.byTooltip('Sent with boosted TX power'),
+        matching: badges,
+      );
+      final lnaBadge = find.byTooltip('Sent with boosted TX power and LNA enabled by the app');
       expect(badge, findsOneWidget);
-      expect(find.byTooltip('Sent with boosted TX power'), findsOneWidget);
+      expect(lnaBadge, findsOneWidget);
+      Color? iconColor(Finder root) => tester.widget<Icon>(find.descendant(
+        of: root, matching: find.byIcon(Icons.bolt),
+      )).color;
+      expect(iconColor(lnaBadge), Colors.red);
+      expect(iconColor(badge), tester.widget<TxPowerBoostBadge>(badge).color);
       final metadata = tester.element(badge).findAncestorWidgetOfExactType<Wrap>()!;
       final previous = metadata.children.indexWhere(
         (widget) => widget is Text && widget.data == (inChannel ? '3' : '1.2s'),
@@ -208,7 +232,8 @@ void main() {
         settings.settings.copyWith(enableMessageTracing: false),
       );
       await tester.pumpAndSettle();
-      expect(badge, findsOneWidget);
+      expect(badges, findsNWidgets(2));
+      expect(iconColor(lnaBadge), Colors.red);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 2));
     });

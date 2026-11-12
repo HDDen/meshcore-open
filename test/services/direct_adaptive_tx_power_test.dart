@@ -35,7 +35,7 @@ typedef _Send = ({int attempt, bool flood, bool boosted});
 
 class _Retry {
   _Retry({int attempts = 2, int floodRetries = 0, bool enabled = true,
-    bool boostConfirmed = true})
+    bool boostConfirmed = true, bool withLna = false})
     : settings = _Settings(enabled: enabled, floodRetries: floodRetries) {
     service.setMaxRetries(attempts);
     service.initialize(RetryServiceConfig(
@@ -64,7 +64,7 @@ class _Retry {
         if (!boostConfirmed && !sendWithoutBoost) return null;
         if (boostConfirmed) {
           owners.add(owner);
-          onSendingBoosted();
+          onSendingBoosted(withLna);
         }
         return send(text, attempt, timestamp, flood: useFlood, boosted: boostConfirmed);
       },
@@ -120,7 +120,7 @@ void main() {
 
   testWidgets('one repeat on the route and two repeats on automatic Flood',
       (tester) async {
-    final retry = _Retry();
+    final retry = _Retry(withLna: true);
     addTearDown(retry.dispose);
     await retry.start();
     await tester.pump();
@@ -146,6 +146,7 @@ void main() {
     expect(retry.service.handleAckReceived(retry.hash(1), 10), isNotNull);
     expect(retry.latest.status, MessageStatus.delivered);
     expect(retry.latest.sentWithTxPowerBoost, isTrue);
+    expect(retry.latest.sentWithAdaptiveLna, isTrue);
     expect(retry.owners, isEmpty);
     expect(retry.releases, 2);
   });
@@ -167,13 +168,17 @@ void main() {
     ]);
     expect(retry.owners, hasLength(1));
     expect(retry.service.handleAckReceived(retry.hash(2), 10), isNotNull);
+    expect(retry.latest.sentWithTxPowerBoost, isTrue);
+    expect(retry.latest.sentWithAdaptiveLna, isFalse);
     expect(retry.owners, isEmpty);
   });
 
   for (final boostConfirmed in [true, false]) {
     testWidgets('only an accepted boost on the acknowledged Flood attempt is marked '
         '(boost confirmed: $boostConfirmed)', (tester) async {
-      final retry = _Retry(floodRetries: 1, boostConfirmed: boostConfirmed);
+      final retry = _Retry(
+        floodRetries: 1, boostConfirmed: boostConfirmed, withLna: true,
+      );
       addTearDown(retry.dispose);
       await retry.start(forceFlood: true);
       await tester.pump();
@@ -186,6 +191,7 @@ void main() {
       expect(retry.service.handleAckReceived(retry.hash(ackedAttempt), 10), isNotNull);
       expect(retry.latest.status, MessageStatus.delivered);
       expect(retry.latest.sentWithTxPowerBoost, isFalse);
+      expect(retry.latest.sentWithAdaptiveLna, isFalse);
     });
   }
 

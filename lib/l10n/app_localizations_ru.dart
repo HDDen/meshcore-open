@@ -8137,6 +8137,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messageSentWithTxPowerBoost => 'Отправлено с повышенной мощностью';
 
   @override
+  String get messageSentWithTxPowerBoostAndLna =>
+      'Отправлено с повышенной мощностью и включением LNA';
+
+  @override
   String get adaptiveTxPowerFloodRetries =>
       'Увеличивать для последних N попыток принудительного Flood';
 

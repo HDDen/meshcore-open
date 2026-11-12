@@ -588,6 +588,7 @@ class MessageStore {
       'deliveredAt': msg.deliveredAt?.millisecondsSinceEpoch,
       'tripTimeMs': msg.tripTimeMs,
       if (msg.sentWithTxPowerBoost) 'sentWithTxPowerBoost': true,
+      if (msg.sentWithAdaptiveLna) 'sentWithAdaptiveLna': true,
       'pathLength': msg.pathLength,
       'pathBytes': msg.pathBytes.isNotEmpty
           ? base64Encode(msg.pathBytes)
@@ -742,6 +743,7 @@ class MessageStore {
           : null,
       tripTimeMs: json['tripTimeMs'] as int?,
       sentWithTxPowerBoost: json['sentWithTxPowerBoost'] == true,
+      sentWithAdaptiveLna: json['sentWithAdaptiveLna'] == true,
       pathLength: decodedPathLength,
       pathBytes: decodedPathBytes,
       deliveryProgressTotalSteps:

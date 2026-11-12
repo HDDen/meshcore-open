@@ -27,7 +27,11 @@ class AdaptiveLna {
   final _restoreOff = <String, TxPowerSession>{};
   final _recoveryAttempted = <String>{};
   TxPowerSession? _ownerSession;
+  TxPowerSession? _enabledSession;
   bool _checked = false;
+
+  bool get enabledByApp =>
+      _enabledSession != null && _enabledSession == currentSession();
 
   static bool? _parseGain(String reply) {
     final state = _gainReply.firstMatch(reply.trim())?.group(1);
@@ -61,6 +65,7 @@ class AdaptiveLna {
       if (_parseGain(await send(_enableGain)) != true) {
         throw StateError('LNA enable was not confirmed');
       }
+      _enabledSession = session;
     });
   }
 
@@ -90,6 +95,7 @@ class AdaptiveLna {
 
   Future<void> _restore(TxPowerSession session) async {
     if (!_restoreOff.containsKey(session.nodeKey)) return;
+    _enabledSession = null;
     await runCli(session, (send) async {
       if (_parseGain(await send(_disableGain)) != false) {
         throw StateError('LNA restore was not confirmed');

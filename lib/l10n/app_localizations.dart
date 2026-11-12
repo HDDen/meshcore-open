@@ -13581,6 +13581,9 @@ abstract class AppLocalizations {
 
   String get messageSentWithTxPowerBoost => 'Sent with boosted TX power';
 
+  String get messageSentWithTxPowerBoostAndLna =>
+      'Sent with boosted TX power and LNA enabled by the app';
+
   /// No description provided for @adaptiveTxPowerRecovery.
   ///
   /// In en, this message translates to:

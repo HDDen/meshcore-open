@@ -5197,7 +5197,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Object? powerOwner,
     bool Function()? canSend,
     bool sendWithoutBoost = true,
-    VoidCallback? onSendingBoosted,
+    void Function(bool withLna)? onSendingBoosted,
   }) async {
     if (!isConnected) throw StateError('Not connected');
     if (text.isEmpty) throw ArgumentError('Empty message text');
@@ -5236,13 +5236,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           attempt: attempt,
           timestampSeconds: timestampSeconds,
         );
+        final onSending = boosted && onSendingBoosted != null
+            ? () => onSendingBoosted(_adaptiveLna.enabledByApp)
+            : null;
         final region = useFlood ? getContactRegion(contact.publicKeyHex) : '';
         if (region.isNotEmpty) {
           return await _sendScopedContactFrame(
             frame,
             region,
             canSend: canSend,
-            onSending: boosted ? onSendingBoosted : null,
+            onSending: onSending,
           );
         }
         final sentByRadioAt = DateTime.now();
@@ -5250,7 +5253,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // text too long for this attempt) fail the message at once instead
         // of after its ACK timeout.
         try {
-          if (boosted) onSendingBoosted?.call();
+          onSending?.call();
           await _sendFrameAndWaitForCommandAck(frame);
         } on TimeoutException catch (e) {
           appLogger.warn('No SENT reply for message: $e', tag: 'Connector');
@@ -10191,6 +10194,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             hopControl!.lastAttemptAt = _channelResendNow();
             _incrementChannelResendCount(messageId);
           }
+          final withLna = boostedSession != null && _adaptiveLna.enabledByApp;
           // Stamp text with the actual send time so replies to our own
           // message resolve by exact-timestamp matching.
           await _sendFrameAndWaitForCommandAck(
@@ -10205,7 +10209,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             channelSendQueueId: isResend ? null : messageId,
           );
           if (boostedSession != null && txPowerSession == boostedSession) {
-            _markChannelSentWithTxPowerBoost(channel.index, messageId);
+            _markChannelSentWithTxPowerBoost(
+              channel.index, messageId, withLna: withLna,
+            );
           }
         }, region: pending.region ?? _channelSendScope(channel.index));
     }
@@ -11460,6 +11466,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
               attempt: expected.attempt,
               selection: expected.selection,
               sentWithTxPowerBoost: expected.sentWithTxPowerBoost,
+              sentWithAdaptiveLna: expected.sentWithAdaptiveLna,
             ));
       }
       while (_stoppedSendAcks.length > 64) {
@@ -11660,12 +11667,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _markChannelSentWithTxPowerBoost(int channelIndex, String messageId) {
+  void _markChannelSentWithTxPowerBoost(
+    int channelIndex,
+    String messageId, {
+    required bool withLna,
+  }) {
     final messages = _channelMessages[channelIndex];
     if (messages == null) return;
     final index = messages.indexWhere((message) => message.messageId == messageId);
-    if (index < 0 || messages[index].sentWithTxPowerBoost) return;
-    final updated = messages[index].copyWith(sentWithTxPowerBoost: true);
+    if (index < 0) return;
+    final message = messages[index];
+    final sentWithAdaptiveLna = message.sentWithAdaptiveLna || withLna;
+    if (message.sentWithTxPowerBoost &&
+        message.sentWithAdaptiveLna == sentWithAdaptiveLna) {
+      return;
+    }
+    final updated = message.copyWith(
+      sentWithTxPowerBoost: true,
+      sentWithAdaptiveLna: sentWithAdaptiveLna,
+    );
     messages[index] = updated;
     unawaited(_channelMessageStore.saveChannelMessage(channelIndex, updated));
     notifyListeners();
@@ -19715,6 +19735,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         final sentWithTxPowerBoost =
             candidates.any((entry) => entry.sentWithTxPowerBoost) &&
             candidates.map((entry) => entry.attempt).toSet().length == 1;
+        final sentWithAdaptiveLna = sentWithTxPowerBoost &&
+            candidates.any((entry) => entry.sentWithAdaptiveLna);
         _updateStoredContactMessage(
           stopped.contactKeyHex,
           stopped.messageId,
@@ -19724,6 +19746,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             tripTimeMs: tripTimeMs,
             sentWithTxPowerBoost:
                 current.sentWithTxPowerBoost || sentWithTxPowerBoost,
+            sentWithAdaptiveLna: current.sentWithAdaptiveLna || sentWithAdaptiveLna,
             deliveryProgressCompletedSteps: current.deliveryProgressTotalSteps,
           ),
         );
@@ -22615,6 +22638,7 @@ typedef _StoppedSend = ({
     int attempt,
     PathSelection? selection,
     bool sentWithTxPowerBoost,
+    bool sentWithAdaptiveLna,
   })> attempts,
 });
 

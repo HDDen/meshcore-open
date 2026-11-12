@@ -44,6 +44,7 @@ typedef AckHashMapping = ({
   int attemptIndex,
   PathSelection? pathSelection,
   bool sentWithTxPowerBoost,
+  bool sentWithAdaptiveLna,
 });
 
 typedef _DeferredRouteFailure = ({int ackHash, PathSelection selection});
@@ -67,7 +68,7 @@ typedef _ExpectedAttempt = ({
   String messageId,
   int attempt,
   PathSelection selection,
-  bool Function()? usedTxPowerBoost,
+  bool? Function()? boostedWithLna,
 });
 
 /// What the node needs before an attempt: its route written, its route
@@ -103,7 +104,7 @@ class RetryServiceConfig {
     required Object owner,
     required bool Function() canSend,
     required bool sendWithoutBoost,
-    required void Function() onSendingBoosted,
+    required void Function(bool withLna) onSendingBoosted,
   })? sendBoostedMessage;
   final Future<void> Function(Object owner)? releaseTxPower;
   final void Function(String, Message) addMessage;
@@ -755,7 +756,7 @@ class MessageRetryService extends ChangeNotifier {
     if (!repeating) _recordAttemptPathHistory(messageId, selection);
 
     final attempt = message.retryCount;
-    var sendingBoosted = false;
+    bool? boostedWithLna;
     final timestampSeconds = message.timestamp.millisecondsSinceEpoch ~/ 1000;
 
     // Compute expected ACK hash that device will return in RESP_CODE_SENT
@@ -790,7 +791,7 @@ class MessageRetryService extends ChangeNotifier {
         messageId: messageId,
         attempt: attempt,
         selection: selection,
-        usedTxPowerBoost: boost ? () => sendingBoosted : null,
+        boostedWithLna: boost ? () => boostedWithLna : null,
       ));
 
       final shortText = message.text.length > 20
@@ -818,7 +819,7 @@ class MessageRetryService extends ChangeNotifier {
             owner: _txPowerOwners.putIfAbsent(messageId, Object.new),
             canSend: canSend,
             sendWithoutBoost: !repeating,
-            onSendingBoosted: () => sendingBoosted = true,
+            onSendingBoosted: (withLna) => boostedWithLna = withLna,
           )
         : await config.sendMessage(
             contact, outboundText, attempt, timestampSeconds, useFlood: useFlood,
@@ -945,12 +946,14 @@ class MessageRetryService extends ChangeNotifier {
 
     final message = _pendingMessages[messageId]!;
     _armProgressTracker(messageId, message, contact);
+    final boostedWithLna = expected.boostedWithLna?.call();
     _ackHashToMessageId.putIfAbsent(ackHashHex, () => []).insert(0, (
       messageId: messageId,
       timestamp: DateTime.now(),
       attemptIndex: expected.attempt,
       pathSelection: isFlood == true ? _floodSelection : expected.selection,
-      sentWithTxPowerBoost: expected.usedTxPowerBoost?.call() == true,
+      sentWithTxPowerBoost: boostedWithLna != null,
+      sentWithAdaptiveLna: boostedWithLna == true,
     ));
 
     // Add this ACK hash to the list of expected ACKs for this message (for history)
@@ -1016,6 +1019,7 @@ class MessageRetryService extends ChangeNotifier {
     int attempt,
     PathSelection? selection,
     bool sentWithTxPowerBoost,
+    bool sentWithAdaptiveLna,
   })> expectedAcksFor(
     String messageId,
   ) => [
@@ -1027,6 +1031,7 @@ class MessageRetryService extends ChangeNotifier {
             attempt: mapping.attemptIndex,
             selection: mapping.pathSelection,
             sentWithTxPowerBoost: mapping.sentWithTxPowerBoost,
+            sentWithAdaptiveLna: mapping.sentWithAdaptiveLna,
           ),
   ];
 
@@ -1043,6 +1048,7 @@ class MessageRetryService extends ChangeNotifier {
         attemptIndex: mapping.attemptIndex,
         pathSelection: mapping.pathSelection,
         sentWithTxPowerBoost: mapping.sentWithTxPowerBoost,
+        sentWithAdaptiveLna: mapping.sentWithAdaptiveLna,
       );
     }
   }
@@ -1514,11 +1520,11 @@ class MessageRetryService extends ChangeNotifier {
           byte == null || (byte < 4 ? attempt < 4 : attempt == byte);
       final ackCandidates = mappings?.where(
         (entry) => matchesAttemptByte(entry.attemptIndex),
-      );
+      ) ?? const <AckHashMapping>[];
       // A normal send and its boosted replay can use the exact same packet.
       // Mark an accepted boosted copy of this attempt. A hash collision with
       // a different logical attempt leaves the boost unconfirmed.
-      final sentWithTxPowerBoost = ackCandidates != null &&
+      final sentWithTxPowerBoost =
           ackCandidates.any((entry) => entry.sentWithTxPowerBoost) &&
           ackCandidates.every((entry) =>
               entry.messageId == matchedMessageId &&
@@ -1533,6 +1539,8 @@ class MessageRetryService extends ChangeNotifier {
         deliveredAt: DateTime.now(),
         tripTimeMs: tripTimeMs,
         sentWithTxPowerBoost: sentWithTxPowerBoost,
+        sentWithAdaptiveLna: sentWithTxPowerBoost &&
+            ackCandidates.any((entry) => entry.sentWithAdaptiveLna),
         deliveryProgressCompletedSteps:
             message.deliveryProgressTotalSteps,
       );
