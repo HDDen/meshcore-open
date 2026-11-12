@@ -1054,10 +1054,13 @@ because a missing value reads through to the other nodes and a name cleared
 here has to shadow theirs. The connector mirrors it in `_channelSenderNames`;
 `channelSenderName` is the stored alias, `channelSenderNameInEffect` the one
 a send takes, `channelSendName` what a message goes out under, and outgoing
-messages store that name in `senderName`, which is what the self-echo rule of
+messages store that name in `senderName`. The self-echo rule of
 `_isChannelRepeat`, reactions to our message, replies naming us, the
-heard-packet record and the "own node" quote styling read; `_channelMessageMentionsSelf`
-and `isChannelSenderNameOurs` match the alias beside the node name.
+heard-packet record and the "own node" quote styling use this field.
+`_channelMessageMentionsSelf` and `isChannelSenderNameOurs` match the alias
+and the node name. An outgoing reaction uses the effective sender name in
+its local record and deduplication key, so a relayed copy matches the
+reaction already shown.
 
 Three locks, in `helpers/channel_sender_name.dart` (`resolveChannelSenderNameLock`),
 each shown as a snackbar when the line is tapped. **Signed MCMP** (MCMP on,

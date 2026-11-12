@@ -9477,7 +9477,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (pendingMessageId != null) {
         _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
       }
-      reactionInfo.senderName = selfName;
+      // The radio echo is deduplicated under the sender carried by the packet.
+      reactionInfo.senderName = senderName;
       // Check if we've already processed this reaction
       _processedChannelReactions.putIfAbsent(channel.index, () => {});
       final reactionIdentifier = reactionInfo.identifier();

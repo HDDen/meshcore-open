@@ -151,7 +151,7 @@ Messages also show a region label when known, independently of message tracing. 
 - **Location pins** (`m:{lat},{lon}|{label}|`) shown as tappable location cards
 - **Mesh images** sent as GRP_DATA chunks and reconstructed locally ([setup and limitations](image-messages.md))
 - **URL image previews** when enabled per channel; content is fetched over the internet
-- **Reactions** displayed as emoji pills below target messages
+- **Reactions** appear as emoji pills below target messages and use the channel's effective sender name.
 
 ### Replies (Channel Chat Only)
 

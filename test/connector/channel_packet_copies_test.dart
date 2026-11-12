@@ -8,8 +8,10 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
 import 'package:meshcore_open/helpers/channel_key_hash_cache.dart';
 import 'package:meshcore_open/helpers/reaction_helper.dart';
+import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/channel_message_store.dart';
 
 import '../support/history_test_environment.dart';
 
@@ -124,13 +126,17 @@ Uint8List _contactFrame(Uint8List key, String name) {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 150));
 
-// Only the synthetic handshake reports a live transport. Packet-copy tests
-// retain their previous disconnected state; no BLE/USB/network is opened.
+// The synthetic handshake and explicit send tests report a live transport.
+// Other packet-copy tests run disconnected.
 class _Connector extends MeshCoreConnector {
   bool handshaking = true;
+  bool readyToSend = false;
 
   @override
-  bool get isConnected => handshaking;
+  bool get isConnected => handshaking || readyToSend;
+
+  @override
+  bool get isSessionReady => readyToSend || super.isSessionReady;
 }
 
 Uint8List _selfInfoFrame() {
@@ -150,7 +156,7 @@ Uint8List _selfInfoFrame() {
 
 /// A connector with [channels] installed the way a channel sync installs
 /// them, each as (index, name, PSK).
-Future<MeshCoreConnector> _connectorWithChannels(
+Future<_Connector> _connectorWithChannels(
   List<(int, String, Uint8List)> channels,
 ) async {
   final connector = _Connector();
@@ -611,6 +617,77 @@ Future<void> main() async {
   });
 
   group('reactions', () {
+    test('an alias reaction writes one raw frame and its echoes add no reaction', () async {
+      final connector = await _connectorWithChannels([(0, 'Test', psk)]);
+      final channel = connector.channels.single;
+      const alias = 'Channel alias';
+      connector.handleFrameForTest([respCodeDeviceInfo, 13, 0, 0]);
+      await connector.setChannelSenderName(channel.index, alias);
+      expect(connector.selfName, 'Copy test');
+      expect(connector.channelSendName(channel.index), alias);
+
+      final original = ChannelMessage(
+        channelIndex: channel.index,
+        senderName: 'Alice',
+        text: 'hello',
+        timestamp: DateTime.fromMillisecondsSinceEpoch(_timestamp * 1000),
+        receivedAt: DateTime.now(),
+        isOutgoing: false,
+        status: ChannelMessageStatus.sent,
+      );
+      connector.setChannelMessagesForTest(channel.index, [original]);
+      final emoji = ReactionHelper.reactionEmojis.first;
+      final reaction = ReactionHelper.encodeReaction(
+        original.computeReactionHash(),
+        ReactionHelper.emojiToIndex(emoji)!,
+      );
+
+      final writes = <Uint8List>[];
+      connector.setFrameWriterForTest((frame) async {
+        writes.add(Uint8List.fromList(frame));
+        connector.handleFrameForTest([respCodeOk]);
+      });
+      connector.readyToSend = true;
+      await connector.sendChannelMessage(channel, reaction);
+      final optimistic = connector.getLoadedChannelMessages(channel).single;
+      expect(writes.map((frame) => frame.first), [
+        cmdSetFloodScope,
+        cmdSendRawPacket,
+        cmdSetFloodScope,
+      ]);
+
+      final sent = writes[1];
+      expect(sent[2], (_groupTextPayloadType << 2) | _routeFlood);
+      expect(sent[3] & 0x3f, 0);
+      // Feed the exact outgoing payload back through the radio RX-log parser
+      // with two different relay paths, as it would arrive from the mesh.
+      for (final hop in [0x22, 0x33]) {
+        connector.handleFrameForTest([
+          pushCodeLogRxData,
+          32,
+          -70 & 0xff,
+          sent[2],
+          sent[3] | 1,
+          hop,
+          ...sent.skip(4),
+        ]);
+      }
+      await _settle();
+
+      expect(connector.heardChannelReactionCopiesDropped, 1);
+      expect(optimistic.reactions[emoji], [alias]);
+      expect(
+        connector.getLoadedChannelMessages(channel).single.reactions[emoji],
+        [alias],
+      );
+      final history = ChannelMessageStore()
+        ..setPublicKeyHex = connector.selfPublicKeyHex
+        ..registerChannel(channel);
+      final stored = (await history.loadChannelMessages(channel.index)).single;
+      expect(stored.reactions[emoji], [alias]);
+      expect(writes, hasLength(3));
+    });
+
     test('a reaction applies once however many copies arrive, and is never '
         'a message', () async {
       final connector = await _connectorWithChannels([(0, 'Test', psk)]);
