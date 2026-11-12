@@ -11,6 +11,7 @@ import 'package:meshcore_open/helpers/backup_channel_settings.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/helpers/backup_node_profile.dart';
+import 'package:meshcore_open/helpers/background_work_tracker.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/community.dart';
@@ -131,6 +132,33 @@ class _Radio {
       await done.future.timeout(const Duration(seconds: 5));
     } finally {
       connector.removeListener(observe);
+    }
+    await waitForChannelWork();
+  }
+
+  Future<void> waitForChannelWork() async {
+    final done = Completer<void>();
+    void observe() {
+      final work = connector.backgroundWorkSnapshot;
+      if (!done.isCompleted &&
+          work.countFor(BackgroundWorkKind.channelSync) == 0 &&
+          work.countFor(BackgroundWorkKind.messageReplay) == 0) {
+        done.complete();
+      }
+    }
+
+    connector.addBackgroundWorkListener(observe);
+    try {
+      observe();
+      await done.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw TimeoutException(
+          'Channel work did not drain: '
+          '${connector.backgroundWorkSnapshot.counts}',
+        ),
+      );
+    } finally {
+      connector.removeBackgroundWorkListener(observe);
     }
   }
 
@@ -262,12 +290,24 @@ void main() {
 
   tearDown(() async {
     radio.connector.resetConnectionHandshakeForTest();
-    radio.connector.resetSyncProgressForTest();
-    radio.connector.dispose();
-    ChannelIdentities.instance.resetForTesting();
-    await storage.resetForTesting();
-    PrefsManager.reset();
-    PathProviderPlatform.instance = savedPaths;
+    try {
+      // The sync result can arrive while deferred inbox replay still uses
+      // SQLite. Wait for those callbacks before closing the database.
+      await radio.waitForChannelWork();
+    } finally {
+      radio.connector.dispose();
+      ChannelIdentities.instance.resetForTesting();
+      try {
+        await storage.resetForTesting().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () =>
+              throw TimeoutException('Restore test database did not close'),
+        );
+      } finally {
+        PrefsManager.reset();
+        PathProviderPlatform.instance = savedPaths;
+      }
+    }
   });
 
   test('node profile applies selected writes on ACK and preserves contact flags', () async {
