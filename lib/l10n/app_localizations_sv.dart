@@ -6592,6 +6592,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pathMap_expandPanel => 'Expandera panel';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Ingen position';
 
   @override

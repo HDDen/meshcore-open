@@ -6640,6 +6640,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pathMap_expandPanel => 'Espandi pannello';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Nessuna posizione';
 
   @override

@@ -27,6 +27,7 @@ import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/app_route_observer.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
+import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -790,6 +791,68 @@ void main() {
       });
     }
   });
+
+  for (final trace in [false, true]) {
+    testWidgets('U34: ${trace ? 'trace' : 'message'} map expands hops and returns without another send', (tester) async {
+      tester.view.physicalSize = const Size(480, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final connector = _PathLocationConnector()
+        ..reportedPosition = const LatLng(54.50, 36.50);
+      final path = Uint8List.fromList([0x12]);
+      final screen = trace
+          ? PathTraceMapScreen(title: 'Synthetic trace', path: path)
+          : ChannelMessagePathMapScreen(
+              message: ChannelMessage(
+                senderName: 'Synthetic sender',
+                text: 'Synthetic path message',
+                timestamp: DateTime.utc(2026),
+                receivedAt: DateTime.utc(2026),
+                isOutgoing: false,
+                pathLength: 1,
+                pathBytes: path,
+                pathHashWidth: 1,
+              ),
+              channelMessage: true,
+            );
+      await _Harness.pump(
+        tester,
+        nodes: [_node(0x12, 'Synthetic hop', 55.75, 37.62).copyWith(type: advTypeRepeater)],
+        zoom: 15,
+        connectorOverride: connector,
+        screenOverride: screen,
+      );
+      if (trace) connector.completeTrace();
+      await _pumpFrames(tester);
+
+      final panel = find.byType(PathHopPanel);
+      final l10n = AppLocalizations.of(tester.element(panel));
+      final map = find.byType(FlutterMap);
+      final controller = tester.widget<FlutterMap>(map).mapController!;
+      final center = controller.camera.center;
+      final zoom = controller.camera.zoom;
+      final writes = connector.sentFrames.length;
+      final normalHeight = tester.getSize(panel).height;
+      expect(tester.widget<PathHopPanel>(panel).mode, PathHopPanelMode.normal);
+
+      await tester.tap(find.byTooltip(l10n.pathMap_expandHopList));
+      await _pumpFrames(tester);
+      expect(tester.widget<PathHopPanel>(panel).mode, PathHopPanelMode.expanded);
+      expect(tester.getSize(panel).height, greaterThan(normalHeight));
+      expect(find.byType(PathAnimationControls), findsNothing);
+      expect(find.descendant(of: panel, matching: find.byType(ListView)), findsOneWidget);
+
+      await tester.tap(find.byTooltip(l10n.pathMap_showMap));
+      await _pumpFrames(tester);
+      expect(tester.widget<PathHopPanel>(panel).mode, PathHopPanelMode.normal);
+      expect(find.byType(PathAnimationControls), findsOneWidget);
+      expect(controller.camera.center, center);
+      expect(controller.camera.zoom, zoom);
+      expect(connector.sentFrames, hasLength(writes));
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   group('U06b1: path map location actions and phone-first display', () {
     const nodePosition = LatLng(54.50, 36.50);

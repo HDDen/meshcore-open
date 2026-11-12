@@ -1043,7 +1043,8 @@ class _ChannelMessagePathMapScreenState
   late final PathPlaybackController _playback;
   PathViewMode _viewMode = PathViewMode.single;
   final Set<String> _hiddenPathIds = {};
-  bool _panelCollapsed = false;
+  PathHopPanelMode _panelMode = PathHopPanelMode.normal;
+  bool get _panelExpanded => _panelMode == PathHopPanelMode.expanded;
   bool _animationEnabled = true;
   bool _followPacket = false;
   bool _mapReady = false;
@@ -1091,7 +1092,7 @@ class _ChannelMessagePathMapScreenState
 
   /// Keeps the camera centered on the packet while the follow lock is on.
   void _followPacketCamera() {
-    if (!_followPacket ||
+    if (_panelExpanded || !_followPacket ||
         !_animationEnabled ||
         !_playback.started ||
         !_playback.hasPath ||
@@ -1290,6 +1291,7 @@ class _ChannelMessagePathMapScreenState
     if (!mounted) return;
     setState(() {
       _focusedHopIndex = hop.index;
+      if (_panelExpanded) _panelMode = PathHopPanelMode.normal;
     });
   }
 
@@ -1325,7 +1327,7 @@ class _ChannelMessagePathMapScreenState
     required double initialZoom,
     required LatLngBounds? bounds,
   }) {
-    if (!_mapReady) return;
+    if (!_mapReady || _panelExpanded) return;
     if (_completedViewportFit == signature ||
         _scheduledViewportFit == signature) {
       return;
@@ -1334,6 +1336,7 @@ class _ChannelMessagePathMapScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _scheduledViewportFit != signature) return;
       _scheduledViewportFit = null;
+      if (_panelExpanded) return;
       _completedViewportFit = signature;
       _resetMapView(
         initialCenter: initialCenter,
@@ -1561,7 +1564,7 @@ class _ChannelMessagePathMapScreenState
           _formatPathPrefixes(selectedPath, width),
           selfPosition,
           effectiveMode.name,
-          _panelCollapsed,
+          _panelMode,
           for (final point in viewportPoints)
             '${point.latitude},${point.longitude}',
         ].join('|');
@@ -1688,19 +1691,19 @@ class _ChannelMessagePathMapScreenState
                     ),
                   ],
                 ),
-                if (isDesktop)
+                if (isDesktop && !_panelExpanded)
                   _buildDesktopMapControls(
                     initialCenter: initialCenter,
                     initialZoom: initialZoom,
                     bounds: bounds,
                   ),
-                if (entries.length > 1)
+                if (entries.length > 1 && !_panelExpanded)
                   PathViewModeToggle(
                     key: _pathViewModeToggleKey,
                     mode: effectiveMode,
                     onChanged: (mode) => setState(() => _viewMode = mode),
                   ),
-                if (observedPaths.length > 1 &&
+                if (!_panelExpanded && observedPaths.length > 1 &&
                     effectiveMode == PathViewMode.single)
                   _buildPathSelector(
                     context,
@@ -1715,7 +1718,7 @@ class _ChannelMessagePathMapScreenState
                     },
                     topOffset: entries.length > 1 ? 60.0 : 16.0,
                   ),
-                if (points.isEmpty)
+                if (points.isEmpty && !_panelExpanded)
                   Center(
                     child: Container(
                       margin: const EdgeInsets.all(24),
@@ -2096,10 +2099,8 @@ class _ChannelMessagePathMapScreenState
     final maxHeight =
         MediaQuery.of(context).size.height * (combined ? 0.45 : 0.35);
 
-    // Collapsed, the panel is as tall as its header and controls, which
-    // wrap on a narrow panel; a fixed height overflowed then.
     double? cardHeight;
-    if (!_panelCollapsed) {
+    if (_panelMode == PathHopPanelMode.normal) {
       final summaryHeight = combined ? 34.0 + entries.length * 36.0 : 0;
       final estimatedHeight = 132.0 + summaryHeight + hops.length * 56.0;
       cardHeight = max(176.0, min(maxHeight, estimatedHeight));
@@ -2116,9 +2117,10 @@ class _ChannelMessagePathMapScreenState
     }
 
     return Positioned(
-      left: 16,
-      right: 16,
-      bottom: 16,
+      left: _panelExpanded ? 0 : 16,
+      right: _panelExpanded ? 0 : 16,
+      bottom: _panelExpanded ? 0 : 16,
+      top: _panelExpanded ? 0 : null,
       child: SizedBox(
         key: _hopListPanelKey,
         height: cardHeight,
@@ -2137,69 +2139,40 @@ class _ChannelMessagePathMapScreenState
                 data: TextButtonThemeData(
                   style: TextButton.styleFrom(foregroundColor: MeshPalette.ink),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                child: PathHopPanel(
+                  mode: _panelMode,
+                  onModeChanged: (mode) {
+                    setState(() => _panelMode = mode);
+                    if (_panelExpanded && _playback.playing) _playback.pause();
+                  },
+                  header: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        l10n.channelPath_repeaterHops,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      formatDistance(
-                                        selectedDisplay?.distanceMeters ??
-                                            _pathDistance,
-                                        isImperial: isImperial,
-                                      ),
-                                      style: MeshTheme.mono(
-                                        fontSize: 12,
-                                        color: MeshPalette.ink2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                PathMiniLegend(
-                                  combined: combined,
-                                  showInferred: false,
-                                ),
-                              ],
+                            child: Text(
+                              l10n.channelPath_repeaterHops,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            icon: Icon(
-                              _panelCollapsed
-                                  ? Icons.expand_less
-                                  : Icons.expand_more,
-                              size: 20,
-                            ),
-                            tooltip: _panelCollapsed
-                                ? l10n.pathMap_expandPanel
-                                : l10n.pathMap_collapsePanel,
-                            onPressed: () => setState(
-                              () => _panelCollapsed = !_panelCollapsed,
+                          Flexible(
+                            child: Text(
+                              formatDistance(
+                                selectedDisplay?.distanceMeters ?? _pathDistance,
+                                isImperial: isImperial,
+                              ),
+                              style: MeshTheme.mono(fontSize: 12, color: MeshPalette.ink2),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    PathAnimationControls(
+                      const SizedBox(height: 4),
+                      PathMiniLegend(combined: combined, showInferred: false),
+                    ],
+                  ),
+                  controls: [
+                    if (!_panelExpanded) PathAnimationControls(
                       playback: _playback,
                       selected: selectedDisplay,
                       animationEnabled: _animationEnabled,
@@ -2210,8 +2183,8 @@ class _ChannelMessagePathMapScreenState
                       followEnabled: _followPacket,
                       onToggleFollow: _toggleFollowPacket,
                     ),
-                    if (!_panelCollapsed) ...[
-                      if (selectedDisplay != null &&
+                    if (_panelMode != PathHopPanelMode.collapsed) ...[
+                      if (!_panelExpanded && selectedDisplay != null &&
                           selectedDisplay.unresolvedHops > 0)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
@@ -2247,16 +2220,9 @@ class _ChannelMessagePathMapScreenState
                               ),
                           onShowAll: () => setState(_hiddenPathIds.clear),
                         ),
-                      const Divider(height: 1),
-                      Expanded(
-                        child: _buildHopListView(
-                          hops,
-                          selectedDisplay,
-                          hopUseCount,
-                        ),
-                      ),
                     ],
                   ],
+                  hopList: _buildHopListView(hops, selectedDisplay, hopUseCount),
                 ),
               ),
             ),

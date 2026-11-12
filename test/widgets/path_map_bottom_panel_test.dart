@@ -3,8 +3,66 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/path_playback.dart';
 import 'package:meshcore_open/widgets/path_map_scaffold.dart';
+import 'package:meshcore_open/widgets/path_map_ui.dart';
 
 void main() {
+  testWidgets('U34: a narrow hop panel expands by swiping its header', (tester) async {
+    tester.view.physicalSize = const Size(320, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var mode = PathHopPanelMode.normal;
+    const hopListKey = ValueKey('long-hop-list');
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('ru'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(2)),
+        child: child!,
+      ),
+      home: Scaffold(
+        body: StatefulBuilder(builder: (context, setState) => Align(
+          alignment: Alignment.bottomCenter,
+          child: SizedBox(
+            height: mode == PathHopPanelMode.expanded ? 360 : 220,
+            child: PathHopPanel(
+              mode: mode,
+              onModeChanged: (value) => setState(() => mode = value),
+              header: const Text('Хопы репитеров'),
+              controls: List.generate(20, (index) => Text('Маршрут $index')),
+              hopList: ListView.builder(
+                key: hopListKey,
+                itemCount: 18,
+                itemExtent: 52,
+                itemBuilder: (_, index) => Text('Hop ${index + 1}'),
+              ),
+            ),
+          ),
+        )),
+      ),
+    ));
+
+    final header = find.byWidgetPredicate(
+      (widget) => widget is GestureDetector && widget.onVerticalDragEnd != null,
+    );
+    await tester.fling(header, const Offset(0, -70), 700);
+    await tester.pumpAndSettle();
+    expect(mode, PathHopPanelMode.expanded);
+    await tester.scrollUntilVisible(
+      find.text('Hop 18'),
+      95,
+      scrollable: find.descendant(of: find.byKey(hopListKey), matching: find.byType(Scrollable)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Hop 18').hitTestable(), findsOneWidget);
+
+    await tester.fling(header, const Offset(0, 70), 700);
+    await tester.pumpAndSettle();
+    expect(mode, PathHopPanelMode.normal);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final scenario in [
     (
       name: 'compact portrait',

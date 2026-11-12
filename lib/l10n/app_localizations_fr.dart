@@ -6656,6 +6656,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pathMap_expandPanel => 'Développer le panneau';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Aucune localisation';
 
   @override

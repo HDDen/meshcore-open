@@ -3576,6 +3576,8 @@
   "pathMap_showPath": "Show path",
   "pathMap_collapsePanel": "Collapse panel",
   "pathMap_expandPanel": "Expand panel",
+  "pathMap_expandHopList": "Expand hop list",
+  "pathMap_showMap": "Show map",
   "pathMap_noLocation": "No location",
   "pathMap_followPacket": "Lock view to packet",
   "pathMap_unfollowPacket": "Unlock view from packet",

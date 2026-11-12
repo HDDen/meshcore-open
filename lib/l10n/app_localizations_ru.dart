@@ -6631,6 +6631,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pathMap_expandPanel => 'Расширить панель';
 
   @override
+  String get pathMap_expandHopList => 'Развернуть список хопов';
+
+  @override
+  String get pathMap_showMap => 'Показать карту';
+
+  @override
   String get pathMap_noLocation => 'Нет координат';
 
   @override

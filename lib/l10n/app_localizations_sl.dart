@@ -6595,6 +6595,12 @@ class AppLocalizationsSl extends AppLocalizations {
   String get pathMap_expandPanel => 'Razširi ploščo';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Brez lokacije';
 
   @override

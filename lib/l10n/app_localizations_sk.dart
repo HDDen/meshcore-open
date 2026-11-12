@@ -6607,6 +6607,12 @@ class AppLocalizationsSk extends AppLocalizations {
   String get pathMap_expandPanel => 'Rozbaliť panel';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Bez polohy';
 
   @override

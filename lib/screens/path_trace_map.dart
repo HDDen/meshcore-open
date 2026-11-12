@@ -173,7 +173,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   List<Uint8List> _primaryOutboundHops = [];
   String _selectedPathId = 'primary';
   final Set<String> _hiddenPathIds = {};
-  bool _panelCollapsed = false;
+  PathHopPanelMode _panelMode = PathHopPanelMode.normal;
+  bool get _panelExpanded => _panelMode == PathHopPanelMode.expanded;
   bool _animationEnabled = true;
   bool _followPacket = false;
   bool _mapReady = false;
@@ -375,7 +376,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
 
   /// Keeps the camera centered on the packet while the follow lock is on.
   void _followPacketCamera() {
-    if (!_followPacket ||
+    if (_panelExpanded || !_followPacket ||
         !_animationEnabled ||
         !_playback.started ||
         !_playback.hasPath ||
@@ -436,12 +437,12 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
   }
 
   void _schedulePathViewportFit() {
-    if (!_mapReady) return;
+    if (!_mapReady || _panelExpanded) return;
     final viewportPoints = _pathViewportPoints();
     final signature = [
       _selectedPathId,
       _viewMode.name,
-      _panelCollapsed,
+      _panelMode,
       for (final point in viewportPoints)
         '${point.latitude},${point.longitude}',
     ].join('|');
@@ -453,6 +454,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _scheduledViewportFit != signature) return;
       _scheduledViewportFit = null;
+      if (_panelExpanded) return;
       _completedViewportFit = signature;
       _resetMapView();
     });
@@ -1472,9 +1474,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                   _buildMapPathTrace(
                     context, context.read<MapTileCacheService>(), _targetContact,
                   ),
-                if (showMap && _isDesktopPlatform(defaultTargetPlatform))
+                if (showMap && !_panelExpanded && _isDesktopPlatform(defaultTargetPlatform))
                   _buildDesktopMapControls(),
-                if (showMap && _displayPaths.length > 1)
+                if (showMap && !_panelExpanded && _displayPaths.length > 1)
                   PathViewModeToggle(
                     mode: _viewMode,
                     onChanged: (mode) => setState(() => _viewMode = mode),
@@ -2088,10 +2090,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     final combined = _viewMode == PathViewMode.combined;
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
 
-    // Collapsed, the panel is as tall as its header and controls, which
-    // wrap on a narrow panel; a fixed height overflowed then.
     double? cardHeight;
-    if (!_panelCollapsed) {
+    if (_panelMode == PathHopPanelMode.normal) {
       final summaryHeight = combined ? 34.0 + _displayPaths.length * 36.0 : 0;
       final hopRows = combined
           ? (selected?.totalTransmissions ?? 0)
@@ -2101,9 +2101,10 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     }
 
     return Positioned(
-      left: 16,
-      right: 16,
-      bottom: 16,
+      left: _panelExpanded ? 0 : 16,
+      right: _panelExpanded ? 0 : 16,
+      bottom: _panelExpanded ? 0 : 16,
+      top: _panelExpanded ? 0 : null,
       child: SizedBox(
         key: _hopListPanelKey,
         height: cardHeight,
@@ -2111,7 +2112,7 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           decoration: BoxDecoration(
             color: MeshPalette.bg1On(
               Theme.of(context).brightness,
-            ).withValues(alpha: 0.95),
+            ).withValues(alpha: _panelExpanded ? 1 : 0.95),
             borderRadius: BorderRadius.circular(MeshRadii.md),
             border: Border.all(
               color: MeshPalette.line2On(Theme.of(context).brightness),
@@ -2119,52 +2120,29 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(MeshRadii.md),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${l10n.channelPath_repeaterHops} ${formatDistance(selected?.distanceMeters ?? _pathDistanceMeters, isImperial: isImperial)}',
-                              style: MeshTheme.mono(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                color: MeshPalette.inkOn(
-                                  Theme.of(context).brightness,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            PathMiniLegend(combined: combined),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: Icon(
-                          _panelCollapsed
-                              ? Icons.expand_less
-                              : Icons.expand_more,
-                          size: 20,
-                        ),
-                        tooltip: _panelCollapsed
-                            ? l10n.pathMap_expandPanel
-                            : l10n.pathMap_collapsePanel,
-                        onPressed: () =>
-                            setState(() => _panelCollapsed = !_panelCollapsed),
-                      ),
-                    ],
+            child: PathHopPanel(
+              mode: _panelMode,
+              onModeChanged: (mode) {
+                setState(() => _panelMode = mode);
+                if (_panelExpanded && _playback.playing) _playback.pause();
+              },
+              header: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${l10n.channelPath_repeaterHops} ${formatDistance(selected?.distanceMeters ?? _pathDistanceMeters, isImperial: isImperial)}',
+                    style: MeshTheme.mono(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: MeshPalette.inkOn(Theme.of(context).brightness),
+                    ),
                   ),
-                ),
-                PathAnimationControls(
+                  const SizedBox(height: 4),
+                  PathMiniLegend(combined: combined),
+                ],
+              ),
+              controls: [
+                if (!_panelExpanded) PathAnimationControls(
                   playback: _playback,
                   selected: selected,
                   animationEnabled: _animationEnabled,
@@ -2175,8 +2153,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                   followEnabled: _followPacket,
                   onToggleFollow: _toggleFollowPacket,
                 ),
-                if (!_panelCollapsed) ...[
-                  if (selected != null && selected.unresolvedHops > 0)
+                if (_panelMode != PathHopPanelMode.collapsed) ...[
+                  if (!_panelExpanded && selected != null && selected.unresolvedHops > 0)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                       child: Text(
@@ -2197,10 +2175,9 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
                       onToggleVisibility: _togglePathVisibility,
                       onShowAll: () => setState(_hiddenPathIds.clear),
                     ),
-                  const Divider(height: 1),
-                  Expanded(child: _buildHopList(pathTraceData, selected)),
                 ],
               ],
+              hopList: _buildHopList(pathTraceData, selected),
             ),
           ),
         ),

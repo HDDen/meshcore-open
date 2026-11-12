@@ -2152,6 +2152,8 @@
   "pathMap_collapsePanel": "Скрыть панель",
   "pathMap_showPath": "Показать маршрут",
   "pathMap_expandPanel": "Расширить панель",
+  "pathMap_expandHopList": "Развернуть список хопов",
+  "pathMap_showMap": "Показать карту",
   "pathMap_noLocation": "Нет координат",
   "pathMap_followPacket": "Следить за пакетом",
   "pathMap_unfollowPacket": "Не следить за пакетом",

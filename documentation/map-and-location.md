@@ -232,6 +232,8 @@ A map with a polyline showing the route from your node through repeater hops to 
 
 A bottom panel shows each hop pair with SNR quality icons and total path distance. When multiple observed paths are available, a **Single / Combined** toggle appears at the top of the map. In Combined view, all paths are overlaid; shared segments are highlighted with a white halo and a path count badge appears on shared nodes.
 
+On both message path and trace maps, **Expand hop list** fills the map area with the hop list. Use **Show map** to return. Swiping the panel header up or down moves between collapsed, normal, and expanded views. Packet animation pauses while the expanded list covers the map.
+
 The bottom panel also provides **packet animation controls**:
 - **Animation toggle** (on/off)
 - **Step back / Play / Step forward / Replay** buttons

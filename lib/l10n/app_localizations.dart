@@ -11041,6 +11041,18 @@ abstract class AppLocalizations {
   /// **'Expand panel'**
   String get pathMap_expandPanel;
 
+  /// No description provided for @pathMap_expandHopList.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand hop list'**
+  String get pathMap_expandHopList;
+
+  /// No description provided for @pathMap_showMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show map'**
+  String get pathMap_showMap;
+
   /// No description provided for @pathMap_noLocation.
   ///
   /// In en, this message translates to:

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -12,6 +14,101 @@ import '../theme/mesh_theme.dart';
 /// playback controls, and the multi-path summary/legend.
 
 enum PathViewMode { single, combined }
+
+enum PathHopPanelMode { collapsed, normal, expanded }
+
+/// Keeps the route summary scrollable above a separately scrolling hop list.
+class PathHopPanel extends StatelessWidget {
+  const PathHopPanel({
+    super.key,
+    required this.mode,
+    required this.onModeChanged,
+    required this.header,
+    required this.controls,
+    required this.hopList,
+  });
+
+  final PathHopPanelMode mode;
+  final ValueChanged<PathHopPanelMode> onModeChanged;
+  final Widget header;
+  final List<Widget> controls;
+  final Widget hopList;
+
+  void _finishDrag(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final next = mode.index + (velocity < 0 ? 1 : -1);
+    if (velocity.abs() > 150 && next >= 0 && next < PathHopPanelMode.values.length) {
+      onModeChanged(PathHopPanelMode.values[next]);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final collapsed = mode == PathHopPanelMode.collapsed;
+    final expanded = mode == PathHopPanelMode.expanded;
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: switch (mode) {
+              PathHopPanelMode.collapsed => constraints.maxHeight,
+              PathHopPanelMode.normal => math.max(0.0, constraints.maxHeight - 61),
+              PathHopPanelMode.expanded => constraints.maxHeight * 0.45,
+            }),
+            child: SingleChildScrollView(
+              key: ValueKey(mode),
+              primary: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragEnd: _finishDrag,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 4, 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: header),
+                          if (!collapsed)
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(expanded ? Icons.close_fullscreen : Icons.open_in_full, size: 20),
+                              tooltip: expanded ? l10n.pathMap_showMap : l10n.pathMap_expandHopList,
+                              onPressed: () => onModeChanged(
+                                expanded ? PathHopPanelMode.normal : PathHopPanelMode.expanded,
+                              ),
+                            ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            icon: Icon(collapsed ? Icons.expand_less : Icons.expand_more, size: 20),
+                            tooltip: collapsed ? l10n.pathMap_expandPanel : l10n.pathMap_collapsePanel,
+                            onPressed: () => onModeChanged(
+                              collapsed ? PathHopPanelMode.normal : PathHopPanelMode.collapsed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  ...controls,
+                ],
+              ),
+            ),
+          ),
+          if (!collapsed) ...[
+            const Divider(height: 1),
+            Expanded(child: hopList),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 const Color kPrimaryPathColor = Colors.blueAccent;
 const List<Color> kAlternatePathColors = [
@@ -577,7 +674,9 @@ class PathSummaryList extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 l10n.pathMap_observedPaths(paths.length),
@@ -585,7 +684,6 @@ class PathSummaryList extends StatelessWidget {
                   color: MeshPalette.ink3On(Theme.of(context).brightness),
                 ),
               ),
-              const Spacer(),
               if (hiddenIds.isNotEmpty)
                 TextButton(
                   onPressed: onShowAll,

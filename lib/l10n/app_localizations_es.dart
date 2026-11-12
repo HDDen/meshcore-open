@@ -6630,6 +6630,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pathMap_expandPanel => 'Ampliar panel';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => 'Sin ubicación';
 
   @override

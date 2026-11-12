@@ -1961,6 +1961,11 @@ wire width, including four-byte prefixes. The manual result shows SNR
 without GPS or tile providers. Opening its map requests the position
 through the normal phone-first flow.
 
+Both the message path map and the trace map share `PathHopPanel`. The header
+buttons and vertical gestures switch between collapsed, normal, and expanded
+modes. The expanded list pauses packet playback and defers viewport fitting
+until the map is visible. The route summary scrolls separately from the hops.
+
 ### Heard repeater details (U06a3)
 
 Both `SNRIndicator` and `SNRActivityIndicator` use `_RepeaterDialogList` in

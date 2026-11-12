@@ -6343,6 +6343,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pathMap_expandPanel => '패널 펼치기';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => '위치 없음';
 
   @override

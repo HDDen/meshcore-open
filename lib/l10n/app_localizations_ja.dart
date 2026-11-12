@@ -6337,6 +6337,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pathMap_expandPanel => 'パネルを展開';
 
   @override
+  String get pathMap_expandHopList => 'Expand hop list';
+
+  @override
+  String get pathMap_showMap => 'Show map';
+
+  @override
   String get pathMap_noLocation => '位置情報なし';
 
   @override
