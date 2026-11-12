@@ -12,6 +12,7 @@ the expanded notification.
 
 ### 1. Direct Message Notifications
 - **Triggered when**: A new incoming message arrives from a Chat or Room contact
+- **Visible chat on Android**: A personal message stays quiet while the sender's chat is the current screen and the app is active. Messages can notify when another screen is open or the app is in the background
 - **Title**: Contact's name
 - **Body**: Message text, with localized summaries for structured messages (see below)
 - **Priority**: High

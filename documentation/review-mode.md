@@ -41,4 +41,4 @@ Simulated messages go through the normal notification pipeline. A notification i
 - The channel is not muted (there is no per-contact muting).
 - The message is incoming and the sender is a known chat or room contact (direct messages from other contact types are not notified).
 
-The app does **not** suppress notifications because it is in the foreground or because that chat is open. Opening a chat clears its unread count and notification. Bursts of messages update the notification silently (rate limited). Reviewers do not need to background the app for notifications to be posted, but notifications are far easier to see from another screen or the home screen.
+On Android, a direct message stays quiet while the sender's chat is on screen and the app is active. To test a direct notification, switch to another screen or background the app. Opening a chat clears its unread count and notification. Bursts of messages can update the notification silently due to rate limiting.

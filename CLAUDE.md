@@ -923,6 +923,11 @@ channel entrypoints use the same conversation notifier; only its display text
 changes. Original chat/SQL message contents, destructive queue ordering,
 notification background work and CPU leases are untouched.
 
+On Android, the connector skips personal message alerts and initial sync
+summary counts for the sender's current chat route while Flutter is resumed.
+Live translation still runs. The connector checks route visibility again
+after translation before handing the alert to the notification service.
+
 `MarkerPayload` and `parseMarkerText` now live in `helpers/marker_message.dart`,
 imported by map, chat and notification code. The existing grammar, including
 sender prefixes, labels, flags and coordinate bounds, is preserved. A cached

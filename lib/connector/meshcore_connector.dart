@@ -14805,9 +14805,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _initialSyncChannelMessageNotifications = 0;
   }
 
-  bool _recordInitialSyncMessageNotification() {
+  bool _recordInitialSyncMessageNotification({required bool suppress}) {
     if (!_initialSyncNotificationSummaryActive) return false;
-    _initialSyncMessageNotifications++;
+    if (!suppress) _initialSyncMessageNotifications++;
     return true;
   }
 
@@ -16053,9 +16053,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _appSettingsService != null) {
         final settings = _appSettingsService!.settings;
         if (settings.notificationsEnabled && settings.notifyOnNewMessage) {
-          if (_recordInitialSyncMessageNotification()) return;
-          final msg = message; // capture for closure
-          final c = contact; // capture contact reference
+          final msg = message;
+          final c = contact;
+          final visibleDirectChat =
+              c?.type == advTypeChat &&
+              _suppressVisibleDirectNotification(msg.senderKeyHex);
+          if (_recordInitialSyncMessageNotification(
+            suppress: visibleDirectChat,
+          )) {
+            return;
+          }
           final queueAlert = _activeQueuedNotificationAlert;
           final notificationNode = selfPublicKeyHex;
           final translationResult = await translateContactMessage(
@@ -16064,6 +16071,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           );
           if (notificationNode != selfPublicKeyHex) return;
           if (c?.type == advTypeChat) {
+            if (visibleDirectChat ||
+                _suppressVisibleDirectNotification(msg.senderKeyHex)) {
+              return;
+            }
             final resolvedText =
                 (translationResult != null &&
                     translationResult.status ==
@@ -20330,6 +20341,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
   }
+
+  bool _suppressVisibleDirectNotification(String contactKey) =>
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android &&
+      _contactChatRoutes.isVisible(contactKey) == true &&
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
   void _maybeIncrementContactUnread(Message message) {
     if (message.isOutgoing || message.isCli) {

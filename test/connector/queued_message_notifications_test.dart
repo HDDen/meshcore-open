@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
@@ -1632,6 +1633,56 @@ Future<void> main() async {
       expect(arguments['body'], 'hello');
       expect(arguments['payload'], 'message:${pubKeyToHex(aliceKey)}');
     });
+
+    for (final (scenario, lifecycle, visible, sameChat) in [
+      ('visible sender', AppLifecycleState.resumed, true, true),
+      ('covered sender', AppLifecycleState.resumed, false, true),
+      ('different chat', AppLifecycleState.resumed, true, false),
+      ('backgrounded chat', AppLifecycleState.paused, true, true),
+    ]) {
+      test('Android direct notification with $scenario', () async {
+        final binding = TestWidgetsFlutterBinding.ensureInitialized();
+        final previous = binding.lifecycleState ?? AppLifecycleState.detached;
+        binding.handleAppLifecycleStateChanged(lifecycle);
+        addTearDown(() => binding.handleAppLifecycleStateChanged(previous));
+
+        final harness = await _Harness.start();
+        final connector = harness.connector;
+        addTearDown(harness.settings.dispose);
+        addTearDown(connector.dispose);
+        final sender = await harness.addContact(aliceKey, 'Alice');
+        final openChat = sameChat
+            ? sender
+            : await harness.addContact(_key(3), 'Bob');
+        addTearDown(
+          connector.trackContactChatRoute(openChat.publicKeyHex, () => visible),
+        );
+        connector.setActiveContact(openChat.publicKeyHex);
+        await _settle();
+
+        connector.handleFrameForTest(_contactMessageFrame(
+          senderKey: aliceKey,
+          timestampSeconds: _timestamp,
+          text: 'hello',
+        ));
+        final history = MessageStore()
+          ..setPublicKeyHex = connector.selfPublicKeyHex;
+        await _waitFor(
+          () async => (await history.loadMessages(sender.publicKeyHex))
+              .any((message) => message.text == 'hello'),
+          'the stored direct message',
+        );
+
+        if (sameChat && visible && lifecycle == AppLifecycleState.resumed) {
+          await _settle();
+          expect(plugin.shown, isEmpty);
+        } else {
+          await _waitFor(() => plugin.shown.length == 1, 'the notification');
+          final arguments = _NotificationPlugin.argumentsOf(plugin.shown.single);
+          expect(arguments['payload'], 'message:${sender.publicKeyHex}');
+        }
+      });
+    }
 
     test('a room post names the room', () async {
       final harness = await _Harness.start();
