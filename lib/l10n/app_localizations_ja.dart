@@ -5315,6 +5315,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get listFilter_unreadOnly => '未読のみ';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => '新しいグループ';
 
   @override

@@ -5517,6 +5517,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get listFilter_unreadOnly => 'Samo neprebrano';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Nova skupina';
 
   @override

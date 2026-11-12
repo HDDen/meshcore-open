@@ -5521,6 +5521,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get listFilter_unreadOnly => 'Endast olästa';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Ny grupp';
 
   @override

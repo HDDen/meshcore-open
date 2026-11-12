@@ -5234,6 +5234,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get listFilter_unreadOnly => '仅显示未读';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => '新建分组';
 
   @override

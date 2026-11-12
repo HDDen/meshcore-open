@@ -1,11 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/widgets/sync_progress_overlay.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _NoPreferencesDirectory extends PathProviderPlatform {
@@ -217,6 +221,56 @@ void main() {
       await tester.pump();
       expect(c.isLoadingContacts, isFalse);
       expect(c.hasLoadedContacts, isTrue);
+    });
+  }, timeout: timeout);
+
+  testWidgets('startup shows blue channels, green queue, then red contacts', (
+    tester,
+  ) async {
+    await _withSync(tester, (c) async {
+      await tester.pumpWidget(
+        ChangeNotifierProvider<MeshCoreConnector>.value(
+          value: c,
+          child: MaterialApp(
+            home: Scaffold(appBar: AppBar(bottom: const SyncProgressAppBarBottom())),
+          ),
+        ),
+      );
+      final indicator = find.byType(LinearProgressIndicator);
+      Color? progressColor() {
+        expect(indicator, findsOneWidget);
+        return tester.widget<LinearProgressIndicator>(indicator).color;
+      }
+
+      Future<void> pumpProgress() async {
+        // Let the sync callbacks settle before advancing the UI batch timer.
+        await tester.pump();
+        await tester.pump(UiNotificationBatcher.minimum);
+      }
+
+      await c.startInitialSyncForTest(maxChannels: 1);
+      await c.getContacts(preserveExisting: true);
+      c.handleFrameForTest([pushCodeMsgWaiting]);
+      await pumpProgress();
+      expect(c.frames, [[cmdGetChannel, 0]]);
+      expect(progressColor(), Colors.blue);
+
+      c.emptyChannel(0);
+      await pumpProgress();
+      expect(c.frames, [[cmdGetChannel, 0], [cmdSyncNextMessage]]);
+      expect(progressColor(), Colors.green);
+      expect(tester.widget<LinearProgressIndicator>(indicator).value, isNull);
+
+      c.handleFrameForTest([respCodeNoMoreMessages]);
+      await pumpProgress();
+      expect(c.frames, [[cmdGetChannel, 0], [cmdSyncNextMessage], [cmdGetContacts]]);
+      expect(progressColor(), Colors.red);
+      expect(c.isShowingQueuedMessageSyncProgress, isFalse);
+
+      c.endContacts();
+      await pumpProgress();
+      expect(indicator, findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }, timeout: timeout);
 

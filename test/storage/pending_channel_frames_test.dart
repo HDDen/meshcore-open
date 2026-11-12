@@ -61,6 +61,27 @@ Future<void> main() async {
       expect(restored.channelName, isNull);
     });
 
+    test('direct frames reopen in their own inbox and radio scope', () async {
+      final queued = PendingChannelFrame(
+        id: 'direct',
+        nodeKey: node,
+        channelIndex: PendingChannelFrame.contactMessageIndex,
+        frame: Uint8List.fromList([7, 1, 2, 3, 4, 5, 6]),
+        receivedAt: DateTime.utc(2026, 10, 30, 12),
+      );
+      await database.putPendingChannelFrame(frame('channel'));
+      await database.putPendingChannelFrame(queued);
+      await database.close();
+      database = _open(file);
+
+      final restored = (await database.readPendingContactFrames(node)).single;
+      expect(restored.id, queued.id);
+      expect(restored.frame, orderedEquals(queued.frame));
+      expect(restored.receivedAt, queued.receivedAt.toLocal());
+      expect(await database.readPendingContactFrames(otherNode), isEmpty);
+      expect((await database.readPendingChannelFrames(node)).single.id, 'channel');
+    });
+
     test('pinning is idempotent and preserves original frame and receipt time', () async {
       final pending = frame('one');
       await database.putPendingChannelFrame(pending);

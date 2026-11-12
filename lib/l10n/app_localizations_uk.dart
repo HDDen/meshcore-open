@@ -5552,6 +5552,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get listFilter_unreadOnly => 'Тільки непрочитані повідомлення';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Нова група';
 
   @override

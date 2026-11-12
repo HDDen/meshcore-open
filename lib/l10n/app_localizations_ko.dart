@@ -5322,6 +5322,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get listFilter_unreadOnly => '읽지 않은 항목만';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => '새로운 그룹';
 
   @override

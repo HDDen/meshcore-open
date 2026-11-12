@@ -25,6 +25,7 @@ import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
+import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -627,6 +628,90 @@ Future<void> main() async {
         expect(connector.getUnreadCountForChannelIndex(slot), 1);
       });
     }
+
+    test('initial backlog retains direct frames before advancing and replays after reconnect', () async {
+      final first = await _Harness.start(notifications: false);
+      addTearDown(first.settings.dispose);
+      final scope = first.connector.selfPublicKeyHex;
+      final storage = MessageHistoryStorage.instance;
+      final retainedAtRequest = <int>[];
+      final directFrame = _contactMessageFrame(
+        senderKey: aliceKey,
+        timestampSeconds: _timestamp,
+        text: 'retained direct message',
+      );
+      late final DateTime retainedAt;
+      try {
+        final connector = first.connector;
+        connector.beforeQueueRequest = () async {
+          retainedAtRequest.add(
+            (await storage.readPendingContactFrames(scope)).length,
+          );
+        };
+        await connector.startInitialSyncForTest(maxChannels: 1);
+        await connector.handleChannelInfoForTest(
+          _channelInfoFrame(0, 'Test', _psk(1)),
+        );
+        await _waitFor(() => connector.syncRequests == 1, 'initial queue request');
+        expect(connector.isShowingQueuedMessageSyncProgress, isTrue);
+        expect(connector.sent.any((frame) => frame.first == cmdGetContacts), isFalse);
+
+        connector.handleFrameForTest(directFrame);
+        await _waitFor(() => connector.syncRequests == 2, 'request after direct retention');
+        expect(retainedAtRequest, [0, 1]);
+        final retained = (await storage.readPendingContactFrames(scope)).single;
+        expect(retained.frame, orderedEquals(directFrame));
+        retainedAt = retained.receivedAt;
+        expect(await storage.readPendingChannelFrames(scope), isEmpty);
+
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'queued channel message',
+        ));
+        await _waitFor(() => connector.syncRequests == 3, 'request after channel save');
+        expect(connector.getLoadedChannelMessages(connector.channels.single).single.text,
+          'queued channel message');
+        expect(connector.sent.any((frame) => frame.first == cmdGetContacts), isFalse);
+      } finally {
+        first.connector.dispose();
+      }
+
+      final restored = await _Harness.start(notifications: false);
+      final connector = restored.connector;
+      addTearDown(restored.settings.dispose);
+      addTearDown(connector.dispose);
+      await connector.startInitialSyncForTest(maxChannels: 1);
+      await connector.handleChannelInfoForTest(
+        _channelInfoFrame(0, 'Test', _psk(1)),
+      );
+      await _waitFor(() => connector.syncRequests == 1, 'queue request after reconnect');
+      connector.handleFrameForTest([respCodeNoMoreMessages]);
+      await _waitFor(() => connector.sent.any((frame) => frame.first == cmdGetContacts),
+        'contact sync after the queue');
+      expect(connector.isShowingQueuedMessageSyncProgress, isFalse);
+      expect(await storage.readPendingContactFrames(scope), hasLength(1));
+
+      final alice = await restored.addContact(aliceKey, 'Alice');
+      final conversationLoad = Completer<void>();
+      connector.setConversationLoadForTest(alice.publicKeyHex, conversationLoad.future);
+      try {
+        connector.handleFrameForTest([respCodeEndOfContacts]);
+        await _waitFor(() => connector.packetReplayStateForTest.replaying,
+          'contact replay after the contact list');
+        expect(connector.isShowingQueuedMessageSyncProgress, isFalse);
+      } finally {
+        conversationLoad.complete();
+      }
+      await _waitFor(() async => (await storage.readPendingContactFrames(scope)).isEmpty,
+        'retained frame committed to history');
+      final history = MessageStore()..setPublicKeyHex = scope;
+      final message = (await history.loadMessages(alice.publicKeyHex)).single;
+      expect(message.text, 'retained direct message');
+      expect(message.receivedAt, retainedAt);
+      expect(connector.isShowingQueuedMessageSyncProgress, isFalse);
+    });
 
     test('a replacement connector recovers an unresolved channel from the same node', () async {
       final first = await _Harness.start(notifications: false);

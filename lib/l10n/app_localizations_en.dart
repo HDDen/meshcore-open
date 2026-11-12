@@ -5479,6 +5479,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listFilter_unreadOnly => 'Unread only';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'New group';
 
   @override

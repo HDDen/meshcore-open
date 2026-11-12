@@ -5559,6 +5559,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get listFilter_unreadOnly => 'Само непрочетените';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Нова група';
 
   @override

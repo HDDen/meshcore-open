@@ -879,6 +879,14 @@ storage and codecs remain unchanged. Baseline and full-name modal checks are in
 
 ### Notifications and the node's queue
 
+Initial sync runs the channel list (blue), the firmware message queue (green)
+and the contact list (red), including on iOS. The firmware queue interleaves
+channel, direct and room frames. Direct and room frames received before
+contacts are committed to the existing pending-frame inbox, using a reserved
+slot value outside the channel index range. After contact sync they replay
+under the same full node key and keep their receipt times. An unresolved
+sender or failed write leaves the frame in the inbox for a later connection.
+
 `CMD_SYNC_NEXT_MESSAGE` is destructive: the node drops the message it hands
 over, so `_processPotentialQueuedMessage` sends the next request only after
 the delivered message is parsed, verified and written to the history (or, for

@@ -96,20 +96,34 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
       });
 
   @override
-  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) async {
+  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) =>
+      _readPendingFrames(nodeKey, contactMessages: false);
+
+  Future<List<PendingChannelFrame>> readPendingContactFrames(String nodeKey) =>
+      _readPendingFrames(nodeKey, contactMessages: true);
+
+  Future<List<PendingChannelFrame>> _readPendingFrames(
+    String nodeKey, {
+    required bool contactMessages,
+  }) async {
     _requireInitialized();
     if (!kIsWeb) {
-      return _database!.readPendingChannelFrames(nodeKey);
+      return contactMessages
+          ? _database!.readPendingContactFrames(nodeKey)
+          : _database!.readPendingChannelFrames(nodeKey);
     }
     final prefs = PrefsManager.instance;
     final prefix = '$_pendingChannelPrefix${nodeKey}_';
     final frames = <PendingChannelFrame>[];
     for (final key in prefs.getKeys().where((key) => key.startsWith(prefix))) {
       final value = jsonDecode(prefs.getString(key)!) as Map<String, dynamic>;
+      final channelIndex = value['channelIndex'] as int;
+      final isContact = channelIndex == PendingChannelFrame.contactMessageIndex;
+      if (isContact != contactMessages) continue;
       frames.add(PendingChannelFrame(
         id: value['id'] as String,
         nodeKey: value['nodeKey'] as String,
-        channelIndex: value['channelIndex'] as int,
+        channelIndex: channelIndex,
         frame: base64Decode(value['frame'] as String),
         receivedAt: DateTime.fromMillisecondsSinceEpoch(value['receivedAtMs'] as int),
         channelName: value['channelName'] as String?,

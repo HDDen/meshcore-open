@@ -727,11 +727,26 @@ CREATE TABLE IF NOT EXISTS pending_channel_frames (
     );
   }
 
-  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) async {
+  Future<List<PendingChannelFrame>> readPendingChannelFrames(String nodeKey) =>
+      _readPendingFrames(nodeKey, contactMessages: false);
+
+  Future<List<PendingChannelFrame>> readPendingContactFrames(String nodeKey) =>
+      _readPendingFrames(nodeKey, contactMessages: true);
+
+  Future<List<PendingChannelFrame>> _readPendingFrames(
+    String nodeKey, {
+    required bool contactMessages,
+  }) async {
+    final slotFilter = contactMessages
+        ? 'channel_index = ?'
+        : 'channel_index <> ?';
     final rows = await customSelect(
-      'SELECT * FROM pending_channel_frames WHERE node_key = ? '
+      'SELECT * FROM pending_channel_frames WHERE node_key = ? AND $slotFilter '
       'ORDER BY received_at_ms, rowid',
-      variables: [Variable<String>(nodeKey)],
+      variables: [
+        Variable<String>(nodeKey),
+        const Variable<int>(PendingChannelFrame.contactMessageIndex),
+      ],
     ).get();
     return [
       for (final row in rows)

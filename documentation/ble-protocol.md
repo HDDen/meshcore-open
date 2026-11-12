@@ -56,7 +56,10 @@ enum MeshCoreConnectionState {
 4. **Discover services** and locate NUS
 5. **Enable TX notifications** (up to 3 attempts on native)
 6. **Subscribe** to TX characteristic for incoming frames
-7. **Initial sync**: device info query, time sync, channel sync
+7. **Initial sync**: the indicators show the channel list (blue), queued
+   messages (green), and the contact list (red). The queue interleaves channel,
+   direct and room messages. Direct and room messages are retained until the
+   contact list is available.
 
 ## Auto-Reconnect (BLE Only)
 

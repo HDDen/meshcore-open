@@ -5571,6 +5571,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get listFilter_unreadOnly => 'Messages non lus seulement';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Nouveau groupe';
 
   @override

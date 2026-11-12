@@ -9347,7 +9347,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Node contacts only'**
-  String get listFilter_nodeContactsOnly => 'Node contacts only';
+  String get listFilter_nodeContactsOnly;
 
   /// No description provided for @listFilter_newGroup.
   ///

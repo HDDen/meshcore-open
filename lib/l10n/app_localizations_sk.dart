@@ -5533,6 +5533,9 @@ class AppLocalizationsSk extends AppLocalizations {
   String get listFilter_unreadOnly => 'Len neprečítané';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Nová skupina';
 
   @override

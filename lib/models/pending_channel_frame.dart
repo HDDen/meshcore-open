@@ -1,8 +1,12 @@
 import 'dart:typed_data';
 
-/// A received frame that must survive until its channel can be identified.
+/// A received frame awaiting its channel or sender metadata.
 /// The full node key is used here, independently of historical storage prefixes.
 class PendingChannelFrame {
+  /// Radio channel indices are unsigned bytes. This value reserves rows
+  /// for direct and room messages awaiting the initial contact list.
+  static const contactMessageIndex = -1;
+
   const PendingChannelFrame({
     required this.id,
     required this.nodeKey,

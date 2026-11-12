@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/deferred_channel_inbox.dart';
+import '../models/pending_channel_frame.dart';
 import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
@@ -617,8 +618,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _hasReceivedDeviceInfo = false;
   bool _hasLoadedCachedChannelStorage = false;
   // Initial sync is serialized for predictable progress. Firmware exposes one
-  // FIFO queued-message stream, so direct/room frames are buffered until after
-  // contacts are known.
+  // FIFO queued-message stream. Direct and room frames are retained on disk
+  // until the contact list can resolve their sender prefixes.
   bool _pendingInitialChannelSync = false;
   bool _pendingInitialContactsSync = false;
   bool _pendingInitialQueuedMessageSync = false;
@@ -676,7 +677,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _deferQueuedContactMessagesUntilContacts = false;
   bool _isProcessingDeferredQueuedContactMessages = false;
   bool _queuedMessageSyncInFlight = false;
+  // Synthetic receive fixtures use the same replay path without a database.
   final List<Uint8List> _deferredQueuedContactMessageFrames = [];
+  DateTime? _lastDeferredContactReceivedAt;
   bool _pendingQueueSync = false;
   // CMD_APP_START stops the firmware's contact iterator (END_OF_CONTACTS is
   // then never sent), so APP_START requested during a contact sync is held
@@ -1700,7 +1703,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   NotificationQueueAlert? get _activeQueuedNotificationAlert =>
       isSyncingQueuedMessages ? _queuedNotificationAlert : null;
   bool get isShowingQueuedMessageSyncProgress =>
-      _deferQueuedContactMessagesUntilContacts && isSyncingQueuedMessages;
+      _isInitialBacklogDrain && _isSyncingQueuedMessages;
   bool get isSyncingChannels => _isSyncingChannels;
   int get channelSyncProgress =>
       _isSyncingChannels && _totalChannelsToRequest > 0
@@ -6227,6 +6230,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   int get pendingCommandReplyCountForTest => _pendingGenericAckQueue.length;
 
+  @visibleForTesting
+  Future<void> startInitialSyncForTest({required int maxChannels}) {
+    _pendingInitialQueuedMessageSync = true;
+    _pendingInitialContactsSync = true;
+    return getChannels(maxChannels: maxChannels, force: true);
+  }
+
   /// Настоящий сброс sync-флагов и таймеров без запуска native teardown.
   @visibleForTesting
   void resetSyncProgressForTest() => _resetSyncProgressState();
@@ -7532,6 +7542,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _queuedMessageSyncInFlight = false;
     _queuedMessageRequestWork.finishCurrent();
     _deferredQueuedContactMessageFrames.clear();
+    _lastDeferredContactReceivedAt = null;
     _pendingQueueSync = false;
     _resetSyncFlowState();
     _queueSyncTimeout?.cancel();
@@ -8589,7 +8600,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> getContacts({int? since, bool preserveExisting = false}) async {
-    if (!isConnected) return;
+    if (!isConnected ||
+        _pendingInitialChannelSync ||
+        _pendingInitialQueuedMessageSync ||
+        _isInitialBacklogDrain) {
+      return;
+    }
     // The firmware answers ERR_BAD_STATE while an iteration is running, and
     // clearing here would drop the contacts already received. A sync older
     // than a minute is assumed lost (e.g. END_OF_CONTACTS never arrived).
@@ -8645,8 +8661,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   /// What waits for a contact sync to end, whether it ended with
   /// END_OF_CONTACTS, with the idle timeout or by failing to start: the
-  /// APP_START held back while it ran, and the messages whose senders it
-  /// may have delivered.
+  /// APP_START held back while it ran, and queued messages awaiting the
+  /// sender list or the firmware's contact iterator.
   void _continueAfterContactSync() {
     if (!isConnected) return;
     if (_appStartDeferredForContactSync) {
@@ -8654,6 +8670,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(_sendAppStart().catchError(_logTimerSendError));
     }
     unawaited(_replayUnknownSenderMessages());
+    if (_deferQueuedContactMessagesUntilContacts) {
+      if (!_isSyncingQueuedMessages) {
+        unawaited(_processDeferredQueuedContactMessages());
+      }
+    } else {
+      _startPostChannelInitialQueuedMessageSync();
+    }
   }
 
   /// Clears the contact-sync follow-up state. Call on connection teardown.
@@ -8744,11 +8767,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           _isSyncingChannels &&
           !_channelSyncInFlight) {
         unawaited(_requestNextChannel());
-      }
-      if (_deferQueuedContactMessagesUntilContacts) {
-        unawaited(_processDeferredQueuedContactMessages());
-      } else {
-        _startPostChannelInitialQueuedMessageSync();
       }
       _continueAfterContactSync();
       _contactSyncWork.finish(contactWork);
@@ -12133,7 +12151,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _pendingQueueSync = true;
       return;
     }
-    if (_awaitingSelfInfo || _isLoadingContacts) {
+    if (_awaitingSelfInfo ||
+        _pendingInitialChannelSync ||
+        _pendingInitialQueuedMessageSync ||
+        _isLoadingContacts ||
+        (_deferQueuedContactMessagesUntilContacts && !_isInitialBacklogDrain)) {
       _pendingQueueSync = true;
       return;
     }
@@ -12660,12 +12682,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _startPostChannelInitialQueuedMessageSync() {
-    // On iOS, resolve contacts before draining the destructive firmware queue.
-    // This avoids keeping the entire direct-message backlog only in RAM while
-    // the app has a limited background execution window.
-    if (PlatformInfo.isIOS && _pendingInitialContactsSync && isConnected) {
-      _pendingInitialContactsSync = false;
-      unawaited(getContacts(preserveExisting: true));
+    if (!isConnected ||
+        _pendingInitialChannelSync ||
+        _awaitingSelfInfo ||
+        _isSyncingChannels ||
+        _isLoadingContacts ||
+        _deferQueuedContactMessagesUntilContacts) {
       return;
     }
     if (_pendingInitialQueuedMessageSync || _pendingQueueSync) {
@@ -12677,6 +12699,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // This drain replays the backlog accumulated before we connected.
       _isInitialBacklogDrain = isInitialDrain;
       _lastInitialBacklogChannelReceivedAt = null;
+      _lastDeferredContactReceivedAt = null;
       _pendingInitialQueuedMessageSync = false;
       _pendingQueueSync = false;
       unawaited(syncQueuedMessages(force: true));
@@ -13953,11 +13976,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             !_channelSyncInFlight) {
           unawaited(_requestNextChannel());
         }
-        if (_deferQueuedContactMessagesUntilContacts) {
-          unawaited(_processDeferredQueuedContactMessages());
-        } else {
-          _startPostChannelInitialQueuedMessageSync();
-        }
         _continueAfterContactSync();
         _contactSyncWork.finish(contactWork);
         break;
@@ -13965,8 +13983,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       case respCodeContactMsgRecvV3:
         if (localSourceLabel == null &&
             _shouldDeferQueuedContactMessage(frame)) {
-          _deferredQueuedContactMessageFrames.add(Uint8List.fromList(frame));
-          _handleQueuedMessageReceived();
+          unawaited(_retainQueuedContactMessage(frame));
         } else {
           unawaited(
             _handleIncomingMessage(frame, localSourceLabel: localSourceLabel),
@@ -14556,11 +14573,30 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         frame[0] == respCodeContactMsgRecvV3;
   }
 
+  Future<void> _retainQueuedContactMessage(Uint8List frame) {
+    final nodeKey = selfPublicKeyHex;
+    final receivedAt = RoomMessageTimelineHelper.nextBacklogReceivedAt(
+      now: DateTime.now(),
+      previous: _lastDeferredContactReceivedAt,
+    );
+    _lastDeferredContactReceivedAt = receivedAt;
+    return _processPotentialQueuedMessage(
+      localSourceLabel: null,
+      frameType: 'contact message awaiting the contact list',
+      process: () => _deferredChannelInbox.defer(
+        nodeKey: nodeKey,
+        channelIndex: PendingChannelFrame.contactMessageIndex,
+        frame: frame,
+        receivedAt: receivedAt,
+      ),
+    );
+  }
+
   void _continueAfterQueuedMessageSync() {
     if (!_deferQueuedContactMessagesUntilContacts) return;
     if (_pendingInitialContactsSync && isConnected) {
       _pendingInitialContactsSync = false;
-      unawaited(getContacts(preserveExisting: true));
+      unawaited(getContacts(preserveExisting: true).catchError(_logTimerSendError));
       return;
     }
     unawaited(_processDeferredQueuedContactMessages());
@@ -14574,7 +14610,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _isProcessingDeferredQueuedContactMessages) {
       return;
     }
-    if (_deferredQueuedContactMessageFrames.isEmpty) {
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    bool isCurrent() =>
+        !_disposed && revision == _channelInboxRevision &&
+        selfPublicKeyHex == nodeKey;
+    final canReadRetainedFrames = nodeKey.length == pubKeySize * 2 &&
+        _messageStore.publicKeyHex == nodeKey.substring(0, 10) &&
+        (MessageHistoryStorage.instance.hasDatabase || kIsWeb);
+    if (_deferredQueuedContactMessageFrames.isEmpty && !canReadRetainedFrames) {
       _deferQueuedContactMessagesUntilContacts = false;
       notifyListeners();
       _maybeFlushInitialSyncNotificationSummary();
@@ -14604,16 +14648,53 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           alreadyAdvancedQueueSync: true,
         );
       }
+      if (canReadRetainedFrames && isCurrent()) {
+        await _replayRetainedContactFrames(nodeKey, isCurrent);
+      }
     } finally {
-      _deferQueuedContactMessagesUntilContacts = false;
-      _isProcessingDeferredQueuedContactMessages = false;
-      notifyListeners();
-      _maybeFlushInitialSyncNotificationSummary();
+      if (isCurrent()) {
+        _deferQueuedContactMessagesUntilContacts = false;
+        _isProcessingDeferredQueuedContactMessages = false;
+        notifyListeners();
+        _maybeFlushInitialSyncNotificationSummary();
+      }
     }
 
-    if (_pendingQueueSync && isConnected) {
+    if (isCurrent() && _pendingQueueSync && isConnected) {
       _pendingQueueSync = false;
       unawaited(syncQueuedMessages(force: true));
+    }
+  }
+
+  Future<void> _replayRetainedContactFrames(
+    String nodeKey,
+    bool Function() isCurrent,
+  ) async {
+    final storage = MessageHistoryStorage.instance;
+    final scope = nodeKey.toLowerCase();
+    try {
+      for (final pending in await storage.readPendingContactFrames(scope)) {
+        if (!isCurrent()) return;
+        final prefix = _extractSenderPrefix(pending.frame);
+        if (prefix != null &&
+            _findContactByPrefix(prefix, includeDiscoveredFallback: true) == null) {
+          // Keep unresolved senders for the next connection to this node.
+          continue;
+        }
+        await _processIncomingMessage(
+          pending.frame,
+          receivedAt: pending.receivedAt,
+          isUnknownSenderReplay: true,
+          canApply: isCurrent,
+        );
+        if (!isCurrent()) return;
+        await storage.removePendingChannelFrame(scope, pending.id);
+      }
+    } catch (error, stackTrace) {
+      appLogger.warn(
+        'Retained contact frames remain on disk: $error\n$stackTrace',
+        tag: 'QueueSync',
+      );
     }
   }
 
@@ -15469,6 +15550,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? localSourceLabel,
     DirectEchoContext? echo,
     bool isUnknownSenderReplay = false,
+    bool Function()? canApply,
   }) async {
     if (_selfPublicKey == null) return;
 
@@ -15553,6 +15635,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
       await _loadMessagesForContact(message.senderKeyHex);
+      if (canApply?.call() == false) return;
       // A contact whose key starts with the byte ours starts with makes our
       // own packets to them look like theirs to us (the hashes and the
       // shared secret are the same both ways): a copy a repeater relays,
@@ -15578,6 +15661,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       if (contact != null && !message.isOutgoing && !message.isCli) {
         message = await _applyContactMcmpVerification(message, contact);
+        if (canApply?.call() == false) return;
       }
       if (contact != null) {
         _updateContactLastMessageAt(contact.publicKeyHex, effectiveReceivedAt);
@@ -15661,7 +15745,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       // The receive-time question is asked once and stamped onto the message.
       final blockedNow = BlockedSenders.instance.isRoomAuthorBlocked(message);
       if (blockedNow) message = message.copyWith(wasBlocked: true);
-      await _addMessage(message.senderKeyHex, message);
+      await _addMessage(message.senderKeyHex, message, canApply: canApply);
+      if (canApply?.call() == false) return;
       if (!blockedNow) _maybeIncrementContactUnread(message);
       notifyListeners();
       if (echo != null) unawaited(_sendDirectEchoAck(echo));
@@ -19982,7 +20067,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _addMessage(String pubKeyHex, Message message) async {
+  Future<void> _addMessage(
+    String pubKeyHex,
+    Message message, {
+    bool Function()? canApply,
+  }) async {
+    final history = canApply == null
+        ? _messageStore
+        : (MessageStore()..setPublicKeyHex = selfPublicKeyHex);
     if (!message.isCli) {
       _updateContactLastMessageAt(
         pubKeyHex,
@@ -20019,10 +20111,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         messages,
         reactionInfo,
         pubKeyHex,
+        publish: canApply == null,
       );
       if (changedMessage != null) {
         appLogger.info('Adding reaction, id: $reactionIdentifier');
-        await _messageStore.saveMessage(pubKeyHex, changedMessage);
+        await history.saveMessage(pubKeyHex, changedMessage);
+        if (canApply != null) {
+          if (!canApply()) return;
+          final index = messages.indexWhere(
+            (message) => message.messageId == changedMessage.messageId,
+          );
+          if (index >= 0) messages[index] = changedMessage;
+        }
 
         // Mark as processed
         _processedContactReactions[pubKeyHex]!.add(reactionIdentifier);
@@ -20039,6 +20139,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (reactionInfo.hashType == HashType.ours) return;
     }
 
+    // A retained message whose history write fails must not look like a
+    // duplicate in memory when the inbox retries it.
+    if (canApply != null) {
+      await history.saveMessage(pubKeyHex, message);
+      if (!canApply()) return;
+    }
     messages.add(message);
     if (_isRoomConversation(pubKeyHex)) {
       messages.sort(RoomMessageTimelineHelper.compare);
@@ -20046,15 +20152,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_activeContactKey != pubKeyHex) {
       _trimContactHistoryWindow(pubKeyHex);
     }
-    await _messageStore.saveMessage(pubKeyHex, message);
+    if (canApply == null) await history.saveMessage(pubKeyHex, message);
     notifyListeners();
   }
 
   Message? _processContactReaction(
     List<Message> messages,
     ReactionInfo reactionInfo,
-    String contactPubKeyHex,
-  ) {
+    String contactPubKeyHex, {
+    required bool publish,
+  }) {
     final contact = getContactByPubKeyHex(contactPubKeyHex);
     final isRoomServer = contact?.type == advTypeRoom;
 
@@ -20070,8 +20177,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       getMessageText: (msg) => msg.text,
       getReactions: (msg) => msg.reactions,
       updateMessage: (i, reactions) {
-        messages[i] = messages[i].copyWith(reactions: reactions);
-        changedMessage = messages[i];
+        final updated = messages[i].copyWith(reactions: reactions);
+        if (publish) messages[i] = updated;
+        changedMessage = updated;
       },
     );
     return changedMessage;

@@ -5551,6 +5551,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get listFilter_unreadOnly => 'Csak olvasatlan';
 
   @override
+  String get listFilter_nodeContactsOnly => 'Node contacts only';
+
+  @override
   String get listFilter_newGroup => 'Új csoport';
 
   @override
