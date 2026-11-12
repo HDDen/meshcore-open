@@ -85,6 +85,26 @@ void main() {
     expect(adaptive.directEnabled, isTrue);
   });
 
+  test('additional Flood attempts persist and extend the shared boost limit', () async {
+    final service = await _loadSettings();
+    expect(service.settings.automaticDirectFloodRetries, 0);
+    await service.setMaxMessageRetries(2);
+    await service.setAutomaticDirectFloodRetries(9);
+    expect(service.settings.automaticDirectFloodRetries, 5);
+    expect(service.settings.floodBoostRetryLimit, 5);
+    await service.updateSettings(service.settings.copyWith(
+      adaptiveTxPower: service.settings.adaptiveTxPower.copyWith(
+        forcedFloodRetries: 4,
+      ),
+    ));
+    final reopened = await _loadSettings();
+    expect(reopened.settings.automaticDirectFloodRetries, 5);
+    expect(reopened.settings.adaptiveTxPower.forcedFloodRetries, 4);
+    await reopened.setAutomaticDirectFloodRetries(-1);
+    expect(reopened.settings.automaticDirectFloodRetries, 0);
+    expect(reopened.settings.floodBoostRetryLimit, 2);
+  });
+
   test('legacy preferences preserve radio and delivery settings', () async {
     final service = await _loadSettings();
     _expectDeliveryChoices(service.settings);

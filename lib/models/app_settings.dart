@@ -205,6 +205,10 @@ class AppSettings {
   static const double defaultRouteWeightSuccessIncrement = 0.5;
   static const double defaultRouteWeightFailureDecrement = 0.2;
   static const int defaultMaxMessageRetries = 5;
+  static const int maxAutomaticDirectFloodRetries = 5;
+
+  static int normalizeAutomaticDirectFloodRetries(int value) =>
+      value.clamp(0, maxAutomaticDirectFloodRetries).toInt();
 
   final bool clearPathOnMaxRetry;
   final bool mapShowRepeaters;
@@ -375,6 +379,15 @@ class AppSettings {
   final AdaptiveTxPowerSettings adaptiveTxPower;
   final int channelMinHops;
   final int channelMinHopsRetries;
+  final int automaticDirectFloodRetries;
+
+  /// Both personal Flood modes use the same boost preference.
+  int get floodBoostRetryLimit =>
+      (maxMessageRetries > automaticDirectFloodRetries
+              ? maxMessageRetries
+              : automaticDirectFloodRetries)
+          .clamp(0, 10)
+          .toInt();
 
   /// Seconds to listen for echoes before each resend of [channelMinHops].
   final int channelMinHopsDelaySeconds;
@@ -852,6 +865,7 @@ class AppSettings {
     this.adaptiveTxPower = const AdaptiveTxPowerSettings(),
     this.channelMinHops = 2,
     this.channelMinHopsRetries = 1,
+    this.automaticDirectFloodRetries = 0,
     this.channelMinHopsDelaySeconds = 30,
     this.channelMinHopsCountRepeaters = false,
     this.channelMinHopsRepeaterCount = 2,
@@ -1037,6 +1051,7 @@ class AppSettings {
       'adaptive_tx_power': adaptiveTxPower.toJson(),
       'channel_min_hops': channelMinHops,
       'channel_min_hops_retries': channelMinHopsRetries,
+      'automatic_direct_flood_retries': automaticDirectFloodRetries,
       'channel_min_hops_delay_seconds': channelMinHopsDelaySeconds,
       'channel_min_hops_count_repeaters': channelMinHopsCountRepeaters,
       'channel_min_hops_repeater_count': channelMinHopsRepeaterCount,
@@ -1275,6 +1290,9 @@ class AppSettings {
       adaptiveTxPower: AdaptiveTxPowerSettings.fromJson(json['adaptive_tx_power']),
       channelMinHops: json['channel_min_hops'] as int? ?? 2,
       channelMinHopsRetries: json['channel_min_hops_retries'] as int? ?? 1,
+      automaticDirectFloodRetries: normalizeAutomaticDirectFloodRetries(
+        json['automatic_direct_flood_retries'] as int? ?? 0,
+      ),
       channelMinHopsDelaySeconds:
           json['channel_min_hops_delay_seconds'] as int? ?? 30,
       channelMinHopsCountRepeaters:
@@ -1522,6 +1540,7 @@ class AppSettings {
     AdaptiveTxPowerSettings? adaptiveTxPower,
     int? channelMinHops,
     int? channelMinHopsRetries,
+    int? automaticDirectFloodRetries,
     int? channelMinHopsDelaySeconds,
     bool? channelMinHopsCountRepeaters,
     int? channelMinHopsRepeaterCount,
@@ -1722,6 +1741,8 @@ class AppSettings {
       channelMinHops: channelMinHops ?? this.channelMinHops,
       channelMinHopsRetries:
           channelMinHopsRetries ?? this.channelMinHopsRetries,
+      automaticDirectFloodRetries:
+          automaticDirectFloodRetries ?? this.automaticDirectFloodRetries,
       channelMinHopsDelaySeconds:
           channelMinHopsDelaySeconds ?? this.channelMinHopsDelaySeconds,
       channelMinHopsCountRepeaters:

@@ -1054,7 +1054,7 @@ class _AdaptiveTxPowerSettingsCard extends StatelessWidget {
               retrySlider(
                 l10n.adaptiveTxPowerFloodRetries,
                 adaptive.forcedFloodRetries,
-                settings.maxMessageRetries.clamp(0, 10).toInt(),
+                settings.floodBoostRetryLimit,
                 (value) => update(adaptive.copyWith(forcedFloodRetries: value)),
               ),
             if (supportsLnaOption)

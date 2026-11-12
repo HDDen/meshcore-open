@@ -580,6 +580,7 @@ class MessageStore {
       'replyToText': msg.replyToText,
       'replyIsExact': msg.replyIsExact,
       'retryCount': msg.retryCount,
+      if (msg.sendAttemptLimit != null) 'sendAttemptLimit': msg.sendAttemptLimit,
       'estimatedTimeoutMs': msg.estimatedTimeoutMs,
       'expectedAckHash': msg.expectedAckHash,
       'sentAt': msg.sentAt?.millisecondsSinceEpoch,
@@ -727,6 +728,7 @@ class MessageStore {
       replyToText: json['replyToText'] as String?,
       replyIsExact: json['replyIsExact'] as bool? ?? false,
       retryCount: json['retryCount'] as int? ?? 0,
+      sendAttemptLimit: json['sendAttemptLimit'] as int?,
       estimatedTimeoutMs: json['estimatedTimeoutMs'] as int?,
       expectedAckHash: json['expectedAckHash'] as int? ?? 0,
       sentAt: json['sentAt'] != null

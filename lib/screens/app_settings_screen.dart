@@ -825,6 +825,25 @@ class AppSettingsScreen extends StatelessWidget {
                   settingsService.setChannelMinHopsRetries(value.toInt()),
             ),
           ),
+        ],
+        ListTile(
+          title: Text(context.l10n.appSettings_automaticDirectFloodRetries),
+          trailing: Text(
+            settingsService.settings.automaticDirectFloodRetries.toString(),
+          ),
+          subtitle: Slider(
+            value:
+                settingsService.settings.automaticDirectFloodRetries.toDouble(),
+            min: 0,
+            max: AppSettings.maxAutomaticDirectFloodRetries.toDouble(),
+            divisions: AppSettings.maxAutomaticDirectFloodRetries,
+            label:
+                settingsService.settings.automaticDirectFloodRetries.toString(),
+            onChanged: (value) =>
+                settingsService.setAutomaticDirectFloodRetries(value.toInt()),
+          ),
+        ),
+        if (settingsService.settings.channelMinHopsEnabled) ...[
           ListTile(
             title: Text(
               context.l10n.appSettings_channelMinHopsDelay(

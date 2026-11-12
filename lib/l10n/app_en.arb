@@ -594,6 +594,7 @@
   "appSettings_channelMinHopsSubtitle": "If your message isn't heard coming back through enough repeaters, send it again. Uses more airtime.",
   "appSettings_channelMinHopsCount": "Required hops: {count}",
   "appSettings_channelMinHopsRetries": "Resend up to {count, plural, =1{1 time} other{{count} times}}",
+  "appSettings_automaticDirectFloodRetries": "Retry personal messages in automatic Flood",
   "appSettings_channelMinHopsCountRepeaters": "Also count different nearby repeaters",
   "appSettings_channelMinHopsRepeaterCount": "Required nearby repeaters: {count}",
   "appSettings_channelMinHopsCountRepeatersSubtitle": "Treat the message as sent when {count, plural, =1{1 nearby repeater} other{{count} different nearby repeaters}} repeat it, even if you can't hear it travel further.",
@@ -4286,7 +4287,7 @@
   "adaptiveTxPowerTryLna": "Try switching LNA",
   "messageSentWithTxPowerBoost": "Sent with boosted TX power",
   "messageSentWithTxPowerBoostAndLna": "Sent with boosted TX power and LNA enabled by the app",
-  "adaptiveTxPowerFloodRetries": "Boost the last N forced Flood attempts",
+  "adaptiveTxPowerFloodRetries": "Boost the last N Flood attempts",
   "adaptiveTxPowerRecovery": "Radio power is {count} dBm. Restore it to {initial} dBm?",
   "@adaptiveTxPowerRecovery": {
     "placeholders": {

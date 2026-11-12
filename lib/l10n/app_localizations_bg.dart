@@ -1669,6 +1669,10 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
+  String get appSettings_automaticDirectFloodRetries =>
+      'Retry personal messages in automatic Flood';
+
+  @override
   String get appSettings_channelMinHopsCountRepeaters =>
       'Отчитай и други близки повторители';
 
@@ -8151,8 +8155,17 @@ class AppLocalizationsBg extends AppLocalizations {
   String get adaptiveTxPowerDirect => 'Use for direct messages';
 
   @override
-  String get adaptiveTxPowerFloodRetries =>
-      'Boost the last N forced Flood attempts';
+  String get adaptiveTxPowerTryLna => 'Try switching LNA';
+
+  @override
+  String get messageSentWithTxPowerBoost => 'Sent with boosted TX power';
+
+  @override
+  String get messageSentWithTxPowerBoostAndLna =>
+      'Sent with boosted TX power and LNA enabled by the app';
+
+  @override
+  String get adaptiveTxPowerFloodRetries => 'Boost the last N Flood attempts';
 
   @override
   String adaptiveTxPowerRecovery(int count, int initial) {

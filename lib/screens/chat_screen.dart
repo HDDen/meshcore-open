@@ -4399,10 +4399,11 @@ class _MessageBubble extends StatelessWidget {
                               child: Text(
                                 context.l10n.chat_retryCount(
                                   message.retryCount + 1,
-                                  context
-                                      .read<AppSettingsService>()
-                                      .settings
-                                      .maxMessageRetries,
+                                  message.sendAttemptLimit ??
+                                      context
+                                          .read<AppSettingsService>()
+                                          .settings
+                                          .maxMessageRetries,
                                 ),
                                 style: MeshTheme.mono(
                                   fontSize: 9.5 * textScale,

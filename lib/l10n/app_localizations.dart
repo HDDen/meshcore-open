@@ -2847,6 +2847,12 @@ abstract class AppLocalizations {
   /// **'Resend up to {count, plural, =1{1 time} other{{count} times}}'**
   String appSettings_channelMinHopsRetries(num count);
 
+  /// No description provided for @appSettings_automaticDirectFloodRetries.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry personal messages in automatic Flood'**
+  String get appSettings_automaticDirectFloodRetries;
+
   /// No description provided for @appSettings_channelMinHopsCountRepeaters.
   ///
   /// In en, this message translates to:
@@ -13571,18 +13577,29 @@ abstract class AppLocalizations {
   /// **'Use for direct messages'**
   String get adaptiveTxPowerDirect;
 
+  /// No description provided for @adaptiveTxPowerTryLna.
+  ///
+  /// In en, this message translates to:
+  /// **'Try switching LNA'**
+  String get adaptiveTxPowerTryLna;
+
+  /// No description provided for @messageSentWithTxPowerBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with boosted TX power'**
+  String get messageSentWithTxPowerBoost;
+
+  /// No description provided for @messageSentWithTxPowerBoostAndLna.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with boosted TX power and LNA enabled by the app'**
+  String get messageSentWithTxPowerBoostAndLna;
+
   /// No description provided for @adaptiveTxPowerFloodRetries.
   ///
   /// In en, this message translates to:
-  /// **'Boost the last N forced Flood attempts'**
+  /// **'Boost the last N Flood attempts'**
   String get adaptiveTxPowerFloodRetries;
-
-  String get adaptiveTxPowerTryLna => 'Try switching LNA';
-
-  String get messageSentWithTxPowerBoost => 'Sent with boosted TX power';
-
-  String get messageSentWithTxPowerBoostAndLna =>
-      'Sent with boosted TX power and LNA enabled by the app';
 
   /// No description provided for @adaptiveTxPowerRecovery.
   ///

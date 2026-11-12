@@ -1667,6 +1667,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get appSettings_automaticDirectFloodRetries =>
+      'Повторять для личных flood-сообщений';
+
+  @override
   String get appSettings_channelMinHopsCountRepeaters =>
       'Также учитывать другие ближайшие репитеры';
 
@@ -8121,7 +8125,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Включите повторы в каналах по минимальному числу хопов, чтобы использовать эту настройку.';
 
   @override
-  String get adaptiveTxPowerTarget => 'Увеличить TXP до';
+  String get adaptiveTxPowerTarget => 'Увеличить TX Power до';
 
   @override
   String get adaptiveTxPowerChannelRetries =>
@@ -8142,7 +8146,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adaptiveTxPowerFloodRetries =>
-      'Увеличивать для последних N попыток принудительного Flood';
+      'Увеличивать для последних N попыток Flood';
 
   @override
   String adaptiveTxPowerRecovery(int count, int initial) {

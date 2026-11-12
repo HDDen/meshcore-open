@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:crypto/crypto.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/automatic_flood_retries.dart';
+import '../models/app_settings.dart';
 import '../models/contact.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
@@ -207,6 +209,7 @@ class MessageRetryService extends ChangeNotifier {
   final Map<String, Contact> _pendingContacts = {};
   final Map<String, Object> _txPowerOwners = {};
   final Map<String, _BoostedRepeats> _boostedRepeats = {};
+  final Map<String, AutomaticFloodRetries> _automaticFloodRetries = {};
 
   /// Exact wire text prepared (and possibly signed) once at compose time.
   /// Automatic retries must reuse it byte-for-byte: re-encoding a signed MCMP
@@ -520,6 +523,7 @@ class MessageRetryService extends ChangeNotifier {
 
   void _onMessageResolved(String messageId, String contactKey) {
     _boostedRepeats.remove(messageId);
+    _automaticFloodRetries.remove(messageId);
     _finishTxPower(messageId);
     if (_resolvedMessages.contains(messageId)) return;
     _resolvedMessages.add(messageId);
@@ -557,11 +561,42 @@ class MessageRetryService extends ChangeNotifier {
       a.hopCount == b.hopCount &&
       listEquals(a.pathBytes, b.pathBytes);
 
-  /// Whether no retry follows this attempt, by the test [_handleTimeout]
-  /// schedules one with.
+  /// Whether this is the last attempt in the ordinary retry budget.
   bool _isLastAttempt(Message message, Contact contact) =>
       message.retryCount >= maxRetries - 1 ||
       !_textFitsAttempt(message, contact, message.retryCount + 1);
+
+  AutomaticFloodRetries? _automaticFloodSeriesFor(
+    Message message,
+    Contact contact,
+    bool useFlood,
+  ) {
+    if (!useFlood ||
+        contact.type != advTypeChat ||
+        contact.pathOverride != null) {
+      return null;
+    }
+    final existing = _automaticFloodRetries[message.messageId];
+    if (existing != null) return existing;
+    final extra = AppSettings.normalizeAutomaticDirectFloodRetries(
+      _config?.appSettingsService?.settings.automaticDirectFloodRetries ?? 0,
+    );
+    if (extra == 0 ||
+        !_isLastAttempt(message, contact) ||
+        _attemptPathHistory[message.messageId]?.isNotEmpty != true) {
+      return null;
+    }
+    final firstAttempt = message.retryCount;
+    final requestedLast = firstAttempt + extra;
+    final lastAttempt = _textFitsAttempt(message, contact, requestedLast)
+        ? requestedLast
+        : maxFullLengthTextAttempt;
+    if (lastAttempt <= firstAttempt) return null;
+    return _automaticFloodRetries[message.messageId] = AutomaticFloodRetries(
+      firstAttempt: firstAttempt,
+      lastAttempt: lastAttempt,
+    );
+  }
 
   /// The route of this attempt and what the node needs before it, or null
   /// when a route from the history is due ([_historyRoute]).
@@ -574,8 +609,8 @@ class MessageRetryService extends ChangeNotifier {
   /// floods with nothing to clear, the history unused, until the recipient's
   /// answer gives the node one. With a route the attempts go by it, and once
   /// it went unanswered in this message `autoRouteRotationEnabled` moves the
-  /// next ones to the history. The last attempt floods either way, the
-  /// node's route cleared first, so that the answer brings a fresh one.
+  /// next ones to the history. The last ordinary attempt and its optional
+  /// extensions clear the route and flood so the answer brings a fresh route.
   _AttemptRoute? _plannedRoute(Message message, Contact contact) {
     if (contact.pathOverride != null) {
       final chosen = resolvePathSelection(contact);
@@ -585,7 +620,8 @@ class MessageRetryService extends ChangeNotifier {
       );
     }
     final holdsRoute = contact.pathLength >= 0;
-    if (_isLastAttempt(message, contact)) {
+    if (_automaticFloodRetries.containsKey(message.messageId) ||
+        _isLastAttempt(message, contact)) {
       return (
         selection: _floodSelection,
         step: holdsRoute ? _NodeRouteStep.clear : _NodeRouteStep.none,
@@ -675,43 +711,42 @@ class MessageRetryService extends ChangeNotifier {
         config.sendBoostedMessage != null &&
         config.canBoostDirectTxPower?.call() == true;
     final forcedFlood = useFlood && contact.pathOverride != null;
-    final boost = repeating || (canBoost && forcedFlood &&
+    final automaticFlood = _automaticFloodSeriesFor(message, contact, useFlood);
+    final boostAutomaticFlood = canBoost &&
+        automaticFlood != null &&
+        automaticFlood.shouldBoost(
+          message.retryCount,
+          adaptive.adaptiveTxPower.forcedFloodRetries,
+        );
+    final boostForcedFlood = canBoost &&
+        forcedFlood &&
         AdaptiveTxPower.isInLastRetries(
           retry: message.retryCount + 1,
           maxRetries: _textFitsAttempt(message, contact, maxRetries - 1)
               ? maxRetries
               : maxFullLengthTextAttempt + 1,
           boostedRetries: adaptive.adaptiveTxPower.forcedFloodRetries,
-        ));
-    if (canBoost && !repeating && !forcedFlood) {
-      final repeats = !useFlood
-          ? 1
-          : _isLastAttempt(message, contact)
-          ? adaptive.channelMinHopsRetries
-          : 0;
-      if (repeats > 0) {
-        // Repeat the same packet by the same route. Only a new logical
-        // attempt can rotate paths or advance the retry number.
-        final step = useFlood
-            ? _NodeRouteStep.clear
-            : _NodeRouteStep.write;
-        _boostedRepeats[messageId] = (
-          route: (selection: selection, step: step),
-          remaining: repeats,
-          repeating: false,
         );
-      }
+    final boost = repeating || boostAutomaticFlood || boostForcedFlood;
+    if (canBoost && !repeating && !useFlood) {
+      // A routed boost replays this packet before the next logical attempt.
+      _boostedRepeats[messageId] = (
+        route: (selection: selection, step: _NodeRouteStep.write),
+        remaining: 1,
+        repeating: false,
+      );
     }
-    final routeStep = !repeating
-        ? route.step
-        : useFlood
-        ? (contact.pathLength < 0 ? _NodeRouteStep.none : _NodeRouteStep.clear)
-        : (_sameRoute(resolvePathSelection(contact), selection) &&
-            contact.pathOverride == null ? _NodeRouteStep.none : _NodeRouteStep.write);
+    final routeStep = repeating &&
+        _sameRoute(resolvePathSelection(contact), selection) &&
+        contact.pathOverride == null
+        ? _NodeRouteStep.none
+        : route.step;
 
     final attemptStartedAt = DateTime.now();
     final hopCount = useFlood ? -1 : selection.hopCount;
     final progressMessage = (_pendingMessages[messageId] ?? message).copyWith(
+      sendAttemptLimit:
+          automaticFlood == null ? null : automaticFlood.lastAttempt + 1,
       pathLength: hopCount,
       pathBytes: useFlood
           ? Uint8List(0)
@@ -1197,6 +1232,7 @@ class MessageRetryService extends ChangeNotifier {
 
   void _cleanupMessage(String messageId) {
     _boostedRepeats.remove(messageId);
+    _automaticFloodRetries.remove(messageId);
     _finishTxPower(messageId);
     _moveAckHashesToHistory(messageId);
     for (final mappings in _ackHashToMessageId.values) {
@@ -1266,9 +1302,17 @@ class MessageRetryService extends ChangeNotifier {
     }
     _recordAttemptTimeout(contact.publicKeyHex, message);
 
-    if (message.retryCount < maxRetries - 1 &&
+    final automaticFlood = contact.pathOverride == null
+        ? _automaticFloodRetries[messageId]
+        : null;
+    final lastAttempt = automaticFlood?.lastAttempt ?? maxRetries - 1;
+    if (message.retryCount < lastAttempt &&
         _textFitsAttempt(message, contact, message.retryCount + 1)) {
-      final backoffMs = retryBackoffMs(message.retryCount);
+      // The Flood series starts its own backoff. Its wire numbers still
+      // follow the Direct attempts and the first automatic Flood.
+      final backoffIndex =
+          message.retryCount - (automaticFlood?.firstAttempt ?? 0);
+      final backoffMs = retryBackoffMs(backoffIndex);
 
       final updatedMessage = message.copyWith(
         retryCount: message.retryCount + 1,
@@ -1709,6 +1753,7 @@ class MessageRetryService extends ChangeNotifier {
       _finishTxPower(id);
     }
     _boostedRepeats.clear();
+    _automaticFloodRetries.clear();
     _retryWork.close();
     _config?.appSettingsService?.removeListener(_syncRxProgressPowerSettings);
     _pendingMessageCountDisposed = true;

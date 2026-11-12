@@ -296,6 +296,34 @@ void main() {
   }
 
   for (final locale in ['en', 'ru']) {
+    testWidgets('automatic personal Flood has its own retry slider ($locale)', (
+      tester,
+    ) async {
+      await _withSettings(tester, locale, (settings, l10n) async {
+        final channelRetries = l10n.appSettings_channelMinHopsRetries(
+          settings.settings.channelMinHopsRetries,
+        );
+        final floodRetries = l10n.appSettings_automaticDirectFloodRetries;
+        await _revealSetting(tester, floodRetries);
+        expect(
+          tester.getTopLeft(find.text(floodRetries)).dy,
+          greaterThan(tester.getTopLeft(find.text(channelRetries)).dy),
+        );
+        final slider = find.descendant(
+          of: find.widgetWithText(ListTile, floodRetries),
+          matching: find.byType(Slider),
+        );
+        final control = tester.widget<Slider>(slider);
+        expect(control.value, 0);
+        expect(control.min, 0);
+        expect(control.max, 5);
+        expect(control.divisions, 5);
+        control.onChanged!(5);
+        await tester.pumpAndSettle();
+        expect(settings.settings.automaticDirectFloodRetries, 5);
+      }, initialSettings: AppSettings(channelMinHopsEnabled: true));
+    });
+
     testWidgets('U34: experimental route ranking preserves weights ($locale)',
         (tester) async {
       await _withSettings(tester, locale, (settings, l10n) async {

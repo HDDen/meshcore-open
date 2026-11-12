@@ -89,6 +89,7 @@ class Message {
   // NEW: Retry logic fields
   final String messageId;
   final int retryCount;
+  final int? sendAttemptLimit;
   final int? estimatedTimeoutMs;
   final int? expectedAckHash;
   final DateTime? sentAt;
@@ -196,6 +197,7 @@ class Message {
     this.sharedHistorySourceName,
     this.sourceLabel,
     this.retryCount = 0,
+    this.sendAttemptLimit,
     this.estimatedTimeoutMs,
     this.expectedAckHash,
     this.sentAt,
@@ -248,6 +250,7 @@ class Message {
     MessageStatus? status,
     DateTime? receivedAt,
     int? retryCount,
+    int? sendAttemptLimit,
     int? estimatedTimeoutMs,
     int? expectedAckHash,
     DateTime? sentAt,
@@ -377,6 +380,7 @@ class Message {
           ? this.sourceLabel
           : sourceLabel as String?,
       retryCount: retryCount ?? this.retryCount,
+      sendAttemptLimit: sendAttemptLimit ?? this.sendAttemptLimit,
       estimatedTimeoutMs: estimatedTimeoutMs ?? this.estimatedTimeoutMs,
       expectedAckHash: expectedAckHash ?? this.expectedAckHash,
       sentAt: sentAt ?? this.sentAt,
