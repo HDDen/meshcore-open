@@ -1084,6 +1084,61 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('add channel sheet shows one form per private channel action', (
+    tester,
+  ) async {
+    await show(
+      tester,
+      const ChannelsScreen(hideBackButton: true),
+      locale: 'ru',
+      logicalSize: const Size(1000, 1800),
+    );
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ChannelsScreen)),
+    );
+    await tester.tap(find.byTooltip(l10n.channels_addChannel));
+    await tester.pumpAndSettle();
+
+    final sheet = find.byType(DraggableScrollableSheet);
+    Finder label(String text) =>
+        find.descendant(of: sheet, matching: find.text(text));
+    final join = label(l10n.channels_joinPrivateChannel);
+    final create = label(l10n.channels_createPrivateChannel);
+    final createSection = label(l10n.channels_addSectionCreate.toUpperCase());
+    final name = label(l10n.channels_channelName);
+    final psk = label(l10n.channels_pskHex);
+    expect(join, findsOneWidget);
+    expect(create, findsOneWidget);
+    expect(createSection, findsOneWidget);
+    expect(label(l10n.channels_joinPublicChannel), findsOneWidget);
+    expect(label(l10n.channels_joinHashtagChannel), findsOneWidget);
+    expect(label(l10n.community_scanQr), findsOneWidget);
+    expect(label(l10n.community_create), findsOneWidget);
+    expect(
+      tester.getTopLeft(create).dy,
+      greaterThan(tester.getTopLeft(createSection).dy),
+    );
+    expect(name, findsNothing);
+    expect(psk, findsNothing);
+
+    await tester.tap(join);
+    await tester.pumpAndSettle();
+    expect(name, findsOneWidget);
+    expect(psk, findsOneWidget);
+    expect(label(l10n.common_add), findsOneWidget);
+
+    await tester.ensureVisible(create);
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+    expect(name, findsOneWidget);
+    expect(psk, findsNothing);
+    expect(label(l10n.common_create), findsOneWidget);
+
+    expect(connector.writes, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   Future<void> editGroup(WidgetTester tester, String name) async {
     final l10n = AppLocalizations.of(tester.element(find.byType(ChannelsScreen)));
     await tester.longPress(find.widgetWithText(ListTile, name));

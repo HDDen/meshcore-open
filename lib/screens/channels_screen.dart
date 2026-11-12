@@ -3877,24 +3877,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                       if (selectedOption == -1)
                         buildExpandedContent(_channelMessageStore)!,
-                      buildOptionCard(
-                        optionIndex: 0,
-                        icon: Icons.add,
-                        title: sheetContext.l10n.channels_createPrivateChannel,
-                        subtitle:
-                            sheetContext.l10n.channels_createPrivateChannelDesc,
-                      ),
-                      if (selectedOption == 0)
-                        buildExpandedContent(_channelMessageStore)!,
-                      buildOptionCard(
-                        optionIndex: 1,
-                        icon: Icons.lock,
-                        title: sheetContext.l10n.channels_joinPrivateChannel,
-                        subtitle:
-                            sheetContext.l10n.channels_joinPrivateChannelDesc,
-                      ),
-                      if (selectedOption == 1)
-                        buildExpandedContent(_channelMessageStore)!,
                       if (!hasPublicChannel) ...[
                         buildOptionCard(
                           optionIndex: 2,
