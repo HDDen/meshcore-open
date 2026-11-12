@@ -7323,6 +7323,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Eltávolítja a kijelölt névjegyeket a csomópont memóriájából?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'A kijelölt névjegyek eltávolítva';
 
@@ -8096,6 +8100,14 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Figyelem! A csomópont privát kulcsa exportálásra kerül az alkalmazás memóriájába, így a csomagot maga az alkalmazás fejti vissza, nem a csomópont.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

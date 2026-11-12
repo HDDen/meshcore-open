@@ -7300,6 +7300,10 @@ class AppLocalizationsSk extends AppLocalizations {
       'Odstrániť vybrané kontakty z pamäte uzla?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Vybrané kontakty boli odstránené';
 
@@ -8071,6 +8075,14 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Pozor! Súkromný kľúč uzla sa exportuje do pamäte aplikácie, aby paket dešifrovala sama aplikácia, a nie uzol.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

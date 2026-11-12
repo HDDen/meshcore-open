@@ -7303,6 +7303,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Geselecteerde contacten uit het geheugen van de node verwijderen?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'De geselecteerde contacten zijn verwijderd';
 
@@ -8076,6 +8080,14 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Let op! De privésleutel van de node wordt naar het geheugen van de app geëxporteerd, zodat de app het pakket zelf ontsleutelt in plaats van de node.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

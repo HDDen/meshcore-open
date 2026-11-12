@@ -7329,6 +7329,10 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Eliminar los contactos seleccionados de la memoria del nodo?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Los contactos seleccionados se han eliminado';
 
@@ -8107,6 +8111,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       '¡Atención! La clave privada del nodo se exportará a la memoria de la aplicación para que sea la propia aplicación, y no el nodo, quien descifre el paquete.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

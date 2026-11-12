@@ -6882,6 +6882,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_batchOperations_removeConfirm => '要从节点内存中删除选中的联系人吗？';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess => '选中的联系人已删除';
 
   @override
@@ -7608,6 +7612,14 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       '注意！节点的私钥将被导出到应用内存中，由应用自己而不是节点来解密数据包。';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

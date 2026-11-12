@@ -7015,6 +7015,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '선택한 연락처를 노드 메모리에서 삭제할까요?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess => '선택한 연락처를 삭제했습니다';
 
   @override
@@ -7755,6 +7759,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       '주의! 노드의 개인 키가 앱 메모리로 내보내지며, 노드 대신 앱이 직접 패킷을 복호화합니다.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

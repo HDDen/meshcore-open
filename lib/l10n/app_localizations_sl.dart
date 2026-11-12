@@ -7292,6 +7292,10 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ali naj se izbrani stiki odstranijo iz pomnilnika vozlišča?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Izbrani stiki so bili odstranjeni';
 
@@ -8067,6 +8071,14 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Pozor! Zasebni ključ vozlišča bo izvožen v pomnilnik aplikacije, da paket dešifrira aplikacija sama in ne vozlišče.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

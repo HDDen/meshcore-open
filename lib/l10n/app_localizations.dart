@@ -12287,8 +12287,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.'**
-  String get contacts_batchOperations_removeWithCacheConfirm =>
-      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+  String get contacts_batchOperations_removeWithCacheConfirm;
 
   /// No description provided for @contacts_batchOperations_removeSuccess.
   ///
@@ -13534,15 +13533,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Suppress phantom channels'**
-  String get settings_modSettingsSuppressPhantomChannels =>
-      'Suppress phantom channels';
+  String get settings_modSettingsSuppressPhantomChannels;
 
   /// No description provided for @settings_modSettingsSuppressPhantomChannelsDscr.
   ///
   /// In en, this message translates to:
   /// **'Ignore messages from unnamed channel slots with an all-zero key.'**
-  String get settings_modSettingsSuppressPhantomChannelsDscr =>
-      'Ignore messages from unnamed channel slots with an all-zero key.';
+  String get settings_modSettingsSuppressPhantomChannelsDscr;
 
   /// No description provided for @settings_modSettingsDirectEchoRecoveryPrompt.
   ///

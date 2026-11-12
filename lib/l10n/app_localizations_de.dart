@@ -7337,6 +7337,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ausgewählte Kontakte vom Knoten entfernen?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Ausgewählte Kontakte wurden entfernt';
 
@@ -8114,6 +8118,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Achtung! Der private Schlüssel des Knotens wird in den Speicher der App exportiert, damit die App das Paket selbst entschlüsselt und nicht der Knoten.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

@@ -7359,6 +7359,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Supprimer les contacts sélectionnés de la mémoire du nœud ?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Les contacts sélectionnés ont été supprimés';
 
@@ -8135,6 +8139,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Attention ! La clé privée du nœud sera exportée dans la mémoire de l\'application, afin que le paquet soit déchiffré par l\'application elle-même et non par le nœud.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

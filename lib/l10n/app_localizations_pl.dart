@@ -7351,6 +7351,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Usunąć wybrane kontakty z pamięci węzła?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Wybrane kontakty zostały usunięte';
 
@@ -8129,6 +8133,14 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Uwaga! Klucz prywatny węzła zostanie wyeksportowany do pamięci aplikacji, aby pakiet odszyfrowywała sama aplikacja, a nie węzeł.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

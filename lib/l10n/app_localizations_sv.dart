@@ -7288,6 +7288,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ta bort de valda kontakterna från nodens minne?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'De valda kontakterna har tagits bort';
 
@@ -8059,6 +8063,14 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Observera! Nodens privata nyckel exporteras till appens minne, så att appen själv dekrypterar paketet i stället för noden.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

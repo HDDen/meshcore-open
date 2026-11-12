@@ -7009,6 +7009,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '選択した連絡先をノードのメモリーから削除しますか？';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess => '選択した連絡先を削除しました';
 
   @override
@@ -7747,6 +7751,14 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       '注意！ ノードの秘密鍵がアプリのメモリーにエクスポートされ、ノードではなくアプリ自身がパケットを復号します。';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>

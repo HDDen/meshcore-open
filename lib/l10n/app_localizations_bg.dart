@@ -7336,6 +7336,10 @@ class AppLocalizationsBg extends AppLocalizations {
       'Да се премахнат ли избраните контакти от паметта на възела?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Избраните контакти са премахнати';
 
@@ -8121,6 +8125,14 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get settings_modSettingsDirectEchoRecoveryDscr =>
       'Внимание! Частният ключ на възела ще бъде експортиран в паметта на приложението, за да може пакетът да се дешифрира от самото приложение, а не от възела.';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>
