@@ -189,14 +189,16 @@ is used. This action does not request another trace or start GPS tracking.
 
 ### Building a Custom Trace on the Map
 1. Open the map menu and choose **Path Trace**. A panel appears at the top of the map.
-2. Tap nodes on the map in the order the trace should travel. **Remove Last** and **Clear** edit the list.
+2. Tap nodes on the map in the order the trace should travel. **Delete** removes the last hop. **Clear** removes all hops.
 3. Choose **Round trip** (the trace comes back along the same hops) or **As entered** (the hops are used exactly as listed, so add the return hops yourself).
 4. Tap **Run path trace**. Nothing is sent until you press this button.
+
+Tap the chevron next to **Path Trace** to hide the controls and leave the title visible. Tap it again to show the same route and mode.
 
 Returning from the result keeps your hops, mode and the last result (**View last result** reopens it without sending again). **Close** or the back button hides the panel without discarding the hops; reopening **Path Trace** during the same session resumes where you left off. The hops are dropped when you connect to a different radio.
 
 You can also edit the comma-separated hop prefixes directly. The route keeps
-its own hash width, even if the current radio mode differs; **Remove Last**
+its own hash width, even if the current radio mode differs. **Delete**
 removes an entire hop. Unknown hops can remain in the route without map
 coordinates. Region requests retain their separate target-at-the-end behavior
 and do not replace the ordinary trace draft.
@@ -214,9 +216,8 @@ Enter hex hashes separated by commas, spaces or arrows. All hops in the route
 must have the same width. Continuous input uses the selected draft's width,
 or the radio's configured width when starting a new draft.
 For three-byte hashes, each hop needs a unique known relay so the app can use
-the fourth byte of its public key in TRACE. The map's builder can prefill the
-manual editor with its current route and mode. Each editor keeps its own
-draft during the app session.
+the fourth byte of its public key in TRACE. The map builder and the editor
+opened from **Contacts** keep separate drafts during the app session.
 
 The app checks the number of hops and the encoded size of the request,
 including any return hops. If the route exceeds the radio's limit, shorten

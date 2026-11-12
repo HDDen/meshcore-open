@@ -16,7 +16,6 @@ import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/screens/channel_message_path_screen.dart';
 import 'package:meshcore_open/screens/path_trace_map.dart';
-import 'package:meshcore_open/screens/manual_path_trace_screen.dart';
 import 'package:meshcore_open/screens/map_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/map_tile_cache_service.dart';
@@ -408,39 +407,65 @@ void main() {
       gesture.onTap!();
     }
 
-    testWidgets('U32: the map prefills the manual route and keeps its own draft',
-        (tester) async {
+    testWidgets('path trace chevron keeps the route and mode when collapsed', (
+      tester,
+    ) async {
       final connector = _TraceBuilderConnector(1);
+      final view = UiViewStateService();
+      addTearDown(view.dispose);
       try {
         await _Harness.pump(
           tester,
           nodes: [],
           zoom: 15,
           connectorOverride: connector,
+          viewState: view,
           screenOverride: MapScreen(
             initialTracePath: Uint8List.fromList([0x10, 0x11]),
             initialTraceHashByteWidth: 2,
           ),
         );
         final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
-        await tester.tap(find.text(l10n.map_pathTraceModeAsEntered));
-        await _pumpFrames(tester);
-        await tester.tap(find.text(l10n.manualTrace_title));
-        await _pumpFrames(tester);
-        final manual = find.byType(ManualPathTraceScreen);
-        expect(tester.widget<ManualPathTraceScreen>(manual).initialHashWidth, 2);
-        final manualInput = find.descendant(
-          of: find.byType(ManualPathTraceScreen),
-          matching: find.byType(TextField),
+        final title = find.text(l10n.contacts_pathTrace);
+        final mode = find.widgetWithText(
+          ChoiceChip,
+          l10n.map_pathTraceModeAsEntered,
         );
-        expect(tester.widget<TextField>(manualInput).controller!.text, '1011');
-        final mode = find.widgetWithText(ChoiceChip, l10n.map_pathTraceModeAsEntered);
-        expect(tester.widget<ChoiceChip>(mode).selected, isTrue);
-        await tester.enterText(manualInput, 'A1, B2');
-        await tester.pageBack();
-        await _pumpFrames(tester);
+        final runTrace = find.text(l10n.map_runTrace);
+        final remove = find.widgetWithText(TextButton, l10n.common_delete);
+        final collapse = find.widgetWithIcon(IconButton, Icons.expand_more);
+        final expand = find.widgetWithIcon(IconButton, Icons.expand_less);
         expect(editorText(tester), '1011');
+        expect(find.text(l10n.manualTrace_title), findsNothing);
+        expect(find.text(l10n.map_removeLast), findsNothing);
+        expect(remove, findsOneWidget);
+        expect(tester.widget<IconButton>(collapse).tooltip, l10n.pathMap_collapsePanel);
+
+        await tester.tap(mode);
+        await _pumpFrames(tester);
+        await tester.enterText(editor(tester), '1011,2021');
+        await tester.tap(collapse);
+        await _pumpFrames(tester);
+
+        expect(title, findsOneWidget);
+        expect(editor(tester), findsNothing);
+        expect(mode, findsNothing);
+        expect(remove, findsNothing);
+        expect(runTrace, findsNothing);
+        expect(view.mapPathTrace.active, isTrue);
+        expect(view.mapPathTrace.pathBytes, [0x10, 0x11, 0x20, 0x21]);
+        expect(view.mapPathTrace.hashByteWidth, 2);
+        expect(tester.widget<IconButton>(expand).tooltip, l10n.pathMap_expandPanel);
+
+        await tester.tap(expand);
+        await _pumpFrames(tester);
+
+        expect(editorText(tester), '1011,2021');
+        expect(tester.widget<ChoiceChip>(mode).selected, isTrue);
+        expect(runTrace, findsOneWidget);
+        expect(remove, findsOneWidget);
         expect(connector.sentFrames, isEmpty);
+        expect(tester.takeException(), isNull);
       } finally {
         await _Harness.unmount(tester);
       }
@@ -584,10 +609,11 @@ void main() {
           final invalid = List<String>.filled(width * 2, 'Z').join();
           await edit(tester, ' ${first.toLowerCase()},, $invalid, ${second.toLowerCase()}, F ');
           expect(editorText(tester), '$first,$second');
-          await tester.tap(find.text(l10n.map_removeLast));
+          final remove = find.widgetWithText(TextButton, l10n.common_delete);
+          await tester.tap(remove);
           await _pumpFrames(tester);
           expect(editorText(tester), first);
-          await tester.tap(find.text(l10n.map_removeLast));
+          await tester.tap(remove);
           await _pumpFrames(tester);
           expect(editorText(tester), isEmpty);
           expect(connector.sentFrames, isEmpty);

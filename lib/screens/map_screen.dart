@@ -74,7 +74,7 @@ import '../icons/los_icon.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
 import 'contacts_screen.dart';
-import 'manual_path_trace_screen.dart';
+// import 'manual_path_trace_screen.dart';
 import '../theme/mesh_theme.dart';
 import '../theme/theme_icons.dart';
 import '../widgets/themed_icon.dart';
@@ -183,6 +183,7 @@ class _MapScreenState extends State<MapScreen>
   final Map<String, DateTime> _hiddenMarkerIds = {};
   Map<String, DateTime> _removedMarkerIds = {};
   bool _isBuildingPathTrace = false;
+  bool _pathTracePanelCollapsed = false;
   bool _traceDraftRestored = false;
   bool _traceReturnPath = true;
   int? _pathTraceHashWidth;
@@ -7770,6 +7771,7 @@ class _MapScreenState extends State<MapScreen>
     _resetTraceForChangedRadio(connector);
     setState(() {
       _isBuildingPathTrace = true;
+      _pathTracePanelCollapsed = false;
       _regionRequestTarget = null;
       _pathTraceHashWidth ??= connector.pathHashByteWidth;
       _pathTraceStart = position;
@@ -8206,17 +8208,17 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-  void _openManualPathTrace() {
-    _commitPathEdit();
-    _pathEditFocus.unfocus();
-    final connector = context.read<MeshCoreConnector>();
-    unawaited(ManualPathTraceScreen.open(
-      context,
-      initialText: _pathEditController.text,
-      initialRoundTrip: _traceReturnPath,
-      initialHashWidth: _activePathHashWidth(connector),
-    ));
-  }
+  // void _openManualPathTrace() {
+  //   _commitPathEdit();
+  //   _pathEditFocus.unfocus();
+  //   final connector = context.read<MeshCoreConnector>();
+  //   unawaited(ManualPathTraceScreen.open(
+  //     context,
+  //     initialText: _pathEditController.text,
+  //     initialRoundTrip: _traceReturnPath,
+  //     initialHashWidth: _activePathHashWidth(connector),
+  //   ));
+  // }
 
   void _openPathTraceResult({
     required bool flipPathAround,
@@ -8388,14 +8390,15 @@ class _MapScreenState extends State<MapScreen>
             if (hasHops) TextButton.icon(
               onPressed: _removePath,
               icon: const Icon(Icons.undo),
-              label: Text(l10n.map_removeLast),
+              label: Text(l10n.common_delete),
             ),
-            if (hasHops && !_isRegionRequestTrace)
-              TextButton.icon(
-                onPressed: _openManualPathTrace,
-                icon: const Icon(Icons.keyboard),
-                label: Text(l10n.manualTrace_title),
-              ),
+            // Trace by hop hashes is available from the Contacts menu.
+            // if (hasHops && !_isRegionRequestTrace)
+            //   TextButton.icon(
+            //     onPressed: _openManualPathTrace,
+            //     icon: const Icon(Icons.keyboard),
+            //     label: Text(l10n.manualTrace_title),
+            //   ),
             if (hasHops && !_isRegionRequestTrace) TextButton.icon(
               onPressed: _clearPathTrace,
               icon: const Icon(Icons.delete_outline),
@@ -8463,64 +8466,94 @@ class _MapScreenState extends State<MapScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  l10n.contacts_pathTrace,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                if (_pathTrace.isNotEmpty)
-                  Text(
-                    '${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}',
-                    style: MeshTheme.mono(
-                      fontSize: 12,
-                      color: MapPalette.textSecondaryOn(brightness),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        l10n.contacts_pathTrace,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                TextField(
-                  controller: _pathEditController,
-                  focusNode: _pathEditFocus,
-                  textAlign: TextAlign.center,
-                  textCapitalization: TextCapitalization.characters,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  minLines: 1,
-                  maxLines: 3,
-                  cursorColor: MapPalette.selected,
-                  inputFormatters: [
-                    TextInputFormatter.withFunction(
-                      (oldValue, newValue) =>
-                          newValue.copyWith(text: newValue.text.toUpperCase()),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: _pathTracePanelCollapsed
+                          ? l10n.pathMap_expandPanel
+                          : l10n.pathMap_collapsePanel,
+                      icon: Icon(
+                        _pathTracePanelCollapsed
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                      ),
+                      onPressed: () {
+                        if (_pathEditFocus.hasFocus) {
+                          _commitPathEdit();
+                          _pathEditFocus.unfocus();
+                        }
+                        setState(() {
+                          _pathTracePanelCollapsed = !_pathTracePanelCollapsed;
+                        });
+                      },
                     ),
                   ],
-                  // Tapping anywhere outside the field (e.g. the map) blurs it
-                  // and commits the edit.
-                  onTapOutside: (_) => _pathEditFocus.unfocus(),
-                  onSubmitted: (_) => _pathEditFocus.unfocus(),
-                  onChanged: (value) {
-                    if (_traceDraft.editorText == value) return;
-                    _traceDraft.editorText = value;
-                    _traceDraft.invalidateResult();
-                  },
-                  decoration: InputDecoration(
-                    isDense: true,
-                    filled: false,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                    hintText: l10n.map_tapToAdd,
-                    hintStyle: MeshTheme.mono(
-                      fontSize: 13,
-                      color: MapPalette.textMutedOn(brightness),
+                ),
+                if (!_pathTracePanelCollapsed) ...[
+                  const SizedBox(height: 6),
+                  if (_pathTrace.isNotEmpty)
+                    Text(
+                      '${l10n.path_currentPathLabel} ${formatDistance(getPathDistanceMeters(_points), isImperial: isImperial)}',
+                      style: MeshTheme.mono(
+                        fontSize: 12,
+                        color: MapPalette.textSecondaryOn(brightness),
+                      ),
+                    ),
+                  TextField(
+                    controller: _pathEditController,
+                    focusNode: _pathEditFocus,
+                    textAlign: TextAlign.center,
+                    textCapitalization: TextCapitalization.characters,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    minLines: 1,
+                    maxLines: 3,
+                    cursorColor: MapPalette.selected,
+                    inputFormatters: [
+                      TextInputFormatter.withFunction(
+                        (oldValue, newValue) =>
+                            newValue.copyWith(text: newValue.text.toUpperCase()),
+                      ),
+                    ],
+                    // Tapping anywhere outside the field (e.g. the map) blurs it
+                    // and commits the edit.
+                    onTapOutside: (_) => _pathEditFocus.unfocus(),
+                    onSubmitted: (_) => _pathEditFocus.unfocus(),
+                    onChanged: (value) {
+                      if (_traceDraft.editorText == value) return;
+                      _traceDraft.editorText = value;
+                      _traceDraft.invalidateResult();
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      hintText: l10n.map_tapToAdd,
+                      hintStyle: MeshTheme.mono(
+                        fontSize: 13,
+                        color: MapPalette.textMutedOn(brightness),
+                      ),
+                    ),
+                    style: MeshTheme.mono(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: MapPalette.selected,
                     ),
                   ),
-                  style: MeshTheme.mono(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: MapPalette.selected,
-                  ),
-                ),
-                _buildPathTraceControls(),
+                  _buildPathTraceControls(),
+                ],
               ],
             ),
           ),
