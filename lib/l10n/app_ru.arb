@@ -2687,6 +2687,7 @@
   "contacts_batchOperations": "Массовые операции",
   "contacts_batchOperations_notSelected": "Вы не выбрали контакты для обработки!",
   "contacts_batchOperations_removeConfirm": "Удалить выбранные контакты из памяти ноды?",
+  "contacts_batchOperations_removeWithCacheConfirm": "Удалить выбранные контакты? Контакты, которых нет в памяти ноды, будут удалены из локального кэша.",
   "contacts_batchOperations_removeSuccess": "Выбранные контакты удалены",
   "contacts_batchOperations_removeFail": "Не удалось удалить контакты - проверьте их список снова",
   "contacts_batchOperations_commonSuccess": "Операция прошла успешно",

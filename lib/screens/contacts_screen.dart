@@ -903,19 +903,20 @@ class _ContactsScreenState extends State<ContactsScreen>
     });
   }
 
-  List<Contact> _selectedBatchContacts(MeshCoreConnector connector) {
-    return connector.contacts
-        .where(
-          (contact) => _selectedBatchContactKeys.contains(contact.publicKeyHex),
-        )
-        .toList(growable: false);
-  }
-
   Future<void> _confirmBatchDelete(
     BuildContext context,
     MeshCoreConnector connector,
   ) async {
-    final selectedContacts = _selectedBatchContacts(connector);
+    final remainingKeys = Set<String>.of(_selectedBatchContactKeys);
+    final selectedOnNode = [
+      for (final contact in connector.contacts)
+        if (remainingKeys.remove(contact.publicKeyHex)) contact,
+    ];
+    final selectedFromCache = [
+      for (final contact in connector.localRepeaters)
+        if (remainingKeys.remove(contact.publicKeyHex)) contact,
+    ];
+    final selectedContacts = [...selectedOnNode, ...selectedFromCache];
     if (selectedContacts.isEmpty) {
       _showBatchResult(
         context,
@@ -925,10 +926,14 @@ class _ContactsScreenState extends State<ContactsScreen>
       return;
     }
 
+    final nodeKey = connector.selfPublicKeyHex;
+    final confirmation = selectedFromCache.isEmpty
+        ? context.l10n.contacts_batchOperations_removeConfirm
+        : context.l10n.contacts_batchOperations_removeWithCacheConfirm;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        content: Text(context.l10n.contacts_batchOperations_removeConfirm),
+        content: Text(confirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -951,8 +956,12 @@ class _ContactsScreenState extends State<ContactsScreen>
 
     await _runBatchOperation(
       contacts: selectedContacts,
-      operation: (contact) =>
-          connector.deleteContact(contact, waitForAck: true),
+      operation: (contact) {
+        if (!connector.isConnected || connector.selfPublicKeyHex != nodeKey) {
+          throw StateError('Connection changed while deleting selected contacts');
+        }
+        return connector.deleteContact(contact, waitForAck: true);
+      },
       successMessage: successMessage,
       failureMessage: failureMessage,
     );

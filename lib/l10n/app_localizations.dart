@@ -12283,6 +12283,13 @@ abstract class AppLocalizations {
   /// **'Remove selected contacts from node?'**
   String get contacts_batchOperations_removeConfirm;
 
+  /// No description provided for @contacts_batchOperations_removeWithCacheConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.'**
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+
   /// No description provided for @contacts_batchOperations_removeSuccess.
   ///
   /// In en, this message translates to:

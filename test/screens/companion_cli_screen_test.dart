@@ -118,6 +118,9 @@ class _Connector extends MeshCoreConnector {
     final failure = deleteFailure;
     if (failure != null) throw failure;
     contactData.removeWhere((entry) => entry.publicKeyHex == contact.publicKeyHex);
+    localRepeaterData.removeWhere(
+      (entry) => entry.publicKeyHex == contact.publicKeyHex,
+    );
     refreshContactRows();
   }
   late final CompanionCliSession testSession;
@@ -162,7 +165,8 @@ class _Connector extends MeshCoreConnector {
   @override
   List<Contact> get contacts => contactData;
   @override
-  List<Contact> get localRepeaters => const [];
+  List<Contact> get localRepeaters => localRepeaterData;
+  final localRepeaterData = <Contact>[];
   @override
   List<Channel> get channels => channelData;
   @override
@@ -1247,6 +1251,63 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final includeNodeContact in [false, true]) {
+    testWidgets('batch delete includes selected cached repeaters (mixed=$includeNodeContact)', (tester) async {
+      Contact repeater(int seed, String name) => Contact(
+        publicKey: Uint8List.fromList(List<int>.filled(32, seed)),
+        name: name,
+        type: advTypeRepeater,
+        pathLength: -1,
+        path: Uint8List(0),
+        lastSeen: DateTime.utc(2026),
+      );
+
+      final stored = repeater(0x52, 'Stored repeater');
+      final cached = repeater(0x53, 'Cached repeater');
+      final unselected = repeater(0x54, 'Unselected repeater');
+      connector.contactData.add(stored);
+      connector.localRepeaterData.addAll([cached, unselected]);
+      await show(
+        tester,
+        const ContactsBatchOperationsScreen(),
+        locale: includeNodeContact ? 'en' : 'ru',
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(ContactsScreen)));
+      final selected = [if (includeNodeContact) stored, cached];
+      for (final contact in selected) {
+        final checkbox = find.descendant(
+          of: find.byKey(ValueKey(contact.publicKeyHex)),
+          matching: find.byType(Checkbox),
+        );
+        await tester.tap(checkbox);
+        await tester.pump();
+        expect(tester.widget<Checkbox>(checkbox).value, isTrue);
+      }
+      await tester.tap(find.byTooltip(l10n.contacts_moreOptions));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.common_delete));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.contacts_batchOperations_removeWithCacheConfirm),
+        findsOneWidget);
+      expect(connector.deletions, isEmpty);
+
+      await tester.tap(find.widgetWithText(TextButton, l10n.common_delete));
+      await tester.pumpAndSettle();
+      expect(connector.deletions, [
+        for (final contact in selected)
+          (key: contact.publicKeyHex, keepMessages: false),
+      ]);
+      expect(connector.deletionAckChoices, List<bool>.filled(selected.length, true));
+      expect(connector.localRepeaterData, [unselected]);
+      expect(connector.contactData, includeNodeContact ? isEmpty : [stored]);
+      expect(find.text(l10n.contacts_batchOperations_removeSuccess), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 
   testWidgets('shared CLI choice survives reopening, node switches and app view-state restart', (tester) async {
     final nodeA = '01' * 32;

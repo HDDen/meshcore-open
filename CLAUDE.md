@@ -4477,7 +4477,10 @@ an old operation from cleaning another radio's rebound stores. The optional
 `waitForAck` argument is retained for source compatibility; UI actions explicitly
 request confirmation through `helpers/remove_contact_action.dart`. This shared
 helper catches failures for the contacts dialog, map deletion and discovery undo.
-Batch operations retain their per-contact failure reporting and cancellation.
+Batch deletion resolves selected keys against the node's contacts and the
+local repeaters shown on the same screen. Both use `deleteContact`, so cached
+repeaters are removed from the app's discovery cache. Per-contact failure
+reporting and cancellation still apply.
 
 `ContactRemovalGuard` counts active removal futures by node/contact pair and
 releases them in `finally`, including overlapping removals. Path/reset/flag

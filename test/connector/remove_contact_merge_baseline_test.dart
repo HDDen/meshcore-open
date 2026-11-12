@@ -493,8 +493,14 @@ Future<void> main() async {
       final discovered = _contact(_linkedKey, 'Discovered-only repeater');
       h.connector.handleFrameForTest(_contactFrame(discovered, code: pushCodeNewAdvert));
       expect(h.connector.discoveredContacts.map((c) => c.publicKeyHex), contains(discovered.publicKeyHex));
+      final discoveryStore = ContactDiscoveryStore();
+      Future<bool> storedInCache() async => (await discoveryStore.loadContacts())
+          .any((contact) => contact.publicKeyHex == discovered.publicKeyHex);
+      await _until(storedInCache, 'discovered contact saved');
+
       h.sent.clear();
       await h.connector.deleteContact(discovered, waitForAck: true);
+      await _until(() async => !await storedInCache(), 'cached contact deleted');
       expect(h.sent, isEmpty);
       expect(h.connector.contacts, hasLength(2));
       expect(h.connector.discoveredContacts.map((c) => c.publicKeyHex), isNot(contains(discovered.publicKeyHex)));

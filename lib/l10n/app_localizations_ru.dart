@@ -7326,6 +7326,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Удалить выбранные контакты из памяти ноды?';
 
   @override
+  String get contacts_batchOperations_removeWithCacheConfirm =>
+      'Удалить выбранные контакты? Контакты, которых нет в памяти ноды, будут удалены из локального кэша.';
+
+  @override
   String get contacts_batchOperations_removeSuccess =>
       'Выбранные контакты удалены';
 

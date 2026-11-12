@@ -121,6 +121,10 @@ other errors and timeouts keep the contact and its history and show a failure
 message. The contact list, map and discovery undo action use the same feedback.
 A contact present only in the app's discovered list is deleted locally.
 
+**Массовые операции → Удалить** обрабатывает и контакты ноды, и отмеченные
+репитеры с подписью «Не добавлен в память ноды». Для таких репитеров запись
+удаляется из локального кэша приложения.
+
 **Keep chat history** retains the conversation, including manually linked
 contact keys. Contact-specific app options such as MCMP and sending delay are
 preserved. This changes neither the database schema nor the existing history format.
