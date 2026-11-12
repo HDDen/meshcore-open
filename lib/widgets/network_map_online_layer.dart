@@ -117,14 +117,17 @@ Color networkMapStatusColor(NetworkMapRepeaterStatus status) {
   };
 }
 
-
-
 /// Above this many in-view repeaters, hexagons and marker shadows are skipped.
 const int networkMapDenseNodeCount = 30;
 
 /// Above this many in-view links, each line is one stroke at half width
 const int networkMapDenseLinkCount = 70;
 
+/// Use a single painted layer when marker widgets would be too numerous.
+const int networkMapMarkerWidgetLimit = 250;
+
+/// Beyond this many drawable links, wait for a closer view.
+const int networkMapMaxLinkCount = 1500;
 
 /// Full style is a 3.5 px confirmed stroke or a 2.5 px unconfirmed stroke,
 /// each with a 1 px border. Simple style keeps the pattern and drops the
@@ -135,27 +138,32 @@ Polyline _onlineLinkPolyline(NetworkMapLink link, {required bool simple}) {
   return Polyline(
     points: [link.aCell.center, link.bCell.center],
     strokeWidth: simple ? strokeWidth / 2 : strokeWidth,
-    color: MapPalette.router.withValues(alpha: confirmed ? 0.85 : 0.6),
+    // Bordered translucent strokes require a viewport-sized saveLayer.
+    color: MapPalette.router,
     borderStrokeWidth: simple ? 0 : 1,
-    borderColor: MapPalette.markerOutline.withValues(alpha: 0.7),
+    borderColor: MapPalette.markerOutline,
     pattern: confirmed
         ? const StrokePattern.solid()
         : StrokePattern.dashed(segments: const [10, 8]),
   );
 }
 
-
-
-List<NetworkMapLink> _visibleOnlineLinks(
+List<NetworkMapLink>? _visibleOnlineLinks(
   List<NetworkMapLink> links,
   List<NetworkMapRepeater> repeaters,
 ) {
   if (links.isEmpty || repeaters.isEmpty) return const [];
   final keys = {for (final repeater in repeaters) repeater.key};
-  return [
-    for (final link in links)
-      if (keys.contains(link.a) && keys.contains(link.b)) link,
-  ];
+  final visible = <NetworkMapLink>[];
+  for (final link in links) {
+    if (!keys.contains(link.a) || !keys.contains(link.b) ||
+        link.aCell.center == link.bCell.center) {
+      continue;
+    }
+    if (visible.length == networkMapMaxLinkCount) return null;
+    visible.add(link);
+  }
+  return visible;
 }
 
 /// Map layers for the online network: links, repeater hexagons and a
@@ -173,11 +181,12 @@ List<Widget> buildNetworkMapOnlineLayers({
   final visibleRepeaters = repeaters ?? controller.repeaters;
   final links = showLinks
       ? _visibleOnlineLinks(controller.links, visibleRepeaters)
-      : const <NetworkMapLink>[];
+      : null;
   final dropHexagons = visibleRepeaters.length > networkMapDenseNodeCount;
-  final simpleLines = links.length > networkMapDenseLinkCount;
+  final useDots = visibleRepeaters.length > networkMapMarkerWidgetLimit;
+  final simpleLines = links != null && links.length > networkMapDenseLinkCount;
   return [
-    if (showLinks)
+    if (links != null)
       PolylineLayer(
         polylines: [
           for (final link in links)
@@ -216,46 +225,74 @@ List<Widget> buildNetworkMapOnlineLayers({
           ],
         ),
       ),
-    MarkerLayer(
-      markers: [
-        for (final repeater in visibleRepeaters)
-          if (!localMarkerKeys.contains(repeater.key))
-            Marker(
-              point: repeater.cell.center,
-              width: 34,
-              height: 34,
-              child: GestureDetector(
-                onTap: () => onTap(repeater),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: networkMapStatusColor(repeater.status),
-                    border: Border.all(
-                      color: MapPalette.markerOutline,
-                      width: 2.5,
+    if (useDots)
+      GestureDetector(
+        onTap: () {
+          final hit = controller.hitNotifier.value?.hitValues.firstOrNull;
+          if (hit != null && visibleRepeaters.contains(hit) &&
+              !localMarkerKeys.contains(hit.key)) {
+            onTap(hit);
+          }
+        },
+        // Hexagons are already hidden at this density, so the layers can
+        // share the hit notifier.
+        child: CircleLayer<NetworkMapRepeater>(
+          hitNotifier: controller.hitNotifier,
+          circles: [
+            for (final repeater in visibleRepeaters)
+              if (!localMarkerKeys.contains(repeater.key))
+                CircleMarker<NetworkMapRepeater>(
+                  point: repeater.cell.center,
+                  radius: 7,
+                  color: networkMapStatusColor(repeater.status),
+                  borderColor: MapPalette.markerOutline,
+                  borderStrokeWidth: 1.5,
+                  hitValue: repeater,
+                ),
+          ],
+        ),
+      )
+    else
+      MarkerLayer(
+        markers: [
+          for (final repeater in visibleRepeaters)
+            if (!localMarkerKeys.contains(repeater.key))
+              Marker(
+                point: repeater.cell.center,
+                width: 34,
+                height: 34,
+                child: GestureDetector(
+                  onTap: () => onTap(repeater),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: networkMapStatusColor(repeater.status),
+                      border: Border.all(
+                        color: MapPalette.markerOutline,
+                        width: 2.5,
+                      ),
+                      boxShadow: dropHexagons
+                          ? null
+                          : const [
+                              BoxShadow(
+                                color: MapPalette.markerShadow,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                     ),
-                    boxShadow: dropHexagons
-                        ? null
-                        : const [
-                            BoxShadow(
-                              color: MapPalette.markerShadow,
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                  ),
-                  child: Icon(
-                    repeater.type == advTypeRoom
-                        ? Icons.meeting_room
-                        : Icons.router,
-                    color: MapPalette.markerOutline,
-                    size: 20,
+                    child: Icon(
+                      repeater.type == advTypeRoom
+                          ? Icons.meeting_room
+                          : Icons.router,
+                      color: MapPalette.markerOutline,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),
-            ),
-      ],
-    ),
+        ],
+      ),
   ];
 }
 

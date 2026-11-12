@@ -3989,8 +3989,12 @@ retained. U24 applies the map visibility filters to online snapshots and
 draws links between visible endpoints. A separate setting gates link
 requests and rendering. A new viewport or link setting fences old responses
 when scheduling the debounced load. The settings listener and online
-controller are initialized only when the network map is available. The
-connector reads the path byte through
+controller are initialized only when the network map is available.
+U34 renderer batches more than 250 filtered nodes into a tappable circle
+layer. Links use opaque strokes to avoid per-line viewport-sized layers in
+flutter_map. The renderer ignores zero-length links and stops building lines
+above 1,500 drawable links. The request and availability gates still apply.
+The connector reads the path byte through
 `raw_packet.dart`'s public `decodePathByteLen` / `decodePathHashWidth`
 where it had private copies. The decision is the fork's: what its users'
 packet records should feed, if anything, is not settled, and an upload

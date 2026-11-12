@@ -22,8 +22,10 @@ visible nodes. Turn off **Show Online Map Connections** in the map filter sheet
 or map settings to stop loading and drawing online links.
 
 Above 30 visible online nodes, the renderer draws center markers without
-hexagons or marker shadows. Above 70 visible links, it draws thinner lines
-with their solid or dashed patterns.
+hexagons or marker shadows. Above 250 nodes it draws tappable dots in one layer.
+Links use opaque solid or dashed strokes. Above 70 links they are thinner, and
+above 1,500 drawable links you need to zoom in or filter the nodes to see them.
+Links with both endpoints in the same location are omitted.
 
 Tap a hexagon or a center marker to see the repeater's name, type, status and
 last-seen time, plus a reachability hint:

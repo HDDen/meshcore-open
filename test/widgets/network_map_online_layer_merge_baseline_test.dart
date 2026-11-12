@@ -371,8 +371,9 @@ void main() {
     expect(lines.map((line) => line.borderStrokeWidth), [1, 1]);
     expect(lines[0].pattern, const StrokePattern.solid());
     expect(lines[1].pattern, StrokePattern.dashed(segments: const [10, 8]));
-    expect(lines[0].color, MapPalette.router.withValues(alpha: 0.85));
-    expect(lines[1].color, MapPalette.router.withValues(alpha: 0.6));
+    expect(lines.map((line) => line.color), everyElement(MapPalette.router));
+    expect(lines.map((line) => line.color.a), everyElement(1.0));
+    expect(lines.map((line) => line.borderColor.a), everyElement(1.0));
 
     final markers = layers.whereType<MarkerLayer>().single.markers;
     expect(markers.map((marker) => marker.point), [
@@ -433,6 +434,84 @@ void main() {
         as PolygonLayer<NetworkMapRepeater>;
     expect(polygons.polygons, isEmpty);
     expect(controller.hitNotifier.value, isNull);
+  });
+
+  testWidgets('U34: dense online markers remain tappable in one painted layer', (
+    tester,
+  ) async {
+    final nodes = List.generate(networkMapMarkerWidgetLimit + 1, _repeater);
+    final local = nodes.first;
+    final remote = nodes[1];
+    final controller = _SnapshotController(nodes, []);
+    addTearDown(controller.dispose);
+    final tapped = <NetworkMapRepeater>[];
+    List<Widget> layers(List<NetworkMapRepeater> visible) =>
+        buildNetworkMapOnlineLayers(
+          controller: controller,
+          repeaters: visible,
+          showLinks: false,
+          localMarkerKeys: {local.key},
+          onTap: tapped.add,
+        );
+
+    final atLimit = layers(nodes.take(networkMapMarkerWidgetLimit).toList());
+    expect(atLimit.whereType<MarkerLayer>().single.markers,
+        hasLength(networkMapMarkerWidgetLimit - 1));
+    final aboveLimit = layers(nodes);
+    expect(aboveLimit.whereType<MarkerLayer>(), isEmpty);
+    final circles = (aboveLimit.single as GestureDetector).child!
+        as CircleLayer<NetworkMapRepeater>;
+    expect(circles.circles.map((circle) => circle.hitValue), nodes.skip(1));
+    expect(circles.circles.first.color, networkMapStatusColor(remote.status));
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: FlutterMap(
+          options: MapOptions(initialCenter: remote.cell.center, initialZoom: 16),
+          children: aboveLimit,
+        ),
+      ),
+    ));
+    final center = tester.getCenter(find.byType(FlutterMap));
+    await tester.tapAt(center);
+    await tester.tapAt(center + const Offset(35, 0));
+    // The tap outside a circle starts flutter_map's double-tap window.
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(tapped, [remote]);
+    expect(controller.linkReads, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  test('U34: the link limit counts only visible nondegenerate connections', () {
+    final nodes = List.generate(60, _repeater);
+    final outside = _repeater(60);
+    final sameCell = _repeater(0, key: 'same-cell');
+    final links = List.generate(networkMapMaxLinkCount + 1, (index) {
+      final from = index % nodes.length;
+      final to = (from + 1 + index ~/ nodes.length) % nodes.length;
+      return _link(nodes[from], nodes[to], confirmed: index.isEven);
+    });
+    final records = [
+      ...links.take(networkMapMaxLinkCount),
+      _link(nodes.first, sameCell, confirmed: true),
+      _link(nodes.first, outside, confirmed: true),
+    ];
+    final controller = _SnapshotController([...nodes, sameCell, outside], records);
+    addTearDown(controller.dispose);
+    List<Widget> layers({required bool showLinks}) => buildNetworkMapOnlineLayers(
+      controller: controller,
+      repeaters: [...nodes, sameCell],
+      showLinks: showLinks,
+      localMarkerKeys: const {},
+      onTap: (_) {},
+    );
+
+    expect(layers(showLinks: true).whereType<PolylineLayer>().single.polylines,
+        hasLength(networkMapMaxLinkCount));
+    records.add(links.last);
+    expect(layers(showLinks: true).whereType<PolylineLayer>(), isEmpty);
+    expect(layers(showLinks: false).whereType<PolylineLayer>(), isEmpty);
+    expect(controller.linkReads, 2);
   });
 
   for (final scenario in [
