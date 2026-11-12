@@ -182,6 +182,8 @@ class _TcpScreenState extends State<TcpScreen>
               port: port,
               wifiSsid: resolvedWifiSsid,
               enabled: true,
+              suppressPhantomChannels:
+                  _settingsService.settings.suppressPhantomChannels,
             );
             if (configResult == null) {
               _appDebugLogService.warn(

@@ -16,6 +16,7 @@ void main() {
     calls = <MethodCall>[];
     messenger.setMockMethodCallHandler(channel, (call) async {
       calls.add(call);
+      if (call.method == 'setSuppressPhantomChannels') return null;
       return <String, Object?>{
         ...Map<String, Object?>.from(call.arguments as Map),
         'active': false,
@@ -37,6 +38,7 @@ void main() {
     expect(calls.single.arguments, <String, Object?>{
       'host': 'mesh.test', 'port': 5000,
       'wifiSsid': 'Synthetic Wi-Fi', 'enabled': true,
+      'suppressPhantomChannels': true,
     });
     expect(result, isNotNull);
     expect(result!.enabled, isTrue);
@@ -56,9 +58,11 @@ void main() {
   test('baseline: disabling an old local-push session needs no SSID', () async {
     final result = await service.configure(
       host: 'mesh.test', port: 5000, wifiSsid: ' ', enabled: false,
+      suppressPhantomChannels: false,
     );
     expect(calls.single.arguments, <String, Object?>{
       'host': 'mesh.test', 'port': 5000, 'wifiSsid': '', 'enabled': false,
+      'suppressPhantomChannels': false,
     });
     expect(result!.enabled, isFalse);
   });
@@ -90,7 +94,7 @@ void main() {
     }
     expect(calls.single.arguments, <String, Object?>{
       'host': 'tailscale://synthetic-peer', 'port': 5000,
-      'wifiSsid': '', 'enabled': false,
+      'wifiSsid': '', 'enabled': false, 'suppressPhantomChannels': true,
     });
     expect(result!.enabled, isFalse);
     expect(result.active, isFalse);
@@ -112,8 +116,22 @@ void main() {
     )));
   });
 
+  test('a changed filter setting reaches the existing iOS receiver', () async {
+    await Future.wait([
+      service.updatePhantomChannelSuppression(false),
+      service.updatePhantomChannelSuppression(true),
+    ]);
+
+    expect(calls.map((call) => call.method), [
+      'setSuppressPhantomChannels',
+      'setSuppressPhantomChannels',
+    ]);
+    expect(calls.map((call) => call.arguments), [false, true]);
+  });
+
   test('baseline: non-iOS configuration has no native side effects', () async {
     const otherPlatform = IosBackgroundTcpService.forTest(isIos: false);
+    await otherPlatform.updatePhantomChannelSuppression(false);
     expect(await otherPlatform.configure(
       host: 'mesh.test', port: 5000, wifiSsid: 'Synthetic', enabled: true,
     ), isNull);

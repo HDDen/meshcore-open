@@ -20,6 +20,7 @@ class DeferredChannelInbox {
 
   final PendingChannelFrameRepository repository;
   Future<void> _replayTail = Future<void>.value();
+  Future<void> _writeTail = Future<void>.value();
   final Set<String> _emptyNodes = {};
   int _writeRevision = 0;
 
@@ -35,17 +36,21 @@ class DeferredChannelInbox {
     if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(nodeKey)) {
       throw StateError('Cannot retain a channel frame without its node identity');
     }
-    _writeRevision++;
-    await repository.putPendingChannelFrame(PendingChannelFrame(
+    final key = nodeKey.toLowerCase();
+    final pending = PendingChannelFrame(
       id: const Uuid().v4(),
-      nodeKey: nodeKey.toLowerCase(),
+      nodeKey: key,
       channelIndex: channelIndex,
       frame: Uint8List.fromList(frame),
       receivedAt: receivedAt,
       channelName: binding?.name,
       channelKey: binding?.key,
-    ));
-    _emptyNodes.remove(nodeKey.toLowerCase());
+    );
+    _writeRevision++;
+    _emptyNodes.remove(key);
+    final write = _writeTail.then((_) => repository.putPendingChannelFrame(pending));
+    _writeTail = write.catchError((Object _, StackTrace _) {});
+    await write;
   }
 
   Future<void> replay({
@@ -53,17 +58,32 @@ class DeferredChannelInbox {
     required bool Function() isCurrent,
     required DeferredChannelBinding? Function(int) bindingFor,
     required Future<void> Function(PendingChannelFrame, bool Function()) process,
+    bool Function(int)? discardUnboundSlot,
   }) {
     final operation = _replayTail.then((_) async {
       if (!isCurrent() || !mayHavePendingFrames(nodeKey)) {
         return;
       }
       final writeRevision = _writeRevision;
+      // A slot response can arrive while its first frame is still being staged.
+      await _writeTail;
+      if (!isCurrent()) {
+        return;
+      }
       final frames = await repository.readPendingChannelFrames(nodeKey);
       var remaining = false;
       for (var frame in frames) {
         if (!isCurrent()) {
           return;
+        }
+        if (discardUnboundSlot?.call(frame.channelIndex) == true) {
+          // A previously bound frame belongs to a known channel's history.
+          if (frame.channelName == null) {
+            await repository.removePendingChannelFrame(nodeKey, frame.id);
+          } else {
+            remaining = true;
+          }
+          continue;
         }
         final binding = bindingFor(frame.channelIndex);
         if (binding == null) {
@@ -81,7 +101,10 @@ class DeferredChannelInbox {
           frame = frame.bind(binding.name, binding.key);
           await repository.putPendingChannelFrame(frame);
         }
-        bool stillCurrent() => isCurrent() && bindingFor(frame.channelIndex) == binding;
+        bool stillCurrent() =>
+            isCurrent() &&
+            discardUnboundSlot?.call(frame.channelIndex) != true &&
+            bindingFor(frame.channelIndex) == binding;
         if (!stillCurrent()) {
           return;
         }

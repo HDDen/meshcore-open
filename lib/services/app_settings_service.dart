@@ -20,6 +20,7 @@ import '../utils/app_logger.dart';
 import '../utils/battery_utils.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/cyr2lat.dart';
+import 'ios_background_tcp_service.dart';
 
 export '../models/app_settings.dart' show ChannelNotificationMode;
 
@@ -576,6 +577,20 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> setDirectEchoRecovery(bool value) async {
     await updateSettings(_settings.copyWith(directEchoRecovery: value));
+  }
+
+  Future<void> setSuppressPhantomChannels(bool value) async {
+    await updateSettings(_settings.copyWith(suppressPhantomChannels: value));
+    try {
+      await const IosBackgroundTcpService().updatePhantomChannelSuppression(
+        _settings.suppressPhantomChannels,
+      );
+    } catch (error) {
+      appLogger.warn(
+        'Could not update phantom channel suppression: $error',
+        tag: 'iOS TCP',
+      );
+    }
   }
 
   Future<void> handleDirectEchoRecoveryPrompt({required bool enable}) async {

@@ -973,11 +973,17 @@ propagate to the existing queue-stop handler. Guarded receive paths request
 strict `ChannelMessageStore.saveChannelMessage(requireBinding: true)` semantics;
 missing node/name can no longer masquerade as a successful history write.
 
+With `AppSettings.suppressPhantomChannels` enabled by default, the connector
+ignores frames from slots the radio confirms have an empty name and an all-zero
+PSK. It consumes the queue response without updating chat, unread counts or
+notifications. Replay discards unbound rows for those slots after any ongoing
+inbox writes finish. Rows already pinned to a channel identity stay recoverable.
+
 Channel-info completion and final channel sync replay retained rows through
 the original parsers and deduplication. Metadata is requested at most once per
 missing slot per connection outside an active channel sync; normal channel
-refresh/reconnect retries recovery. Replay is serialized, keeps first receipt
-time and removes a row only after processing completes. The resolved name/key
+refresh/reconnect retries recovery. Replay is serialized. A recoverable
+frame keeps its first receipt time and is removed after processing completes. The resolved name/key
 is pinned before replay; a reused slot with a different identity leaves that
 row retained. Full node and sync-revision guards prevent a late replay from
 applying to another session. Unknown slots have no original name/key evidence:
@@ -4270,7 +4276,7 @@ Deployment target is owned by the build profile, not edited by hand: `tool/use_t
 - Background modes: `bluetooth-central` (no location background mode — iOS wardriving is foreground-only)
 - `LSApplicationQueriesSchemes`: `http`, `https`
 
-**Experimental iOS background TCP (merged from `feature/ios-background-tcp`).** The TCP screen stores a Wi-Fi SSID in the last endpoint and in each bookmark, tries the current SSID through `IosWifiSsidService`, and configures `NEAppPushManager` through `IosBackgroundTcpService` after a successful connection when background TCP is enabled. The incoming branch changes `backgroundTcpEnabled` to true by default (Android included); an explicit saved false is retained. The separate `MeshCoreBackgroundTcpExtension` uses its own TCP connection, drains the node queue and posts local notifications; it does not run the Flutter connector or persist those messages to the app database. `AppDelegate` registers the added native channels on both the launch path and the implicit engine, while retaining the BLE adapters and badge channel. `Info.plist` keeps `bluetooth-peripheral` alongside the incoming fetch/processing/voip modes. This is a merge of an experiment, not a device-validated background-delivery guarantee. Signing/entitlements, shared-node socket behaviour, queue ownership, re-delivery to Flutter, disable/disconnect handling, and deployment targets after switching profiles still need checking on the affected iOS build; the profile tool rewrites every `IPHONEOS_DEPLOYMENT_TARGET`, now including the extension. See `documentation/scanner-and-connection.md`.
+**Experimental iOS background TCP (merged from `feature/ios-background-tcp`).** The TCP screen stores a Wi-Fi SSID in the last endpoint and in each bookmark, tries the current SSID through `IosWifiSsidService`, and configures `NEAppPushManager` through `IosBackgroundTcpService` after a successful connection when background TCP is enabled. The incoming branch changes `backgroundTcpEnabled` to true by default (Android included); an explicit saved false is retained. The separate `MeshCoreBackgroundTcpExtension` uses its own TCP connection, drains the node queue and posts local notifications; it does not run the Flutter connector or persist those messages to the app database. `AppDelegate` registers the added native channels on both the launch path and the implicit engine, while retaining the BLE adapters and badge channel. `Info.plist` keeps `bluetooth-peripheral` alongside the incoming fetch/processing/voip modes. The receiver reads `suppressPhantomChannels` from its provider configuration. Before a channel notification, it requests `CHANNEL_INFO` and skips an unnamed slot with an all-zero key. A lookup timeout retains notification delivery and advances the queue. This is a merge of an experiment, not a device-validated background-delivery guarantee. Signing/entitlements, shared-node socket behaviour, queue ownership, re-delivery to Flutter, disable/disconnect handling, and deployment targets after switching profiles still need checking on the affected iOS build; the profile tool rewrites every `IPHONEOS_DEPLOYMENT_TARGET`, now including the extension. See `documentation/scanner-and-connection.md`.
 
 ### Web (`web/`)
 PWA scaffold present but boilerplate (`manifest.json` and `index.html` are unmodified Flutter defaults). BLE is unsupported in browsers; TCP and Web Serial USB may work in Chrome only. `ChromeRequiredScreen` gates non-Chrome web users. Versioned releases are produced via `build_pipe` (`?v=<pubspec version>` cache busting, no service worker).

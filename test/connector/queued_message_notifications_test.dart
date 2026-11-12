@@ -516,6 +516,118 @@ Future<void> main() async {
       expect(plugin.shown, isEmpty);
     });
 
+    test('known empty slots consume text and data queue responses without retaining them', () async {
+      final harness = await _Harness.start();
+      final connector = harness.connector;
+      addTearDown(harness.settings.dispose);
+      addTearDown(connector.dispose);
+      const slot = 2;
+      final scope = connector.selfPublicKeyHex;
+      await connector.handleChannelInfoForTest(
+        _channelInfoFrame(slot, '', Uint8List(16)),
+      );
+
+      final body = MCOtxtAppCodec.encodeBody(
+        text: 'phantom data', timestamp: _timestamp + 1,
+      );
+      final payload = ChannelAppDataHelper.encodeEnvelope(
+        senderName: 'Alice',
+        subtypeId: MCOtxtAppCodec.subtypeId,
+        version: MCOtxtAppCodec.wireVersion,
+        body: body,
+      );
+      final type = ChannelAppDataHelper.appDataType;
+      await connector.syncQueuedMessages();
+      final frames = [
+        _channelMessageFrame(
+          channelIndex: slot,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'phantom text',
+        ),
+        Uint8List.fromList([
+          respCodeChannelDataRecv, 32, 0, 0, slot, 0xFF,
+          type & 0xFF, type >> 8, payload.length, ...payload,
+        ]),
+      ];
+      for (final (i, frame) in frames.indexed) {
+        connector.handleFrameForTest(frame);
+        await _waitFor(
+          () => connector.syncRequests == i + 2, 'the next queue request',
+        );
+      }
+      connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+
+      expect(connector.channels, isEmpty);
+      expect(connector.getUnreadCountForChannelIndex(slot), 0);
+      expect(await MessageHistoryStorage.instance.readPendingChannelFrames(scope), isEmpty);
+      expect((await historyDatabase.maintenanceStats()).channelMessages, 0);
+      expect(plugin.shown, isEmpty);
+      expect(
+        connector.sent.where((frame) => frame.first == cmdGetChannel && frame[1] == slot),
+        isEmpty,
+      );
+    });
+
+    for (final suppress in [true, false]) {
+      test('confirmed empty slot replay follows the switch (enabled=$suppress)', () async {
+        final harness = await _Harness.start();
+        final connector = harness.connector;
+        addTearDown(harness.settings.dispose);
+        addTearDown(connector.dispose);
+        await harness.settings.setSuppressPhantomChannels(suppress);
+        const slot = 2;
+        final scope = connector.selfPublicKeyHex;
+        await connector.syncQueuedMessages();
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: slot,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'arrived before metadata',
+        ));
+        await _waitFor(() => connector.syncRequests == 2, 'retention before slot response');
+        expect(await MessageHistoryStorage.instance.readPendingChannelFrames(scope), hasLength(1));
+        connector.handleFrameForTest(Uint8List.fromList([respCodeNoMoreMessages]));
+
+        final emptySlot = connector.handleChannelInfoForTest(
+          _channelInfoFrame(slot, '', Uint8List(16)),
+        );
+        if (!suppress) {
+          await emptySlot;
+          expect(
+            await MessageHistoryStorage.instance.readPendingChannelFrames(scope),
+            hasLength(1),
+          );
+          expect(plugin.shown, isEmpty);
+          return;
+        }
+
+        final reusedSlot = connector.handleChannelInfoForTest(
+          _channelInfoFrame(slot, 'Named zero key', Uint8List(16)),
+        );
+        await Future.wait([emptySlot, reusedSlot]);
+        expect(
+          await MessageHistoryStorage.instance.readPendingChannelFrames(scope),
+          isEmpty,
+        );
+        expect(plugin.shown, isEmpty);
+        final channel = connector.channels.single;
+        expect(connector.getLoadedChannelMessages(channel), isEmpty);
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: slot,
+          timestampSeconds: _timestamp + 10,
+          senderName: 'Alice',
+          text: 'legitimate text',
+        ));
+        await _waitFor(() => plugin.shown.length == 1, 'the configured channel notification');
+        final history = ChannelMessageStore()
+          ..setPublicKeyHex = scope
+          ..registerChannel(channel);
+        expect((await history.loadChannelMessages(slot)).single.text, 'legitimate text');
+        expect(connector.getUnreadCountForChannelIndex(slot), 1);
+      });
+    }
+
     test('a replacement connector recovers an unresolved channel from the same node', () async {
       final first = await _Harness.start(notifications: false);
       final scope = first.connector.selfPublicKeyHex;

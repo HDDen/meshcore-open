@@ -109,6 +109,15 @@ Future<void> _openHistoryStorage() =>
     );
 
 Future<void> main() async {
+  test('phantom channel suppression defaults on and preserves an opt-out', () {
+    expect(AppSettings().suppressPhantomChannels, isTrue);
+    expect(AppSettings.fromJson(const {}).suppressPhantomChannels, isTrue);
+
+    final disabled = AppSettings().copyWith(suppressPhantomChannels: false);
+    expect(AppSettings.fromJson(disabled.toJson()).suppressPhantomChannels, isFalse);
+    expect(disabled.copyWith(notificationsEnabled: false).suppressPhantomChannels, isFalse);
+  });
+
   TestWidgetsFlutterBinding.ensureInitialized();
   final skip = await _sqliteProblem();
 

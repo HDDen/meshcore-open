@@ -3111,6 +3111,8 @@
   "channels_qrUpdateExisting": "Канал {name} уже существует, обновить его свойства?",
   "settings_modSettingsDirectEchoRecovery": "Получать личные сообщения, не дожидаясь полного прохождения маршрута",
   "settings_modSettingsDirectEchoRecoveryDscr": "Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.",
+  "settings_modSettingsSuppressPhantomChannels": "Подавлять фантомные каналы",
+  "settings_modSettingsSuppressPhantomChannelsDscr": "Игнорировать сообщения из безымянных слотов каналов с нулевым ключом.",
   "settings_modSettingsDirectEchoRecoveryPrompt": "Включить ускоренное получение личных сообщений?\nДля этого в оперативную память приложения будет извлекаться приватный ключ ноды.",
   "channelPath_incompletePaths": "Неполные пути",
   "channelPath_incompletePathTitle": "Неполный путь {index} • {hops}",

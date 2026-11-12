@@ -8103,6 +8103,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Внимание! Будет экспортирован приватный ключ ноды в память приложения для расшифровки пакета своими силами, а не нодой.';
 
   @override
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Подавлять фантомные каналы';
+
+  @override
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Игнорировать сообщения из безымянных слотов каналов с нулевым ключом.';
+
+  @override
   String get settings_modSettingsDirectEchoRecoveryPrompt =>
       'Включить ускоренное получение личных сообщений?\nДля этого в оперативную память приложения будет извлекаться приватный ключ ноды.';
 

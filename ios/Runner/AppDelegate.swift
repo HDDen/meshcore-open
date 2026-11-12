@@ -106,11 +106,14 @@ import UserNotifications
       binaryMessenger: binaryMessenger
     )
     backgroundTcpChannel.setMethodCallHandler { [weak self] call, result in
-      guard call.method == "configure" else {
+      switch call.method {
+      case "configure":
+        self?.configureBackgroundTcp(call: call, result: result)
+      case "setSuppressPhantomChannels":
+        self?.updateBackgroundTcpPhantomChannelSuppression(call: call, result: result)
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      self?.configureBackgroundTcp(call: call, result: result)
     }
   }
 
@@ -144,6 +147,44 @@ import UserNotifications
         completionHandler(options.union([.banner, .sound, .badge]))
       } else {
         completionHandler(options)
+      }
+    }
+  }
+
+  private var backgroundTcpProviderIdentifier: String {
+    "\(Bundle.main.bundleIdentifier ?? "com.monitormx.mcoadvanced").MeshCoreBackgroundTcpExtension"
+  }
+
+  private func updateBackgroundTcpPhantomChannelSuppression(
+    call: FlutterMethodCall,
+    result: @escaping FlutterResult
+  ) {
+    guard let enabled = call.arguments as? Bool else {
+      result(FlutterError(code: "bad_args", message: "Expected a Boolean", details: nil))
+      return
+    }
+    let identifier = backgroundTcpProviderIdentifier
+    NEAppPushManager.loadAllFromPreferences { managers, error in
+      DispatchQueue.main.async {
+        if let error = error {
+          result(FlutterError(code: "load_failed", message: error.localizedDescription, details: nil))
+          return
+        }
+        guard let manager = managers?.first(where: { $0.providerBundleIdentifier == identifier }),
+              (manager.providerConfiguration["suppressPhantomChannels"] as? Bool ?? true) != enabled else {
+          result(nil)
+          return
+        }
+        manager.providerConfiguration["suppressPhantomChannels"] = enabled
+        manager.saveToPreferences { error in
+          DispatchQueue.main.async {
+            if let error = error {
+              result(FlutterError(code: "save_failed", message: error.localizedDescription, details: nil))
+            } else {
+              result(nil)
+            }
+          }
+        }
       }
     }
   }
@@ -184,7 +225,7 @@ import UserNotifications
         }
         return
       }
-      let providerBundleIdentifier = "\(Bundle.main.bundleIdentifier ?? "com.monitormx.mcoadvanced").MeshCoreBackgroundTcpExtension"
+      let providerBundleIdentifier = self.backgroundTcpProviderIdentifier
       let manager = managers?.first(where: { existing in
         existing.localizedDescription == self.backgroundTcpManagerName ||
         existing.providerBundleIdentifier == providerBundleIdentifier
@@ -197,7 +238,8 @@ import UserNotifications
       manager.providerConfiguration = [
         "host": host.trimmingCharacters(in: .whitespacesAndNewlines),
         "port": port,
-        "appName": "MeshCoreOpen;cap=mctxt,mcmp,aeic"
+        "appName": "MeshCoreOpen;cap=mctxt,mcmp,aeic",
+        "suppressPhantomChannels": args["suppressPhantomChannels"] as? Bool ?? true
       ]
       manager.isEnabled = enabled
       manager.saveToPreferences { saveError in

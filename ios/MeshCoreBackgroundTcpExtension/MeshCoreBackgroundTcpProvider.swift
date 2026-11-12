@@ -9,6 +9,8 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
   private var rxBuffer: [UInt8] = []
   private var startCompletion: ((Error?) -> Void)?
   private var startCompletionFinished = false
+  private var pendingChannelNotifications: [(slot: UInt8, title: String, body: String)] = []
+  private var channelInfoTimeout: DispatchWorkItem?
 
   private let txFrameStart: UInt8 = 0x3c
   private let rxFrameStart: UInt8 = 0x3e
@@ -17,11 +19,13 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
   private let cmdAppStart: UInt8 = 1
   private let cmdSyncNextMessage: UInt8 = 10
   private let cmdDeviceQuery: UInt8 = 22
+  private let cmdGetChannel: UInt8 = 31
   private let appProtocolVersion: UInt8 = 4
   private let respCodeContactMsgRecv: UInt8 = 7
   private let respCodeChannelMsgRecv: UInt8 = 8
   private let respCodeContactMsgRecvV3: UInt8 = 16
   private let respCodeChannelMsgRecvV3: UInt8 = 17
+  private let respCodeChannelInfo: UInt8 = 18
   private let respCodeChannelDataRecv: UInt8 = 27
   private let pushCodeMsgWaiting: UInt8 = 0x83
   private let pushCodeLoginSuccess: UInt8 = 0x85
@@ -42,6 +46,9 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
       self?.connection?.cancel()
       self?.connection = nil
       self?.rxBuffer.removeAll(keepingCapacity: false)
+      self?.channelInfoTimeout?.cancel()
+      self?.channelInfoTimeout = nil
+      self?.pendingChannelNotifications.removeAll()
       completionHandler()
     }
   }
@@ -110,6 +117,7 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
   }
 
   private func sendSyncNextMessage() {
+    guard pendingChannelNotifications.isEmpty else { return }
     sendFrame([cmdSyncNextMessage])
   }
 
@@ -172,11 +180,63 @@ final class MeshCoreBackgroundTcpProvider: NEAppPushProvider {
     if code == pushCodeLoginSuccess || code == pushCodeLoginFail {
       return
     }
-    if let notification = parseContactMessage(payload) ?? parseChannelMessage(payload) ?? parseChannelData(payload) {
+    if code == respCodeChannelInfo {
+      // CHANNEL_INFO contains the slot, a 32-byte name and the 16-byte PSK.
+      guard payload.count >= 50, payload[1] == pendingChannelNotifications.first?.slot else { return }
+      let empty = payload[2] == 0 && payload[34..<50].allSatisfy { $0 == 0 }
+      finishChannelCheck(suppress: suppressPhantomChannels && empty)
+      return
+    }
+    guard isLikelyMessagePayload(payload) else { return }
+    let notification = parseContactMessage(payload) ?? parseChannelMessage(payload) ??
+      parseChannelData(payload) ?? (title: "MeshCore", body: "New MeshCore message")
+    if suppressPhantomChannels, let slot = channelSlot(payload) {
+      pendingChannelNotifications.append((slot, notification.title, notification.body))
+      if pendingChannelNotifications.count == 1 {
+        requestChannelInfo(slot)
+      }
+    } else {
       showNotification(title: notification.title, body: notification.body)
       sendSyncNextMessage()
-    } else if isLikelyMessagePayload(payload) {
-      showNotification(title: "MeshCore", body: "New MeshCore message")
+    }
+  }
+
+  private var suppressPhantomChannels: Bool {
+    providerConfiguration?["suppressPhantomChannels"] as? Bool ?? true
+  }
+
+  private func channelSlot(_ payload: [UInt8]) -> UInt8? {
+    if payload[0] == respCodeChannelMsgRecv, payload.count > 1 {
+      return payload[1]
+    }
+    if (payload[0] == respCodeChannelMsgRecvV3 || payload[0] == respCodeChannelDataRecv),
+       payload.count > 4 {
+      return payload[4]
+    }
+    return nil
+  }
+
+  private func requestChannelInfo(_ slot: UInt8) {
+    // Keep normal notification delivery if the radio never answers the lookup.
+    let timeout = DispatchWorkItem { [weak self] in
+      self?.finishChannelCheck(suppress: false)
+    }
+    channelInfoTimeout = timeout
+    queue.asyncAfter(deadline: .now() + 2, execute: timeout)
+    sendFrame([cmdGetChannel, slot])
+  }
+
+  private func finishChannelCheck(suppress: Bool) {
+    channelInfoTimeout?.cancel()
+    channelInfoTimeout = nil
+    guard !pendingChannelNotifications.isEmpty else { return }
+    let notification = pendingChannelNotifications.removeFirst()
+    if !suppress {
+      showNotification(title: notification.title, body: notification.body)
+    }
+    if let next = pendingChannelNotifications.first {
+      requestChannelInfo(next.slot)
+    } else {
       sendSyncNextMessage()
     }
   }

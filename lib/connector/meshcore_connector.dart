@@ -727,6 +727,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   late final DeferredChannelInbox _deferredChannelInbox =
       DeferredChannelInbox(MessageHistoryStorage.instance);
   final Set<int> _pendingChannelBindingRequests = {};
+  final Set<int> _confirmedEmptyChannelSlots = {};
+  bool _lastSuppressPhantomChannels = true;
   int _channelInboxRevision = 0;
   Future<void>? _pendingRawAdvert;
   static const int _maxChannelSyncRetries = 3;
@@ -1178,7 +1180,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     return result;
   }
 
-  List<Channel> get channels => List.unmodifiable(_channels);
+  List<Channel> get channels => List.unmodifiable(
+    _suppressPhantomChannels
+        ? _channels.where((channel) => !channel.isEmpty)
+        : _channels,
+  );
   bool get isConnected => _state == MeshCoreConnectionState.connected;
   bool get isOfflineMode => _isOfflineMode;
   bool get isOfflineSharedMode => _isOfflineMode && _isOfflineSharedMode;
@@ -4458,6 +4464,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         appSettingsService?.settings.noRetransmissionWarningSeconds ?? 0;
     _lastDirectEchoRecovery =
         appSettingsService?.settings.directEchoRecovery ?? false;
+    _lastSuppressPhantomChannels = _suppressPhantomChannels;
     _appSettingsService?.addListener(_handleAppSettingsChanged);
     // The block table is app-wide and has no provider, so the screens cannot
     // watch it themselves. Re-emitting it here redraws the chat, the channels
@@ -4620,6 +4627,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       } else {
         _clearDirectEchoKey('option switched off');
       }
+    }
+    final suppressPhantomChannels = _suppressPhantomChannels;
+    if (suppressPhantomChannels != _lastSuppressPhantomChannels) {
+      _lastSuppressPhantomChannels = suppressPhantomChannels;
+      if (suppressPhantomChannels && _confirmedEmptyChannelSlots.isNotEmpty) {
+        unawaited(_replayDeferredChannelFrames());
+      }
+      notifyListeners();
     }
     final evictDiscovered = settings?.evictDiscoveredContactsEnabled ?? false;
     if (evictDiscovered != _lastEvictDiscoveredContacts) {
@@ -7480,6 +7495,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _finishBackupChannelSync(false);
     _pendingRawAdvert = null;
     _pendingChannelBindingRequests.clear();
+    _confirmedEmptyChannelSlots.clear();
     _hasLoadedCachedChannelStorage = false;
     _pendingInitialChannelSync = false;
     _pendingInitialContactsSync = false;
@@ -13515,6 +13531,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             .firstOrNull;
         var dispatched = false;
         try {
+          await _releaseConfirmedEmptyChannelSlot(target.index);
           await _dispatchFrame(
             buildSetChannelFrame(target.index, target.name, target.psk),
             waitForGenericAck: true,
@@ -13607,6 +13624,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!isConnected) return;
 
     final previous = _findChannelByIndex(index);
+    final revision = _channelInboxRevision;
+    await _releaseConfirmedEmptyChannelSlot(index);
+    if (revision != _channelInboxRevision) return;
     await sendFrame(buildSetChannelFrame(index, name, psk));
     // An edit that keeps the key or the name is the same channel renamed or
     // rekeyed: its history and settings stay with it through the identity
@@ -17387,7 +17407,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) async {
     if (message.isOutgoing || _appSettingsService == null) return;
     final channelIndex = message.channelIndex;
-    if (channelIndex == null) return;
+    if (channelIndex == null || _isSuppressedChannelSlot(channelIndex)) return;
 
     final settings = _appSettingsService!.settings;
     if (!settings.notificationsEnabled || !settings.notifyOnNewChannelMessage) {
@@ -17447,6 +17467,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  bool get _suppressPhantomChannels =>
+      _appSettingsService?.settings.suppressPhantomChannels ?? true;
+
+  bool _isSuppressedChannelSlot(int index) =>
+      _suppressPhantomChannels && _confirmedEmptyChannelSlots.contains(index);
+
+  Future<void> _releaseConfirmedEmptyChannelSlot(int index) async {
+    // Resolve pending frames against the empty slot before it can be reused.
+    final revision = _channelInboxRevision;
+    if (_isSuppressedChannelSlot(index)) {
+      await _replayDeferredChannelFrames();
+    }
+    if (revision == _channelInboxRevision &&
+        _confirmedEmptyChannelSlots.remove(index)) {
+      _pendingChannelBindingRequests.remove(index);
+    }
+  }
+
   DeferredChannelBinding? _pendingChannelBinding(int index) {
     final name = _channelMessageStore.channelNameForIndex(index);
     if (name == null || name.isEmpty) {
@@ -17466,8 +17504,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final data = frame.isNotEmpty && frame.first == respCodeChannelDataRecv
         ? parseChannelDataReceivedFrame(frame)
         : null;
-    // AEIC has its own chunk retention/lifetime; this inbox protects channel
-    // history messages, including binary MCMP/MCOtxt, not image reconstruction.
     final int? index = frame.isEmpty
         ? null
         : switch (frame.first) {
@@ -17476,16 +17512,27 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             respCodeChannelDataRecv => data?.channelIndex,
             _ => null,
           };
-    if (localSourceLabel != null || index == null || data?.dataType == dataTypeAeicImage) {
+    if (index != null && _isSuppressedChannelSlot(index)) {
+      return;
+    }
+    if (localSourceLabel != null || index == null) {
+      await process(frame, null, null);
+      return;
+    }
+    final binding = _pendingChannelBinding(index);
+    // AEIC retains and expires its own chunks once the slot is known.
+    if (data?.dataType == dataTypeAeicImage &&
+        (binding != null || !_suppressPhantomChannels)) {
       await process(frame, null, null);
       return;
     }
     final nodeKey = selfPublicKeyHex;
     final revision = _channelInboxRevision;
     final receivedAt = DateTime.now();
-    final binding = _pendingChannelBinding(index);
     bool isCurrent() => !_disposed && revision == _channelInboxRevision &&
-        selfPublicKeyHex == nodeKey && _pendingChannelBinding(index) == binding;
+        selfPublicKeyHex == nodeKey &&
+        !_isSuppressedChannelSlot(index) &&
+        _pendingChannelBinding(index) == binding;
     if (binding == null) {
       await _deferredChannelInbox.defer(
         nodeKey: nodeKey, channelIndex: index, frame: frame, receivedAt: receivedAt,
@@ -17495,7 +17542,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         tag: 'Channel inbox',
       );
       if (revision == _channelInboxRevision && nodeKey == selfPublicKeyHex) {
-        if (_pendingChannelBinding(index) != null) {
+        if (_isSuppressedChannelSlot(index) ||
+            _pendingChannelBinding(index) != null) {
           await _replayDeferredChannelFrames();
         } else {
           unawaited(_requestMissingChannelBinding(index, revision, nodeKey));
@@ -17521,6 +17569,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> _requestMissingChannelBinding(int index, int revision, String nodeKey) async {
     if (!isConnected || _disposed || _isSyncingChannels ||
         revision != _channelInboxRevision || selfPublicKeyHex != nodeKey ||
+        _isSuppressedChannelSlot(index) ||
         !_pendingChannelBindingRequests.add(index)) {
       return;
     }
@@ -17546,6 +17595,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         nodeKey: nodeKey,
         isCurrent: isCurrent,
         bindingFor: _pendingChannelBinding,
+        discardUnboundSlot: _isSuppressedChannelSlot,
         process: (pending, canApply) async {
           if (pending.frame.first == respCodeChannelDataRecv) {
             await _processIncomingChannelData(
@@ -18769,7 +18819,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           ? _channels
           : _cachedChannels;
       for (final channel in channelsToSearch) {
-        if (channel.isEmpty) continue;
+        if (channel.isEmpty || _isSuppressedChannelSlot(channel.index)) continue;
         final hash = _computeChannelHash(channel.psk);
         if (hash != channelHash) continue;
         try {
@@ -19524,9 +19574,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         debugPrint(
           '[ChannelSync] Received unexpected channel ${channel.index}, expected $_nextChannelIndexToRequest',
         );
-        // Add it anyway but don't advance sync
-        if (!channel.isEmpty &&
-            !_channels.any((c) => c.index == channel.index)) {
+        // Keep slot metadata without advancing the active request.
+        if (!_channels.any((c) => c.index == channel.index)) {
           await _applySyncedChannel(channel);
         }
         return;
@@ -19577,6 +19626,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (channel.isEmpty) {
+      _confirmedEmptyChannelSlots.add(channel.index);
       _registerChannelStorageBinding(channel);
       _channelMessages.remove(channel.index);
       _channelMcmpEnabled.remove(channel.index);
@@ -19595,6 +19645,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    if (_confirmedEmptyChannelSlots.contains(channel.index)) {
+      final revision = _channelInboxRevision;
+      await _releaseConfirmedEmptyChannelSlot(channel.index);
+      if (revision != _channelInboxRevision) return;
+    }
     final cachedByName = _previousChannelsCache.cast<Channel?>().firstWhere(
       (entry) => entry?.name == channel.name,
       orElse: () => null,
@@ -19831,6 +19886,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
       return;
     }
+    if (_isSuppressedChannelSlot(channelIndex)) return;
     // The rule, not the flag: this runs before `_addChannelMessage` stamps its
     // own copy. Without it a muted flooder drives a badge that never stops
     // climbing and feeds the app icon through `getTotalUnreadCount`.
@@ -20296,6 +20352,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (canApply?.call() == false) {
       throw StateError('Channel receive context changed');
     }
+    if (_isSuppressedChannelSlot(channelIndex)) return false;
     _channelMessages.putIfAbsent(channelIndex, () => []);
     final messages = _channelMessages[channelIndex]!;
 

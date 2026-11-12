@@ -132,6 +132,8 @@ its unchanged masked value keeps the stored key; Cancel discards edits.
 Individual channels can be muted from the channel chat bell icon, the channel list, or the channel notification. Replying from notifications, watches, and Android Auto is described in [Notifications](notifications.md).
 
 ### Messaging
+
+- **Подавлять фантомные каналы** в настройках мода включено по умолчанию. Сообщения из слотов, которые нода подтвердила как безымянные и с нулевым ключом, не попадают в чат, уведомления и историю. Если сведения о слоте ещё не получены, приложение запрашивает их у ноды. Слот с заданным именем считается обычным каналом, даже если его ключ состоит из нулей.
 - **Clear Path on Max Retry**: Erases the stored routing path after all retries fail
 - **Jump to Oldest Unread**: When opening a chat, scrolls to the oldest unread message instead of the newest
 - **Max Message Retries** sets the direct-message attempt limit (2–10, default 5) in every routing mode.

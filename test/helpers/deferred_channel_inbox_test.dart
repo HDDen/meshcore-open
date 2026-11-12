@@ -188,6 +188,31 @@ void main() {
     expect(repository.rows, hasLength(1));
   });
 
+  test('discard waits for staging and keeps previously bound frames', () async {
+    await inbox.defer(
+      nodeKey: node,
+      channelIndex: 2,
+      frame: Uint8List.fromList([8, 2]),
+      receivedAt: at,
+      binding: binding,
+    );
+    repository.holdPut = Completer<void>();
+    final pendingWrite = stage();
+    final replay = inbox.replay(
+      nodeKey: node,
+      isCurrent: () => true,
+      bindingFor: (_) => null,
+      discardUnboundSlot: (slot) => slot == 2,
+      process: (_, _) async => fail('empty slots cannot be replayed'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.reads, 0);
+    repository.holdPut!.complete();
+    await Future.wait([pendingWrite, replay]);
+
+    expect(repository.rows.values.single.channelName, binding.name);
+  });
+
   test('empty inbox is queried once and a newly deferred frame invalidates it', () async {
     Future<void> replay() => inbox.replay(
       nodeKey: node, isCurrent: () => true, bindingFor: (_) => binding,

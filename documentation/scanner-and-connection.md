@@ -239,4 +239,9 @@ The iOS research branch adds a separate native background receiver. With **Keep 
 
 Background TCP now defaults to enabled, including on Android; a previously saved disabled setting stays disabled. The iOS receiver opens its own connection and can fetch pending messages and show notifications. It does not keep the Flutter interface running or save the fetched messages into the app history. Successful configuration does not prove that the receiver is active or that background delivery works on a particular iPhone.
 
+With **Suppress phantom channels** enabled, the receiver checks the channel slot
+with the radio before posting its notification. It suppresses slots with an
+empty name and an all-zero key. If the slot lookup times out, notification
+delivery continues.
+
 This feature remains experimental. The merge preserves the earlier research implementation; reliable sharing of the node with the foreground connection, history reconciliation, and disabling an already saved receiver require further work or device verification. Validate the iOS signing/entitlements and the deployment target for the chosen build profile on a Mac before relying on it. The normal BLE peripheral mode for the companion proxy remains in the app's background-mode configuration.

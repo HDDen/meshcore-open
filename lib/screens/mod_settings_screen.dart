@@ -582,6 +582,24 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setDirectEchoRecovery,
                   ),
                 ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    secondary: const Icon(Icons.filter_alt_outlined, size: 20),
+                    title: Text(
+                      context.l10n.settings_modSettingsSuppressPhantomChannels,
+                    ),
+                    subtitle: Text(
+                      context.l10n.settings_modSettingsSuppressPhantomChannelsDscr,
+                    ),
+                    value: settings.suppressPhantomChannels,
+                    onChanged: settingsService.setSuppressPhantomChannels,
+                  ),
+                ),
                 if (PlatformInfo.isAndroid || PlatformInfo.isIOS)
                   MeshCard(
                     padding: EdgeInsets.zero,

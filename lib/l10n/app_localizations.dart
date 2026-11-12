@@ -13523,6 +13523,20 @@ abstract class AppLocalizations {
   /// **'Warning! The node\'s private key will be exported into the app\'s memory, so the app decrypts the packet itself instead of the node.'**
   String get settings_modSettingsDirectEchoRecoveryDscr;
 
+  /// No description provided for @settings_modSettingsSuppressPhantomChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Suppress phantom channels'**
+  String get settings_modSettingsSuppressPhantomChannels =>
+      'Suppress phantom channels';
+
+  /// No description provided for @settings_modSettingsSuppressPhantomChannelsDscr.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore messages from unnamed channel slots with an all-zero key.'**
+  String get settings_modSettingsSuppressPhantomChannelsDscr =>
+      'Ignore messages from unnamed channel slots with an all-zero key.';
+
   /// No description provided for @settings_modSettingsDirectEchoRecoveryPrompt.
   ///
   /// In en, this message translates to:

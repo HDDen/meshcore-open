@@ -45,11 +45,30 @@ class IosBackgroundTcpService {
     'mco_advanced/ios_background_tcp',
   );
 
+  static Future<void> _configurationTail = Future<void>.value();
+
+  static Future<T> _updateConfiguration<T>(Future<T> Function() update) {
+    final operation = _configurationTail.then((_) => update());
+    _configurationTail = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return operation;
+  }
+
+  Future<void> updatePhantomChannelSuppression(bool enabled) async {
+    if (!(_isIosForTest ?? PlatformInfo.isIOS)) return;
+    await _updateConfiguration(
+      () => _channel.invokeMethod<void>('setSuppressPhantomChannels', enabled),
+    );
+  }
+
   Future<IosBackgroundTcpConfigurationResult?> configure({
     required String host,
     required int port,
     required String wifiSsid,
     required bool enabled,
+    bool suppressPhantomChannels = true,
   }) async {
     if (!(_isIosForTest ?? PlatformInfo.isIOS)) return null;
     final normalizedHost = host.trim();
@@ -60,14 +79,17 @@ class IosBackgroundTcpService {
     final localPushEnabled = enabled && !isMcoTcpOverlayEndpoint(normalizedHost);
     if (localPushEnabled && normalizedSsid.isEmpty) return null;
 
-    final result = await _channel.invokeMapMethod<Object?, Object?>(
-      'configure',
-      <String, Object?>{
-        'host': normalizedHost,
-        'port': port,
-        'wifiSsid': normalizedSsid,
-        'enabled': localPushEnabled,
-      },
+    final result = await _updateConfiguration(
+      () => _channel.invokeMapMethod<Object?, Object?>(
+        'configure',
+        <String, Object?>{
+          'host': normalizedHost,
+          'port': port,
+          'wifiSsid': normalizedSsid,
+          'enabled': localPushEnabled,
+          'suppressPhantomChannels': suppressPhantomChannels,
+        },
+      ),
     );
     if (result == null) return null;
     return IosBackgroundTcpConfigurationResult.fromMap(result);

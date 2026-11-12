@@ -327,6 +327,9 @@ class AppSettings {
   /// private key into the app's memory.
   final bool directEchoRecovery;
 
+  /// Ignore received frames from slots confirmed to be empty by the radio.
+  final bool suppressPhantomChannels;
+
   /// Whether the one-time direct echo recovery opt-in prompt was answered.
   final bool directEchoRecoveryPromptHandled;
   final bool simplifiedMentions;
@@ -810,6 +813,7 @@ class AppSettings {
     this.showLastHopSignal = true,
     this.recoverLongPacketEchoes = true,
     this.directEchoRecovery = false,
+    this.suppressPhantomChannels = true,
     this.directEchoRecoveryPromptHandled = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
@@ -989,6 +993,7 @@ class AppSettings {
       'show_last_hop_signal': showLastHopSignal,
       'recover_long_packet_echoes': recoverLongPacketEchoes,
       'direct_echo_recovery': directEchoRecovery,
+      'suppress_phantom_channels': suppressPhantomChannels,
       'direct_echo_recovery_prompt_handled': directEchoRecoveryPromptHandled,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
@@ -1205,6 +1210,7 @@ class AppSettings {
       recoverLongPacketEchoes:
           json['recover_long_packet_echoes'] as bool? ?? true,
       directEchoRecovery: json['direct_echo_recovery'] as bool? ?? false,
+      suppressPhantomChannels: json['suppress_phantom_channels'] as bool? ?? true,
       directEchoRecoveryPromptHandled:
           json['direct_echo_recovery_prompt_handled'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
@@ -1474,6 +1480,7 @@ class AppSettings {
     bool? showLastHopSignal,
     bool? recoverLongPacketEchoes,
     bool? directEchoRecovery,
+    bool? suppressPhantomChannels,
     bool? directEchoRecoveryPromptHandled,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
@@ -1643,6 +1650,8 @@ class AppSettings {
       recoverLongPacketEchoes:
           recoverLongPacketEchoes ?? this.recoverLongPacketEchoes,
       directEchoRecovery: directEchoRecovery ?? this.directEchoRecovery,
+      suppressPhantomChannels:
+          suppressPhantomChannels ?? this.suppressPhantomChannels,
       directEchoRecoveryPromptHandled:
           directEchoRecoveryPromptHandled ??
           this.directEchoRecoveryPromptHandled,
