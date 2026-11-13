@@ -3324,7 +3324,7 @@ history is its own, manual change
 
 ### Additional identity delivery details
 
-Both direct chat views use `ContactMessageBubble`. Additional identities send with the contact's compression settings and keep their wire text, dispatch time, ACK round-trip time and estimated LoRa airtime in SQLite. The raw command reports enqueue, so the ACK interval starts when the app hands the packet to the node. A raw send makes one attempt. The normal contact retry service estimates airtime for the latest attempt from its packet size and radio parameters.
+Both direct chat views use `ContactChatTitle` and `ContactMessageBubble`. The chat opened from an additional key's contact group fixes the sender to that key and uses the contact's routing sheet and Flood region. If the contact exists only in local history, editing its route asks to add it to the node first. Additional identities send with the contact's compression settings and keep their wire text, dispatch time, ACK round-trip time and estimated LoRa airtime in SQLite. The raw command reports enqueue, so the ACK interval starts when the app hands the packet to the node. A raw send makes one attempt. The normal contact retry service estimates airtime for the latest attempt from its packet size and radio parameters.
 
 ### Contact identity: attaching an old key's history
 

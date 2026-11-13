@@ -12,6 +12,10 @@ import '../services/additional_identity_inbox.dart';
 import '../services/chat_text_scale_service.dart';
 import '../widgets/additional_identity_sender_picker.dart';
 import '../widgets/chat_route_activity.dart';
+import '../widgets/contact_chat_title.dart';
+import '../widgets/radio_stats_entry.dart';
+import '../widgets/routing_sheet.dart';
+import '../widgets/sync_progress_overlay.dart';
 import 'chat_screen.dart' show ContactMessageBubble;
 
 class AdditionalIdentityChatScreen extends StatefulWidget {
@@ -149,7 +153,7 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
       _showError(l10n.settings_notConnectedError);
       return;
     }
-    final peer = connector.getContactByPubKeyHex(widget.senderKey) ?? widget.peer;
+    final peer = _currentContact(connector);
     final maxBytes = connector.additionalIdentityMaxTextBytes(peer);
     if (maxBytes == 0) {
       _showError(l10n.extraKeys_actionError);
@@ -178,6 +182,15 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
       if (mounted) setState(() => _sending = false);
     }
   }
+
+  Contact _currentContact(MeshCoreConnector connector) =>
+      connector.getContactByPubKeyHex(widget.senderKey) ?? widget.peer;
+
+  Future<void> _openRouting(Contact contact) => ContactRoutingSheet.show(
+    context,
+    contact: contact,
+    ensureContactBeforeWriting: true,
+  );
 
   void _showError(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -208,18 +221,33 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
         (_older.isNotEmpty || (_latest?.length ?? 0) >= _pageSize);
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.senderName, maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(
-              '${l10n.channels_senderNameLabel}: ${widget.recipientName}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
-            ),
-          ],
+        centerTitle: false,
+        toolbarHeight: ContactChatTitle.senderToolbarHeight(context),
+        title: Consumer<MeshCoreConnector>(
+          builder: (context, connector, _) {
+            final contact = _currentContact(connector);
+            return ContactChatTitle(
+              connector: connector,
+              contact: contact,
+              senderName: widget.inbox.entryFor(widget.recipientKey)?.name ??
+                  widget.recipientName,
+              onOpenRouting: () => _openRouting(contact),
+            );
+          },
         ),
+        bottom: const SyncProgressAppBarBottom(),
+        actions: [
+          Consumer<MeshCoreConnector>(
+            builder: (context, connector, _) {
+              final contact = _currentContact(connector);
+              return ContactChatRoutingButton(
+                contact: contact,
+                onPressed: () => _openRouting(contact),
+              );
+            },
+          ),
+          const RadioStatsIconButton(),
+        ],
       ),
       body: SafeArea(
         child: rows.isEmpty

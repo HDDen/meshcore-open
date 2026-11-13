@@ -22,8 +22,11 @@ import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
+import 'package:meshcore_open/services/path_history_service.dart';
+import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/storage/region_store.dart';
 import 'package:meshcore_open/widgets/byte_count_input.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
@@ -210,6 +213,57 @@ class _SenderPickerNode extends _PagedNode {
     String text,
   ) async {
     sent.add((identityKey, peer.publicKeyHex, text));
+  }
+}
+
+class _IdentityRoutingNode extends _SenderPickerNode {
+  _IdentityRoutingNode(super.inbox);
+
+  Contact? contact;
+  final _regions = <String, String>{};
+
+  @override
+  List<Contact> get contacts => [if (contact case final stored?) stored];
+
+  @override
+  Contact? getContactByPubKeyHex(String contactPubKeyHex) =>
+      contact?.publicKeyHex == contactPubKeyHex ? contact : null;
+
+  @override
+  Future<bool> importDiscoveredContact(Contact contact) async {
+    this.contact = contact;
+    notifyListeners();
+    return true;
+  }
+
+  @override
+  Future<void> setPathOverride(
+    Contact contact, {
+    int? pathLen,
+    Uint8List? pathBytes,
+  }) async {
+    this.contact = contact.copyWith(
+      pathOverride: pathLen,
+      pathOverrideBytes: pathBytes,
+      clearPathOverride: pathLen == null,
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<bool> verifyContactPathOnDevice(
+    Contact contact,
+    Uint8List expectedPath, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async => true;
+
+  @override
+  String getContactRegion(String contactKeyHex) => _regions[contactKeyHex] ?? '';
+
+  @override
+  Future<void> setContactRegion(String contactKeyHex, String region) async {
+    _regions[contactKeyHex] = region;
+    notifyListeners();
   }
 }
 
@@ -588,6 +642,98 @@ void main() {
     expect(find.text('1.8s'), findsNothing);
     expect(find.byTooltip('Time on air'), findsNothing);
     expect(find.textContaining('% MCOtxt'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('additional identity chat edits the contact route and Flood region', (
+    tester,
+  ) async {
+    final inbox = _SenderPickerInbox();
+    final node = _IdentityRoutingNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    final history = PathHistoryService(StorageService());
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+    addTearDown(history.dispose);
+    RegionStore().saveRegions(['bots']);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+          ChangeNotifierProvider<PathHistoryService>.value(value: history),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox,
+            connector: node,
+            peer: _contact,
+            recipientKey: 'af' * 32,
+            recipientName: 'Extra key',
+            senderKey: _contact.publicKeyHex,
+            senderName: _contact.name,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bar = find.byType(AppBar);
+    final l10n = AppLocalizations.of(tester.element(bar));
+    final sender = find.text(
+      '${l10n.channels_senderNameLabel}: Extra key',
+      findRichText: true,
+    );
+    expect(sender.hitTestable(), findsOneWidget);
+    await tester.tap(sender);
+    await tester.pumpAndSettle();
+    expect(find.byType(SimpleDialog), findsNothing);
+    expect(find.text(l10n.chat_floodAuto), findsOneWidget);
+
+    await tester.tap(find.text(l10n.chat_floodRegionNode));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('bots'));
+    await tester.pumpAndSettle();
+    expect(node.getContactRegion(_contact.publicKeyHex), 'bots');
+    expect(find.text(l10n.channels_messageRegion('bots')), findsOneWidget);
+
+    final routing = find.byTooltip(l10n.repeater_routingMode);
+    await tester.tap(routing);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.routing_title), findsOneWidget);
+    expect(node.contact, isNull);
+    final direct = find.text(l10n.routing_modeDirect);
+    await tester.ensureVisible(direct);
+    await tester.pumpAndSettle();
+    await tester.tap(direct);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.contacts_addToNodeTitle), findsOneWidget);
+    await tester.tap(find.text(l10n.common_cancel));
+    await tester.pumpAndSettle();
+    expect(node.contact, isNull);
+
+    await tester.tap(direct);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.common_add));
+    await tester.pumpAndSettle();
+    expect(node.contact?.pathOverride, 0);
+    Navigator.of(tester.element(direct)).pop();
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chat_directForced), findsOneWidget);
+    expect(find.text(l10n.channels_messageRegion('bots')), findsNothing);
+    expect(sender.hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

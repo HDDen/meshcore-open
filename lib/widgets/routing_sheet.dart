@@ -10,6 +10,7 @@ import '../models/contact.dart';
 import '../models/path_history.dart';
 import '../screens/path_trace_map.dart';
 import '../services/path_history_service.dart';
+import 'node_memory_prompt.dart';
 import 'path_editor_sheet.dart';
 
 enum _RoutingMode { auto, flood, direct, manual }
@@ -17,7 +18,11 @@ enum _RoutingMode { auto, flood, direct, manual }
 enum _PathQuality { strong, good, fair, proven, flood, untested }
 
 class ContactRoutingSheet {
-  static Future<void> show(BuildContext context, {required Contact contact}) {
+  static Future<void> show(
+    BuildContext context, {
+    required Contact contact,
+    bool ensureContactBeforeWriting = false,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -30,6 +35,7 @@ class ContactRoutingSheet {
         builder: (context, scrollController) => _RoutingSheetBody(
           contact: contact,
           scrollController: scrollController,
+          ensureContactBeforeWriting: ensureContactBeforeWriting,
         ),
       ),
     );
@@ -39,10 +45,12 @@ class ContactRoutingSheet {
 class _RoutingSheetBody extends StatefulWidget {
   final Contact contact;
   final ScrollController scrollController;
+  final bool ensureContactBeforeWriting;
 
   const _RoutingSheetBody({
     required this.contact,
     required this.scrollController,
+    required this.ensureContactBeforeWriting,
   });
 
   @override
@@ -160,11 +168,24 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
       _syncStatus = null;
     });
     try {
-      await connector.setPathOverride(contact, pathLen: pathLen, pathBytes: bytes);
-      if (bytes != null) await _verifyPath(connector, contact, bytes);
+      final target = widget.ensureContactBeforeWriting
+          ? await _contactForRouteChange(connector, contact)
+          : contact;
+      if (target == null || !mounted) return;
+      await connector.setPathOverride(target, pathLen: pathLen, pathBytes: bytes);
+      if (bytes != null) await _verifyPath(connector, target, bytes);
     } finally {
       if (mounted) setState(() => _updatingRoute = false);
     }
+  }
+
+  Future<Contact?> _contactForRouteChange(
+    MeshCoreConnector connector,
+    Contact contact,
+  ) async {
+    final target = await ensureContactOnNode(context, connector, contact);
+    if (target == null || !mounted) return null;
+    return connector.getContactByPubKeyHex(target.publicKeyHex);
   }
 
   Future<void> _verifyPath(
@@ -190,7 +211,11 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
     if (_updatingRoute) return;
     setState(() => _updatingRoute = true);
     try {
-      await connector.clearContactPath(contact);
+      final target = widget.ensureContactBeforeWriting
+          ? await _contactForRouteChange(connector, contact)
+          : contact;
+      if (target == null || !mounted) return;
+      await connector.clearContactPath(target);
       if (mounted) setState(() => _syncStatus = context.l10n.chat_pathCleared);
     } finally {
       if (mounted) setState(() => _updatingRoute = false);

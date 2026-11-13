@@ -93,9 +93,7 @@ import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import 'mco_image_gallery_screen.dart';
-import '../widgets/routing_sheet.dart';
-import '../widgets/contact_region_dialog.dart';
-import '../storage/contact_region_store.dart';
+import '../widgets/contact_chat_title.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -1195,110 +1193,31 @@ class _ChatScreenState extends State<ChatScreen> {
       autofocus: PlatformInfo.isDesktop,
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: showSender ? 76 : null,
+          toolbarHeight: showSender
+              ? ContactChatTitle.senderToolbarHeight(context)
+              : null,
           title: Consumer<MeshCoreConnector>(
-            builder: (context, connector, _) {
-              final contact = _resolveContact(connector);
-              final unreadCount = connector.getUnreadCountForContactKey(
-                widget.contact.publicKeyHex,
-              );
-              final unreadLabel = context.l10n.chat_unread(unreadCount);
-              final pathLabel = _currentPathLabel(contact);
-              final floodRegionLabel = _floodRegionLabel(connector, contact);
-              // Show path details if we have non-empty path data (from device or override)
-              final effectivePath = contact.pathOverrideBytes ?? contact.path;
-              final hasPathData = effectivePath.isNotEmpty;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    contact.name,
-                    // A third line has to fit under the name while a send
-                    // goes by flood; the name gives up a little height.
-                    style: floodRegionLabel == null && !showSender
-                        ? null
-                        : const TextStyle(fontSize: 15),
-                    maxLines: showSender ? 1 : null,
-                    overflow: showSender ? TextOverflow.ellipsis : null,
-                  ),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        ContactRoutingSheet.show(context, contact: contact),
-                    child: Text(
-                      _showsRadioHistory(connector)
-                          ? '$pathLabel • $unreadLabel'
-                          : pathLabel,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.normal,
-                        decoration: hasPathData
-                            ? TextDecoration.underline
-                            : null,
-                        decorationStyle: TextDecorationStyle.dotted,
-                      ),
-                    ),
-                  ),
-                  if (floodRegionLabel != null)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _pickFloodRegion(contact),
-                      child: Text(
-                        floodRegionLabel,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.normal,
-                          decoration: TextDecoration.underline,
-                          decorationStyle: TextDecorationStyle.dotted,
-                        ),
-                      ),
-                    ),
-                  if (showSender)
-                    InkWell(
-                      onTap: _senderReady && !_changingSender
-                          ? () => _pickAdditionalSender(connector)
-                          : null,
-                      child: Text.rich(
-                        TextSpan(children: [
-                          TextSpan(text: '${context.l10n.channels_senderNameLabel}: '),
-                          TextSpan(
-                            text: _additionalSenderLabel(context, connector),
-                            style: const TextStyle(
-                              decoration: TextDecoration.underline,
-                              decorationStyle: TextDecorationStyle.dotted,
-                            ),
-                          ),
-                        ]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+            builder: (context, connector, _) => ContactChatTitle(
+              connector: connector,
+              contact: _resolveContact(connector),
+              unreadCount: _showsRadioHistory(connector)
+                  ? connector.getUnreadCountForContactKey(widget.contact.publicKeyHex)
+                  : null,
+              senderName: showSender
+                  ? _additionalSenderLabel(context, connector)
+                  : null,
+              onPickSender: showSender && _senderReady && !_changingSender
+                  ? () => _pickAdditionalSender(connector)
+                  : null,
+            ),
           ),
           centerTitle: false,
           bottom: const SyncProgressAppBarBottom(),
           actions: [
             Consumer<MeshCoreConnector>(
-              builder: (context, connector, _) {
-                final contact = _resolveContact(connector);
-                final isFloodMode = contact.pathOverride == -1;
-                return IconButton(
-                  icon: Icon(isFloodMode ? Icons.waves : Icons.route),
-                  tooltip: context.l10n.repeater_routingMode,
-                  onPressed: () =>
-                      ContactRoutingSheet.show(context, contact: contact),
-                );
-              },
+              builder: (context, connector, _) => ContactChatRoutingButton(
+                contact: _resolveContact(connector),
+              ),
             ),
             const RadioStatsIconButton(),
             Consumer<MeshCoreConnector>(
@@ -2603,72 +2522,6 @@ class _ChatScreenState extends State<ChatScreen> {
           listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
       orElse: () => null,
     );
-  }
-
-  /// The region line under the route line: shown only while a send would
-  /// go by flood, forced or automatic with no route. A contact marked
-  /// unscoped reads "no region"; without a choice of the contact's own the
-  /// line names the node's, with the node's default scope once the node has
-  /// reported it.
-  String? _floodRegionLabel(MeshCoreConnector connector, Contact contact) {
-    final floods = contact.pathOverride == null
-        ? contact.pathLength < 0
-        : contact.pathOverride! < 0;
-    if (!floods) return null;
-    final region = connector.getContactRegion(contact.publicKeyHex);
-    if (ContactRegionStore.isUnscoped(region)) {
-      return context.l10n.chat_floodRegionNone;
-    }
-    if (region.isNotEmpty) return context.l10n.channels_messageRegion(region);
-    if (!connector.hasLoadedDefaultRegionScope) {
-      return context.l10n.chat_floodRegionNode;
-    }
-    return context.l10n.chat_floodRegionNodeWith(
-      connector.defaultRegionScopeLabel ??
-          context.l10n.channels_messageRegionEmpty,
-    );
-  }
-
-  Future<void> _pickFloodRegion(Contact contact) async {
-    final connector = context.read<MeshCoreConnector>();
-    final region = await ContactRegionDialog.show(
-      context,
-      selectedRegion: connector.getContactRegion(contact.publicKeyHex),
-    );
-    if (region == null || !mounted) return;
-    await connector.setContactRegion(contact.publicKeyHex, region);
-  }
-
-  String _currentPathLabel(Contact contact) {
-    final connector = context.read<MeshCoreConnector>();
-
-    // Check if user has set a path override
-    if (contact.pathOverride != null) {
-      if (contact.pathOverride! < 0) return context.l10n.chat_floodForced;
-      if (contact.pathOverride == 0) return context.l10n.chat_directForced;
-      final bytes = contact.pathOverrideBytes ?? Uint8List(0);
-      final hopCount = _displayHopCount(
-        bytes,
-        contact.pathOverride!,
-        connector.pathHashByteWidth,
-      );
-      return context.l10n.chat_hopsForced(hopCount);
-    }
-
-    // Use device's path
-    if (contact.pathLength < 0) return context.l10n.chat_floodAuto;
-    if (contact.pathLength == 0) return context.l10n.chat_direct;
-    final hopCount = _displayHopCount(
-      contact.path,
-      contact.pathLength,
-      contact.pathHashWidth,
-    );
-    return context.l10n.chat_hopsCount(hopCount);
-  }
-
-  int _displayHopCount(List<int> pathBytes, int storedHopCount, int hashWidth) {
-    if (pathBytes.isEmpty) return storedHopCount;
-    return PathHelper.splitPathBytes(pathBytes, hashWidth).length;
   }
 
   void _showContactInfo(BuildContext context) {
