@@ -237,6 +237,9 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
                   final time = DateTime.fromMillisecondsSinceEpoch(
                     message.timestampSeconds * 1000,
                   );
+                  final material = MaterialLocalizations.of(context);
+                  final dateLabel = material.formatShortDate(time);
+                  final timeLabel = material.formatTimeOfDay(TimeOfDay.fromDateTime(time));
                   return MeshCard(
                     key: ValueKey(message.rowId),
                     color: message.isOutgoing
@@ -250,11 +253,7 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
                         SelectableText(message.text),
                         const SizedBox(height: 4),
                         Text(
-                          MaterialLocalizations.of(context).formatShortDate(time) +
-                              ' ' +
-                              MaterialLocalizations.of(context).formatTimeOfDay(
-                                TimeOfDay.fromDateTime(time),
-                              ),
+                          '$dateLabel $timeLabel',
                           style: MeshTheme.mono(fontSize: 11),
                         ),
                         if (message.isOutgoing)

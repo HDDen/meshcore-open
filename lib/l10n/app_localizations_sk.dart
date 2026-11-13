@@ -10449,4 +10449,56 @@ class AppLocalizationsSk extends AppLocalizations {
   @override
   String get messageFilter_enableLearningPrompt =>
       'To use the spam filter fully, enable learning. Enable it now?';
+
+  @override
+  String get extraKeys_manage => 'Manage additional private keys';
+
+  @override
+  String get extraKeys_setPassword => 'Set a password';
+
+  @override
+  String get extraKeys_invalidPassword => 'Enter matching passwords.';
+
+  @override
+  String get extraKeys_unlockError =>
+      'Could not unlock the keys. Check the password.';
+
+  @override
+  String get extraKeys_actionError => 'Could not complete the key action.';
+
+  @override
+  String get extraKeys_advertise => 'Send Flood advert';
+
+  @override
+  String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_name => 'Key name';
+
+  @override
+  String get extraKeys_privateKey => 'Private key';
+
+  @override
+  String get extraKeys_generate => 'Generate private key';
+
+  @override
+  String get extraKeys_encrypted =>
+      'The key will be stored encrypted in the app.';
+
+  @override
+  String get extraKeys_invalidKey =>
+      'Enter a valid name and a 64-byte MeshCore private key.';
+
+  @override
+  String get extraKeys_rememberUnlock => 'Remember unlock on this device';
+
+  @override
+  String get extraKeys_loadOlder => 'Load older messages';
+
+  @override
+  String get extraKeys_locked => 'Key unavailable';
+
+  @override
+  String get extraKeys_roomLoginFailed =>
+      'Could not confirm posting access for this key. Check the room password and connection.';
 }

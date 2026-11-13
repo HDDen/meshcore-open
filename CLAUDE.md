@@ -1677,7 +1677,9 @@ Shared History off, selecting an additional sender shows only its thread.
 Read counts and Android notification suppression follow the visible thread.
 Opening a radio message from its notification or a search result shows
 radio history for that visit when Contact Shared History is off.
-Room chats also offer the sender picker. Room posting requires an encrypted
+The room login dialog offers unlocked keys when opening a room chat. The
+successful login determines the initial sender for that chat visit. Room
+management uses the radio. Room posting requires an encrypted
 login response with write permission for the additional public key. Access
 is held for the current radio session. Signed room posts are stored with
 their author prefix and acknowledged with the additional recipient key.

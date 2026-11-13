@@ -126,24 +126,42 @@ void showRoomLoginDialog(
   Contact room, {
   bool manage = false,
 }) {
+  void openChat(String senderKey) {
+    if (!context.mounted) return;
+    final connector = context.read<MeshCoreConnector>();
+    final unread = connector.getUnreadCountForContactKey(room.publicKeyHex);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          contact: room,
+          initialUnreadCount: unread,
+          roomLoginSenderKey: senderKey,
+        ),
+      ),
+    );
+  }
+
   showDialog(
     context: context,
-    builder: (context) => RoomLoginDialog(
+    builder: (_) => RoomLoginDialog(
       room: room,
+      onAdditionalLogin: manage ? null : openChat,
       onLogin: (password, isAdmin) {
-        final connector = context.read<MeshCoreConnector>();
-        final unread = connector.getUnreadCountForContactKey(room.publicKeyHex);
-        if (manage) connector.markContactRead(room.publicKeyHex);
+        if (!context.mounted) return;
+        if (!manage) {
+          openChat('');
+          return;
+        }
+        context.read<MeshCoreConnector>().markContactRead(room.publicKeyHex);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => manage
-                ? RepeaterHubScreen(
-                    repeater: room,
-                    password: password,
-                    isAdmin: isAdmin,
-                  )
-                : ChatScreen(contact: room, initialUnreadCount: unread),
+            builder: (_) => RepeaterHubScreen(
+              repeater: room,
+              password: password,
+              isAdmin: isAdmin,
+            ),
           ),
         );
       },

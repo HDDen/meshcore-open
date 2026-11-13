@@ -54,7 +54,7 @@ import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/repeater_options_sheet.dart';
-import '../widgets/room_login_dialog.dart';
+import '../widgets/node_info_sheet.dart' show showRoomLoginDialog;
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unread_badge.dart';
@@ -2262,33 +2262,10 @@ class _ContactsScreenState extends State<ContactsScreen>
     Contact room,
     RoomLoginDestination destination,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => RoomLoginDialog(
-        room: room,
-        onLogin: (password, isAdmin) {
-          final connector = context.read<MeshCoreConnector>();
-          final unread = connector.getUnreadCountForContactKey(
-            room.publicKeyHex,
-          );
-          if (destination == RoomLoginDestination.management) {
-            connector.markContactRead(room.publicKeyHex);
-          }
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  destination == RoomLoginDestination.management
-                  ? RepeaterHubScreen(
-                      repeater: room,
-                      password: password,
-                      isAdmin: isAdmin,
-                    )
-                  : ChatScreen(contact: room, initialUnreadCount: unread),
-            ),
-          );
-        },
-      ),
+    showRoomLoginDialog(
+      context,
+      room,
+      manage: destination == RoomLoginDestination.management,
     );
   }
 

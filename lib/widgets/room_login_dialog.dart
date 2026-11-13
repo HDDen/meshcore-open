@@ -15,13 +15,20 @@ import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
+import 'additional_identity_sender_picker.dart';
 import 'routing_sheet.dart';
 
 class RoomLoginDialog extends StatefulWidget {
   final Contact room;
-  final Function(String password, bool isAdmin) onLogin;
+  final void Function(String password, bool isAdmin) onLogin;
+  final ValueChanged<String>? onAdditionalLogin;
 
-  const RoomLoginDialog({super.key, required this.room, required this.onLogin});
+  const RoomLoginDialog({
+    super.key,
+    required this.room,
+    required this.onLogin,
+    this.onAdditionalLogin,
+  });
 
   @override
   State<RoomLoginDialog> createState() => _RoomLoginDialogState();
@@ -33,6 +40,8 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
   bool _savePassword = false;
   bool _isLoading = true;
   bool _obscurePassword = true;
+  String? _senderKey;
+  bool _additionalLoginFailed = false;
   late MeshCoreConnector _connector;
   int _currentAttempt = 0;
   static const int _maxAttempts = 5;
@@ -88,8 +97,59 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
     return connector.contacts[_resolveRepeaterIndex];
   }
 
+  Future<void> _pickSender() async {
+    final inbox = _connector.additionalIdentityInbox;
+    if (inbox == null || _isLoggingIn) return;
+    final selected = await pickAdditionalIdentitySender(
+      context,
+      inbox: inbox,
+      selected: _senderKey,
+      radioName: _connector.selfName,
+      radioKey: _connector.selfPublicKeyHex,
+    );
+    if (!mounted || selected == null || _isLoggingIn) return;
+    setState(() {
+      _senderKey = selected.isEmpty ? null : selected;
+      _additionalLoginFailed = false;
+    });
+  }
+
+  Future<void> _loginWithAdditionalKey(String key) async {
+    final onLogin = widget.onAdditionalLogin;
+    if (onLogin == null) return;
+    setState(() {
+      _isLoggingIn = true;
+      _additionalLoginFailed = false;
+    });
+    var success = false;
+    try {
+      success = await _connector.loginToRoomAsAdditionalIdentity(
+        key,
+        _resolveRepeater(_connector),
+        _passwordController.text,
+      );
+    } catch (_) {
+      // Use the same localized error for connection and authorization failures.
+    }
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (success) {
+      Navigator.pop(context);
+      onLogin(key);
+      return;
+    }
+    setState(() {
+      _isLoggingIn = false;
+      _additionalLoginFailed = true;
+    });
+  }
+
   Future<void> _handleLogin() async {
-    if (_isLoggingIn) return;
+    if (_isLoading || _isLoggingIn) return;
+    final senderKey = _senderKey;
+    if (senderKey != null) {
+      await _loginWithAdditionalKey(senderKey);
+      return;
+    }
 
     setState(() {
       _isLoggingIn = true;
@@ -238,6 +298,17 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
     final connector = context.watch<MeshCoreConnector>();
     final repeater = _resolveRepeater(connector);
     final isFloodMode = repeater.pathOverride == -1;
+    final inbox = widget.onAdditionalLogin == null
+        ? null
+        : connector.additionalIdentityInbox;
+    final senderKey = _senderKey;
+    final sender = senderKey == null ? null : inbox?.entryFor(senderKey);
+    final radioKey = inbox == null ? null : connector.selfPublicKeyHex;
+    final canPickSender = inbox?.entries.any(
+      (entry) => entry.identity.publicKeyHex != radioKey,
+    ) ?? false;
+    final senderAvailable = senderKey == null ||
+        (sender != null && senderKey != radioKey);
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       titlePadding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -294,16 +365,34 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 16),
+                  if (canPickSender || senderKey != null)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.key_outlined),
+                      title: Text(l10n.channels_senderNameLabel),
+                      subtitle: Text(
+                        senderKey == null
+                            ? connector.selfName ?? l10n.channels_senderNameDefault
+                            : sender?.name ?? l10n.extraKeys_locked,
+                      ),
+                      trailing: const Icon(Icons.expand_more),
+                      onTap: _isLoggingIn ? null : _pickSender,
+                    ),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    readOnly: _isLoggingIn,
                     // Firmware stores at most 15 bytes (CommonCLI.h password[16]).
-                    inputFormatters: const [
-                      Utf8LengthLimitingTextInputFormatter(20),
-                    ],
+                    inputFormatters: senderKey == null
+                        ? const [Utf8LengthLimitingTextInputFormatter(20)]
+                        : const [Utf8LengthLimitingTextInputFormatter(15)],
                     decoration: InputDecoration(
                       labelText: l10n.login_password,
                       hintText: l10n.login_enterPassword,
+                      errorText: _additionalLoginFailed
+                          ? l10n.extraKeys_roomLoginFailed
+                          : null,
+                      errorMaxLines: 4,
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -327,24 +416,25 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                         _passwordController.text.isEmpty,
                   ),
                   const SizedBox(height: 12),
-                  CheckboxListTile(
-                    value: _savePassword,
-                    onChanged: (value) {
-                      setState(() {
-                        _savePassword = value ?? false;
-                      });
-                    },
-                    title: Text(
-                      l10n.login_savePassword,
-                      style: const TextStyle(fontSize: 14),
+                  if (senderKey == null)
+                    CheckboxListTile(
+                      value: _savePassword,
+                      onChanged: (value) {
+                        setState(() {
+                          _savePassword = value ?? false;
+                        });
+                      },
+                      title: Text(
+                        l10n.login_savePassword,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      subtitle: Text(
+                        l10n.login_savePasswordSubtitle,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    subtitle: Text(
-                      l10n.login_savePasswordSubtitle,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
                   const Divider(),
                   Row(
                     children: [
@@ -487,14 +577,20 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(l10n.login_attempt(_currentAttempt, _maxAttempts)),
+                  Flexible(
+                    child: Text(
+                      senderKey == null
+                          ? l10n.login_attempt(_currentAttempt, _maxAttempts)
+                          : l10n.common_loading,
+                    ),
+                  ),
                 ],
               ),
             ),
           )
         else
           FilledButton.icon(
-            onPressed: _isLoading ? null : _handleLogin,
+            onPressed: _isLoading || !senderAvailable ? null : _handleLogin,
             icon: const Icon(Icons.login, size: 18),
             label: Text(l10n.login_login),
           ),

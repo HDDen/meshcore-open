@@ -120,12 +120,16 @@ class ChatScreen extends StatefulWidget {
   final String? initialMessageId;
   final bool showRadioHistoryInitially;
 
+  /// Empty for a room login made with the radio's key.
+  final String? roomLoginSenderKey;
+
   const ChatScreen({
     super.key,
     required this.contact,
     this.initialUnreadCount = 0,
     this.initialMessageId,
     this.showRadioHistoryInitially = false,
+    this.roomLoginSenderKey,
   });
 
   @override
@@ -366,9 +370,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final inbox = connector.additionalIdentityInbox;
     if (inbox == null || !_supportsAdditionalSender) return;
     try {
-      final preferred = await inbox.preferredSender(widget.contact.publicKeyHex);
+      final loginSender = widget.roomLoginSenderKey;
+      final preferred = loginSender ??
+          await inbox.preferredSender(widget.contact.publicKeyHex);
       if (!mounted) return;
-      final key = widget.showRadioHistoryInitially && !_sharesContactHistory
+      final key = preferred == '' ||
+              (widget.showRadioHistoryInitially && !_sharesContactHistory)
           ? null
           : preferred;
       setState(() {
@@ -436,6 +443,17 @@ class _ChatScreenState extends State<ChatScreen> {
     return key == null ||
         (key != connector.selfPublicKeyHex &&
             connector.additionalIdentityInbox?.entryFor(key) != null);
+  }
+
+  String _additionalSenderLabel(
+    BuildContext context,
+    MeshCoreConnector connector,
+  ) {
+    final key = _additionalSenderKey;
+    return key == null
+        ? connector.selfName ?? context.l10n.channels_senderNameDefault
+        : connector.additionalIdentityInbox?.entryFor(key)?.name ??
+              context.l10n.extraKeys_locked;
   }
 
   void _showAdditionalSenderError() {
@@ -1187,12 +1205,6 @@ class _ChatScreenState extends State<ChatScreen> {
               final unreadLabel = context.l10n.chat_unread(unreadCount);
               final pathLabel = _currentPathLabel(contact);
               final floodRegionLabel = _floodRegionLabel(connector, contact);
-              final inbox = connector.additionalIdentityInbox;
-              final selected = _additionalSenderKey;
-              final senderName = selected == null
-                  ? connector.selfName ?? context.l10n.channels_senderNameDefault
-                  : inbox?.entryFor(selected)?.name ?? context.l10n.extraKeys_locked;
-
               // Show path details if we have non-empty path data (from device or override)
               final effectivePath = contact.pathOverrideBytes ?? contact.path;
               final hasPathData = effectivePath.isNotEmpty;
@@ -1254,7 +1266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         TextSpan(children: [
                           TextSpan(text: '${context.l10n.channels_senderNameLabel}: '),
                           TextSpan(
-                            text: senderName,
+                            text: _additionalSenderLabel(context, connector),
                             style: const TextStyle(
                               decoration: TextDecoration.underline,
                               decorationStyle: TextDecorationStyle.dotted,

@@ -101,6 +101,8 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
     final args = invocation.positionalArguments;
     if (invocation.isGetter) {
       switch (member) {
+        case #additionalIdentityInbox:
+          return null;
         case #contacts:
           return <Contact>[target];
         case #uiRevision:

@@ -297,7 +297,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "de": [
@@ -598,7 +614,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "es": [
@@ -899,7 +931,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "fr": [
@@ -1200,7 +1248,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "hu": [
@@ -1501,7 +1565,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "it": [
@@ -1802,7 +1882,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "ja": [
@@ -2103,7 +2199,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "ko": [
@@ -2404,7 +2516,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "nl": [
@@ -2705,7 +2833,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "pl": [
@@ -3006,7 +3150,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "pt": [
@@ -3307,7 +3467,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "sk": [
@@ -3608,7 +3784,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "sl": [
@@ -3909,7 +4101,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "sv": [
@@ -4210,7 +4418,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "uk": [
@@ -4511,7 +4735,23 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ],
 
   "zh": [
@@ -4812,6 +5052,22 @@
     "messageFilter_resetLearningConfirm",
     "messageFilter_reasonLearned",
     "messageFilter_learningSqlHelp",
-    "messageFilter_enableLearningPrompt"
+    "messageFilter_enableLearningPrompt",
+    "extraKeys_manage",
+    "extraKeys_setPassword",
+    "extraKeys_invalidPassword",
+    "extraKeys_unlockError",
+    "extraKeys_actionError",
+    "extraKeys_advertise",
+    "extraKeys_deleteConfirm",
+    "extraKeys_name",
+    "extraKeys_privateKey",
+    "extraKeys_generate",
+    "extraKeys_encrypted",
+    "extraKeys_invalidKey",
+    "extraKeys_rememberUnlock",
+    "extraKeys_loadOlder",
+    "extraKeys_locked",
+    "extraKeys_roomLoginFailed"
   ]
 }

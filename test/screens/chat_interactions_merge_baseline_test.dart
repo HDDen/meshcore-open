@@ -392,7 +392,10 @@ void main() {
     addTearDown(settings.dispose);
     addTearDown(scale.dispose);
 
-    Future<void> openChat({bool showRadioHistoryInitially = false}) async {
+    Future<void> openChat({
+      bool showRadioHistoryInitially = false,
+      String? roomLoginSenderKey,
+    }) async {
       await tester.pumpWidget(MultiProvider(
         providers: [
           ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
@@ -404,8 +407,11 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: ChatScreen(
-            contact: _contact,
+            contact: roomLoginSenderKey == null
+                ? _contact
+                : _contact.copyWith(type: advTypeRoom),
             showRadioHistoryInitially: showRadioHistoryInitially,
+            roomLoginSenderKey: roomLoginSenderKey,
           ),
         ),
       ));
@@ -449,6 +455,20 @@ void main() {
       expect(tester.widget<TextField>(composer).controller!.text, isEmpty);
 
       await tester.pumpWidget(const SizedBox.shrink());
+      await openChat(roomLoginSenderKey: '');
+      expect(sender('Radio node'), findsOneWidget);
+      expect(radioHistory, findsOneWidget);
+      expect(inbox.selections, {_contact.publicKeyHex: key});
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      inbox.selections.clear();
+      await openChat(roomLoginSenderKey: key);
+      expect(sender(entry.name), findsOneWidget);
+      expect(keyHistory, findsOneWidget);
+      expect(inbox.selections, isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      inbox.selections[_contact.publicKeyHex] = key;
       await openChat(showRadioHistoryInitially: true);
       expect(sender('Radio node'), findsOneWidget);
       expect(radioHistory, findsOneWidget);

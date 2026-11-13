@@ -84,7 +84,6 @@ import '../widgets/node_info_sheet.dart';
 import '../widgets/node_memory_prompt.dart';
 import '../widgets/repeater_login_dialog.dart';
 import '../widgets/repeater_options_sheet.dart';
-import '../widgets/room_login_dialog.dart';
 import '../widgets/set_my_location_dialog.dart';
 import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
@@ -6493,26 +6492,7 @@ class _MapScreenState extends State<MapScreen>
   }
 
   void _showRoomLogin(BuildContext context, Contact room) {
-    showDialog(
-      context: context,
-      builder: (context) => RoomLoginDialog(
-        room: room,
-        // onLogin(password, isAdmin) isAdmin not used for room caht screen
-        onLogin: (password, _) {
-          final connector = context.read<MeshCoreConnector>();
-          final unread = connector.getUnreadCountForContactKey(
-            room.publicKeyHex,
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ChatScreen(contact: room, initialUnreadCount: unread),
-            ),
-          );
-        },
-      ),
-    );
+    showRoomLoginDialog(context, room);
   }
 
   void _showNodeInfo(

@@ -78,43 +78,6 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  String get extraKeys_manage => 'Manage additional private keys';
-
-  String get extraKeys_setPassword => 'Set a password';
-
-  String get extraKeys_invalidPassword => 'Enter matching passwords.';
-
-  String get extraKeys_unlockError =>
-      'Could not unlock the keys. Check the password.';
-
-  String get extraKeys_actionError => 'Could not complete the key action.';
-
-  String get extraKeys_advertise => 'Send Flood advert';
-
-  String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
-
-  String get extraKeys_name => 'Key name';
-
-  String get extraKeys_privateKey => 'Private key';
-
-  String get extraKeys_generate => 'Generate private key';
-
-  String get extraKeys_encrypted =>
-      'The key will be stored encrypted in the app.';
-
-  String get extraKeys_rememberUnlock =>
-      'Remember unlock on this device';
-
-  String get extraKeys_loadOlder => 'Load older messages';
-
-  String get extraKeys_locked => 'Key unavailable';
-
-  String get extraKeys_roomLoginFailed =>
-      'Could not confirm posting access for this key. Check the room password and connection.';
-
-  String get extraKeys_invalidKey =>
-      'Enter a valid name and a 64-byte MeshCore private key.';
-
   AppLocalizations(String locale)
     : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
@@ -17446,6 +17409,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To use the spam filter fully, enable learning. Enable it now?'**
   String get messageFilter_enableLearningPrompt;
+
+  /// No description provided for @extraKeys_manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage additional private keys'**
+  String get extraKeys_manage;
+
+  /// No description provided for @extraKeys_setPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a password'**
+  String get extraKeys_setPassword;
+
+  /// No description provided for @extraKeys_invalidPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter matching passwords.'**
+  String get extraKeys_invalidPassword;
+
+  /// No description provided for @extraKeys_unlockError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not unlock the keys. Check the password.'**
+  String get extraKeys_unlockError;
+
+  /// No description provided for @extraKeys_actionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete the key action.'**
+  String get extraKeys_actionError;
+
+  /// No description provided for @extraKeys_advertise.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Flood advert'**
+  String get extraKeys_advertise;
+
+  /// No description provided for @extraKeys_deleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this private key from the app?'**
+  String get extraKeys_deleteConfirm;
+
+  /// No description provided for @extraKeys_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Key name'**
+  String get extraKeys_name;
+
+  /// No description provided for @extraKeys_privateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Private key'**
+  String get extraKeys_privateKey;
+
+  /// No description provided for @extraKeys_generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate private key'**
+  String get extraKeys_generate;
+
+  /// No description provided for @extraKeys_encrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'The key will be stored encrypted in the app.'**
+  String get extraKeys_encrypted;
+
+  /// No description provided for @extraKeys_invalidKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid name and a 64-byte MeshCore private key.'**
+  String get extraKeys_invalidKey;
+
+  /// No description provided for @extraKeys_rememberUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember unlock on this device'**
+  String get extraKeys_rememberUnlock;
+
+  /// No description provided for @extraKeys_loadOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older messages'**
+  String get extraKeys_loadOlder;
+
+  /// No description provided for @extraKeys_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Key unavailable'**
+  String get extraKeys_locked;
+
+  /// No description provided for @extraKeys_roomLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm posting access for this key. Check the room password and connection.'**
+  String get extraKeys_roomLoginFailed;
 }
 
 class _AppLocalizationsDelegate

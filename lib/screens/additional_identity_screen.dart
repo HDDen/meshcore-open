@@ -130,8 +130,11 @@ class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
         await _edit(entry);
       case _KeyAction.advertise:
         await _run(() async {
-          if (connector == null || !connector.isConnected ||
-              connector.isOfflineMode) return;
+          if (connector == null ||
+              !connector.isConnected ||
+              connector.isOfflineMode) {
+            return;
+          }
           final radio = connector.selfPublicKeyHex;
           final frame = await buildAdditionalIdentityFloodAdvert(
             identity: entry.identity,
