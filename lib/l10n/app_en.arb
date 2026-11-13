@@ -5202,5 +5202,21 @@
     }
   },
   "messageFilter_learningSqlHelp": "Uses a local model and one SQLite training pool for all nodes.",
-  "messageFilter_enableLearningPrompt": "To use the spam filter fully, enable learning. Enable it now?"
+  "messageFilter_enableLearningPrompt": "To use the spam filter fully, enable learning. Enable it now?",
+  "extraKeys_manage": "Manage additional private keys",
+  "extraKeys_setPassword": "Set a password",
+  "extraKeys_invalidPassword": "Enter matching passwords.",
+  "extraKeys_unlockError": "Could not unlock the keys. Check the password.",
+  "extraKeys_actionError": "Could not complete the key action.",
+  "extraKeys_advertise": "Send Flood advert",
+  "extraKeys_deleteConfirm": "Delete this private key from the app?",
+  "extraKeys_name": "Key name",
+  "extraKeys_privateKey": "Private key",
+  "extraKeys_generate": "Generate private key",
+  "extraKeys_encrypted": "The key will be stored encrypted in the app.",
+  "extraKeys_invalidKey": "Enter a valid name and a 64-byte MeshCore private key.",
+  "extraKeys_rememberUnlock": "Remember unlock on this device",
+  "extraKeys_loadOlder": "Load older messages",
+  "extraKeys_locked": "Key unavailable",
+  "extraKeys_roomLoginFailed": "Could not confirm posting access for this key. Check the room password and connection."
 }

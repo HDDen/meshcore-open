@@ -68,6 +68,7 @@ dependencies:
   crypto: ^3.0.3
   pointycastle: ^4.0.0
   cryptography: ^2.9.0 # Ed25519 verification of MCMP v3 signatures
+  flutter_secure_storage: 10.1.0 # Optional device-bound identity vault unlock
   http: ^1.2.0
   cached_network_image: ^3.4.1
   flutter_cache_manager: ^3.4.5

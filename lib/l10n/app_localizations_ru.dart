@@ -6,6 +6,60 @@ import 'app_localizations.dart';
 
 /// The translations for Russian (`ru`).
 class AppLocalizationsRu extends AppLocalizations {
+  @override
+  String get extraKeys_manage => 'Управление дополнительными закрытыми ключами';
+
+  @override
+  String get extraKeys_setPassword => 'Задайте пароль';
+
+  @override
+  String get extraKeys_invalidPassword => 'Введите одинаковые пароли.';
+
+  @override
+  String get extraKeys_unlockError =>
+      'Не удалось открыть хранилище ключей. Проверьте пароль.';
+
+  @override
+  String get extraKeys_actionError => 'Не удалось выполнить действие с ключом.';
+
+  @override
+  String get extraKeys_advertise => 'Отправить flood-адверт';
+
+  @override
+  String get extraKeys_deleteConfirm =>
+      'Удалить этот закрытый ключ из приложения?';
+
+  @override
+  String get extraKeys_name => 'Имя ключа';
+
+  @override
+  String get extraKeys_privateKey => 'Закрытый ключ';
+
+  @override
+  String get extraKeys_generate => 'Сгенерировать закрытый ключ';
+
+  @override
+  String get extraKeys_encrypted =>
+      'Ключ будет сохранён в приложении в зашифрованном виде.';
+
+  @override
+  String get extraKeys_rememberUnlock =>
+      'Запомнить разблокировку на этом устройстве';
+
+  @override
+  String get extraKeys_loadOlder => 'Загрузить более ранние сообщения';
+
+  @override
+  String get extraKeys_locked => 'Ключ недоступен';
+
+  @override
+  String get extraKeys_roomLoginFailed =>
+      'Не удалось подтвердить право отправки с этого ключа. Проверьте пароль комнаты и связь.';
+
+  @override
+  String get extraKeys_invalidKey =>
+      'Введите допустимое имя и 64-байтовый закрытый ключ MeshCore.';
+
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override

@@ -6,10 +6,11 @@ import 'companion_cli_tile.dart';
 /// CLI — первый прокручиваемый sliver; индексы/ключи обычных контактов не сдвигаются.
 class CompanionCliContactsList extends StatelessWidget {
   const CompanionCliContactsList({super.key, required this.connector,
-    required this.sliver, required this.showCli}) : _placeholder = false;
+    required this.sliver, required this.showCli, this.afterCli}) : _placeholder = false;
 
   CompanionCliContactsList.placeholder({super.key, required this.connector,
-    required Widget child, this.showCli = true, bool hasScrollBody = false})
+    required Widget child, this.showCli = true, bool hasScrollBody = false,
+    this.afterCli})
     // A scrollable placeholder (EmptyState) owns its bounded viewport.
     // The false variant asks for intrinsic height, which LayoutBuilder and
     // scrollable children cannot provide. Keep it for plain loading content.
@@ -19,6 +20,7 @@ class CompanionCliContactsList extends StatelessWidget {
   final MeshCoreConnector connector;
   final Widget sliver;
   final bool showCli;
+  final Widget? afterCli;
   final bool _placeholder;
 
   @override
@@ -28,6 +30,7 @@ class CompanionCliContactsList extends StatelessWidget {
       if (showCli) SliverToBoxAdapter(child: CompanionCliTile(
         connector: connector, compact: true,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 4))),
+      ?afterCli,
       sliver,
       if (!_placeholder) const SliverToBoxAdapter(child: SizedBox(height: 88)),
     ],

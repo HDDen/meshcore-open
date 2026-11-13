@@ -330,7 +330,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             final unread = connector.getUnreadCountForContactKey(
               contact.publicKeyHex,
             );
-            connector.markContactRead(contact.publicKeyHex);
             await Navigator.push(
               context,
               MaterialPageRoute(
@@ -338,6 +337,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   contact: contact,
                   initialUnreadCount: unread,
                   initialMessageId: result.messageId,
+                  showRadioHistoryInitially: true,
                 ),
               ),
             );
@@ -1021,7 +1021,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         onTap: () {
           HapticFeedback.selectionClick();
-          connector.markContactRead(contact.publicKeyHex);
           Navigator.push(
             context,
             MaterialPageRoute(

@@ -1634,6 +1634,55 @@ copy's width, and a route taken from a copy brings its own along. The
 message's width used to win, so a two-byte route merged into a message that
 claimed one-byte hashes was drawn as twice the hops.
 
+### Additional MeshCore identities
+
+The mod settings screen can open a password-protected vault for additional
+MeshCore identities. SQLite holds an authenticated AES-GCM snapshot per
+data folder. PBKDF2 and distinct HMAC labels produce the verifier and
+cipher key. The optional remembered unlock stores only the cipher key through
+the OS secure storage plugin. Its slot includes the userdata path and vault
+salt. Opening the management screen still asks for the password. The
+management screen can send an advert signed by the selected
+identity via the companion raw-packet command. See the settings guide.
+
+At startup the app attempts the remembered unlock in the background.
+Opening the vault by password also activates its identities for the
+process. The connector checks TXT_MSG packets from the RX log with the
+same MAC and AES routine it uses for the radio's own traffic. It tries
+known chat contacts matching the source prefix and unlocked recipients
+matching the destination prefix. Ambiguous decryptions are discarded.
+SQLite indexes incoming messages by the full recipient and sender keys.
+A retry with the same timestamp and wire text does not duplicate history.
+A distinct attempt can receive its own raw ACK after the history write.
+Key changes invalidate pending ACKs and clear cached shared secrets.
+The main contacts list places unlocked identities after CompanionCLI. Each
+has its own persisted unread counts and paged conversations. Contact Shared
+History projects messages for the same sender from every unlocked key into
+the ordinary chat with the identity name as their source. Read counts are
+tracked separately for each key. Deleting a projected message marks its
+SQLite row as deleted. Its row still suppresses duplicate deliveries and
+preserves the room sync cursor. Clear chat applies to the selected key's
+thread, or to the displayed unlocked threads and the radio's history when
+Contact Shared History is on.
+Group chats send plain TXT_MSG via the companion raw-packet command using
+the selected key and the peer's current route or public Flood scope.
+Outgoing rows use the same identity/peer partition, with status changed
+from pending to sent on companion OK and to delivered on a matching
+direct ACK or encrypted PATH ACK. Pending sends expire after 45 seconds
+and are failed when the radio session ends. No automatic retries are
+scheduled for these raw sends. Ordinary personal chats remember the selected
+sender by full peer key in profile SQLite. The radio is the default. An
+unavailable saved key blocks sends until it is unlocked or replaced. With
+Shared History off, selecting an additional sender shows only its thread.
+Read counts and Android notification suppression follow the visible thread.
+Opening a radio message from its notification or a search result shows
+radio history for that visit when Contact Shared History is off.
+Room chats also offer the sender picker. Room posting requires an encrypted
+login response with write permission for the additional public key. Access
+is held for the current radio session. Signed room posts are stored with
+their author prefix and acknowledged with the additional recipient key.
+Room login resumes from the latest stored post for that identity and room.
+
 ### Direct echo recovery (experimental, off by default)
 
 The same RX log shows a direct message *to us* before it arrives: the

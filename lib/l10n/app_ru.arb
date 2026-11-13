@@ -4016,5 +4016,21 @@
   "messageFilter_resetLearningConfirm": "Очистить примеры и сбросить обученную модель? Правила и история сообщений сохранятся.",
   "messageFilter_reasonLearned": "Скрыто: похоже на сообщения, отмеченные как спам",
   "messageFilter_learningSqlHelp": "Локальная модель с общим для всех нод корпусом в SQLite.",
-  "messageFilter_enableLearningPrompt": "Для полноценного функционирования функционала необходимо включить функцию обучения спам-фильтра. Включить это сейчас?"
+  "messageFilter_enableLearningPrompt": "Для полноценного функционирования функционала необходимо включить функцию обучения спам-фильтра. Включить это сейчас?",
+  "extraKeys_manage": "Управление дополнительными закрытыми ключами",
+  "extraKeys_setPassword": "Задайте пароль",
+  "extraKeys_invalidPassword": "Введите одинаковые пароли.",
+  "extraKeys_unlockError": "Не удалось открыть хранилище ключей. Проверьте пароль.",
+  "extraKeys_actionError": "Не удалось выполнить действие с ключом.",
+  "extraKeys_advertise": "Отправить flood-адверт",
+  "extraKeys_deleteConfirm": "Удалить этот закрытый ключ из приложения?",
+  "extraKeys_name": "Имя ключа",
+  "extraKeys_privateKey": "Закрытый ключ",
+  "extraKeys_generate": "Сгенерировать закрытый ключ",
+  "extraKeys_encrypted": "Ключ будет сохранён в приложении в зашифрованном виде.",
+  "extraKeys_invalidKey": "Введите допустимое имя и 64-байтовый закрытый ключ MeshCore.",
+  "extraKeys_rememberUnlock": "Запомнить разблокировку на этом устройстве",
+  "extraKeys_loadOlder": "Загрузить более ранние сообщения",
+  "extraKeys_locked": "Ключ недоступен",
+  "extraKeys_roomLoginFailed": "Не удалось подтвердить право отправки с этого ключа. Проверьте пароль комнаты и связь."
 }

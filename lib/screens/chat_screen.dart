@@ -48,6 +48,7 @@ import '../helpers/path_helper.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/signal_reading_text.dart';
 import '../helpers/quick_answers_helper.dart';
+import '../models/app_settings.dart' show SharedMessageHistoryModeValue;
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
@@ -60,6 +61,7 @@ import '../services/chat_background_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
+import '../widgets/additional_identity_sender_picker.dart';
 import '../widgets/chat_bubble_box.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/contact_history_link_banner.dart';
@@ -116,12 +118,14 @@ class ChatScreen extends StatefulWidget {
   final Contact contact;
   final int initialUnreadCount;
   final String? initialMessageId;
+  final bool showRadioHistoryInitially;
 
   const ChatScreen({
     super.key,
     required this.contact,
     this.initialUnreadCount = 0,
     this.initialMessageId,
+    this.showRadioHistoryInitially = false,
   });
 
   @override
@@ -142,6 +146,9 @@ class _ChatScreenState extends State<ChatScreen> {
   String _lastTextFieldText = '';
   bool _isLoadingOlder = false;
   final _routeActivity = ChatRouteActivity();
+  String? _additionalSenderKey;
+  bool _senderReady = false;
+  bool _changingSender = false;
   StreamSubscription<void>? _mcmpSigningFailedSubscription;
   Message? _pendingUnreadScrollTarget;
   String? _unreadDividerMessageId;
@@ -219,6 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final connector = context.read<MeshCoreConnector>();
+      unawaited(_loadAdditionalSender(connector));
       final settings = context.read<AppSettingsService>().settings;
       final keyHex = widget.contact.publicKeyHex;
       final unread = widget.initialUnreadCount;
@@ -238,8 +246,23 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       });
       _routeActivity.attach(
-        register: (isCurrent) => connector.trackContactChatRoute(keyHex, isCurrent),
-        activate: () => connector.setActiveContact(keyHex),
+        register: (isCurrent) {
+          final releaseRadio = connector.trackContactChatRoute(
+            keyHex,
+            () => mounted && isCurrent() && _showsRadioHistory(connector),
+          );
+          final releaseAdditional = connector.additionalIdentityInbox
+              ?.trackPeerChat(keyHex, (key) =>
+                  mounted &&
+                  isCurrent() &&
+                  WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+                  _showsAdditionalHistory(key));
+          return () {
+            releaseAdditional?.call();
+            releaseRadio();
+          };
+        },
+        activate: () => _markVisibleHistoryRead(connector),
       );
       _mcmpSigningFailedSubscription = connector.mcmpSigningFailures.listen(
         (_) => _showMcmpSigningFailed(),
@@ -262,6 +285,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (anchor != null && settings.jumpToOldestUnread) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
+          if (!_showsRadioHistory(connector)) return;
           _scrollController.jumpToEstimatedOffset(
             unreadCount: unread,
             totalMessages: messages.length,
@@ -296,6 +320,131 @@ class _ChatScreenState extends State<ChatScreen> {
     return key?.currentContext;
   }
 
+  bool get _supportsAdditionalSender =>
+      widget.contact.type == advTypeChat || widget.contact.type == advTypeRoom;
+
+  bool get _sharesContactHistory =>
+      context.read<AppSettingsService>().settings.sharedMessageHistoryMode.includesContacts;
+
+  bool _showsRadioHistory(MeshCoreConnector connector) =>
+      !_supportsAdditionalSender ||
+      connector.additionalIdentityInbox == null ||
+      _sharesContactHistory ||
+      (_senderReady && _additionalSenderKey == null);
+
+  bool _showsAdditionalHistory(String key) =>
+      _additionalSenderKey == key || _sharesContactHistory;
+
+  void _markVisibleHistoryRead(MeshCoreConnector connector) {
+    if (!mounted || _changingSender || ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
+    if (_showsRadioHistory(connector)) {
+      connector.setActiveContact(widget.contact.publicKeyHex);
+    }
+    unawaited(_markAdditionalHistoryRead(connector));
+  }
+
+  Future<void> _markAdditionalHistoryRead(MeshCoreConnector connector) async {
+    final inbox = connector.additionalIdentityInbox;
+    if (inbox == null) return;
+    final keys = [
+      for (final entry in inbox.entries)
+        if (_showsAdditionalHistory(entry.identity.publicKeyHex))
+          entry.identity.publicKeyHex,
+    ];
+    try {
+      for (final key in keys) {
+        await inbox.markRead(key, widget.contact.publicKeyHex);
+      }
+    } catch (_) {
+      if (mounted) _showAdditionalSenderError();
+    }
+  }
+
+  Future<void> _loadAdditionalSender(MeshCoreConnector connector) async {
+    final inbox = connector.additionalIdentityInbox;
+    if (inbox == null || !_supportsAdditionalSender) return;
+    try {
+      final preferred = await inbox.preferredSender(widget.contact.publicKeyHex);
+      if (!mounted) return;
+      final key = widget.showRadioHistoryInitially && !_sharesContactHistory
+          ? null
+          : preferred;
+      setState(() {
+        _additionalSenderKey = key;
+        _senderReady = true;
+        _displayMessagesRevision = -1;
+        if (!_showsRadioHistory(connector)) {
+          _unreadDividerMessageId = null;
+          _pendingUnreadScrollTarget = null;
+        }
+      });
+      _markVisibleHistoryRead(connector);
+    } catch (_) {
+      if (mounted) _showAdditionalSenderError();
+    }
+  }
+
+  Future<void> _pickAdditionalSender(MeshCoreConnector connector) async {
+    final inbox = connector.additionalIdentityInbox;
+    if (inbox == null || !_senderReady || _changingSender || _isSendingText) {
+      return;
+    }
+    setState(() => _changingSender = true);
+    try {
+      final selected = await pickAdditionalIdentitySender(
+        context,
+        inbox: inbox,
+        selected: _additionalSenderKey,
+        radioName: connector.selfName,
+        radioKey: connector.selfPublicKeyHex,
+      );
+      if (!mounted || selected == null) return;
+      final key = selected.isEmpty ? null : selected;
+      if (key == _additionalSenderKey) return;
+      if (key != null &&
+          !await ensureAdditionalIdentityRoomAccess(
+            context, connector, key, _resolveContact(connector),
+          )) {
+        return;
+      }
+      if (!mounted) return;
+      await inbox.setPreferredSender(widget.contact.publicKeyHex, key);
+      if (!mounted) return;
+      _cancelReply();
+      setState(() {
+        _additionalSenderKey = key;
+        _displayMessagesRevision = -1;
+      });
+    } catch (_) {
+      if (mounted) _showAdditionalSenderError();
+    } finally {
+      if (mounted) {
+        setState(() => _changingSender = false);
+        _markVisibleHistoryRead(connector);
+      }
+    }
+  }
+
+  bool _additionalSenderCanSend(MeshCoreConnector connector) {
+    if (!_supportsAdditionalSender || connector.additionalIdentityInbox == null) {
+      return true;
+    }
+    if (!_senderReady || _changingSender) return false;
+    final key = _additionalSenderKey;
+    return key == null ||
+        (key != connector.selfPublicKeyHex &&
+            connector.additionalIdentityInbox?.entryFor(key) != null);
+  }
+
+  void _showAdditionalSenderError() {
+    showDismissibleSnackBar(
+      context,
+      content: Text(context.l10n.extraKeys_actionError),
+    );
+  }
+
   List<Message> _messagesForDisplay(MeshCoreConnector connector) {
     final revision = connector.uiRevision;
     if (_displayMessagesRevision == revision) {
@@ -303,10 +452,13 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     _displayMessagesRevision = revision;
-    _displayMessagesCache = [
-      ...connector.getMessages(widget.contact),
-      ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
-    ];
+    final selected = _additionalSenderKey;
+    _displayMessagesCache = selected == null
+        ? [
+            ...connector.getMessages(widget.contact),
+            ...connector.getPendingContactMessages(widget.contact.publicKeyHex),
+          ]
+        : connector.getMessagesForAdditionalSender(widget.contact, selected);
     _messageListDataCache = null;
     return _displayMessagesCache;
   }
@@ -537,7 +689,7 @@ class _ChatScreenState extends State<ChatScreen> {
     var n = 0;
     Message? oldest;
     for (final m in messages.reversed) {
-      if (m.isOutgoing || m.isCli) continue;
+      if (m.isOutgoing || m.isCli || m.messageId.startsWith('identity:')) continue;
       n++;
       oldest = m;
       if (n >= unreadCount) break;
@@ -972,7 +1124,10 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isLoadingOlder = true);
 
     final connector = context.read<MeshCoreConnector>();
-    await connector.loadOlderMessages(widget.contact.publicKeyHex);
+    if (_additionalSenderKey == null ||
+        context.read<AppSettingsService>().settings.sharedMessageHistoryMode.includesContacts) {
+      await connector.loadOlderMessages(widget.contact.publicKeyHex);
+    }
 
     if (mounted) {
       setState(() => _isLoadingOlder = false);
@@ -1012,11 +1167,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAdditionalSenders = context.select<MeshCoreConnector, bool>(
+      (connector) => connector.additionalIdentityInbox?.entries.isNotEmpty ?? false,
+    );
+    final showSender = _supportsAdditionalSender &&
+        (hasAdditionalSenders || _additionalSenderKey != null);
     return Focus(
       focusNode: _screenFocusNode,
       autofocus: PlatformInfo.isDesktop,
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: showSender ? 76 : null,
           title: Consumer<MeshCoreConnector>(
             builder: (context, connector, _) {
               final contact = _resolveContact(connector);
@@ -1026,6 +1187,11 @@ class _ChatScreenState extends State<ChatScreen> {
               final unreadLabel = context.l10n.chat_unread(unreadCount);
               final pathLabel = _currentPathLabel(contact);
               final floodRegionLabel = _floodRegionLabel(connector, contact);
+              final inbox = connector.additionalIdentityInbox;
+              final selected = _additionalSenderKey;
+              final senderName = selected == null
+                  ? connector.selfName ?? context.l10n.channels_senderNameDefault
+                  : inbox?.entryFor(selected)?.name ?? context.l10n.extraKeys_locked;
 
               // Show path details if we have non-empty path data (from device or override)
               final effectivePath = contact.pathOverrideBytes ?? contact.path;
@@ -1039,16 +1205,20 @@ class _ChatScreenState extends State<ChatScreen> {
                     contact.name,
                     // A third line has to fit under the name while a send
                     // goes by flood; the name gives up a little height.
-                    style: floodRegionLabel == null
+                    style: floodRegionLabel == null && !showSender
                         ? null
                         : const TextStyle(fontSize: 15),
+                    maxLines: showSender ? 1 : null,
+                    overflow: showSender ? TextOverflow.ellipsis : null,
                   ),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () =>
                         ContactRoutingSheet.show(context, contact: contact),
                     child: Text(
-                      '$pathLabel • $unreadLabel',
+                      _showsRadioHistory(connector)
+                          ? '$pathLabel • $unreadLabel'
+                          : pathLabel,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
@@ -1072,6 +1242,30 @@ class _ChatScreenState extends State<ChatScreen> {
                           fontWeight: FontWeight.normal,
                           decoration: TextDecoration.underline,
                           decorationStyle: TextDecorationStyle.dotted,
+                        ),
+                      ),
+                    ),
+                  if (showSender)
+                    InkWell(
+                      onTap: _senderReady && !_changingSender
+                          ? () => _pickAdditionalSender(connector)
+                          : null,
+                      child: Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: '${context.l10n.channels_senderNameLabel}: '),
+                          TextSpan(
+                            text: senderName,
+                            style: const TextStyle(
+                              decoration: TextDecoration.underline,
+                              decorationStyle: TextDecorationStyle.dotted,
+                            ),
+                          ),
+                        ]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.normal,
                         ),
                       ),
                     ),
@@ -1619,6 +1813,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _markAsUnread(Message message) {
     final connector = context.read<MeshCoreConnector>();
+    if (message.messageId.startsWith('identity:')) return;
     final messages = connector.getMessages(widget.contact);
     var count = 0;
     var found = false;
@@ -1632,6 +1827,9 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Byte counting must match what actually goes on air, so the field and the
   /// colour palette share one encoder.
   String Function(String)? _composerEncoder(MeshCoreConnector connector) {
+    if (_additionalSenderKey != null) {
+      return (text) => _composerWireText(connector, text);
+    }
     final key = widget.contact.publicKeyHex;
     final usesEncoding =
         connector.isContactMcmpEnabled(key) ||
@@ -2119,7 +2317,44 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       return;
     }
+    if (!_additionalSenderCanSend(connector)) {
+      _showAdditionalSenderError();
+      return;
+    }
     _lastTextSendAt = now;
+    final additionalSender = _additionalSenderKey;
+    if (additionalSender != null) {
+      final contact = _resolveContact(connector);
+      final wireText = skipReplyContext
+          ? text
+          : composerReply == null
+          ? _applyReplyMention(connector, text)
+          : '${composerReply.wirePrefix}$text';
+      final limit = connector.additionalIdentityMaxTextBytes(contact);
+      if (utf8.encode(wireText).length > limit && limit > 0) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(context.l10n.chat_messageTooLong(limit)),
+        );
+        return;
+      }
+      try {
+        if (!await _sendFromAdditionalIdentity(
+          connector, additionalSender, contact, wireText,
+        ) || !mounted) {
+          return;
+        }
+        if (quickAnswerText == null && _textController.text == composerTextAtSend) {
+          ComposerDraftCache.clear(_composerDraftKey);
+          _textController.clear();
+          _textFieldFocusNode.requestFocus();
+        }
+        _cancelReply();
+      } catch (_) {
+        if (mounted) _showAdditionalSenderError();
+      }
+      return;
+    }
 
     final settings = context.read<AppSettingsService>().settings;
     final translationService = context.read<TranslationService>();
@@ -2263,6 +2498,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   int _maxContactInputBytes(MeshCoreConnector connector) {
+    if (_additionalSenderKey != null) {
+      final limit = connector.additionalIdentityMaxTextBytes(_resolveContact(connector));
+      if (limit > 0) return limit;
+    }
     // Room servers store posts in a 151-byte buffer and silently truncate
     // longer texts, which would destroy an MCMP container and its signature.
     final limit = _resolveContact(connector).type == advTypeRoom
@@ -2920,7 +3159,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void _openChat(BuildContext context, Contact contact) {
     final connector = context.read<MeshCoreConnector>();
     final unread = connector.getUnreadCountForContactKey(contact.publicKeyHex);
-    connector.markContactRead(contact.publicKeyHex);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -3050,8 +3288,14 @@ class _ChatScreenState extends State<ChatScreen> {
       title: context.l10n.contact_clearChat,
       message: context.l10n.chat_clearChatConfirm,
     );
-    if (confirmed) {
-      connector.clearMessagesForContact(widget.contact);
+    if (!confirmed || !mounted) return;
+    try {
+      await connector.clearDisplayedContactMessages(
+        widget.contact,
+        additionalSender: _additionalSenderKey,
+      );
+    } catch (_) {
+      if (mounted) _showAdditionalSenderError();
     }
   }
 
@@ -3394,7 +3638,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _deleteMessage(Message message) async {
     final connector = context.read<MeshCoreConnector>();
     if (blockIfOffline(context, connector)) return;
-    await connector.deleteMessage(message);
+    try {
+      await connector.deleteMessage(message);
+    } catch (_) {
+      if (mounted) _showAdditionalSenderError();
+      return;
+    }
     if (!mounted) return;
     showDismissibleSnackBar(
       context,
@@ -3464,9 +3713,35 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _retryMessage(Message message) {
+  Future<bool> _sendFromAdditionalIdentity(
+    MeshCoreConnector connector,
+    String key,
+    Contact peer,
+    String text,
+  ) async {
+    if (!await ensureAdditionalIdentityRoomAccess(context, connector, key, peer) ||
+        !mounted) {
+      return false;
+    }
+    await connector.sendAdditionalIdentityMessage(key, peer, text);
+    return true;
+  }
+
+  Future<void> _retryMessage(Message message) async {
     final connector = Provider.of<MeshCoreConnector>(context, listen: false);
     if (blockIfOffline(context, connector)) return;
+    if (message.isOutgoing && message.messageId.startsWith('identity:')) {
+      final source = message.senderKeyHex;
+      try {
+        await _sendFromAdditionalIdentity(
+          connector, source, _resolveContact(connector),
+          message.rawText ?? message.text,
+        );
+      } catch (_) {
+        if (mounted) _showAdditionalSenderError();
+      }
+      return;
+    }
     connector.cancelPendingContactSend(message.messageId);
     // Retry using the contact's current path override setting. A reply goes
     // out as a reply again: the stored text is its body, so the mention and
@@ -3512,7 +3787,11 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _sendReaction(Message message, Contact senderContact, String emoji) {
+  Future<void> _sendReaction(
+    Message message,
+    Contact senderContact,
+    String emoji,
+  ) async {
     final connector = context.read<MeshCoreConnector>();
     if (blockIfOffline(context, connector)) return;
     final emojiIndex = ReactionHelper.emojiToIndex(emoji);
@@ -3532,7 +3811,22 @@ class _ChatScreenState extends State<ChatScreen> {
       message.text,
     );
     final reactionText = ReactionHelper.encodeReaction(hash, emojiIndex);
-    connector.sendMessage(_resolveContact(connector), reactionText);
+    if (!_additionalSenderCanSend(connector)) {
+      _showAdditionalSenderError();
+      return;
+    }
+    final additionalSender = _additionalSenderKey;
+    if (additionalSender == null) {
+      connector.sendMessage(liveContact, reactionText);
+    } else {
+      try {
+        await _sendFromAdditionalIdentity(
+          connector, additionalSender, liveContact, reactionText,
+        );
+      } catch (_) {
+        if (mounted) _showAdditionalSenderError();
+      }
+    }
   }
 }
 

@@ -3,17 +3,23 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
 import 'package:meshcore_open/helpers/direct_echo_crypto.dart';
+import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/models/path_history.dart';
+import 'package:meshcore_open/services/additional_identity_inbox.dart';
+import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
@@ -21,6 +27,7 @@ import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:pointycastle/export.dart' show AESEngine, ECBBlockCipher, KeyParameter;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // A contact whose key starts with the byte ours starts with makes our own
@@ -117,11 +124,13 @@ Uint8List _heardTextFrame({
   required Uint8List secret,
   required int timestampSeconds,
   required List<int> text,
+  int attempt = 0,
+  bool flood = false,
 }) {
   final timestamp = ByteData(4)..setUint32(0, timestampSeconds, Endian.little);
   final plaintext = Uint8List.fromList([
     ...timestamp.buffer.asUint8List(),
-    txtTypePlain << 2, // attempt 0
+    (txtTypePlain << 2) | attempt,
     ...text,
     0,
   ]);
@@ -129,9 +138,9 @@ Uint8List _heardTextFrame({
     pushCodeLogRxData,
     40, // snr * 4
     (-70) & 0xFF,
-    (payloadTypeTXTMSG << 2) | 0x02, // direct route
-    1, // one hop still ahead, one-byte hashes
-    0x20,
+    (payloadTypeTXTMSG << 2) | (flood ? 0x01 : 0x02),
+    flood ? 0 : 1, // one hop still ahead for the routed copy
+    if (!flood) 0x20,
     destination,
     source,
     ...ChannelEchoRecovery.encryptedPayloadFor(secret, plaintext),
@@ -188,6 +197,8 @@ class _FakeStorage extends StorageService {
 /// A connected connector whose frames are kept: the node is played by the
 /// test through [handleFrameForTest].
 class _Connector extends MeshCoreConnector {
+  _Connector({super.additionalIdentityInbox});
+
   final written = <Uint8List>[];
 
   @override
@@ -224,9 +235,13 @@ class _Node {
   final _Connector connector;
   final MessageRetryService retry;
 
-  static Future<_Node> start({required bool echoRecovery}) async {
-    final connector = _Connector();
-    final settings = AppSettingsService();
+  static Future<_Node> start({
+    required bool echoRecovery,
+    AdditionalIdentityInbox? additionalIdentityInbox,
+    AppSettingsService? settingsOverride,
+  }) async {
+    final connector = _Connector(additionalIdentityInbox: additionalIdentityInbox);
+    final settings = settingsOverride ?? AppSettingsService();
     await settings.updateSettings(
       settings.settings.copyWith(
         notificationsEnabled: false,
@@ -371,6 +386,396 @@ Future<void> main() async {
     await MessageHistoryStorage.instance.resetForTesting();
     PrefsManager.reset();
   });
+
+  for (final flood in [false, true]) {
+    test('additional identity sends and confirms a ${flood ? 'Flood' : 'Direct'} message',
+        () async {
+      final storage = MessageHistoryStorage.instance;
+      final expanded = Uint8List.fromList((await Sha512().hash(hex.decode(
+        '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+      ))).bytes);
+      expanded[0] &= 248;
+      expanded[31] = (expanded[31] & 63) | 64;
+      final entry = await AdditionalIdentityEntry.parse('Extra', hex.encode(expanded));
+      final identityKey = entry.identity.publicKeyHex;
+      final inbox = AdditionalIdentityInbox()..unlock([entry]);
+      final node = await _Node.start(
+        echoRecovery: false,
+        additionalIdentityInbox: inbox,
+      );
+      addTearDown(node.connector.dispose);
+      final contactFrame = _contactFrame(
+        _aliceKey,
+        'Alice',
+        route: flood ? const [] : const [0x10, 0x20],
+      );
+      if (flood) contactFrame[35] = 0xff;
+      node.connector.handleFrameForTest(contactFrame);
+      await _waitFor(() => node.connector.getContactByPubKeyHex(
+        pubKeyToHex(_aliceKey),
+      ) != null, 'contact');
+
+      await node.connector.sendAdditionalIdentityMessage(
+        identityKey, node.alice, 'Reply',
+      );
+      final frame = node.rawPackets.single;
+      expect(frame[0], cmdSendRawPacket);
+      expect(frame[2], (payloadTypeTXTMSG << 2) | (flood ? 1 : 2));
+      final offset = flood ? 4 : 6;
+      expect(frame.sublist(offset, offset + 2),
+          [_aliceKey.first, entry.identity.publicKey.first]);
+      final saved = (await storage.readAdditionalIdentityMessages(identityKey)).single;
+      expect(saved.isOutgoing, isTrue);
+      expect(saved.status, MessageStatus.sent);
+      expect(saved.isUnread, isFalse);
+      expect(node.messages, isEmpty);
+      expect(await inbox.preferredSender(node.alice.publicKeyHex), isNull);
+      await inbox.setPreferredSender(node.alice.publicKeyHex, identityKey);
+      expect(
+        await AdditionalIdentityInbox().preferredSender(node.alice.publicKeyHex),
+        identityKey,
+      );
+      expect(await inbox.preferredSender(pubKeyToHex(_selfKey)), isNull);
+      await _waitFor(
+        () => node.connector.getMessagesForAdditionalSender(node.alice, identityKey).isNotEmpty,
+        'the selected identity history',
+      );
+      final projected = node.connector
+          .getMessagesForAdditionalSender(node.alice, identityKey).single;
+      expect(projected.senderKeyHex, identityKey);
+      expect(projected.containerSenderName, entry.name);
+      expect(node.messages, isEmpty);
+      await inbox.setPreferredSender(node.alice.publicKeyHex, null);
+      expect(await inbox.preferredSender(node.alice.publicKeyHex), isNull);
+
+      final plaintext = Uint8List.fromList([
+        ...((ByteData(4)..setUint32(0, saved.timestampSeconds, Endian.little))
+            .buffer.asUint8List()),
+        0,
+        ...utf8.encode('Reply'),
+      ]);
+      final secret = entry.identity.sharedSecret(_aliceKey);
+      expect(frame.sublist(offset + 2),
+          ChannelEchoRecovery.encryptedPayloadFor(secret, plaintext));
+      final ack = DirectEchoCrypto.ackHash(
+        plaintext, 5, entry.identity.publicKey, randomByte: 7,
+      );
+      node.connector.handleFrameForTest(Uint8List.fromList([
+        pushCodeLogRxData,
+        40,
+        (-70) & 0xff,
+        ((flood ? payloadTypePATH : payloadTypeACK) << 2) | 0x01,
+        0,
+        if (flood) ...[
+          entry.identity.publicKey.first,
+          _aliceKey.first,
+          ...ChannelEchoRecovery.encryptedPayloadFor(secret, Uint8List.fromList([
+            0, payloadTypeACK, ...ack,
+          ])),
+        ] else ...ack,
+      ]));
+      for (var i = 0; i < 100; i++) {
+        final delivered = (await storage.readAdditionalIdentityMessages(identityKey)).single;
+        if (delivered.status == MessageStatus.delivered) break;
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      expect((await storage.readAdditionalIdentityMessages(identityKey)).single.status,
+          MessageStatus.delivered);
+      expect(node.textFrames, isEmpty);
+    }, skip: skip);
+  }
+
+
+  for (final flood in [false, true]) {
+    test('room login and posts use the additional key (flood=$flood)', () async {
+      final storage = MessageHistoryStorage.instance;
+      final expanded = Uint8List.fromList((await Sha512().hash(hex.decode(
+        '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+      ))).bytes);
+      expanded[0] &= 248;
+      expanded[31] = (expanded[31] & 63) | 64;
+      final entry = await AdditionalIdentityEntry.parse('Extra', hex.encode(expanded));
+      final key = entry.identity.publicKeyHex;
+      final inbox = AdditionalIdentityInbox()..unlock([entry]);
+      final settings = AppSettingsService();
+      addTearDown(settings.dispose);
+      final node = await _Node.start(
+        echoRecovery: false,
+        additionalIdentityInbox: inbox,
+        settingsOverride: settings,
+      );
+      addTearDown(node.connector.dispose);
+      final contact = _contactFrame(
+        _aliceKey, 'Room', route: flood ? const [] : const [0x10, 0x20],
+      )..[33] = advTypeRoom;
+      if (flood) contact[35] = 0xff;
+      node.connector.handleFrameForTest(contact);
+      await _waitFor(() => node.connector.getContactByPubKeyHex(
+        pubKeyToHex(_aliceKey),
+      ) != null, 'the room');
+      final room = node.alice;
+      final secret = entry.identity.sharedSecret(room.publicKey);
+
+      Uint8List received(int type, Uint8List body, {bool damaged = false}) {
+        final encrypted = ChannelEchoRecovery.encryptedPayloadFor(secret, body);
+        if (damaged) encrypted[0] ^= 1;
+        return Uint8List.fromList([
+          pushCodeLogRxData, 40, (-70) & 0xff, (type << 2) | 1, 0,
+          entry.identity.publicKey.first, room.publicKey.first, ...encrypted,
+        ]);
+      }
+
+      void answerLogin(int timestamp, {required bool canPost, bool damaged = false}) {
+        final response = Uint8List(13)
+          ..[6] = canPost ? 0 : 2
+          ..[7] = canPost ? 2 : 0
+          ..[12] = 9;
+        ByteData.sublistView(response).setUint32(0, timestamp, Endian.little);
+        node.connector.handleFrameForTest(received(
+          flood ? payloadTypePATH : payloadTypeRESPONSE,
+          flood
+              ? Uint8List.fromList([1, 0x10, payloadTypeRESPONSE, ...response])
+              : response,
+          damaged: damaged,
+        ));
+      }
+
+      await expectLater(
+        node.connector.sendAdditionalIdentityMessage(key, room, 'Before login'),
+        throwsStateError,
+      );
+      expect(node.rawPackets, isEmpty);
+
+      final readOnly = node.connector.loginToRoomAsAdditionalIdentity(key, room, 'guest');
+      await _waitFor(() => node.rawPackets.isNotEmpty, 'the login request');
+      final login = node.rawPackets.single;
+      final address = flood ? 4 : 6;
+      expect(login[2], (payloadTypeANONREQ << 2) | (flood ? 1 : 2));
+      expect(login.sublist(address, address + 33),
+          [room.publicKey.first, ...entry.identity.publicKey]);
+      final encrypted = login.sublist(address + 33);
+      final cipher = ECBBlockCipher(AESEngine())
+        ..init(false, KeyParameter(secret.sublist(0, 16)));
+      final loginBody = Uint8List(16);
+      cipher.processBlock(encrypted, 2, loginBody, 0);
+      final loginData = ByteData.sublistView(loginBody);
+      expect(loginData.getUint32(0, Endian.little), greaterThan(0));
+      expect(loginData.getUint32(4, Endian.little), 0);
+      expect(loginBody.sublist(8), [...utf8.encode('guest'), 0, 0, 0]);
+      expect(encrypted, ChannelEchoRecovery.encryptedPayloadFor(secret, loginBody));
+      expect(node.connector.canPostToRoomAsAdditionalIdentity(key, room), isFalse);
+      answerLogin(1700000000, canPost: false);
+      expect(await readOnly, isFalse);
+
+      final writable = node.connector.loginToRoomAsAdditionalIdentity(key, room, 'write');
+      await _waitFor(() => node.rawPackets.length == 2, 'the new login request');
+      answerLogin(1700000001, canPost: true, damaged: true);
+      await _settle();
+      expect(node.connector.canPostToRoomAsAdditionalIdentity(key, room), isFalse);
+      answerLogin(1700000001, canPost: true);
+      expect(await writable, isTrue);
+      await node.connector.sendAdditionalIdentityMessage(key, room, 'Reply');
+      expect(node.rawPackets, hasLength(3));
+      expect(node.rawPackets.last[2] >> 2, payloadTypeTXTMSG);
+      expect(node.textFrames, isEmpty);
+      final sent = (await storage.readAdditionalIdentityMessages(key)).single;
+      final sentBody = Uint8List.fromList([0, 0, 0, 0, 0, ...utf8.encode('Reply')]);
+      ByteData.sublistView(sentBody).setUint32(0, sent.timestampSeconds, Endian.little);
+      final confirmation = DirectEchoCrypto.ackHash(
+        sentBody, 5, entry.identity.publicKey, randomByte: 0,
+      );
+      node.connector.handleFrameForTest(Uint8List.fromList([
+        pushCodeLogRxData, 40, (-70) & 0xff,
+        (payloadTypeACK << 2) | 1, 0, ...confirmation.take(4),
+      ]));
+
+      const author = [0x00, 0x22, 0x00, 0x44];
+      final text = utf8.encode('Room post');
+      final post = Uint8List.fromList([
+        0, 0, 0, 0, (txtTypeSigned << 2) | 2, ...author, ...text,
+      ]);
+      ByteData.sublistView(post).setUint32(0, 1700000002, Endian.little);
+      final rawPost = received(payloadTypeTXTMSG, post);
+      node.connector.handleFrameForTest(rawPost);
+      node.connector.handleFrameForTest(rawPost);
+      await _waitFor(() => node.rawPackets.length == 4, 'the room post ACK');
+      final ack = node.rawPackets.last;
+      expect(ack[2] >> 2, payloadTypeACK);
+      final expectedAck = DirectEchoCrypto.ackHash(
+        post, 4 + text.length, entry.identity.publicKey, randomByte: 0,
+      );
+      expect(ack.sublist(ack.length - 4), expectedAck.take(4));
+      final rows = await storage.readAdditionalIdentityMessages(key);
+      final incoming = rows.singleWhere((row) => !row.isOutgoing);
+      expect(incoming.text, 'Room post');
+      expect(incoming.peerType, advTypeRoom);
+      expect(incoming.roomAuthorHex, '00220044');
+      expect(rows.singleWhere((row) => row.isOutgoing).status, MessageStatus.delivered);
+      expect(node.connector.getMessages(room), isEmpty);
+      await settings.updateSettings(settings.settings.copyWith(
+        sharedMessageHistoryMode: SharedMessageHistoryMode.contacts,
+      ));
+      await _waitFor(() => node.connector.getMessages(room).length == 2, 'shared room history');
+      final shared = node.connector.getMessages(room).singleWhere((row) => !row.isOutgoing);
+      expect(shared.fourByteRoomContactKey, author);
+      expect(shared.sharedHistorySourceName, 'Extra');
+
+      inbox.endRadioSession();
+      expect(node.connector.canPostToRoomAsAdditionalIdentity(key, room), isFalse);
+      await expectLater(
+        node.connector.sendAdditionalIdentityMessage(key, room, 'After disconnect'),
+        throwsStateError,
+      );
+      expect(node.rawPackets, hasLength(4));
+    }, skip: skip);
+  }
+
+  test('remembered identities receive separate histories and ACK each attempt',
+      () async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final storage = MessageHistoryStorage.instance;
+    final vault = await AdditionalIdentityVault.open(
+      password: 'test password',
+      saved: null,
+    );
+    Future<AdditionalIdentityEntry> createIdentity(
+      String name,
+      String seed,
+    ) async {
+      final expanded = Uint8List.fromList(
+        (await Sha512().hash(hex.decode(seed))).bytes,
+      );
+      expanded[0] &= 248;
+      expanded[31] = (expanded[31] & 63) | 64;
+      return AdditionalIdentityEntry.parse(name, hex.encode(expanded));
+    }
+
+    final first = await createIdentity(
+      'First identity',
+      '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+    );
+    final second = await createIdentity(
+      'Second identity',
+      '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb',
+    );
+    await vault.save(first);
+    await vault.save(second);
+    await vault.setUnlockRemembered(true);
+    final inbox = AdditionalIdentityInbox();
+    await inbox.restoreRemembered();
+    expect(inbox.isUnlocked, isTrue);
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    final node = await _Node.start(
+      echoRecovery: false,
+      additionalIdentityInbox: inbox,
+      settingsOverride: settings,
+    );
+    addTearDown(node.connector.dispose);
+    await node.contact();
+
+    Uint8List message(AdditionalIdentityEntry entry, {
+      bool flood = false,
+      int attempt = 0,
+    }) => _heardTextFrame(
+      destination: entry.identity.publicKey.first,
+      source: _aliceKey.first,
+      secret: entry.identity.sharedSecret(_aliceKey),
+      timestampSeconds: 1700000000,
+      text: utf8.encode('Одинаковое сообщение'),
+      flood: flood,
+      attempt: attempt,
+    );
+
+    final routed = message(first);
+    final flood = message(second, flood: true);
+    // In this frame the first MAC byte follows the two address hashes.
+    final damaged = Uint8List.fromList(routed)..[8] ^= 1;
+    node.connector.handleFrameForTest(damaged);
+    node.connector.handleFrameForTest(routed);
+    node.connector.handleFrameForTest(routed);
+    node.connector.handleFrameForTest(flood);
+    node.connector.handleFrameForTest(message(first, attempt: 1));
+
+    await _waitFor(() => node.rawPackets.length >= 3, 'three ACKs');
+    await _settle();
+    expect(node.rawPackets, hasLength(3));
+    for (final entry in [first, second]) {
+      final rows = await storage.readAdditionalIdentityMessages(
+        entry.identity.publicKeyHex,
+      );
+      expect(rows, hasLength(1));
+      expect(rows.single.senderKey, pubKeyToHex(_aliceKey));
+      expect(rows.single.text, 'Одинаковое сообщение');
+    }
+    expect(node.messages, isEmpty);
+    final recipient = first.identity.publicKeyHex;
+    final otherRecipient = second.identity.publicKeyHex;
+    final sender = pubKeyToHex(_aliceKey);
+    expect((await inbox.threads(recipient)).single.unread, 1);
+    expect((await inbox.threads(otherRecipient)).single.unread, 1);
+    await inbox.markRead(recipient, sender);
+    expect((await inbox.threads(recipient)).single.unread, 0);
+    expect((await inbox.threads(otherRecipient)).single.unread, 1);
+
+    await settings.updateSettings(settings.settings.copyWith(
+      sharedMessageHistoryMode: SharedMessageHistoryMode.contacts,
+    ));
+    await _waitFor(() => node.messages.length == 2, 'shared identity history');
+    expect(node.messages.map((message) => message.sharedHistorySourceName),
+        unorderedEquals([first.name, second.name]));
+    expect(node.connector.getLoadedMessages(node.alice), isEmpty);
+
+    final deleted = node.messages.singleWhere(
+      (message) => message.sharedHistorySourceName == first.name,
+    );
+    await node.connector.deleteMessage(deleted);
+    await _waitFor(() => node.messages.length == 1, 'updated shared identity history');
+    expect(node.messages.single.sharedHistorySourceName, second.name);
+    expect(await inbox.messages(recipient, sender), isEmpty);
+    expect(await inbox.threads(recipient), isEmpty);
+    expect((await inbox.messages(otherRecipient, sender)).single.text,
+        'Одинаковое сообщение');
+    expect((await inbox.threads(otherRecipient)).single.unread, 1);
+
+    // Reload the projection after replacing the unlocked entries and hear
+    // another attempt of the deleted message. It still gets an ACK.
+    inbox.unlock([first, second]);
+    node.connector.handleFrameForTest(message(first, attempt: 2));
+    await _waitFor(() => node.rawPackets.length == 4, 'ACK for the deleted post');
+    expect(await inbox.messages(recipient, sender), isEmpty);
+    await _waitFor(() => node.messages.length == 1, 'reloaded shared identity history');
+    expect(node.messages.single.sharedHistorySourceName, second.name);
+
+    await settings.updateSettings(settings.settings.copyWith(
+      sharedMessageHistoryMode: SharedMessageHistoryMode.disabled,
+    ));
+    expect(node.messages, isEmpty);
+    await node.connector.clearDisplayedContactMessages(
+      node.alice, additionalSender: recipient,
+    );
+    expect((await inbox.messages(otherRecipient, sender)).single.text,
+        'Одинаковое сообщение');
+
+    await settings.updateSettings(settings.settings.copyWith(
+      sharedMessageHistoryMode: SharedMessageHistoryMode.contacts,
+    ));
+    await _waitFor(() => node.messages.length == 1, 'shared history before clearing');
+    await node.connector.clearDisplayedContactMessages(
+      node.alice, additionalSender: recipient,
+    );
+    expect(await inbox.messages(otherRecipient, sender), isEmpty);
+    expect(await inbox.threads(otherRecipient), isEmpty);
+    expect(node.messages, isEmpty);
+    expect(node.connector.written.any(
+      (frame) => frame.first == cmdExportPrivateKey,
+    ), isFalse);
+
+    inbox.unlock([]);
+    node.connector.handleFrameForTest(message(second, attempt: 1));
+    await _settle();
+    expect(node.rawPackets, hasLength(4));
+  }, skip: skip);
 
   group('heard through the RX log with direct echo recovery on', () {
     test('our own packet on its way to the contact is not a message from '

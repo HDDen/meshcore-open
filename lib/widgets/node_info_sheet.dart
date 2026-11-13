@@ -133,7 +133,7 @@ void showRoomLoginDialog(
       onLogin: (password, isAdmin) {
         final connector = context.read<MeshCoreConnector>();
         final unread = connector.getUnreadCountForContactKey(room.publicKeyHex);
-        connector.markContactRead(room.publicKeyHex);
+        if (manage) connector.markContactRead(room.publicKeyHex);
         Navigator.push(
           context,
           MaterialPageRoute(

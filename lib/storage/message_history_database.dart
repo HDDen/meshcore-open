@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import '../helpers/contact_option_storage.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
+import '../models/additional_identity_message.dart';
+import '../models/message.dart' show MessageStatus;
 import '../models/companion_cli_entry.dart';
 import '../models/message_filter.dart';
 import '../models/repeater_cli_entry.dart';
@@ -503,7 +505,360 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureCliHistoryTables();
     await _ensurePendingChannelFramesTable();
     await _ensureFilterTrainingExamplesTable();
+    await _ensureAdditionalIdentityVaultTable();
+    await _ensureAdditionalIdentityMessagesTable();
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS additional_identity_senders (
+  peer_key TEXT PRIMARY KEY,
+  identity_key TEXT NOT NULL
+)
+''');
   }
+
+  Future<void> _ensureAdditionalIdentityVaultTable() => customStatement('''
+CREATE TABLE IF NOT EXISTS additional_identity_vault (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  envelope TEXT NOT NULL
+)
+''');
+
+  Future<void> _ensureAdditionalIdentityMessagesTable() async {
+    await customStatement('''
+CREATE TABLE IF NOT EXISTS additional_identity_messages (
+  recipient_key TEXT NOT NULL,
+  sender_key TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sent_at_s INTEGER NOT NULL,
+  received_at_ms INTEGER NOT NULL,
+  wire_text TEXT NOT NULL,
+  text TEXT NOT NULL,
+  peer_type INTEGER NOT NULL DEFAULT 1,
+  room_author_hex TEXT,
+  is_deleted INTEGER NOT NULL DEFAULT 0,
+  is_unread INTEGER NOT NULL DEFAULT 1,
+  is_outgoing INTEGER NOT NULL DEFAULT 0,
+  delivery_status TEXT NOT NULL DEFAULT 'delivered',
+  PRIMARY KEY (recipient_key, sender_key, sent_at_s, wire_text)
+)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS additional_identity_inbox_order
+ON additional_identity_messages (recipient_key, sender_key, received_at_ms DESC)
+''');
+    await customStatement('''
+CREATE INDEX IF NOT EXISTS additional_identity_sender_history
+ON additional_identity_messages (sender_key, received_at_ms DESC)
+''');
+    final columns = await customSelect(
+      'PRAGMA table_info(additional_identity_messages)',
+    ).get();
+    final names = {for (final column in columns) column.read<String>('name')};
+    for (final (name, definition) in [
+      ('peer_type', 'INTEGER NOT NULL DEFAULT 1'),
+      ('room_author_hex', 'TEXT'),
+      ('is_deleted', 'INTEGER NOT NULL DEFAULT 0'),
+      ('is_unread', 'INTEGER NOT NULL DEFAULT 1'),
+      ('is_outgoing', 'INTEGER NOT NULL DEFAULT 0'),
+      ('delivery_status', "TEXT NOT NULL DEFAULT 'delivered'"),
+    ]) {
+      if (!names.contains(name)) {
+        await customStatement(
+          'ALTER TABLE additional_identity_messages ADD COLUMN $name $definition',
+        );
+      }
+    }
+    // Pending ACKs live in the process. Recover interrupted sends on reopen.
+    await customStatement("""
+UPDATE additional_identity_messages
+SET delivery_status = 'failed'
+WHERE is_outgoing = 1 AND delivery_status IN ('pending', 'sent')
+""");
+  }
+
+  Future<bool> insertAdditionalIdentityMessage(
+    AdditionalIdentityMessage message,
+  ) async {
+    final changed = await customUpdate(
+      '''
+INSERT INTO additional_identity_messages
+  (recipient_key, sender_key, sender_name, sent_at_s, received_at_ms,
+   wire_text, text, peer_type, room_author_hex, is_unread, is_outgoing,
+   delivery_status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(recipient_key, sender_key, sent_at_s, wire_text) DO NOTHING
+''',
+      variables: [
+        Variable<String>(message.recipientKey),
+        Variable<String>(message.senderKey),
+        Variable<String>(message.senderName),
+        Variable<int>(message.timestampSeconds),
+        Variable<int>(message.receivedAtMs),
+        Variable<String>(message.wireText),
+        Variable<String>(message.text),
+        Variable<int>(message.peerType),
+        Variable<String>(message.roomAuthorHex),
+        Variable<int>(message.isUnread ? 1 : 0),
+        Variable<int>(message.isOutgoing ? 1 : 0),
+        Variable<String>(message.status.name),
+      ],
+      updateKind: UpdateKind.insert,
+    );
+    return changed != 0;
+  }
+
+  Future<int?> latestAdditionalIdentitySendTimestamp(String recipientKey) async {
+    final row = await customSelect(
+      '''
+SELECT MAX(sent_at_s) AS latest
+FROM additional_identity_messages
+WHERE recipient_key = ? AND is_outgoing = 1
+''',
+      variables: [Variable<String>(recipientKey)],
+    ).getSingle();
+    return row.readNullable<int>('latest');
+  }
+
+  Future<int?> latestAdditionalIdentityReceivedTimestamp(
+    String recipientKey,
+    String senderKey,
+  ) async {
+    final row = await customSelect(
+      '''
+SELECT MAX(sent_at_s) AS latest
+FROM additional_identity_messages
+WHERE recipient_key = ? AND sender_key = ? AND is_outgoing = 0
+''',
+      variables: [Variable<String>(recipientKey), Variable<String>(senderKey)],
+    ).getSingle();
+    return row.readNullable<int>('latest');
+  }
+
+  Future<bool> updateAdditionalIdentitySendStatus(
+    String recipientKey,
+    String peerKey,
+    int timestamp,
+    MessageStatus status,
+  ) async {
+    final changed = await customUpdate(
+      '''
+UPDATE additional_identity_messages SET delivery_status = ?
+WHERE recipient_key = ? AND sender_key = ? AND sent_at_s = ? AND is_outgoing = 1
+  AND delivery_status IN ('pending', 'sent')
+''',
+      variables: [
+        Variable<String>(status.name),
+        Variable<String>(recipientKey),
+        Variable<String>(peerKey),
+        Variable<int>(timestamp),
+      ],
+      updateKind: UpdateKind.update,
+    );
+    return changed != 0;
+  }
+
+  Future<bool> deleteAdditionalIdentityMessage(
+    String recipientKey,
+    int rowId,
+  ) async {
+    final changed = await customUpdate(
+      '''
+UPDATE additional_identity_messages
+SET is_deleted = 1, is_unread = 0
+WHERE recipient_key = ? AND rowid = ? AND is_deleted = 0
+''',
+      variables: [Variable<String>(recipientKey), Variable<int>(rowId)],
+      updateKind: UpdateKind.update,
+    );
+    return changed != 0;
+  }
+
+  Future<bool> clearAdditionalIdentityMessages(
+    String senderKey,
+    List<String> recipientKeys,
+  ) async {
+    if (recipientKeys.isEmpty) return false;
+    final placeholders = List.filled(recipientKeys.length, '?').join(', ');
+    final changed = await customUpdate(
+      '''
+UPDATE additional_identity_messages
+SET is_deleted = 1, is_unread = 0
+WHERE sender_key = ? AND recipient_key IN ($placeholders) AND is_deleted = 0
+''',
+      variables: [
+        Variable<String>(senderKey),
+        for (final key in recipientKeys) Variable<String>(key),
+      ],
+      updateKind: UpdateKind.update,
+    );
+    return changed != 0;
+  }
+
+  Future<List<AdditionalIdentityThread>> readAdditionalIdentityThreads(
+    String recipientKey,
+  ) async {
+    final rows = await customSelect(
+      '''
+SELECT sender_key, sender_name, peer_type, unread
+FROM (
+  SELECT sender_key, sender_name, peer_type, received_at_ms, rowid,
+    SUM(is_unread) OVER (PARTITION BY sender_key) AS unread,
+    ROW_NUMBER() OVER (
+      PARTITION BY sender_key ORDER BY received_at_ms DESC, rowid DESC
+    ) AS newest
+  FROM additional_identity_messages
+  WHERE recipient_key = ? AND is_deleted = 0
+)
+WHERE newest = 1
+ORDER BY received_at_ms DESC, rowid DESC
+''',
+      variables: [Variable<String>(recipientKey)],
+    ).get();
+    return [
+      for (final row in rows)
+        (
+          senderKey: row.read<String>('sender_key'),
+          senderName: row.read<String>('sender_name'),
+          peerType: row.read<int>('peer_type'),
+          unread: row.read<int>('unread'),
+        ),
+    ];
+  }
+
+  Future<bool> markAdditionalIdentityThreadRead(
+    String recipientKey,
+    String senderKey,
+  ) async {
+    final changed = await customUpdate(
+      '''
+UPDATE additional_identity_messages
+SET is_unread = 0
+WHERE recipient_key = ? AND sender_key = ? AND is_unread = 1 AND is_deleted = 0
+''',
+      variables: [Variable<String>(recipientKey), Variable<String>(senderKey)],
+      updateKind: UpdateKind.update,
+    );
+    return changed != 0;
+  }
+
+  Future<List<AdditionalIdentityMessage>> readAdditionalIdentityMessages(
+    String recipientKey, {
+    required int limit,
+    String? senderKey,
+    (int, int)? before,
+  }) async {
+    final rows = await customSelect(
+      '''
+SELECT rowid, recipient_key, sender_key, sender_name, sent_at_s,
+  received_at_ms, wire_text, text, peer_type, room_author_hex,
+  is_unread, is_outgoing, delivery_status
+FROM additional_identity_messages
+WHERE recipient_key = ? AND is_deleted = 0
+${senderKey == null ? '' : 'AND sender_key = ?'}
+${before == null ? '' : 'AND (received_at_ms, rowid) < (?, ?)'}
+ORDER BY received_at_ms DESC, rowid DESC
+LIMIT ?
+''',
+      variables: [
+        Variable<String>(recipientKey),
+        if (senderKey != null) Variable<String>(senderKey),
+        if (before != null) ...[
+          Variable<int>(before.$1),
+          Variable<int>(before.$2),
+        ],
+        Variable<int>(limit),
+      ],
+    ).get();
+    return [
+      for (final row in rows) _additionalIdentityMessage(row),
+    ];
+  }
+
+  Future<List<AdditionalIdentityMessage>> readAdditionalIdentityMessagesForSender(
+    String senderKey,
+    List<String> recipientKeys,
+  ) async {
+    if (recipientKeys.isEmpty) return const [];
+    final placeholders = List.filled(recipientKeys.length, '?').join(', ');
+    final rows = await customSelect(
+      '''
+SELECT rowid, recipient_key, sender_key, sender_name, sent_at_s,
+  received_at_ms, wire_text, text, peer_type, room_author_hex,
+  is_unread, is_outgoing, delivery_status
+FROM additional_identity_messages
+WHERE sender_key = ? AND recipient_key IN ($placeholders) AND is_deleted = 0
+ORDER BY received_at_ms DESC, rowid DESC
+''',
+      variables: [
+        Variable<String>(senderKey),
+        for (final key in recipientKeys) Variable<String>(key),
+      ],
+    ).get();
+    return [
+      for (final row in rows) _additionalIdentityMessage(row),
+    ];
+  }
+
+  static AdditionalIdentityMessage _additionalIdentityMessage(QueryRow row) => (
+    recipientKey: row.read<String>('recipient_key'),
+    senderKey: row.read<String>('sender_key'),
+    senderName: row.read<String>('sender_name'),
+    peerType: row.read<int>('peer_type'),
+    roomAuthorHex: row.readNullable<String>('room_author_hex'),
+    timestampSeconds: row.read<int>('sent_at_s'),
+    receivedAtMs: row.read<int>('received_at_ms'),
+    wireText: row.read<String>('wire_text'),
+    text: row.read<String>('text'),
+    isUnread: row.read<int>('is_unread') != 0,
+    isOutgoing: row.read<int>('is_outgoing') != 0,
+    status: MessageStatus.values.byName(row.read<String>('delivery_status')),
+    rowId: row.read<int>('rowid'),
+  );
+
+  Future<String?> readAdditionalIdentitySender(String peerKey) async {
+    final row = await customSelect(
+      'SELECT identity_key FROM additional_identity_senders WHERE peer_key = ?',
+      variables: [Variable<String>(peerKey)],
+    ).getSingleOrNull();
+    return row?.read<String>('identity_key');
+  }
+
+  Future<void> writeAdditionalIdentitySender(String peerKey, String? key) async {
+    if (key == null) {
+      await customUpdate(
+        'DELETE FROM additional_identity_senders WHERE peer_key = ?',
+        variables: [Variable<String>(peerKey)],
+        updateKind: UpdateKind.delete,
+      );
+      return;
+    }
+    await customInsert(
+      '''
+INSERT INTO additional_identity_senders (peer_key, identity_key) VALUES (?, ?)
+ON CONFLICT(peer_key) DO UPDATE SET identity_key = excluded.identity_key
+''',
+      variables: [Variable<String>(peerKey), Variable<String>(key)],
+    );
+  }
+
+  Future<String?> readAdditionalIdentityVault() async {
+    final row = await customSelect(
+      'SELECT envelope FROM additional_identity_vault WHERE id = 1',
+    ).getSingleOrNull();
+    return row?.read<String>('envelope');
+  }
+
+  Future<bool> replaceAdditionalIdentityVault(String? previous, String next) =>
+      transaction(() async {
+        if (await readAdditionalIdentityVault() != previous) return false;
+        await customInsert(
+          '''
+INSERT INTO additional_identity_vault (id, envelope) VALUES (1, ?)
+ON CONFLICT(id) DO UPDATE SET envelope = excluded.envelope
+''',
+          variables: [Variable<String>(next)],
+        );
+        return true;
+      });
 
   // One corpus for the entire data folder, independent of the node identity.
   Future<void> _ensureFilterTrainingExamplesTable() async {

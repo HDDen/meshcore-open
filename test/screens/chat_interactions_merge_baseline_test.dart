@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
@@ -11,9 +13,12 @@ import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/screens/channel_chat_screen.dart';
 import 'package:meshcore_open/screens/chat_screen.dart';
+import 'package:meshcore_open/services/additional_identity_inbox.dart';
+import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/widgets/byte_count_input.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
 import 'package:meshcore_open/widgets/tx_power_boost_badge.dart';
@@ -56,7 +61,7 @@ ChannelMessage _channelPost(String id, String text, int seconds) =>
     );
 
 class _PagedNode extends MeshCoreConnector {
-  _PagedNode() {
+  _PagedNode({super.additionalIdentityInbox}) {
     setChannelMessagesForTest(_channel.index, _recentChannel);
   }
 
@@ -127,6 +132,57 @@ class _PagedNode extends MeshCoreConnector {
     setChannelMessagesForTest(channelIndex, _recentChannel);
     notifyListeners();
     return [older];
+  }
+}
+
+class _SenderPickerInbox extends AdditionalIdentityInbox {
+  final selections = <String, String>{};
+
+  @override
+  Future<String?> preferredSender(String peerKey) async => selections[peerKey];
+
+  @override
+  Future<void> setPreferredSender(String peerKey, String? identityKey) async {
+    if (identityKey == null) {
+      selections.remove(peerKey);
+    } else {
+      selections[peerKey] = identityKey;
+    }
+  }
+
+  @override
+  Future<void> markRead(String recipientKey, String senderKey) async {}
+}
+
+class _SenderPickerNode extends _PagedNode {
+  _SenderPickerNode(_SenderPickerInbox inbox)
+    : super(additionalIdentityInbox: inbox);
+
+  final sent = <(String, String, String)>[];
+
+  @override
+  String? get selfName => 'Radio node';
+
+  @override
+  List<Message> getMessages(Contact contact) => [
+    _directPost('radio', 'History of the radio node', 1),
+  ];
+
+  @override
+  List<Message> getMessagesForAdditionalSender(Contact contact, String key) => [
+    _directPost('identity:$key:1', 'History of the additional key', 2),
+  ];
+
+  @override
+  int additionalIdentityMaxTextBytes(Contact peer) => 100;
+
+  @override
+  Future<void> sendAdditionalIdentityMessage(
+    String identityKey,
+    Contact peer,
+    String text,
+  ) async {
+    sent.add((identityKey, peer.publicKeyHex, text));
   }
 }
 
@@ -316,6 +372,122 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
   }
+
+  testWidgets('sender selection keeps the chat and draft tied to the chosen key', (
+    tester,
+  ) async {
+    final entry = (await tester.runAsync(() async {
+      const seed = '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60';
+      final expanded = Uint8List.fromList((await Sha512().hash(hex.decode(seed))).bytes);
+      expanded[0] &= 248;
+      expanded[31] = (expanded[31] & 63) | 64;
+      return AdditionalIdentityEntry.parse('Additional sender', hex.encode(expanded));
+    }))!;
+    final key = entry.identity.publicKeyHex;
+    final inbox = _SenderPickerInbox()..unlock([entry]);
+    final node = _SenderPickerNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+
+    Future<void> openChat({bool showRadioHistoryInitially = false}) async {
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChatScreen(
+            contact: _contact,
+            showRadioHistoryInitially: showRadioHistoryInitially,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    Finder sender(String name) => find.descendant(
+      of: find.byType(AppBar),
+      matching: find.text('Sender: $name', findRichText: true),
+    );
+    final composer = find.descendant(
+      of: find.byType(ByteCountedTextField),
+      matching: find.byType(TextField),
+    );
+    final send = find.byTooltip('Send message');
+    final radioHistory = find.text('History of the radio node', findRichText: true);
+    final keyHistory = find.text('History of the additional key', findRichText: true);
+    try {
+      await openChat();
+      expect(radioHistory, findsOneWidget);
+      expect(keyHistory, findsNothing);
+      expect(node.routeIsCurrent?.call(), isTrue);
+      final radioActivations = node.activations;
+      await tester.tap(sender('Radio node'));
+      await tester.pumpAndSettle();
+      final option = find.widgetWithText(ListTile, entry.name);
+      expect(find.descendant(of: option, matching: find.text(key)), findsOneWidget);
+      await tester.tap(option);
+      await tester.pumpAndSettle();
+
+      expect(sender(entry.name), findsOneWidget);
+      expect(radioHistory, findsNothing);
+      expect(keyHistory, findsOneWidget);
+      expect(node.routeIsCurrent?.call(), isFalse);
+      expect(node.activations, radioActivations);
+      expect(inbox.selections, {_contact.publicKeyHex: key});
+      await tester.enterText(composer, 'From the selected key');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(node.sent, [(key, _contact.publicKeyHex, 'From the selected key')]);
+      expect(tester.widget<TextField>(composer).controller!.text, isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await openChat(showRadioHistoryInitially: true);
+      expect(sender('Radio node'), findsOneWidget);
+      expect(radioHistory, findsOneWidget);
+      expect(node.routeIsCurrent?.call(), isTrue);
+      expect(inbox.selections, {_contact.publicKeyHex: key});
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      final activationsBeforeReopening = node.activations;
+      await openChat();
+      expect(sender(entry.name), findsOneWidget);
+      expect(node.routeIsCurrent?.call(), isFalse);
+      expect(node.activations, activationsBeforeReopening);
+      inbox.unlock([]);
+      await tester.pumpAndSettle();
+      expect(sender('Key unavailable'), findsOneWidget);
+      await tester.enterText(composer, 'Keep this draft');
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      expect(node.sent, hasLength(1));
+      expect(tester.widget<TextField>(composer).controller!.text, 'Keep this draft');
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(sender('Key unavailable'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Radio node'));
+      await tester.pumpAndSettle();
+      // With every additional key locked, returning to the radio hides the picker.
+      expect(sender('Radio node'), findsNothing);
+      expect(sender('Key unavailable'), findsNothing);
+      expect(radioHistory, findsOneWidget);
+      expect(node.routeIsCurrent?.call(), isTrue);
+      expect(inbox.selections, isEmpty);
+      expect(tester.widget<TextField>(composer).controller!.text, 'Keep this draft');
+      await tester.enterText(composer, '');
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 2));
+    }
+  });
 
   testWidgets('U34 baseline: a deliberate left swipe replies once', (tester) async {
     var replies = 0;

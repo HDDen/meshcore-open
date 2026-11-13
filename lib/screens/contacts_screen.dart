@@ -21,6 +21,7 @@ import '../helpers/channel_qr_link.dart'; // channel-qr-paste
 import '../helpers/contact_link.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
+import '../widgets/additional_identity_contacts.dart';
 import '../widgets/companion_cli_contacts_list.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../l10n/l10n.dart';
@@ -275,7 +276,6 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
     if (contact.type == advTypeRepeater) return false;
     final unread = connector.getUnreadCountForContactKey(contact.publicKeyHex);
-    connector.markContactRead(contact.publicKeyHex);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -298,7 +298,6 @@ class _ContactsScreenState extends State<ContactsScreen>
         final unread = connector.getUnreadCountForContactKey(
           contact.publicKeyHex,
         );
-        connector.markContactRead(contact.publicKeyHex);
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -306,6 +305,7 @@ class _ContactsScreenState extends State<ContactsScreen>
               contact: contact,
               initialUnreadCount: unread,
               initialMessageId: result.messageId,
+              showRadioHistoryInitially: true,
             ),
           ),
         );
@@ -1494,9 +1494,26 @@ class _ContactsScreenState extends State<ContactsScreen>
     final viewState = context.watch<UiViewStateService>();
     final showCompanionCli = !widget.selectionMode && !widget.batchOperationsMode &&
         connector.supportsCompanionCli;
-    Widget placeholder(Widget child, {bool hasScrollBody = false}) => showCompanionCli
+    final inbox = widget.selectionMode || widget.batchOperationsMode
+        ? null
+        : connector.additionalIdentityInbox;
+    final identityGroups = inbox == null
+        ? null
+        : SliverToBoxAdapter(
+            child: AdditionalIdentityContacts(
+              inbox: inbox,
+              connector: connector,
+            ),
+          );
+    Widget placeholder(Widget child, {bool hasScrollBody = false}) =>
+        showCompanionCli || identityGroups != null
         ? CompanionCliContactsList.placeholder(
-            connector: connector, hasScrollBody: hasScrollBody, child: child)
+            connector: connector,
+            showCli: showCompanionCli,
+            hasScrollBody: hasScrollBody,
+            afterCli: identityGroups,
+            child: child,
+          )
         : child;
     // Copied again only when a contact changed, not on every notification.
     // The node's contacts come first, then the repeaters the app has heard
@@ -1811,6 +1828,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 ? CompanionCliContactsList.placeholder(
                     connector: connector, showCli: showCompanionCli,
                     hasScrollBody: true,
+                    afterCli: identityGroups,
                     child: EmptyState(
                       icon: Icons.search_off,
                       title: viewState.contactsShowUnreadOnly
@@ -1820,6 +1838,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   )
                 : CompanionCliContactsList(
                     connector: connector, showCli: showCompanionCli,
+                    afterCli: identityGroups,
                     sliver: SliverList(delegate: SliverChildBuilderDelegate((context, index) {
                       final item = contactItems[index];
                       final contact = item.contact;
@@ -2170,7 +2189,6 @@ class _ContactsScreenState extends State<ContactsScreen>
       final unread = connector.getUnreadCountForContactKey(
         contact.publicKeyHex,
       );
-      connector.markContactRead(contact.publicKeyHex);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -2189,7 +2207,6 @@ class _ContactsScreenState extends State<ContactsScreen>
       final unread = connector.getUnreadCountForContactKey(
         contact.publicKeyHex,
       );
-      connector.markContactRead(contact.publicKeyHex);
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -2254,7 +2271,9 @@ class _ContactsScreenState extends State<ContactsScreen>
           final unread = connector.getUnreadCountForContactKey(
             room.publicKeyHex,
           );
-          connector.markContactRead(room.publicKeyHex);
+          if (destination == RoomLoginDestination.management) {
+            connector.markContactRead(room.publicKeyHex);
+          }
           Navigator.push(
             context,
             MaterialPageRoute(

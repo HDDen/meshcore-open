@@ -78,6 +78,43 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
+  String get extraKeys_manage => 'Manage additional private keys';
+
+  String get extraKeys_setPassword => 'Set a password';
+
+  String get extraKeys_invalidPassword => 'Enter matching passwords.';
+
+  String get extraKeys_unlockError =>
+      'Could not unlock the keys. Check the password.';
+
+  String get extraKeys_actionError => 'Could not complete the key action.';
+
+  String get extraKeys_advertise => 'Send Flood advert';
+
+  String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  String get extraKeys_name => 'Key name';
+
+  String get extraKeys_privateKey => 'Private key';
+
+  String get extraKeys_generate => 'Generate private key';
+
+  String get extraKeys_encrypted =>
+      'The key will be stored encrypted in the app.';
+
+  String get extraKeys_rememberUnlock =>
+      'Remember unlock on this device';
+
+  String get extraKeys_loadOlder => 'Load older messages';
+
+  String get extraKeys_locked => 'Key unavailable';
+
+  String get extraKeys_roomLoginFailed =>
+      'Could not confirm posting access for this key. Check the room password and connection.';
+
+  String get extraKeys_invalidKey =>
+      'Enter a valid name and a 64-byte MeshCore private key.';
+
   AppLocalizations(String locale)
     : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 

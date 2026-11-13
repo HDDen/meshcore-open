@@ -8,6 +8,7 @@ import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
 
+import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/storage/region_store.dart';
@@ -77,6 +78,8 @@ import '../helpers/reconnect_power_settings.dart';
 import '../helpers/ui_notification_batcher.dart';
 import '../helpers/channel_mention_matcher.dart';
 import '../helpers/heard_channel_packets.dart';
+import '../helpers/additional_identity_text_packet.dart';
+import '../services/additional_identity_inbox.dart';
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
 import '../helpers/direct_flood_repeats.dart';
@@ -904,7 +907,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   int _storageUsedKb = -1;
   int _storageTotalKb = -1;
 
+  final AdditionalIdentityInbox? additionalIdentityInbox;
+  final _additionalSharedMessages = <String, List<Message>>{};
+  final _loadingAdditionalSharedKeys = <String>{};
+  int _additionalSharedRevision = 0;
+  int _observedAdditionalHistoryRevision = 0;
+
   MeshCoreConnector({
+    this.additionalIdentityInbox,
     MeshCoreTcpConnector? tcpConnector,
     MeshCoreUsbManager? usbManager,
     MessageFilterService? messageFilterService,
@@ -916,6 +926,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _lastNotifyConnectionState = _notificationConnectionState;
     _observedMessageFilterRules = _messageFilterService?.rules;
     _messageFilterService?.addListener(_handleMessageFilterChanged);
+    additionalIdentityInbox?.addListener(_onAdditionalIdentityInboxChanged);
     if (PlatformInfo.isIOS) {
       _lastAppLifecycleState = WidgetsBinding.instance.lifecycleState;
       _lastAppLifecycleStateAt = DateTime.now();
@@ -1865,15 +1876,31 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   List<Message> getMessages(Contact contact) {
     final primary = _conversations[contact.publicKeyHex] ?? [];
-    if (isOfflineMode) return primary;
-    if (!_sharedContactsEnabled || contact.type == advTypeRoom) {
-      return primary;
+    if (!_sharedContactsEnabled) return primary;
+    final shareRadioHistory = !isOfflineMode && contact.type != advTypeRoom;
+    if (shareRadioHistory) _ensureSharedContactHistory(contact);
+    final secondary = shareRadioHistory
+        ? _sharedContactSecondaryMessages[contact.publicKeyHex] ?? const <Message>[]
+        : const <Message>[];
+    if (additionalIdentityInbox?.isUnlocked != true) {
+      return _mergeContactMessages(primary, secondary);
     }
-    _ensureSharedContactHistory(contact);
-    return _mergeContactMessages(
-      primary,
-      _sharedContactSecondaryMessages[contact.publicKeyHex] ?? const [],
-    );
+    _ensureAdditionalSharedHistory(contact);
+    return _mergeContactMessages(primary, [
+      ...secondary,
+      ..._additionalSharedMessages[contact.publicKeyHex] ?? const [],
+    ]);
+  }
+
+  /// Projection used by the ordinary chat when an additional sender is
+  /// selected. Shared History shows all unlocked identities in that chat.
+  List<Message> getMessagesForAdditionalSender(Contact contact, String key) {
+    if (_sharedContactsEnabled) return getMessages(contact);
+    _ensureAdditionalSharedHistory(contact);
+    return [
+      for (final message in _additionalSharedMessages[contact.publicKeyHex] ?? const <Message>[])
+        if (message.messageId.startsWith('identity:$key:')) message,
+    ];
   }
 
   List<Message> getLoadedMessages(Contact contact) {
@@ -1926,10 +1953,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Contact-chat counterpart of [getLoadedChannelMessagesWithShared].
   List<Message> getLoadedMessagesWithShared(Contact contact) {
     final primary = _conversations[contact.publicKeyHex] ?? const <Message>[];
-    if (isOfflineMode || !_sharedContactsEnabled) return primary;
-    final secondary = _sharedContactSecondaryMessages[contact.publicKeyHex];
-    if (secondary == null || secondary.isEmpty) return primary;
-    return _mergeContactMessages(primary, secondary);
+    if (!_sharedContactsEnabled || contact.type == advTypeRoom) return primary;
+    return _mergeContactMessages(primary, [
+      if (!isOfflineMode)
+        ..._sharedContactSecondaryMessages[contact.publicKeyHex] ?? const [],
+      ..._additionalSharedMessages[contact.publicKeyHex] ?? const [],
+    ]);
   }
 
   /// Warms shared history for every channel, so a screen that shows all
@@ -2019,6 +2048,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> deleteMessage(Message message) async {
+    if (message.messageId.startsWith('identity:')) {
+      final inbox = additionalIdentityInbox;
+      if (inbox == null) throw StateError('Additional identity inbox is unavailable');
+      await inbox.deleteMessage(message.messageId);
+      return;
+    }
     final pending = _pendingContactSends.remove(message.messageId);
     if (pending != null) {
       pending.timer?.cancel();
@@ -2890,6 +2925,73 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
     }());
     return true;
+  }
+
+  void _onAdditionalIdentityInboxChanged() {
+    final revision = additionalIdentityInbox?.historyRevision ?? 0;
+    if (_observedAdditionalHistoryRevision == revision) return;
+    _observedAdditionalHistoryRevision = revision;
+    _clearAdditionalSharedHistory();
+    if (!_disposed) notifyListeners();
+  }
+
+  void _clearAdditionalSharedHistory() {
+    _additionalSharedRevision++;
+    _additionalSharedMessages.clear();
+    _loadingAdditionalSharedKeys.clear();
+  }
+
+  void _ensureAdditionalSharedHistory(Contact contact) {
+    final inbox = additionalIdentityInbox;
+    final sender = contact.publicKeyHex;
+    if (inbox == null ||
+        !inbox.isUnlocked ||
+        _additionalSharedMessages.containsKey(sender) ||
+        !_loadingAdditionalSharedKeys.add(sender)) {
+      return;
+    }
+    final revision = _additionalSharedRevision;
+    unawaited(() async {
+      try {
+        final rows = await inbox.sharedMessages(sender);
+        if (_disposed || revision != _additionalSharedRevision) {
+          return;
+        }
+        final names = {
+          for (final entry in inbox.entries)
+            entry.identity.publicKeyHex: entry.name,
+        };
+        _additionalSharedMessages[sender] = [
+          for (final row in rows)
+            Message(
+              senderKey: row.isOutgoing ? hexToPubKey(row.recipientKey) : contact.publicKey,
+              messageId: 'identity:${row.recipientKey}:${row.rowId}',
+              text: row.text,
+              rawText: row.wireText,
+              timestamp: DateTime.fromMillisecondsSinceEpoch(row.timestampSeconds * 1000),
+              receivedAt: DateTime.fromMillisecondsSinceEpoch(row.receivedAtMs),
+              isOutgoing: row.isOutgoing,
+              status: row.status,
+              pathBytes: Uint8List(0),
+              sharedHistorySourceName: names[row.recipientKey],
+              containerSenderName: row.isOutgoing ? names[row.recipientKey] : null,
+              fourByteRoomContactKey: row.roomAuthorHex == null
+                  ? null
+                  : Uint8List.fromList(hex.decode(row.roomAuthorHex!)),
+            ),
+        ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        notifyListeners();
+      } catch (error) {
+        appLogger.warn(
+          'Could not read additional identity history: ${error.runtimeType}',
+          tag: 'History',
+        );
+      } finally {
+        if (revision == _additionalSharedRevision) {
+          _loadingAdditionalSharedKeys.remove(sender);
+        }
+      }
+    }());
   }
 
   List<ChannelMessage> _mergeChannelMessages(
@@ -4840,6 +4942,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _clearSharedMessageHistoryCache() {
+    _clearAdditionalSharedHistory();
     _sharedChannelSecondaryMessages.clear();
     _sharedChannelSecondaryIdentityKeys.clear();
     _sharedContactSecondaryMessages.clear();
@@ -7683,6 +7786,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   void _resetSyncProgressState() {
     _channelInboxRevision++;
+    additionalIdentityInbox?.endRadioSession();
     _sessionRepeaterAdverts.clear();
     _confirmedDefaultFloodScope = null;
     _defaultRegionScopeRefreshFuture = null;
@@ -16039,7 +16143,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (canApply?.call() == false) return;
       if (!blockedNow) _maybeIncrementContactUnread(message);
       notifyListeners();
-      if (echo != null) unawaited(_sendDirectEchoAck(echo));
+      if (echo != null) {
+        unawaited(_sendDirectEchoAck(echo.contact, echo.plaintext));
+      }
 
       // Persist first, then enqueue the notification before advancing a
       // destructive firmware queue read. The notification is enqueued here
@@ -18842,16 +18948,157 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// firmware behaviour and out of reach). Firmware without the command
   /// answers ERR_CODE_UNSUPPORTED_CMD, after which no ACK is attempted until
   /// the next connection; any other refusal costs only this ACK.
-  Future<void> _sendDirectEchoAck(DirectEchoContext echo) async {
-    if (_directEchoAckUnsupported || !isConnected) return;
-    final contact =
-        getContactByPubKeyHex(echo.contact.publicKeyHex) ?? echo.contact;
-    final ack = DirectEchoCrypto.ackHash(
-      echo.plaintext.bytes,
-      echo.plaintext.textLength,
-      contact.publicKey,
-      randomByte: math.Random.secure().nextInt(256),
+  ({PathSelection route, int width, String region}) _additionalIdentityRoute(
+    Contact peer,
+  ) {
+    final selected = resolvePathSelection(peer);
+    final canUsePath = !selected.useFlood &&
+        selected.hopCount >= 0 &&
+        selected.hopCount <= 63 &&
+        (selected.hopCount == 0
+            ? selected.pathBytes.isEmpty
+            : selected.pathBytes.length % selected.hopCount == 0 &&
+                selected.pathBytes.length ~/ selected.hopCount >= 1 &&
+                selected.pathBytes.length ~/ selected.hopCount <= 3);
+    if (canUsePath) {
+      return (
+        route: selected,
+        width: selected.hopCount == 0
+            ? _pathHashByteWidth.clamp(1, 3)
+            : selected.pathBytes.length ~/ selected.hopCount,
+        region: '',
+      );
+    }
+    final configured = getContactRegion(peer.publicKeyHex);
+    final region = ContactRegionStore.isUnscoped(configured)
+        ? ''
+        : configured.isNotEmpty
+        ? configured
+        : _defaultRegionScope?.trim() ?? '';
+    if (region.startsWith(r'$')) {
+      throw UnsupportedError('Private region for additional identity');
+    }
+    return (
+      route: const PathSelection(pathBytes: [], hopCount: -1, useFlood: true),
+      width: _pathHashByteWidth.clamp(1, 3),
+      region: region,
     );
+  }
+
+  int additionalIdentityMaxTextBytes(Contact peer) {
+    try {
+      final target = _additionalIdentityRoute(peer);
+      final limit = AdditionalIdentityTextPacket.maxTextBytes(
+        target.route,
+        scoped: target.region.isNotEmpty,
+      );
+      return peer.type == advTypeRoom ? math.min(limit, maxRoomServerTextBytes) : limit;
+    } on UnsupportedError {
+      return 0;
+    }
+  }
+
+  bool canPostToRoomAsAdditionalIdentity(String identityKey, Contact room) =>
+      isConnected &&
+      additionalIdentityInbox?.canPostToRoom(identityKey, room.publicKeyHex) == true;
+
+  Future<bool> loginToRoomAsAdditionalIdentity(
+    String identityKey,
+    Contact room,
+    String password,
+  ) async {
+    final inbox = additionalIdentityInbox;
+    final isCurrent = _captureAdditionalIdentitySession();
+    if (inbox == null ||
+        !isCurrent() ||
+        identityKey == selfPublicKeyHex ||
+        room.type != advTypeRoom) {
+      throw StateError('Cannot log in from this additional identity');
+    }
+    final currentRoom = getContactByPubKeyHex(room.publicKeyHex) ?? room;
+    final target = _additionalIdentityRoute(currentRoom);
+    return inbox.loginToRoom(
+      identityKey: identityKey,
+      room: currentRoom,
+      password: password,
+      route: target.route,
+      pathHashWidth: target.width,
+      region: target.region,
+      isCurrent: isCurrent,
+      write: (frame, canSend) => _runChannelCommandLocked(() async {
+        await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
+        if (!canSend()) throw StateError('Radio session or identity changed');
+        await sendFrame(frame, waitForGenericAck: true);
+      }),
+    );
+  }
+
+  bool Function() _captureAdditionalIdentitySession() {
+    final revision = _channelInboxRevision;
+    final radio = selfPublicKeyHex;
+    return () => !_disposed &&
+        isConnected &&
+        !isOfflineMode &&
+        !isReviewMode &&
+        radio.isNotEmpty &&
+        radio == selfPublicKeyHex &&
+        revision == _channelInboxRevision;
+  }
+
+  Future<void> sendAdditionalIdentityMessage(
+    String identityKey,
+    Contact peer,
+    String text,
+  ) async {
+    final inbox = additionalIdentityInbox;
+    final isCurrent = _captureAdditionalIdentitySession();
+    final currentPeer = getContactByPubKeyHex(peer.publicKeyHex) ?? peer;
+    if (inbox == null ||
+        !isCurrent() ||
+        identityKey == selfPublicKeyHex ||
+        (currentPeer.type != advTypeChat && currentPeer.type != advTypeRoom) ||
+        (currentPeer.type == advTypeRoom &&
+            !canPostToRoomAsAdditionalIdentity(identityKey, currentPeer))) {
+      throw StateError('Cannot send from this additional identity');
+    }
+    if (utf8.encode(text).length > additionalIdentityMaxTextBytes(currentPeer)) {
+      throw const FormatException('Invalid additional identity message size');
+    }
+    final target = _additionalIdentityRoute(currentPeer);
+    await _runChannelCommandLocked(() async {
+      await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
+      if (!isCurrent()) throw StateError('Radio session changed');
+      await inbox.send(
+        identityKey: identityKey,
+        peer: currentPeer,
+        text: text,
+        route: target.route,
+        pathHashWidth: target.width,
+        region: target.region,
+        isCurrent: isCurrent,
+        write: (frame, canSend) {
+          if (!canSend()) throw StateError('Radio session or identity changed');
+          return sendFrame(frame, waitForGenericAck: true);
+        },
+      );
+    });
+  }
+
+  Future<void> _sendDirectEchoAck(
+    Contact sender,
+    DirectEchoPlaintext plaintext, {
+    bool Function()? isCurrent,
+    Uint8List? roomRecipientKey,
+  }) async {
+    if (_directEchoAckUnsupported || !isConnected) return;
+    final contact = getContactByPubKeyHex(sender.publicKeyHex) ?? sender;
+    final ack = DirectEchoCrypto.ackHash(
+      plaintext.bytes,
+      plaintext.textLength,
+      roomRecipientKey ?? contact.publicKey,
+      randomByte: roomRecipientKey == null ? math.Random.secure().nextInt(256) : 0,
+    );
+    final ackBytes = roomRecipientKey == null ? ack : Uint8List.sublistView(ack, 0, 4);
     final route = resolvePathSelection(contact);
     int? transportCode;
     // The region our own flood sends to this contact take: its own, none
@@ -18863,21 +19110,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         ? contactRegion
         : _defaultRegionScope?.trim() ?? '';
     if (route.useFlood && scope.isNotEmpty && !scope.startsWith(r'$')) {
-      transportCode = _computeRegionTransportCode(scope, payloadTypeACK, ack);
+      transportCode = _computeRegionTransportCode(scope, payloadTypeACK, ackBytes);
     }
     final packet = DirectEchoRecovery.buildAckPacket(
-      ack: ack,
+      ack: ackBytes,
       route: route,
       pathHashWidth: _pathHashByteWidth,
       transportCode: transportCode,
     );
     try {
-      await _runChannelCommandLocked(
-        () => sendFrame(
+      final sent = await _runChannelCommandLocked(() async {
+        if (isCurrent?.call() == false) return false;
+        await sendFrame(
           DirectEchoRecovery.buildSendRawPacketFrame(packet),
           waitForGenericAck: true,
-        ),
-      );
+        );
+        return true;
+      });
+      if (!sent) return;
       appLogger.info(
         'ACK for the echoed message from ${contact.name} sent '
         '${route.useFlood ? 'by flood' : 'along ${route.hopCount} hop(s)'}',
@@ -19195,13 +19445,61 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final packet = _parseRawPacket(raw);
       if (packet?.payloadType == payloadTypeACK) {
         _noteHeardAck(packet!);
+        if (packet.payloadVer == 0 && packet.payload.length >= 4) {
+          final hash = ByteData.sublistView(packet.payload).getUint32(0, Endian.little);
+          additionalIdentityInbox?.acceptAck(hash);
+        }
         return;
+      }
+      if (packet != null && packet.payloadVer == 0) {
+        if (packet.payloadType == payloadTypePATH) {
+          additionalIdentityInbox?.acceptPathAck(packet.payload, _decryptPayload);
+        }
+        if (packet.payloadType == payloadTypePATH ||
+            packet.payloadType == payloadTypeRESPONSE) {
+          additionalIdentityInbox?.acceptRoomLoginResponse(
+            packet.payload,
+            _decryptPayload,
+            inPath: packet.payloadType == payloadTypePATH,
+          );
+        }
       }
       if (packet?.payloadType == payloadTypeTXTMSG) {
         if (packet!.isFlood) {
           _countDirectFloodCopy(packet, snr: snr, rssi: rssi);
         }
         await _recoverDirectEcho(frame, snr: snr, rssi: rssi);
+        final inbox = additionalIdentityInbox;
+        if (inbox != null &&
+            inbox.isUnlocked &&
+            packet.payloadVer == 0 &&
+            packet.pathHashWidth <= 3 &&
+            isConnected &&
+            !isOfflineMode &&
+            !isReviewMode &&
+            selfPublicKeyHex.isNotEmpty) {
+          final revision = _channelInboxRevision;
+          final radioKey = selfPublicKeyHex;
+          bool isCurrent() => !_disposed &&
+              isConnected &&
+              revision == _channelInboxRevision &&
+              radioKey == selfPublicKeyHex;
+          final receipt = await inbox.receive(
+            payload: packet.payload,
+            primaryKey: radioKey,
+            contacts: () => allContactsUnfiltered,
+            decrypt: _decryptPayload,
+            isCurrent: isCurrent,
+          );
+          if (receipt != null) {
+            unawaited(_sendDirectEchoAck(
+              receipt.contact,
+              receipt.plaintext,
+              isCurrent: receipt.isCurrent,
+              roomRecipientKey: receipt.roomRecipientKey,
+            ));
+          }
+        }
         return;
       }
       if (packet == null ||
@@ -21693,6 +21991,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    additionalIdentityInbox?.removeListener(_onAdditionalIdentityInboxChanged);
+    additionalIdentityInbox?.dispose();
     _companionCli?.dispose();
     _messageFilterService?.removeListener(_handleMessageFilterChanged);
     unawaited(flushChannelRuleVerdicts());
@@ -22509,6 +22809,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _discoveredContacts.clear();
     unawaited(_persistDiscoveredContacts());
     notifyListeners();
+  }
+
+  Future<void> clearDisplayedContactMessages(
+    Contact contact, {
+    String? additionalSender,
+  }) async {
+    final inbox = additionalIdentityInbox;
+    if (_sharedContactsEnabled) {
+      await inbox?.clearMessages(contact.publicKeyHex);
+    } else if (additionalSender != null) {
+      if (inbox == null) throw StateError('Additional identity inbox is unavailable');
+      await inbox.clearMessages(contact.publicKeyHex, recipientKey: additionalSender);
+      return;
+    }
+    if (!_disposed) clearMessagesForContact(contact);
   }
 
   void clearMessagesForContact(Contact contact) {

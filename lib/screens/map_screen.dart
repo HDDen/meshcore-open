@@ -6503,7 +6503,6 @@ class _MapScreenState extends State<MapScreen>
           final unread = connector.getUnreadCountForContactKey(
             room.publicKeyHex,
           );
-          connector.markContactRead(room.publicKeyHex);
           Navigator.push(
             context,
             MaterialPageRoute(

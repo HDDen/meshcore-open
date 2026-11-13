@@ -35,6 +35,7 @@ import 'services/message_filter/message_filter_service.dart';
 import 'services/message_retry_service.dart';
 import 'services/path_history_service.dart';
 import 'services/adaptive_tx_power.dart';
+import 'services/additional_identity_inbox.dart';
 import 'services/app_settings_service.dart';
 import 'services/chat_background_service.dart';
 import 'services/app_update_service.dart';
@@ -216,7 +217,14 @@ Future<void> _startApplication() async {
   StartupTiming.mark('  service objects');
   final storage = StorageService();
   final messageFilter = MessageFilterService()..load();
-  final connector = MeshCoreConnector(messageFilterService: messageFilter);
+  final additionalInbox = MessageHistoryStorage.instance.hasDatabase
+      ? AdditionalIdentityInbox()
+      : null;
+  final connector = MeshCoreConnector(
+    messageFilterService: messageFilter,
+    additionalIdentityInbox: additionalInbox,
+  );
+  if (additionalInbox != null) unawaited(additionalInbox.restoreRemembered());
   final pathHistoryService = PathHistoryService(storage);
   final retryService = MessageRetryService();
   final appSettingsService = AppSettingsService();
@@ -1335,8 +1343,11 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         final unread = widget.connector.getUnreadCountForContact(contact);
         await navigator.push(
           MaterialPageRoute(
-            builder: (_) =>
-                ChatScreen(contact: contact, initialUnreadCount: unread),
+            builder: (_) => ChatScreen(
+              contact: contact,
+              initialUnreadCount: unread,
+              showRadioHistoryInitially: true,
+            ),
           ),
         );
         break;

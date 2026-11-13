@@ -322,6 +322,21 @@ absent or blank name retains a locally known name. A completed full contact
 sync drops keys omitted by the radio so those nodes can appear in discovery
 again. An incremental sync only reports changes.
 
+## Additional identities
+
+The app uses `[CMD_SEND_RAW_PACKET=65][priority][raw packet]` to send
+from keys stored in the app. Room login uses `ANON_REQ` with the room's
+one-byte hash, the sender's full public key, and a MAC-protected encrypted
+body. The body contains two little-endian 32-bit timestamps (request time
+and last saved room post), followed by up to 15 UTF-8 password bytes.
+The app reads the encrypted `RESPONSE` or `PATH` response from
+`PUSH_CODE_LOG_RX_DATA` and checks the room's ACL role before sending.
+
+The signed text pushed by a room includes a four-byte author prefix before
+the text. Its ACK contains the first four bytes of SHA-256 over the
+timestamp, flags, author prefix, text and recipient's full public key.
+The history stores the author prefix and keeps each recipient's thread.
+
 ## CLI and application payloads
 
 Remote repeater CLI commands use the text-message command with `txtTypeCliData`, addressed to the repeater's public-key prefix:

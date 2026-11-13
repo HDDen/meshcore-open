@@ -12,6 +12,8 @@ import '../models/pending_channel_frame.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
 import '../models/wardrive_sample.dart';
+import '../models/additional_identity_message.dart';
+import '../models/message.dart' show MessageStatus;
 import '../models/companion_cli_entry.dart';
 import '../models/repeater_cli_entry.dart';
 import 'data_root.dart';
@@ -1356,6 +1358,117 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
       reduceWrites: _reduceDeliveryObservationWrites,
     );
   }
+
+  Future<bool> insertAdditionalIdentityMessage(AdditionalIdentityMessage message) =>
+      _persistenceWork.run(() {
+        _requireInitialized();
+        return _database!.insertAdditionalIdentityMessage(message);
+      });
+
+  Future<int?> latestAdditionalIdentitySendTimestamp(String recipientKey) {
+    _requireInitialized();
+    return _database!.latestAdditionalIdentitySendTimestamp(recipientKey);
+  }
+
+  Future<int?> latestAdditionalIdentityReceivedTimestamp(
+    String recipientKey,
+    String senderKey,
+  ) {
+    _requireInitialized();
+    return _database!.latestAdditionalIdentityReceivedTimestamp(recipientKey, senderKey);
+  }
+
+  Future<bool> updateAdditionalIdentitySendStatus(
+    String recipientKey,
+    String peerKey,
+    int timestamp,
+    MessageStatus status,
+  ) => _persistenceWork.run(() {
+    _requireInitialized();
+    return _database!.updateAdditionalIdentitySendStatus(
+      recipientKey,
+      peerKey,
+      timestamp,
+      status,
+    );
+  });
+
+  Future<List<AdditionalIdentityMessage>> readAdditionalIdentityMessages(
+    String recipientKey, {
+    int limit = 100,
+    String? senderKey,
+    (int, int)? before,
+  }) {
+    _requireInitialized();
+    return _database!.readAdditionalIdentityMessages(
+      recipientKey,
+      limit: limit.clamp(1, 1000),
+      senderKey: senderKey,
+      before: before,
+    );
+  }
+
+  Future<List<AdditionalIdentityMessage>> readAdditionalIdentityMessagesForSender(
+    String senderKey,
+    List<String> recipientKeys,
+  ) {
+    _requireInitialized();
+    return _database!.readAdditionalIdentityMessagesForSender(
+      senderKey,
+      recipientKeys,
+    );
+  }
+
+  Future<bool> deleteAdditionalIdentityMessage(String recipientKey, int rowId) =>
+      _persistenceWork.run(() {
+        _requireInitialized();
+        return _database!.deleteAdditionalIdentityMessage(recipientKey, rowId);
+      });
+
+  Future<bool> clearAdditionalIdentityMessages(
+    String senderKey,
+    List<String> recipientKeys,
+  ) => _persistenceWork.run(() {
+    _requireInitialized();
+    return _database!.clearAdditionalIdentityMessages(senderKey, recipientKeys);
+  });
+
+  Future<List<AdditionalIdentityThread>> readAdditionalIdentityThreads(
+    String recipientKey,
+  ) {
+    _requireInitialized();
+    return _database!.readAdditionalIdentityThreads(recipientKey);
+  }
+
+  Future<bool> markAdditionalIdentityThreadRead(
+    String recipientKey,
+    String senderKey,
+  ) => _persistenceWork.run(() {
+    _requireInitialized();
+    return _database!.markAdditionalIdentityThreadRead(recipientKey, senderKey);
+  });
+
+  Future<String?> readAdditionalIdentitySender(String peerKey) {
+    _requireInitialized();
+    return _database!.readAdditionalIdentitySender(peerKey);
+  }
+
+  Future<void> writeAdditionalIdentitySender(String peerKey, String? key) =>
+      _persistenceWork.run(() {
+        _requireInitialized();
+        return _database!.writeAdditionalIdentitySender(peerKey, key);
+      });
+
+  Future<String?> readAdditionalIdentityVault() {
+    _requireInitialized();
+    return _database!.readAdditionalIdentityVault();
+  }
+
+  Future<bool> replaceAdditionalIdentityVault(String? previous, String next) =>
+      _persistenceWork.run(() {
+        _requireInitialized();
+        return _database!.replaceAdditionalIdentityVault(previous, next);
+      });
 
   Future<String?> readNodeState(String nodeKey, String name) async {
     _requireInitialized();

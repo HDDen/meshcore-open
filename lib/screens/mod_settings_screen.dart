@@ -14,6 +14,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/low_battery_settings_card.dart';
 import '../widgets/sync_progress_overlay.dart';
+import 'additional_identity_screen.dart';
 import 'message_filter_settings_screen.dart';
 import 'message_history_database_screen.dart';
 
@@ -603,6 +604,16 @@ class ModSettingsScreen extends StatelessWidget {
                   ),
                 ),
                 _AdaptiveTxPowerSettingsCard(settingsService: settingsService),
+                if (!PlatformInfo.isWeb)
+                  MeshCard(
+                    padding: EdgeInsets.zero,
+                    child: ListTile(
+                      leading: const Icon(Icons.key_outlined),
+                      title: Text(context.l10n.extraKeys_manage),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => AdditionalIdentityScreen.open(context),
+                    ),
+                  ),
                 if (PlatformInfo.isAndroid || PlatformInfo.isIOS)
                   MeshCard(
                     padding: EdgeInsets.zero,
