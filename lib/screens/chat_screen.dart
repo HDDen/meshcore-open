@@ -1636,7 +1636,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           (service) =>
                               service.settings.showMcoImagePackReplacements,
                         );
-                    final bubble = _MessageBubble(
+                    final bubble = ContactMessageBubble(
                       message: message,
                       isHighlighted: _highlightedMessageId == message.messageId,
                       senderName: resolvedContact.type == advTypeRoom
@@ -1839,8 +1839,12 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Byte counting must match what actually goes on air, so the field and the
   /// colour palette share one encoder.
   String Function(String)? _composerEncoder(MeshCoreConnector connector) {
-    if (_additionalSenderKey != null) {
-      return (text) => _composerWireText(connector, text);
+    if (_additionalSenderKey case final key?) {
+      return (text) => connector.prepareAdditionalIdentityOutboundText(
+        _resolveContact(connector),
+        key,
+        _composerWireText(connector, text),
+      );
     }
     final key = widget.contact.publicKeyHex;
     final usesEncoding =
@@ -2343,7 +2347,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ? _applyReplyMention(connector, text)
           : '${composerReply.wirePrefix}$text';
       final limit = connector.additionalIdentityMaxTextBytes(contact);
-      if (utf8.encode(wireText).length > limit && limit > 0) {
+      final outboundText = connector.prepareAdditionalIdentityOutboundText(
+        contact,
+        additionalSender,
+        wireText,
+      );
+      if (utf8.encode(outboundText).length > limit && limit > 0) {
         showDismissibleSnackBar(
           context,
           content: Text(context.l10n.chat_messageTooLong(limit)),
@@ -3747,7 +3756,7 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         await _sendFromAdditionalIdentity(
           connector, source, _resolveContact(connector),
-          message.rawText ?? message.text,
+          message.text,
         );
       } catch (_) {
         if (mounted) _showAdditionalSenderError();
@@ -3842,7 +3851,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class ContactMessageBubble extends StatelessWidget {
   final Message message;
   final String senderName;
   final VoidCallback? onTap;
@@ -3883,7 +3892,8 @@ class _MessageBubble extends StatelessWidget {
   final bool blockedRevealed;
   final VoidCallback? onToggleBlocked;
 
-  const _MessageBubble({
+  const ContactMessageBubble({
+    super.key,
     required this.message,
     required this.senderName,
     required this.sourceId,
@@ -4019,6 +4029,9 @@ class _MessageBubble extends StatelessWidget {
         message.status == MessageStatus.delivered &&
         message.sentWithTxPowerBoost;
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
+    final showSingleAttempt = isOutgoing &&
+        message.retryCount == 0 &&
+        message.sentByRadioAt != null;
     // An incoming message decoded from its echo (DirectEchoRecovery) carries
     // the same bar while the packet is still on its way to the node.
     final showDeliveryProgress =
@@ -4804,6 +4817,50 @@ class _MessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                if (showSingleAttempt)
+                                  Tooltip(
+                                    message: context.l10n.channelPath_sendAttemptsLabel,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.replay,
+                                          size: 11 * textScale,
+                                          color: metaColor,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          '1',
+                                          style: MeshTheme.mono(
+                                            fontSize: 10 * textScale,
+                                            color: metaColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                if (message.airtimeMs case final airtime?)
+                                  Tooltip(
+                                    message: context.l10n.imageSend_airtimeLabel,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.cell_tower,
+                                          size: 11 * textScale,
+                                          color: metaColor,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          context.l10n.powerSaving_milliseconds(airtime),
+                                          style: MeshTheme.mono(
+                                            fontSize: 10 * textScale,
+                                            color: metaColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 if (showTxPowerBoostBadge)
                                   TxPowerBoostBadge(
                                     withLna: message.sentWithAdaptiveLna,

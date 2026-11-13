@@ -14,9 +14,11 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
 import 'package:meshcore_open/helpers/direct_echo_crypto.dart';
+import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
+import 'package:meshcore_open/models/message_compression.dart';
 import 'package:meshcore_open/models/path_history.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
@@ -415,8 +417,18 @@ Future<void> main() async {
         pubKeyToHex(_aliceKey),
       ) != null, 'contact');
 
+      final text = flood
+          ? 'Reply with the same phrase over and over and over and over'
+          : 'Reply';
+      if (flood) {
+        await node.connector.setContactMCOtxtEnabled(node.alice.publicKeyHex, true);
+        await node.connector.setContactMCOtxtPlainWhenSmaller(
+          node.alice.publicKeyHex,
+          false,
+        );
+      }
       await node.connector.sendAdditionalIdentityMessage(
-        identityKey, node.alice, 'Reply',
+        identityKey, node.alice, text,
       );
       final frame = node.rawPackets.single;
       expect(frame[0], cmdSendRawPacket);
@@ -428,6 +440,18 @@ Future<void> main() async {
       expect(saved.isOutgoing, isTrue);
       expect(saved.status, MessageStatus.sent);
       expect(saved.isUnread, isFalse);
+      expect(saved.text, text);
+      expect(saved.dispatchedAtMs, isNotNull);
+      expect(saved.airtimeMs, greaterThan(0));
+      expect(saved.sentByFlood, flood);
+      expect(saved.path, flood ? isEmpty : orderedEquals([0x10, 0x20]));
+      final wireText = flood
+          ? MCOtxtAppCodec.encodeTextTransport(
+              text: text,
+              timestamp: saved.timestampSeconds,
+            )
+          : text;
+      expect(saved.wireText, wireText);
       expect(node.messages, isEmpty);
       expect(await inbox.preferredSender(node.alice.publicKeyHex), isNull);
       await inbox.setPreferredSender(node.alice.publicKeyHex, identityKey);
@@ -444,6 +468,8 @@ Future<void> main() async {
           .getMessagesForAdditionalSender(node.alice, identityKey).single;
       expect(projected.senderKeyHex, identityKey);
       expect(projected.containerSenderName, entry.name);
+      expect(projected.compressionType, flood ? MessageCompressionType.mcotxt : null);
+      expect(projected.sentByRadioWaitSeconds, hasLength(1));
       expect(node.messages, isEmpty);
       await inbox.setPreferredSender(node.alice.publicKeyHex, null);
       expect(await inbox.preferredSender(node.alice.publicKeyHex), isNull);
@@ -452,13 +478,16 @@ Future<void> main() async {
         ...((ByteData(4)..setUint32(0, saved.timestampSeconds, Endian.little))
             .buffer.asUint8List()),
         0,
-        ...utf8.encode('Reply'),
+        ...utf8.encode(wireText),
       ]);
       final secret = entry.identity.sharedSecret(_aliceKey);
       expect(frame.sublist(offset + 2),
           ChannelEchoRecovery.encryptedPayloadFor(secret, plaintext));
       final ack = DirectEchoCrypto.ackHash(
-        plaintext, 5, entry.identity.publicKey, randomByte: 7,
+        plaintext,
+        utf8.encode(wireText).length,
+        entry.identity.publicKey,
+        randomByte: 7,
       );
       node.connector.handleFrameForTest(Uint8List.fromList([
         pushCodeLogRxData,
@@ -479,8 +508,23 @@ Future<void> main() async {
         if (delivered.status == MessageStatus.delivered) break;
         await Future<void>.delayed(const Duration(milliseconds: 10));
       }
-      expect((await storage.readAdditionalIdentityMessages(identityKey)).single.status,
-          MessageStatus.delivered);
+      final delivered = (await storage.readAdditionalIdentityMessages(identityKey)).single;
+      expect(delivered.status, MessageStatus.delivered);
+      expect(delivered.tripTimeMs, isNotNull);
+      expect(delivered.tripTimeMs, greaterThanOrEqualTo(0));
+      await _waitFor(
+        () => node.connector
+            .getMessagesForAdditionalSender(node.alice, identityKey)
+            .singleOrNull
+            ?.status == MessageStatus.delivered,
+        'the delivered identity message with its send details',
+      );
+      final deliveredMessage = node.connector
+          .getMessagesForAdditionalSender(node.alice, identityKey).single;
+      expect(deliveredMessage.tripTimeMs, delivered.tripTimeMs);
+      expect(deliveredMessage.airtimeMs, saved.airtimeMs);
+      expect(deliveredMessage.sendAttemptLimit, 1);
+      expect(node.rawPackets, hasLength(1));
       expect(node.textFrames, isEmpty);
     }, skip: skip);
   }

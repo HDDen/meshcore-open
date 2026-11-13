@@ -98,6 +98,7 @@ class Message {
   final List<int> sentByRadioWaitSeconds;
   final DateTime? deliveredAt;
   final int? tripTimeMs;
+  final int? airtimeMs;
   final bool sentWithTxPowerBoost;
   final bool sentWithAdaptiveLna;
   final int? pathLength;
@@ -205,6 +206,7 @@ class Message {
     List<int>? sentByRadioWaitSeconds,
     this.deliveredAt,
     this.tripTimeMs,
+    this.airtimeMs,
     this.sentWithTxPowerBoost = false,
     this.sentWithAdaptiveLna = false,
     this.pathLength,
@@ -258,6 +260,7 @@ class Message {
     List<int>? sentByRadioWaitSeconds,
     DateTime? deliveredAt,
     int? tripTimeMs,
+    int? airtimeMs,
     bool? sentWithTxPowerBoost,
     bool? sentWithAdaptiveLna,
     int? pathLength,
@@ -391,6 +394,7 @@ class Message {
           sentByRadioWaitSeconds ?? this.sentByRadioWaitSeconds,
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
+      airtimeMs: airtimeMs ?? this.airtimeMs,
       sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
       sentWithAdaptiveLna: sentWithAdaptiveLna ?? this.sentWithAdaptiveLna,
       pathLength: pathLength ?? this.pathLength,

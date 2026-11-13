@@ -8,11 +8,14 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
 import 'package:meshcore_open/helpers/contact_share_helper.dart';
+import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
+import 'package:meshcore_open/models/additional_identity_message.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/models/message.dart';
+import 'package:meshcore_open/screens/additional_identity_chat_screen.dart';
 import 'package:meshcore_open/screens/channel_chat_screen.dart';
 import 'package:meshcore_open/screens/chat_screen.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
@@ -153,6 +156,14 @@ class _ContactShareNode extends _PagedNode {
 
 class _SenderPickerInbox extends AdditionalIdentityInbox {
   final selections = <String, String>{};
+  List<AdditionalIdentityMessage> rows = const [];
+
+  @override
+  Future<List<AdditionalIdentityMessage>> messages(
+    String recipientKey,
+    String senderKey, {
+    (int, int)? before,
+  }) async => rows;
 
   @override
   Future<String?> preferredSender(String peerKey) async => selections[peerKey];
@@ -483,6 +494,102 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('additional identity chat shows the regular message indicators', (
+    tester,
+  ) async {
+    final inbox = _SenderPickerInbox();
+    final node = _SenderPickerNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+    final identityKey = 'af' * 32;
+    final timestamp = _time.millisecondsSinceEpoch ~/ 1000;
+    const text = 'A message sent from the additional key';
+    inbox.rows = [
+      (
+        recipientKey: identityKey,
+        senderKey: _contact.publicKeyHex,
+        senderName: _contact.name,
+        peerType: advTypeChat,
+        roomAuthorHex: null,
+        timestampSeconds: timestamp,
+        receivedAtMs: _time.millisecondsSinceEpoch,
+        wireText: MCOtxtAppCodec.encodeTextTransport(
+          text: text,
+          timestamp: timestamp,
+        ),
+        text: text,
+        isUnread: false,
+        isOutgoing: true,
+        status: MessageStatus.delivered,
+        rowId: 1,
+        sentByFlood: true,
+        region: 'bots',
+        path: Uint8List(0),
+        dispatchedAtMs: _time.millisecondsSinceEpoch + 2000,
+        tripTimeMs: 1800,
+        airtimeMs: 90,
+        usedCyr2Lat: false,
+      ),
+    ];
+    await settings.updateSettings(
+      settings.settings.copyWith(
+        enableMessageTracing: true,
+        showCompressionRatio: true,
+        showMessageRegion: true,
+      ),
+    );
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox,
+            connector: node,
+            peer: _contact,
+            recipientKey: identityKey,
+            recipientName: 'Extra key',
+            senderKey: _contact.publicKeyHex,
+            senderName: _contact.name,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bubble = find.byType(ContactMessageBubble);
+    expect(bubble, findsOneWidget);
+    expect(find.descendant(of: bubble, matching: find.byIcon(Icons.check)), findsOneWidget);
+    expect(find.descendant(of: bubble, matching: find.byIcon(Icons.speed)), findsOneWidget);
+    expect(find.text('(2)'), findsOneWidget);
+    expect(find.text('1.8s'), findsOneWidget);
+    expect(find.byTooltip('Send attempts'), findsOneWidget);
+    expect(find.byTooltip('Time on air'), findsOneWidget);
+    expect(find.text('90 ms'), findsOneWidget);
+    expect(find.textContaining('% MCOtxt'), findsOneWidget);
+    expect(find.textContaining('bots'), findsOneWidget);
+    expect(find.byType(TxPowerBoostBadge), findsNothing);
+
+    await settings.updateSettings(
+      settings.settings.copyWith(enableMessageTracing: false),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('1.8s'), findsNothing);
+    expect(find.byTooltip('Time on air'), findsNothing);
+    expect(find.textContaining('% MCOtxt'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('sender selection keeps the chat and draft tied to the chosen key', (

@@ -1382,14 +1382,20 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     String recipientKey,
     String peerKey,
     int timestamp,
-    MessageStatus status,
-  ) => _persistenceWork.run(() {
+    MessageStatus status, {
+    int? dispatchedAtMs,
+    int? tripTimeMs,
+    int? airtimeMs,
+  }) => _persistenceWork.run(() {
     _requireInitialized();
     return _database!.updateAdditionalIdentitySendStatus(
       recipientKey,
       peerKey,
       timestamp,
       status,
+      dispatchedAtMs: dispatchedAtMs,
+      tripTimeMs: tripTimeMs,
+      airtimeMs: airtimeMs,
     );
   });
 

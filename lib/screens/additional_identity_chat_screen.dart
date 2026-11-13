@@ -1,17 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/additional_identity_message.dart';
 import '../models/contact.dart';
-import '../models/message.dart';
 import '../services/additional_identity_inbox.dart';
-import '../theme/mesh_theme.dart';
+import '../services/chat_text_scale_service.dart';
 import '../widgets/additional_identity_sender_picker.dart';
 import '../widgets/chat_route_activity.dart';
-import '../widgets/mesh_ui.dart';
+import 'chat_screen.dart' show ContactMessageBubble;
 
 class AdditionalIdentityChatScreen extends StatefulWidget {
   const AdditionalIdentityChatScreen({
@@ -154,7 +155,10 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
       _showError(l10n.extraKeys_actionError);
       return;
     }
-    if (utf8.encode(text).length > maxBytes) {
+    final outboundText = connector.prepareAdditionalIdentityOutboundText(
+      peer, widget.recipientKey, text,
+    );
+    if (utf8.encode(outboundText).length > maxBytes) {
       _showError(l10n.chat_messageTooLong(maxBytes));
       return;
     }
@@ -190,6 +194,9 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final textScale = context.select<ChatTextScaleService, double>(
+      (service) => service.scale,
+    );
     final latestIds = {for (final message in _latest ?? const <AdditionalIdentityMessage>[]) message.rowId};
     final rows = [
       ...?_latest,
@@ -233,40 +240,22 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
                       child: Text(l10n.extraKeys_loadOlder),
                     );
                   }
-                  final message = rows[index];
-                  final time = DateTime.fromMillisecondsSinceEpoch(
-                    message.timestampSeconds * 1000,
+                  final row = rows[index];
+                  final message = row.toChatMessage(
+                    identityName: widget.recipientName,
                   );
-                  final material = MaterialLocalizations.of(context);
-                  final dateLabel = material.formatShortDate(time);
-                  final timeLabel = material.formatTimeOfDay(TimeOfDay.fromDateTime(time));
-                  return MeshCard(
-                    key: ValueKey(message.rowId),
-                    color: message.isOutgoing
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : null,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (message.roomAuthorHex case final author?)
-                          Text('[${author.toUpperCase()}]', style: MeshTheme.mono(fontSize: 11)),
-                        SelectableText(message.text),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$dateLabel $timeLabel',
-                          style: MeshTheme.mono(fontSize: 11),
-                        ),
-                        if (message.isOutgoing)
-                          Text(
-                            switch (message.status) {
-                              MessageStatus.pending => l10n.messageStatus_pending,
-                              MessageStatus.sent => l10n.messageStatus_sent,
-                              MessageStatus.delivered => l10n.messageStatus_delivered,
-                              MessageStatus.failed => l10n.messageStatus_failed,
-                            },
-                            style: MeshTheme.mono(fontSize: 11),
-                          ),
-                      ],
+                  final roomAuthor = row.roomAuthorHex;
+                  return Padding(
+                    key: ValueKey(row.rowId),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: ContactMessageBubble(
+                      message: message,
+                      senderName: roomAuthor == null
+                          ? widget.senderName
+                          : '${widget.senderName} [${roomAuthor.toUpperCase()}]',
+                      sourceId: widget.senderKey,
+                      isRoomChat: widget.peer.type == advTypeRoom,
+                      textScale: textScale,
                     ),
                   );
                 },

@@ -588,6 +588,7 @@ class MessageStore {
       'sentByRadioWaitSeconds': msg.sentByRadioWaitSeconds,
       'deliveredAt': msg.deliveredAt?.millisecondsSinceEpoch,
       'tripTimeMs': msg.tripTimeMs,
+      if (msg.airtimeMs != null) 'airtimeMs': msg.airtimeMs,
       if (msg.sentWithTxPowerBoost) 'sentWithTxPowerBoost': true,
       if (msg.sentWithAdaptiveLna) 'sentWithAdaptiveLna': true,
       'pathLength': msg.pathLength,
@@ -744,6 +745,7 @@ class MessageStore {
           ? DateTime.fromMillisecondsSinceEpoch(json['deliveredAt'] as int)
           : null,
       tripTimeMs: json['tripTimeMs'] as int?,
+      airtimeMs: json['airtimeMs'] as int?,
       sentWithTxPowerBoost: json['sentWithTxPowerBoost'] == true,
       sentWithAdaptiveLna: json['sentWithAdaptiveLna'] == true,
       pathLength: decodedPathLength,

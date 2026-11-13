@@ -29,14 +29,26 @@ typedef _PendingRoomLogin = ({
   Completer<bool> result,
 });
 
-typedef _PendingIdentitySend = ({
-  String identityKey,
-  Contact peer,
-  int timestamp,
-  bool Function() isCurrent,
-  bool flood,
-  Timer timeout,
-});
+class _PendingIdentitySend {
+  _PendingIdentitySend({
+    required this.identityKey,
+    required this.peer,
+    required this.timestamp,
+    required this.isCurrent,
+    required this.flood,
+    required this.timeout,
+  });
+
+  final String identityKey;
+  final Contact peer;
+  final int timestamp;
+  final bool Function() isCurrent;
+  final bool flood;
+  final Timer timeout;
+  int? dispatchedAtMs;
+  final elapsed = Stopwatch();
+  int? airtimeMs;
+}
 
 typedef _Match = ({
   String recipientKey,
@@ -58,7 +70,6 @@ class AdditionalIdentityInbox extends ChangeNotifier {
   final _recentAcks = <(String, String, String), DateTime>{};
   final _pending = <int, _PendingIdentitySend>{};
   final _lastSendTimestamp = <String, int>{};
-  final _dispatched = <int>{};
   final _roomLogins = <(String, String), _PendingRoomLogin>{};
   final _roomPostAccess = <(String, String)>{};
   final _lastRoomResponse = <(String, String), int>{};
@@ -176,9 +187,13 @@ class AdditionalIdentityInbox extends ChangeNotifier {
     required String identityKey,
     required Contact peer,
     required String text,
+    required DateTime requestedAt,
     required PathSelection route,
     required int pathHashWidth,
     required String region,
+    required FutureOr<String> Function(AdditionalIdentityEntry, int) encode,
+    required bool cyr2Lat,
+    required int? Function(int packetBytes) estimateAirtime,
     required bool Function() isCurrent,
     required Future<void> Function(Uint8List, bool Function()) write,
   }) async {
@@ -194,20 +209,25 @@ class AdditionalIdentityInbox extends ChangeNotifier {
         (peer.type != advTypeRoom || canPostToRoom(identityKey, peerKey)) &&
         isCurrent();
 
-    final now = DateTime.now();
-    final timestamp = await _nextTimestamp(identityKey, now, valid);
+    final timestamp = await _nextTimestamp(identityKey, requestedAt, valid);
+    final wireText = await encode(entry, timestamp);
+    if (!valid()) throw StateError('Radio session or identity changed');
+    if (peer.type == advTypeRoom &&
+        utf8.encode(wireText).length > maxRoomServerTextBytes) {
+      throw const FormatException('Invalid additional identity message size');
+    }
     final packet = AdditionalIdentityTextPacket.build(
       identity: entry.identity,
       peer: peer.publicKey,
       timestamp: timestamp,
-      text: text,
+      text: wireText,
       route: route,
       pathHashWidth: pathHashWidth,
       region: region,
     );
     final hash = packet.ackHash;
     if (_pending.containsKey(hash)) throw StateError('ACK hash is already in use');
-    final pending = (
+    final pending = _PendingIdentitySend(
       identityKey: identityKey,
       peer: peer,
       timestamp: timestamp,
@@ -227,28 +247,37 @@ class AdditionalIdentityInbox extends ChangeNotifier {
         peerType: peer.type,
         roomAuthorHex: null,
         timestampSeconds: timestamp,
-        receivedAtMs: now.millisecondsSinceEpoch,
+        receivedAtMs: requestedAt.millisecondsSinceEpoch,
         text: text,
-        wireText: text,
+        wireText: wireText,
         isUnread: false,
         isOutgoing: true,
         status: MessageStatus.pending,
         rowId: 0,
+        sentByFlood: route.useFlood,
+        region: region.isEmpty ? null : region,
+        path: Uint8List.fromList(route.pathBytes),
+        dispatchedAtMs: null,
+        tripTimeMs: null,
+        airtimeMs: null,
+        usedCyr2Lat: cyr2Lat && wireText != text,
       ));
       if (!stored) throw StateError('Identity message already exists');
       _historyChanged();
       bool canWrite() => valid() && identical(_pending[hash], pending);
       if (!canWrite()) throw StateError('Radio session or identity changed');
-      _dispatched.add(hash);
+      pending.airtimeMs = estimateAirtime(packet.frame.length - 2);
+      pending.dispatchedAtMs = DateTime.now().millisecondsSinceEpoch;
+      pending.elapsed.start();
       await write(packet.frame, canWrite);
       if (identical(_pending[hash], pending)) {
-        await _updateSend(identityKey, peerKey, timestamp, MessageStatus.sent);
+        await _updateSend(pending, MessageStatus.sent);
       }
     } catch (_) {
       if (identical(_pending[hash], pending)) {
         await _finishSend(hash, MessageStatus.failed);
-      } else if (stored) {
-        await _updateSend(identityKey, peerKey, timestamp, MessageStatus.failed);
+      } else if (stored && pending.dispatchedAtMs == null) {
+        await _updateSend(pending, MessageStatus.failed);
       }
       rethrow;
     }
@@ -374,7 +403,8 @@ class AdditionalIdentityInbox extends ChangeNotifier {
   }
 
   void acceptAck(int hash) {
-    if (_dispatched.contains(hash) && _pending[hash]?.isCurrent() == true) {
+    final pending = _pending[hash];
+    if (pending != null && pending.elapsed.isRunning && pending.isCurrent()) {
       _persistInBackground(_finishSend(hash, MessageStatus.delivered));
     }
   }
@@ -422,26 +452,27 @@ class AdditionalIdentityInbox extends ChangeNotifier {
   }
 
   Future<void> _finishSend(int hash, MessageStatus status) async {
-    _dispatched.remove(hash);
     final pending = _pending.remove(hash);
     if (pending == null) return;
     pending.timeout.cancel();
-    await _updateSend(
+    pending.elapsed.stop();
+    await _updateSend(pending, status);
+  }
+
+  Future<void> _updateSend(
+    _PendingIdentitySend pending,
+    MessageStatus status,
+  ) async {
+    if (await _storage.updateAdditionalIdentitySendStatus(
       pending.identityKey,
       pending.peer.publicKeyHex,
       pending.timestamp,
       status,
-    );
-  }
-
-  Future<void> _updateSend(
-    String key,
-    String peer,
-    int timestamp,
-    MessageStatus status,
-  ) async {
-    if (await _storage.updateAdditionalIdentitySendStatus(
-      key, peer, timestamp, status,
+      dispatchedAtMs: pending.dispatchedAtMs,
+      tripTimeMs: status == MessageStatus.delivered
+          ? pending.elapsed.elapsedMilliseconds
+          : null,
+      airtimeMs: status == MessageStatus.failed ? null : pending.airtimeMs,
     )) {
       _historyChanged();
     }
@@ -595,6 +626,13 @@ class AdditionalIdentityInbox extends ChangeNotifier {
       isOutgoing: false,
       status: MessageStatus.delivered,
       rowId: 0,
+      sentByFlood: null,
+      region: null,
+      path: null,
+      dispatchedAtMs: null,
+      tripTimeMs: null,
+      airtimeMs: null,
+      usedCyr2Lat: false,
     ));
     if (stored) _historyChanged();
     if (revision != _revision ||

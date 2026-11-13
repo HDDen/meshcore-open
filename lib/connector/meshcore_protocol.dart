@@ -465,6 +465,19 @@ const int _sendTextMsgOverheadBytes =
 const int _sendChannelTextMsgOverheadBytes =
     1 + 1 + 1 + 4 + 1 + 2; // +2 safety margin
 
+/// On-air size of a text datagram, including AES padding and addressing.
+int contactTextPacketBytes({
+  required int messageBytes,
+  required int attempt,
+  required int pathBytes,
+  int scopeBytes = 0,
+}) {
+  final plaintextBytes =
+      5 + messageBytes + (attempt > maxFullLengthTextAttempt ? 2 : 0);
+  final encryptedBytes = ((plaintextBytes + 15) ~/ 16) * 16;
+  return 6 + encryptedBytes + pathBytes + scopeBytes;
+}
+
 int maxContactMessageBytes() {
   final byFrame = maxFrameSize - _sendTextMsgOverheadBytes;
   return _minPositive(byFrame, maxTextPayloadBytes);

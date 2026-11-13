@@ -129,6 +129,8 @@ class RetryServiceConfig {
   calculatePhysicsMaxTimeout;
   final Uint8List? Function()? getSelfPublicKey;
   final String Function(Contact, String)? prepareContactOutboundText;
+  final int? Function(int packetBytes)? estimateAirtime;
+  final int Function(Contact contact)? floodScopeBytes;
   final AppSettingsService? appSettingsService;
   final AppDebugLogService? debugLogService;
   final void Function(String, PathSelection, bool, int?)? recordPathResult;
@@ -165,6 +167,8 @@ class RetryServiceConfig {
     this.calculatePhysicsMaxTimeout,
     this.getSelfPublicKey,
     this.prepareContactOutboundText,
+    this.estimateAirtime,
+    this.floodScopeBytes,
     this.appSettingsService,
     this.debugLogService,
     this.recordPathResult,
@@ -873,12 +877,19 @@ class MessageRetryService extends ChangeNotifier {
             .difference(attemptStartedAt)
             .inSeconds;
         final clampedWaitSeconds = waitSeconds < 0 ? 0 : waitSeconds;
+        final airtimeMs = config.estimateAirtime?.call(contactTextPacketBytes(
+          messageBytes: utf8.encode(outboundText).length,
+          attempt: attempt,
+          pathBytes: useFlood ? 0 : selection.pathBytes.length,
+          scopeBytes: useFlood ? config.floodScopeBytes?.call(contact) ?? 0 : 0,
+        ));
         // Store the real TX anchor separately from the visible compose time.
         final updatedMessage = currentMessage.copyWith(
           receivedAt: contact.type == advTypeRoom
               ? currentMessage.receivedAt ?? sentByRadioAt
               : null,
           sentByRadioAt: sentByRadioAt,
+          airtimeMs: airtimeMs,
           sentByRadioWaitSeconds: [
             ...currentMessage.sentByRadioWaitSeconds,
             clampedWaitSeconds,

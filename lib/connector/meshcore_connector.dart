@@ -8,7 +8,6 @@ import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
 import '../services/companion_cli_session.dart';
 
-import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/storage/region_store.dart';
@@ -21,6 +20,7 @@ import 'package:flutter_blue_plus_platform_interface/flutter_blue_plus_platform_
 
 import '../models/channel.dart';
 import '../models/community.dart';
+import '../models/additional_identity_message.dart';
 import '../models/channel_message.dart';
 import '../models/message_filter.dart';
 import '../models/companion_radio_stats.dart';
@@ -80,6 +80,7 @@ import '../helpers/channel_mention_matcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/additional_identity_text_packet.dart';
 import '../services/additional_identity_inbox.dart';
+import '../services/additional_identity_vault.dart' show AdditionalIdentityEntry;
 import '../helpers/direct_echo_crypto.dart';
 import '../helpers/direct_echo_recovery.dart';
 import '../helpers/direct_flood_repeats.dart';
@@ -170,6 +171,7 @@ import '../review_mode/review_mode_storage.dart';
 import '../review_mode/review_radio.dart';
 import '../utils/app_logger.dart';
 import '../utils/battery_utils.dart';
+import '../utils/lora_airtime.dart';
 import '../utils/platform_info.dart';
 import 'meshcore_uuids.dart';
 import 'meshcore_protocol.dart';
@@ -2963,21 +2965,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         };
         _additionalSharedMessages[sender] = [
           for (final row in rows)
-            Message(
-              senderKey: row.isOutgoing ? hexToPubKey(row.recipientKey) : contact.publicKey,
-              messageId: 'identity:${row.recipientKey}:${row.rowId}',
-              text: row.text,
-              rawText: row.wireText,
-              timestamp: DateTime.fromMillisecondsSinceEpoch(row.timestampSeconds * 1000),
-              receivedAt: DateTime.fromMillisecondsSinceEpoch(row.receivedAtMs),
-              isOutgoing: row.isOutgoing,
-              status: row.status,
-              pathBytes: Uint8List(0),
-              sharedHistorySourceName: names[row.recipientKey],
-              containerSenderName: row.isOutgoing ? names[row.recipientKey] : null,
-              fourByteRoomContactKey: row.roomAuthorHex == null
-                  ? null
-                  : Uint8List.fromList(hex.decode(row.roomAuthorHex!)),
+            row.toChatMessage(
+              identityName: names[row.recipientKey],
+              sharedHistory: true,
             ),
         ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
         notifyListeners();
@@ -4820,6 +4810,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           text,
           estimateSignatureOverhead: false,
         ),
+    estimateAirtime: _estimateTextPacketAirtime,
+    floodScopeBytes: (contact) {
+      final region = getContactRegion(contact.publicKeyHex);
+      final scope = region.isEmpty ||
+              (ContactRegionStore.isUnscoped(region) && _unscopedSendUnsupported)
+          ? _defaultRegionScope?.trim() ?? ''
+          : region;
+      return scope.isEmpty || ContactRegionStore.isUnscoped(scope) ? 0 : 4;
+    },
     appSettingsService: _appSettingsService,
     debugLogService: _appDebugLogService,
     recordPathResult: _recordPathResult,
@@ -15417,10 +15416,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // Match BaseChatMesh::composeMsgPacket(), Utils::encryptThenMAC() and
     // Packet::getRawLength(): timestamp/type, optional extended attempt,
     // AES block padding, address hashes, MAC, packet header and path.
-    final plaintextBytes = 5 + messageBytes + (attempt > 3 ? 2 : 0);
-    final encryptedBytes = ((plaintextBytes + 15) ~/ 16) * 16;
-    final radioPacketBytes = 2 + pathBytes + 2 + 2 + encryptedBytes;
-    final airtime = _estimateAirtimeMs(radioPacketBytes);
+    final airtime = _estimateAirtimeMs(contactTextPacketBytes(
+      messageBytes: messageBytes,
+      attempt: attempt,
+      pathBytes: pathBytes,
+    ));
     return _physicsMaxTimeout(
       pathLength,
       airtime,
@@ -17075,6 +17075,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Contact contact,
     String text, {
     bool estimateSignatureOverhead = true,
+    String? senderName,
+    int? timestampSeconds,
     String? replyAuthorName,
     int? replyTimestamp,
     String? replyToText,
@@ -17116,9 +17118,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           ),
           MCOtxtAppCodec.encodeTextTransport(
             text: text,
-            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            timestamp: timestampSeconds ??
+                DateTime.now().millisecondsSinceEpoch ~/ 1000,
             senderName: contact.type == advTypeRoom
-                ? _selfName ?? 'Me'
+                ? senderName ?? _selfName ?? 'Me'
                 : null,
             replyAuthorName: anchorAuthor,
             replyTimestamp: anchorTimestamp,
@@ -17129,7 +17132,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         if (contactMcmpVersion(contact.publicKeyHex) != 3) {
           return MeshCompressor.instance.encodeIfSmaller(text);
         }
-        final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final timestamp = timestampSeconds ??
+            DateTime.now().millisecondsSinceEpoch ~/ 1000;
         if (contact.type == advTypeRoom) {
           final placeholderSignature =
               estimateSignatureOverhead &&
@@ -17139,7 +17143,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           return McmpAppCodec.encodeTextTransport(
             text: text,
             timestamp: timestamp,
-            senderName: _selfName ?? 'Me',
+            senderName: senderName ?? _selfName ?? 'Me',
             signature: placeholderSignature,
             replyAuthorName: anchorAuthor,
             replyTimestamp: anchorTimestamp,
@@ -19090,6 +19094,78 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         revision == _channelInboxRevision;
   }
 
+  String prepareAdditionalIdentityOutboundText(
+    Contact peer,
+    String identityKey,
+    String text,
+  ) => prepareContactOutboundText(
+    peer,
+    text,
+    senderName: additionalIdentityInbox?.entryFor(identityKey)?.name,
+  );
+
+  FutureOr<String> _encodeAdditionalIdentityOutboundText(
+    Contact peer,
+    AdditionalIdentityEntry entry,
+    String text,
+    int timestamp,
+  ) {
+    final key = peer.publicKeyHex;
+    if (peer.type == advTypeRoom &&
+        isContactMcmpEnabled(key) &&
+        contactMcmpVersion(key) == 3 &&
+        contactMcmpUseSign(key) &&
+        _isMcmpSignableText(text)) {
+      final canonical = McmpAppCodec.canonicalSigningBytes(
+        context: McmpSigningContext.room,
+        binding: McmpAppCodec.roomSigningBinding(peer.publicKey),
+        senderName: entry.name,
+        timestamp: timestamp,
+        flags: McmpAppCodec.packFlags(
+          hasReply: false,
+          isSigned: true,
+          hasSenderName: true,
+        ),
+        text: text,
+      );
+      return entry.identity.sign(canonical).then(
+        (signature) => McmpAppCodec.encodeTextTransport(
+          text: text,
+          timestamp: timestamp,
+          senderName: entry.name,
+          signature: signature,
+        ),
+      );
+    }
+    return prepareContactOutboundText(
+      peer,
+      text,
+      estimateSignatureOverhead: false,
+      senderName: entry.name,
+      timestampSeconds: timestamp,
+    );
+  }
+
+  int? _estimateTextPacketAirtime(int packetBytes) {
+    final sf = currentSf;
+    final bw = currentBwHz;
+    final rawCr = currentCr;
+    final cr = rawCr == null ? null : normalizeCodingRate(rawCr);
+    if (!areLoRaParamsValid(
+      spreadingFactor: sf,
+      bandwidthHz: bw,
+      codingRate: cr,
+    )) {
+      return null;
+    }
+    return loraTimeOnAir(
+      payloadBytes: packetBytes,
+      spreadingFactor: sf!,
+      bandwidthHz: bw!,
+      codingRate: cr!,
+    ).inMilliseconds;
+  }
+
   Future<void> sendAdditionalIdentityMessage(
     String identityKey,
     Contact peer,
@@ -19099,6 +19175,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final isCurrent = _captureAdditionalIdentitySession();
     final currentPeer = getContactByPubKeyHex(peer.publicKeyHex) ?? peer;
     if (inbox == null ||
+        inbox.entryFor(identityKey) == null ||
         !isCurrent() ||
         identityKey == selfPublicKeyHex ||
         (currentPeer.type != advTypeChat && currentPeer.type != advTypeRoom) ||
@@ -19106,10 +19183,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             !canPostToRoomAsAdditionalIdentity(identityKey, currentPeer))) {
       throw StateError('Cannot send from this additional identity');
     }
-    if (utf8.encode(text).length > additionalIdentityMaxTextBytes(currentPeer)) {
-      throw const FormatException('Invalid additional identity message size');
-    }
     final target = _additionalIdentityRoute(currentPeer);
+    final requestedAt = DateTime.now();
     await _runChannelCommandLocked(() async {
       await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
       if (!isCurrent()) throw StateError('Radio session changed');
@@ -19117,9 +19192,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         identityKey: identityKey,
         peer: currentPeer,
         text: text,
+        requestedAt: requestedAt,
         route: target.route,
         pathHashWidth: target.width,
         region: target.region,
+        encode: (activeEntry, timestamp) => _encodeAdditionalIdentityOutboundText(
+          currentPeer,
+          activeEntry,
+          text,
+          timestamp,
+        ),
+        cyr2Lat: isContactCyr2LatEnabled(currentPeer.publicKeyHex),
+        estimateAirtime: _estimateTextPacketAirtime,
         isCurrent: isCurrent,
         write: (frame, canSend) {
           if (!canSend()) throw StateError('Radio session or identity changed');

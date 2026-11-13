@@ -538,6 +538,13 @@ CREATE TABLE IF NOT EXISTS additional_identity_messages (
   is_unread INTEGER NOT NULL DEFAULT 1,
   is_outgoing INTEGER NOT NULL DEFAULT 0,
   delivery_status TEXT NOT NULL DEFAULT 'delivered',
+  sent_by_flood INTEGER,
+  region TEXT,
+  path BLOB,
+  dispatched_at_ms INTEGER,
+  trip_time_ms INTEGER,
+  airtime_ms INTEGER,
+  used_cyr2lat INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (recipient_key, sender_key, sent_at_s, wire_text)
 )
 ''');
@@ -560,6 +567,13 @@ ON additional_identity_messages (sender_key, received_at_ms DESC)
       ('is_unread', 'INTEGER NOT NULL DEFAULT 1'),
       ('is_outgoing', 'INTEGER NOT NULL DEFAULT 0'),
       ('delivery_status', "TEXT NOT NULL DEFAULT 'delivered'"),
+      ('sent_by_flood', 'INTEGER'),
+      ('region', 'TEXT'),
+      ('path', 'BLOB'),
+      ('dispatched_at_ms', 'INTEGER'),
+      ('trip_time_ms', 'INTEGER'),
+      ('airtime_ms', 'INTEGER'),
+      ('used_cyr2lat', 'INTEGER NOT NULL DEFAULT 0'),
     ]) {
       if (!names.contains(name)) {
         await customStatement(
@@ -583,8 +597,9 @@ WHERE is_outgoing = 1 AND delivery_status IN ('pending', 'sent')
 INSERT INTO additional_identity_messages
   (recipient_key, sender_key, sender_name, sent_at_s, received_at_ms,
    wire_text, text, peer_type, room_author_hex, is_unread, is_outgoing,
-   delivery_status)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+   delivery_status, sent_by_flood, region, path, dispatched_at_ms,
+   trip_time_ms, airtime_ms, used_cyr2lat)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(recipient_key, sender_key, sent_at_s, wire_text) DO NOTHING
 ''',
       variables: [
@@ -600,6 +615,13 @@ ON CONFLICT(recipient_key, sender_key, sent_at_s, wire_text) DO NOTHING
         Variable<int>(message.isUnread ? 1 : 0),
         Variable<int>(message.isOutgoing ? 1 : 0),
         Variable<String>(message.status.name),
+        Variable<bool>(message.sentByFlood),
+        Variable<String>(message.region),
+        Variable<Uint8List>(message.path),
+        Variable<int>(message.dispatchedAtMs),
+        Variable<int>(message.tripTimeMs),
+        Variable<int>(message.airtimeMs),
+        Variable<int>(message.usedCyr2Lat ? 1 : 0),
       ],
       updateKind: UpdateKind.insert,
     );
@@ -637,16 +659,24 @@ WHERE recipient_key = ? AND sender_key = ? AND is_outgoing = 0
     String recipientKey,
     String peerKey,
     int timestamp,
-    MessageStatus status,
-  ) async {
+    MessageStatus status, {
+    int? dispatchedAtMs,
+    int? tripTimeMs,
+    int? airtimeMs,
+  }) async {
     final changed = await customUpdate(
       '''
-UPDATE additional_identity_messages SET delivery_status = ?
+UPDATE additional_identity_messages
+SET delivery_status = ?, dispatched_at_ms = COALESCE(?, dispatched_at_ms),
+    trip_time_ms = COALESCE(?, trip_time_ms), airtime_ms = COALESCE(?, airtime_ms)
 WHERE recipient_key = ? AND sender_key = ? AND sent_at_s = ? AND is_outgoing = 1
   AND delivery_status IN ('pending', 'sent')
 ''',
       variables: [
         Variable<String>(status.name),
+        Variable<int>(dispatchedAtMs),
+        Variable<int>(tripTimeMs),
+        Variable<int>(airtimeMs),
         Variable<String>(recipientKey),
         Variable<String>(peerKey),
         Variable<int>(timestamp),
@@ -750,7 +780,8 @@ WHERE recipient_key = ? AND sender_key = ? AND is_unread = 1 AND is_deleted = 0
       '''
 SELECT rowid, recipient_key, sender_key, sender_name, sent_at_s,
   received_at_ms, wire_text, text, peer_type, room_author_hex,
-  is_unread, is_outgoing, delivery_status
+  is_unread, is_outgoing, delivery_status, sent_by_flood, region, path,
+  dispatched_at_ms, trip_time_ms, airtime_ms, used_cyr2lat
 FROM additional_identity_messages
 WHERE recipient_key = ? AND is_deleted = 0
 ${senderKey == null ? '' : 'AND sender_key = ?'}
@@ -783,7 +814,8 @@ LIMIT ?
       '''
 SELECT rowid, recipient_key, sender_key, sender_name, sent_at_s,
   received_at_ms, wire_text, text, peer_type, room_author_hex,
-  is_unread, is_outgoing, delivery_status
+  is_unread, is_outgoing, delivery_status, sent_by_flood, region, path,
+  dispatched_at_ms, trip_time_ms, airtime_ms, used_cyr2lat
 FROM additional_identity_messages
 WHERE sender_key = ? AND recipient_key IN ($placeholders) AND is_deleted = 0
 ORDER BY received_at_ms DESC, rowid DESC
@@ -812,6 +844,13 @@ ORDER BY received_at_ms DESC, rowid DESC
     isOutgoing: row.read<int>('is_outgoing') != 0,
     status: MessageStatus.values.byName(row.read<String>('delivery_status')),
     rowId: row.read<int>('rowid'),
+    sentByFlood: row.readNullable<bool>('sent_by_flood'),
+    region: row.readNullable<String>('region'),
+    path: row.readNullable<Uint8List>('path'),
+    dispatchedAtMs: row.readNullable<int>('dispatched_at_ms'),
+    tripTimeMs: row.readNullable<int>('trip_time_ms'),
+    airtimeMs: row.readNullable<int>('airtime_ms'),
+    usedCyr2Lat: row.read<int>('used_cyr2lat') != 0,
   );
 
   Future<String?> readAdditionalIdentitySender(String peerKey) async {
