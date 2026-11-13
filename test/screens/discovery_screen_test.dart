@@ -163,6 +163,7 @@ class _Harness {
     Size? logicalSize,
     double textScale = 1,
     double keyboardInset = 0,
+    bool startDiscovery = false,
   }) async {
     tester.view.viewInsets = FakeViewPadding(bottom: keyboardInset);
     addTearDown(tester.view.resetViewInsets);
@@ -196,11 +197,15 @@ class _Harness {
             data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
             child: child!,
           ),
-          home: const DiscoveryScreen(),
+          home: DiscoveryScreen(startDiscovery: startDiscovery),
         ),
       ),
     );
-    await _settleRows(tester);
+    if (startDiscovery) {
+      await _pumpRows(tester);
+    } else {
+      await _settleRows(tester);
+    }
     return _Harness(connector);
   }
 
@@ -482,6 +487,22 @@ void main() {
       await _settleRows(tester);
 
       expect(_rowsOf(tester, ['Bob', 'Dieter']), hasLength(2));
+    } finally {
+      await _Harness.unmount(tester);
+    }
+  });
+
+  testWidgets('opening from quick actions sends one discovery request', (tester) async {
+    final harness = await _Harness.pump(tester, discovered: [], startDiscovery: true);
+    try {
+      expect(harness.connector.written.where(
+        (frame) => frame.isNotEmpty && frame.first == cmdSendControlData,
+      ), hasLength(1));
+      harness.connector.notify();
+      await _pumpRows(tester);
+      expect(harness.connector.written.where(
+        (frame) => frame.isNotEmpty && frame.first == cmdSendControlData,
+      ), hasLength(1));
     } finally {
       await _Harness.unmount(tester);
     }

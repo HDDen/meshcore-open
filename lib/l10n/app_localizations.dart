@@ -83,6 +83,48 @@ abstract class AppLocalizations {
 
   final String localeName;
 
+  String get quickActions_title => 'Quick actions';
+
+  String get quickActions_settings => 'Configure widgets';
+
+  String get quickActions_configure => 'Configure';
+
+  String get quickActions_buttonDisplay => 'Header button';
+
+  String get quickActions_icon => 'Icon';
+
+  String get quickActions_noise => 'Noise level';
+
+  String get quickActions_extraHops => 'Extra hops';
+
+  String get quickActions_retries => 'Resend messages';
+
+  String get quickActions_discover => 'Discovery';
+
+  String get quickActions_companionProxy => 'Companion proxy';
+
+  String get quickActions_tcpProxy => 'TCP proxy';
+
+  String get quickActions_bleProxy => 'BLE proxy';
+
+  String get quickActions_keys => 'Manage keys';
+
+  String get quickActions_cliCommand => 'CompanionCLI command';
+
+  String get quickActions_sendChannel => 'Send to channel';
+
+  String get quickActions_name => 'Button name';
+
+  String get quickActions_text => 'Text';
+
+  String get quickActions_required => 'Enter a value.';
+
+  String get quickActions_channelMissing => 'The channel name must match exactly one channel on the connected radio.';
+
+  String get quickActions_failed => 'Could not complete the action.';
+
+  String get quickActions_empty => 'Enable actions in widget settings.';
+
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }

@@ -9,6 +9,69 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get quickActions_title => 'Быстрые действия';
+
+  @override
+  String get quickActions_settings => 'Настройка виджетов';
+
+  @override
+  String get quickActions_configure => 'Настроить';
+
+  @override
+  String get quickActions_buttonDisplay => 'Кнопка в шапке';
+
+  @override
+  String get quickActions_icon => 'Иконка';
+
+  @override
+  String get quickActions_noise => 'Уровень шума';
+
+  @override
+  String get quickActions_extraHops => 'Доп. хопы';
+
+  @override
+  String get quickActions_retries => 'Повтор отправок';
+
+  @override
+  String get quickActions_discover => 'Обнаружение';
+
+  @override
+  String get quickActions_companionProxy => 'Companion-прокси';
+
+  @override
+  String get quickActions_tcpProxy => 'Прокси TCP';
+
+  @override
+  String get quickActions_bleProxy => 'Прокси BLE';
+
+  @override
+  String get quickActions_keys => 'Управление ключами';
+
+  @override
+  String get quickActions_cliCommand => 'Команда CompanionCLI';
+
+  @override
+  String get quickActions_sendChannel => 'Отправка в канал';
+
+  @override
+  String get quickActions_name => 'Имя кнопки';
+
+  @override
+  String get quickActions_text => 'Текст';
+
+  @override
+  String get quickActions_required => 'Заполните поле.';
+
+  @override
+  String get quickActions_channelMissing => 'Имя должно совпадать ровно с одним каналом подключённой ноды.';
+
+  @override
+  String get quickActions_failed => 'Не удалось выполнить действие.';
+
+  @override
+  String get quickActions_empty => 'Включите кнопки в настройках виджетов.';
+
+  @override
   String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override

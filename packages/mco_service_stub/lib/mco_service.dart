@@ -40,6 +40,21 @@ class SettingsSectionsService extends ChangeNotifier {
 
   // Public builds never supply a proxy TCP reason to the iOS execution policy.
   bool get companionProxyEnabled => false;
+  bool get companionProxySupported => false;
+  bool get allowsCompanionProxy => false;
+  bool get allowsCompanionProxyTcp => false;
+  bool get allowsCompanionProxyBle => false;
+  bool get companionProxyTcpEnabled => false;
+  bool get companionProxyBleEnabled => false;
+
+  String? get companionProxyError => null;
+
+  Future<void> setCompanionProxyEnabled(
+    bool enabled, {
+    bool waitForBle = false,
+  }) async {}
+  Future<void> setCompanionProxyTcpEnabled(bool enabled) async {}
+  Future<void> setCompanionProxyBleEnabled(bool enabled) async {}
 
   bool get companionProxyRunning => false;
   bool get companionProxyBleRunning => false;

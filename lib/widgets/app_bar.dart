@@ -4,6 +4,7 @@ import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/widgets/battery_indicator.dart';
 import 'package:provider/provider.dart';
 
+import 'quick_actions_button.dart';
 import 'radio_stats_entry.dart';
 import 'snr_indicator.dart';
 
@@ -73,6 +74,8 @@ class AppBarTitle extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (showBattery && availableWidth >= 140 && connector.isConnected)
+                    QuickActionsButton(connector: connector),
                   if (showBattery) BatteryIndicator(connector: connector),
                   if (showSnr)
                     snrAllRepActivity

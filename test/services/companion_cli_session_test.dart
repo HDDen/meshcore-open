@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/companion_cli_protocol.dart';
 import 'package:meshcore_open/models/companion_cli_entry.dart';
 import 'package:meshcore_open/services/companion_cli_session.dart';
 import 'package:meshcore_open/storage/companion_cli_store.dart';
@@ -127,6 +128,21 @@ void main() {
     await second;
     expect(session.entries(shared: false).last.response, 'new reply');
     expect(sent.length, 2);
+  });
+
+  testWidgets('quick commands surface timeout after saving the failure', (tester) async {
+    final failed = expectLater(
+      session.sendCommand('ver', reportFailure: true),
+      throwsA(isA<CompanionCliException>().having(
+        (error) => error.code, 'code', 'timeout',
+      )),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    await failed;
+    expect(history.rows.values.single.failure, 'timeout');
+    expect(sent, hasLength(1));
+    expect(session.busy, isFalse);
   });
 
   testWidgets('changing a node interrupts its pending command and shared view keeps provenance', (tester) async {

@@ -17,6 +17,7 @@ import '../widgets/sync_progress_overlay.dart';
 import 'additional_identity_screen.dart';
 import 'message_filter_settings_screen.dart';
 import 'message_history_database_screen.dart';
+import 'quick_actions_settings_screen.dart';
 
 class ModSettingsScreen extends StatelessWidget {
   const ModSettingsScreen({super.key});
@@ -47,6 +48,15 @@ class ModSettingsScreen extends StatelessWidget {
                     title: Text(context.l10n.updates_automaticCheck),
                     value: settings.checkGitHubUpdates,
                     onChanged: settingsService.setCheckGitHubUpdates,
+                  ),
+                ),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: const Icon(Icons.widgets_outlined),
+                    title: Text(context.l10n.quickActions_settings),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => QuickActionsSettingsScreen.open(context),
                   ),
                 ),
                 SectionHeader(context.l10n.settings_modSettingsVisual),

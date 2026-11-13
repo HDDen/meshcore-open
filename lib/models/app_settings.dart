@@ -4,6 +4,7 @@ import 'image_codec_support.dart';
 import 'translation_support.dart';
 import 'power_saving_settings.dart';
 import 'low_battery_alert_settings.dart';
+import 'quick_actions_settings.dart';
 import '../helpers/cyr2lat.dart';
 
 String normalizeIpfsGateway(String value) {
@@ -300,6 +301,8 @@ class AppSettings {
   /// When true, the [uiScale] multiplier also scales icons (via
   /// IconThemeData.applyTextScaling), not only text.
   final bool uiScaleApplyToIcons;
+
+  final QuickActionsSettings quickActions;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool monochromeSenderNames;
@@ -815,6 +818,7 @@ class AppSettings {
     this.mcoImageScaleNearestNeighbor = true,
     this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
+    this.quickActions = const QuickActionsSettings.defaults(),
     this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
@@ -997,6 +1001,7 @@ class AppSettings {
       'mco_image_scale_nearest_neighbor': mcoImageScaleNearestNeighbor,
       'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
+      'quick_actions': quickActions.toJson(),
       'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
@@ -1212,6 +1217,7 @@ class AppSettings {
       mcoImageReplacementsSharpness:
           (json['mco_image_replacements_sharpness'] as num?)?.toInt() ?? 0,
       uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
+      quickActions: QuickActionsSettings.fromJson(json['quick_actions']),
       uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
@@ -1490,6 +1496,7 @@ class AppSettings {
     bool? mcoImageScaleNearestNeighbor,
     int? mcoImageReplacementsSharpness,
     double? uiScale,
+    QuickActionsSettings? quickActions,
     bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
@@ -1657,6 +1664,7 @@ class AppSettings {
       mcoImageReplacementsSharpness:
           mcoImageReplacementsSharpness ?? this.mcoImageReplacementsSharpness,
       uiScale: uiScale ?? this.uiScale,
+      quickActions: quickActions ?? this.quickActions,
       uiScaleApplyToIcons: uiScaleApplyToIcons ?? this.uiScaleApplyToIcons,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:

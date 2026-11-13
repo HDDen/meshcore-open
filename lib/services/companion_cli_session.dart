@@ -89,11 +89,11 @@ class CompanionCliSession extends ChangeNotifier {
     _changed();
   }
 
-  Future<void> sendCommand(String command) {
+  Future<void> sendCommand(String command, {bool reportFailure = false}) {
     return _runExclusive(() {
       final prefix = _tags.allocate();
       final frame = buildCompanionCliFrame(command, prefix);
-      return _execute(command, prefix, frame);
+      return _execute(command, prefix, frame, reportFailure: reportFailure);
     });
   }
 
@@ -143,7 +143,12 @@ class CompanionCliSession extends ChangeNotifier {
     }
   }
 
-  Future<void> _execute(String command, String prefix, Uint8List frame) async {
+  Future<void> _execute(
+    String command,
+    String prefix,
+    Uint8List frame, {
+    required bool reportFailure,
+  }) async {
     final capturedNode = nodeKey();
     final capturedName = nodeName();
     await ensureLoaded();
@@ -156,6 +161,7 @@ class CompanionCliSession extends ChangeNotifier {
     // Сначала SQL-запись; очистка до завершения записи отменяет ещё не посланное.
     if (!await _history.save(entry, revision: revision) ||
         _history.revision(capturedNode) != revision) {
+      if (reportFailure) throw const CompanionCliException('disconnected');
       return;
     }
     _entries.add(entry);
@@ -164,6 +170,7 @@ class CompanionCliSession extends ChangeNotifier {
       _replace(entry, revision);
       _changed();
       await _history.save(entry, revision: revision);
+      if (reportFailure) throw const CompanionCliException('disconnected');
       return;
     }
     try {
@@ -179,6 +186,9 @@ class CompanionCliSession extends ChangeNotifier {
     }
     _replace(entry, revision);
     await _history.save(entry, revision: revision);
+    if (reportFailure && entry.status != CompanionCliStatus.replied) {
+      throw CompanionCliException(entry.failure ?? 'sendFailed');
+    }
   }
 
   Future<String> _exchange(

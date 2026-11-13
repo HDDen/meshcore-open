@@ -9707,6 +9707,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     String? pendingMessageId,
     DateTime? pendingTimestamp,
     DateTime? pendingReceivedAt,
+    bool reportFailure = false,
     // The region to send under instead of the channel's own: a reply to a
     // message heard under a region goes back there.
     String? region,
@@ -9716,8 +9717,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         pendingMessageId == null && SharedMarkerDeletion.isMarker(rawText)
         ? prepareChannelOutboundText(channel.index, rawText)
         : rawText;
-    if (text.isEmpty || isOfflineMode) return;
+    if (text.isEmpty || isOfflineMode) {
+      if (reportFailure) throw StateError('Channel send is unavailable');
+      return;
+    }
     if (!isSessionReady) {
+      if (reportFailure) throw StateError('Channel send is unavailable');
       if (pendingMessageId == null) {
         scheduleChannelMessage(
           channel,
@@ -9738,9 +9743,25 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       return;
     }
+    final sameQuickSendSession = reportFailure
+        ? _captureAdditionalIdentitySession()
+        : null;
+    void checkQuickSendTarget() {
+      if (sameQuickSendSession == null) return;
+      if (!sameQuickSendSession() ||
+          !isSessionReady ||
+          !_hasSyncedBackupChannel(channel)) {
+        throw StateError('Channel or radio session changed');
+      }
+    }
+    checkQuickSendTarget();
+
     final shouldBypassAckAndRetry = _isChannelAckAndRetryBypassed(channel.name);
     final shouldDeferForSync =
         !shouldBypassAckAndRetry && _shouldDeferChannelSendForSync;
+    if (reportFailure && shouldDeferForSync) {
+      throw StateError('Channel send is waiting for synchronization');
+    }
     // The name the message goes out under: the channel's own when it has
     // one and nothing holds it back, else the node's.
     final senderName = channelSendName(channel.index);
@@ -9795,6 +9816,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         try {
           await _runScopedChannelSend(() async {
             await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+            checkQuickSendTarget();
             await _sendFrameAndWaitForCommandAck(
               _channelTextFrame(
                 channel,
@@ -9821,7 +9843,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         (shouldDeferForSync
             ? _outgoingChannelRegion(channel.index)
             : await _outgoingChannelRegionForMessage(channel.index));
-    if (!isConnected) return;
+    if (!isConnected) {
+      if (reportFailure) throw StateError('Channel send was disconnected');
+      return;
+    }
 
     // MCMP v3: the reply pair travels only when both parts are known, and the
     // signature covers the exact same flags/reply data as the encoded body.
@@ -9915,6 +9940,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       if (!isConnected) {
         notifyListeners();
+        if (reportFailure) throw StateError('Channel send was disconnected');
         return;
       }
       if (mcmpSignature == null) _notifyMcmpSigningFailed();
@@ -10035,6 +10061,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             outboundText,
             inheritedTimestamp: mcotxtTimestamp,
           );
+    checkQuickSendTarget();
     final packetRegion = _displayPacketRegion(outgoingRegion);
     if (pendingMessageId != null) {
       _pendingChannelSends.remove(pendingMessageId)?.timer?.cancel();
@@ -10104,6 +10131,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         '(${utf8.encode(outboundText).length} bytes), not sending',
       );
       _markPendingChannelMessageFailedById(message.messageId);
+      if (reportFailure) throw StateError('Channel message exceeds the payload limit');
       return;
     }
     if (shouldDeferForSync) {
@@ -10131,6 +10159,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       await _runScopedChannelSend(
         () async {
           await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+          checkQuickSendTarget();
           final sentByRadioAt = DateTime.now();
           final sentTimestampSeconds =
               sentByRadioAt.millisecondsSinceEpoch ~/ 1000;
@@ -10147,17 +10176,24 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   )
                 : null,
           );
-          _markPendingChannelMessageSentById(message.messageId);
-          await sendFrame(
-            binaryFrame ??
-                _channelTextFrame(
-                  channel,
-                  outboundText,
-                  senderName: senderName,
-                  region: outgoingRegion,
-                  timestampSeconds: sentTimestampSeconds,
-                ),
-          );
+          if (!reportFailure) _markPendingChannelMessageSentById(message.messageId);
+          try {
+            await sendFrame(
+              binaryFrame ??
+                  _channelTextFrame(
+                    channel,
+                    outboundText,
+                    senderName: senderName,
+                    region: outgoingRegion,
+                    timestampSeconds: sentTimestampSeconds,
+                  ),
+              waitForGenericAck: reportFailure,
+            );
+          } catch (_) {
+            if (reportFailure) _markPendingChannelMessageFailedById(message.messageId);
+            rethrow;
+          }
+          if (reportFailure) _markPendingChannelMessageSentById(message.messageId);
         },
         region: region ?? _channelSendScope(channel.index),
         waitForScopeReset: false,
@@ -10191,6 +10227,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       binaryFrame: binaryFrame,
       outgoingRegion: outgoingRegion,
       reportInitialFailure: true,
+      checkBeforeFirstSend: reportFailure ? checkQuickSendTarget : null,
     );
   });
 
@@ -10200,6 +10237,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required Uint8List? binaryFrame,
     required String outgoingRegion,
     required bool reportInitialFailure,
+    VoidCallback? checkBeforeFirstSend,
   }) async {
     final messageId = pending.messageId;
     final channel = pending.channel;
@@ -10260,6 +10298,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             }
           }
           if (!isResend) {
+            checkBeforeFirstSend?.call();
             final sentByRadioAt = DateTime.now();
             final resendUntilMinHops = hopControl != null;
             _markChannelMessageSentByRadio(
@@ -12688,9 +12727,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> sendSelfAdvert({bool flood = true}) async {
-    if (!isConnected) return;
-    await sendFrame(buildSendSelfAdvertFrame(flood: flood));
+  Future<void> sendSelfAdvert({bool flood = true, bool waitForAck = false}) async {
+    if (!isConnected) {
+      if (waitForAck) throw StateError('Radio is disconnected');
+      return;
+    }
+    await sendFrame(
+      buildSendSelfAdvertFrame(flood: flood),
+      waitForGenericAck: waitForAck,
+    );
     if (!flood) {
       _lastZeroHopAdvertAt = DateTime.now();
       _lastZeroHopAdvertLatitude = _selfLatitude;

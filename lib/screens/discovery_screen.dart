@@ -32,7 +32,9 @@ import '../helpers/snack_bar_builder.dart';
 enum DiscoverySortOption { lastSeen, name, type }
 
 class DiscoveryScreen extends StatefulWidget {
-  const DiscoveryScreen({super.key});
+  const DiscoveryScreen({super.key, this.startDiscovery = false});
+
+  final bool startDiscovery;
 
   @override
   State<DiscoveryScreen> createState() => _DiscoveryScreenState();
@@ -70,6 +72,20 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   /// The two parts of the list, kept per input (see [discoverySections]):
   /// most notifications of the connector change neither.
   final LastValueMemo<Object, DiscoverySections> _rowsMemo = LastValueMemo();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.startDiscovery) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final connector = context.read<MeshCoreConnector>();
+        if (connector.isConnected && !connector.isOfflineMode) {
+          unawaited(_discoverDevices(connector));
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
