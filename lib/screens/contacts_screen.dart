@@ -22,6 +22,7 @@ import '../helpers/contact_link.dart';
 import '../helpers/neighbor_map_focus.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../widgets/additional_identity_contacts.dart';
+import '../widgets/additional_identity_share_contacts.dart';
 import '../widgets/companion_cli_contacts_list.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../l10n/l10n.dart';
@@ -98,6 +99,9 @@ class ContactsScreen extends StatefulWidget {
   final bool selectionMode;
   final bool batchOperationsMode;
 
+  /// Includes app-managed public contact cards in selection mode.
+  final bool includeAdditionalIdentities;
+
   /// Opens the screen with the search box already expanded and pre-filled,
   /// used when arriving from a place that names a contact (for example a
   /// channel message sender).
@@ -108,6 +112,7 @@ class ContactsScreen extends StatefulWidget {
     this.hideBackButton = false,
     this.selectionMode = false,
     this.batchOperationsMode = false,
+    this.includeAdditionalIdentities = false,
     this.initialSearchQuery,
   });
 
@@ -197,7 +202,7 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
     _loadGroups();
     _setupFrameListener();
-    _clearAdvertNotifications();
+    if (!widget.selectionMode) _clearAdvertNotifications();
   }
 
   void _clearAdvertNotifications() {
@@ -1494,24 +1499,29 @@ class _ContactsScreenState extends State<ContactsScreen>
     final viewState = context.watch<UiViewStateService>();
     final showCompanionCli = !widget.selectionMode && !widget.batchOperationsMode &&
         connector.supportsCompanionCli;
-    final inbox = widget.selectionMode || widget.batchOperationsMode
+    final inbox = widget.batchOperationsMode
         ? null
         : connector.additionalIdentityInbox;
-    final identityGroups = inbox == null
-        ? null
-        : SliverToBoxAdapter(
-            child: AdditionalIdentityContacts(
-              inbox: inbox,
-              connector: connector,
-            ),
-          );
+    final shareEntries = widget.selectionMode && widget.includeAdditionalIdentities
+        ? inbox?.entries
+        : null;
+    final hasShareEntries = shareEntries != null && shareEntries.isNotEmpty;
+    final identityRows = hasShareEntries
+        ? SliverToBoxAdapter(
+            child: AdditionalIdentityShareContacts(entries: shareEntries),
+          )
+        : inbox != null && !widget.selectionMode
+        ? SliverToBoxAdapter(
+            child: AdditionalIdentityContacts(inbox: inbox, connector: connector),
+          )
+        : null;
     Widget placeholder(Widget child, {bool hasScrollBody = false}) =>
-        showCompanionCli || identityGroups != null
+        showCompanionCli || identityRows != null
         ? CompanionCliContactsList.placeholder(
             connector: connector,
             showCli: showCompanionCli,
             hasScrollBody: hasScrollBody,
-            afterCli: identityGroups,
+            afterCli: identityRows,
             child: child,
           )
         : child;
@@ -1541,7 +1551,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       return placeholder(const Center(child: CircularProgressIndicator()));
     }
 
-    if (contacts.isEmpty && _groups.isEmpty) {
+    if (contacts.isEmpty && _groups.isEmpty && !hasShareEntries) {
       return placeholder(EmptyState(
         icon: Icons.people_outline,
         title: context.l10n.contacts_noContacts,
@@ -1824,11 +1834,11 @@ class _ContactsScreenState extends State<ContactsScreen>
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => connector.refreshContacts(),
-            child: filteredAndSorted.isEmpty
+            child: filteredAndSorted.isEmpty && !hasShareEntries
                 ? CompanionCliContactsList.placeholder(
                     connector: connector, showCli: showCompanionCli,
                     hasScrollBody: true,
-                    afterCli: identityGroups,
+                    afterCli: identityRows,
                     child: EmptyState(
                       icon: Icons.search_off,
                       title: viewState.contactsShowUnreadOnly
@@ -1838,7 +1848,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   )
                 : CompanionCliContactsList(
                     connector: connector, showCli: showCompanionCli,
-                    afterCli: identityGroups,
+                    afterCli: identityRows,
                     sliver: SliverList(delegate: SliverChildBuilderDelegate((context, index) {
                       final item = contactItems[index];
                       final contact = item.contact;

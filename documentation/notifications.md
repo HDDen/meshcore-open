@@ -229,7 +229,7 @@ The notification system prevents notification storms:
 - **Opening a contact chat**: Cancels the OS notification and resets unread count
 - **Opening a channel**: Cancels the channel notification and resets unread count
 - **Switching radios or replacing a channel in a slot**: Clears stale cards and pending updates. After an app restart, clearing old cards depends on which active notifications the platform exposes.
-- **Opening Contacts screen**: Cancels all advertisement notifications
+- **Opening Contacts screen**: Cancels advertisement notifications for contacts in the list. The **Share contact** picker leaves these notifications active.
 
 ## Translation and image references
 

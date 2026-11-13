@@ -116,6 +116,10 @@ Tap a channel card to open the channel chat screen.
 - Bell icon: mute or unmute notifications for this channel (crossed-out bell when muted)
 - Open **⋮ → Chat background** to choose a color or photo for the channel. You can enable greeting effects separately in **Themes → Holidays**. [Themes](themes.md#chat-backgrounds)
 
+### Sharing contacts
+
+Open **Chat actions → Share contact** to insert a contact card into the message draft. Unlocked additional keys appear at the top of the picker. Their cards share the name and public key. Tap **Send** to post the card in the channel.
+
 ### Message Display
 
 - Reverse-scrolling list (newest at bottom)

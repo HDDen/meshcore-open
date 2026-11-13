@@ -4147,7 +4147,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final contact = await Navigator.push<Contact>(
       context,
       MaterialPageRoute(
-        builder: (_) => const ContactsScreen(selectionMode: true),
+        builder: (_) => const ContactsScreen(
+          selectionMode: true,
+          includeAdditionalIdentities: true,
+        ),
       ),
     );
     if (contact == null || !mounted) return;

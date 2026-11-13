@@ -57,7 +57,11 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
   };
 
   void _refresh() {
-    if (mounted) setState(() => _threads = _load());
+    if (!mounted) return;
+    final threads = _load();
+    setState(() {
+      _threads = threads;
+    });
   }
 
   @override
@@ -187,7 +191,10 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                             style: mono,
                           ),
                           trailing: contact.unread > 0
-                              ? UnreadBadge(count: contact.unread)
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [UnreadBadge(count: contact.unread)],
+                                )
                               : null,
                         ),
                       ),

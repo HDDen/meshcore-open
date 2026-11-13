@@ -10044,6 +10044,70 @@ class AppLocalizationsKo extends AppLocalizations {
       'To use the spam filter fully, enable learning. Enable it now?';
 
   @override
+  String get quickActions_title => 'Quick actions';
+
+  @override
+  String get quickActions_settings => 'Configure widgets';
+
+  @override
+  String get quickActions_configure => 'Configure';
+
+  @override
+  String get quickActions_buttonDisplay => 'Header button';
+
+  @override
+  String get quickActions_icon => 'Icon';
+
+  @override
+  String get quickActions_noise => 'Noise level';
+
+  @override
+  String get quickActions_extraHops => 'Extra hops';
+
+  @override
+  String get quickActions_retries => 'Resend messages';
+
+  @override
+  String get quickActions_discover => 'Discovery';
+
+  @override
+  String get quickActions_companionProxy => 'Companion proxy';
+
+  @override
+  String get quickActions_tcpProxy => 'TCP proxy';
+
+  @override
+  String get quickActions_bleProxy => 'BLE proxy';
+
+  @override
+  String get quickActions_keys => 'Manage keys';
+
+  @override
+  String get quickActions_cliCommand => 'CompanionCLI command';
+
+  @override
+  String get quickActions_sendChannel => 'Send to channel';
+
+  @override
+  String get quickActions_name => 'Button name';
+
+  @override
+  String get quickActions_text => 'Text';
+
+  @override
+  String get quickActions_required => 'Enter a value.';
+
+  @override
+  String get quickActions_channelMissing =>
+      'The channel name must match exactly one channel on the connected radio.';
+
+  @override
+  String get quickActions_failed => 'Could not complete the action.';
+
+  @override
+  String get quickActions_empty => 'Enable actions in widget settings.';
+
+  @override
   String get extraKeys_manage => 'Manage additional private keys';
 
   @override

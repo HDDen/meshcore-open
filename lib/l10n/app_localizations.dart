@@ -83,48 +83,6 @@ abstract class AppLocalizations {
 
   final String localeName;
 
-  String get quickActions_title => 'Quick actions';
-
-  String get quickActions_settings => 'Configure widgets';
-
-  String get quickActions_configure => 'Configure';
-
-  String get quickActions_buttonDisplay => 'Header button';
-
-  String get quickActions_icon => 'Icon';
-
-  String get quickActions_noise => 'Noise level';
-
-  String get quickActions_extraHops => 'Extra hops';
-
-  String get quickActions_retries => 'Resend messages';
-
-  String get quickActions_discover => 'Discovery';
-
-  String get quickActions_companionProxy => 'Companion proxy';
-
-  String get quickActions_tcpProxy => 'TCP proxy';
-
-  String get quickActions_bleProxy => 'BLE proxy';
-
-  String get quickActions_keys => 'Manage keys';
-
-  String get quickActions_cliCommand => 'CompanionCLI command';
-
-  String get quickActions_sendChannel => 'Send to channel';
-
-  String get quickActions_name => 'Button name';
-
-  String get quickActions_text => 'Text';
-
-  String get quickActions_required => 'Enter a value.';
-
-  String get quickActions_channelMissing => 'The channel name must match exactly one channel on the connected radio.';
-
-  String get quickActions_failed => 'Could not complete the action.';
-
-  String get quickActions_empty => 'Enable actions in widget settings.';
-
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
@@ -17451,6 +17409,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To use the spam filter fully, enable learning. Enable it now?'**
   String get messageFilter_enableLearningPrompt;
+
+  /// No description provided for @quickActions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get quickActions_title;
+
+  /// No description provided for @quickActions_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure widgets'**
+  String get quickActions_settings;
+
+  /// No description provided for @quickActions_configure.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure'**
+  String get quickActions_configure;
+
+  /// No description provided for @quickActions_buttonDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Header button'**
+  String get quickActions_buttonDisplay;
+
+  /// No description provided for @quickActions_icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get quickActions_icon;
+
+  /// No description provided for @quickActions_noise.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise level'**
+  String get quickActions_noise;
+
+  /// No description provided for @quickActions_extraHops.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra hops'**
+  String get quickActions_extraHops;
+
+  /// No description provided for @quickActions_retries.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend messages'**
+  String get quickActions_retries;
+
+  /// No description provided for @quickActions_discover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery'**
+  String get quickActions_discover;
+
+  /// No description provided for @quickActions_companionProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion proxy'**
+  String get quickActions_companionProxy;
+
+  /// No description provided for @quickActions_tcpProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'TCP proxy'**
+  String get quickActions_tcpProxy;
+
+  /// No description provided for @quickActions_bleProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'BLE proxy'**
+  String get quickActions_bleProxy;
+
+  /// No description provided for @quickActions_keys.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage keys'**
+  String get quickActions_keys;
+
+  /// No description provided for @quickActions_cliCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'CompanionCLI command'**
+  String get quickActions_cliCommand;
+
+  /// No description provided for @quickActions_sendChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to channel'**
+  String get quickActions_sendChannel;
+
+  /// No description provided for @quickActions_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Button name'**
+  String get quickActions_name;
+
+  /// No description provided for @quickActions_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get quickActions_text;
+
+  /// No description provided for @quickActions_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value.'**
+  String get quickActions_required;
+
+  /// No description provided for @quickActions_channelMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The channel name must match exactly one channel on the connected radio.'**
+  String get quickActions_channelMissing;
+
+  /// No description provided for @quickActions_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete the action.'**
+  String get quickActions_failed;
+
+  /// No description provided for @quickActions_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable actions in widget settings.'**
+  String get quickActions_empty;
 
   /// No description provided for @extraKeys_manage.
   ///

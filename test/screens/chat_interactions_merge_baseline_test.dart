@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
+import 'package:meshcore_open/helpers/background_work_tracker.dart';
+import 'package:meshcore_open/helpers/contact_share_helper.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
@@ -17,6 +19,7 @@ import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
+import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/widgets/byte_count_input.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
@@ -133,6 +136,19 @@ class _PagedNode extends MeshCoreConnector {
     notifyListeners();
     return [older];
   }
+}
+
+class _ContactShareNode extends _PagedNode {
+  _ContactShareNode(AdditionalIdentityInbox inbox)
+    : super(additionalIdentityInbox: inbox);
+
+  List<Contact> contactList = [_contact];
+
+  @override
+  List<Contact> get contacts => contactList;
+
+  @override
+  bool get hasLoadedContacts => true;
 }
 
 class _SenderPickerInbox extends AdditionalIdentityInbox {
@@ -372,6 +388,102 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
   }
+
+  testWidgets('channel contact picker shares additional keys before node contacts', (
+    tester,
+  ) async {
+    final entry = (await tester.runAsync(() async {
+      final seed = hex.decode(
+        '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+      );
+      final expanded = Uint8List.fromList((await Sha512().hash(seed)).bytes);
+      expanded[0] &= 248;
+      expanded[31] = (expanded[31] & 63) | 64;
+      return AdditionalIdentityEntry.parse('Additional key', hex.encode(expanded));
+    }))!;
+    final inbox = AdditionalIdentityInbox()..unlock([entry]);
+    final node = _ContactShareNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    final view = UiViewStateService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+    addTearDown(view.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+          ChangeNotifierProvider<UiViewStateService>.value(value: view),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChannelChatScreen(channel: _channel),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    var notificationWorkStarted = false;
+    void observeBackgroundWork() {
+      if (node.backgroundWorkSnapshot.countFor(BackgroundWorkKind.notification) >
+          0) {
+        notificationWorkStarted = true;
+      }
+    }
+
+    node.addBackgroundWorkListener(observeBackgroundWork);
+    addTearDown(() => node.removeBackgroundWorkListener(observeBackgroundWork));
+
+    Future<void> openPicker() async {
+      await tester.tap(find.byTooltip('Chat actions menu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Share contact'));
+      await tester.pumpAndSettle();
+      expect(notificationWorkStarted, isFalse);
+    }
+
+    final composer = find.descendant(
+      of: find.byType(ByteCountedTextField),
+      matching: find.byType(TextField),
+    );
+    final keyCard = find.text(entry.name);
+    final contact = find.text(_contact.name);
+    final publicKey = entry.identity.publicKeyHex;
+
+    await openPicker();
+    expect(keyCard, findsOneWidget);
+    expect(contact, findsOneWidget);
+    expect(tester.getTopLeft(keyCard).dy, lessThan(tester.getTopLeft(contact).dy));
+    await tester.tap(keyCard);
+    await tester.pumpAndSettle();
+
+    final draft = tester.widget<TextField>(composer).controller!;
+    expect(draft.text, '<$publicKey:$advTypeChat:${entry.name}>');
+
+    draft.clear();
+    await openPicker();
+    await tester.tap(contact);
+    await tester.pumpAndSettle();
+    expect(draft.text, formatContactShareTextForContact(_contact));
+
+    draft.clear();
+    node.contactList = const [];
+    await openPicker();
+    expect(keyCard, findsOneWidget);
+    expect(contact, findsNothing);
+    await tester.tap(keyCard);
+    await tester.pumpAndSettle();
+    expect(draft.text, '<$publicKey:$advTypeChat:${entry.name}>');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 2));
+  });
 
   testWidgets('sender selection keeps the chat and draft tied to the chosen key', (
     tester,
