@@ -7,10 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
+import 'package:meshcore_open/helpers/composer_draft_cache.dart';
 import 'package:meshcore_open/helpers/contact_share_helper.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/additional_identity_message.dart';
+import 'package:meshcore_open/models/app_settings.dart' show QuickAnswer;
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -28,6 +30,8 @@ import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/storage/region_store.dart';
 import 'package:meshcore_open/widgets/byte_count_input.dart';
+import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
+import 'package:meshcore_open/widgets/contact_chat_composer.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
 import 'package:meshcore_open/widgets/tx_power_boost_badge.dart';
@@ -216,6 +220,21 @@ class _SenderPickerNode extends _PagedNode {
   }
 }
 
+class _ComposerNode extends _SenderPickerNode {
+  _ComposerNode(super.inbox);
+
+  @override
+  String prepareAdditionalIdentityOutboundText(
+    Contact peer,
+    String identityKey,
+    String text,
+  ) => text == 'Проверка связи' ? 'wire' : text;
+
+  @override
+  Future<List<String>> loadContactQuickAnswerIds(String contactKeyHex) async =>
+      ['reply'];
+}
+
 class _IdentityRoutingNode extends _SenderPickerNode {
   _IdentityRoutingNode(super.inbox);
 
@@ -223,7 +242,7 @@ class _IdentityRoutingNode extends _SenderPickerNode {
   final _regions = <String, String>{};
 
   @override
-  List<Contact> get contacts => [if (contact case final stored?) stored];
+  List<Contact> get contacts => [?contact];
 
   @override
   Contact? getContactByPubKeyHex(String contactPubKeyHex) =>
@@ -548,6 +567,90 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('additional identity uses the common composer and its wire byte limit', (
+    tester,
+  ) async {
+    final inbox = _SenderPickerInbox();
+    final node = _ComposerNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    const replyText = 'Quick reply';
+    await settings.updateSettings(settings.settings.copyWith(
+      quickAnswers: const [
+        QuickAnswer(id: 'reply', text: replyText, sendAtSelect: true),
+      ],
+    ));
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+
+    final key = 'bc' * 32;
+    final draftKey = ComposerDraftCache.additionalIdentityKey(
+      key,
+      _contact.publicKeyHex,
+    );
+    addTearDown(() => ComposerDraftCache.clear(draftKey));
+
+    Future<void> openChat() async {
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox,
+            connector: node,
+            peer: _contact,
+            recipientKey: key,
+            recipientName: 'Extra key',
+            senderKey: _contact.publicKeyHex,
+            senderName: _contact.name,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    await openChat();
+    final composer = find.byType(ContactChatComposer);
+    final input = find.descendant(
+      of: composer,
+      matching: find.byType(TextField),
+    );
+    final send = find.byTooltip('Send message');
+    expect(find.byType(ChatComposerSendButton), findsOneWidget);
+    expect(find.byTooltip('Chat actions menu'), findsOneWidget);
+
+    const text = 'Проверка связи';
+    await tester.enterText(input, text);
+    await tester.pump(ByteCountedTextField.counterDelay);
+    expect(find.text('4 / 100'), findsOneWidget);
+
+    await tester.longPress(send);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(replyText));
+    await tester.pumpAndSettle();
+    expect(node.sent, [(key, _contact.publicKeyHex, replyText)]);
+    expect(tester.widget<TextField>(input).controller!.text, text);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await openChat();
+    expect(tester.widget<TextField>(input).controller!.text, text);
+    await tester.tap(send);
+    await tester.pumpAndSettle();
+    expect(node.sent.last, (key, _contact.publicKeyHex, text));
+    expect(node.sent, hasLength(2));
+    expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+    expect(ComposerDraftCache.read(draftKey), isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('additional identity chat shows the regular message indicators', (

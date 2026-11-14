@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/platform_info.dart';
@@ -29,7 +28,6 @@ import '../helpers/message_url_image_helper.dart';
 import '../helpers/ipfs_link_attach_flow.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
-import '../helpers/inserted_text_limiter.dart';
 import '../helpers/offline_mode_helper.dart';
 import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_suggestions_panel.dart';
@@ -47,14 +45,12 @@ import '../helpers/mention_autocomplete.dart';
 import '../helpers/path_helper.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/signal_reading_text.dart';
-import '../helpers/quick_answers_helper.dart';
 import '../models/app_settings.dart' show SharedMessageHistoryModeValue;
 import '../models/channel_message.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
-import '../models/mco_image_gallery_item.dart';
 import '../models/translation_support.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_background_service.dart';
@@ -68,9 +64,8 @@ import '../widgets/contact_history_link_banner.dart';
 import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
-import '../widgets/chat_additional_actions_menu.dart';
-import '../widgets/composer_text_builder.dart';
-import '../widgets/byte_count_input.dart';
+import '../widgets/contact_chat_composer.dart';
+import '../widgets/contact_composer_actions.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
@@ -81,7 +76,6 @@ import '../utils/emoji_utils.dart';
 import '../widgets/emoji_picker.dart';
 import '../widgets/gif_message.dart';
 import '../widgets/jump_to_bottom_button.dart';
-import '../widgets/gif_picker.dart';
 import '../widgets/mco_image_message.dart';
 import '../widgets/mco_image_original.dart';
 import '../widgets/mcmp_signature_badge.dart';
@@ -89,10 +83,8 @@ import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
-import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
-import 'mco_image_gallery_screen.dart';
 import '../widgets/contact_chat_title.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -183,8 +175,6 @@ class _ChatScreenState extends State<ChatScreen> {
   /// session.
   List<ContactHistoryCandidate> _historyCandidates = const [];
   bool _historyBannerDismissed = false;
-
-  bool _ipfsUploading = false;
 
   String get _composerDraftKey =>
       ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
@@ -1789,9 +1779,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputBar(BuildContext context, MeshCoreConnector connector) {
     final maxBytes = _maxContactInputBytes(connector);
-    final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<AppSettingsService>().settings;
-    final mediaQuery = MediaQuery.of(context);
     final replyingTo = _replyingToMessage;
     final replyBannerHeight =
         replyingTo == null || _plainReplyComposerPrefix != null
@@ -1799,403 +1787,88 @@ class _ChatScreenState extends State<ChatScreen> {
         : ReplyComposerBanner.showsImage(replyingTo.text)
         ? ReplyComposerBanner.imageHeight
         : ReplyComposerBanner.height;
-    final maxInputHeight =
-        (mediaQuery.size.height -
-                mediaQuery.padding.top -
-                kToolbarHeight -
-                mediaQuery.viewInsets.bottom -
-                replyBannerHeight -
-                48)
-            .clamp(56.0, 240.0)
-            .toDouble();
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-      ),
-      child: SafeArea(
-          child: Row(
-            children: [
-              /*
-               * Upstream dev places this compact popup in the composer.
-               * MCOa keeps it disabled because ChatAdditionalActionsButton
-               * below opens our complete bottom-sheet actions menu.
-               *
-               * PopupMenuButton<String>(
-               *   icon: const Icon(Icons.add_circle_outline),
-               *   position: PopupMenuPosition.over,
-               *   tooltip: context.l10n.chat_selectSendAction,
-               *   onSelected: (action) {
-               *     if (action == 'gif') _showGifPicker(context);
-               *   },
-               *   itemBuilder: (context) => [
-               *     PopupMenuItem(
-               *       value: 'gif',
-               *       child: Text(context.l10n.chat_sendGif),
-               *     ),
-               *   ],
-               * ),
-               */
-              ChatComposerSideAction(
-              child: ChatAdditionalActionsButton(
-                canvasActive: settings.canvasActive,
-                offlineMode: connector.isOfflineMode,
-                onSendSelfContact: () => _insertSelfContact(connector),
-                onSendMyLocation: () => unawaited(_insertMyLocation(connector)),
-                onSendContact: () => _pickAndInsertContact(),
-                onPickLocationFromMap: () =>
-                    unawaited(_pickAndInsertLocationFromMap()),
-                onOpenQuickAnswers: () => _showQuickAnswersPicker(connector),
-                onSendGif: () => _showGifPicker(context),
-                onSendIpfs: settings.uploadIpfsEndpoint.trim().isNotEmpty && !_ipfsUploading
-                    ? () => unawaited(_attachIpfsLink(connector))
-                    : null,
-                onOpenCanvas: () => _showCanvasEditor(connector, maxBytes),
-                onOpenMcoImageGallery: () =>
-                    _showMcoImageGallery(connector, maxBytes),
-              ),
-            ),
-            if (BuildFeatures.llmTranslationEnabled &&
-                settings.translationEnabled)
-              MessageTranslationButton(
-                enabled: settings.composerTranslationEnabled,
-                languageCode: settings.translationTargetLanguageCode,
-                onPressed: _showTranslationOptions,
-              ),
-            Expanded(
-              child: ComposerTextBuilder(
-                controller: _textController,
-                builder: (context, composerText) {
-                  final gifId = GifHelper.parseGif(composerText);
-                  if (gifId != null) {
-                    return Focus(
-                      autofocus: true,
-                      onKeyEvent: (node, event) {
-                        if (event is KeyDownEvent &&
-                            (event.logicalKey == LogicalKeyboardKey.enter ||
-                                event.logicalKey ==
-                                    LogicalKeyboardKey.numpadEnter)) {
-                          _sendMessage(connector);
-                          return KeyEventResult.handled;
-                        }
-                        return KeyEventResult.ignored;
-                      },
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: GifMessage(
-                                url:
-                                    'https://media.giphy.com/media/$gifId/giphy.gif',
-                                backgroundColor:
-                                    colorScheme.surfaceContainerHighest,
-                                fallbackTextColor: colorScheme.onSurface
-                                    .withValues(alpha: 0.6),
-                                maxSize: 160,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              _textController.clear();
-                              _textFieldFocusNode.requestFocus();
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return ByteCountedTextField(
-                    maxBytes: maxBytes,
-                    softLimitBytes: maxTextPayloadBytesAfterFullLengthAttempts,
-                    softLimitNote: context.l10n.chat_longMessageRetryNote(
-                      maxFullLengthTextAttempt + 1,
-                    ),
-                    controller: _textController,
-                    focusNode: _textFieldFocusNode,
-                    enabled: !connector.isOfflineMode,
-                    maxHeight: maxInputHeight,
-                    hintText: context.l10n.chat_typeMessage,
-                    onSubmitted: (_) => _sendMessage(connector),
-                    extraFormatters:
-                        connector.isContactMcmpEnabled(
-                          widget.contact.publicKeyHex,
-                        )
-                        ? [
-                            InsertedTextLimiter(
-                              maxInsertedChars: settings.mcmpTextLimit,
-                            ),
-                          ]
-                        : const [],
-                    encoder: _composerEncoder(connector),
-                    decoration: InputDecoration(
-                      hintText: context.l10n.chat_typeMessage,
-                      hintMaxLines: 1,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(MeshRadii.md),
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLow,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            ChatComposerSideAction(
-              child: ChatComposerSendButton(
-                tooltip: context.l10n.chat_sendMessage,
-                semanticLabel: context.l10n.chat_sendMessageTo(
-                  _resolveContact(connector).name,
-                ),
-                onLongPress: connector.isOfflineMode
-                    ? null
-                    : () => _showQuickAnswersPicker(connector),
-                onPressed: connector.isOfflineMode
-                    ? null
-                    : () => _sendMessage(connector),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    final offline = connector.isOfflineMode;
 
-  void _showGifPicker(BuildContext context) {
-    showMeshSheet<void>(
-      context,
-      builder: (context) => GifPicker(
-        onGifSelected: (gifId) {
-          _textController.text = GifHelper.encodeGif(gifId);
-        },
-      ),
-    );
-  }
-
-  void _insertTextIntoComposer(String text) {
-    final value = _textController.value;
-    final selection = value.selection;
-    final range = selection.isValid
-        ? selection
-        : TextSelection.collapsed(offset: value.text.length);
-    final nextText = value.text.replaceRange(range.start, range.end, text);
-    final nextOffset = range.start + text.length;
-    _textController.value = TextEditingValue(
-      text: nextText,
-      selection: TextSelection.collapsed(offset: nextOffset),
-    );
-    _textFieldFocusNode.requestFocus();
-  }
-
-  void _insertSelfContact(MeshCoreConnector connector) {
-    final publicKey = connector.selfPublicKey;
-    if (publicKey == null || publicKey.isEmpty) return;
-    _insertTextIntoComposer(
-      formatContactShareText(
-        publicKey: publicKey,
-        type: advTypeChat,
-        name: connector.selfName ?? connector.deviceDisplayName,
-      ),
-    );
-  }
-
-  Future<void> _insertMyLocation(MeshCoreConnector connector) async {
-    final location = await connector.refreshSelfLocation();
-    if (!mounted || location == null) return;
-    _insertTextIntoComposer(
-      '${location.latitude.toStringAsFixed(6)},'
-      '${location.longitude.toStringAsFixed(6)}',
-    );
-  }
-
-  Future<void> _pickAndInsertLocationFromMap() async {
-    final location = await Navigator.push<LatLng>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MapScreen(locationPickerMode: true),
-      ),
-    );
-    if (!mounted || location == null) return;
-    _insertTextIntoComposer(
-      '${location.latitude.toStringAsFixed(6)},'
-      '${location.longitude.toStringAsFixed(6)}',
-    );
-  }
-
-  Future<void> _pickAndInsertContact() async {
-    final contact = await Navigator.push<Contact>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ContactsScreen(selectionMode: true),
-      ),
-    );
-    if (contact == null || !mounted) return;
-    _insertTextIntoComposer(formatContactShareTextForContact(contact));
-  }
-
-  Future<void> _showCanvasEditor(
-    MeshCoreConnector connector,
-    int maxTextChars, {
-    MCOImage? initialImage,
-    Uint8List? initialImageBytes,
-    int? initialImageWidth,
-    int? initialImageHeight,
-    PaletteProfile? initialPaletteProfile,
-  }) async {
-    final result = await Navigator.push<CanvasEditorResult>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CanvasEditorScreen(
-          maxTextChars: maxTextChars,
-          initialImage: initialImage,
-          initialImageBytes: initialImageBytes,
-          initialImageWidth: initialImageWidth,
-          initialImageHeight: initialImageHeight,
-          initialPaletteProfile: initialPaletteProfile,
-        ),
-      ),
-    );
-    if (result == null || result.text.isEmpty) return;
-    if (!mounted) return;
-    final encodedText = result.text;
-    _textController.text = encodedText;
-    _textController.selection = TextSelection.collapsed(
-      offset: encodedText.length,
-    );
-    await _sendMessage(
-      connector,
-      skipTranslation: true,
-      skipReplyContext: true,
-    );
-  }
-
-  Future<void> _attachIpfsLink(MeshCoreConnector connector) async {
-    if (_ipfsUploading || connector.isOfflineMode || !connector.isConnected) return;
-    setState(() => _ipfsUploading = true);
-    try {
-      await attachIpfsLinkToDraft(
-        context: context,
+    return ContactChatComposer(
+      contactName: _resolveContact(connector).name,
+      controller: _textController,
+      focusNode: _textFieldFocusNode,
+      maxBytes: maxBytes,
+      encoder: _composerEncoder(connector),
+      enabled: !offline,
+      showRetryLimit: _additionalSenderKey == null,
+      replyBannerHeight: replyBannerHeight,
+      insertedTextLimit: connector.isContactMcmpEnabled(widget.contact.publicKeyHex)
+          ? settings.mcmpTextLimit
+          : null,
+      onSend: offline ? null : () => unawaited(_sendMessage(connector)),
+      onQuickAnswers: offline
+          ? null
+          : () => unawaited(_showQuickAnswersPicker(connector)),
+      actions: ContactComposerActions(
+        connector: connector,
+        contact: _resolveContact(connector),
         controller: _textController,
         focusNode: _textFieldFocusNode,
-        maxBytes: _maxContactInputBytes(connector),
-        encodeOutbound: (text) => _composerEncoder(connector)?.call(text) ?? text,
-        composeDraft: (link, draft) {
-          // Keep the editable exact-quote header at the beginning of the
-          // composer; only its body receives the uploaded link.
+        maxBytes: maxBytes,
+        identityKey: _additionalSenderKey,
+        encoder: _composerEncoder(connector),
+        composeIpfsDraft: (link, draft) {
           final prefix = _composerReply(draft)?.prefix ?? '';
           return '$prefix${composeIpfsLinkDraft(
             messageUrl: link,
             existingText: draft.substring(prefix.length),
           )}';
         },
-      );
-    } finally {
-      if (mounted) setState(() => _ipfsUploading = false);
-    }
-  }
-
-  Future<void> _showMcoImageGallery(
-    MeshCoreConnector connector,
-    int maxTextChars,
-  ) async {
-    final result = await showModalBottomSheet<MCOImageGalleryResult>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => const MCOImageGalleryScreen(),
-    );
-    if (result == null || !mounted) return;
-    if (result.action == MCOImageGalleryAction.edit) {
-      await _openGalleryItemInCanvas(connector, maxTextChars, result.item);
-      return;
-    }
-    await _sendGalleryItem(connector, result.item);
-  }
-
-  Future<void> _openGalleryItemInCanvas(
-    MeshCoreConnector connector,
-    int maxTextChars,
-    MCOImageGalleryItem item,
-  ) async {
-    final useRasterOriginal = item.showPngFallback && !item.originalIsLottie;
-    final image = useRasterOriginal ? null : item.tryDecodeImage();
-    await _showCanvasEditor(
-      connector,
-      maxTextChars,
-      initialImage: image,
-      initialImageBytes: image == null && !item.originalIsLottie
-          ? item.pngBytes
-          : null,
-      initialImageWidth: item.width,
-      initialImageHeight: item.height,
-      initialPaletteProfile: item.paletteProfile,
-    );
-  }
-
-  Future<void> _sendGalleryItem(
-    MeshCoreConnector connector,
-    MCOImageGalleryItem item,
-  ) async {
-    final text = item.textPayload;
-    final outboundText = connector.prepareContactOutboundText(
-      _resolveContact(connector),
-      text,
-    );
-    final payloadBytes = utf8.encode(outboundText).length;
-    final maxBytes = _maxContactInputBytes(connector);
-    if (payloadBytes > maxBytes) {
-      showDismissibleSnackBar(
-        context,
-        content: Text(
-          context.l10n.chat_canvasCannotSend(payloadBytes - maxBytes),
+        onSend: ({quickAnswerText, standalone = false}) => _sendMessage(
+          connector,
+          quickAnswerText: quickAnswerText,
+          skipTranslation: standalone,
+          skipReplyContext: standalone,
         ),
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-      );
-      return;
-    }
-    _textController.text = text;
-    _textController.selection = TextSelection.collapsed(offset: text.length);
-    await _sendMessage(
-      connector,
-      skipTranslation: true,
-      skipReplyContext: true,
+      ),
+      translationButton: BuildFeatures.llmTranslationEnabled &&
+              settings.translationEnabled
+          ? MessageTranslationButton(
+              enabled: settings.composerTranslationEnabled,
+              languageCode: settings.translationTargetLanguageCode,
+              onPressed: _showTranslationOptions,
+            )
+          : null,
     );
   }
 
-  Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) async {
-    final selectedAnswerIds = await connector.loadContactQuickAnswerIds(
-      widget.contact.publicKeyHex,
-    );
-    if (!mounted) return;
-    final answer = await showQuickAnswersPickerDialog(
+  Future<void> _showCanvasEditor(
+    MeshCoreConnector connector,
+    int maxTextChars, {
+    required MCOImage initialImage,
+  }) async {
+    final result = await Navigator.push<CanvasEditorResult>(
       context,
-      answers: filterAvailableQuickAnswers(
-        selectedAnswerIds: selectedAnswerIds,
-        globalAnswers: context.read<AppSettingsService>().settings.quickAnswers,
+      MaterialPageRoute(
+        builder: (_) => CanvasEditorScreen(
+          maxTextChars: maxTextChars,
+          initialImage: initialImage,
+        ),
       ),
     );
-    if (answer == null) return;
-    if (!mounted) return;
-    if (answer.sendAtSelect) {
-      await _sendMessage(connector, quickAnswerText: answer.text);
-      return;
-    }
-    insertQuickAnswerIntoComposer(
-      controller: _textController,
-      focusNode: _textFieldFocusNode,
-      text: answer.text,
+    if (!mounted || result == null || result.text.isEmpty) return;
+    _textController.value = TextEditingValue(
+      text: result.text,
+      selection: TextSelection.collapsed(offset: result.text.length),
     );
+    await _sendMessage(connector, skipTranslation: true, skipReplyContext: true);
   }
+
+  Future<void> _showQuickAnswersPicker(MeshCoreConnector connector) =>
+      ContactComposerActions.showQuickAnswers(
+        context,
+        connector: connector,
+        contact: _resolveContact(connector),
+        controller: _textController,
+        focusNode: _textFieldFocusNode,
+        send: (text) => _sendMessage(connector, quickAnswerText: text),
+      );
 
   Future<void> _showTranslationOptions() async {
     final settingsService = context.read<AppSettingsService>();

@@ -5,6 +5,9 @@ class ComposerDraftCache {
 
   static String contactKey(String publicKeyHex) => 'contact:$publicKeyHex';
 
+  static String additionalIdentityKey(String identityKey, String peerKey) =>
+      'identity:$identityKey:$peerKey';
+
   static String channelKey(int channelIndex) => 'channel:$channelIndex';
 
   static String? read(String key) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -5,14 +6,19 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
+import '../helpers/composer_draft_cache.dart';
 import '../l10n/l10n.dart';
 import '../models/additional_identity_message.dart';
 import '../models/contact.dart';
 import '../services/additional_identity_inbox.dart';
+import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
 import '../widgets/additional_identity_sender_picker.dart';
 import '../widgets/chat_route_activity.dart';
+import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_chat_title.dart';
+import '../widgets/contact_composer_actions.dart';
+import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/routing_sheet.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -47,7 +53,8 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
   static const _pageSize = 100;
 
   final _route = ChatRouteActivity();
-  final _composer = TextEditingController();
+  final _composer = MarkupTextEditingController();
+  final _composerFocus = FocusNode();
   bool _sending = false;
   List<AdditionalIdentityMessage>? _latest;
   final _older = <AdditionalIdentityMessage>[];
@@ -57,9 +64,23 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
   int _revision = 0;
   int _deletionRevision = 0;
 
+  String get _draftKey => ComposerDraftCache.additionalIdentityKey(
+    widget.recipientKey,
+    widget.senderKey,
+  );
+
   @override
   void initState() {
     super.initState();
+    final draft = ComposerDraftCache.read(_draftKey);
+    if (draft != null) {
+      _lastDraft = draft;
+      _composer.value = TextEditingValue(
+        text: draft,
+        selection: TextSelection.collapsed(offset: draft.length),
+      );
+    }
+    _composer.addListener(_saveDraft);
     widget.inbox.addListener(_reload);
     _reload();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,11 +163,20 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
     }
   }
 
-  Future<void> _send() async {
+  String _lastDraft = '';
+
+  void _saveDraft() {
+    final text = _composer.text;
+    if (text == _lastDraft) return;
+    _lastDraft = text;
+    ComposerDraftCache.write(_draftKey, text);
+  }
+
+  Future<void> _send({String? quickAnswerText}) async {
     if (_sending) return;
     final draft = _composer.text;
-    final text = draft.trim();
-    if (text.isEmpty) return;
+    final text = quickAnswerText ?? draft.trim();
+    if (text.trim().isEmpty) return;
     final connector = widget.connector;
     final l10n = context.l10n;
     if (!connector.isConnected || connector.isOfflineMode) {
@@ -175,7 +205,10 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
         return;
       }
       await connector.sendAdditionalIdentityMessage(widget.recipientKey, peer, text);
-      if (mounted && _composer.text == draft) _composer.clear();
+      if (mounted && quickAnswerText == null && _composer.text == draft) {
+        _composer.clear();
+        _composerFocus.requestFocus();
+      }
     } catch (_) {
       if (mounted) _showError(l10n.extraKeys_actionError);
     } finally {
@@ -198,10 +231,57 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
 
   @override
   void dispose() {
+    _composer.removeListener(_saveDraft);
     _composer.dispose();
+    _composerFocus.dispose();
     widget.inbox.removeListener(_reload);
     _route.dispose();
     super.dispose();
+  }
+
+  Widget _buildComposer(BuildContext context, MeshCoreConnector connector) {
+    final contact = _currentContact(connector);
+    final settings = context.watch<AppSettingsService>().settings;
+    final offline = connector.isOfflineMode;
+    final maxBytes = connector.additionalIdentityMaxTextBytes(contact);
+    String encode(String text) => connector.prepareAdditionalIdentityOutboundText(
+      contact, widget.recipientKey, text,
+    );
+
+    return ContactChatComposer(
+      contactName: contact.name,
+      controller: _composer,
+      focusNode: _composerFocus,
+      maxBytes: maxBytes,
+      encoder: encode,
+      enabled: !offline && maxBytes > 0,
+      showRetryLimit: false,
+      insertedTextLimit: connector.isContactMcmpEnabled(contact.publicKeyHex)
+          ? settings.mcmpTextLimit
+          : null,
+      onSend: _sending || offline ? null : () => unawaited(_send()),
+      onQuickAnswers: _sending || offline
+          ? null
+          : () => unawaited(ContactComposerActions.showQuickAnswers(
+                context,
+                connector: connector,
+                contact: contact,
+                controller: _composer,
+                focusNode: _composerFocus,
+                send: (text) => _send(quickAnswerText: text),
+              )),
+      actions: ContactComposerActions(
+        connector: connector,
+        contact: contact,
+        controller: _composer,
+        focusNode: _composerFocus,
+        maxBytes: maxBytes,
+        identityKey: widget.recipientKey,
+        encoder: encode,
+        onSend: ({quickAnswerText, standalone = false}) =>
+            _send(quickAnswerText: quickAnswerText),
+      ),
+    );
   }
 
   @override
@@ -249,71 +329,53 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
           const RadioStatsIconButton(),
         ],
       ),
-      body: SafeArea(
-        child: rows.isEmpty
-            ? Center(
-                child: _readFailed
-                    ? Text(l10n.extraKeys_actionError)
-                    : _latest == null
-                    ? const CircularProgressIndicator()
-                    : Text(l10n.chat_noMessages),
-              )
-            : ListView.builder(
-                reverse: true,
-                itemCount: rows.length + (canPage ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == rows.length) {
-                    return TextButton(
-                      onPressed: _readingOlder ? null : () => _loadOlder(rows.last),
-                      child: Text(l10n.extraKeys_loadOlder),
-                    );
-                  }
-                  final row = rows[index];
-                  final message = row.toChatMessage(
-                    identityName: widget.recipientName,
-                  );
-                  final roomAuthor = row.roomAuthorHex;
-                  return Padding(
-                    key: ValueKey(row.rowId),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: ContactMessageBubble(
-                      message: message,
-                      senderName: roomAuthor == null
-                          ? widget.senderName
-                          : '${widget.senderName} [${roomAuthor.toUpperCase()}]',
-                      sourceId: widget.senderKey,
-                      isRoomChat: widget.peer.type == advTypeRoom,
-                      textScale: textScale,
+      body: Column(
+        children: [
+          Expanded(
+            child: SafeArea(
+              bottom: false,
+              child: rows.isEmpty
+                  ? Center(
+                      child: _readFailed
+                          ? Text(l10n.extraKeys_actionError)
+                          : _latest == null
+                          ? const CircularProgressIndicator()
+                          : Text(l10n.chat_noMessages),
+                    )
+                  : ListView.builder(
+                      reverse: true,
+                      itemCount: rows.length + (canPage ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == rows.length) {
+                          return TextButton(
+                            onPressed: _readingOlder ? null : () => _loadOlder(rows.last),
+                            child: Text(l10n.extraKeys_loadOlder),
+                          );
+                        }
+                        final row = rows[index];
+                        final message = row.toChatMessage(
+                          identityName: widget.recipientName,
+                        );
+                        final roomAuthor = row.roomAuthorHex;
+                        return Padding(
+                          key: ValueKey(row.rowId),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: ContactMessageBubble(
+                            message: message,
+                            senderName: roomAuthor == null
+                                ? widget.senderName
+                                : '${widget.senderName} [${roomAuthor.toUpperCase()}]',
+                            sourceId: widget.senderKey,
+                            isRoomChat: widget.peer.type == advTypeRoom,
+                            textScale: textScale,
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            12, 4, 8, 8 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _composer,
-                  minLines: 1,
-                  maxLines: 4,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(hintText: l10n.chat_typeMessage),
-                ),
-              ),
-              IconButton(
-                onPressed: _sending ? null : _send,
-                tooltip: l10n.chat_sendMessage,
-                icon: const Icon(Icons.send),
-              ),
-            ],
-          ),
-        ),
+          Consumer<MeshCoreConnector>(builder: (context, connector, _) => _buildComposer(context, connector)),
+        ],
       ),
     );
   }
