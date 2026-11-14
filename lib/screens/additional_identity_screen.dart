@@ -19,18 +19,27 @@ class AdditionalIdentityScreen extends StatefulWidget {
   final bool rememberedUnlock;
   final AdditionalIdentityInbox? inbox;
 
-  static Future<void> open(BuildContext context) async {
+  static Future<AdditionalIdentityVault?> unlockVault(
+    BuildContext context, {
+    bool allowRemembered = false,
+  }) async {
     final storage = MessageHistoryStorage.instance;
-    if (!storage.hasDatabase) return;
+    if (!storage.hasDatabase) return null;
+    final saved = await storage.readAdditionalIdentityVault();
+    if (allowRemembered && saved != null) {
+      final vault = await AdditionalIdentityVault.openRemembered();
+      if (vault != null) return vault;
+    }
+    if (!context.mounted) return null;
+    final password = await _askPassword(context, create: saved == null);
+    if (!context.mounted || password == null) return null;
+    return AdditionalIdentityVault.open(password: password, saved: saved);
+  }
+
+  static Future<void> open(BuildContext context) async {
     try {
-      final saved = await storage.readAdditionalIdentityVault();
-      if (!context.mounted) return;
-      final password = await _askPassword(context, create: saved == null);
-      if (!context.mounted || password == null) return;
-      final vault = await AdditionalIdentityVault.open(
-        password: password,
-        saved: saved,
-      );
+      final vault = await unlockVault(context);
+      if (!context.mounted || vault == null) return;
       final remembered = await vault.isUnlockRemembered();
       if (!context.mounted) return;
       final inbox = context.read<MeshCoreConnector?>()?.additionalIdentityInbox;
@@ -346,7 +355,11 @@ class _EditKeyDialogState extends State<_EditKeyDialog> {
   Future<void> _submit() async {
     setState(() => _busy = true);
     try {
-      final entry = await AdditionalIdentityEntry.parse(_name.text, _key.text);
+      final entry = await AdditionalIdentityEntry.parse(
+        _name.text,
+        _key.text,
+        previous: widget.previous,
+      );
       if (mounted) Navigator.pop(context, entry);
     } catch (_) {
       if (mounted) setState(() => _invalid = true);

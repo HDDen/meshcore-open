@@ -10572,6 +10572,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get extraKeys_actionError => 'Не удалось выполнить действие с ключом.';
 
   @override
+  String get extraKeys_importNodePrompt =>
+      'Сохранить закрытый ключ и имя узла в списке ключей, чтобы иметь возможность получать адресованные ему сообщения даже без физического подключения и отправлять от его имени личные сообщения?';
+
+  @override
+  String get extraKeys_nodeExportUnavailable =>
+      'Прошивка не разрешает экспорт закрытого ключа узла.';
+
+  @override
   String get extraKeys_advertise => 'Отправить flood-адверт';
 
   @override

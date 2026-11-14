@@ -17584,6 +17584,18 @@ abstract class AppLocalizations {
   /// **'Could not complete the key action.'**
   String get extraKeys_actionError;
 
+  /// No description provided for @extraKeys_importNodePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?'**
+  String get extraKeys_importNodePrompt;
+
+  /// No description provided for @extraKeys_nodeExportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This firmware does not allow exporting the node’s private key.'**
+  String get extraKeys_nodeExportUnavailable;
+
   /// No description provided for @extraKeys_advertise.
   ///
   /// In en, this message translates to:

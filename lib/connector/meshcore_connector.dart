@@ -14453,7 +14453,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         break;
       case respCodePrivateKey:
       case respCodeDisabled:
-        // Answers to CMD_EXPORT_PRIVATE_KEY; _requestDirectEchoKey listens.
+        // Answers to CMD_EXPORT_PRIVATE_KEY; _exportNodePrivateKey listens.
         break;
       case respCodeSent:
         _handleMessageSent(frame);
@@ -18808,7 +18808,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// The node's private key, RAM only, for decrypting direct messages heard
   /// before they finish their route. Cleared wherever a session ends.
   final DirectEchoKeyStore _directEchoKeys = DirectEchoKeyStore();
-  Future<void>? _directEchoKeyRequest;
+  ({TxPowerSession session, Future<void> work})? _directEchoKeyRequest;
+  Future<void> _privateKeyExportTail = Future.value();
 
   /// Set when the node answered CMD_SEND_RAW_PACKET as a command it does not
   /// know: firmware older than that command cannot inject the ACK, so none
@@ -18841,70 +18842,122 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _directEchoKeys.hasKey) {
       return Future.value();
     }
+    final session = txPowerSession;
+    if (session == null) return Future.value();
     final pending = _directEchoKeyRequest;
-    if (pending != null) return pending;
-    final request = _exportDirectEchoKey();
-    _directEchoKeyRequest = request;
+    if (pending != null && pending.session == session) return pending.work;
+    final request = _exportDirectEchoKey(session);
+    _directEchoKeyRequest = (session: session, work: request);
     return request.whenComplete(() {
-      if (identical(_directEchoKeyRequest, request)) {
+      if (identical(_directEchoKeyRequest?.work, request)) {
         _directEchoKeyRequest = null;
       }
     });
   }
 
-  Future<void> _exportDirectEchoKey() async {
-    final completer = Completer<void>();
-    void finish() {
-      if (!completer.isCompleted) completer.complete();
+  Future<void> _exportDirectEchoKey(TxPowerSession session) async {
+    try {
+      final key = await _exportNodePrivateKey(session);
+      if (key == null) return;
+      try {
+        if (_directEchoRecoveryEnabled && txPowerSession == session) {
+          _directEchoKeys.setPrivateKey(key);
+        }
+      } finally {
+        key.fillRange(0, key.length, 0);
+      }
+    } catch (_) {
+      appLogger.warn('Private key export failed', tag: 'DirectEcho');
     }
+  }
 
-    final subscription = receivedFrames.listen((frame) {
-      if (frame.isEmpty || completer.isCompleted) return;
-      switch (frame[0]) {
-        case respCodePrivateKey:
-          if (frame.length < 1 + DirectEchoCrypto.privateKeyLength) {
-            appLogger.warn(
-              'Private key export answered with a short frame; '
-              'direct echo recovery stays off',
-              tag: 'DirectEcho',
-            );
+  /// Reads the full identity for an explicitly requested vault import.
+  Future<AdditionalIdentityEntry?> exportNodeIdentity(
+    TxPowerSession session, {
+    required String name,
+  }) async {
+    if (isOfflineMode || isReviewMode || !isSessionReady) {
+      throw StateError('Radio is not ready for identity export');
+    }
+    final key = await _exportNodePrivateKey(session, forVault: true);
+    if (key == null) return null;
+    try {
+      final entry = await AdditionalIdentityEntry.fromRadio(
+        name: name,
+        privateKey: key,
+        expectedPublicKey: session.nodeKey,
+      );
+      if (txPowerSession != session) {
+        throw StateError('Radio changed during identity export');
+      }
+      return entry;
+    } finally {
+      key.fillRange(0, key.length, 0);
+    }
+  }
+
+  Future<Uint8List?> _exportNodePrivateKey(
+    TxPowerSession session, {
+    bool forVault = false,
+  }) async {
+    final previous = _privateKeyExportTail;
+    final done = Completer<void>();
+    _privateKeyExportTail = done.future;
+    await previous;
+    try {
+      if (txPowerSession != session || !hasCompletedSelfInfoHandshake) {
+        throw StateError('Radio changed before identity export');
+      }
+      final response = Completer<Uint8List?>();
+      Uint8List? key;
+      var waitingForReply = !forVault;
+      final subscription = receivedFrames.listen((frame) {
+        if (!waitingForReply || frame.isEmpty || response.isCompleted ||
+            txPowerSession != session) {
+          return;
+        }
+        if (frame.first == respCodePrivateKey) {
+          const end = 1 + DirectEchoCrypto.privateKeyLength;
+          if (frame.length >= end) {
+            key = Uint8List.fromList(Uint8List.sublistView(frame, 1, end));
+            response.complete(key);
           } else {
-            _directEchoKeys.setPrivateKey(
-              Uint8List.fromList(
-                frame.sublist(1, 1 + DirectEchoCrypto.privateKeyLength),
-              ),
-            );
-            appLogger.info(
-              'Node private key exported to RAM for direct echo recovery',
-              tag: 'DirectEcho',
+            response.completeError(
+              const FormatException('Invalid private key response'),
             );
           }
-          finish();
-        case respCodeDisabled:
-          appLogger.warn(
-            'Node refused to export its private key (disabled in firmware); '
-            'direct echo recovery stays off',
-            tag: 'DirectEcho',
-          );
-          finish();
+        } else if (frame.first == respCodeDisabled) {
+          response.complete(null);
+        }
+      });
+      response.future.ignore();
+      try {
+        final command = Uint8List.fromList([cmdExportPrivateKey]);
+        if (forVault) {
+          await _dispatchFrame(command, beforeSend: () {
+            if (txPowerSession != session || !isSessionReady ||
+                isRestartingTransport) {
+              throw StateError('Radio changed before identity export');
+            }
+            waitingForReply = true;
+          });
+        } else {
+          await sendFrame(command);
+        }
+        final result = await response.future.timeout(const Duration(seconds: 5));
+        if (txPowerSession != session) {
+          throw StateError('Radio changed during identity export');
+        }
+        key = null; // The caller now owns and clears the returned buffer.
+        return result;
+      } finally {
+        waitingForReply = false;
+        final unusedKey = key;
+        unusedKey?.fillRange(0, unusedKey.length, 0);
+        await subscription.cancel();
       }
-    });
-    final timer = Timer(const Duration(seconds: 5), () {
-      if (completer.isCompleted) return;
-      appLogger.warn(
-        'Private key export got no answer; direct echo recovery stays off',
-        tag: 'DirectEcho',
-      );
-      finish();
-    });
-    try {
-      await sendFrame(Uint8List.fromList([cmdExportPrivateKey]));
-      await completer.future;
-    } catch (error) {
-      appLogger.warn('Private key export failed: $error', tag: 'DirectEcho');
     } finally {
-      timer.cancel();
-      await subscription.cancel();
+      done.complete();
     }
   }
 

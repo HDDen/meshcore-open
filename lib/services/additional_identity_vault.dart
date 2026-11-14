@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:cryptography/cryptography.dart';
@@ -16,17 +17,42 @@ class AdditionalIdentityEntry {
   final String name;
   final MeshCoreExpandedIdentity identity;
 
-  static Future<AdditionalIdentityEntry> parse(String name, String key) async {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty ||
-        utf8.encode(trimmed).length > maxRadioNameBytes ||
-        RegExp(r'[\[\]\\:,?*\x00-\x1f]').hasMatch(trimmed)) {
+  static Future<AdditionalIdentityEntry> parse(
+    String name,
+    String key, {
+    AdditionalIdentityEntry? previous,
+  }) async {
+    final checked = _checkedRadioName(name);
+    if (checked != previous?.name && RegExp(r'[\[\]\\:,?*]').hasMatch(checked)) {
       throw const FormatException('Invalid MeshCore identity name');
     }
     return AdditionalIdentityEntry._(
-      trimmed,
+      checked,
       await MeshCoreExpandedIdentity.fromHex(key),
     );
+  }
+
+  static Future<AdditionalIdentityEntry> fromRadio({
+    required String name,
+    required Uint8List privateKey,
+    required String expectedPublicKey,
+  }) async {
+    final checked = _checkedRadioName(name);
+    final identity = await MeshCoreExpandedIdentity.fromBytes(
+      privateKey,
+      expectedPublicKey: expectedPublicKey,
+    );
+    return AdditionalIdentityEntry._(checked, identity);
+  }
+
+  static String _checkedRadioName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty ||
+        utf8.encode(trimmed).length > maxRadioNameBytes ||
+        RegExp(r'[\x00-\x1f]').hasMatch(trimmed)) {
+      throw const FormatException('Invalid MeshCore identity name');
+    }
+    return trimmed;
   }
 
   Map<String, String> _toJson() => {
@@ -84,6 +110,35 @@ class AdditionalIdentityVault {
     return _decrypt(history, saved, envelope, secrets);
   }
 
+  /// Checks the public-key index without unlocking the private entries.
+  /// Older vaults without an index can be checked with a remembered unlock.
+  static Future<bool> containsPublicKey(String publicKey) async {
+    final history = MessageHistoryStorage.instance;
+    if (!history.hasDatabase) return false;
+    final saved = await history.readAdditionalIdentityVault();
+    if (saved == null) return false;
+    final envelope = _readEnvelope(saved);
+    final fingerprints = envelope['publicKeyFingerprints'];
+    final salt = envelope['salt'];
+    if (fingerprints is List && salt is String) {
+      return fingerprints.contains(_publicKeyFingerprint(salt, publicKey));
+    }
+    final vault = await _openRemembered(history, saved);
+    return vault?.entries.any((entry) =>
+        entry.identity.publicKeyHex == publicKey) ?? false;
+  }
+
+  static String _publicKeyFingerprint(String salt, String publicKey) =>
+      crypto.sha256.convert(utf8.encode('$salt:$publicKey')).toString();
+
+  static List<String> _publicKeyFingerprints(
+    String salt,
+    List<AdditionalIdentityEntry> entries,
+  ) => [
+    for (final entry in entries)
+      _publicKeyFingerprint(salt, entry.identity.publicKeyHex),
+  ];
+
   /// Returns null when the profile has no remembered key or the OS store is
   /// locked, absent, or has a stale entry. The password remains the fallback.
   static Future<AdditionalIdentityVault?> openRemembered({
@@ -93,7 +148,17 @@ class AdditionalIdentityVault {
     if (!history.hasDatabase) return null;
     try {
       final saved = await history.readAdditionalIdentityVault();
-      if (saved == null) return null;
+      return saved == null ? null : await _openRemembered(history, saved);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<AdditionalIdentityVault?> _openRemembered(
+    MessageHistoryStorage history,
+    String saved,
+  ) async {
+    try {
       final envelope = _readEnvelope(saved);
       final salt = _readBytes(envelope['salt'], 16);
       final key = await _deviceStorage.read(key: _deviceEntryKey(salt));
@@ -171,13 +236,26 @@ class AdditionalIdentityVault {
       if (entry is! Map || entry['name'] is! String || entry['key'] is! String) {
         throw const FormatException('Invalid identity entry');
       }
-      entries.add(await AdditionalIdentityEntry.parse(
-        entry['name'] as String,
-        entry['key'] as String,
+      entries.add(AdditionalIdentityEntry._(
+        AdditionalIdentityEntry._checkedRadioName(entry['name'] as String),
+        await MeshCoreExpandedIdentity.fromHex(entry['key'] as String),
       ));
     }
-    return AdditionalIdentityVault._(history, saved, secrets)
+    final vault = AdditionalIdentityVault._(history, saved, secrets)
       .._entries = List.unmodifiable(entries);
+    if (envelope['publicKeyFingerprints'] == null) {
+      final indexed = jsonEncode({
+        ...envelope,
+        'publicKeyFingerprints': _publicKeyFingerprints(
+          envelope['salt'] as String,
+          entries,
+        ),
+      });
+      if (await history.replaceAdditionalIdentityVault(saved, indexed)) {
+        vault._serialized = indexed;
+      }
+    }
+    return vault;
   }
 
   Future<void> save(AdditionalIdentityEntry entry, {String? replacing}) async {
@@ -234,9 +312,11 @@ class AdditionalIdentityVault {
       for (final entry in entries) entry._toJson(),
     ]));
     final box = await _cipher.encrypt(plaintext, secretKey: secrets.key);
+    final salt = base64Encode(secrets.salt);
     final serialized = jsonEncode({
       'version': 1,
-      'salt': base64Encode(secrets.salt),
+      'salt': salt,
+      'publicKeyFingerprints': _publicKeyFingerprints(salt, entries),
       'verifier': base64Encode(secrets.verifier),
       'nonce': base64Encode(box.nonce),
       'tag': base64Encode(box.mac.bytes),

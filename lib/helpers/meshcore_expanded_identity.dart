@@ -26,25 +26,38 @@ class MeshCoreExpandedIdentity {
     }
     final expanded = Uint8List.fromList(hex.decode(normalized));
     try {
-      if ((expanded[0] & 7) != 0 || (expanded[31] & 0xc0) != 0x40) {
-        throw const FormatException('Invalid MeshCore private key scalar');
-      }
-      final algorithm = DartEd25519(sha512: _ExpandedSeedHash(expanded));
-      final placeholder = await algorithm.newKeyPairFromSeed(Uint8List(32));
-      try {
-        final publicKey = (await placeholder.extractPublicKey()).bytes;
-        if (publicKey.first == 0 || publicKey.first == 0xff) {
-          throw const FormatException('Reserved MeshCore public key prefix');
-        }
-        return MeshCoreExpandedIdentity._(
-          Uint8List.fromList(expanded),
-          Uint8List.fromList(publicKey),
-        );
-      } finally {
-        placeholder.destroy();
-      }
+      return await fromBytes(expanded);
     } finally {
       expanded.fillRange(0, expanded.length, 0);
+    }
+  }
+
+  static Future<MeshCoreExpandedIdentity> fromBytes(
+    Uint8List expanded, {
+    String? expectedPublicKey,
+  }) async {
+    if (expanded.length != DirectEchoCrypto.privateKeyLength) {
+      throw const FormatException('Expected a 64-byte MeshCore private key');
+    }
+    if ((expanded[0] & 7) != 0 || (expanded[31] & 0xc0) != 0x40) {
+      throw const FormatException('Invalid MeshCore private key scalar');
+    }
+    final algorithm = DartEd25519(sha512: _ExpandedSeedHash(expanded));
+    final placeholder = await algorithm.newKeyPairFromSeed(Uint8List(32));
+    try {
+      final publicKey = (await placeholder.extractPublicKey()).bytes;
+      if (publicKey.first == 0 || publicKey.first == 0xff) {
+        throw const FormatException('Reserved MeshCore public key prefix');
+      }
+      if (expectedPublicKey != null && hex.encode(publicKey) != expectedPublicKey) {
+        throw const FormatException('Exported key does not match the radio');
+      }
+      return MeshCoreExpandedIdentity._(
+        Uint8List.fromList(expanded),
+        Uint8List.fromList(publicKey),
+      );
+    } finally {
+      placeholder.destroy();
     }
   }
 

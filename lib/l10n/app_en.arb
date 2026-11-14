@@ -5232,6 +5232,8 @@
   "extraKeys_invalidPassword": "Enter matching passwords.",
   "extraKeys_unlockError": "Could not unlock the keys. Check the password.",
   "extraKeys_actionError": "Could not complete the key action.",
+  "extraKeys_importNodePrompt": "Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?",
+  "extraKeys_nodeExportUnavailable": "This firmware does not allow exporting the node’s private key.",
   "extraKeys_advertise": "Send Flood advert",
   "extraKeys_deleteConfirm": "Delete this private key from the app?",
   "extraKeys_name": "Key name",

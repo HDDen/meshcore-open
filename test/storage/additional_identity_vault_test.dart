@@ -20,6 +20,53 @@ void main() {
   });
   tearDown(environment.tearDown);
 
+  test('a radio import verifies the public key and keeps the radio name', () async {
+    MCKeyPair pair;
+    do {
+      pair = await generateKeyPair();
+    } while (pair.public.first == 0 || pair.public.first == 0xff);
+    final radioKey = hex.encode(pair.public);
+    await expectLater(
+      AdditionalIdentityEntry.fromRadio(
+        name: 'Radio [test]',
+        privateKey: pair.private,
+        expectedPublicKey: '00' * 32,
+      ),
+      throwsFormatException,
+    );
+    final entry = await AdditionalIdentityEntry.fromRadio(
+      name: 'Radio [test]',
+      privateKey: pair.private,
+      expectedPublicKey: radioKey,
+    );
+    final vault = await AdditionalIdentityVault.open(
+      password: 'test vault password',
+      saved: null,
+    );
+    await vault.save(entry);
+    final saved = (await storage.readAdditionalIdentityVault())!;
+    expect(saved, isNot(contains(entry.name)));
+    expect(saved, isNot(contains(hex.encode(pair.private))));
+    expect(await AdditionalIdentityVault.openRemembered(), isNull);
+    expect(await AdditionalIdentityVault.containsPublicKey(radioKey), isTrue);
+    expect(await AdditionalIdentityVault.containsPublicKey('00' * 32), isFalse);
+    final legacy = (jsonDecode(saved) as Map<String, dynamic>)
+      ..remove('publicKeyFingerprints');
+    final legacyEnvelope = jsonEncode(legacy);
+    expect(await storage.replaceAdditionalIdentityVault(saved, legacyEnvelope), isTrue);
+    expect(await AdditionalIdentityVault.containsPublicKey(radioKey), isFalse);
+
+    final reopened = await AdditionalIdentityVault.open(
+      password: 'test vault password',
+      saved: legacyEnvelope,
+    );
+    expect(await AdditionalIdentityVault.containsPublicKey(radioKey), isTrue);
+    expect(reopened.entries.single.name, 'Radio [test]');
+    expect(reopened.entries.single.identity.publicKeyHex, radioKey);
+    await reopened.remove(radioKey);
+    expect(await AdditionalIdentityVault.containsPublicKey(radioKey), isFalse);
+  });
+
   test('keys stay encrypted in SQLite and can be reopened and edited', () async {
     MCKeyPair pair;
     do {

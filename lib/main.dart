@@ -40,6 +40,7 @@ import 'services/app_settings_service.dart';
 import 'services/chat_background_service.dart';
 import 'services/app_update_service.dart';
 import 'widgets/app_update_controls.dart';
+import 'widgets/node_identity_import_prompt.dart';
 import 'services/network_map/network_map_availability.dart';
 import 'services/network_map/network_map_upload_service.dart';
 import 'services/notification_service.dart';
@@ -710,6 +711,8 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   bool _txPowerRecoveryShowing = false;
   bool _directEchoRecoveryPromptScheduled = false;
   bool _directEchoRecoveryPromptShowing = false;
+  TxPowerSession? _nodeIdentityImportChecked;
+  bool _nodeIdentityImportShowing = false;
 
   @override
   void initState() {
@@ -794,6 +797,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       unawaited(_showMessageHistoryMigrationWarning());
       if (widget.connector.isSessionReady) _maybeScheduleTxPowerRecovery();
       _maybeScheduleDirectEchoRecoveryPrompt();
+      _maybeScheduleNodeIdentityImport();
     });
   }
 
@@ -930,13 +934,14 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       unawaited(connector.resumePendingOutgoingMessages());
       _maybeScheduleTxPowerRecovery();
       _maybeScheduleDirectEchoRecoveryPrompt();
+      _maybeScheduleNodeIdentityImport();
     }
   }
 
   void _maybeScheduleTxPowerRecovery() {
     final session = widget.connector.txPowerSession;
     if (session == null || session == _txPowerRecoveryChecked ||
-        _txPowerRecoveryShowing) {
+        _txPowerRecoveryShowing || _nodeIdentityImportShowing) {
       return;
     }
     _txPowerRecoveryChecked = session;
@@ -993,13 +998,16 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       }
     } finally {
       _txPowerRecoveryShowing = false;
-      if (mounted && connector.isSessionReady) _maybeScheduleTxPowerRecovery();
+      if (mounted && connector.isSessionReady) {
+        _maybeScheduleTxPowerRecovery();
+        _maybeScheduleNodeIdentityImport();
+      }
     }
   }
 
   void _maybeScheduleDirectEchoRecoveryPrompt() {
     if (_directEchoRecoveryPromptScheduled ||
-        _directEchoRecoveryPromptShowing ||
+        _directEchoRecoveryPromptShowing || _nodeIdentityImportShowing ||
         !widget.connector.isSessionReady) {
       return;
     }
@@ -1052,10 +1060,51 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
       ),
     );
     _directEchoRecoveryPromptShowing = false;
-    if (enable == null || !mounted) return;
-    await widget.appSettingsService.handleDirectEchoRecoveryPrompt(
-      enable: enable,
-    );
+    if (!mounted) return;
+    if (enable != null) {
+      await widget.appSettingsService.handleDirectEchoRecoveryPrompt(enable: enable);
+    }
+    if (mounted) _maybeScheduleNodeIdentityImport();
+  }
+
+  void _maybeScheduleNodeIdentityImport() {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
+    final connector = widget.connector;
+    final session = connector.txPowerSession;
+    if (session == null || session == _nodeIdentityImportChecked ||
+        _nodeIdentityImportShowing || _txPowerRecoveryShowing ||
+        _directEchoRecoveryPromptScheduled || _directEchoRecoveryPromptShowing ||
+        !NodeIdentityImportPrompt.shouldOffer(connector, session)) {
+      return;
+    }
+    _nodeIdentityImportChecked = session;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_showNodeIdentityImport(session));
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  Future<void> _showNodeIdentityImport(TxPowerSession session) async {
+    final context = MeshCoreApp._navigatorKey.currentContext;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (context == null || _txPowerRecoveryShowing ||
+        _directEchoRecoveryPromptScheduled || _directEchoRecoveryPromptShowing ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
+      if (_nodeIdentityImportChecked == session) _nodeIdentityImportChecked = null;
+      return;
+    }
+    _nodeIdentityImportShowing = true;
+    try {
+      await NodeIdentityImportPrompt.show(context, widget.connector, session);
+    } finally {
+      _nodeIdentityImportShowing = false;
+      if (mounted && widget.connector.isSessionReady) {
+        _maybeScheduleTxPowerRecovery();
+        _maybeScheduleDirectEchoRecoveryPrompt();
+        _maybeScheduleNodeIdentityImport();
+      }
+    }
   }
 
   void _scheduleScannerNavigation() {
@@ -1133,6 +1182,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _refreshNotificationPermissionState();
       unawaited(widget.connector.resumeQueuedMessageSyncAfterForeground());
+      _maybeScheduleNodeIdentityImport();
     }
     // `inactive` is still on screen (iOS Control Center, a call banner, a Face
     // ID prompt), so it must not cancel a decode and mark the image corrupt.

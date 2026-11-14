@@ -10577,6 +10577,14 @@ class AppLocalizationsHu extends AppLocalizations {
   String get extraKeys_actionError => 'Could not complete the key action.';
 
   @override
+  String get extraKeys_importNodePrompt =>
+      'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
+
+  @override
+  String get extraKeys_nodeExportUnavailable =>
+      'This firmware does not allow exporting the node’s private key.';
+
+  @override
   String get extraKeys_advertise => 'Send Flood advert';
 
   @override
