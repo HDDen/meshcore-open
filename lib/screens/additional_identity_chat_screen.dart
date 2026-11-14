@@ -18,7 +18,9 @@ import '../widgets/chat_route_activity.dart';
 import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_chat_title.dart';
 import '../widgets/contact_composer_actions.dart';
+import '../widgets/contact_settings_dialog.dart';
 import '../widgets/markup_text_editing_controller.dart';
+import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/routing_sheet.dart';
@@ -329,6 +331,34 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
           ),
           const QuickActionsHeaderButton(header: QuickActionsHeader.contact),
           const RadioStatsIconButton(),
+          Consumer<MeshCoreConnector>(
+            builder: (context, connector, _) {
+              if (connector.isOfflineMode) return const SizedBox.shrink();
+              return PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: PopupMenuRow(
+                      icon: Icons.settings,
+                      text: context.l10n.contact_settings,
+                    ),
+                  ),
+                ],
+                onSelected: (_) {
+                  final stored = connector.getContactByPubKeyHex(
+                    widget.senderKey,
+                  );
+                  unawaited(showContactSettingsDialog(
+                    context,
+                    connector: connector,
+                    contact: stored ?? widget.peer,
+                    canEditTelemetry: stored != null,
+                  ));
+                },
+              );
+            },
+          ),
         ],
       ),
       body: Column(

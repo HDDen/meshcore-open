@@ -27,16 +27,19 @@ abstract final class NodeIdentityImportPrompt {
     MeshCoreConnector connector,
     TxPowerSession session,
   ) async {
-    bool isCurrent() =>
-        context.mounted &&
+    bool isCurrentSession() =>
         connector.isSessionReady &&
         !connector.isRestartingTransport &&
         connector.txPowerSession == session;
-    if (!isCurrent() || !shouldOffer(connector, session)) return;
+    if (!context.mounted ||
+        !isCurrentSession() ||
+        !shouldOffer(connector, session)) {
+      return;
+    }
 
     final l10n = context.l10n;
     void showError(String message) {
-      if (!isCurrent()) return;
+      if (!context.mounted || !isCurrentSession()) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -50,7 +53,11 @@ abstract final class NodeIdentityImportPrompt {
       showError(l10n.extraKeys_actionError);
       return;
     }
-    if (!isCurrent() || !shouldOffer(connector, session)) return;
+    if (!context.mounted ||
+        !isCurrentSession() ||
+        !shouldOffer(connector, session)) {
+      return;
+    }
     final name = connector.selfName!.trim();
 
     final confirmed = await showDialog<bool>(
@@ -71,7 +78,7 @@ abstract final class NodeIdentityImportPrompt {
         ],
       ),
     );
-    if (!isCurrent()) return;
+    if (!context.mounted || !isCurrentSession()) return;
     final preference = _preferenceKey(session.nodeKey);
     try {
       if (confirmed != true) {
@@ -82,12 +89,12 @@ abstract final class NodeIdentityImportPrompt {
         context,
         allowRemembered: true,
       );
-      if (vault == null || !isCurrent()) return;
+      if (vault == null || !context.mounted || !isCurrentSession()) return;
 
       if (!vault.entries.any((entry) =>
           entry.identity.publicKeyHex == session.nodeKey)) {
         final entry = await connector.exportNodeIdentity(session, name: name);
-        if (!isCurrent()) return;
+        if (!context.mounted || !isCurrentSession()) return;
         if (entry == null) {
           showError(l10n.extraKeys_nodeExportUnavailable);
           return;

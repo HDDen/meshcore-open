@@ -66,6 +66,7 @@ import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_composer_actions.dart';
+import '../widgets/contact_settings_dialog.dart';
 import '../widgets/chat_day_separator.dart';
 import '../widgets/popup_menu_row.dart';
 import 'canvas_editor_screen.dart';
@@ -82,7 +83,6 @@ import '../widgets/mcmp_signature_badge.dart';
 import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_search_sheet.dart';
-import '../widgets/quick_answers_selection_dialog.dart';
 import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
@@ -1223,7 +1223,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       case 'info':
                         _showContactInfo(context);
                       case 'settings':
-                        _showContactSettings(context);
+                        unawaited(showContactSettingsDialog(
+                          context,
+                          connector: connector,
+                          contact: _resolveContact(connector),
+                        ));
                       case 'background':
                         unawaited(showChatBackgroundSheet(
                           context,
@@ -2211,27 +2215,27 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow(
+              ContactInfoRow(
                 context.l10n.chat_type,
                 contact.typeLabel(context.l10n),
               ),
-              _buildInfoRow(
+              ContactInfoRow(
                 context.l10n.chat_path,
                 contact.pathLabel(
                   context.l10n,
                   pathHashByteWidth: connector.pathHashByteWidth,
                 ),
               ),
-              _buildInfoRow(
+              ContactInfoRow(
                 context.l10n.contact_lastSeen,
                 _formatContactLastMessage(contact.lastMessageAt),
               ),
               if (contact.hasLocation)
-                _buildInfoRow(
+                ContactInfoRow(
                   context.l10n.chat_location,
                   '${contact.latitude?.toStringAsFixed(4)}, ${contact.longitude?.toStringAsFixed(4)}',
                 ),
-              _buildInfoRow(context.l10n.chat_publicKey, contact.publicKeyHex),
+              ContactInfoRow(context.l10n.chat_publicKey, contact.publicKeyHex),
             ],
           ),
         ),
@@ -2240,446 +2244,6 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.common_close),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showContactSettings(BuildContext context) {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    final appSettingsService = Provider.of<AppSettingsService>(
-      context,
-      listen: false,
-    );
-    connector.ensureContactMcmpSettingLoaded(widget.contact.publicKeyHex);
-    connector.ensureContactMCOtxtSettingLoaded(widget.contact.publicKeyHex);
-    connector.ensureContactSmazSettingLoaded(widget.contact.publicKeyHex);
-    connector.ensureContactCyr2LatSettingLoaded(widget.contact.publicKeyHex);
-    connector.ensureContactSendingDelaySettingLoaded(
-      widget.contact.publicKeyHex,
-    );
-    connector.ensureContactQuickAnswerIdsLoaded(widget.contact.publicKeyHex);
-    // The live contact carries the current telemetry flags; widget.contact
-    // is the snapshot this screen was opened with.
-    final contact = _resolveContact(connector);
-    bool mcmpEnabled = connector.isContactMcmpEnabled(contact.publicKeyHex);
-    bool mcotxtEnabled = connector.isContactMCOtxtEnabled(contact.publicKeyHex);
-    bool mcotxtPlainWhenSmaller = connector.isContactMCOtxtPlainWhenSmaller(
-      contact.publicKeyHex,
-    );
-    int selectedMcmpVersion = connector.contactMcmpVersion(
-      contact.publicKeyHex,
-    );
-    bool mcmpUseSign = connector.contactMcmpUseSign(contact.publicKeyHex);
-    bool smazEnabled = connector.isContactSmazEnabled(contact.publicKeyHex);
-    bool cyr2latEnabled = connector.isContactCyr2LatEnabled(
-      contact.publicKeyHex,
-    );
-    bool urlImagesEnabled = connector.isContactUrlImagesEnabled(
-      contact.publicKeyHex,
-    );
-    bool sendingDelayEnabled = connector.isContactSendingDelayEnabled(
-      contact.publicKeyHex,
-    );
-    List<String> selectedQuickAnswerIds = connector.getContactQuickAnswerIds(
-      contact.publicKeyHex,
-    );
-    String? selectedCyr2LatProfileId = connector.getContactCyr2LatProfileId(
-      contact.publicKeyHex,
-    );
-    bool teleBaseEnabled = contact.teleBaseEnabled;
-    bool teleLocEnabled = contact.teleLocEnabled;
-    bool teleEnvEnabled = contact.teleEnvEnabled;
-    // Each toggle is committed at once, like the compression switches, so
-    // dismissing the dialog by tapping outside keeps the change. All three
-    // flags go every time so overlapping writes cannot undo each other.
-    void commitTelemetryFlags() {
-      connector.setContactFlags(
-        contact,
-        teleBase: teleBaseEnabled,
-        teleLoc: teleLocEnabled,
-        teleEnv: teleEnvEnabled,
-      );
-    }
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(context.l10n.contact_settings),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (contact.hasLocation) ...[
-                  _buildInfoRow(
-                    context.l10n.chat_location,
-                    '${contact.latitude?.toStringAsFixed(4)}, ${contact.longitude?.toStringAsFixed(4)}',
-                  ),
-                  const Divider(height: 8),
-                ],
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.channels_mcmpCompression),
-                  subtitle: Text(
-                    context.l10n.channels_mcmpCompressionDescription,
-                  ),
-                  value: mcmpEnabled,
-                  onChanged: (value) {
-                    connector.setContactMcmpEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    if (value) {
-                      connector.setContactSmazEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactMCOtxtEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactCyr2LatEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                    }
-                    setDialogState(() {
-                      mcmpEnabled = value;
-                      if (mcmpEnabled) {
-                        mcotxtEnabled = false;
-                        smazEnabled = false;
-                        cyr2latEnabled = false;
-                      }
-                    });
-                  },
-                ),
-                if (mcmpEnabled) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                    child: DropdownButtonFormField<int>(
-                      initialValue: selectedMcmpVersion,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.settings_mcmp_version,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 2, child: Text('v2 (legacy)')),
-                        DropdownMenuItem(value: 3, child: Text('v3')),
-                      ],
-                      onChanged: (value) {
-                        final normalized = value == 3 ? 3 : 2;
-                        connector.setContactMcmpVersion(
-                          contact.publicKeyHex,
-                          normalized,
-                        );
-                        setDialogState(() {
-                          selectedMcmpVersion = normalized;
-                        });
-                      },
-                    ),
-                  ),
-                  if (contact.type == advTypeRoom && selectedMcmpVersion == 3)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                      child: DropdownButtonFormField<bool>(
-                        initialValue: mcmpUseSign,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.settings_mcmp_useSign,
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: true,
-                            child: Text(context.l10n.settings_mcmp_signed),
-                          ),
-                          DropdownMenuItem(
-                            value: false,
-                            child: Text(context.l10n.settings_mcmp_noSign),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          final normalized = value ?? true;
-                          connector.setContactMcmpUseSign(
-                            contact.publicKeyHex,
-                            normalized,
-                          );
-                          setDialogState(() {
-                            mcmpUseSign = normalized;
-                          });
-                        },
-                      ),
-                    ),
-                ],
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.channels_smazCompression),
-                  subtitle: Text(context.l10n.chat_compressOutgoingMessages),
-                  value: smazEnabled,
-                  onChanged: (value) {
-                    connector.setContactSmazEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    connector.setContactMcmpEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    connector.setContactMCOtxtEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    connector.setContactCyr2LatEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    setDialogState(() {
-                      smazEnabled = value;
-                      if (smazEnabled) {
-                        mcmpEnabled = false;
-                        mcotxtEnabled = false;
-                        cyr2latEnabled = false;
-                      }
-                    });
-                  },
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.channels_cyr2latCompression),
-                  subtitle: Text(context.l10n.channels_cyr2latCompressionDscr),
-                  value: cyr2latEnabled,
-                  onChanged: (value) {
-                    connector.setContactCyr2LatEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    connector.setContactMcmpEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    connector.setContactMCOtxtEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    connector.setContactSmazEnabled(
-                      contact.publicKeyHex,
-                      false,
-                    );
-                    setDialogState(() {
-                      cyr2latEnabled = value;
-                      if (cyr2latEnabled) {
-                        mcmpEnabled = false;
-                        mcotxtEnabled = false;
-                        smazEnabled = false;
-                      }
-                    });
-                  },
-                ),
-                if (cyr2latEnabled) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                    child: DropdownButtonFormField<String>(
-                      // Keep full profile names readable in the field and menu.
-                      isExpanded: true,
-                      isDense: false,
-                      itemHeight: null,
-                      initialValue: selectedCyr2LatProfileId,
-                      decoration: InputDecoration(
-                        labelText:
-                            context.l10n.channels_cyr2latSettingsSubheading,
-                        border: const OutlineInputBorder(),
-                      ),
-                      items: appSettingsService.settings.cyr2latProfiles.map((
-                        profile,
-                      ) {
-                        return DropdownMenuItem(
-                          value: profile.id,
-                          child: Text(profile.name, softWrap: true),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        connector.setContactCyr2LatProfileId(
-                          contact.publicKeyHex,
-                          value,
-                        );
-                        setDialogState(() {
-                          selectedCyr2LatProfileId = value;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.channels_mcotxtCompression),
-                  value: mcotxtEnabled,
-                  onChanged: (value) {
-                    connector.setContactMCOtxtEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    if (value) {
-                      connector.setContactMcmpEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactSmazEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                      connector.setContactCyr2LatEnabled(
-                        contact.publicKeyHex,
-                        false,
-                      );
-                    }
-                    setDialogState(() {
-                      mcotxtEnabled = value;
-                      if (mcotxtEnabled) {
-                        mcmpEnabled = false;
-                        smazEnabled = false;
-                        cyr2latEnabled = false;
-                      }
-                    });
-                  },
-                ),
-                if (mcotxtEnabled)
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      context.l10n.channels_mcotxtPlainWhenSmaller,
-                    ),
-                    value: mcotxtPlainWhenSmaller,
-                    onChanged: (value) {
-                      connector.setContactMCOtxtPlainWhenSmaller(
-                        contact.publicKeyHex,
-                        value,
-                      );
-                      setDialogState(() {
-                        mcotxtPlainWhenSmaller = value;
-                      });
-                    },
-                  ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.settings_useSendingDelay),
-                  value: sendingDelayEnabled,
-                  onChanged: (value) {
-                    connector.setContactSendingDelayEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    setDialogState(() {
-                      sendingDelayEnabled = value;
-                    });
-                  },
-                ),
-                const Divider(height: 8),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.quickreply_outlined),
-                  title: Text(context.l10n.settings_quickAnswersTitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    final selection = await showQuickAnswersSelectionDialog(
-                      context,
-                      settingsService: appSettingsService,
-                      selectedAnswerIds: selectedQuickAnswerIds,
-                    );
-                    if (selection == null) return;
-                    await connector.setContactQuickAnswerIds(
-                      contact.publicKeyHex,
-                      selection,
-                    );
-                    setDialogState(() {
-                      selectedQuickAnswerIds = selection;
-                    });
-                  },
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.urlImage_enable),
-                  subtitle: appSettingsService.settings.loadLinkImages
-                      ? null : Text(context.l10n.urlImage_disabledInAppSettings),
-                  value: urlImagesEnabled,
-                  onChanged: appSettingsService.settings.loadLinkImages ? (value) {
-                    connector.setContactUrlImagesEnabled(
-                      contact.publicKeyHex,
-                      value,
-                    );
-                    setDialogState(() => urlImagesEnabled = value);
-                  } : null,
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.contact_teleBase),
-                  subtitle: Text(context.l10n.contact_teleBaseSubtitle),
-                  value: teleBaseEnabled,
-                  onChanged: (value) {
-                    setDialogState(() => teleBaseEnabled = value);
-                    commitTelemetryFlags();
-                  },
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.contact_teleLoc),
-                  subtitle: Text(context.l10n.contact_teleLocSubtitle),
-                  value: teleLocEnabled,
-                  onChanged: (value) {
-                    setDialogState(() => teleLocEnabled = value);
-                    commitTelemetryFlags();
-                  },
-                ),
-                const Divider(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(context.l10n.contact_teleEnv),
-                  subtitle: Text(context.l10n.contact_teleEnvSubtitle),
-                  value: teleEnvEnabled,
-                  onChanged: (value) {
-                    setDialogState(() => teleEnvEnabled = value);
-                    commitTelemetryFlags();
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                connector.setContactFlags(
-                  contact,
-                  teleBase: teleBaseEnabled,
-                  teleLoc: teleLocEnabled,
-                  teleEnv: teleEnvEnabled,
-                );
-                Navigator.pop(context);
-              },
-              child: Text(context.l10n.common_close),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(label, style: TextStyle(color: Colors.grey[600])),
-          ),
-          Expanded(child: SelectableText(value)),
         ],
       ),
     );

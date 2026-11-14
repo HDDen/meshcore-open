@@ -239,7 +239,19 @@ class _IdentityRoutingNode extends _SenderPickerNode {
   _IdentityRoutingNode(super.inbox);
 
   Contact? contact;
+  final telemetryWrites = <(String, bool?)>[];
   final _regions = <String, String>{};
+
+  @override
+  Future<void> setContactFlags(
+    Contact contact, {
+    bool? isFavorite,
+    bool? teleBase,
+    bool? teleLoc,
+    bool? teleEnv,
+  }) async {
+    telemetryWrites.add((contact.publicKeyHex, teleBase));
+  }
 
   @override
   List<Contact> get contacts => [?contact];
@@ -854,6 +866,96 @@ void main() {
     expect(find.text('1.8s'), findsNothing);
     expect(find.byTooltip('Time on air'), findsNothing);
     expect(find.textContaining('% MCOtxt'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('additional identity chat opens the shared contact settings', (
+    tester,
+  ) async {
+    final inbox = _SenderPickerInbox();
+    final node = _IdentityRoutingNode(inbox)
+      ..bindContactSettingsToNodeForTest('ab' * 32);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ru'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox,
+            connector: node,
+            peer: _contact,
+            recipientKey: 'af' * 32,
+            recipientName: 'Extra key',
+            senderKey: _contact.publicKeyHex,
+            senderName: _contact.name,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bar = find.byType(AppBar);
+    final l10n = AppLocalizations.of(tester.element(bar));
+    final menu = find.descendant(
+      of: bar,
+      matching: find.byType(PopupMenuButton<String>),
+    );
+    final dialog = find.byType(AlertDialog);
+    final smaz = find.widgetWithText(
+      SwitchListTile,
+      l10n.channels_smazCompression,
+    );
+    final telemetry = find.widgetWithText(SwitchListTile, l10n.contact_teleBase);
+
+    Future<void> openSettings() async {
+      await tester.tap(menu);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.contact_settings));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: dialog, matching: find.text(l10n.contact_settings)),
+        findsOneWidget,
+      );
+    }
+
+    await openSettings();
+    expect(find.text(l10n.contacts_notInNodeMemory), findsOneWidget);
+    expect(tester.widget<SwitchListTile>(telemetry).onChanged, isNull);
+    await tester.ensureVisible(smaz);
+    await tester.tap(smaz);
+    await tester.pumpAndSettle();
+    expect(node.isContactSmazEnabled(_contact.publicKeyHex), isTrue);
+
+    await tester.tap(find.text(l10n.common_close));
+    await tester.pumpAndSettle();
+    expect(node.telemetryWrites, isEmpty);
+    expect(node.contact, isNull);
+
+    node.contact = _contact.copyWith(flags: contactFlagTeleBase);
+    await openSettings();
+    expect(find.text(l10n.contacts_notInNodeMemory), findsNothing);
+    expect(tester.widget<SwitchListTile>(smaz).value, isTrue);
+    expect(tester.widget<SwitchListTile>(telemetry).value, isTrue);
+    await tester.ensureVisible(telemetry);
+    await tester.tap(telemetry);
+    await tester.pumpAndSettle();
+    expect(node.telemetryWrites, [(_contact.publicKeyHex, false)]);
+
+    await tester.tap(find.text(l10n.common_close));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
