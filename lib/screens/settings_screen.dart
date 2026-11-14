@@ -27,8 +27,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/settings_nav_tile_content.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
-import 'backup_export_screen.dart';
-import 'backup_restore_screen.dart';
+import 'backup_screen.dart';
 import 'ble_debug_log_screen.dart';
 import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
@@ -155,189 +154,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: EdgeInsets.zero,
                   child: _buildActionsCardContent(context, connector),
                 ),
+                SectionHeader(l10n.settings_export),
                 MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupExportScreen(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.save_outlined,
-                    title: l10n.backupExport_createTitle,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupExportScreen.nodeProfile(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.save_outlined,
-                    title: l10n.backupNodeProfile_exportTitle,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.nodeProfile(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.settings_backup_restore,
-                    title: l10n.backupNodeProfile_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.channels(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.restore,
-                    title: l10n.backupChannels_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.channelSettings(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.tune_outlined,
-                    title: l10n.backupChannelSettings_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.contacts(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.person_add_alt_1_outlined,
-                    title: l10n.backupContacts_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.contactSettings(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.manage_accounts_outlined,
-                    title: l10n.backupContactSettings_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.contactGroups(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.folder_shared_outlined,
-                    title: l10n.backupContactGroups_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.discoveredContacts(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.radar,
-                    title: l10n.backupDiscoveredContacts_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.communities(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.groups_outlined,
-                    title: l10n.backupCommunities_title,
-                  ),
-                ),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BackupRestoreScreen.appSettings(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.settings_backup_restore,
-                    title: l10n.backupAppSettings_title,
-                  ),
-                ),
-                if (!kIsWeb)
-                  MeshCard(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BackupRestoreScreen.messageHistory(),
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const BackupScreen()),
+                        ),
+                        child: _buildNavTileContent(
+                          context,
+                          icon: Icons.backup_outlined,
+                          title: l10n.backupRestore_title,
+                          subtitle: l10n.backupRestore_subtitle,
+                        ),
                       ),
-                    ),
-                    child: _buildNavTileContent(
-                      context,
-                      icon: Icons.history,
-                      title: l10n.backupMessageHistory_title,
-                    ),
-                  ),
-                if (!kIsWeb)
-                  MeshCard(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BackupExportScreen.messageHistory(),
+                      const Divider(height: 1, indent: 16),
+                      InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ExportScreen()),
+                        ),
+                        child: _buildNavTileContent(
+                          context,
+                          icon: Icons.download_outlined,
+                          title: l10n.settings_export,
+                          subtitle: l10n.settings_exportSubtitle,
+                        ),
                       ),
-                    ),
-                    child: _buildNavTileContent(
-                      context,
-                      icon: Icons.save_outlined,
-                      title: l10n.backupMessageHistory_exportTitle,
-                    ),
-                  ),
-
-                // EXPORT section
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ExportScreen()),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.download_outlined,
-                    title: l10n.settings_export,
-                    subtitle: l10n.settings_exportSubtitle,
+                    ],
                   ),
                 ),
 

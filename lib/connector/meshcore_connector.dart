@@ -56,7 +56,11 @@ import '../helpers/channel_raw_packet.dart';
 import '../helpers/channel_key_hash_cache.dart';
 import '../helpers/channel_sender_name.dart';
 import '../helpers/backup_channel_restore.dart';
+import '../helpers/backup_additional_identities.dart';
+import '../helpers/backup_filter_training.dart';
+import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_channel_settings.dart';
+import '../helpers/portable_app_settings.dart';
 import '../helpers/backup_communities.dart';
 import '../helpers/backup_contact_groups.dart';
 import '../helpers/backup_contact_settings.dart';
@@ -13369,7 +13373,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     };
   }
 
-  BackupSnapshot? snapshotNodeProfileBackup(Set<BackupNodeProfilePart> parts) {
+  BackupNodeProfile? captureBackupNodeProfile(Set<BackupNodeProfilePart> parts) {
     if (!_canUseNodeProfileBackup) return null;
     final profile = _readNodeProfile();
     final name = profile.nodeName;
@@ -13393,10 +13397,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       defaultFloodScope: parts.contains(BackupNodeProfilePart.defaultFloodScope)
           ? profile.defaultFloodScope : null,
     );
-    return BackupSnapshot(
+    return selected;
+  }
+
+  BackupSnapshot? snapshotNodeProfileBackup(Set<BackupNodeProfilePart> parts) {
+    final profile = captureBackupNodeProfile(parts);
+    return profile == null ? null : BackupSnapshot(
       sourcePublicKey: selfPublicKeyHex,
       nodeName: deviceDisplayName,
-      nodeProfile: selected,
+      nodeProfile: profile,
       createdAt: DateTime.now(),
     );
   }
@@ -13848,8 +13857,42 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool includeCommunities = false,
     bool includeContactSettings = false,
     bool includeChannelSettings = false,
+  }) => snapshotBackup(
+    includeChannels: includeChannels,
+    includeContacts: includeContacts,
+    appSettings: appSettings,
+    includeDiscoveredContacts: includeDiscoveredContacts,
+    includeContactGroups: includeContactGroups,
+    includeCommunities: includeCommunities,
+    includeContactSettings: includeContactSettings,
+    includeChannelSettings: includeChannelSettings,
+  );
+
+  Future<BackupSnapshot?> snapshotBackup({
+    required bool includeChannels,
+    required bool includeContacts,
+    AppSettingsBackup? appSettings,
+    bool includeDiscoveredContacts = false,
+    bool includeContactGroups = false,
+    bool includeCommunities = false,
+    bool includeContactSettings = false,
+    bool includeChannelSettings = false,
+    Set<BackupNodeProfilePart> profileParts = const {},
+    bool publicKeySelected = false,
+    bool includePrivateKey = false,
+    List<String>? regions,
+    Map<String, PortableAppSettings> portableSettings = const {},
+    BackupMessageFilter? messageFilter,
+    BackupFilterTraining? filterTraining,
+    BackupAdditionalIdentities? additionalIdentities,
   }) async {
     final nodeKey = selfPublicKeyHex;
+    final includeProfile =
+        profileParts.isNotEmpty || publicKeySelected || includePrivateKey;
+    if (includeProfile && !_canUseNodeProfileBackup) return null;
+    final nodeProfile =
+        profileParts.isEmpty ? null : captureBackupNodeProfile(profileParts);
+    final session = includePrivateKey ? txPowerSession : null;
     final revision = _channelInboxRevision;
     bool canSnapshot() =>
         !_restoringBackupChannels &&
@@ -13864,9 +13907,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _channelInboxRevision == revision;
     if ((!includeChannels && !includeContacts &&
             !includeDiscoveredContacts && !includeContactGroups &&
-            !includeCommunities && !includeContactSettings && !includeChannelSettings) ||
+            !includeCommunities && !includeContactSettings && !includeChannelSettings &&
+            !includeProfile) ||
         !canSnapshot()) {
       return null;
+    }
+    String? nodePrivateKey;
+    if (includePrivateKey) {
+      if (session == null) return null;
+      final entry = await exportNodeIdentity(session, name: _selfName ?? '');
+      if (entry == null || !canSnapshot() || txPowerSession != session) return null;
+      final key = hex2Uint8List(entry.identity.privateKeyHex);
+      try {
+        nodePrivateKey = base64Encode(key);
+      } finally {
+        key.fillRange(0, key.length, 0);
+      }
     }
     final discoveredJson = includeDiscoveredContacts
         ? exportDiscoveredContactsJson()
@@ -13912,6 +13968,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       communities: communities,
       contactSettings: contactSettings,
       channelSettings: channelSettings,
+      nodeProfile: nodeProfile,
+      publicKeySelected: publicKeySelected,
+      nodePrivateKey: nodePrivateKey,
+      regions: regions,
+      portableSettings: portableSettings,
+      messageFilter: messageFilter,
+      filterTraining: filterTraining,
+      additionalIdentities: additionalIdentities,
       createdAt: DateTime.now(),
     );
   }

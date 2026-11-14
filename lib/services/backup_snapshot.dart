@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import '../connector/meshcore_protocol.dart';
+import '../helpers/backup_additional_identities.dart';
 import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/portable_app_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -29,11 +31,17 @@ class BackupSnapshot {
     BackupMessageFilter? messageFilter,
     BackupFilterTraining? filterTraining,
     BackupNodeProfile? nodeProfile,
+    this.publicKeySelected = false,
+    this.nodePrivateKey,
+    this.regions,
+    this.portableSettings = const {},
+    this.additionalIdentities,
     required DateTime createdAt,
   }) : sourcePublicKey =
            channels == null && channelSettings == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
-               communities == null && contactSettings == null && nodeProfile == null
+               communities == null && contactSettings == null && nodeProfile == null &&
+               !publicKeySelected && nodePrivateKey == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
@@ -73,7 +81,9 @@ class BackupSnapshot {
     }
     if (_sections.isEmpty && _appSettings == null &&
         contactSettings == null && channelSettings == null && messageFilter == null &&
-        filterTraining == null && nodeProfile == null) {
+        filterTraining == null && nodeProfile == null &&
+        !publicKeySelected && nodePrivateKey == null && regions == null &&
+        portableSettings.isEmpty && additionalIdentities == null) {
       throw const FormatException('No selected backup sections');
     }
   }
@@ -87,6 +97,11 @@ class BackupSnapshot {
        createdAt = createdAt.toUtc(),
        _sections = const {},
        _appSettings = null,
+       publicKeySelected = false,
+       nodePrivateKey = null,
+       regions = null,
+       portableSettings = const {},
+       additionalIdentities = null,
        _messageFilter = null,
        _filterTraining = null,
        _nodeProfile = null,
@@ -109,6 +124,15 @@ class BackupSnapshot {
   final DateTime createdAt;
   final Map<String, List<Map<String, Object?>>> _sections;
   final AppSettingsBackup? _appSettings;
+  final bool publicKeySelected;
+  final String? nodePrivateKey;
+  final List<String>? regions;
+  final Map<String, PortableAppSettings> portableSettings;
+  final BackupAdditionalIdentities? additionalIdentities;
+
+  bool get requiresPassword => nodePrivateKey != null ||
+      additionalIdentities != null ||
+      portableSettings.keys.any(PortableAppSettings.secretKeys.containsKey);
   final BackupMessageFilter? _messageFilter;
   final BackupFilterTraining? _filterTraining;
   final BackupNodeProfile? _nodeProfile;
@@ -120,10 +144,13 @@ class BackupSnapshot {
       _historyRows?.isEmpty ??
       (_appSettings == null && _contactSettings == null && _channelSettings == null &&
           _messageFilter == null && _filterTraining == null && _nodeProfile == null &&
+          !publicKeySelected && nodePrivateKey == null && (regions?.isEmpty ?? true) &&
+          portableSettings.values.every((section) => section.isEmpty) &&
+          (additionalIdentities?.entries.isEmpty ?? true) &&
           _sections.values.every((rows) => rows.isEmpty));
   bool get _hasNodeData =>
       _sections.isNotEmpty || _contactSettings != null || _channelSettings != null ||
-      _nodeProfile != null;
+      _nodeProfile != null || publicKeySelected || nodePrivateKey != null;
   List<String> get _items => [
     ..._sections.keys,
     if (_contactSettings != null) 'perContactSettings',
@@ -160,7 +187,10 @@ class BackupSnapshot {
     return '$name.json';
   }
 
-  Future<String> encode({required String password}) {
+  Future<String> encode({required String password}) async {
+    if (requiresPassword && password.isEmpty) {
+      throw const BackupPasswordException.required();
+    }
     if (_historyRows case final rows?) {
       return _encodeHistory(rows, password);
     }
@@ -221,7 +251,23 @@ class BackupSnapshot {
     if (position != null) items.add('location');
     if (privacy != null) items.add('privacySettings');
     if (hasRadio) items.add('radioSettings');
-    return const BackupFileCodec().encode({
+    if (publicKeySelected || nodePrivateKey != null) items.add('publicKey');
+    if (nodePrivateKey != null) items.add('privateKey');
+    if (regions != null) items.add('regions');
+    final extensionSettings = portableSettings[PortableAppSettings.extension];
+    final sharedSettings = <String, Object?>{};
+    for (final entry in portableSettings.entries) {
+      if (entry.value.isEmpty) continue;
+      items.add(entry.key);
+      if (entry.key != PortableAppSettings.extension) {
+        sharedSettings.addAll(entry.value.values);
+      }
+    }
+    final keys = additionalIdentities;
+    if (keys != null && keys.entries.isNotEmpty) {
+      items.add(BackupAdditionalIdentities.section);
+    }
+    final contents = await const BackupFileCodec().encode({
       'format': BackupFileCodec.payloadFormat,
       'version': BackupFileCodec.formatVersion,
       'createdAt': createdAt.toIso8601String(),
@@ -234,8 +280,26 @@ class BackupSnapshot {
           AppSettingsBackup.section: {
             'preferences': {'app_settings': settings.toJson()},
           },
-        if (name != null || hasRadio)
-          'nodeSettings': {'name': ?name, if (hasRadio) 'radio': radio},
+        if (sharedSettings.isNotEmpty)
+          PortableAppSettings.shared: {
+            'preferences': {'app_settings': sharedSettings},
+          },
+        if (extensionSettings != null && !extensionSettings.isEmpty)
+          PortableAppSettings.extension: {
+            'preferences': {'app_settings': extensionSettings.values},
+          },
+        if (keys != null && keys.entries.isNotEmpty)
+          BackupAdditionalIdentities.section: {'entries': keys.toJson()},
+        if (name != null || hasRadio || publicKeySelected ||
+            nodePrivateKey != null || regions != null)
+          'nodeSettings': {
+            'name': ?name,
+            if (hasRadio) 'radio': radio,
+            if (publicKeySelected || nodePrivateKey != null)
+              'publicKey': sourcePublicKey,
+            'privateKey': ?nodePrivateKey,
+            if (regions != null) 'preferences': {'regions': regions},
+          },
         if (position != null || privacy != null)
           'locationSettings': {
             if (position != null) 'location': {
@@ -246,6 +310,10 @@ class BackupSnapshot {
           },
       },
     }, password: password);
+    if (utf8.encode(contents).length > backupMaxJsonBytes) {
+      throw const BackupFileTooLarge();
+    }
+    return contents;
   }
 
   Future<String> _encodeHistory(

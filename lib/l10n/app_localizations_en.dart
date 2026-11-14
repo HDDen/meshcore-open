@@ -9,6 +9,60 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle => 'Save and restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import file';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_locationSettings => 'Location settings';
+
+  @override
+  String get backupRestore_privateKey => 'Node private key';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API key';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+
+  @override
+  String get backupRestore_extraKeys => 'Additional private keys';
+
+  @override
+  String get backupRestore_passwordRequired => 'Set a backup password to include the selected keys.';
+
+  @override
+  String get backupRestore_review => 'Review and restore';
+
+  @override
+  String get backupRestore_historySeparate => 'Export message history to a separate file.';
+
+  @override
+  String get backupRestore_invalidSections => 'Some sections could not be read.';
+
+  @override
+  String get backupRestore_localApplied => 'Settings restored.';
+
+  @override
+  String get backupRestore_keysIntro => 'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
+
+  @override
+  String get backupRestore_nodeKeyExportOnly => 'You can export the node key here.';
+
+  @override
   String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override

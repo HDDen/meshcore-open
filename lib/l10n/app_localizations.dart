@@ -436,6 +436,114 @@ abstract class AppLocalizations {
   /// **'Could not save the backup.'**
   String get backupExport_failed;
 
+  /// No description provided for @backupRestore_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupRestore_title => 'Backup & Restore';
+
+  /// No description provided for @backupRestore_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and restore app data and radio settings'**
+  String get backupRestore_subtitle => 'Save and restore app data and radio settings';
+
+  /// No description provided for @backupRestore_import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get backupRestore_import => 'Import';
+
+  /// No description provided for @backupRestore_selectImportFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Import file'**
+  String get backupRestore_selectImportFile => 'Import file';
+
+  /// No description provided for @backupRestore_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password (optional)'**
+  String get backupRestore_password => 'Password (optional)';
+
+  /// No description provided for @backupRestore_items.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup and restore items'**
+  String get backupRestore_items => 'Backup and restore items';
+
+  /// No description provided for @backupRestore_locationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Location settings'**
+  String get backupRestore_locationSettings => 'Location settings';
+
+  /// No description provided for @backupRestore_privateKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Node private key'**
+  String get backupRestore_privateKey => 'Node private key';
+
+  /// No description provided for @backupRestore_ipfsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'IPFS API key'**
+  String get backupRestore_ipfsKey => 'IPFS API key';
+
+  /// No description provided for @backupRestore_stadiaMapKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Stadia Maps API key'**
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+
+  /// No description provided for @backupRestore_extraKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional private keys'**
+  String get backupRestore_extraKeys => 'Additional private keys';
+
+  /// No description provided for @backupRestore_passwordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a backup password to include the selected keys.'**
+  String get backupRestore_passwordRequired => 'Set a backup password to include the selected keys.';
+
+  /// No description provided for @backupRestore_review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and restore'**
+  String get backupRestore_review => 'Review and restore';
+
+  /// No description provided for @backupRestore_historySeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Export message history to a separate file.'**
+  String get backupRestore_historySeparate => 'Export message history to a separate file.';
+
+  /// No description provided for @backupRestore_invalidSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Some sections could not be read.'**
+  String get backupRestore_invalidSections => 'Some sections could not be read.';
+
+  /// No description provided for @backupRestore_localApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings restored.'**
+  String get backupRestore_localApplied => 'Settings restored.';
+
+  /// No description provided for @backupRestore_keysIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Add keys from this file to the current profile. Existing keys with the same public key are kept.'**
+  String get backupRestore_keysIntro => 'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
+
+  /// No description provided for @backupRestore_nodeKeyExportOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'You can export the node key here.'**
+  String get backupRestore_nodeKeyExportOnly => 'You can export the node key here.';
+
   /// No description provided for @backupContacts_title.
   ///
   /// In en, this message translates to:

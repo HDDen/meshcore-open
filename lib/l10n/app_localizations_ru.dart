@@ -9,6 +9,60 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get backupRestore_title => 'Резервное копирование';
+
+  @override
+  String get backupRestore_subtitle => 'Сохранение и восстановление данных приложения и настроек ноды';
+
+  @override
+  String get backupRestore_import => 'Импорт';
+
+  @override
+  String get backupRestore_selectImportFile => 'Импорт файла';
+
+  @override
+  String get backupRestore_password => 'Пароль (необязательный)';
+
+  @override
+  String get backupRestore_items => 'Данные для копирования и восстановления';
+
+  @override
+  String get backupRestore_locationSettings => 'Настройки местоположения';
+
+  @override
+  String get backupRestore_privateKey => 'Закрытый ключ ноды';
+
+  @override
+  String get backupRestore_ipfsKey => 'Ключ API IPFS';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Ключ API Stadia Maps';
+
+  @override
+  String get backupRestore_extraKeys => 'Дополнительные закрытые ключи';
+
+  @override
+  String get backupRestore_passwordRequired => 'Чтобы включить выбранные ключи, задайте пароль резервной копии.';
+
+  @override
+  String get backupRestore_review => 'Просмотреть и восстановить';
+
+  @override
+  String get backupRestore_historySeparate => 'Сохранить историю сообщений отдельным файлом.';
+
+  @override
+  String get backupRestore_invalidSections => 'Некоторые разделы не удалось прочитать.';
+
+  @override
+  String get backupRestore_localApplied => 'Настройки восстановлены.';
+
+  @override
+  String get backupRestore_keysIntro => 'Добавить ключи из файла в текущий профиль. Имеющиеся ключи с тем же открытым ключом сохранятся.';
+
+  @override
+  String get backupRestore_nodeKeyExportOnly => 'Здесь доступен экспорт ключа ноды.';
+
+  @override
   String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override

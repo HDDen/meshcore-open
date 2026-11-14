@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:typed_data' show BytesBuilder;
 import 'dart:ui' show Rect;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../services/backup_file_codec.dart';
 import 'platform_info.dart';
 
 const backupJsonFileType = XTypeGroup(
@@ -12,6 +14,18 @@ const backupJsonFileType = XTypeGroup(
   mimeTypes: ['application/json'],
   uniformTypeIdentifiers: ['public.json'],
 );
+
+Future<String> readBackupJson(XFile file) async {
+  if (await file.length() > backupMaxJsonBytes) throw const BackupFileTooLarge();
+  final bytes = BytesBuilder(copy: false);
+  await for (final chunk in file.openRead()) {
+    if (bytes.length + chunk.length > backupMaxJsonBytes) {
+      throw const BackupFileTooLarge();
+    }
+    bytes.add(chunk);
+  }
+  return utf8.decode(bytes.takeBytes());
+}
 
 enum BackupJsonSaveResult { saved, shareOpened, cancelled }
 

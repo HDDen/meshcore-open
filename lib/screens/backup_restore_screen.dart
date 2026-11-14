@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data' show BytesBuilder;
-
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
@@ -65,18 +62,6 @@ Future<BackupImportPlan> _inspectBackup(
   nodeProfileOnly: input.nodeProfileOnly,
 );
 
-Future<String> _readBackupFile(XFile file) async {
-  if (await file.length() > backupMaxJsonBytes) throw const BackupFileTooLarge();
-  final bytes = BytesBuilder(copy: false);
-  await for (final chunk in file.openRead()) {
-    if (bytes.length + chunk.length > backupMaxJsonBytes) {
-      throw const BackupFileTooLarge();
-    }
-    bytes.add(chunk);
-  }
-  return utf8.decode(bytes.takeBytes());
-}
-
 enum _BackupSection {
   channels,
   contacts,
@@ -96,67 +81,130 @@ class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen.channels({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.channels, _filter = null;
+  }) : _section = _BackupSection.channels,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.nodeProfile({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.nodeProfile, _filter = null;
+  }) : _section = _BackupSection.nodeProfile,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.contacts({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.contacts, _filter = null;
+  }) : _section = _BackupSection.contacts,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.appSettings({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.appSettings, _filter = null;
+  }) : _section = _BackupSection.appSettings,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.messageHistory({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.messageHistory, _filter = null;
+  }) : _section = _BackupSection.messageHistory,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.discoveredContacts({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.discoveredContacts, _filter = null;
+  }) : _section = _BackupSection.discoveredContacts,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.contactGroups({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.contactGroups, _filter = null;
+  }) : _section = _BackupSection.contactGroups,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.communities({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.communities, _filter = null;
+  }) : _section = _BackupSection.communities,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.contactSettings({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.contactSettings, _filter = null;
+  }) : _section = _BackupSection.contactSettings,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.channelSettings({
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.channelSettings, _filter = null;
+  }) : _section = _BackupSection.channelSettings,
+       _filter = null,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.messageFilter(
     MessageFilterService filter, {
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.messageFilter, _filter = filter;
+  }) : _section = _BackupSection.messageFilter,
+       _filter = filter,
+       _initialPlan = null,
+       _initialFileName = null;
 
   const BackupRestoreScreen.filterTraining(
     MessageFilterService filter, {
     super.key,
     this.pickFile = _pickBackupFile,
-  }) : _section = _BackupSection.filterTraining, _filter = filter;
+  }) : _section = _BackupSection.filterTraining,
+       _filter = filter,
+       _initialPlan = null,
+       _initialFileName = null;
+
+  BackupRestoreScreen.preview(
+    this._initialPlan, {
+    required BackupRestoreSection section,
+    required String fileName,
+    MessageFilterService? filter,
+    super.key,
+  }) : _section = switch (section) {
+         BackupRestoreSection.channels => _BackupSection.channels,
+         BackupRestoreSection.contacts => _BackupSection.contacts,
+         BackupRestoreSection.appSettings => _BackupSection.appSettings,
+         BackupRestoreSection.messageHistory => _BackupSection.messageHistory,
+         BackupRestoreSection.discoveredContacts => _BackupSection.discoveredContacts,
+         BackupRestoreSection.contactGroups => _BackupSection.contactGroups,
+         BackupRestoreSection.communities => _BackupSection.communities,
+         BackupRestoreSection.contactSettings => _BackupSection.contactSettings,
+         BackupRestoreSection.channelSettings => _BackupSection.channelSettings,
+         BackupRestoreSection.messageFilter => _BackupSection.messageFilter,
+         BackupRestoreSection.filterTraining => _BackupSection.filterTraining,
+         BackupRestoreSection.nodeProfile => _BackupSection.nodeProfile,
+         _ => throw ArgumentError('Unsupported preview section'),
+       },
+       pickFile = _pickBackupFile,
+       _filter = filter,
+       _initialFileName = fileName;
 
   final Future<XFile?> Function() pickFile;
   final _BackupSection _section;
+  final BackupImportPlan? _initialPlan;
+  final String? _initialFileName;
   final MessageFilterService? _filter;
 
   @override
@@ -243,97 +291,10 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _channelSettingsPreview = null;
         _notice = null;
       });
-      final contents = await _readBackupFile(file);
+      final contents = await readBackupJson(file);
       final plan = await _inspectWithPassword(contents);
       if (!mounted || plan == null) return;
-      final l10n = context.l10n;
-      if (widget._section == _BackupSection.nodeProfile) {
-        final profile = plan.nodeProfile;
-        if (profile == null || profile.isEmpty) {
-          setState(() => _notice = l10n.backupNodeProfile_empty);
-          return;
-        }
-        _nodeProfileSource = profile;
-      } else if (widget._section == _BackupSection.filterTraining) {
-        final training = plan.filterTraining;
-        if (training == null || training.isEmpty) {
-          setState(() => _notice = l10n.backupFilterTraining_empty);
-          return;
-        }
-        setState(() => _trainingSource = training);
-        return;
-      } else if (widget._section == _BackupSection.messageFilter) {
-        final filter = plan.messageFilter;
-        if (filter == null || filter.isEmpty) {
-          setState(() => _notice = l10n.backupMessageFilter_empty);
-          return;
-        }
-        _filterSource = filter;
-      } else if (widget._section == _BackupSection.channelSettings) {
-        final settings = plan.channelSettings;
-        if (settings == null || settings.isEmpty) {
-          setState(() => _notice = l10n.backupChannelSettings_empty);
-          return;
-        }
-        _channelSettingsSource = settings;
-      } else if (widget._section == _BackupSection.contactSettings) {
-        final settings = plan.contactSettings;
-        if (settings == null || settings.isEmpty) {
-          setState(() => _notice = l10n.backupContactSettings_empty);
-          return;
-        }
-        _contactSettingsSource = settings;
-      } else if (widget._section == _BackupSection.communities) {
-        final communities = plan.communities;
-        if (communities == null || communities.isEmpty) {
-          setState(() => _notice = l10n.backupCommunities_empty);
-          return;
-        }
-        _communitiesSource = communities;
-      } else if (widget._section == _BackupSection.contactGroups) {
-        final groups = plan.contactGroups;
-        if (groups == null || groups.isEmpty) {
-          setState(() => _notice = l10n.backupContactGroups_empty);
-          return;
-        }
-        _contactGroupsSource = groups;
-      } else if (widget._section == _BackupSection.discoveredContacts) {
-        final discovered = plan.discoveredContactsJson;
-        if (discovered == null || discovered == '[]') {
-          setState(() => _notice = l10n.discoveredContacts_importNoContacts);
-          return;
-        }
-        _discoveredSource = discovered;
-      } else if (widget._section == _BackupSection.messageHistory) {
-        final history = plan.messageHistory;
-        if (history == null) {
-          setState(() => _notice = l10n.backupMessageHistory_empty);
-          return;
-        }
-        _historySource = history;
-      } else if (widget._section == _BackupSection.appSettings) {
-        final settings = plan.appSettings;
-        if (settings == null) {
-          setState(() => _notice = l10n.backupAppSettings_noSupported);
-          return;
-        }
-        _settingsSource = settings;
-      } else if (widget._section == _BackupSection.contacts) {
-        final contacts = plan.contacts;
-        if (contacts == null || contacts.isEmpty) {
-          setState(() => _notice = l10n.backupContacts_noContacts);
-          return;
-        }
-        _contactSource = (nodeKey: plan.sourcePublicKey, contacts: contacts);
-      } else {
-        final channels = plan.channels;
-        if (channels == null || channels.isEmpty) {
-          setState(() => _notice = l10n.backupChannels_noChannels);
-          return;
-        }
-        _source = channels;
-      }
-      await _refreshPreview();
+      await _usePlan(plan);
     } on BackupFileTooLarge {
       if (mounted) {
         setState(() => _notice = context.l10n.backupChannels_fileTooLarge);
@@ -349,6 +310,108 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     } finally {
       if (mounted) setState(() => _reading = false);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget._initialPlan case final plan?) {
+      _fileName = widget._initialFileName;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _usePlan(plan);
+      });
+    }
+  }
+
+  Future<void> _usePlan(BackupImportPlan plan) async {
+    final l10n = context.l10n;
+    if (widget._section == _BackupSection.nodeProfile) {
+      final profile = plan.nodeProfile;
+      if (profile == null || profile.isEmpty) {
+        setState(() => _notice = l10n.backupNodeProfile_empty);
+        return;
+      }
+      _nodeProfileSource = profile;
+    } else if (widget._section == _BackupSection.filterTraining) {
+      final training = plan.filterTraining;
+      if (training == null || training.isEmpty) {
+        setState(() => _notice = l10n.backupFilterTraining_empty);
+        return;
+      }
+      setState(() => _trainingSource = training);
+      return;
+    } else if (widget._section == _BackupSection.messageFilter) {
+      final filter = plan.messageFilter;
+      if (filter == null || filter.isEmpty) {
+        setState(() => _notice = l10n.backupMessageFilter_empty);
+        return;
+      }
+      _filterSource = filter;
+    } else if (widget._section == _BackupSection.channelSettings) {
+      final settings = plan.channelSettings;
+      if (settings == null || settings.isEmpty) {
+        setState(() => _notice = l10n.backupChannelSettings_empty);
+        return;
+      }
+      _channelSettingsSource = settings;
+    } else if (widget._section == _BackupSection.contactSettings) {
+      final settings = plan.contactSettings;
+      if (settings == null || settings.isEmpty) {
+        setState(() => _notice = l10n.backupContactSettings_empty);
+        return;
+      }
+      _contactSettingsSource = settings;
+    } else if (widget._section == _BackupSection.communities) {
+      final communities = plan.communities;
+      if (communities == null || communities.isEmpty) {
+        setState(() => _notice = l10n.backupCommunities_empty);
+        return;
+      }
+      _communitiesSource = communities;
+    } else if (widget._section == _BackupSection.contactGroups) {
+      final groups = plan.contactGroups;
+      if (groups == null || groups.isEmpty) {
+        setState(() => _notice = l10n.backupContactGroups_empty);
+        return;
+      }
+      _contactGroupsSource = groups;
+    } else if (widget._section == _BackupSection.discoveredContacts) {
+      final discovered = plan.discoveredContactsJson;
+      if (discovered == null || discovered == '[]') {
+        setState(() => _notice = l10n.discoveredContacts_importNoContacts);
+        return;
+      }
+      _discoveredSource = discovered;
+    } else if (widget._section == _BackupSection.messageHistory) {
+      final history = plan.messageHistory;
+      if (history == null) {
+        setState(() => _notice = l10n.backupMessageHistory_empty);
+        return;
+      }
+      _historySource = history;
+    } else if (widget._section == _BackupSection.appSettings) {
+      final settings = plan.appSettings;
+      if (settings == null) {
+        setState(() => _notice = l10n.backupAppSettings_noSupported);
+        return;
+      }
+      _settingsSource = settings;
+    } else if (widget._section == _BackupSection.contacts) {
+      final contacts = plan.contacts;
+      if (contacts == null || contacts.isEmpty) {
+        setState(() => _notice = l10n.backupContacts_noContacts);
+        return;
+      }
+      _contactSource = (nodeKey: plan.sourcePublicKey, contacts: contacts);
+    } else {
+      final channels = plan.channels;
+      if (channels == null || channels.isEmpty) {
+        setState(() => _notice = l10n.backupChannels_noChannels);
+        return;
+      }
+      _source = channels;
+    }
+    await _refreshPreview();
   }
 
   Future<BackupImportPlan?> _inspectWithPassword(String contents) async {
@@ -1038,11 +1101,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             children: [
               Text(intro),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _busy ? null : _chooseFile,
-                icon: const Icon(Icons.folder_open_outlined),
-                label: Text(l10n.backupChannels_choose),
-              ),
+              if (widget._initialPlan == null)
+                OutlinedButton.icon(
+                  onPressed: _busy ? null : _chooseFile,
+                  icon: const Icon(Icons.folder_open_outlined),
+                  label: Text(l10n.backupChannels_choose),
+                ),
               if (_fileName case final name?) Text(name),
               if (_hasSource)
                 TextButton(

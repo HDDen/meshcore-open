@@ -30,6 +30,9 @@ class BackupFileCodec {
   static const payloadFormat = 'meshcore-open-backup';
   static const formatVersion = 1;
   static const _encryptedFormat = 'meshcore-open-encrypted-backup';
+
+  static bool isEncryptedEnvelope(Object? document) =>
+      document is Map<String, Object?> && document['format'] == _encryptedFormat;
   static const _kdf = 'PBKDF2-HMAC-SHA256';
   static const _cipher = 'AES-256-GCM';
   static const _iterations = 310000;
@@ -78,9 +81,8 @@ class BackupFileCodec {
     Object? decoded, {
     required String password,
   }) async {
-    if (decoded is Map<String, Object?> &&
-        decoded['format'] == _encryptedFormat) {
-      return _decrypt(decoded, password);
+    if (isEncryptedEnvelope(decoded)) {
+      return _decrypt(decoded as Map<String, Object?>, password);
     }
     return _validatePayload(decoded);
   }

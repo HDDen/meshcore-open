@@ -275,6 +275,17 @@ class AdditionalIdentityVault {
     await _persist(next, _secrets);
   }
 
+  /// Adds all missing identities in one compare-and-set of the vault.
+  Future<int> importMissing(Iterable<AdditionalIdentityEntry> incoming) async {
+    final known = {for (final entry in entries) entry.identity.publicKeyHex};
+    final added = [
+      for (final entry in incoming)
+        if (known.add(entry.identity.publicKeyHex)) entry,
+    ];
+    if (added.isNotEmpty) await _persist([...entries, ...added], _secrets);
+    return added.length;
+  }
+
   Future<void> remove(String publicKey) => _persist(
     entries.where((entry) => entry.identity.publicKeyHex != publicKey).toList(),
     _secrets,

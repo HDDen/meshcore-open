@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../connector/meshcore_protocol.dart';
+import '../helpers/backup_additional_identities.dart';
 import '../helpers/backup_channel_restore.dart';
 import '../helpers/backup_channel_settings.dart';
 import '../helpers/backup_communities.dart';
@@ -11,12 +12,31 @@ import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/portable_app_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
 import 'backup_file_codec.dart';
+
+enum BackupRestoreSection {
+  channels,
+  contacts,
+  appSettings,
+  messageHistory,
+  discoveredContacts,
+  contactGroups,
+  communities,
+  contactSettings,
+  channelSettings,
+  messageFilter,
+  filterTraining,
+  nodeProfile,
+  portableSettings,
+  regions,
+  additionalIdentities,
+}
 
 /// Supported data recovered from a backup before choosing a restore destination.
 class BackupImportPlan {
@@ -35,6 +55,9 @@ class BackupImportPlan {
     this.messageFilter,
     this.filterTraining,
     this.nodeProfile,
+    this.portableSettings = const {},
+    this.regions,
+    this.additionalIdentities,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -54,6 +77,29 @@ class BackupImportPlan {
   final BackupMessageFilter? messageFilter;
   final BackupFilterTraining? filterTraining;
   final BackupNodeProfile? nodeProfile;
+  final Map<String, PortableAppSettings> portableSettings;
+  final List<String>? regions;
+  final BackupAdditionalIdentities? additionalIdentities;
+
+  bool contains(BackupRestoreSection section) => switch (section) {
+    BackupRestoreSection.channels => channels?.isNotEmpty == true,
+    BackupRestoreSection.contacts => contacts?.isNotEmpty == true,
+    BackupRestoreSection.appSettings => appSettings != null,
+    BackupRestoreSection.messageHistory => messageHistory != null,
+    BackupRestoreSection.discoveredContacts =>
+      discoveredContactsJson != null && discoveredContactsJson != '[]',
+    BackupRestoreSection.contactGroups => contactGroups?.isNotEmpty == true,
+    BackupRestoreSection.communities => communities?.isNotEmpty == true,
+    BackupRestoreSection.contactSettings => contactSettings?.isEmpty == false,
+    BackupRestoreSection.channelSettings => channelSettings?.isEmpty == false,
+    BackupRestoreSection.messageFilter => messageFilter?.isEmpty == false,
+    BackupRestoreSection.filterTraining => filterTraining?.isEmpty == false,
+    BackupRestoreSection.nodeProfile => nodeProfile?.isEmpty == false,
+    BackupRestoreSection.portableSettings => portableSettings.isNotEmpty,
+    BackupRestoreSection.regions => regions?.isNotEmpty == true,
+    BackupRestoreSection.additionalIdentities =>
+      additionalIdentities?.entries.isNotEmpty == true,
+  };
 
   /// Keeps the node's slot for an existing PSK and proposes the backup name.
   List<BackupChannelDecision> resolveChannels({
@@ -93,6 +139,99 @@ class BackupImportPlanner {
             document,
             password: password,
           );
+    return _inspectPayload(payload, official: official,
+      appSettingsOnly: appSettingsOnly,
+      messageHistoryOnly: messageHistoryOnly,
+      discoveredContactsOnly: discoveredContactsOnly,
+      contactGroupsOnly: contactGroupsOnly,
+      communitiesOnly: communitiesOnly,
+      contactSettingsOnly: contactSettingsOnly,
+      channelSettingsOnly: channelSettingsOnly,
+      messageFilterOnly: messageFilterOnly,
+      filterTrainingOnly: filterTrainingOnly,
+      nodeProfileOnly: nodeProfileOnly,
+    );
+  }
+
+  /// Decrypts once and validates each section independently. A section that
+  /// cannot be decoded is reported without hiding the other sections.
+  Future<({
+    Map<BackupRestoreSection, BackupImportPlan> sections,
+    Set<BackupRestoreSection> invalid,
+  })> inspectSections(String contents, {required String password}) async {
+    final document = _readDocument(contents);
+    final official = _isOfficial(document);
+    final payload = official
+        ? document
+        : await const BackupFileCodec().decodeEnvelope(
+            document, password: password,
+          );
+    final sections = <BackupRestoreSection, BackupImportPlan>{};
+    final invalid = <BackupRestoreSection>{};
+    for (final section in BackupRestoreSection.values) {
+      try {
+        final plan = switch (section) {
+          BackupRestoreSection.portableSettings => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            portableSettings: official ? const {} : _readPortableSettings(
+              payload, encrypted: BackupFileCodec.isEncryptedEnvelope(document),
+            ),
+          ),
+          BackupRestoreSection.regions => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            regions: official ? null : _readRegions(payload),
+          ),
+          BackupRestoreSection.additionalIdentities => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            additionalIdentities: official ? null : await _readAdditionalIdentities(
+              payload, encrypted: BackupFileCodec.isEncryptedEnvelope(document),
+            ),
+          ),
+          _ => _inspectPayload(payload, official: official,
+            listOnly: section == BackupRestoreSection.channels ||
+                section == BackupRestoreSection.contacts ? section : null,
+            appSettingsOnly: section == BackupRestoreSection.appSettings,
+            messageHistoryOnly: section == BackupRestoreSection.messageHistory,
+            discoveredContactsOnly: section == BackupRestoreSection.discoveredContacts,
+            contactGroupsOnly: section == BackupRestoreSection.contactGroups,
+            communitiesOnly: section == BackupRestoreSection.communities,
+            contactSettingsOnly: section == BackupRestoreSection.contactSettings,
+            channelSettingsOnly: section == BackupRestoreSection.channelSettings,
+            messageFilterOnly: section == BackupRestoreSection.messageFilter,
+            filterTrainingOnly: section == BackupRestoreSection.filterTraining,
+            nodeProfileOnly: section == BackupRestoreSection.nodeProfile,
+          ),
+        };
+        if (plan.contains(section) &&
+            (section != BackupRestoreSection.appSettings ||
+                _readList(payload['items']).contains(AppSettingsBackup.section))) {
+          sections[section] = plan;
+        }
+      } on FormatException {
+        invalid.add(section);
+      }
+    }
+    return (sections: sections, invalid: invalid);
+  }
+
+  BackupImportPlan _inspectPayload(
+    Map<String, Object?> payload, {
+    required bool official,
+    BackupRestoreSection? listOnly,
+    bool appSettingsOnly = false,
+    bool messageHistoryOnly = false,
+    bool discoveredContactsOnly = false,
+    bool contactGroupsOnly = false,
+    bool communitiesOnly = false,
+    bool contactSettingsOnly = false,
+    bool channelSettingsOnly = false,
+    bool messageFilterOnly = false,
+    bool filterTrainingOnly = false,
+    bool nodeProfileOnly = false,
+  }) {
     final rawKey = payload[official ? 'public_key' : 'sourcePublicKey'];
     final publicKey = !official && (rawKey == null || rawKey == '')
         ? null
@@ -231,12 +370,12 @@ class BackupImportPlanner {
         messageHistory: official ? null : BackupMessageHistory.read(payload, publicKey),
       );
     }
-    final contacts = appSettingsOnly
+    final contacts = appSettingsOnly || listOnly == BackupRestoreSection.channels
         ? null
         : official
         ? _officialList(payload, 'contacts')
         : _upstreamList(payload, 'contacts', publicKey);
-    final channels = appSettingsOnly
+    final channels = appSettingsOnly || listOnly == BackupRestoreSection.contacts
         ? null
         : official
         ? _officialList(payload, 'channels')
@@ -262,6 +401,55 @@ class BackupImportPlanner {
                   _readChannel(_readObject(row), official, index, channelSlots),
             ].where((channel) => !channel.isEmpty).toList(),
     );
+  }
+
+  static Map<String, PortableAppSettings> _readPortableSettings(
+    Map<String, Object?> payload, {
+    required bool encrypted,
+  }) {
+    final result = <String, PortableAppSettings>{};
+    for (final item in [
+      PortableAppSettings.shared,
+      PortableAppSettings.extension,
+      if (encrypted) ...PortableAppSettings.secretKeys.keys,
+    ]) {
+      final section = item == PortableAppSettings.extension
+          ? item : PortableAppSettings.shared;
+      final preferences = _upstreamPreferences(payload, item, sectionName: section);
+      final raw = preferences?['app_settings'];
+      if (raw == null) continue;
+      final values = raw is String ? jsonDecode(raw) : raw;
+      final backup = PortableAppSettings.read(item, _readObject(values));
+      if (!backup.isEmpty) result[item] = backup;
+    }
+    return result;
+  }
+
+  static List<String>? _readRegions(Map<String, Object?> payload) {
+    final preferences = _upstreamPreferences(
+      payload, 'regions', sectionName: 'nodeSettings',
+    );
+    final regions = preferences?['regions'];
+    if (regions == null) return null;
+    if (regions is! List<Object?>) {
+      throw const FormatException('Invalid regions');
+    }
+    final pattern = RegExp(r'^#?[a-z0-9-]{1,31}$');
+    if (regions.any((name) => name is! String || !pattern.hasMatch(name))) {
+      throw const FormatException('Invalid region name');
+    }
+    return regions.cast<String>();
+  }
+
+  static Future<BackupAdditionalIdentities?> _readAdditionalIdentities(
+    Map<String, Object?> payload, {
+    required bool encrypted,
+  }) async {
+    const name = BackupAdditionalIdentities.section;
+    if (!_readList(payload['items']).contains(name)) return null;
+    if (!encrypted) throw const FormatException('Additional keys must be encrypted');
+    final section = _readObject(_readObject(payload['sections'])[name]);
+    return BackupAdditionalIdentities.read(section['entries']);
   }
 
   static AppSettingsBackup? _readAppSettings(Map<String, Object?> payload) {
