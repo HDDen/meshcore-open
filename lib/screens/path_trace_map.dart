@@ -299,7 +299,8 @@ class _PathTraceMapScreenState extends State<PathTraceMapScreen>
     super.dispose();
   }
 
-  Future<LatLng?> _requestSelfPosition() => MapLocationHelper.resolve(
+  Future<LatLng?> _requestSelfPosition() => MapLocationHelper.resolveForScreen(
+    context,
     enabled: context.read<AppSettingsService>().settings.alwaysRequestMapLocation,
     wardrive: context.read<WardriveService>(),
     connector: context.read<MeshCoreConnector>(),

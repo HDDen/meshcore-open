@@ -17,6 +17,31 @@ import 'quick_action_presentation.dart';
 
 typedef _QuickActionsDestination = Future<void> Function(BuildContext);
 
+enum QuickActionsHeader { main, channel, contact }
+
+class QuickActionsHeaderButton extends StatelessWidget {
+  const QuickActionsHeaderButton({super.key, required this.header});
+
+  final QuickActionsHeader header;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = context.select<AppSettingsService, bool>((service) {
+      final settings = service.settings;
+      return switch (header) {
+        QuickActionsHeader.main => settings.showQuickActionsInMainHeader,
+        QuickActionsHeader.channel => settings.showQuickActionsInChannelHeader,
+        QuickActionsHeader.contact => settings.showQuickActionsInContactHeader,
+      };
+    });
+    final connected = context.select<MeshCoreConnector, bool>(
+      (connector) => connector.isConnected && !connector.isOfflineMode,
+    );
+    if (!visible || !connected) return const SizedBox.shrink();
+    return QuickActionsButton(connector: context.read<MeshCoreConnector>());
+  }
+}
+
 class QuickActionsButton extends StatelessWidget {
   const QuickActionsButton({super.key, required this.connector});
 

@@ -163,9 +163,12 @@ class _PhoneLocationWardrive extends WardriveService {
   _PhoneLocationWardrive(super.connector, this.phonePosition);
 
   final LatLng? phonePosition;
+  int requestCount = 0;
 
   @override
   Future<({double latitude, double longitude})?> requestPhoneLocation() async {
+    requestCount++;
+    notifyListeners();
     final position = phonePosition;
     return position == null
         ? null
@@ -283,9 +286,6 @@ class _Harness {
     final connector = connectorOverride ?? _FakeConnector();
     connector.nodes.addAll(nodes);
     final settings = AppSettingsService();
-    // The phone location request notifies the wardrive service from inside
-    // the map's first build, which the test framework reports as an error;
-    // the map centres on its nodes instead.
     await settings.updateSettings(
       settings.settings.copyWith(alwaysRequestMapLocation: requestPhoneLocation),
     );
@@ -321,7 +321,10 @@ class _Harness {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           navigatorObservers: [appRouteObserver],
-          home: screenOverride ?? const MapScreen(),
+          home: Consumer<WardriveService>(
+            builder: (_, _, child) => child!,
+            child: screenOverride ?? const MapScreen(),
+          ),
         ),
       ),
     );
@@ -761,6 +764,33 @@ void main() {
           }
         });
       }
+    }
+  });
+
+  testWidgets('opening the map requests phone GPS with an active provider', (
+    tester,
+  ) async {
+    const phonePosition = LatLng(55.70, 37.60);
+    final connector = _PathLocationConnector()
+      ..reportedPosition = const LatLng(54.50, 36.50);
+    try {
+      final harness = await _Harness.pump(
+        tester,
+        nodes: [_node(1, 'Synthetic location anchor', 55.75, 37.62)],
+        zoom: 15,
+        connectorOverride: connector,
+        requestPhoneLocation: true,
+        wardriveFactory: (connector) =>
+            _PhoneLocationWardrive(connector, phonePosition),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect((harness.wardrive as _PhoneLocationWardrive).requestCount, 1);
+      expect(_markerPoints(tester), contains(phonePosition));
+      expect(connector.positionRefreshCount, 0);
+      expect(connector.sentFrames, isEmpty);
+    } finally {
+      await _Harness.unmount(tester);
     }
   });
 
@@ -1377,6 +1407,10 @@ void main() {
         nodes: [_node(1, 'Alice', 55.75, 37.62)],
         zoom: 15,
       );
+      // The main map can reopen at a center remembered by an earlier test.
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+      map.mapController!.move(alicePoint, 15);
+      await tester.pump();
       expect(find.text('Alice'), findsOneWidget);
 
       harness.connector.replace(_node(1, 'Alicia', 55.75, 37.62));

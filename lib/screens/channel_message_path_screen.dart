@@ -1057,7 +1057,8 @@ class _ChannelMessagePathMapScreenState
     _selectedPath = widget.initialPath;
     _playback = PathPlaybackController(this);
     _playback.addListener(_followPacketCamera);
-    _preferredSelfPositionFuture = MapLocationHelper.resolve(
+    _preferredSelfPositionFuture = MapLocationHelper.resolveForScreen(
+      context,
       enabled: context
           .read<AppSettingsService>()
           .settings

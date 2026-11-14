@@ -8,6 +8,7 @@ import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/quick_actions_settings.dart';
 import 'package:meshcore_open/screens/quick_actions_settings_screen.dart';
+import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
@@ -39,10 +40,19 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   bool get supportsCompanionRadioStats => false;
 
   @override
+  bool get supportsCompanionCli => false;
+
+  @override
+  AdditionalIdentityInbox? get additionalIdentityInbox => null;
+
+  @override
   final repeaterActivity = ValueNotifier<int>(0);
 
   @override
   List<DirectRepeater> get directRepeaters => const [];
+
+  @override
+  List<DirectRepeater> get activeRepeaters => const [];
 
   @override
   int? get currentSf => 7;
@@ -376,6 +386,58 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('header visibility switches are independent and persist', (tester) async {
+    final radio = _Radio();
+    final settings = AppSettingsService();
+    final reloaded = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(reloaded.dispose);
+
+    await _open(tester, radio, settings, useHeader: true);
+    final l10n = AppLocalizations.of(tester.element(find.byType(AlertDialog)));
+    await tester.tap(find.text(l10n.quickActions_configure));
+    await tester.pumpAndSettle();
+
+    final tiles = [
+      for (final label in [
+        l10n.quickActions_showInMainHeader,
+        l10n.quickActions_showInChannelHeader,
+        l10n.quickActions_showInContactHeader,
+      ])
+        find.widgetWithText(SwitchListTile, label),
+    ];
+    await tester.scrollUntilVisible(
+      tiles.first,
+      300,
+      scrollable: find.descendant(
+        of: find.byType(ReorderableListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pumpAndSettle();
+    for (final tile in tiles) {
+      expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+    }
+    for (final tile in [tiles.first, tiles.last]) {
+      await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+    }
+
+    expect(tester.widget<SwitchListTile>(tiles[1]).value, isTrue);
+    await reloaded.loadSettings();
+    expect(reloaded.settings.showQuickActionsInMainHeader, isFalse);
+    expect(reloaded.settings.showQuickActionsInChannelHeader, isTrue);
+    expect(reloaded.settings.showQuickActionsInContactHeader, isFalse);
+
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+    expect(find.byTooltip(l10n.quickActions_title), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('editing and reordering presets persists independent button settings', (

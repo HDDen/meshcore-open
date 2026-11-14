@@ -117,6 +117,7 @@ import '../widgets/message_status_icon.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_answers_picker_dialog.dart';
+import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/received_image_message.dart';
 import '../widgets/shared_contact_message.dart';
@@ -1080,6 +1081,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   // Two lines sit under the name, so it gives up a little
                   // height, as the direct chat's does over its region line.
                   style: const TextStyle(fontSize: 15),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Consumer<MeshCoreConnector>(
                   builder: (context, connector, _) {
@@ -1149,6 +1152,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 );
               },
             ),
+            const QuickActionsHeaderButton(header: QuickActionsHeader.channel),
             const RadioStatsIconButton(),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),

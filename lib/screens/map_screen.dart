@@ -385,7 +385,8 @@ class _MapScreenState extends State<MapScreen>
           .read<AppSettingsService>()
           .settings
           .alwaysRequestMapLocation;
-      _preferredMapLocationFuture = MapLocationHelper.resolve(
+      _preferredMapLocationFuture = MapLocationHelper.resolveForScreen(
+        context,
         enabled: _alwaysRequestMapLocation,
         wardrive: context.read<WardriveService>(),
         connector: context.read<MeshCoreConnector>(),

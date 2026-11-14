@@ -19,6 +19,7 @@ import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_chat_title.dart';
 import '../widgets/contact_composer_actions.dart';
 import '../widgets/markup_text_editing_controller.dart';
+import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/routing_sheet.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -326,6 +327,7 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
               );
             },
           ),
+          const QuickActionsHeaderButton(header: QuickActionsHeader.contact),
           const RadioStatsIconButton(),
         ],
       ),

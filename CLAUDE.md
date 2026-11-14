@@ -1643,7 +1643,9 @@ panel uses the existing radio, CompanionCLI, discovery, adaptive TX power
 and licensed proxy APIs. Channel presets require one exact channel-name
 match on the connected radio. CompanionCLI presets share the console queue
 and history, and surface a timeout or transport failure in the panel. The
-header display menu currently supports the icon.
+header display menu currently supports the icon. Its three independent
+switches control the shared app bar, channel chats and direct chats (including
+fixed additional identities). They default to visible for existing profiles.
 
 ### Additional MeshCore identities
 
@@ -2465,7 +2467,7 @@ does not currently invoke AEIC cleanup: `deleteImageForSentinel` can parse the s
 the message text, but that helper is not wired into the connector's individual-message delete path.
 
 ### Wardriving (coverage mapping)
-Постоянным GPS телефона владеет только активный wardrive с включённой опцией continuous GPS. `helpers/continuous_location_subscription.dart` упорядочивает подготовку/отмену подписки, исключает конкурирующие открытия и поздний запуск после stop/dispose. Разовый discovery с карты и `MapLocationHelper.resolve` вне wardrive используют только ограниченный запрос позиции (15 с), даже при сохранённой continuous-опции; поиск из контактов GPS не вызывает. Остановка инвалидирует незавершённый старт discovery, чтобы поздний GPS-ответ не запустил wardrive заново. Исходные контракты и регрессии: `test/services/discovery_location_baseline_test.dart`; поведение описано в [карте и геопозиции](documentation/map-and-location.md#gps-телефона-и-discovery).
+Постоянным GPS телефона владеет только активный wardrive с включённой опцией continuous GPS. `helpers/continuous_location_subscription.dart` упорядочивает подготовку/отмену подписки, исключает конкурирующие открытия и поздний запуск после stop/dispose. Разовый discovery с карты и `MapLocationHelper.resolve` вне wardrive используют только ограниченный запрос позиции (15 с), даже при сохранённой continuous-опции; поиск из контактов GPS не вызывает. Карта нод и карты маршрутов запускают начальный запрос через `MapLocationHelper.resolveForScreen` после построения кадра, поскольку Wardrive уведомляет подписчиков при старте запроса. Остановка инвалидирует незавершённый старт discovery, чтобы поздний GPS-ответ не запустил wardrive заново. Исходные контракты и регрессии: `test/services/discovery_location_baseline_test.dart`; поведение описано в [карте и геопозиции](documentation/map-and-location.md#gps-телефона-и-discovery).
 
 Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, driven from `map_screen.dart` / `widgets/wardrive_status_panel.dart`). Each cycle (default 25 s, 5–300 s configurable) takes a GPS fix, sends a zero-hop discovery request, and listens ~10 s for `DiscoverResp` frames; each responder → a GPS-tagged `WardriveSample` (SNR/RSSI/node key/response time), plus `pingSuccess=false` "dead zone" samples when nobody answers. `wardrive_upload_service.dart` POSTs sample batches as JSON to configurable sites (default `https://meshwar-map.pages.dev/api/samples`), de-duping per endpoint. `wardrive_foreground_service.dart` runs an Android **location** foreground service (MethodChannel `mco_advanced/wardrive_foreground`), gated in Dart so ordinary BLE users don't inherit location FGS.
 

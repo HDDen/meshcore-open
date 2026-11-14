@@ -17434,6 +17434,24 @@ abstract class AppLocalizations {
   /// **'Header button'**
   String get quickActions_buttonDisplay;
 
+  /// No description provided for @quickActions_showInMainHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in main header'**
+  String get quickActions_showInMainHeader;
+
+  /// No description provided for @quickActions_showInChannelHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in channels'**
+  String get quickActions_showInChannelHeader;
+
+  /// No description provided for @quickActions_showInContactHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in contacts'**
+  String get quickActions_showInContactHeader;
+
   /// No description provided for @quickActions_icon.
   ///
   /// In en, this message translates to:

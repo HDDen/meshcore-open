@@ -473,6 +473,85 @@ void main() {
     });
   }
 
+  testWidgets('quick actions respect channel and contact header settings', (
+    tester,
+  ) async {
+    final inbox = _SenderPickerInbox();
+    final node = _PagedNode(additionalIdentityInbox: inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+
+    Future<void> showChat(Widget chat) async {
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: chat,
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    final launch = find.descendant(
+      of: find.byType(AppBar),
+      matching: find.byTooltip('Quick actions'),
+    );
+    await showChat(ChannelChatScreen(channel: _channel));
+    expect(launch.hitTestable(), findsOneWidget);
+
+    await settings.updateSettings(settings.settings.copyWith(
+      showQuickActionsInMainHeader: false,
+      showQuickActionsInChannelHeader: false,
+    ));
+    await tester.pumpAndSettle();
+    expect(launch, findsNothing);
+
+    final contactChats = [
+      ChatScreen(contact: _contact),
+      AdditionalIdentityChatScreen(
+        inbox: inbox,
+        connector: node,
+        peer: _contact,
+        recipientKey: 'af' * 32,
+        recipientName: 'Extra key',
+        senderKey: _contact.publicKeyHex,
+        senderName: _contact.name,
+      ),
+    ];
+    for (final chat in contactChats) {
+      await settings.updateSettings(settings.settings.copyWith(
+        showQuickActionsInContactHeader: true,
+      ));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await showChat(chat);
+      expect(launch.hitTestable(), findsOneWidget);
+      await tester.tap(launch);
+      await tester.pumpAndSettle();
+      final dialog = find.byType(AlertDialog);
+      expect(find.descendant(of: dialog, matching: find.text('Configure')),
+          findsOneWidget);
+      Navigator.of(tester.element(dialog)).pop();
+      await tester.pumpAndSettle();
+      await settings.updateSettings(settings.settings.copyWith(
+        showQuickActionsInContactHeader: false,
+      ));
+      await tester.pumpAndSettle();
+      expect(launch, findsNothing);
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('channel contact picker shares additional keys before node contacts', (
     tester,
   ) async {

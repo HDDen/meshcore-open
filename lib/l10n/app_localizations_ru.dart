@@ -10495,6 +10495,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickActions_buttonDisplay => 'Кнопка в шапке';
 
   @override
+  String get quickActions_showInMainHeader => 'Отображать в общей шапке';
+
+  @override
+  String get quickActions_showInChannelHeader => 'Отображать в каналах';
+
+  @override
+  String get quickActions_showInContactHeader => 'Отображать в контактах';
+
+  @override
   String get quickActions_icon => 'Иконка';
 
   @override

@@ -74,8 +74,8 @@ class AppBarTitle extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (showBattery && availableWidth >= 140 && connector.isConnected)
-                    QuickActionsButton(connector: connector),
+                  if (showBattery && availableWidth >= 140)
+                    const QuickActionsHeaderButton(header: QuickActionsHeader.main),
                   if (showBattery) BatteryIndicator(connector: connector),
                   if (showSnr)
                     snrAllRepActivity

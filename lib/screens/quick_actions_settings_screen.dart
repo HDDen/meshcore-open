@@ -54,6 +54,27 @@ class QuickActionsSettingsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SectionHeader(l10n.quickActions_buttonDisplay),
+              SwitchListTile(
+                title: Text(l10n.quickActions_showInMainHeader),
+                value: service.settings.showQuickActionsInMainHeader,
+                onChanged: (value) => service.updateSettings(
+                  service.settings.copyWith(showQuickActionsInMainHeader: value),
+                ),
+              ),
+              SwitchListTile(
+                title: Text(l10n.quickActions_showInChannelHeader),
+                value: service.settings.showQuickActionsInChannelHeader,
+                onChanged: (value) => service.updateSettings(
+                  service.settings.copyWith(showQuickActionsInChannelHeader: value),
+                ),
+              ),
+              SwitchListTile(
+                title: Text(l10n.quickActions_showInContactHeader),
+                value: service.settings.showQuickActionsInContactHeader,
+                onChanged: (value) => service.updateSettings(
+                  service.settings.copyWith(showQuickActionsInContactHeader: value),
+                ),
+              ),
               MeshCard(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButton<int>(

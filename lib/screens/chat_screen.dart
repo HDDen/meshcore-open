@@ -83,6 +83,7 @@ import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
+import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import '../widgets/contact_chat_title.dart';
@@ -1209,6 +1210,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 contact: _resolveContact(connector),
               ),
             ),
+            const QuickActionsHeaderButton(header: QuickActionsHeader.contact),
             const RadioStatsIconButton(),
             Consumer<MeshCoreConnector>(
               builder: (context, connector, _) {

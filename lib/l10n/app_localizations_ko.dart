@@ -10056,6 +10056,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get quickActions_buttonDisplay => 'Header button';
 
   @override
+  String get quickActions_showInMainHeader => 'Show in main header';
+
+  @override
+  String get quickActions_showInChannelHeader => 'Show in channels';
+
+  @override
+  String get quickActions_showInContactHeader => 'Show in contacts';
+
+  @override
   String get quickActions_icon => 'Icon';
 
   @override

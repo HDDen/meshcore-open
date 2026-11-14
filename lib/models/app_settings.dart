@@ -303,6 +303,9 @@ class AppSettings {
   final bool uiScaleApplyToIcons;
 
   final QuickActionsSettings quickActions;
+  final bool showQuickActionsInMainHeader;
+  final bool showQuickActionsInChannelHeader;
+  final bool showQuickActionsInContactHeader;
   final bool showCompressionRatio;
   final bool compressionRatioWithSenderName;
   final bool monochromeSenderNames;
@@ -819,6 +822,9 @@ class AppSettings {
     this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
     this.quickActions = const QuickActionsSettings.defaults(),
+    this.showQuickActionsInMainHeader = true,
+    this.showQuickActionsInChannelHeader = true,
+    this.showQuickActionsInContactHeader = true,
     this.uiScaleApplyToIcons = true,
     this.showCompressionRatio = false,
     this.compressionRatioWithSenderName = false,
@@ -1002,6 +1008,9 @@ class AppSettings {
       'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
       'quick_actions': quickActions.toJson(),
+      'quick_actions_in_main_header': showQuickActionsInMainHeader,
+      'quick_actions_in_channel_header': showQuickActionsInChannelHeader,
+      'quick_actions_in_contact_header': showQuickActionsInContactHeader,
       'ui_scale_apply_to_icons': uiScaleApplyToIcons,
       'show_compression_ratio': showCompressionRatio,
       'compression_ratio_with_sender_name': compressionRatioWithSenderName,
@@ -1218,6 +1227,9 @@ class AppSettings {
           (json['mco_image_replacements_sharpness'] as num?)?.toInt() ?? 0,
       uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
       quickActions: QuickActionsSettings.fromJson(json['quick_actions']),
+      showQuickActionsInMainHeader: json['quick_actions_in_main_header'] != false,
+      showQuickActionsInChannelHeader: json['quick_actions_in_channel_header'] != false,
+      showQuickActionsInContactHeader: json['quick_actions_in_contact_header'] != false,
       uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
       showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
       compressionRatioWithSenderName:
@@ -1497,6 +1509,9 @@ class AppSettings {
     int? mcoImageReplacementsSharpness,
     double? uiScale,
     QuickActionsSettings? quickActions,
+    bool? showQuickActionsInMainHeader,
+    bool? showQuickActionsInChannelHeader,
+    bool? showQuickActionsInContactHeader,
     bool? uiScaleApplyToIcons,
     bool? showCompressionRatio,
     bool? compressionRatioWithSenderName,
@@ -1665,6 +1680,12 @@ class AppSettings {
           mcoImageReplacementsSharpness ?? this.mcoImageReplacementsSharpness,
       uiScale: uiScale ?? this.uiScale,
       quickActions: quickActions ?? this.quickActions,
+      showQuickActionsInMainHeader:
+          showQuickActionsInMainHeader ?? this.showQuickActionsInMainHeader,
+      showQuickActionsInChannelHeader:
+          showQuickActionsInChannelHeader ?? this.showQuickActionsInChannelHeader,
+      showQuickActionsInContactHeader:
+          showQuickActionsInContactHeader ?? this.showQuickActionsInContactHeader,
       uiScaleApplyToIcons: uiScaleApplyToIcons ?? this.uiScaleApplyToIcons,
       showCompressionRatio: showCompressionRatio ?? this.showCompressionRatio,
       compressionRatioWithSenderName:

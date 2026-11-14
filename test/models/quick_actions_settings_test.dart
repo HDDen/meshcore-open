@@ -34,6 +34,24 @@ void main() {
     expect(restored.items.first.channelName, '#test');
   });
 
+  test('header visibility defaults on and survives independent changes', () {
+    final legacy = AppSettings.fromJson({
+      'quick_actions': const QuickActionsSettings.defaults().toJson(),
+    });
+    expect(legacy.showQuickActionsInMainHeader, isTrue);
+    expect(legacy.showQuickActionsInChannelHeader, isTrue);
+    expect(legacy.showQuickActionsInContactHeader, isTrue);
+
+    final custom = legacy
+        .copyWith(showQuickActionsInMainHeader: false)
+        .copyWith(showQuickActionsInContactHeader: false);
+    final restored = AppSettings.fromJson(custom.toJson());
+    expect(restored.showQuickActionsInMainHeader, isFalse);
+    expect(restored.showQuickActionsInChannelHeader, isTrue);
+    expect(restored.showQuickActionsInContactHeader, isFalse);
+    expect(restored.quickActions.toJson(), legacy.quickActions.toJson());
+  });
+
   test('old and malformed settings keep a single copy of each action', () {
     final restored = QuickActionsSettings.fromJson([
       null,
