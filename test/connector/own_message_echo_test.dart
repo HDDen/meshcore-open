@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
+import 'package:meshcore_open/helpers/channel_raw_packet.dart';
 import 'package:meshcore_open/helpers/direct_echo_crypto.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/models/app_settings.dart';
@@ -29,6 +30,7 @@ import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:meshcore_open/storage/region_store.dart';
 import 'package:pointycastle/export.dart' show AESEngine, ECBBlockCipher, KeyParameter;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -732,18 +734,64 @@ Future<void> main() async {
     );
 
     final routed = message(first);
-    final flood = message(second, flood: true);
+    const region = 'north';
+    await PrefsManager.instance.setStringList(RegionStore.key, [region]);
+    const packedPath = 0x42; // Two hops, two bytes per hop.
+    const hops = [0x10, 0x11, 0x20, 0x21];
+    final floodPayload = message(second, flood: true).sublist(5);
+    final incomingCode = ChannelRawPacket.regionTransportCode(
+      region, payloadTypeTXTMSG, floodPayload,
+    );
+    final flood = Uint8List.fromList([
+      pushCodeLogRxData, 40, (-70) & 0xff,
+      payloadTypeTXTMSG << 2,
+      incomingCode & 0xff, incomingCode >> 8, 0, 0,
+      packedPath, ...hops,
+      ...floodPayload,
+    ]);
     // In this frame the first MAC byte follows the two address hashes.
     final damaged = Uint8List.fromList(routed)..[8] ^= 1;
     node.connector.handleFrameForTest(damaged);
     node.connector.handleFrameForTest(routed);
     node.connector.handleFrameForTest(routed);
     node.connector.handleFrameForTest(flood);
+    node.connector.handleFrameForTest(flood);
     node.connector.handleFrameForTest(message(first, attempt: 1));
 
     await _waitFor(() => node.rawPackets.length >= 3, 'three ACKs');
     await _settle();
     expect(node.rawPackets, hasLength(3));
+    expect(
+      node.rawPackets.where((frame) => frame[2] >> 2 == payloadTypeACK),
+      hasLength(2),
+    );
+    final reply = node.rawPackets.singleWhere(
+      (frame) => frame[2] >> 2 == payloadTypePATH,
+    );
+    expect(reply.sublist(0, 3), [cmdSendRawPacket, 2, payloadTypePATH << 2]);
+    final returnPayload = reply.sublist(8);
+    final expectedCode = ChannelRawPacket.regionTransportCode(
+      region, payloadTypePATH, returnPayload,
+    );
+    expect(reply.sublist(3, 8), [expectedCode & 0xff, expectedCode >> 8, 0, 0, 0]);
+    expect(returnPayload.sublist(0, 2), [
+      _aliceKey.first,
+      second.identity.publicKey.first,
+    ]);
+
+    final secret = second.identity.sharedSecret(_aliceKey);
+    final cipher = ECBBlockCipher(AESEngine())
+      ..init(false, KeyParameter(secret.sublist(0, 16)));
+    final body = Uint8List(16);
+    cipher.processBlock(returnPayload, 4, body, 0);
+    final hash = MessageRetryService.computeExpectedAckHash(
+      1700000000, 0, 'Одинаковое сообщение', _aliceKey,
+    );
+    expect(body.sublist(0, 11), [packedPath, ...hops, payloadTypeACK, ..._le32(hash), 0]);
+    expect(
+      returnPayload.sublist(2),
+      ChannelEchoRecovery.encryptedPayloadFor(secret, body),
+    );
     for (final entry in [first, second]) {
       final rows = await storage.readAdditionalIdentityMessages(
         entry.identity.publicKeyHex,

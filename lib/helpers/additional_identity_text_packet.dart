@@ -54,6 +54,45 @@ abstract final class AdditionalIdentityTextPacket {
     );
   }
 
+  /// Returns the Flood's forward route and ACK to the sender, matching
+  /// Mesh::createPathReturn. The reply starts a new Flood with zero hops.
+  static Uint8List pathReturn({
+    required MeshCoreExpandedIdentity identity,
+    required Uint8List peer,
+    required int receivedPathLength,
+    required Uint8List receivedPath,
+    required Uint8List ack,
+    required int pathHashWidth,
+    required String region,
+  }) {
+    final receivedWidth = (receivedPathLength >> 6) + 1;
+    final receivedHops = receivedPathLength & 63;
+    if (receivedPathLength < 0 || receivedWidth > 3 ||
+        receivedPath.length != receivedHops * receivedWidth ||
+        receivedPath.length > maxPathSize) {
+      throw const FormatException('Invalid received Flood path');
+    }
+    final payload = _encryptedPayload(
+      identity,
+      peer,
+      Uint8List.fromList([
+        receivedPathLength,
+        ...receivedPath,
+        payloadTypeACK,
+        ...ack,
+      ]),
+      [peer.first, identity.publicKey.first],
+    );
+    return _frame(
+      payloadTypePATH,
+      payload,
+      const PathSelection(pathBytes: [], hopCount: -1, useFlood: true),
+      pathHashWidth,
+      region,
+      floodPriority: 2, // Mesh::sendFlood uses this priority for PATH.
+    );
+  }
+
   static Uint8List roomLogin({
     required MeshCoreExpandedIdentity identity,
     required Uint8List room,
@@ -110,8 +149,9 @@ abstract final class AdditionalIdentityTextPacket {
     Uint8List payload,
     PathSelection route,
     int pathHashWidth,
-    String region,
-  ) {
+    String region, {
+    int floodPriority = ChannelRawPacket.priority,
+  }) {
     if (pathHashWidth < 1 ||
         pathHashWidth > 3 ||
         (!route.useFlood &&
@@ -141,7 +181,7 @@ abstract final class AdditionalIdentityTextPacket {
     }
     return Uint8List.fromList([
       cmdSendRawPacket,
-      route.useFlood ? ChannelRawPacket.priority : 0,
+      route.useFlood ? floodPriority : 0,
       ...packet,
     ]);
   }

@@ -79,6 +79,7 @@ import '../helpers/ui_notification_batcher.dart';
 import '../helpers/channel_mention_matcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/additional_identity_text_packet.dart';
+import '../helpers/meshcore_expanded_identity.dart';
 import '../services/additional_identity_inbox.dart';
 import '../services/additional_identity_vault.dart' show AdditionalIdentityEntry;
 import '../helpers/direct_echo_crypto.dart';
@@ -19220,8 +19221,12 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     DirectEchoPlaintext plaintext, {
     bool Function()? isCurrent,
     Uint8List? roomRecipientKey,
+    ({MeshCoreExpandedIdentity identity, _RawPacket packet})? pathReturn,
   }) async {
-    if (_directEchoAckUnsupported || !isConnected) return;
+    if (_directEchoAckUnsupported || !isConnected ||
+        isCurrent?.call() == false) {
+      return;
+    }
     final contact = getContactByPubKeyHex(sender.publicKeyHex) ?? sender;
     final ack = DirectEchoCrypto.ackHash(
       plaintext.bytes,
@@ -19231,7 +19236,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
     final ackBytes = roomRecipientKey == null ? ack : Uint8List.sublistView(ack, 0, 4);
     final route = resolvePathSelection(contact);
-    int? transportCode;
     // The region our own flood sends to this contact take: its own, none
     // when it is marked unscoped, else the node's default scope.
     final contactRegion = getContactRegion(contact.publicKeyHex);
@@ -19240,28 +19244,49 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : contactRegion.isNotEmpty
         ? contactRegion
         : _defaultRegionScope?.trim() ?? '';
-    if (route.useFlood && scope.isNotEmpty && !scope.startsWith(r'$')) {
-      transportCode = _computeRegionTransportCode(scope, payloadTypeACK, ackBytes);
-    }
-    final packet = DirectEchoRecovery.buildAckPacket(
-      ack: ackBytes,
-      route: route,
-      pathHashWidth: _pathHashByteWidth,
-      transportCode: transportCode,
-    );
     try {
+      final Uint8List frame;
+      if (pathReturn != null) {
+        final incoming = pathReturn.packet;
+        final incomingScope = _resolvePacketRegion(incoming);
+        final returnScope = incomingScope.notMatched
+            ? (scope.startsWith(r'$') ? '' : scope)
+            : incomingScope.region ?? '';
+        frame = AdditionalIdentityTextPacket.pathReturn(
+          identity: pathReturn.identity,
+          peer: contact.publicKey,
+          receivedPathLength: incoming.pathLenRaw,
+          receivedPath: incoming.pathBytes,
+          ack: ack,
+          pathHashWidth: _pathHashByteWidth.clamp(1, 3),
+          region: returnScope,
+        );
+      } else {
+        final transportCode = route.useFlood &&
+                scope.isNotEmpty && !scope.startsWith(r'$')
+            ? _computeRegionTransportCode(scope, payloadTypeACK, ackBytes)
+            : null;
+        final packet = DirectEchoRecovery.buildAckPacket(
+          ack: ackBytes,
+          route: route,
+          pathHashWidth: _pathHashByteWidth,
+          transportCode: transportCode,
+        );
+        frame = DirectEchoRecovery.buildSendRawPacketFrame(packet);
+      }
       final sent = await _runChannelCommandLocked(() async {
         if (isCurrent?.call() == false) return false;
-        await sendFrame(
-          DirectEchoRecovery.buildSendRawPacketFrame(packet),
-          waitForGenericAck: true,
-        );
+        await sendFrame(frame, waitForGenericAck: true);
         return true;
       });
       if (!sent) return;
+      final replyRoute = pathReturn != null
+          ? 'in a Flood path return'
+          : route.useFlood
+          ? 'by flood'
+          : 'along ${route.hopCount} hop(s)';
       appLogger.info(
-        'ACK for the echoed message from ${contact.name} sent '
-        '${route.useFlood ? 'by flood' : 'along ${route.hopCount} hop(s)'}',
+        'ACK for the echoed message from ${contact.name} sent $replyRoute',
         tag: 'DirectEcho',
       );
     } on TimeoutException {
@@ -19622,12 +19647,18 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             decrypt: _decryptPayload,
             isCurrent: isCurrent,
           );
-          if (receipt != null) {
+          if (receipt != null && receipt.isCurrent()) {
+            final identity = packet.isFlood && receipt.roomRecipientKey == null
+                ? inbox.entryFor(receipt.recipientKey)?.identity
+                : null;
             unawaited(_sendDirectEchoAck(
               receipt.contact,
               receipt.plaintext,
               isCurrent: receipt.isCurrent,
               roomRecipientKey: receipt.roomRecipientKey,
+              pathReturn: identity == null
+                  ? null
+                  : (identity: identity, packet: packet),
             ));
           }
         }

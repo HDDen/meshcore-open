@@ -18,6 +18,7 @@ import 'additional_identity_vault.dart';
 
 typedef AdditionalIdentityReceipt = ({
   Contact contact,
+  String recipientKey,
   DirectEchoPlaintext plaintext,
   bool Function() isCurrent,
   Uint8List? roomRecipientKey,
@@ -644,6 +645,7 @@ class AdditionalIdentityInbox extends ChangeNotifier {
     _recentAcks[packetKey] = DateTime.now();
     return (
       contact: match.contact,
+      recipientKey: recipientKey,
       plaintext: match.plaintext,
       isCurrent: () => revision == _revision && isCurrent(),
       roomRecipientKey: match.roomRecipientKey,
