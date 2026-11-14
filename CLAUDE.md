@@ -3850,12 +3850,19 @@ It leases the stock companion's global TX power only for the selected retry
 windows. The original power is committed to profile SQLite per node before
 raising it. Echoes, ACKs, timeouts and cancellations end the relevant leases.
 The last lease restores the baseline. Reconnection checks the persisted
-baseline against SELF_INFO. Direct messages can opt in separately: a routed
-attempt can replay once. The Flood boost setting applies to the tail of the
-extra automatic Flood attempts or the tail of the ordinary forced Flood
-budget. The first automatic Flood keeps normal power. When Auto starts with
-no known route, it boosts the last configured retries of the ordinary Flood
-budget and leaves the first attempt at normal power.
+baseline against SELF_INFO. Direct messages can opt in separately. With route
+rotation enabled, a timeout without relay progress can replay the same routed
+packet once at higher power before advancing the attempt number. With rotation
+off or a pinned route, the same Flood boost setting selects the last N ordinary
+routed retries. A retry is boosted when the preceding attempt on that route
+timed out without a matched relay echo. The progress tracker infers that the
+first repeater forwarded from a matching echo at any hop. A zero-hop path
+has no repeater to check.
+The Flood boost setting also applies to the tail of the extra automatic
+Flood attempts or the tail of the ordinary forced Flood budget. The first
+automatic Flood keeps normal power. When Auto starts with no known route,
+it boosts the last configured retries of the ordinary Flood budget and
+leaves the first attempt at normal power.
 The companion confirms enqueue before airtime and saves its global power in
 flash. Other packets transmitted during a boost share the higher power.
 Successful boosted sends keep a local lightning badge in history. Channel

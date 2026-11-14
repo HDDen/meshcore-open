@@ -573,6 +573,11 @@ class MessageRetryService extends ChangeNotifier {
       message.retryCount >= maxRetries - 1 ||
       !_textFitsAttempt(message, contact, message.retryCount + 1);
 
+  int _lastOrdinaryAttempt(Message message, Contact contact) =>
+      _textFitsAttempt(message, contact, maxRetries - 1)
+          ? maxRetries - 1
+          : maxFullLengthTextAttempt;
+
   AutomaticFloodRetries? _automaticFloodSeriesFor(
     Message message,
     Contact contact,
@@ -735,15 +740,38 @@ class MessageRetryService extends ChangeNotifier {
         (forcedFlood || (floodWithoutRoute && message.retryCount > 0)) &&
         AdaptiveTxPower.isInLastRetries(
           retry: message.retryCount + 1,
-          maxRetries: _textFitsAttempt(message, contact, maxRetries - 1)
-              ? maxRetries
-              : maxFullLengthTextAttempt + 1,
+          maxRetries: _lastOrdinaryAttempt(message, contact) + 1,
           boostedRetries: adaptive.adaptiveTxPower.forcedFloodRetries,
         );
-    final boost = repeating || boostAutomaticFlood || boostOrdinaryFlood;
+    final personalMessage = contact.type == advTypeChat;
+    final rotatesRoute = _rotatesRoutes && contact.pathOverride == null;
+    final hasRepeater = !useFlood && selection.hopCount > 0;
+    // Between ordinary retries the message still holds the route and echo
+    // progress of the preceding send. The final Auto slot belongs to Flood.
+    final boostFixedRoute = canBoost &&
+        personalMessage &&
+        !rotatesRoute &&
+        hasRepeater &&
+        message.retryCount > 0 &&
+        message.deliveryProgressCompletedSteps == 0 &&
+        message.pathLength == selection.hopCount &&
+        listEquals(message.pathBytes, selection.pathBytes) &&
+        AdaptiveTxPower.isInLastRetries(
+          retry: message.retryCount,
+          maxRetries: _lastOrdinaryAttempt(message, contact) -
+              (contact.pathOverride == null ? 1 : 0),
+          boostedRetries: adaptive.adaptiveTxPower.forcedFloodRetries,
+        );
+    final boost = repeating ||
+        boostFixedRoute ||
+        boostAutomaticFlood ||
+        boostOrdinaryFlood;
     if (!boost) _finishTxPower(messageId);
-    if (canBoost && !repeating && !useFlood) {
-      // A routed boost replays this packet before the next logical attempt.
+    if (canBoost &&
+        !repeating &&
+        !useFlood &&
+        (!personalMessage || (rotatesRoute && hasRepeater))) {
+      // Replay the same packet before moving to the next numbered attempt.
       _boostedRepeats[messageId] = (
         route: (selection: selection, step: _NodeRouteStep.write),
         remaining: 1,
@@ -1002,7 +1030,16 @@ class MessageRetryService extends ChangeNotifier {
     }
 
     final message = _pendingMessages[messageId]!;
-    _armProgressTracker(messageId, message, contact);
+    if (expected.attempt == message.retryCount) {
+      if (isFlood == true) {
+        if (contact.type == advTypeChat &&
+            _boostedRepeats[messageId]?.repeating == false) {
+          _boostedRepeats.remove(messageId);
+        }
+      } else {
+        _armProgressTracker(messageId, message, contact);
+      }
+    }
     final boostedWithLna = expected.boostedWithLna?.call();
     _ackHashToMessageId.putIfAbsent(ackHashHex, () => []).insert(0, (
       messageId: messageId,
@@ -1308,7 +1345,16 @@ class MessageRetryService extends ChangeNotifier {
       tag: 'AckHash',
     );
     final repeat = _boostedRepeats.remove(messageId);
-    if (repeat != null && repeat.remaining > 0 &&
+    final liveContact = repeat == null
+        ? contact
+        : config?.findContact?.call(contact.publicKeyHex) ?? contact;
+    final skipRoutedReplay = liveContact.type == advTypeChat &&
+        (!_rotatesRoutes ||
+            liveContact.pathOverride != null ||
+            message.deliveryProgressCompletedSteps > 0);
+    if (repeat != null &&
+        repeat.remaining > 0 &&
+        !skipRoutedReplay &&
         config?.canBoostDirectTxPower?.call() == true) {
       _boostedRepeats[messageId] = (
         route: repeat.route,
