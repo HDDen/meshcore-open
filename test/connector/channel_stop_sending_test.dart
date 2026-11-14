@@ -10,7 +10,9 @@ import 'package:meshcore_open/models/adaptive_tx_power_settings.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
+import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -39,6 +41,11 @@ class _Node extends MeshCoreConnector {
         info[2] = txPower;
         info[3] = 22;
         info.fillRange(4, 36, 0x11);
+        final radio = ByteData.sublistView(info);
+        radio.setUint32(48, 869525000, Endian.little);
+        radio.setUint32(52, 500000, Endian.little);
+        info[56] = 7;
+        info[57] = 5;
         info.setRange(58, 62, 'Node'.codeUnits);
         handleFrameForTest(info);
         return;
@@ -144,6 +151,128 @@ void main() {
       );
     });
     tearDown(storage.resetForTesting);
+
+    testWidgets('Flood Auto without a route raises TX before the retry and restores after ACK', (
+      tester,
+    ) async {
+      final node = _Node(txPower: 11);
+      final settings = AppSettingsService();
+      final retry = MessageRetryService()..retryBackoffMs = (_) => 0;
+      final peerKey = Uint8List(32)..fillRange(0, 32, 0x22);
+      final peerKeyHex = pubKeyToHex(peerKey);
+      try {
+        await settings.updateSettings(AppSettings(
+          maxMessageRetries: 2,
+          automaticDirectFloodRetries: 5,
+          channelMinHopsEnabled: true,
+          notifyOnNewAdvert: false,
+          adaptiveTxPower: const AdaptiveTxPowerSettings(
+            enabled: true,
+            targetDbm: 18,
+            directEnabled: true,
+            forcedFloodRetries: 1,
+          ),
+        ));
+        node.attachAppSettingsServiceForTest(settings);
+        node.attachRetryServiceForTest(retry);
+        retry.setMaxRetries(2);
+        await node.prepareChannelHistory();
+
+        node.handleFrameForTest(Uint8List(148)
+          ..[0] = respCodeContact
+          ..setRange(1, 33, peerKey)
+          ..[33] = advTypeChat
+          ..[35] = 0xff
+          ..setRange(100, 104, 'Peer'.codeUnits));
+        final peer = node.getContactByPubKeyHex(peerKeyHex)!;
+        expect(peer.pathLength, -1);
+        expect(peer.pathOverride, isNull);
+
+        // Reuse the transport from the channel tests and hold SENT for the
+        // two personal sends so the test observes the live state as well.
+        final textFrames = <Uint8List>[];
+        node.setFrameWriterForTest((frame) async {
+          node.frames.add(frame);
+          if (frame.first == cmdSendTxtMsg) {
+            textFrames.add(frame);
+            return;
+          }
+          node.handleFrameForTest([respCodeOk]);
+        });
+        // The default scope is already known in this scenario. A Flood SENT
+        // can stamp the message without starting a separate stream waiter.
+        await node.setDefaultRegionScope(null);
+
+        int acknowledgeEnqueue(Uint8List frame) {
+          final reader = BufferReader(frame)..skipBytes(2);
+          final attempt = reader.readByte();
+          final timestamp = reader.readUInt32LE();
+          reader.skipBytes(6);
+          final hash = MessageRetryService.computeExpectedAckHash(
+            timestamp, attempt, reader.readCString(), node.selfPublicKey!,
+          );
+          final sent = BufferWriter()
+            ..writeByte(respCodeSent)
+            ..writeByte(1)
+            ..writeUInt32LE(hash)
+            ..writeUInt32LE(1000);
+          node.handleFrameForTest(sent.toBytes());
+          return hash;
+        }
+
+        Message message() => node.getMessages(peer).single;
+        await node.sendMessage(peer, 'Flood Auto');
+        await _until(tester, () => textFrames.length == 1, stage: 'ordinary send');
+        expect(node.currentTxPower, 11);
+        final firstHash = acknowledgeEnqueue(textFrames.first);
+        expect(message().status, MessageStatus.sent);
+        expect(message().expectedAckHash, firstHash);
+        expect(message().activeTxBoostWithLna, isNull);
+        final timeout = message().estimatedTimeoutMs;
+        expect(timeout, greaterThan(0), reason: 'SENT must arm the ACK timer');
+        await tester.pump(Duration(milliseconds: timeout!));
+        await _until(tester, () => textFrames.length == 2, stage: 'boosted retry');
+
+        expect(node.currentTxPower, 18);
+        expect(message().activeTxBoostWithLna, isNull);
+        expect(textFrames.map((frame) => frame[2]), [0, 1]);
+        final hash = acknowledgeEnqueue(textFrames.last);
+        expect(message().expectedAckHash, hash);
+        expect(message().activeTxBoostWithLna, isFalse);
+        expect(message().sentWithTxPowerBoost, isFalse);
+
+        final ack = BufferWriter()
+          ..writeByte(pushCodeSendConfirmed)
+          ..writeUInt32LE(hash)
+          ..writeUInt32LE(1200);
+        node.handleFrameForTest(ack.toBytes());
+        await _until(tester, () => node.currentTxPower == 11, stage: 'restore');
+        expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
+        expect(message().status, MessageStatus.delivered);
+        expect(message().tripTimeMs, 1200);
+        expect(message().activeTxBoostWithLna, isNull);
+        expect(message().sentWithTxPowerBoost, isTrue);
+        expect([
+          for (final frame in node.frames)
+            if (frame.first == cmdSetRadioTxPower)
+              'TX ${frame[1]}'
+            else if (frame.first == cmdSendTxtMsg)
+              'send ${frame[2]}',
+        ], ['send 0', 'TX 18', 'send 1', 'TX 11']);
+      } finally {
+        retry.setSendingPaused(true);
+        // On an earlier assertion failure, a held SENT may still own the
+        // command lock. Let its timeout finish before disposing the node.
+        await tester.pump();
+        if (node.pendingCommandReplyCountForTest > 0) {
+          await tester.pump(const Duration(seconds: 5));
+        }
+        node.dispose();
+        retry.dispose();
+        settings.dispose();
+        await tester.pump();
+      }
+    }, timeout: const Timeout(Duration(seconds: 30)));
 
     for (final (cliSupported, tryLna) in [(false, true), (true, false), (true, true)]) {
       final usesLna = cliSupported && tryLna;

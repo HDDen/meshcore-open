@@ -160,10 +160,12 @@ void main() {
       (attempt: 3, flood: true, boosted: true),
     ]);
     expect(retry.latest.sendAttemptLimit, 4);
+    expect(retry.latest.activeTxBoostWithLna, isTrue);
     expect(retry.packets, everyElement((_text, _timestamp)));
     expect(retry.owners, hasLength(1));
     expect(retry.service.handleAckReceived(retry.hash(3), 10), isNotNull);
     expect(retry.latest.status, MessageStatus.delivered);
+    expect(retry.latest.activeTxBoostWithLna, isNull);
     expect(retry.latest.sentWithTxPowerBoost, isTrue);
     expect(retry.latest.sentWithAdaptiveLna, isTrue);
     expect(retry.owners, isEmpty);
@@ -205,11 +207,13 @@ void main() {
       await tester.pump(ackWait);
       await tester.pump();
       expect(retry.sends.last.boosted, boostConfirmed);
+      expect(retry.latest.activeTxBoostWithLna, boostConfirmed ? true : null);
       expect(retry.latest.sentWithTxPowerBoost, isFalse);
       // A late ACK for the ordinary attempt must not claim the newer boost.
       final ackedAttempt = boostConfirmed ? 0 : 1;
       expect(retry.service.handleAckReceived(retry.hash(ackedAttempt), 10), isNotNull);
       expect(retry.latest.status, MessageStatus.delivered);
+      expect(retry.latest.activeTxBoostWithLna, isNull);
       expect(retry.latest.sentWithTxPowerBoost, isFalse);
       expect(retry.latest.sentWithAdaptiveLna, isFalse);
     });
@@ -310,7 +314,7 @@ void main() {
     await tester.pump(const Duration(seconds: 61));
   });
 
-  testWidgets('starting without a route does not extend the automatic Flood budget',
+  testWidgets('Flood without a route boosts the tail of its ordinary retries',
       (tester) async {
     final retry = _Retry(automaticFloodRetries: 5, floodRetries: 5);
     addTearDown(retry.dispose);
@@ -320,10 +324,13 @@ void main() {
     await tester.pump();
     await tester.pump(ackWait);
     expect(retry.latest.status, MessageStatus.failed);
+    expect(retry.latest.activeTxBoostWithLna, isNull);
+    expect(retry.latest.sendAttemptLimit, isNull);
     expect(retry.sends, [
       (attempt: 0, flood: true, boosted: false),
-      (attempt: 1, flood: true, boosted: false),
+      (attempt: 1, flood: true, boosted: true),
     ]);
+    expect(retry.owners, isEmpty);
     await tester.pump(const Duration(seconds: 61));
   });
 

@@ -99,6 +99,8 @@ class Message {
   final DateTime? deliveredAt;
   final int? tripTimeMs;
   final int? airtimeMs;
+  // Live attempt only. Null until the node accepts a boosted send.
+  final bool? activeTxBoostWithLna;
   final bool sentWithTxPowerBoost;
   final bool sentWithAdaptiveLna;
   final int? pathLength;
@@ -207,6 +209,7 @@ class Message {
     this.deliveredAt,
     this.tripTimeMs,
     this.airtimeMs,
+    this.activeTxBoostWithLna,
     this.sentWithTxPowerBoost = false,
     this.sentWithAdaptiveLna = false,
     this.pathLength,
@@ -261,6 +264,7 @@ class Message {
     DateTime? deliveredAt,
     int? tripTimeMs,
     int? airtimeMs,
+    Object? activeTxBoostWithLna = _unset,
     bool? sentWithTxPowerBoost,
     bool? sentWithAdaptiveLna,
     int? pathLength,
@@ -395,6 +399,9 @@ class Message {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       tripTimeMs: tripTimeMs ?? this.tripTimeMs,
       airtimeMs: airtimeMs ?? this.airtimeMs,
+      activeTxBoostWithLna: activeTxBoostWithLna == _unset
+          ? this.activeTxBoostWithLna
+          : activeTxBoostWithLna as bool?,
       sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
       sentWithAdaptiveLna: sentWithAdaptiveLna ?? this.sentWithAdaptiveLna,
       pathLength: pathLength ?? this.pathLength,

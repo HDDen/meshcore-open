@@ -2977,6 +2977,7 @@ transportSetup: логическое ожидание принадлежит п�
 Reset/SELF_INFO снимают только логическую фазу; local timeout/известный ключ
 не снимают ещё установленный awaiting-флаг. Retry при потере связи и dispose
 снимают logical hold, сохраняя actual запросы/waiters и отдельный transportWrite.
+Dispose отменяет периодический retry SELF_INFO и не даёт завершившейся позже записи поставить его снова.
 Значение флага, команды, deadlines/retry и прежние error/early-response quirks
 сохранены; после close новые leases не создаются. Подготовлены 23 отдельные
 connector-регрессии; handshakeWorkTests принят владельцем.
@@ -3850,13 +3851,18 @@ The last lease restores the baseline. Reconnection checks the persisted
 baseline against SELF_INFO. Direct messages can opt in separately: a routed
 attempt can replay once. The Flood boost setting applies to the tail of the
 extra automatic Flood attempts or the tail of the ordinary forced Flood
-budget. The first automatic Flood keeps normal power.
+budget. The first automatic Flood keeps normal power. When Auto starts with
+no known route, it boosts the last configured retries of the ordinary Flood
+budget and leaves the first attempt at normal power.
 The companion confirms enqueue before airtime and saves its global power in
 flash. Other packets transmitted during a boost share the higher power.
 Successful boosted sends keep a local lightning badge in history. Channel
 messages mark a boosted resend accepted by the node. Direct messages mark
-an acknowledged attempt with an accepted boosted copy. The badge is red when
-that copy used LNA confirmed enabled by the app during the boost.
+an acknowledged attempt with an accepted boosted copy. While a direct message
+is in flight, the live badge follows its attempt counter once the node accepts
+the boosted send. On delivery the badge follows the delivery time and reflects
+the attempt matched by the ACK. The badge is red when that copy used LNA
+confirmed enabled by the app during the boost.
 The optional LNA switch uses CompanionCLI before raising power. After a
 confirmed RX gain off, it requests on and restores off after the last boosted
 series ends. An interrupted restore is remembered per node for one reconnect

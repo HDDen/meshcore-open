@@ -8772,6 +8772,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _scheduleSelfInfoRetry() {
+    if (_disposed) return;
     _selfInfoRetryTimer?.cancel();
     if (PlatformInfo.isWeb &&
         _activeTransport == MeshCoreTransportType.bluetooth) {
@@ -11623,6 +11624,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final wentOut = current.sentAt != null || current.sentByRadioAt != null;
       return current.copyWith(
         status: wentOut ? MessageStatus.sent : MessageStatus.failed,
+        activeTxBoostWithLna: null,
       );
     });
     appLogger.info(
@@ -22142,6 +22144,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _finishBackupChannelSync(false);
     _finishBackupContactRead(null);
     _cancelChannelHopControls();
+    _selfInfoRetryTimer?.cancel();
+    _selfInfoRetryTimer = null;
     _selfInfoWork.finishCurrent();
     MessageHistoryStorage.instance.detachBackgroundWorkTracker(_backgroundWork);
     _notificationService.detachBackgroundWorkTracker(_backgroundWork);

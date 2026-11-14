@@ -424,6 +424,18 @@ void main() {
     });
   }, timeout: timeout);
 
+  testWidgets('dispose cancels the scheduled SELF_INFO retry', (tester) async {
+    await _withHandshake(tester, (c) async {
+      await c.requestDeviceInfoForTest();
+      expect(c.selfInfoRetryActiveForTest, isTrue);
+      final writes = c.frames.length;
+      c.dispose();
+      expect(c.selfInfoRetryActiveForTest, isFalse);
+      await tester.pump(const Duration(milliseconds: 3500));
+      expect(c.frames, hasLength(writes));
+    });
+  }, timeout: timeout);
+
   testWidgets('dispose preserves existing local waiter deadlines and their leases', (tester) async {
     await _withHandshake(tester, (c) async {
       await c.requestDeviceInfoForTest();

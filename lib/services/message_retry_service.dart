@@ -502,7 +502,10 @@ class MessageRetryService extends ChangeNotifier {
     _timeoutTimers[messageId]?.cancel();
     if (message.status != MessageStatus.failed &&
         message.status != MessageStatus.delivered) {
-      final failed = message.copyWith(status: MessageStatus.failed);
+      final failed = message.copyWith(
+        status: MessageStatus.failed,
+        activeTxBoostWithLna: null,
+      );
       _pendingMessages[messageId] = failed;
       _config?.updateMessage(failed);
     }
@@ -722,8 +725,14 @@ class MessageRetryService extends ChangeNotifier {
           message.retryCount,
           adaptive.adaptiveTxPower.forcedFloodRetries,
         );
-    final boostForcedFlood = canBoost &&
-        forcedFlood &&
+    // With no known route, Auto already floods within the ordinary budget.
+    // Boost its retries without adding a second Flood series.
+    final floodWithoutRoute = useFlood &&
+        contact.type == advTypeChat &&
+        contact.pathOverride == null &&
+        _attemptPathHistory[messageId]?.isNotEmpty != true;
+    final boostOrdinaryFlood = canBoost &&
+        (forcedFlood || (floodWithoutRoute && message.retryCount > 0)) &&
         AdaptiveTxPower.isInLastRetries(
           retry: message.retryCount + 1,
           maxRetries: _textFitsAttempt(message, contact, maxRetries - 1)
@@ -731,7 +740,8 @@ class MessageRetryService extends ChangeNotifier {
               : maxFullLengthTextAttempt + 1,
           boostedRetries: adaptive.adaptiveTxPower.forcedFloodRetries,
         );
-    final boost = repeating || boostAutomaticFlood || boostForcedFlood;
+    final boost = repeating || boostAutomaticFlood || boostOrdinaryFlood;
+    if (!boost) _finishTxPower(messageId);
     if (canBoost && !repeating && !useFlood) {
       // A routed boost replays this packet before the next logical attempt.
       _boostedRepeats[messageId] = (
@@ -749,6 +759,7 @@ class MessageRetryService extends ChangeNotifier {
     final attemptStartedAt = DateTime.now();
     final hopCount = useFlood ? -1 : selection.hopCount;
     final progressMessage = (_pendingMessages[messageId] ?? message).copyWith(
+      activeTxBoostWithLna: null,
       sendAttemptLimit:
           automaticFlood == null ? null : automaticFlood.lastAttempt + 1,
       pathLength: hopCount,
@@ -1028,6 +1039,9 @@ class MessageRetryService extends ChangeNotifier {
 
     final updatedMessage = message.copyWith(
       status: MessageStatus.sent,
+      activeTxBoostWithLna: expected.attempt == message.retryCount
+          ? boostedWithLna
+          : message.activeTxBoostWithLna,
       expectedAckHash: ackHash,
       estimatedTimeoutMs: actualTimeout,
       sentAt: DateTime.now(),
@@ -1301,7 +1315,10 @@ class MessageRetryService extends ChangeNotifier {
         remaining: repeat.remaining - 1,
         repeating: true,
       );
-      final pending = message.copyWith(status: MessageStatus.pending);
+      final pending = message.copyWith(
+        status: MessageStatus.pending,
+        activeTxBoostWithLna: null,
+      );
       _pendingMessages[messageId] = pending;
       config?.updateMessage(pending);
       _attemptSendOrFail(messageId);
@@ -1328,6 +1345,7 @@ class MessageRetryService extends ChangeNotifier {
       final updatedMessage = message.copyWith(
         retryCount: message.retryCount + 1,
         status: MessageStatus.pending,
+        activeTxBoostWithLna: null,
       );
 
       _pendingMessages[messageId] = updatedMessage;
@@ -1345,7 +1363,10 @@ class MessageRetryService extends ChangeNotifier {
       });
     } else {
       // Max retries reached - mark as failed
-      final failedMessage = message.copyWith(status: MessageStatus.failed);
+      final failedMessage = message.copyWith(
+        status: MessageStatus.failed,
+        activeTxBoostWithLna: null,
+      );
       _pendingMessages[messageId] = failedMessage;
 
       // A route the user pinned outranks this cleanup. Every other automatic
@@ -1593,6 +1614,7 @@ class MessageRetryService extends ChangeNotifier {
         status: MessageStatus.delivered,
         deliveredAt: DateTime.now(),
         tripTimeMs: tripTimeMs,
+        activeTxBoostWithLna: null,
         sentWithTxPowerBoost: sentWithTxPowerBoost,
         sentWithAdaptiveLna: sentWithTxPowerBoost &&
             ackCandidates.any((entry) => entry.sentWithAdaptiveLna),

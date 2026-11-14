@@ -3556,6 +3556,9 @@ class ContactMessageBubble extends StatelessWidget {
     final showTxPowerBoostBadge = isOutgoing &&
         message.status == MessageStatus.delivered &&
         message.sentWithTxPowerBoost;
+    final activeTxBoostWithLna = isOutgoing && message.status == MessageStatus.sent
+        ? message.activeTxBoostWithLna
+        : null;
     final outgoingRadioWaitLabel = _outgoingRadioWaitLabel(message);
     final showSingleAttempt = isOutgoing &&
         message.retryCount == 0 &&
@@ -4236,29 +4239,39 @@ class ContactMessageBubble extends StatelessWidget {
                             ),
                           ),
                         ],
-                        if (enableTracing) ...[
-                          if (isOutgoing && message.retryCount > 0) ...[
-                            const SizedBox(height: 4),
-                            Padding(
-                              padding: isMediaMessage
-                                  ? const EdgeInsets.symmetric(horizontal: 8)
-                                  : EdgeInsets.zero,
-                              child: Text(
-                                context.l10n.chat_retryCount(
-                                  message.retryCount + 1,
-                                  message.sendAttemptLimit ??
-                                      context
-                                          .read<AppSettingsService>()
-                                          .settings
-                                          .maxMessageRetries,
+                        if ((enableTracing && isOutgoing && message.retryCount > 0) ||
+                            activeTxBoostWithLna != null) ...[
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: isMediaMessage
+                                ? const EdgeInsets.symmetric(horizontal: 8)
+                                : EdgeInsets.zero,
+                            child: Wrap(
+                              spacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  context.l10n.chat_retryCount(
+                                    message.retryCount + 1,
+                                    message.sendAttemptLimit ??
+                                        settingsService.settings.maxMessageRetries,
+                                  ),
+                                  style: MeshTheme.mono(
+                                    fontSize: 9.5 * textScale,
+                                    color: metaColor,
+                                  ),
                                 ),
-                                style: MeshTheme.mono(
-                                  fontSize: 9.5 * textScale,
-                                  color: metaColor,
-                                ),
-                              ),
+                                if (activeTxBoostWithLna != null)
+                                  TxPowerBoostBadge(
+                                    withLna: activeTxBoostWithLna,
+                                    size: 12 * textScale,
+                                    color: metaColor,
+                                  ),
+                              ],
                             ),
-                          ],
+                          ),
+                        ],
+                        if (enableTracing) ...[
                           const SizedBox(height: 3),
                           // Meta row: timestamp + status icon + optional tracing
                           Padding(
@@ -4345,6 +4358,12 @@ class ContactMessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                                if (showTxPowerBoostBadge)
+                                  TxPowerBoostBadge(
+                                    withLna: message.sentWithAdaptiveLna,
+                                    size: 12 * textScale,
+                                    color: metaColor,
+                                  ),
                                 if (showSingleAttempt)
                                   Tooltip(
                                     message: context.l10n.channelPath_sendAttemptsLabel,
@@ -4388,12 +4407,6 @@ class ContactMessageBubble extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                  ),
-                                if (showTxPowerBoostBadge)
-                                  TxPowerBoostBadge(
-                                    withLna: message.sentWithAdaptiveLna,
-                                    size: 12 * textScale,
-                                    color: metaColor,
                                   ),
                                 if (mcoImageBadgeLabel != null) ...[
                                   const SizedBox(width: 4),

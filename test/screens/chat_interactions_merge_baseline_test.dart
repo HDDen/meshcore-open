@@ -331,6 +331,7 @@ void main() {
             _directPost('boosted', boostedText, 2).copyWith(
               isOutgoing: true,
               tripTimeMs: 1200,
+              airtimeMs: 90,
               sentWithTxPowerBoost: true,
             ),
             _directPost('lna', lnaText, 3).copyWith(
@@ -338,6 +339,13 @@ void main() {
               tripTimeMs: 1200,
               sentWithTxPowerBoost: true,
               sentWithAdaptiveLna: true,
+            ),
+            _directPost('active-boost', 'Boosted retry awaiting ACK', 4).copyWith(
+              isOutgoing: true,
+              status: MessageStatus.sent,
+              retryCount: 2,
+              sendAttemptLimit: 4,
+              activeTxBoostWithLna: false,
             ),
           ]);
       }
@@ -363,9 +371,16 @@ void main() {
       await tester.pumpAndSettle();
 
       final badges = find.byType(TxPowerBoostBadge);
-      expect(badges, findsNWidgets(2));
+      expect(badges, findsNWidgets(inChannel ? 2 : 3));
+      final deliveredBubble = find.ancestor(
+        of: find.text(boostedText),
+        matching: find.byType(ContactMessageBubble),
+      );
+      final normalBoostTooltip = find.byTooltip('Sent with boosted TX power');
       final badge = find.ancestor(
-        of: find.byTooltip('Sent with boosted TX power'),
+        of: inChannel
+            ? normalBoostTooltip
+            : find.descendant(of: deliveredBubble, matching: normalBoostTooltip),
         matching: badges,
       );
       final lnaBadge = find.byTooltip('Sent with boosted TX power and LNA enabled by the app');
@@ -381,14 +396,29 @@ void main() {
         (widget) => widget is Text && widget.data == (inChannel ? '3' : '1.2s'),
       );
       expect(previous, isNonNegative);
-      expect(metadata.children.indexWhere((widget) => widget is TxPowerBoostBadge),
-        greaterThan(previous));
+      final boostIndex = metadata.children.indexWhere(
+        (widget) => widget is TxPowerBoostBadge,
+      );
+      expect(boostIndex, inChannel ? greaterThan(previous) : previous + 1);
+      if (!inChannel) {
+        final activeBubble = find.ancestor(
+          of: find.text('Boosted retry awaiting ACK'),
+          matching: find.byType(ContactMessageBubble),
+        );
+        final activeBadge = find.descendant(of: activeBubble, matching: badges);
+        expect(activeBadge, findsOneWidget);
+        final retryRow = tester.element(activeBadge).findAncestorWidgetOfExactType<Wrap>()!;
+        expect(retryRow.children.first, isA<Text>().having(
+          (text) => text.data, 'label', 'Retry 3/4',
+        ));
+        expect(retryRow.children[1], isA<TxPowerBoostBadge>());
+      }
 
       await settings.updateSettings(
         settings.settings.copyWith(enableMessageTracing: false),
       );
       await tester.pumpAndSettle();
-      expect(badges, findsNWidgets(2));
+      expect(badges, findsNWidgets(inChannel ? 2 : 3));
       expect(iconColor(lnaBadge), Colors.red);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 2));
