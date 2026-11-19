@@ -12,7 +12,13 @@ enum QuickAction {
   cliCommand1,
   cliCommand2,
   channelMessage1,
-  channelMessage2;
+  channelMessage2,
+  radioStats,
+  sensors,
+  readChannels,
+  readDirect,
+  readAll,
+  channelIndices;
 
   bool get isCliCommand => this == cliCommand1 || this == cliCommand2;
   bool get isChannelMessage => this == channelMessage1 || this == channelMessage2;

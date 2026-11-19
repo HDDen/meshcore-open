@@ -3940,6 +3940,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  Future<void> markChatsRead({bool channels = false, bool contacts = false}) async {
+    if (isOfflineMode) return;
+    if (channels) {
+      for (final index in this.channels.map((channel) => channel.index).toSet()) {
+        markChannelRead(index);
+      }
+    }
+    if (contacts) {
+      for (final key in _contactUnreadCount.keys.toList()) {
+        markContactRead(key);
+      }
+      await additionalIdentityInbox?.markAllRead();
+    }
+  }
+
   void markContactRead(String contactKeyHex) {
     if (isOfflineMode) return;
     if (!_shouldTrackUnreadForContactKey(contactKeyHex)) return;

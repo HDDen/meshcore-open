@@ -176,6 +176,18 @@ class AdditionalIdentityInbox extends ChangeNotifier {
     }
   }
 
+  Future<void> markAllRead() async {
+    final recipients = entries.map((entry) => entry.identity.publicKeyHex).toList();
+    for (final recipient in recipients) {
+      if (_disposed) return;
+      final conversations = await threads(recipient);
+      for (final conversation in conversations) {
+        if (_disposed) return;
+        if (conversation.unread > 0) await markRead(recipient, conversation.senderKey);
+      }
+    }
+  }
+
   Future<void> markRead(String recipientKey, String senderKey) async {
     final changed = await _storage.markAdditionalIdentityThreadRead(
       recipientKey,

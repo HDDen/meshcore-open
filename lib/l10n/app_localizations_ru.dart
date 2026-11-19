@@ -10629,6 +10629,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickActions_bleProxy => 'Прокси BLE';
 
   @override
+  String get quickActions_radioStats => 'Статистика радио';
+
+  @override
+  String get quickActions_sensors => 'Просмотр датчиков';
+
+  @override
+  String get quickActions_readChannels => 'Прочитать каналы';
+
+  @override
+  String get quickActions_readDirect => 'Прочитать direct';
+
+  @override
+  String get quickActions_readAll => 'Прочитать всё';
+
+  @override
+  String get quickActions_channelIndices => 'Индексы каналов';
+
+  @override
   String get quickActions_keys => 'Управление ключами';
 
   @override

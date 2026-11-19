@@ -10658,6 +10658,24 @@ class AppLocalizationsPl extends AppLocalizations {
   String get quickActions_bleProxy => 'BLE proxy';
 
   @override
+  String get quickActions_radioStats => 'Radio statistics';
+
+  @override
+  String get quickActions_sensors => 'View sensors';
+
+  @override
+  String get quickActions_readChannels => 'Read channels';
+
+  @override
+  String get quickActions_readDirect => 'Read direct chats';
+
+  @override
+  String get quickActions_readAll => 'Read everything';
+
+  @override
+  String get quickActions_channelIndices => 'Channel indices';
+
+  @override
   String get quickActions_keys => 'Manage keys';
 
   @override

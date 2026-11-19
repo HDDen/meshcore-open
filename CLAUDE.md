@@ -1640,7 +1640,7 @@ The shared app bar opens a titleless quick-actions panel before the battery
 indicator. `AppSettings.quickActions` stores visibility, order and four
 independent command/message presets in the active userdata profile. The
 panel uses the existing radio, CompanionCLI, discovery, adaptive TX power
-and licensed proxy APIs. TCP and BLE quick actions each use their matching
+and licensed proxy APIs. Radio statistics opens the companion stats screen when supported; View sensors opens self-telemetry. Read channels, Read direct chats and Read everything use `markChatsRead`, including room-server counts and unlocked additional-identity threads for contact scopes. Channel indices toggles the existing hide-index setting and is active when indices are visible. New actions are appended by enum name so existing order and presets survive. TCP and BLE quick actions each use their matching
 transport's permission, enabled state and setter. Channel presets require one exact channel-name
 match on the connected radio. CompanionCLI presets share the console queue
 and history, and surface a timeout or transport failure in the panel. The

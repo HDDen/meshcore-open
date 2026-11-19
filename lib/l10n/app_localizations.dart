@@ -17674,6 +17674,42 @@ abstract class AppLocalizations {
   /// **'BLE proxy'**
   String get quickActions_bleProxy;
 
+  /// No description provided for @quickActions_radioStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio statistics'**
+  String get quickActions_radioStats;
+
+  /// No description provided for @quickActions_sensors.
+  ///
+  /// In en, this message translates to:
+  /// **'View sensors'**
+  String get quickActions_sensors;
+
+  /// No description provided for @quickActions_readChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Read channels'**
+  String get quickActions_readChannels;
+
+  /// No description provided for @quickActions_readDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Read direct chats'**
+  String get quickActions_readDirect;
+
+  /// No description provided for @quickActions_readAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Read everything'**
+  String get quickActions_readAll;
+
+  /// No description provided for @quickActions_channelIndices.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel indices'**
+  String get quickActions_channelIndices;
+
   /// No description provided for @quickActions_keys.
   ///
   /// In en, this message translates to:

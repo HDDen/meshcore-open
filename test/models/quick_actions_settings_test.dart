@@ -8,7 +8,8 @@ void main() {
   test('quick actions keep their order and independent presets in settings', () {
     final defaults = AppSettings.fromJson({}).quickActions;
     expect(defaults.items.map((item) => item.action), QuickAction.values);
-    expect(defaults.items.where((item) => item.visible), hasLength(10));
+    expect(defaults.items.where((item) => item.visible),
+        hasLength(QuickAction.values.where((action) => !action.isCustom).length));
 
     final custom = defaults
         .update(const QuickActionItem(
@@ -61,7 +62,7 @@ void main() {
       {'action': 'channelMessage2', 'visible': true, 'text': 42},
     ]);
     expect(restored.items.map((item) => item.action).toSet(), QuickAction.values.toSet());
-    expect(restored.items, hasLength(14));
+    expect(restored.items, hasLength(QuickAction.values.length));
     expect(restored.items.first.action, QuickAction.channelRetries);
     expect(restored.items.first.visible, isFalse);
     expect(restored.items[1].isConfigured, isFalse);

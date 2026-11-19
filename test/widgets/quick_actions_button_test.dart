@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,6 +39,15 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   bool get supportsCompanionRadioStats => false;
+
+  @override
+  Uint8List get selfPublicKey => Uint8List(32)..[0] = 1;
+
+  final readScopes = <(bool, bool)>[];
+  @override
+  Future<void> markChatsRead({bool channels = false, bool contacts = false}) async {
+    readScopes.add((channels, contacts));
+  }
 
   @override
   bool get supportsCompanionCli => false;
@@ -299,6 +309,46 @@ void main() {
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('read shortcuts keep their scopes and channel indices toggle visibility', (tester) async {
+    final radio = _Radio();
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    await settings.updateSettings(settings.settings.copyWith(
+      quickActions: _visibleActions(const [
+        QuickActionItem(QuickAction.readChannels, visible: true),
+        QuickActionItem(QuickAction.readDirect, visible: true),
+        QuickActionItem(QuickAction.readAll, visible: true),
+        QuickActionItem(QuickAction.channelIndices, visible: true),
+        QuickActionItem(QuickAction.radioStats, visible: true),
+        QuickActionItem(QuickAction.sensors, visible: true),
+      ]),
+    ));
+    try {
+      await _open(tester, radio, settings);
+      Finder tile(QuickAction action) => find.byKey(ValueKey(action));
+      expect(tester.widget<InkWell>(tile(QuickAction.radioStats)).onTap, isNull);
+      expect(tester.widget<InkWell>(tile(QuickAction.sensors)).onTap, isNotNull);
+      await tester.tap(tile(QuickAction.readChannels));
+      await tester.pumpAndSettle();
+      await tester.tap(tile(QuickAction.readDirect));
+      await tester.pumpAndSettle();
+      await tester.tap(tile(QuickAction.readAll));
+      await tester.pumpAndSettle();
+      expect(radio.readScopes, [(true, false), (false, true), (true, true)]);
+      final original = settings.settings.hideChannelIndexIndicator;
+      await tester.tap(tile(QuickAction.channelIndices));
+      await tester.pumpAndSettle();
+      expect(settings.settings.hideChannelIndexIndicator, !original);
+      await tester.tap(tile(QuickAction.channelIndices));
+      await tester.pumpAndSettle();
+      expect(settings.settings.hideChannelIndexIndicator, original);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
     }
   });
 

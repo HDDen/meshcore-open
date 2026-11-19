@@ -11,6 +11,8 @@ import '../models/quick_actions_settings.dart';
 import '../screens/additional_identity_screen.dart';
 import '../screens/companion_cli_screen.dart';
 import '../screens/discovery_screen.dart';
+import '../screens/companion_radio_stats_screen.dart';
+import '../screens/telemetry_screen.dart';
 import '../screens/quick_actions_settings_screen.dart';
 import '../services/app_settings_service.dart';
 import 'quick_action_presentation.dart';
@@ -102,7 +104,11 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
     if (!item.isConfigured) return false;
     return switch (item.action) {
       QuickAction.adaptiveTxPower => widget.service.settings.channelMinHopsEnabled,
-      QuickAction.channelRetries => true,
+      QuickAction.channelRetries || QuickAction.channelIndices => true,
+      QuickAction.radioStats => _online && connector.supportsCompanionRadioStats,
+      QuickAction.sensors => _online && connector.selfPublicKey?.isNotEmpty == true,
+      QuickAction.readChannels || QuickAction.readDirect || QuickAction.readAll =>
+          !connector.isOfflineMode,
       QuickAction.companionCli || QuickAction.cliCommand1 ||
         QuickAction.cliCommand2 => _online && connector.supportsCompanionCli,
       QuickAction.floodAdvert || QuickAction.zeroHopAdvert || QuickAction.discover =>
@@ -123,6 +129,7 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
   bool _active(QuickAction action) => switch (action) {
     QuickAction.adaptiveTxPower => widget.service.settings.adaptiveTxPower.enabled,
     QuickAction.channelRetries => widget.service.settings.channelMinHopsEnabled,
+    QuickAction.channelIndices => !widget.service.settings.hideChannelIndexIndicator,
     QuickAction.companionProxy => widget.sections?.companionProxyEnabled == true,
     QuickAction.tcpProxy => widget.sections?.companionProxyTcpEnabled == true,
     QuickAction.bleProxy => widget.sections?.companionProxyBleEnabled == true,
@@ -144,6 +151,10 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
         MaterialPageRoute(builder: (_) => const DiscoveryScreen(startDiscovery: true)),
       ),
       QuickAction.manageKeys => AdditionalIdentityScreen.open,
+      QuickAction.radioStats => (context) => Navigator.of(context).push<void>(
+        MaterialPageRoute(builder: (_) => const CompanionRadioStatsScreen()),
+      ),
+      QuickAction.sensors => (context) async { pushSelfTelemetryScreen(context); },
       _ => null,
     };
     if (destination != null) {
@@ -165,6 +176,14 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
           ));
         case QuickAction.channelRetries:
           await service.setChannelMinHopsEnabled(enable);
+        case QuickAction.channelIndices:
+          await service.setHideChannelIndexIndicator(!enable);
+        case QuickAction.readChannels:
+          await connector.markChatsRead(channels: true);
+        case QuickAction.readDirect:
+          await connector.markChatsRead(contacts: true);
+        case QuickAction.readAll:
+          await connector.markChatsRead(channels: true, contacts: true);
         case QuickAction.floodAdvert:
         case QuickAction.zeroHopAdvert:
           await connector.sendSelfAdvert(
@@ -202,6 +221,8 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
             item.text,
             reportFailure: true,
           );
+        case QuickAction.radioStats:
+        case QuickAction.sensors:
         case QuickAction.companionCli:
         case QuickAction.discover:
         case QuickAction.manageKeys:
