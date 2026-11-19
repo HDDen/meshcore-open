@@ -10681,6 +10681,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get extraKeys_importNodeNever => 'Never for this node';
 
   @override
+  String get extraKeys_importNodePromptEnabled =>
+      'Ask to save the node’s private key on connection for later offline use';
+
+  @override
   String get extraKeys_importNodePrompt =>
       'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
 

@@ -9,6 +9,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/services/adaptive_tx_power.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/utils/keys.dart';
@@ -132,6 +133,29 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(checked, isTrue);
     expect(node.exports, 0);
+  });
+
+  testWidgets('disabling the offer does not lock or remove saved identities', (tester) async {
+    final settings = AppSettingsService();
+    node.attachAppSettingsServiceForTest(settings);
+    addTearDown(settings.dispose);
+    await settings.setNodeIdentityImportPromptEnabled(false);
+    expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isFalse);
+    final screen = await pumpScreen(tester);
+    unawaited(NodeIdentityImportPrompt.show(screen, node, node.txPowerSession));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(node.exports, 0);
+    final inbox = node.additionalIdentityInbox!..unlock([node.entry]);
+    expect(inbox.isUnlocked, isTrue);
+    expect(inbox.entryFor(node.txPowerSession.nodeKey), same(node.entry));
+    await settings.setNodeIdentityImportPromptEnabled(true);
+    expect(inbox.isUnlocked, isTrue);
+    expect(inbox.entries, contains(node.entry));
+    inbox.unlock([]);
+    expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isTrue);
+    // Changing unlocked keys schedules a batched connector notification.
+    await tester.pumpAndSettle();
   });
 
   for (final dismissal in ['cancel', 'barrier', 'back']) {

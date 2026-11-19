@@ -340,6 +340,7 @@ class AppSettings {
 
   /// Ignore received frames from slots confirmed to be empty by the radio.
   final bool suppressPhantomChannels;
+  final bool nodeIdentityImportPromptEnabled;
 
   /// Whether the one-time direct echo recovery opt-in prompt was answered.
   final bool directEchoRecoveryPromptHandled;
@@ -839,6 +840,7 @@ class AppSettings {
     this.recoverLongPacketEchoes = true,
     this.directEchoRecovery = false,
     this.suppressPhantomChannels = true,
+    this.nodeIdentityImportPromptEnabled = true,
     this.directEchoRecoveryPromptHandled = false,
     this.simplifiedMentions = false,
     this.sharedMessageHistoryMode = SharedMessageHistoryMode.disabled,
@@ -1025,6 +1027,7 @@ class AppSettings {
       'recover_long_packet_echoes': recoverLongPacketEchoes,
       'direct_echo_recovery': directEchoRecovery,
       'suppress_phantom_channels': suppressPhantomChannels,
+      'node_identity_import_prompt_enabled': nodeIdentityImportPromptEnabled,
       'direct_echo_recovery_prompt_handled': directEchoRecoveryPromptHandled,
       'simplified_mentions': simplifiedMentions,
       'shared_message_history_mode': sharedMessageHistoryMode.value,
@@ -1248,6 +1251,7 @@ class AppSettings {
           json['recover_long_packet_echoes'] as bool? ?? true,
       directEchoRecovery: json['direct_echo_recovery'] as bool? ?? false,
       suppressPhantomChannels: json['suppress_phantom_channels'] as bool? ?? true,
+      nodeIdentityImportPromptEnabled: json['node_identity_import_prompt_enabled'] as bool? ?? true,
       directEchoRecoveryPromptHandled:
           json['direct_echo_recovery_prompt_handled'] as bool? ?? false,
       simplifiedMentions: json['simplified_mentions'] as bool? ?? false,
@@ -1526,6 +1530,7 @@ class AppSettings {
     bool? recoverLongPacketEchoes,
     bool? directEchoRecovery,
     bool? suppressPhantomChannels,
+    bool? nodeIdentityImportPromptEnabled,
     bool? directEchoRecoveryPromptHandled,
     bool? simplifiedMentions,
     SharedMessageHistoryMode? sharedMessageHistoryMode,
@@ -1706,6 +1711,8 @@ class AppSettings {
       directEchoRecovery: directEchoRecovery ?? this.directEchoRecovery,
       suppressPhantomChannels:
           suppressPhantomChannels ?? this.suppressPhantomChannels,
+      nodeIdentityImportPromptEnabled:
+          nodeIdentityImportPromptEnabled ?? this.nodeIdentityImportPromptEnabled,
       directEchoRecoveryPromptHandled:
           directEchoRecoveryPromptHandled ??
           this.directEchoRecoveryPromptHandled,

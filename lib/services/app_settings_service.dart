@@ -603,6 +603,9 @@ class AppSettingsService extends ChangeNotifier {
     await updateSettings(_settings.copyWith(directEchoRecovery: value));
   }
 
+  Future<void> setNodeIdentityImportPromptEnabled(bool value) =>
+      updateSettings(_settings.copyWith(nodeIdentityImportPromptEnabled: value));
+
   Future<void> setSuppressPhantomChannels(bool value) async {
     await updateSettings(_settings.copyWith(suppressPhantomChannels: value));
     try {

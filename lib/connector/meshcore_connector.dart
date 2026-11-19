@@ -1042,6 +1042,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  bool get nodeIdentityImportPromptEnabled =>
+      _appSettingsService?.settings.nodeIdentityImportPromptEnabled ?? true;
+
   Contact? getContactByPubKeyHex(String contactPubKeyHex) =>
       _contacts.byKey(contactPubKeyHex);
 

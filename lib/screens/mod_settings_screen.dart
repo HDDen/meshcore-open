@@ -617,6 +617,15 @@ class ModSettingsScreen extends StatelessWidget {
                 if (!PlatformInfo.isWeb)
                   MeshCard(
                     padding: EdgeInsets.zero,
+                    child: SwitchListTile(
+                      title: Text(context.l10n.extraKeys_importNodePromptEnabled),
+                      value: settings.nodeIdentityImportPromptEnabled,
+                      onChanged: settingsService.setNodeIdentityImportPromptEnabled,
+                    ),
+                  ),
+                if (!PlatformInfo.isWeb)
+                  MeshCard(
+                    padding: EdgeInsets.zero,
                     child: ListTile(
                       leading: const Icon(Icons.key_outlined),
                       title: Text(context.l10n.extraKeys_manage),

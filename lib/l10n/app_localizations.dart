@@ -17764,6 +17764,12 @@ abstract class AppLocalizations {
   /// **'Never for this node'**
   String get extraKeys_importNodeNever;
 
+  /// No description provided for @extraKeys_importNodePromptEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to save the node’s private key on connection for later offline use'**
+  String get extraKeys_importNodePromptEnabled;
+
   /// No description provided for @extraKeys_importNodePrompt.
   ///
   /// In en, this message translates to:

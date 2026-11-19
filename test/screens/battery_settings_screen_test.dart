@@ -73,6 +73,17 @@ void main() {
         final headers = children.whereType<SectionHeader>().map((widget) => widget.label).toList();
         expect(headers.indexOf(l10n.settings_modSettingsBattery),
             headers.indexOf(l10n.settings_modSettingsMessageStorage) + 1);
+        final keys = children.indexWhere((widget) => widget is MeshCard &&
+            widget.child is ListTile &&
+            (widget.child as ListTile).title is Text &&
+            ((widget.child as ListTile).title as Text).data == l10n.extraKeys_manage);
+        expect(keys, greaterThan(0));
+        final importToggle = (children[keys - 1] as MeshCard).child as SwitchListTile;
+        expect((importToggle.title as Text).data, l10n.extraKeys_importNodePromptEnabled);
+        expect(importToggle.value, isTrue);
+        importToggle.onChanged!(false);
+        await tester.pumpAndSettle();
+        expect(settings.settings.nodeIdentityImportPromptEnabled, isFalse);
         final battery = children.indexWhere((widget) => widget is SectionHeader &&
             widget.label == l10n.settings_modSettingsBattery);
         expect((children[battery + 1] as MeshCard).child, isA<PowerSavingSettingsTile>());

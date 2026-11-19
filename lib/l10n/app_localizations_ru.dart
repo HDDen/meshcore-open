@@ -10676,6 +10676,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get extraKeys_importNodeNever => 'Никогда для этой ноды';
 
   @override
+  String get extraKeys_importNodePromptEnabled =>
+      'Запрашивать закрытый ключ ноды при подключении для последующей оффлайн-работы';
+
+  @override
   String get extraKeys_importNodePrompt =>
       'Сохранить закрытый ключ и имя узла в списке ключей, чтобы иметь возможность получать адресованные ему сообщения даже без физического подключения и отправлять от его имени личные сообщения?';
 

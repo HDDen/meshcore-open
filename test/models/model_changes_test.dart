@@ -109,6 +109,14 @@ Future<void> _openHistoryStorage() =>
     );
 
 Future<void> main() async {
+  test('node identity import prompt defaults on and persists its opt-out', () {
+    expect(AppSettings().nodeIdentityImportPromptEnabled, isTrue);
+    expect(AppSettings.fromJson(const {}).nodeIdentityImportPromptEnabled, isTrue);
+    final disabled = AppSettings().copyWith(nodeIdentityImportPromptEnabled: false);
+    expect(AppSettings.fromJson(disabled.toJson()).nodeIdentityImportPromptEnabled, isFalse);
+    expect(disabled.copyWith(notificationsEnabled: false).nodeIdentityImportPromptEnabled, isFalse);
+  });
+
   test('phantom channel suppression defaults on and preserves an opt-out', () {
     expect(AppSettings().suppressPhantomChannels, isTrue);
     expect(AppSettings.fromJson(const {}).suppressPhantomChannels, isTrue);

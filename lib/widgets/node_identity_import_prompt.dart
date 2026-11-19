@@ -16,6 +16,7 @@ abstract final class NodeIdentityImportPrompt {
   static String _preferenceKey(String key) => 'node_identity_import_prompt_$key';
 
   static bool shouldOffer(MeshCoreConnector connector, TxPowerSession session) =>
+      connector.nodeIdentityImportPromptEnabled &&
       _cancelledSessions[connector] != session &&
       connector.isSessionReady &&
       connector.hasCompletedSelfInfoHandshake &&
@@ -87,7 +88,10 @@ abstract final class NodeIdentityImportPrompt {
         ],
       ),
     );
-    if (!context.mounted || !isCurrentSession()) return;
+    if (!context.mounted || !isCurrentSession() ||
+        !connector.nodeIdentityImportPromptEnabled) {
+      return;
+    }
     final preference = _preferenceKey(session.nodeKey);
     try {
       if (confirmed != _NodeIdentityImportChoice.save) {
