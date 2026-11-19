@@ -18,6 +18,24 @@ const _forest = CustomTheme(
 );
 
 void main() {
+  test('theme exchange adds only the versioned MCOa extension to each theme', () {
+    final second = _forest.copyWith(id: 'custom:second', name: 'Second');
+    final lines = const LineSplitter().convert(encodeThemesJsonl([_forest, second]));
+    expect(lines, hasLength(2));
+    for (final line in lines) {
+      final json = jsonDecode(line) as Map<String, dynamic>;
+      expect(json['mcoa'], {'version': 1});
+      expect(json, isNot(contains('customOption')));
+      expect(json['mcoa'], isNot(contains('customOption')));
+      // An upstream reader sees exactly the same base theme without the extension.
+      final extended = CustomTheme.fromShareCode(line, newId: 'same');
+      json.remove('mcoa');
+      expect(CustomTheme.fromShareCode(jsonEncode(json), newId: 'same'), extended);
+    }
+    expect(_forest.toJson(), isNot(contains('mcoa')));
+  });
+
+
   test('U19a: upstream share JSON preserves colors, known slots and the background', () {
     final theme = CustomTheme.fromShareCode(
       jsonEncode({

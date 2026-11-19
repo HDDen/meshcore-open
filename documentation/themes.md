@@ -30,6 +30,11 @@ clipboard. **Paste theme code** imports and applies it. **Export to file** and
 **Export my themes** create a .jsonl file with one theme per line. **Import from
 file** adds the themes to your library and keeps your current selection.
 
+MCOa exports add `"mcoa": {"version": 1}` to each theme object. This is the
+version of the MCOa theme extension, not the app version. Share codes use the
+same format. Upstream readers ignore this section; themes without it still
+import normally. The extension currently contains no other fields.
+
 ## Chat backgrounds
 
 In a direct chat or channel, open **⋮ → Chat background** and pick a color or

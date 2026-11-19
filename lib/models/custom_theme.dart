@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 import '../helpers/theme_media.dart';
+import '../helpers/mcoa_theme_extension.dart';
 import '../theme/theme_icons.dart';
 import 'chat_background.dart';
 
@@ -170,6 +171,7 @@ class CustomTheme {
     final chat = chatBackground?.toShareJson();
     return jsonEncode({
       ..._contentJson(),
+      'mcoa': mcoaThemeExtension,
       'chatBackground': ?chat,
       if (chat != null && chatBackgroundEverywhere)
         'chatBackgroundEverywhere': true,
