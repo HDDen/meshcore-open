@@ -24,6 +24,7 @@ import '../widgets/app_bar.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/node_key_settings_dialog.dart';
 import '../widgets/settings_nav_tile_content.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
@@ -656,6 +657,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               connector.isConnected &&
                   connector.supportsPathHashMode
               ? () => _editPathHashMode(context, connector)
+              : null,
+        ),
+        const Divider(height: 1, indent: 16),
+        _tappableTile(
+          context,
+          icon: Icons.vpn_key_outlined,
+          title: l10n.repeater_keySettings,
+          subtitle: l10n.repeater_keySettingsSubtitle,
+          onTap: connector.isSessionReady && !connector.isOfflineMode && !connector.isReviewMode
+              ? () => showDialog<void>(
+                  context: context,
+                  builder: (_) => NodeKeySettingsDialog(connector: connector),
+                )
               : null,
         ),
       ],

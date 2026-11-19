@@ -9,7 +9,15 @@ import '../utils/keys.dart';
 import 'meshcore_key_fields.dart';
 
 class AdditionalIdentityKeyDialog extends StatefulWidget {
-  const AdditionalIdentityKeyDialog({super.key, this.previous, this.keyPairSearcher});
+  const AdditionalIdentityKeyDialog({super.key, this.previous, this.keyPairSearcher})
+      : nodeKey = false, onSave = null;
+
+  const AdditionalIdentityKeyDialog.node({
+    super.key, required this.previous, required this.onSave,
+  }) : nodeKey = true, keyPairSearcher = null;
+
+  final bool nodeKey;
+  final Future<bool> Function(AdditionalIdentityEntry)? onSave;
 
   final AdditionalIdentityEntry? previous;
 
@@ -96,7 +104,9 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
         _key.text,
         previous: widget.previous,
       );
-      if (mounted) Navigator.pop(context, entry);
+      if (!mounted) return;
+      if (widget.onSave != null && !await widget.onSave!(entry)) return;
+      if (mounted) Navigator.pop(context, widget.nodeKey ? null : entry);
     } catch (_) {
       if (mounted) setState(() => _invalid = true);
     } finally {
@@ -120,15 +130,17 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
     final l10n = context.l10n;
     return AlertDialog(
       scrollable: true,
+      contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
+          if (!widget.nodeKey) TextField(
             controller: _name,
             inputFormatters: const [Utf8LengthLimitingTextInputFormatter(maxRadioNameBytes)],
             decoration: InputDecoration(labelText: l10n.extraKeys_name),
           ),
-          const SizedBox(height: 12),
+          if (!widget.nodeKey) const SizedBox(height: 12),
           MeshCoreKeyFields(
             privateKey: _key, publicKey: _publicKey, prefix: _prefix,
             searching: _searching, editable: !_busy, canGenerate: !_busy,
@@ -139,14 +151,23 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
             onPrivateChanged: (_) => setState(() => _invalid = false),
             onPrefixChanged: (_) => setState(() => _invalid = false),
           ),
-          const SizedBox(height: 8),
-          Text(l10n.extraKeys_encrypted, style: Theme.of(context).textTheme.bodySmall),
-          if (_invalid) Text(l10n.extraKeys_invalidKey),
+          if (!widget.nodeKey) ...[
+            const SizedBox(height: 8),
+            Text(l10n.extraKeys_encrypted, style: Theme.of(context).textTheme.bodySmall),
+          ],
+          if (_invalid)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(l10n.extraKeys_invalidKey),
+            ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.common_cancel)),
-        FilledButton(onPressed: _busy ? null : _submit, child: Text(l10n.common_ok)),
+        TextButton(
+          onPressed: widget.nodeKey && _busy && !_searching ? null : () => Navigator.pop(context),
+          child: Text(widget.nodeKey ? l10n.common_close : l10n.common_cancel),
+        ),
+        FilledButton(onPressed: _busy ? null : _submit, child: Text(widget.nodeKey ? l10n.common_save : l10n.common_ok)),
       ],
     );
   }

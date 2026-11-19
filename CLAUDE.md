@@ -1648,6 +1648,10 @@ header display menu currently supports the icon. Its three independent
 switches control the shared app bar, channel chats and direct chats (including
 fixed additional identities). They default to visible for existing profiles.
 
+### Connected node key editor
+
+Node settings place Key settings immediately after path hash mode. `NodeKeySettingsDialog` exports and verifies the current key for the captured radio session before showing the shared identity editor in node mode (no name or vault-storage hint, Close/Save actions). Save reuses `previewBackupNodeIdentity`/`restoreBackupNodeIdentity`, including serialized key writes, transport restart and SELF_INFO verification; unchanged keys cause no write. Session changes reject the save. After a write attempt the editor shows the existing outcome message and cannot resubmit from that view. Editing here does not modify the additional-key vault.
+
 ### Additional MeshCore identities
 
 The add/edit key dialog previews the derived public key in a read-only multiline field, independently of the name input. Invalid or incomplete private input clears the preview; revision checks discard stale asynchronous results. The editor and repeater settings reuse `MeshCoreKeyFields`: outlined private/public fields, a 0–4 hex-digit public prefix, expected search effort, generation/stop and progress controls. All three key helpers wrap without a line cap, and the private-key helper wording is device-neutral. The editor keeps the public field multiline and derives it from typed keys. Generation reuses `KeyPairSearcher` in 30ms chunks; a revision token discards results after stopping or disposing the dialog, and reserved 00/FF first bytes are excluded.
