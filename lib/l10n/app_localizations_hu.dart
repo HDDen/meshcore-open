@@ -4372,7 +4372,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Új privát kulcs az átjátszóhoz — 128 karakteres hexadecimális karakterlánc.';
+      'Új privát kulcs — 128 karakteres hexadecimális karakterlánc.';
 
   @override
   String get repeater_generatePrvKey => 'Véletlenszerű kulcspár létrehozása';
@@ -10697,6 +10697,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

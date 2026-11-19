@@ -3025,7 +3025,7 @@
   "repeater_keySettings": "Cambiar las claves de identidad",
   "repeater_keySettingsSubtitle": "Cambiar el par de claves pública/privada",
   "repeater_prvKey": "Clave privada",
-  "repeater_prvKeyHelper": "Una nueva clave privada para el repetidor, una cadena hexadecimal de 128 caracteres.",
+  "repeater_prvKeyHelper": "Una nueva clave privada, una cadena hexadecimal de 128 caracteres.",
   "repeater_generatePrvKey": "Generar un par de claves aleatorio",
   "repeater_stopGeneratingPrvKey": "Interrumpir la búsqueda del par de claves",
   "repeater_pubKey": "Clave pública",

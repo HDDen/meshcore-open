@@ -7456,7 +7456,7 @@ abstract class AppLocalizations {
   /// No description provided for @repeater_prvKeyHelper.
   ///
   /// In en, this message translates to:
-  /// **'A new private key for the repeater, a 128-character hex string.'**
+  /// **'A new private key, a 128-character hex string.'**
   String get repeater_prvKeyHelper;
 
   /// No description provided for @repeater_generatePrvKey.
@@ -17793,6 +17793,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete this private key from the app?'**
   String get extraKeys_deleteConfirm;
+
+  /// No description provided for @extraKeys_publicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key'**
+  String get extraKeys_publicKey;
 
   /// No description provided for @extraKeys_name.
   ///

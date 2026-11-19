@@ -3052,7 +3052,7 @@
   "repeater_keySettings": "ノードの鍵を変更",
   "repeater_keySettingsSubtitle": "公開鍵／秘密鍵のペアを変更",
   "repeater_prvKey": "秘密鍵",
-  "repeater_prvKeyHelper": "リピーター用の新しい秘密鍵。128 文字の 16 進文字列です。",
+  "repeater_prvKeyHelper": "新しい秘密鍵。128 文字の 16 進文字列です。",
   "repeater_generatePrvKey": "ランダムな鍵ペアを生成",
   "repeater_stopGeneratingPrvKey": "鍵ペアの探索を中断",
   "repeater_pubKey": "公開鍵",

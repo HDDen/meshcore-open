@@ -4372,7 +4372,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Новый приватный ключ ретранслятора — hex-строка из 128 символов.';
+      'Новый приватный ключ — hex-строка из 128 символов.';
 
   @override
   String get repeater_generatePrvKey => 'Сгенерировать случайную пару ключей';
@@ -10693,6 +10693,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get extraKeys_deleteConfirm =>
       'Удалить этот закрытый ключ из приложения?';
+
+  @override
+  String get extraKeys_publicKey => 'Открытый ключ';
 
   @override
   String get extraKeys_name => 'Имя ключа';

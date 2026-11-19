@@ -4227,7 +4227,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_prvKey => '개인 키';
 
   @override
-  String get repeater_prvKeyHelper => '리피터용 새 개인 키 — 128자 16진 문자열입니다.';
+  String get repeater_prvKeyHelper => '새 개인 키 — 128자 16진 문자열입니다.';
 
   @override
   String get repeater_generatePrvKey => '무작위 키 쌍 생성';
@@ -10253,6 +10253,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

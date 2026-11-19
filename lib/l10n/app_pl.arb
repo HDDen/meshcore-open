@@ -2986,7 +2986,7 @@
   "repeater_keySettings": "Zmiana kluczy tożsamości",
   "repeater_keySettingsSubtitle": "Zmień parę kluczy publiczny/prywatny",
   "repeater_prvKey": "Klucz prywatny",
-  "repeater_prvKeyHelper": "Nowy klucz prywatny repeatera — ciąg szesnastkowy o długości 128 znaków.",
+  "repeater_prvKeyHelper": "Nowy klucz prywatny — ciąg szesnastkowy o długości 128 znaków.",
   "repeater_generatePrvKey": "Wygeneruj losową parę kluczy",
   "repeater_stopGeneratingPrvKey": "Przerwij wyszukiwanie pary kluczy",
   "repeater_pubKey": "Klucz publiczny",

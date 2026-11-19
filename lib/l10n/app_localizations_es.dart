@@ -4376,7 +4376,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Una nueva clave privada para el repetidor, una cadena hexadecimal de 128 caracteres.';
+      'Una nueva clave privada, una cadena hexadecimal de 128 caracteres.';
 
   @override
   String get repeater_generatePrvKey => 'Generar un par de claves aleatorio';
@@ -10713,6 +10713,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

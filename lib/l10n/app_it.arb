@@ -2921,7 +2921,7 @@
   "repeater_keySettings": "Modifica le chiavi di identità",
   "repeater_keySettingsSubtitle": "Modifica la coppia di chiavi pubblica/privata",
   "repeater_prvKey": "Chiave privata",
-  "repeater_prvKeyHelper": "Una nuova chiave privata per il ripetitore, una stringa esadecimale di 128 caratteri.",
+  "repeater_prvKeyHelper": "Una nuova chiave privata, una stringa esadecimale di 128 caratteri.",
   "repeater_generatePrvKey": "Genera una coppia di chiavi casuale",
   "repeater_stopGeneratingPrvKey": "Interrompi la ricerca della coppia di chiavi",
   "repeater_pubKey": "Chiave pubblica",

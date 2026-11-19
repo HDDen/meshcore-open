@@ -2947,7 +2947,7 @@
   "repeater_keySettings": "更改节点密钥",
   "repeater_keySettingsSubtitle": "更改公钥/私钥对",
   "repeater_prvKey": "私钥",
-  "repeater_prvKeyHelper": "中继器的新私钥——128 个字符的十六进制字符串。",
+  "repeater_prvKeyHelper": "新私钥——128 个字符的十六进制字符串。",
   "repeater_generatePrvKey": "生成随机密钥对",
   "repeater_stopGeneratingPrvKey": "中断密钥对搜索",
   "repeater_pubKey": "公钥",

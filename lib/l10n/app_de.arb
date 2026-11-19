@@ -3097,7 +3097,7 @@
   "repeater_keySettings": "Identitätsschlüssel ändern",
   "repeater_keySettingsSubtitle": "Öffentliches/privates Schlüsselpaar ändern",
   "repeater_prvKey": "Privater Schlüssel",
-  "repeater_prvKeyHelper": "Ein neuer privater Schlüssel für den Repeater, eine 128-stellige Hex-Zeichenfolge.",
+  "repeater_prvKeyHelper": "Ein neuer privater Schlüssel, eine 128-stellige Hex-Zeichenfolge.",
   "repeater_generatePrvKey": "Zufälliges Schlüsselpaar erzeugen",
   "repeater_stopGeneratingPrvKey": "Suche nach Schlüsselpaar abbrechen",
   "repeater_pubKey": "Öffentlicher Schlüssel",

@@ -2788,7 +2788,7 @@
   "repeater_keySettings": "Identiteitssleutels wijzigen",
   "repeater_keySettingsSubtitle": "Het publieke/privésleutelpaar wijzigen",
   "repeater_prvKey": "Privésleutel",
-  "repeater_prvKeyHelper": "Een nieuwe privésleutel voor de repeater, een hexadecimale reeks van 128 tekens.",
+  "repeater_prvKeyHelper": "Een nieuwe privésleutel, een hexadecimale reeks van 128 tekens.",
   "repeater_generatePrvKey": "Een willekeurig sleutelpaar genereren",
   "repeater_stopGeneratingPrvKey": "Zoeken naar het sleutelpaar afbreken",
   "repeater_pubKey": "Publieke sleutel",

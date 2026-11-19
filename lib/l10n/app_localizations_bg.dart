@@ -4387,7 +4387,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Нов частен ключ за ретранслатора — шестнадесетичен низ от 128 знака.';
+      'Нов частен ключ — шестнадесетичен низ от 128 знака.';
 
   @override
   String get repeater_generatePrvKey => 'Генериране на случайна двойка ключове';
@@ -10726,6 +10726,9 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

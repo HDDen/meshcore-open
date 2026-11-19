@@ -4354,7 +4354,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Nov zasebni ključ repetitorja — šestnajstiški niz s 128 znaki.';
+      'Nov zasebni ključ — šestnajstiški niz s 128 znaki.';
 
   @override
   String get repeater_generatePrvKey => 'Ustvari naključni par ključev';
@@ -10658,6 +10658,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

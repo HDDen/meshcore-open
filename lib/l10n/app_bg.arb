@@ -2919,7 +2919,7 @@
   "repeater_keySettings": "Смяна на ключовете на възела",
   "repeater_keySettingsSubtitle": "Смяна на двойката публичен/частен ключ",
   "repeater_prvKey": "Частен ключ",
-  "repeater_prvKeyHelper": "Нов частен ключ за ретранслатора — шестнадесетичен низ от 128 знака.",
+  "repeater_prvKeyHelper": "Нов частен ключ — шестнадесетичен низ от 128 знака.",
   "repeater_generatePrvKey": "Генериране на случайна двойка ключове",
   "repeater_stopGeneratingPrvKey": "Прекъсване на търсенето на двойка ключове",
   "repeater_pubKey": "Публичен ключ",

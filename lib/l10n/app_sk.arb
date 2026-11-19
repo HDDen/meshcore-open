@@ -2919,7 +2919,7 @@
   "repeater_keySettings": "Zmena kľúčov uzla",
   "repeater_keySettingsSubtitle": "Zmeniť pár verejného a súkromného kľúča",
   "repeater_prvKey": "Súkromný kľúč",
-  "repeater_prvKeyHelper": "Nový súkromný kľúč repeatera — hexadecimálny reťazec so 128 znakmi.",
+  "repeater_prvKeyHelper": "Nový súkromný kľúč — hexadecimálny reťazec so 128 znakmi.",
   "repeater_generatePrvKey": "Vygenerovať náhodný pár kľúčov",
   "repeater_stopGeneratingPrvKey": "Prerušiť hľadanie páru kľúčov",
   "repeater_pubKey": "Verejný kľúč",

@@ -2950,7 +2950,7 @@
   "repeater_keySettings": "A csomópont kulcsainak cseréje",
   "repeater_keySettingsSubtitle": "A nyilvános/privát kulcspár módosítása",
   "repeater_prvKey": "Privát kulcs",
-  "repeater_prvKeyHelper": "Új privát kulcs az átjátszóhoz — 128 karakteres hexadecimális karakterlánc.",
+  "repeater_prvKeyHelper": "Új privát kulcs — 128 karakteres hexadecimális karakterlánc.",
   "repeater_generatePrvKey": "Véletlenszerű kulcspár létrehozása",
   "repeater_stopGeneratingPrvKey": "A kulcspár keresésének megszakítása",
   "repeater_pubKey": "Nyilvános kulcs",

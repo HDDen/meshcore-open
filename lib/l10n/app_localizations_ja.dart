@@ -4222,7 +4222,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get repeater_prvKey => '秘密鍵';
 
   @override
-  String get repeater_prvKeyHelper => 'リピーター用の新しい秘密鍵。128 文字の 16 進文字列です。';
+  String get repeater_prvKeyHelper => '新しい秘密鍵。128 文字の 16 進文字列です。';
 
   @override
   String get repeater_generatePrvKey => 'ランダムな鍵ペアを生成';
@@ -10248,6 +10248,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

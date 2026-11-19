@@ -2728,7 +2728,7 @@
   "repeater_keySettings": "Ändra identitetsnycklar",
   "repeater_keySettingsSubtitle": "Ändra det publika/privata nyckelparet",
   "repeater_prvKey": "Privat nyckel",
-  "repeater_prvKeyHelper": "En ny privat nyckel för repeatern, en hexadecimal sträng med 128 tecken.",
+  "repeater_prvKeyHelper": "En ny privat nyckel, en hexadecimal sträng med 128 tecken.",
   "repeater_generatePrvKey": "Generera ett slumpmässigt nyckelpar",
   "repeater_stopGeneratingPrvKey": "Avbryt sökningen efter nyckelpar",
   "repeater_pubKey": "Publik nyckel",

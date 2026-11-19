@@ -2926,7 +2926,7 @@
   "repeater_keySettings": "Зміна ключів вузла",
   "repeater_keySettingsSubtitle": "Змінити пару публічного та приватного ключів",
   "repeater_prvKey": "Приватний ключ",
-  "repeater_prvKeyHelper": "Новий приватний ключ ретранслятора — hex-рядок зі 128 символів.",
+  "repeater_prvKeyHelper": "Новий приватний ключ — hex-рядок зі 128 символів.",
   "repeater_generatePrvKey": "Згенерувати випадкову пару ключів",
   "repeater_stopGeneratingPrvKey": "Перервати пошук пари ключів",
   "repeater_pubKey": "Публічний ключ",

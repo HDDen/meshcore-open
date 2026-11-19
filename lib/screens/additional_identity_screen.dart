@@ -1,15 +1,13 @@
-import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/additional_identity_advert.dart';
-import '../helpers/utf8_length_limiter.dart';
 import '../l10n/l10n.dart';
 import '../services/additional_identity_inbox.dart';
 import '../services/additional_identity_vault.dart';
 import '../storage/message_history_storage.dart';
-import '../utils/keys.dart';
+import '../widgets/additional_identity_key_dialog.dart';
 import '../widgets/mesh_ui.dart';
 
 class AdditionalIdentityScreen extends StatefulWidget {
@@ -86,7 +84,7 @@ class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
   Future<void> _edit([AdditionalIdentityEntry? previous]) => _run(() async {
     final entry = await showDialog<AdditionalIdentityEntry>(
       context: context,
-      builder: (_) => _EditKeyDialog(previous: previous),
+      builder: (_) => AdditionalIdentityKeyDialog(previous: previous),
     );
     if (entry == null) return;
     await _vault.save(entry, replacing: previous?.identity.publicKeyHex);
@@ -312,104 +310,6 @@ class _PasswordDialogState extends State<_PasswordDialog> {
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.common_cancel)),
         FilledButton(onPressed: _submit, child: Text(l10n.common_ok)),
-      ],
-    );
-  }
-}
-
-class _EditKeyDialog extends StatefulWidget {
-  const _EditKeyDialog({this.previous});
-
-  final AdditionalIdentityEntry? previous;
-
-  @override
-  State<_EditKeyDialog> createState() => _EditKeyDialogState();
-}
-
-class _EditKeyDialogState extends State<_EditKeyDialog> {
-  late final _name = TextEditingController(text: widget.previous?.name);
-  late final _key = TextEditingController(
-    text: widget.previous?.identity.privateKeyHex,
-  );
-  bool _busy = false;
-  bool _invalid = false;
-
-  Future<void> _generate() async {
-    setState(() => _busy = true);
-    try {
-      MCKeyPair pair;
-      do {
-        pair = await generateKeyPair();
-      } while (pair.public.first == 0 || pair.public.first == 0xff);
-      if (mounted) {
-        _key.text = hex.encode(pair.private);
-        _invalid = false;
-      }
-    } catch (_) {
-      if (mounted) _invalid = true;
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    setState(() => _busy = true);
-    try {
-      final entry = await AdditionalIdentityEntry.parse(
-        _name.text,
-        _key.text,
-        previous: widget.previous,
-      );
-      if (mounted) Navigator.pop(context, entry);
-    } catch (_) {
-      if (mounted) setState(() => _invalid = true);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _key.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AlertDialog(
-      scrollable: true,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _name,
-            inputFormatters: const [Utf8LengthLimitingTextInputFormatter(maxRadioNameBytes)],
-            decoration: InputDecoration(labelText: l10n.extraKeys_name),
-          ),
-          TextField(
-            controller: _key,
-            obscureText: true,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: InputDecoration(
-              labelText: l10n.extraKeys_privateKey,
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.casino_outlined),
-                tooltip: l10n.extraKeys_generate,
-                onPressed: _busy ? null : _generate,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(l10n.extraKeys_encrypted, style: Theme.of(context).textTheme.bodySmall),
-          if (_invalid) Text(l10n.extraKeys_invalidKey),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.common_cancel)),
-        FilledButton(onPressed: _busy ? null : _submit, child: Text(l10n.common_ok)),
       ],
     );
   }

@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
+import '../widgets/meshcore_key_fields.dart';
 import '../models/contact.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -2669,118 +2669,24 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
         subtitle: Text(l10n.repeater_keySettingsSubtitle),
         childrenPadding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _prvKeyController,
-                  maxLength: _prvKeyHexLength,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp("[0-9a-fA-F]")),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l10n.repeater_prvKey,
-                    helperText: l10n.repeater_prvKeyHelper,
-                    helperMaxLines: 3,
-                    errorText:
-                        _prvKeyController.text.isNotEmpty &&
-                            !_prvKeyPattern.hasMatch(_prvKeyController.text)
-                        ? l10n.repeater_prvKeyLengthError(_prvKeyHexLength)
-                        : null,
-                    errorMaxLines: 3,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (_) {
-                    _pubKeyController.text = "";
-                    if (_prvKeyController.text.isNotEmpty) {
-                      _markChanged(_SettingField.prvKey);
-                    }
-                    // Refresh the inline length error.
-                    setState(() {});
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: _searchingForKeyPair
-                    ? IconButton(
-                        icon: const Icon(Icons.cancel, size: 24),
-                        onPressed: (() => _stopSearchingForKeyPair = true),
-                        tooltip: l10n.repeater_stopGeneratingPrvKey,
-                        visualDensity: VisualDensity.compact,
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.casino_rounded, size: 24),
-                        onPressed: () {
-                          _startSearchingForKeyPair();
-                        },
-                        tooltip: l10n.repeater_generatePrvKey,
-                        visualDensity: VisualDensity.compact,
-                      ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  readOnly: true,
-                  controller: _pubKeyController,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).textTheme.headlineSmall?.color?.withValues(alpha: 0.6),
-                  ),
-                  decoration: InputDecoration(
-                    labelText: l10n.repeater_pubKey,
-                    helperText: l10n.repeater_pubKeyHelper,
-                    helperMaxLines: 3,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: _searchingForKeyPair
-                      ? CircularProgressIndicator(strokeWidth: 2)
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _prvKeyPrefixController,
-                  maxLength: 4,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp("[0-9a-fA-F]")),
-                  ],
-                  onChanged: (_) => setState(() => {}), // updates helper text
-                  decoration: InputDecoration(
-                    labelText: l10n.repeater_pubKeyPrefix,
-                    helperText: l10n.repeater_pubKeyPrefixHelper(
-                      pow(16, _prvKeyPrefixController.text.length).toInt(),
-                    ),
-                    helperMaxLines: 3,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 48),
-            ],
+          MeshCoreKeyFields(
+            privateKey: _prvKeyController,
+            publicKey: _pubKeyController,
+            prefix: _prvKeyPrefixController,
+            searching: _searchingForKeyPair,
+            onGenerate: _startSearchingForKeyPair,
+            onStop: () => _stopSearchingForKeyPair = true,
+            privateError: _prvKeyController.text.isNotEmpty &&
+                    !_prvKeyPattern.hasMatch(_prvKeyController.text)
+                ? l10n.repeater_prvKeyLengthError(_prvKeyHexLength) : null,
+            onPrivateChanged: (_) {
+              _pubKeyController.text = '';
+              if (_prvKeyController.text.isNotEmpty) {
+                _markChanged(_SettingField.prvKey);
+              }
+              setState(() {});
+            },
+            onPrefixChanged: (_) => setState(() {}),
           ),
         ],
       ),

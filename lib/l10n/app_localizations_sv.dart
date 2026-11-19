@@ -4350,7 +4350,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'En ny privat nyckel för repeatern, en hexadecimal sträng med 128 tecken.';
+      'En ny privat nyckel, en hexadecimal sträng med 128 tecken.';
 
   @override
   String get repeater_generatePrvKey => 'Generera ett slumpmässigt nyckelpar';
@@ -10646,6 +10646,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

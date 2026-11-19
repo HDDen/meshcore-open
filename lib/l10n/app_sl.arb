@@ -2919,7 +2919,7 @@
   "repeater_keySettings": "Sprememba ključev vozlišča",
   "repeater_keySettingsSubtitle": "Spremeni par javnega in zasebnega ključa",
   "repeater_prvKey": "Zasebni ključ",
-  "repeater_prvKeyHelper": "Nov zasebni ključ repetitorja — šestnajstiški niz s 128 znaki.",
+  "repeater_prvKeyHelper": "Nov zasebni ključ — šestnajstiški niz s 128 znaki.",
   "repeater_generatePrvKey": "Ustvari naključni par ključev",
   "repeater_stopGeneratingPrvKey": "Prekini iskanje para ključev",
   "repeater_pubKey": "Javni ključ",

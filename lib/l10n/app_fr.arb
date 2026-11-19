@@ -3053,7 +3053,7 @@
   "repeater_keySettings": "Modifier les clés d'identité",
   "repeater_keySettingsSubtitle": "Modifier la paire de clés publique/privée",
   "repeater_prvKey": "Clé privée",
-  "repeater_prvKeyHelper": "Une nouvelle clé privée pour le répéteur, une chaîne hexadécimale de 128 caractères.",
+  "repeater_prvKeyHelper": "Une nouvelle clé privée, une chaîne hexadécimale de 128 caractères.",
   "repeater_generatePrvKey": "Générer une paire de clés aléatoire",
   "repeater_stopGeneratingPrvKey": "Interrompre la recherche de la paire de clés",
   "repeater_pubKey": "Clé publique",

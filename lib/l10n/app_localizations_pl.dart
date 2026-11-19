@@ -4392,7 +4392,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Nowy klucz prywatny repeatera — ciąg szesnastkowy o długości 128 znaków.';
+      'Nowy klucz prywatny — ciąg szesnastkowy o długości 128 znaków.';
 
   @override
   String get repeater_generatePrvKey => 'Wygeneruj losową parę kluczy';
@@ -10721,6 +10721,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

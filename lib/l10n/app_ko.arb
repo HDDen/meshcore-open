@@ -3084,7 +3084,7 @@
   "repeater_keySettings": "노드 키 변경",
   "repeater_keySettingsSubtitle": "공개 키/개인 키 쌍 변경",
   "repeater_prvKey": "개인 키",
-  "repeater_prvKeyHelper": "리피터용 새 개인 키 — 128자 16진 문자열입니다.",
+  "repeater_prvKeyHelper": "새 개인 키 — 128자 16진 문자열입니다.",
   "repeater_generatePrvKey": "무작위 키 쌍 생성",
   "repeater_stopGeneratingPrvKey": "키 쌍 검색 중단",
   "repeater_pubKey": "공개 키",

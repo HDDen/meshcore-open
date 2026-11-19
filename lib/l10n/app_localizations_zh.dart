@@ -4177,7 +4177,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_prvKey => '私钥';
 
   @override
-  String get repeater_prvKeyHelper => '中继器的新私钥——128 个字符的十六进制字符串。';
+  String get repeater_prvKeyHelper => '新私钥——128 个字符的十六进制字符串。';
 
   @override
   String get repeater_generatePrvKey => '生成随机密钥对';
@@ -10054,6 +10054,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

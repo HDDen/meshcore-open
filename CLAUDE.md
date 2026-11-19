@@ -1650,6 +1650,8 @@ fixed additional identities). They default to visible for existing profiles.
 
 ### Additional MeshCore identities
 
+The add/edit key dialog previews the derived public key in a read-only multiline field, independently of the name input. Invalid or incomplete private input clears the preview; revision checks discard stale asynchronous results. The editor and repeater settings reuse `MeshCoreKeyFields`: outlined private/public fields, a 0–4 hex-digit public prefix, expected search effort, generation/stop and progress controls. All three key helpers wrap without a line cap, and the private-key helper wording is device-neutral. The editor keeps the public field multiline and derives it from typed keys. Generation reuses `KeyPairSearcher` in 30ms chunks; a revision token discards results after stopping or disposing the dialog, and reserved 00/FF first bytes are excluded.
+
 The mod settings screen can open a password-protected vault for additional
 MeshCore identities. SQLite holds an authenticated AES-GCM snapshot per
 data folder. PBKDF2 and distinct HMAC labels produce the verifier and

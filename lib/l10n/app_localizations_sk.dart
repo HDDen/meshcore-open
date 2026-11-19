@@ -4360,7 +4360,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Nový súkromný kľúč repeatera — hexadecimálny reťazec so 128 znakmi.';
+      'Nový súkromný kľúč — hexadecimálny reťazec so 128 znakmi.';
 
   @override
   String get repeater_generatePrvKey => 'Vygenerovať náhodný pár kľúčov';
@@ -10660,6 +10660,9 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';

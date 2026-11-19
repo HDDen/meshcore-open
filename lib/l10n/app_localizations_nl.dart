@@ -4358,7 +4358,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_prvKeyHelper =>
-      'Een nieuwe privésleutel voor de repeater, een hexadecimale reeks van 128 tekens.';
+      'Een nieuwe privésleutel, een hexadecimale reeks van 128 tekens.';
 
   @override
   String get repeater_generatePrvKey => 'Een willekeurig sleutelpaar genereren';
@@ -10674,6 +10674,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get extraKeys_deleteConfirm => 'Delete this private key from the app?';
+
+  @override
+  String get extraKeys_publicKey => 'Public key';
 
   @override
   String get extraKeys_name => 'Key name';
