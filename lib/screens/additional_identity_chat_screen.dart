@@ -256,7 +256,7 @@ class _AdditionalIdentityChatScreenState extends State<_AdditionalIdentityThread
   }
 
   Contact _currentContact(MeshCoreConnector connector) =>
-      connector.getContactByPubKeyHex(widget.senderKey) ?? widget.peer;
+      connector.resolveAdditionalIdentityContact(widget.peer);
 
   Future<void> _openRouting(Contact contact) => ContactRoutingSheet.show(
     context,

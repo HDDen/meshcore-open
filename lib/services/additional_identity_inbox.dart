@@ -410,18 +410,19 @@ class AdditionalIdentityInbox extends ChangeNotifier {
     }
   }
 
-  void acceptPathAck(
+  ({Contact peer, Uint8List path, int width})? acceptPathAck(
     Uint8List payload,
     Uint8List? Function(Uint8List, Uint8List) decrypt,
   ) {
     if (_pending.isEmpty ||
         payload.length < 20 ||
         (payload.length - 4) % 16 != 0) {
-      return;
+      return null;
     }
     final recipients = _recipients[payload.first];
-    if (recipients == null) return;
+    if (recipients == null) return null;
     int? match;
+    ({Contact peer, Uint8List path, int width})? route;
     final encrypted = Uint8List.sublistView(payload, 2);
     final tried = <(String, String)>{};
     for (final pending in _pending.values) {
@@ -440,16 +441,25 @@ class AdditionalIdentityInbox extends ChangeNotifier {
         final hash = AdditionalIdentityTextPacket.pathAckHash(plaintext);
         final found = _pending[hash];
         if (hash == null || found == null ||
-            !found.flood || !found.isCurrent() ||
+            !found.flood || !found.elapsed.isRunning || !found.isCurrent() ||
             found.identityKey != key ||
             found.peer.publicKeyHex != pending.peer.publicKeyHex) {
           continue;
         }
-        if (match != null && match != hash) return;
+        if (match != null && match != hash) return null;
+        final width = (plaintext.first >> 6) + 1;
+        final length = (plaintext.first & 63) * width;
+        if (length > maxPathSize) continue;
         match = hash;
+        route = (
+          peer: found.peer,
+          path: Uint8List.fromList(plaintext.sublist(1, 1 + length)),
+          width: width,
+        );
       }
     }
     if (match != null) acceptAck(match);
+    return route;
   }
 
   Future<void> _finishSend(int hash, MessageStatus status) async {

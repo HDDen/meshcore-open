@@ -2122,6 +2122,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Contact _resolveContact(MeshCoreConnector connector) {
+    if (widget.fixedSenderKey != null) {
+      return connector.resolveAdditionalIdentityContact(widget.contact);
+    }
     if (_resolveContactIndex >= 0 &&
         _resolveContactIndex < connector.contacts.length &&
         connector.contacts[_resolveContactIndex].publicKeyHex ==

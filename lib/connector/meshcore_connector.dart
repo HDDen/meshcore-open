@@ -19382,9 +19382,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// firmware behaviour and out of reach). Firmware without the command
   /// answers ERR_CODE_UNSUPPORTED_CMD, after which no ACK is attempted until
   /// the next connection; any other refusal costs only this ACK.
+  Contact resolveAdditionalIdentityContact(Contact peer) =>
+      _findContactByPubKeyHex(peer.publicKeyHex, includeDiscoveredFallback: true) ?? peer;
+
   ({PathSelection route, int width, String region}) _additionalIdentityRoute(
     Contact peer,
   ) {
+    peer = resolveAdditionalIdentityContact(peer);
     final selected = resolvePathSelection(peer);
     final canUsePath = !selected.useFlood &&
         selected.hopCount >= 0 &&
@@ -19596,6 +19600,32 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         },
       );
     });
+  }
+
+  void _learnAdditionalIdentityPath(Contact peer, Uint8List path, int width) {
+    final key = peer.publicKeyHex;
+    final storedIndex = _contacts.indexWhere((contact) => contact.publicKeyHex == key);
+    final discoveredIndex = _discoveredContacts.indexWhere((contact) => contact.publicKeyHex == key);
+    final current = storedIndex >= 0 ? _contacts[storedIndex]
+        : discoveredIndex >= 0 ? _discoveredContacts[discoveredIndex] : peer;
+    final updated = current.copyWith(
+      path: path, pathLength: path.length ~/ width, pathHashWidth: width,
+    );
+    if (storedIndex >= 0) {
+      _contacts[storedIndex] = updated;
+      unawaited(_persistContacts());
+    } else if (discoveredIndex >= 0) {
+      _discoveredContacts[discoveredIndex] = updated;
+      unawaited(_persistDiscoveredContacts());
+    } else {
+      _discoveredContacts.add(updated);
+      unawaited(_persistDiscoveredContacts());
+    }
+    _pathHistoryService?.handlePathUpdated(updated, initialWeight: _initialRouteWeight);
+    _recordPathResult(key, PathSelection(
+      pathBytes: path, hopCount: updated.pathLength, useFlood: false,
+    ), true, null);
+    notifyListeners();
   }
 
   Future<void> _sendDirectEchoAck(
@@ -19991,7 +20021,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       }
       if (packet != null && packet.payloadVer == 0) {
         if (packet.payloadType == payloadTypePATH) {
-          additionalIdentityInbox?.acceptPathAck(packet.payload, _decryptPayload);
+          final learned = additionalIdentityInbox?.acceptPathAck(packet.payload, _decryptPayload);
+          if (learned != null) {
+            _learnAdditionalIdentityPath(learned.peer, learned.path, learned.width);
+          }
         }
         if (packet.payloadType == payloadTypePATH ||
             packet.payloadType == payloadTypeRESPONSE) {

@@ -501,7 +501,7 @@ Future<void> main() async {
           entry.identity.publicKey.first,
           _aliceKey.first,
           ...ChannelEchoRecovery.encryptedPayloadFor(secret, Uint8List.fromList([
-            0, payloadTypeACK, ...ack,
+            0x42, 0x12, 0x34, 0x56, 0x78, payloadTypeACK, ...ack,
           ])),
         ] else ...ack,
       ]));
@@ -512,6 +512,14 @@ Future<void> main() async {
       }
       final delivered = (await storage.readAdditionalIdentityMessages(identityKey)).single;
       expect(delivered.status, MessageStatus.delivered);
+      if (flood) {
+        expect(node.alice.path, [0x12, 0x34, 0x56, 0x78]);
+        expect(node.alice.pathLength, 2);
+        expect(node.alice.pathHashWidth, 2);
+        expect(node.alice.pathOverride, isNull);
+      } else {
+        expect(node.alice.path, [0x10, 0x20]);
+      }
       expect(delivered.tripTimeMs, isNotNull);
       expect(delivered.tripTimeMs, greaterThanOrEqualTo(0));
       await _waitFor(
@@ -528,6 +536,13 @@ Future<void> main() async {
       expect(deliveredMessage.sendAttemptLimit, 1);
       expect(node.rawPackets, hasLength(1));
       expect(node.textFrames, isEmpty);
+      if (flood) {
+        await node.connector.sendAdditionalIdentityMessage(identityKey, node.alice, 'Next');
+        expect(node.rawPackets.last.sublist(0, 8), [
+          cmdSendRawPacket, 0, (payloadTypeTXTMSG << 2) | 2,
+          0x42, 0x12, 0x34, 0x56, 0x78,
+        ]);
+      }
     }, skip: skip);
   }
 
