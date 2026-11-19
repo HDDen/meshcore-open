@@ -73,6 +73,7 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final primaryKey = widget.connector.selfPublicKeyHex;
     final mono = MeshTheme.mono(
       fontSize: 9,
       color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -81,7 +82,9 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
       future: _threads,
       builder: (context, snapshot) => Column(
         children: [
-          for (final entry in widget.inbox.entries)
+          for (final entry in widget.inbox.entries.where(
+            (entry) => entry.identity.publicKeyHex != primaryKey,
+          ))
             Builder(builder: (context) {
               final key = entry.identity.publicKeyHex;
               final contacts = snapshot.data?[key] ?? const [];

@@ -48,7 +48,6 @@ import '../helpers/signal_reading_text.dart';
 import '../models/app_settings.dart' show SharedMessageHistoryModeValue;
 import '../models/channel_message.dart';
 import '../models/contact.dart';
-import '../l10n/contact_localization.dart';
 import '../models/message.dart';
 import '../models/message_compression.dart';
 import '../models/translation_support.dart';
@@ -66,9 +65,8 @@ import '../widgets/future_timestamp_indicator.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_composer_actions.dart';
-import '../widgets/contact_settings_dialog.dart';
 import '../widgets/chat_day_separator.dart';
-import '../widgets/popup_menu_row.dart';
+import '../widgets/contact_chat_menu.dart';
 import 'canvas_editor_screen.dart';
 import 'channel_message_path_screen.dart';
 import 'contacts_screen.dart';
@@ -97,7 +95,6 @@ import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/chat_background.dart';
 import '../widgets/holiday_animations.dart';
-import 'telemetry_screen.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
 import '../widgets/mention_chip.dart';
@@ -603,6 +600,8 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       scope: MessageSearchScope.contacts,
       contactFilter: _resolveContact(connector),
+      additionalIdentityInbox: connector.additionalIdentityInbox,
+      additionalRecipientKey: _sharesContactHistory ? null : _additionalSenderKey,
       onOpenResult: (result) async {
         if (!mounted || result.type == MessageSearchEntryType.channel) return;
         Navigator.of(context).pop();
@@ -1214,88 +1213,11 @@ class _ChatScreenState extends State<ChatScreen> {
             const RadioStatsIconButton(),
             Consumer<MeshCoreConnector>(
               builder: (context, connector, _) {
-                return PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'searchMessages':
-                        unawaited(_showMessageSearch());
-                      case 'info':
-                        _showContactInfo(context);
-                      case 'settings':
-                        unawaited(showContactSettingsDialog(
-                          context,
-                          connector: connector,
-                          contact: _resolveContact(connector),
-                        ));
-                      case 'background':
-                        unawaited(showChatBackgroundSheet(
-                          context,
-                          ChatBackgroundService.contactKey(widget.contact),
-                        ));
-                      case 'telemetry':
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                TelemetryScreen(contact: widget.contact),
-                          ),
-                        );
-                      case 'clearChat':
-                        _confirmClearChat(context, connector);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'searchMessages',
-                      child: PopupMenuRow(
-                        icon: Icons.search,
-                        text: context.l10n.chat_searchMessages,
-                      ),
-                    ),
-                    if (!connector.isOfflineMode)
-                      PopupMenuItem(
-                        value: 'info',
-                        child: PopupMenuRow(
-                          icon: Icons.info_outline,
-                          text: context.l10n.contact_info,
-                        ),
-                      ),
-                    if (!connector.isOfflineMode)
-                      PopupMenuItem(
-                        value: 'telemetry',
-                        child: PopupMenuRow(
-                          icon: Icons.bar_chart,
-                          text: context.l10n.contact_telemetry,
-                        ),
-                      ),
-                    if (!connector.isOfflineMode)
-                      PopupMenuItem(
-                        value: 'settings',
-                        child: PopupMenuRow(
-                          icon: Icons.settings,
-                          text: context.l10n.contact_settings,
-                        ),
-                      ),
-                    if (context.read<ChatBackgroundService?>() != null)
-                      PopupMenuItem(
-                        value: 'background',
-                        child: PopupMenuRow(
-                          icon: Icons.wallpaper,
-                          text: context.l10n.chatBackground_title,
-                        ),
-                      ),
-                    if (!connector.isOfflineMode)
-                      PopupMenuItem(
-                        value: 'clearChat',
-                        child: PopupMenuRow(
-                          icon: Icons.delete,
-                          iconColor: Colors.red,
-                          text: context.l10n.contact_clearChat,
-                          textStyle: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                  ],
+                return ContactChatMenu(
+                  connector: connector,
+                  contact: _resolveContact(connector),
+                  onSearch: () => unawaited(_showMessageSearch()),
+                  onClear: () => unawaited(_confirmClearChat(context, connector)),
                 );
               },
             ),
@@ -2201,72 +2123,6 @@ class _ChatScreenState extends State<ChatScreen> {
           listEquals(c.publicKey.sublist(0, 4), key4Bytes.sublist(0, 4)),
       orElse: () => null,
     );
-  }
-
-  void _showContactInfo(BuildContext context) {
-    final connector = Provider.of<MeshCoreConnector>(context, listen: false);
-    final contact = _resolveContact(connector);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: SelectableText(contact.name),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ContactInfoRow(
-                context.l10n.chat_type,
-                contact.typeLabel(context.l10n),
-              ),
-              ContactInfoRow(
-                context.l10n.chat_path,
-                contact.pathLabel(
-                  context.l10n,
-                  pathHashByteWidth: connector.pathHashByteWidth,
-                ),
-              ),
-              ContactInfoRow(
-                context.l10n.contact_lastSeen,
-                _formatContactLastMessage(contact.lastMessageAt),
-              ),
-              if (contact.hasLocation)
-                ContactInfoRow(
-                  context.l10n.chat_location,
-                  '${contact.latitude?.toStringAsFixed(4)}, ${contact.longitude?.toStringAsFixed(4)}',
-                ),
-              ContactInfoRow(context.l10n.chat_publicKey, contact.publicKeyHex),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatContactLastMessage(DateTime timestamp) {
-    final diff = DateTime.now().difference(timestamp);
-    if (diff.isNegative || diff.inMinutes < 5) {
-      return context.l10n.contacts_lastSeenNow;
-    }
-    if (diff.inMinutes < 60) {
-      return context.l10n.contacts_lastSeenMinsAgo(diff.inMinutes);
-    }
-    if (diff.inHours < 24) {
-      final hours = diff.inHours;
-      return hours == 1
-          ? context.l10n.contacts_lastSeenHourAgo
-          : context.l10n.contacts_lastSeenHoursAgo(hours);
-    }
-    final days = diff.inDays;
-    return days == 1
-        ? context.l10n.contacts_lastSeenDayAgo
-        : context.l10n.contacts_lastSeenDaysAgo(days);
   }
 
   void _openChat(BuildContext context, Contact contact) {

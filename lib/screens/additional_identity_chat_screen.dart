@@ -13,14 +13,17 @@ import '../models/contact.dart';
 import '../services/additional_identity_inbox.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
+import '../services/chat_background_service.dart';
+import '../widgets/chat_background.dart';
+import '../widgets/confirm_clear_dialog.dart';
+import '../widgets/contact_chat_menu.dart';
+import '../widgets/message_search_sheet.dart';
 import '../widgets/additional_identity_sender_picker.dart';
 import '../widgets/chat_route_activity.dart';
 import '../widgets/contact_chat_composer.dart';
 import '../widgets/contact_chat_title.dart';
 import '../widgets/contact_composer_actions.dart';
-import '../widgets/contact_settings_dialog.dart';
 import '../widgets/markup_text_editing_controller.dart';
-import '../widgets/popup_menu_row.dart';
 import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/routing_sheet.dart';
@@ -58,6 +61,9 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
   final _route = ChatRouteActivity();
   final _composer = MarkupTextEditingController();
   final _composerFocus = FocusNode();
+  final _scroll = ScrollController();
+  final _searchTargetKey = GlobalKey();
+  int? _searchTargetRow;
   bool _sending = false;
   List<AdditionalIdentityMessage>? _latest;
   final _older = <AdditionalIdentityMessage>[];
@@ -228,6 +234,70 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
     ensureContactBeforeWriting: true,
   );
 
+  Future<void> _confirmClearChat() async {
+    final confirmed = await showConfirmClearDialog(
+      context,
+      title: context.l10n.contact_clearChat,
+      message: context.l10n.chat_clearChatConfirm,
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      await widget.inbox.clearMessages(
+        widget.senderKey,
+        recipientKey: widget.recipientKey,
+      );
+    } catch (_) {
+      if (mounted) _showError(context.l10n.extraKeys_actionError);
+    }
+  }
+
+  Future<void> _showMessageSearch() => MessageSearchSheet.show(
+    context,
+    scope: MessageSearchScope.contacts,
+    contactFilter: _currentContact(widget.connector),
+    additionalIdentityInbox: widget.inbox,
+    additionalRecipientKey: widget.recipientKey,
+    onOpenResult: (result) async {
+      final prefix = 'identity:${widget.recipientKey}:';
+      if (!result.messageId.startsWith(prefix)) return;
+      final rowId = int.tryParse(result.messageId.substring(prefix.length));
+      if (rowId == null || !mounted) return;
+      Navigator.of(context).pop();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      // Materialize older SQLite pages before positioning the common search hit.
+      while (mounted && !(_latest ?? const <AdditionalIdentityMessage>[])
+          .followedBy(_older).any((row) => row.rowId == rowId)) {
+        final rows = [...?_latest, ..._older];
+        if (rows.isEmpty || !_hasOlder || _readingOlder) return;
+        final oldest = rows.last;
+        await _loadOlder(oldest);
+        if (!mounted || _readFailed || _older.lastOrNull?.rowId == oldest.rowId) return;
+      }
+      if (!mounted) return;
+      setState(() => _searchTargetRow = rowId);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      final rows = [...?_latest, ..._older];
+      final index = rows.indexWhere((row) => row.rowId == rowId);
+      if (index < 0 || !_scroll.hasClients) return;
+      // ListView builds lazily; walk toward older rows until the target exists.
+      _scroll.jumpTo(0);
+      await WidgetsBinding.instance.endOfFrame;
+      while (mounted && _scroll.hasClients && _searchTargetKey.currentContext == null) {
+        final before = _scroll.offset;
+        _scroll.jumpTo((_scroll.offset + _scroll.position.viewportDimension * 0.8)
+            .clamp(0.0, _scroll.position.maxScrollExtent));
+        await WidgetsBinding.instance.endOfFrame;
+        if (!_scroll.hasClients || _scroll.offset == before) break;
+      }
+      final targetContext = _searchTargetKey.currentContext;
+      if (mounted && targetContext != null && targetContext.mounted) {
+        await Scrollable.ensureVisible(targetContext, alignment: 0.3);
+      }
+    },
+  );
+
   void _showError(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
@@ -237,6 +307,7 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
     _composer.removeListener(_saveDraft);
     _composer.dispose();
     _composerFocus.dispose();
+    _scroll.dispose();
     widget.inbox.removeListener(_reload);
     _route.dispose();
     super.dispose();
@@ -333,29 +404,13 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
           const RadioStatsIconButton(),
           Consumer<MeshCoreConnector>(
             builder: (context, connector, _) {
-              if (connector.isOfflineMode) return const SizedBox.shrink();
-              return PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: PopupMenuRow(
-                      icon: Icons.settings,
-                      text: context.l10n.contact_settings,
-                    ),
-                  ),
-                ],
-                onSelected: (_) {
-                  final stored = connector.getContactByPubKeyHex(
-                    widget.senderKey,
-                  );
-                  unawaited(showContactSettingsDialog(
-                    context,
-                    connector: connector,
-                    contact: stored ?? widget.peer,
-                    canEditTelemetry: stored != null,
-                  ));
-                },
+              final stored = connector.getContactByPubKeyHex(widget.senderKey);
+              return ContactChatMenu(
+                connector: connector,
+                contact: stored ?? widget.peer,
+                canEditTelemetry: stored != null,
+                onSearch: () => unawaited(_showMessageSearch()),
+                onClear: () => unawaited(_confirmClearChat()),
               );
             },
           ),
@@ -364,46 +419,52 @@ class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScr
       body: Column(
         children: [
           Expanded(
-            child: SafeArea(
-              bottom: false,
-              child: rows.isEmpty
-                  ? Center(
-                      child: _readFailed
-                          ? Text(l10n.extraKeys_actionError)
-                          : _latest == null
-                          ? const CircularProgressIndicator()
-                          : Text(l10n.chat_noMessages),
-                    )
-                  : ListView.builder(
-                      reverse: true,
-                      itemCount: rows.length + (canPage ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == rows.length) {
-                          return TextButton(
-                            onPressed: _readingOlder ? null : () => _loadOlder(rows.last),
-                            child: Text(l10n.extraKeys_loadOlder),
+            child: ChatBackdrop(
+              chatKey: ChatBackgroundService.contactKey(widget.peer),
+              child: SafeArea(
+                bottom: false,
+                child: rows.isEmpty
+                    ? Center(
+                        child: _readFailed
+                            ? Text(l10n.extraKeys_actionError)
+                            : _latest == null
+                            ? const CircularProgressIndicator()
+                            : Text(l10n.chat_noMessages),
+                      )
+                    : ListView.builder(
+                        controller: _scroll,
+                        reverse: true,
+                        itemCount: rows.length + (canPage ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == rows.length) {
+                            return TextButton(
+                              onPressed: _readingOlder ? null : () => _loadOlder(rows.last),
+                              child: Text(l10n.extraKeys_loadOlder),
+                            );
+                          }
+                          final row = rows[index];
+                          final message = row.toChatMessage(
+                            identityName: widget.recipientName,
                           );
-                        }
-                        final row = rows[index];
-                        final message = row.toChatMessage(
-                          identityName: widget.recipientName,
-                        );
-                        final roomAuthor = row.roomAuthorHex;
-                        return Padding(
-                          key: ValueKey(row.rowId),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: ContactMessageBubble(
-                            message: message,
-                            senderName: roomAuthor == null
-                                ? widget.senderName
-                                : '${widget.senderName} [${roomAuthor.toUpperCase()}]',
-                            sourceId: widget.senderKey,
-                            isRoomChat: widget.peer.type == advTypeRoom,
-                            textScale: textScale,
-                          ),
-                        );
-                      },
-                    ),
+                          final roomAuthor = row.roomAuthorHex;
+                          return Padding(
+                            key: row.rowId == _searchTargetRow
+                                ? _searchTargetKey
+                                : ValueKey(row.rowId),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: ContactMessageBubble(
+                              message: message,
+                              senderName: roomAuthor == null
+                                  ? widget.senderName
+                                  : '${widget.senderName} [${roomAuthor.toUpperCase()}]',
+                              sourceId: widget.senderKey,
+                              isRoomChat: widget.peer.type == advTypeRoom,
+                              textScale: textScale,
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ),
           Consumer<MeshCoreConnector>(builder: (context, connector, _) => _buildComposer(context, connector)),

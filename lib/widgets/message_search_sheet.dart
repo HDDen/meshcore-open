@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:convert/convert.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +15,7 @@ import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
 import '../services/app_settings_service.dart';
+import '../services/additional_identity_inbox.dart';
 import '../storage/channel_message_store.dart';
 import '../storage/channel_store.dart';
 import '../storage/message_store.dart';
@@ -66,6 +69,8 @@ class MessageSearchSheet extends StatefulWidget {
   final MessageSearchScope scope;
   final Channel? channelFilter;
   final Contact? contactFilter;
+  final AdditionalIdentityInbox? additionalIdentityInbox;
+  final String? additionalRecipientKey;
   final Future<void> Function(MessageSearchResult result) onOpenResult;
 
   const MessageSearchSheet({
@@ -73,6 +78,8 @@ class MessageSearchSheet extends StatefulWidget {
     required this.scope,
     this.channelFilter,
     this.contactFilter,
+    this.additionalIdentityInbox,
+    this.additionalRecipientKey,
     required this.onOpenResult,
   });
 
@@ -81,6 +88,8 @@ class MessageSearchSheet extends StatefulWidget {
     required MessageSearchScope scope,
     Channel? channelFilter,
     Contact? contactFilter,
+    AdditionalIdentityInbox? additionalIdentityInbox,
+    String? additionalRecipientKey,
     required Future<void> Function(MessageSearchResult result) onOpenResult,
   }) {
     return showModalBottomSheet<void>(
@@ -90,6 +99,8 @@ class MessageSearchSheet extends StatefulWidget {
         scope: scope,
         channelFilter: channelFilter,
         contactFilter: contactFilter,
+        additionalIdentityInbox: additionalIdentityInbox,
+        additionalRecipientKey: additionalRecipientKey,
         onOpenResult: onOpenResult,
       ),
     );
@@ -269,6 +280,8 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
             ),
           );
         }
+      } else if (widget.additionalRecipientKey != null) {
+        sources.addAll(await _collectAdditionalSources(generation: generation));
       } else {
         sources.addAll(
           await _collectContactSources(
@@ -360,6 +373,46 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
         setState(() => _isSearching = false);
       }
     }
+  }
+
+  Future<List<_MessageSearchSourceDescriptor>> _collectAdditionalSources({
+    required int generation,
+  }) async {
+    final inbox = widget.additionalIdentityInbox;
+    final recipient = widget.additionalRecipientKey;
+    final contact = widget.contactFilter;
+    if (inbox == null || recipient == null || contact == null) return const [];
+    final sources = <_MessageSearchSourceDescriptor>[];
+    (int, int)? before;
+    while (mounted && generation == _generation) {
+      final rows = await inbox.messages(recipient, contact.publicKeyHex, before: before);
+      if (!mounted || generation != _generation || rows.isEmpty) break;
+      final next = (rows.last.receivedAtMs, rows.last.rowId);
+      if (next == before) break;
+      before = next;
+      final room = contact.type == advTypeRoom;
+      sources.add(_MessageSearchSourceDescriptor(
+        workerSource: StoredMessageSearchSource(
+          sourceId: 'identity|$recipient|${contact.publicKeyHex}|${next.$1}|${next.$2}',
+          type: room ? StoredMessageSearchType.room : StoredMessageSearchType.contact,
+          contactName: contact.name,
+          jsonString: jsonEncode([
+            for (final row in rows)
+              {
+                'messageId': 'identity:$recipient:${row.rowId}',
+                'timestamp': row.timestampSeconds * 1000,
+                'text': row.text,
+                'isOutgoing': row.isOutgoing,
+                if (row.roomAuthorHex case final author?)
+                  'fourByteRoomContactKey': base64Encode(hex.decode(author)),
+              },
+          ]),
+        ),
+        type: room ? MessageSearchEntryType.room : MessageSearchEntryType.contact,
+        contact: contact,
+      ));
+    }
+    return sources;
   }
 
   List<String> _normalizedSearchQueries(String query, AppSettings settings) {

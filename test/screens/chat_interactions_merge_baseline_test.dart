@@ -24,6 +24,9 @@ import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_text_scale_service.dart';
+import 'package:meshcore_open/services/chat_background_service.dart';
+import 'package:meshcore_open/widgets/chat_background.dart';
+import 'package:meshcore_open/widgets/contact_chat_menu.dart';
 import 'package:meshcore_open/services/path_history_service.dart';
 import 'package:meshcore_open/services/storage_service.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
@@ -47,6 +50,30 @@ final _contact = Contact(
   path: Uint8List(0),
   lastSeen: _time,
 );
+
+AdditionalIdentityMessage _identityRow(String key, int id, String text) => (
+  recipientKey: key,
+  senderKey: _contact.publicKeyHex,
+  senderName: _contact.name,
+  peerType: advTypeChat,
+  roomAuthorHex: null,
+  timestampSeconds: _time.millisecondsSinceEpoch ~/ 1000 + id,
+  receivedAtMs: _time.millisecondsSinceEpoch + id * 1000,
+  wireText: text,
+  text: text,
+  isUnread: false,
+  isOutgoing: false,
+  status: MessageStatus.delivered,
+  rowId: id,
+  sentByFlood: null,
+  region: null,
+  path: null,
+  dispatchedAtMs: null,
+  tripTimeMs: null,
+  airtimeMs: null,
+  usedCyr2Lat: false,
+);
+
 final _channel = Channel.fromHex(0, 'Test channel', Channel.publicChannelPsk);
 const _olderText = 'Result from an older page';
 const _olderId = 'older';
@@ -163,6 +190,14 @@ class _ContactShareNode extends _PagedNode {
 
 class _SenderPickerInbox extends AdditionalIdentityInbox {
   final selections = <String, String>{};
+  final clearedThreads = <(String, String?)>[];
+
+  @override
+  Future<void> clearMessages(String senderKey, {String? recipientKey}) async {
+    clearedThreads.add((senderKey, recipientKey));
+    rows = const [];
+    notifyListeners();
+  }
   List<AdditionalIdentityMessage> rows = const [];
 
   @override
@@ -170,7 +205,11 @@ class _SenderPickerInbox extends AdditionalIdentityInbox {
     String recipientKey,
     String senderKey, {
     (int, int)? before,
-  }) async => rows;
+  }) async => rows.where((row) =>
+      row.recipientKey == recipientKey && row.senderKey == senderKey &&
+      (before == null || row.receivedAtMs < before.$1 ||
+          (row.receivedAtMs == before.$1 && row.rowId < before.$2)))
+      .take(100).toList();
 
   @override
   Future<String?> preferredSender(String peerKey) async => selections[peerKey];
@@ -476,6 +515,7 @@ void main() {
       await tester.pumpAndSettle();
       final sheetFinder = find.byType(MessageSearchSheet);
       final sheet = tester.widget<MessageSearchSheet>(sheetFinder);
+      if (!inChannel) expect(find.byType(ContactChatMenu), findsOneWidget);
       expect(node.routeIsCurrent?.call(), isFalse);
       final beforeReturn = node.activations;
       expect(sheet.channelFilter, inChannel ? same(_channel) : isNull);
@@ -866,6 +906,159 @@ void main() {
     expect(find.text('1.8s'), findsNothing);
     expect(find.byTooltip('Time on air'), findsNothing);
     expect(find.textContaining('% MCOtxt'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+
+  for (final locale in ['en', 'ru']) {
+    testWidgets('additional key shares header actions and clears only its history ($locale)', (tester) async {
+      final inbox = _SenderPickerInbox();
+      final node = _IdentityRoutingNode(inbox);
+      final settings = AppSettingsService();
+      final scale = ChatTextScaleService();
+      final backgrounds = ChatBackgroundService(settings);
+      addTearDown(node.dispose);
+      addTearDown(backgrounds.dispose);
+      addTearDown(settings.dispose);
+      addTearDown(scale.dispose);
+      final recipient = 'af' * 32;
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+          ChangeNotifierProvider<ChatBackgroundService>.value(value: backgrounds),
+        ],
+        child: MaterialApp(
+          locale: Locale(locale),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox, connector: node, peer: _contact,
+            recipientKey: recipient, recipientName: 'Extra key',
+            senderKey: _contact.publicKeyHex, senderName: _contact.name,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(ContactChatMenu), findsOneWidget);
+      expect(tester.widget<ChatBackdrop>(find.byType(ChatBackdrop)).chatKey,
+          ChatBackgroundService.contactKey(_contact));
+      final l10n = AppLocalizations.of(tester.element(find.byType(AppBar)));
+      Future<void> openMenu() async {
+        await tester.tap(find.byType(PopupMenuButton<String>));
+        await tester.pumpAndSettle();
+      }
+      await openMenu();
+      for (final label in [
+        l10n.chat_searchMessages, l10n.contact_info, l10n.contact_telemetry,
+        l10n.contact_settings, l10n.chatBackground_title, l10n.contact_clearChat,
+      ]) {
+        expect(find.text(label), findsOneWidget);
+      }
+      await tester.tap(find.text(l10n.contact_info));
+      await tester.pumpAndSettle();
+      expect(find.text(_contact.publicKeyHex), findsOneWidget);
+      await tester.tap(find.text(l10n.common_close));
+      await tester.pumpAndSettle();
+      await openMenu();
+      await tester.tap(find.text(l10n.chatBackground_title));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.chatBackground_thisChatOnly), findsOneWidget);
+      Navigator.of(tester.element(find.text(l10n.chatBackground_thisChatOnly))).pop();
+      await tester.pumpAndSettle();
+      await openMenu();
+      await tester.tap(find.text(l10n.chat_searchMessages));
+      await tester.pumpAndSettle();
+      final search = tester.widget<MessageSearchSheet>(find.byType(MessageSearchSheet));
+      expect(search.additionalIdentityInbox, same(inbox));
+      expect(search.additionalRecipientKey, recipient);
+      expect(search.contactFilter?.publicKeyHex, _contact.publicKeyHex);
+      Navigator.of(tester.element(find.byType(MessageSearchSheet))).pop();
+      await tester.pumpAndSettle();
+      await openMenu();
+      await tester.tap(find.text(l10n.contact_clearChat));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.common_cancel));
+      await tester.pumpAndSettle();
+      expect(inbox.clearedThreads, isEmpty);
+      await openMenu();
+      await tester.tap(find.text(l10n.contact_clearChat));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.common_clear));
+      await tester.pumpAndSettle();
+      expect(inbox.clearedThreads, [(_contact.publicKeyHex, recipient)]);
+      expect(node.getMessages(_contact), isNotEmpty);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+
+  testWidgets('additional key search finds and opens an older SQLite page', (tester) async {
+    final key = 'af' * 32;
+    final inbox = _SenderPickerInbox()..rows = [
+      _identityRow('bc' * 32, 999, 'Foreign needle'),
+      for (var id = 101; id >= 1; id--)
+        _identityRow(key, id, id == 1 ? 'Older needle' : 'Recent post $id'),
+    ];
+    final node = _IdentityRoutingNode(inbox);
+    final settings = AppSettingsService();
+    final scale = ChatTextScaleService();
+    addTearDown(node.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(scale.dispose);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+        ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+        ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+      ],
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: AdditionalIdentityChatScreen(
+          inbox: inbox, connector: node, peer: _contact,
+          recipientKey: key, recipientName: 'Extra key',
+          senderKey: _contact.publicKeyHex, senderName: _contact.name,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Older needle', findRichText: true), findsNothing);
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Search messages'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.descendant(
+      of: find.byType(MessageSearchSheet),
+      matching: find.byType(TextField),
+    ), 'needle');
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump();
+    final result = find.descendant(
+      of: find.byType(MessageSearchSheet),
+      matching: find.textContaining('Older needle'),
+    );
+    // Compute workers need real time; UI debounce/publication timers use fake time.
+    for (var i = 0; i < 40 && result.evaluate().isEmpty; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(result, findsOneWidget);
+    expect(find.textContaining('Foreign needle'), findsNothing);
+    await tester.tap(result);
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.byType(MessageSearchSheet).evaluate().isEmpty &&
+          find.text('Older needle', findRichText: true).hitTestable().evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    expect(find.byType(MessageSearchSheet), findsNothing);
+    expect(find.text('Older needle', findRichText: true).hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

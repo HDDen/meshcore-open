@@ -16,6 +16,9 @@ import 'package:meshcore_open/widgets/unread_badge.dart';
 
 class _Connector implements MeshCoreConnector {
   @override
+  String selfPublicKeyHex = '';
+
+  @override
   int get pathHashByteWidth => 1;
 
   @override
@@ -39,10 +42,10 @@ class _Inbox extends AdditionalIdentityInbox {
   }
 }
 
-Future<AdditionalIdentityEntry> _testEntry() async {
-  final seed = hex.decode(
-    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
-  );
+Future<AdditionalIdentityEntry> _testEntry({
+  String seedHex = '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+}) async {
+  final seed = hex.decode(seedHex);
   final expanded = Uint8List.fromList((await Sha512().hash(seed)).bytes);
   expanded[0] &= 248;
   expanded[31] = (expanded[31] & 63) | 64;
@@ -50,6 +53,44 @@ Future<AdditionalIdentityEntry> _testEntry() async {
 }
 
 void main() {
+  testWidgets('the primary node key has no duplicate group and reappears after a node switch', (tester) async {
+    final primary = await _testEntry();
+    final other = await _testEntry(
+      seedHex: '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb',
+    );
+    final inbox = _Inbox()..unlock([primary, other]);
+    addTearDown(inbox.dispose);
+    final connector = _Connector()..selfPublicKeyHex = primary.identity.publicKeyHex;
+    Future<void> show() async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: AdditionalIdentityContacts(
+          inbox: inbox, connector: connector,
+        )),
+      ));
+      await tester.pumpAndSettle();
+    }
+    Finder card(AdditionalIdentityEntry entry) => find.byKey(
+      ValueKey('additional-identity:${entry.identity.publicKeyHex}'),
+    );
+
+    await show();
+    expect(card(primary), findsNothing);
+    expect(card(other), findsOneWidget);
+    connector.selfPublicKeyHex = other.identity.publicKeyHex;
+    await show();
+    expect(card(primary), findsOneWidget);
+    expect(card(other), findsNothing);
+    connector.selfPublicKeyHex = '';
+    await show();
+    expect(card(primary), findsOneWidget);
+    expect(card(other), findsOneWidget);
+    expect(inbox.entries, hasLength(2));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('history updates refresh an expanded additional key group', (
     tester,
   ) async {
