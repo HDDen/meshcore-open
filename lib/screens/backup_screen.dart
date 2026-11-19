@@ -8,6 +8,8 @@ import '../helpers/backup_additional_identities.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/backup_node_identity.dart';
+import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
@@ -66,13 +68,13 @@ class _BackupScreenState extends State<BackupScreen> {
   final _password = TextEditingController();
   final _selected = <String>{
     'deviceName', 'publicKey', 'radioSettings', 'regions', 'location',
-    'privacySettings', PortableAppSettings.shared, PortableAppSettings.extension,
+    'privacySettings', 'contactSettings', PortableAppSettings.shared, PortableAppSettings.extension,
     'contacts', 'perContactSettings', 'contactGroups', 'discoveredContacts',
     'channels', 'channelSettings', 'communities', 'channelFilters',
   };
   static const _nodeItems = {
     'deviceName', 'publicKey', 'privateKey', 'radioSettings', 'location',
-    'privacySettings', 'contacts', 'perContactSettings', 'contactGroups',
+    'privacySettings', 'contactSettings', 'contacts', 'perContactSettings', 'contactGroups',
     'discoveredContacts', 'channels', 'channelSettings', 'communities',
   };
   static const _secretItems = {
@@ -98,6 +100,7 @@ class _BackupScreenState extends State<BackupScreen> {
     }
     return switch (item) {
       'radioSettings' => node.availableBackupRadioParts.isNotEmpty,
+      'contactSettings' => node.canBackupAutoAddConfig,
       'channelFilters' => node.messageFilterService != null,
       BackupFilterTraining.section =>
         MessageHistoryStorage.instance.hasDatabase && node.messageFilterService != null,
@@ -159,8 +162,6 @@ class _BackupScreenState extends State<BackupScreen> {
       setState(() => _notice = l10n.backupRestore_passwordRequired);
       return;
     }
-    if (password.isNotEmpty && !await _confirmPassword(password)) return;
-    if (!mounted || _busy) return;
     final app = context.read<AppSettingsService>().settings;
     final session = node.txPowerSession;
     final filter = node.messageFilterService;
@@ -170,6 +171,8 @@ class _BackupScreenState extends State<BackupScreen> {
       _notice = null;
     });
     try {
+      if (password.isNotEmpty && !await _confirmPassword(password)) return;
+      if (!mounted) return;
       BackupAdditionalIdentities? keys;
       if (items.contains(BackupAdditionalIdentities.section)) {
         final saved = await MessageHistoryStorage.instance.readAdditionalIdentityVault();
@@ -225,6 +228,7 @@ class _BackupScreenState extends State<BackupScreen> {
               profileParts: parts,
               publicKeySelected: items.contains('publicKey'),
               includePrivateKey: items.contains('privateKey'),
+              locationPreferences: node.captureBackupLocationPreferences(items, app),
               regions: regions,
               portableSettings: settings,
               messageFilter: messageFilter,
@@ -303,8 +307,10 @@ class _BackupScreenState extends State<BackupScreen> {
   String _restoreTitle(AppLocalizations l10n, BackupRestoreSection section) =>
       switch (section) {
         BackupRestoreSection.nodeProfile => l10n.settings_nodeSettings,
+        BackupRestoreSection.nodeIdentity => l10n.backupRestore_privateKey,
         BackupRestoreSection.regions => l10n.settings_regionSettings,
-        BackupRestoreSection.appSettings ||
+        BackupRestoreSection.locationPreferences => l10n.backupRestore_locationSettings,
+        BackupRestoreSection.appSettings => l10n.backupAppSettings_title,
         BackupRestoreSection.portableSettings => l10n.settings_appSettings,
         BackupRestoreSection.contacts => l10n.contacts_title,
         BackupRestoreSection.contactSettings => l10n.backupContactSettings_label,
@@ -326,9 +332,23 @@ class _BackupScreenState extends State<BackupScreen> {
     String? settingsItem,
   }) async {
     if (_busy) return;
+    if (section == BackupRestoreSection.nodeIdentity) {
+      await _restoreNodeIdentity(node, plan.nodeIdentity!);
+      return;
+    }
     final l10n = context.l10n;
     final filter = node.messageFilterService;
-    final isLocal = section == BackupRestoreSection.portableSettings ||
+    final location = section == BackupRestoreSection.locationPreferences
+        ? node.previewBackupLocationPreferences(
+            plan.locationPreferences!, context.read<AppSettingsService>().settings,
+          )
+        : null;
+    if (section == BackupRestoreSection.locationPreferences && location == null) {
+      setState(() => _notice = l10n.backupExport_notReady);
+      return;
+    }
+    final isLocal = section == BackupRestoreSection.locationPreferences ||
+        section == BackupRestoreSection.portableSettings ||
         section == BackupRestoreSection.regions ||
         section == BackupRestoreSection.additionalIdentities;
     if (!isLocal) {
@@ -347,7 +367,13 @@ class _BackupScreenState extends State<BackupScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
-        content: section == BackupRestoreSection.additionalIdentities
+        scrollable: true,
+        content: location != null
+            ? Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(node.deviceDisplayName),
+                ..._locationDetails(location.source),
+              ])
+            : section == BackupRestoreSection.additionalIdentities
             ? Text(l10n.backupRestore_keysIntro)
             : null,
         actions: [
@@ -369,6 +395,12 @@ class _BackupScreenState extends State<BackupScreen> {
     });
     try {
       switch (section) {
+        case BackupRestoreSection.locationPreferences:
+          final result = await node.restoreBackupLocationPreferences(location!);
+          if (!result.completed) {
+            if (mounted) setState(() => _notice = l10n.backupNodeProfile_unconfirmed(result.count));
+            return;
+          }
         case BackupRestoreSection.portableSettings:
           final service = context.read<AppSettingsService>();
           final next = plan.portableSettings[settingsItem]!.mergeInto(service.settings);
@@ -395,6 +427,98 @@ class _BackupScreenState extends State<BackupScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _restoreNodeIdentity(
+    MeshCoreConnector node, BackupNodeIdentity source,
+  ) async {
+    final l10n = context.l10n;
+    final preview = node.previewBackupNodeIdentity(source);
+    if (preview == null) {
+      setState(() => _notice = l10n.backupIdentity_notReady);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _notice = null;
+    });
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.backupIdentity_confirmTitle),
+          scrollable: true,
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.backupIdentity_confirmBody(preview.destinationName)),
+              const SizedBox(height: 16),
+              Text(l10n.backupIdentity_currentKey),
+              SelectableText(preview.destinationKey),
+              const SizedBox(height: 12),
+              Text(l10n.backupIdentity_backupKey),
+              SelectableText(source.publicKey),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.backupChannels_apply),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || confirmed != true) return;
+      final result = await node.restoreBackupNodeIdentity(preview);
+      if (!mounted) return;
+      setState(() => _notice = switch (result.status) {
+        BackupNodeIdentityStatus.completed => l10n.backupIdentity_completed,
+        BackupNodeIdentityStatus.notReady => l10n.backupIdentity_notReady,
+        BackupNodeIdentityStatus.unsupported => l10n.backupIdentity_unsupported,
+        BackupNodeIdentityStatus.writeRejected => l10n.backupIdentity_rejected,
+        BackupNodeIdentityStatus.unconfirmed => l10n.backupIdentity_unconfirmed,
+        BackupNodeIdentityStatus.reconnectRequired => l10n.backupIdentity_reconnect,
+      });
+    } catch (_) {
+      if (mounted) setState(() => _notice = l10n.backupIdentity_unconfirmed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  List<Widget> _locationDetails(BackupLocationPreferences source) {
+    final l10n = context.l10n;
+    final labels = {
+      'gpsEnabled': l10n.settings_locationGPSEnable,
+      'gpsIntervalSeconds': l10n.settings_locationIntervalSec,
+      'autoAddChat': l10n.contactsSettings_autoAddUsersTitle,
+      'autoAddRepeater': l10n.contactsSettings_autoAddRepeatersTitle,
+      'autoAddRoomServer': l10n.contactsSettings_autoAddRoomServersTitle,
+      'autoAddSensor': l10n.contactsSettings_autoAddSensorsTitle,
+      'overwriteOldest': l10n.contactsSettings_overwriteOldestTitle,
+      'maxHops': l10n.backupRestore_autoAddMaxHops,
+      'evictDiscoveredContactsEnabled': l10n.contactsSettings_evictDiscoveredContactsTitle,
+      'autoSendZeroHopAdvertOnGpsUpdate': l10n.settings_autoZeroHopAdvertOnGpsUpdate,
+    };
+    final values = {
+      ...source.values, ...source.contacts,
+      ...?(source.values['privacySettings'] as Map<String, Object?>?),
+    }..removeWhere((key, _) => !labels.containsKey(key));
+    return [
+      for (final entry in values.entries)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(labels[entry.key]!),
+          trailing: entry.value is bool
+              ? Icon(entry.value == true ? Icons.check : Icons.close)
+              : Text('${entry.value}'),
+        ),
+    ];
   }
 
   String _settingsTitle(AppLocalizations l10n, String item) => switch (item) {
@@ -439,6 +563,7 @@ class _BackupScreenState extends State<BackupScreen> {
         if (entry.key == BackupRestoreSection.portableSettings)
           for (final item in entry.value.portableSettings.keys)
             ListTile(
+              key: ValueKey('restore-$item'),
               title: Text(_settingsTitle(l10n, item)),
               trailing: const Icon(Icons.chevron_right),
               onTap: _busy ? null :
@@ -446,6 +571,7 @@ class _BackupScreenState extends State<BackupScreen> {
             )
         else
           ListTile(
+            key: ValueKey('restore-${entry.key.name}'),
             title: Text(_restoreTitle(l10n, entry.key)),
             trailing: const Icon(Icons.chevron_right),
             onTap: _busy ||
@@ -470,6 +596,13 @@ class _BackupScreenState extends State<BackupScreen> {
       canPop: !_busy,
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.backupRestore_title)),
+        bottomNavigationBar: _notice == null ? null : SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Semantics(liveRegion: true, child: Text(_notice!)),
+          ),
+        ),
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.only(bottom: 24),
@@ -507,8 +640,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         ),
                     ],
                     if (_busy) const LinearProgressIndicator(),
-                    if (_notice case final notice?)
-                      Semantics(liveRegion: true, child: Text(notice)),
+
                   ],
                 ),
               ),
@@ -526,8 +658,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   children: [
                     _group(l10n.settings_nodeSettings, Icons.router_outlined, [
                       _option(node, 'deviceName', l10n.settings_nodeName),
-                      _option(node, 'privateKey', l10n.backupRestore_privateKey,
-                          subtitle: l10n.backupRestore_nodeKeyExportOnly),
+                      _option(node, 'privateKey', l10n.backupRestore_privateKey),
                       _option(node, 'publicKey', l10n.settings_infoPublicKey),
                       _option(node, 'radioSettings', l10n.settings_radioSettings),
                       _option(node, 'regions', l10n.settings_regionSettings),
@@ -535,6 +666,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     const Divider(height: 1),
                     _group(l10n.backupRestore_locationSettings, Icons.place_outlined, [
                       _option(node, 'location', l10n.settings_location),
+                      _option(node, 'contactSettings', l10n.settings_contactSettings),
                       _option(node, 'privacySettings', l10n.settings_privacy),
                     ]),
                     const Divider(height: 1),
@@ -590,11 +722,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   label: Text(l10n.backupChannels_createBackup),
                 ),
               ),
-              if (_notice case final notice?)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Semantics(liveRegion: true, child: Text(notice)),
-                ),
+
             ],
           ),
         ),

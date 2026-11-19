@@ -7,6 +7,7 @@ import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -33,6 +34,7 @@ class BackupSnapshot {
     BackupNodeProfile? nodeProfile,
     this.publicKeySelected = false,
     this.nodePrivateKey,
+    this.locationPreferences,
     this.regions,
     this.portableSettings = const {},
     this.additionalIdentities,
@@ -41,7 +43,7 @@ class BackupSnapshot {
            channels == null && channelSettings == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
                communities == null && contactSettings == null && nodeProfile == null &&
-               !publicKeySelected && nodePrivateKey == null
+               !publicKeySelected && nodePrivateKey == null && locationPreferences == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
        createdAt = createdAt.toUtc(),
@@ -82,7 +84,7 @@ class BackupSnapshot {
     if (_sections.isEmpty && _appSettings == null &&
         contactSettings == null && channelSettings == null && messageFilter == null &&
         filterTraining == null && nodeProfile == null &&
-        !publicKeySelected && nodePrivateKey == null && regions == null &&
+        !publicKeySelected && nodePrivateKey == null && locationPreferences == null && regions == null &&
         portableSettings.isEmpty && additionalIdentities == null) {
       throw const FormatException('No selected backup sections');
     }
@@ -99,6 +101,7 @@ class BackupSnapshot {
        _appSettings = null,
        publicKeySelected = false,
        nodePrivateKey = null,
+       locationPreferences = null,
        regions = null,
        portableSettings = const {},
        additionalIdentities = null,
@@ -126,6 +129,7 @@ class BackupSnapshot {
   final AppSettingsBackup? _appSettings;
   final bool publicKeySelected;
   final String? nodePrivateKey;
+  final BackupLocationPreferences? locationPreferences;
   final List<String>? regions;
   final Map<String, PortableAppSettings> portableSettings;
   final BackupAdditionalIdentities? additionalIdentities;
@@ -144,13 +148,15 @@ class BackupSnapshot {
       _historyRows?.isEmpty ??
       (_appSettings == null && _contactSettings == null && _channelSettings == null &&
           _messageFilter == null && _filterTraining == null && _nodeProfile == null &&
-          !publicKeySelected && nodePrivateKey == null && (regions?.isEmpty ?? true) &&
+          !publicKeySelected && nodePrivateKey == null && (locationPreferences?.isEmpty ?? true) &&
+          (regions?.isEmpty ?? true) &&
           portableSettings.values.every((section) => section.isEmpty) &&
           (additionalIdentities?.entries.isEmpty ?? true) &&
           _sections.values.every((rows) => rows.isEmpty));
   bool get _hasNodeData =>
       _sections.isNotEmpty || _contactSettings != null || _channelSettings != null ||
-      _nodeProfile != null || publicKeySelected || nodePrivateKey != null;
+      _nodeProfile != null || publicKeySelected || nodePrivateKey != null ||
+      locationPreferences?.isEmpty == false;
   List<String> get _items => [
     ..._sections.keys,
     if (_contactSettings != null) 'perContactSettings',
@@ -250,6 +256,7 @@ class BackupSnapshot {
     if (name != null) items.add('deviceName');
     if (position != null) items.add('location');
     if (privacy != null) items.add('privacySettings');
+    items.addAll(locationPreferences?.items ?? const []);
     if (hasRadio) items.add('radioSettings');
     if (publicKeySelected || nodePrivateKey != null) items.add('publicKey');
     if (nodePrivateKey != null) items.add('privateKey');
@@ -272,7 +279,7 @@ class BackupSnapshot {
       'version': BackupFileCodec.formatVersion,
       'createdAt': createdAt.toIso8601String(),
       'sourcePublicKey': sourcePublicKey,
-      'items': items,
+      'items': items.toSet().toList(),
       'sections': {
         for (final section in preferences.entries)
           section.key: {'preferences': section.value},
@@ -300,13 +307,17 @@ class BackupSnapshot {
             'privateKey': ?nodePrivateKey,
             if (regions != null) 'preferences': {'regions': regions},
           },
-        if (position != null || privacy != null)
+        if (position != null || privacy != null || locationPreferences?.isEmpty == false)
           'locationSettings': {
+            ...?locationPreferences?.values,
             if (position != null) 'location': {
               'latitude': position.latitudeE6 / 1000000,
               'longitude': position.longitudeE6 / 1000000,
             },
-            if (privacy != null) 'privacySettings': BackupNodeProfile.privacyValues(privacy),
+            if (privacy != null) 'privacySettings': {
+              ...?(locationPreferences?.values['privacySettings'] as Map<String, Object?>?),
+              ...BackupNodeProfile.privacyValues(privacy),
+            },
           },
       },
     }, password: password);

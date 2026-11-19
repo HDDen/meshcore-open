@@ -26,6 +26,20 @@ void main() {
     expect(queue.completeReply(frame([29, ...'A2|current'.codeUnits])), isTrue);
   });
 
+  test('disabled key import releases its reply and preserves the next ACK', () async {
+    final queue = newQueue();
+    final pending = queue.track(frame([cmdImportPrivateKey]), waitForReply: true)!;
+    queue.track(buildSetDeviceTimeFrame(1));
+    final rejected = expectLater(pending.completer!.future,
+        throwsA(isA<CommandDisabledException>()));
+    queue.takePrivateKeyImportDisabled();
+    await rejected;
+    expect(queue.takeOk()?.commandCode, cmdSetDeviceTime);
+    expect(queue.length, 0);
+    queue.takePrivateKeyImportDisabled();
+    expect(queue.length, 0);
+  });
+
   test('ERR goes to the oldest pending command (firmware order)', () {
     final queue = newQueue();
     final time = queue.track(buildSetDeviceTimeFrame(1));

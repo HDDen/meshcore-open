@@ -12,6 +12,8 @@ import '../helpers/backup_filter_training.dart';
 import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/backup_node_identity.dart';
+import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
@@ -36,6 +38,8 @@ enum BackupRestoreSection {
   portableSettings,
   regions,
   additionalIdentities,
+  locationPreferences,
+  nodeIdentity,
 }
 
 /// Supported data recovered from a backup before choosing a restore destination.
@@ -58,6 +62,8 @@ class BackupImportPlan {
     this.portableSettings = const {},
     this.regions,
     this.additionalIdentities,
+    this.locationPreferences,
+    this.nodeIdentity,
   }) : contacts = contacts == null ? null : List.unmodifiable(contacts),
        channels = channels == null ? null : List.unmodifiable(channels);
 
@@ -80,6 +86,8 @@ class BackupImportPlan {
   final Map<String, PortableAppSettings> portableSettings;
   final List<String>? regions;
   final BackupAdditionalIdentities? additionalIdentities;
+  final BackupLocationPreferences? locationPreferences;
+  final BackupNodeIdentity? nodeIdentity;
 
   bool contains(BackupRestoreSection section) => switch (section) {
     BackupRestoreSection.channels => channels?.isNotEmpty == true,
@@ -95,6 +103,8 @@ class BackupImportPlan {
     BackupRestoreSection.messageFilter => messageFilter?.isEmpty == false,
     BackupRestoreSection.filterTraining => filterTraining?.isEmpty == false,
     BackupRestoreSection.nodeProfile => nodeProfile?.isEmpty == false,
+    BackupRestoreSection.nodeIdentity => nodeIdentity != null,
+    BackupRestoreSection.locationPreferences => locationPreferences?.isEmpty == false,
     BackupRestoreSection.portableSettings => portableSettings.isNotEmpty,
     BackupRestoreSection.regions => regions?.isNotEmpty == true,
     BackupRestoreSection.additionalIdentities =>
@@ -176,7 +186,18 @@ class BackupImportPlanner {
             channels: null, contacts: null, appSettings: null,
             portableSettings: official ? const {} : _readPortableSettings(
               payload, encrypted: BackupFileCodec.isEncryptedEnvelope(document),
+              invalidItem: () => invalid.add(BackupRestoreSection.portableSettings),
             ),
+          ),
+          BackupRestoreSection.locationPreferences => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            locationPreferences: official ? null : _readLocationPreferences(payload),
+          ),
+          BackupRestoreSection.nodeIdentity => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            nodeIdentity: await _readNodeIdentity(payload, official: official),
           ),
           BackupRestoreSection.regions => BackupImportPlan._(
             isOfficial: official, sourcePublicKey: null,
@@ -406,6 +427,7 @@ class BackupImportPlanner {
   static Map<String, PortableAppSettings> _readPortableSettings(
     Map<String, Object?> payload, {
     required bool encrypted,
+    required void Function() invalidItem,
   }) {
     final result = <String, PortableAppSettings>{};
     for (final item in [
@@ -413,16 +435,44 @@ class BackupImportPlanner {
       PortableAppSettings.extension,
       if (encrypted) ...PortableAppSettings.secretKeys.keys,
     ]) {
-      final section = item == PortableAppSettings.extension
-          ? item : PortableAppSettings.shared;
-      final preferences = _upstreamPreferences(payload, item, sectionName: section);
-      final raw = preferences?['app_settings'];
-      if (raw == null) continue;
-      final values = raw is String ? jsonDecode(raw) : raw;
-      final backup = PortableAppSettings.read(item, _readObject(values));
-      if (!backup.isEmpty) result[item] = backup;
+      try {
+        final section = item == PortableAppSettings.extension
+            ? item : PortableAppSettings.shared;
+        final preferences = _upstreamPreferences(payload, item, sectionName: section);
+        final raw = preferences?['app_settings'];
+        if (raw == null) continue;
+        final values = raw is String ? jsonDecode(raw) : raw;
+        final backup = PortableAppSettings.read(item, _readObject(values));
+        if (!backup.isEmpty) result[item] = backup;
+      } on FormatException {
+        invalidItem();
+      }
     }
     return result;
+  }
+
+  static Future<BackupNodeIdentity?> _readNodeIdentity(
+    Map<String, Object?> payload, {required bool official}
+  ) async {
+    if (official) {
+      if (payload['private_key'] == null) return null;
+      return BackupNodeIdentity.read(payload['private_key'],
+        hexadecimal: true, publicKeys: [payload['public_key']]);
+    }
+    if (!_readList(payload['items']).contains('privateKey')) return null;
+    final node = _readObject(_readObject(payload['sections'])['nodeSettings']);
+    return BackupNodeIdentity.read(node['privateKey'],
+      hexadecimal: false,
+      publicKeys: [node['publicKey'], payload['sourcePublicKey']],
+    );
+  }
+
+  static BackupLocationPreferences? _readLocationPreferences(Map<String, Object?> payload) {
+    final section = _readObject(payload['sections'])['locationSettings'];
+    if (section == null) return null;
+    return BackupLocationPreferences.read(
+      _readObject(section), _readList(payload['items']).cast<String>().toSet(),
+    );
   }
 
   static List<String>? _readRegions(Map<String, Object?> payload) {

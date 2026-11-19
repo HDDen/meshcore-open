@@ -430,119 +430,185 @@ abstract class AppLocalizations {
   /// **'The backup was offered in the system share sheet.'**
   String get backupExport_shared;
 
-  /// No description provided for @backupExport_failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save the backup.'**
-  String get backupExport_failed;
-
   /// No description provided for @backupRestore_title.
   ///
   /// In en, this message translates to:
   /// **'Backup & Restore'**
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title;
 
   /// No description provided for @backupRestore_subtitle.
   ///
   /// In en, this message translates to:
   /// **'Save and restore app data and radio settings'**
-  String get backupRestore_subtitle => 'Save and restore app data and radio settings';
+  String get backupRestore_subtitle;
 
   /// No description provided for @backupRestore_import.
   ///
   /// In en, this message translates to:
   /// **'Import'**
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import;
 
   /// No description provided for @backupRestore_selectImportFile.
   ///
   /// In en, this message translates to:
   /// **'Import file'**
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile;
 
   /// No description provided for @backupRestore_password.
   ///
   /// In en, this message translates to:
   /// **'Password (optional)'**
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password;
 
   /// No description provided for @backupRestore_items.
   ///
   /// In en, this message translates to:
   /// **'Backup and restore items'**
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items;
 
   /// No description provided for @backupRestore_locationSettings.
   ///
   /// In en, this message translates to:
   /// **'Location settings'**
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings;
+
+  /// No description provided for @backupRestore_autoAddMaxHops.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum hops for adding contacts'**
+  String get backupRestore_autoAddMaxHops;
 
   /// No description provided for @backupRestore_privateKey.
   ///
   /// In en, this message translates to:
   /// **'Node private key'**
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey;
 
   /// No description provided for @backupRestore_ipfsKey.
   ///
   /// In en, this message translates to:
   /// **'IPFS API key'**
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey;
 
   /// No description provided for @backupRestore_stadiaMapKey.
   ///
   /// In en, this message translates to:
   /// **'Stadia Maps API key'**
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey;
 
   /// No description provided for @backupRestore_extraKeys.
   ///
   /// In en, this message translates to:
   /// **'Additional private keys'**
-  String get backupRestore_extraKeys => 'Additional private keys';
+  String get backupRestore_extraKeys;
 
   /// No description provided for @backupRestore_passwordRequired.
   ///
   /// In en, this message translates to:
   /// **'Set a backup password to include the selected keys.'**
-  String get backupRestore_passwordRequired => 'Set a backup password to include the selected keys.';
+  String get backupRestore_passwordRequired;
 
   /// No description provided for @backupRestore_review.
   ///
   /// In en, this message translates to:
   /// **'Review and restore'**
-  String get backupRestore_review => 'Review and restore';
+  String get backupRestore_review;
 
   /// No description provided for @backupRestore_historySeparate.
   ///
   /// In en, this message translates to:
   /// **'Export message history to a separate file.'**
-  String get backupRestore_historySeparate => 'Export message history to a separate file.';
+  String get backupRestore_historySeparate;
 
   /// No description provided for @backupRestore_invalidSections.
   ///
   /// In en, this message translates to:
   /// **'Some sections could not be read.'**
-  String get backupRestore_invalidSections => 'Some sections could not be read.';
+  String get backupRestore_invalidSections;
 
   /// No description provided for @backupRestore_localApplied.
   ///
   /// In en, this message translates to:
   /// **'Settings restored.'**
-  String get backupRestore_localApplied => 'Settings restored.';
+  String get backupRestore_localApplied;
 
   /// No description provided for @backupRestore_keysIntro.
   ///
   /// In en, this message translates to:
   /// **'Add keys from this file to the current profile. Existing keys with the same public key are kept.'**
-  String get backupRestore_keysIntro => 'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
+  String get backupRestore_keysIntro;
+
+  /// No description provided for @backupIdentity_confirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace node identity?'**
+  String get backupIdentity_confirmTitle;
+
+  /// No description provided for @backupIdentity_confirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace the main private key of node “{node}” with the key from this backup? The change is saved on the node. The app will reconnect and load data for the new identity.'**
+  String backupIdentity_confirmBody(String node);
+
+  /// No description provided for @backupIdentity_currentKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Current public key'**
+  String get backupIdentity_currentKey;
+
+  /// No description provided for @backupIdentity_backupKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key from the backup'**
+  String get backupIdentity_backupKey;
+
+  /// No description provided for @backupIdentity_completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Node identity verified. The new key is active.'**
+  String get backupIdentity_completed;
+
+  /// No description provided for @backupIdentity_notReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for synchronization and message sending to finish, then reopen the confirmation.'**
+  String get backupIdentity_notReady;
+
+  /// No description provided for @backupIdentity_unsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This firmware has private-key import disabled.'**
+  String get backupIdentity_unsupported;
+
+  /// No description provided for @backupIdentity_rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The node rejected the identity replacement.'**
+  String get backupIdentity_rejected;
+
+  /// No description provided for @backupIdentity_unconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The result of the key write could not be confirmed. Reconnect and check the node public key before trying again.'**
+  String get backupIdentity_unconfirmed;
+
+  /// No description provided for @backupIdentity_reconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'The node confirmed the key write. Reconnect to verify the new identity.'**
+  String get backupIdentity_reconnect;
 
   /// No description provided for @backupRestore_nodeKeyExportOnly.
   ///
   /// In en, this message translates to:
   /// **'You can export the node key here.'**
-  String get backupRestore_nodeKeyExportOnly => 'You can export the node key here.';
+  String get backupRestore_nodeKeyExportOnly;
+
+  /// No description provided for @backupExport_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the backup.'**
+  String get backupExport_failed;
 
   /// No description provided for @backupContacts_title.
   ///

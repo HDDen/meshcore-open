@@ -157,11 +157,18 @@ class PortableAppSettings {
     _ => {?secretKeys[item]},
   };
 
-  factory PortableAppSettings.read(String item, Map<String, Object?> json) =>
-      PortableAppSettings._(Map.unmodifiable({
-        for (final key in _keysFor(item))
-          if (json.containsKey(key)) key: json[key],
-      }));
+  factory PortableAppSettings.read(String item, Map<String, Object?> json) {
+    final values = <String, Object?>{
+      for (final key in _keysFor(item))
+        if (json.containsKey(key)) key: json[key],
+    };
+    try {
+      AppSettings.fromJson(values);
+    } on Object {
+      throw const FormatException('Invalid portable app settings');
+    }
+    return PortableAppSettings._(Map.unmodifiable(values));
+  }
 
   factory PortableAppSettings.capture(String item, AppSettings settings) =>
       PortableAppSettings.read(item, {

@@ -15,6 +15,13 @@ class CommandFailedException implements Exception {
   String toString() => 'Exception: Command failed with error code $errCode';
 }
 
+class CommandDisabledException extends CommandFailedException {
+  const CommandDisabledException() : super(-1);
+
+  @override
+  String toString() => 'Command disabled by firmware';
+}
+
 /// A command waiting for its reply from the companion firmware.
 class PendingCommandReply {
   final int commandCode;
@@ -65,6 +72,7 @@ int? replyCodeForCommand(Uint8List data) {
     case cmdRemoveContact:
     case cmdShareContact:
     case cmdImportContact:
+    case cmdImportPrivateKey:
     case cmdSetChannel:
     case cmdSetOtherParams:
     case cmdSetCustomVar:
@@ -220,6 +228,18 @@ class PendingCommandReplies {
     if (index < 0) return false;
     _queue.removeAt(index).completer?.complete();
     return true;
+  }
+
+  /// Private-key commands are serialized by the connector. An import-disabled
+  /// response completes that command without leaving an ACK entry behind.
+  void takePrivateKeyImportDisabled() {
+    _pruneStale();
+    final index = _queue.indexWhere((entry) => entry.commandCode == cmdImportPrivateKey);
+    if (index < 0) return;
+    final pending = _queue.removeAt(index);
+    if (!pending.isTombstone) {
+      pending.completer?.completeError(const CommandDisabledException());
+    }
   }
 
   /// Attributes RESP_CODE_OK; commands expecting a specific reply are skipped.

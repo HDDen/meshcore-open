@@ -34,6 +34,7 @@ import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/background_work_tracker.dart';
+import '../helpers/persistence_background_work.dart';
 import '../helpers/frame_background_work.dart';
 import '../helpers/packet_background_work.dart';
 import '../helpers/image_transfer_background_work.dart';
@@ -67,6 +68,8 @@ import '../helpers/backup_contact_settings.dart';
 import '../helpers/backup_discovered_contacts.dart';
 import '../helpers/backup_message_history.dart';
 import '../helpers/backup_node_profile.dart';
+import '../helpers/backup_node_identity.dart';
+import '../helpers/backup_location_preferences.dart';
 import '../helpers/backup_contact_restore.dart';
 import '../helpers/channel_identity_reconciler.dart';
 import '../helpers/channel_deletion_snapshot.dart';
@@ -370,6 +373,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       QueuedMessageRequestBackgroundWork(_backgroundWork);
   late final SyncBackgroundWork _contactSyncWork =
       SyncBackgroundWork(_backgroundWork, BackgroundWorkKind.contactSync);
+  late final PersistenceBackgroundWork _contactPersistenceWork =
+      PersistenceBackgroundWork()..attach(_backgroundWork);
   late final SyncBackgroundWork _channelSyncWork =
       SyncBackgroundWork(_backgroundWork, BackgroundWorkKind.channelSync);
   late final SyncBackgroundWork _selfInfoWork =
@@ -383,6 +388,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   late final ImageTransferBackgroundWork _imageTransferWork =
       ImageTransferBackgroundWork(_backgroundWork);
   Future<void> Function(Uint8List)? _frameWriterForTest;
+
+  @visibleForTesting
+  Future<void> Function()? reconnectAfterIdentityRestoreForTest;
   MeshCoreTransportType _activeTransport = MeshCoreTransportType.bluetooth;
   ReviewRadio? _reviewRadio;
   StreamSubscription<Uint8List>? _reviewFrameSubscription;
@@ -678,6 +686,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   BackupContactInventoryRead? _backupContactRead;
   bool _restoringBackupContacts = false;
   int _autoAddConfigRevision = 0;
+  Object? _backupAutoAddReadSession;
   int _contactSyncReceived = 0;
   bool _contactSyncUsesSinceFilter = false;
 
@@ -1251,7 +1260,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool get hasCompletedSelfInfoHandshake =>
       isConnected && _hasCompletedSelfInfoHandshake;
   bool get isSessionReady =>
-      isConnected &&
+      isConnected && !_restoringNodeIdentity &&
       _hasLoadedContacts &&
       _hasLoadedChannels &&
       !_isInitialBacklogDrain &&
@@ -2291,7 +2300,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _refreshContactMessageSummaries({
     bool persistChanges = true,
-  }) async {
+  }) => _contactPersistenceWork.run(() async {
     if (_contacts.isEmpty && _discoveredContacts.isEmpty) {
       if (_contactMessagePreviews.isNotEmpty) {
         _contactMessagePreviews.clear();
@@ -2376,7 +2385,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(_persistDiscoveredContacts());
     }
     if (changed || previewChanged) notifyListeners();
-  }
+  });
 
   bool _canUseSharedContactHistorySummary(Contact contact) {
     return !(_isOfflineMode && !_isOfflineSharedMode) &&
@@ -8308,6 +8317,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (!isConnected) {
       throw Exception("Not connected to a MeshCore device");
     }
+    if (_nodeIdentityWriteSession != null &&
+        (data.first != cmdImportPrivateKey ||
+            _nodeLocalBackupSession != _nodeIdentityWriteSession)) {
+      throw StateError('Radio identity replacement in progress');
+    }
     _bleDebugLogService?.logFrame(data, outgoing: true);
     final testWriter = _frameWriterForTest;
     if (testWriter != null) {
@@ -13373,6 +13387,249 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     };
   }
 
+  bool _restoringNodeIdentity = false;
+  Object? _nodeIdentityWriteSession;
+
+  BackupNodeIdentityPreview? previewBackupNodeIdentity(BackupNodeIdentity source) {
+    if (!isSessionReady || !_canUseNodeProfileBackup || isRestartingTransport ||
+        _restoringNodeIdentity || hasPendingRadioStatsWork) {
+      return null;
+    }
+    return (
+      session: _nodeLocalBackupSession,
+      destinationKey: selfPublicKeyHex,
+      destinationName: deviceDisplayName,
+      source: source,
+    );
+  }
+
+  Future<BackupNodeIdentityResult> restoreBackupNodeIdentity(
+    BackupNodeIdentityPreview preview,
+  ) async {
+    bool sameDestination() => _canUseNodeProfileBackup &&
+        _nodeLocalBackupSession == preview.session &&
+        selfPublicKeyHex == preview.destinationKey &&
+        !_restoringBackupNodeProfile && !_restoringBackupContacts &&
+        !_restoringBackupChannels && !isRestartingTransport &&
+        !hasPendingRadioStatsWork;
+    if (_restoringNodeIdentity || !sameDestination()) {
+      return (written: false, status: BackupNodeIdentityStatus.notReady);
+    }
+    if (preview.source.publicKey == selfPublicKeyHex) {
+      return (written: false, status: BackupNodeIdentityStatus.completed);
+    }
+    final previous = _privateKeyExportTail;
+    final done = Completer<void>();
+    _privateKeyExportTail = done.future;
+    await previous;
+    var acknowledged = false;
+    var dispatched = false;
+    try {
+      if (_restoringNodeIdentity || !isSessionReady || !sameDestination()) {
+        return (written: false, status: BackupNodeIdentityStatus.notReady);
+      }
+      _restoringNodeIdentity = true;
+      _nodeIdentityWriteSession = preview.session;
+      pausePendingOutgoingMessages();
+      notifyListeners();
+      final key = hex2Uint8List(preview.source.identity.privateKeyHex);
+      final frame = buildImportPrivateKeyFrame(key);
+      try {
+        await _dispatchFrame(frame, waitForGenericAck: true, beforeSend: () {
+          if (!sameDestination()) throw StateError('Identity destination changed');
+          dispatched = true;
+        });
+        acknowledged = true;
+      } on CommandDisabledException {
+        return (written: false, status: BackupNodeIdentityStatus.unsupported);
+      } on CommandFailedException {
+        return (written: false, status: BackupNodeIdentityStatus.writeRejected);
+      } catch (_) {
+        // A lost ACK leaves the outcome unknown. Read the identity after
+        // reconnecting instead of resubmitting a permanent key write.
+        if (!dispatched) {
+          return (written: false, status: BackupNodeIdentityStatus.notReady);
+        }
+      } finally {
+        _nodeIdentityWriteSession = null;
+        key.fillRange(0, key.length, 0);
+        frame.fillRange(0, frame.length, 0);
+      }
+      if (!isConnected || _nodeLocalBackupSession != preview.session) {
+        return (
+          written: acknowledged,
+          status: acknowledged ? BackupNodeIdentityStatus.reconnectRequired
+              : BackupNodeIdentityStatus.unconfirmed,
+        );
+      }
+      final reconnect = reconnectAfterIdentityRestoreForTest;
+      try {
+        if (reconnect != null) {
+          await reconnect();
+        } else {
+          await _restartActiveTransport();
+        }
+      } catch (_) {
+        // The device may already contain the new identity.
+      }
+      if (hasCompletedSelfInfoHandshake && selfPublicKeyHex == preview.source.publicKey) {
+        return (written: true, status: BackupNodeIdentityStatus.completed);
+      }
+      if (isConnected) await disconnect(manual: true);
+      return (
+        written: acknowledged,
+        status: acknowledged ? BackupNodeIdentityStatus.reconnectRequired
+            : BackupNodeIdentityStatus.unconfirmed,
+      );
+    } finally {
+      _nodeIdentityWriteSession = null;
+      _restoringNodeIdentity = false;
+      done.complete();
+      if (!_disposed) {
+        notifyListeners();
+        if (isSessionReady) unawaited(resumePendingOutgoingMessages());
+      }
+    }
+  }
+
+  bool get canBackupAutoAddConfig => _canUseNodeProfileBackup &&
+      supportsAutoAddConfig && _backupAutoAddReadSession == _nodeLocalBackupSession;
+
+  BackupLocationPreferences captureBackupLocationPreferences(
+    Set<String> items, AppSettings settings,
+  ) => BackupLocationPreferences.read({
+    if (_currentCustomVars?['gps'] case final gps?) ...{
+      'gpsEnabled': gps == '1',
+      'gpsIntervalSeconds': int.tryParse(_currentCustomVars?['gps_interval'] ?? '') ??
+          settings.gpsIntervalSeconds,
+    },
+    'contactSettings': {
+      if (canBackupAutoAddConfig) ...{
+        'autoAddChat': _autoAddUsers,
+        'autoAddRepeater': _autoAddRepeaters,
+        'autoAddRoomServer': _autoAddRoomServers,
+        'autoAddSensor': _autoAddSensors,
+        'overwriteOldest': _overwriteOldest,
+        'maxHops': ?_autoAddMaxHops,
+      },
+      'evictDiscoveredContactsEnabled': settings.evictDiscoveredContactsEnabled,
+    },
+    'privacySettings': {
+      'autoSendZeroHopAdvertOnGpsUpdate': settings.autoSendZeroHopAdvertOnGpsUpdate,
+    },
+  }, items);
+
+  BackupLocationPreview? previewBackupLocationPreferences(
+    BackupLocationPreferences source, AppSettings settings,
+  ) {
+    if (!_canUseNodeProfileBackup ||
+        (source.hasGps && _currentCustomVars?['gps'] == null) ||
+        (source.hasAutoAdd && !canBackupAutoAddConfig)) {
+      return null;
+    }
+    return (
+      session: _nodeLocalBackupSession,
+      before: captureBackupLocationPreferences(source.items.toSet(), settings),
+      source: source,
+    );
+  }
+
+  Future<({int count, bool completed})> restoreBackupLocationPreferences(
+    BackupLocationPreview preview,
+  ) async {
+    final service = _appSettingsService;
+    if (service == null) return (count: 0, completed: false);
+    var count = 0;
+    var expected = preview.before.fingerprint;
+    bool unchanged() => _canUseNodeProfileBackup &&
+        _nodeLocalBackupSession == preview.session &&
+        captureBackupLocationPreferences(
+          preview.source.items.toSet(), service.settings,
+        ).fingerprint == expected;
+    if (_restoringBackupNodeProfile || _restoringBackupContacts ||
+        _restoringBackupChannels || !unchanged()) {
+      return (count: 0, completed: false);
+    }
+    Future<void> write(Uint8List frame) async {
+      var dispatched = false;
+      await _dispatchFrame(frame, waitForGenericAck: true, beforeSend: () {
+        if (!unchanged()) throw StateError('Backup destination changed');
+        dispatched = true;
+      });
+      if (!dispatched || !unchanged()) {
+        throw StateError('Backup write was not confirmed for this session');
+      }
+      count++;
+    }
+    void adopt() {
+      expected = captureBackupLocationPreferences(
+        preview.source.items.toSet(), service.settings,
+      ).fingerprint;
+    }
+    final source = preview.source;
+    _restoringBackupNodeProfile = true;
+    try {
+      final gps = source.values['gpsEnabled'];
+      if (gps is bool) {
+        final value = gps ? '1' : '0';
+        await write(buildSetCustomVarFrame('gps:$value'));
+        _currentCustomVars!['gps'] = value;
+        if (gps) {
+          _startGpsLocationPolling();
+        } else {
+          _stopGpsLocationPolling();
+        }
+        adopt();
+      }
+      final interval = source.values['gpsIntervalSeconds'];
+      if (interval is int) {
+        await write(buildSetCustomVarFrame('gps_interval:$interval'));
+        _currentCustomVars!['gps_interval'] = '$interval';
+        await service.setGpsIntervalSeconds(interval);
+        adopt();
+      }
+      final contacts = source.contacts;
+      if (source.hasAutoAdd) {
+        final current = captureBackupLocationPreferences(
+          {'contactSettings'}, service.settings,
+        ).contacts;
+        final next = {...current, ...contacts};
+        await write(buildSetAutoAddConfigFrame(
+          autoAddChat: next['autoAddChat']! as bool,
+          autoAddRepeater: next['autoAddRepeater']! as bool,
+          autoAddRoomServer: next['autoAddRoomServer']! as bool,
+          autoAddSensor: next['autoAddSensor']! as bool,
+          overwriteOldest: next['overwriteOldest']! as bool,
+          maxHops: next['maxHops'] as int?,
+        ));
+        _autoAddUsers = next['autoAddChat']! as bool;
+        _autoAddRepeaters = next['autoAddRepeater']! as bool;
+        _autoAddRoomServers = next['autoAddRoomServer']! as bool;
+        _autoAddSensors = next['autoAddSensor']! as bool;
+        _overwriteOldest = next['overwriteOldest']! as bool;
+        _autoAddMaxHops = next['maxHops'] as int?;
+        _autoAddConfigRevision++;
+        adopt();
+      }
+      if (!unchanged()) return (count: count, completed: false);
+      final privacy = source.values['privacySettings'] as Map<String, Object?>?;
+      await service.updateSettings(service.settings.copyWith(
+        gpsIntervalSeconds: interval as int?,
+        evictDiscoveredContactsEnabled: contacts['evictDiscoveredContactsEnabled'] as bool?,
+        autoSendZeroHopAdvertOnGpsUpdate: privacy?['autoSendZeroHopAdvertOnGpsUpdate'] as bool?,
+      ));
+      adopt();
+      return (count: count, completed: unchanged());
+    } catch (_) {
+      return (count: count, completed: false);
+    } finally {
+      _restoringBackupNodeProfile = false;
+      if (_canUseNodeProfileBackup && _nodeLocalBackupSession == preview.session) {
+        notifyListeners();
+      }
+    }
+  }
+
   BackupNodeProfile? captureBackupNodeProfile(Set<BackupNodeProfilePart> parts) {
     if (!_canUseNodeProfileBackup) return null;
     final profile = _readNodeProfile();
@@ -13880,6 +14137,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Set<BackupNodeProfilePart> profileParts = const {},
     bool publicKeySelected = false,
     bool includePrivateKey = false,
+    BackupLocationPreferences? locationPreferences,
     List<String>? regions,
     Map<String, PortableAppSettings> portableSettings = const {},
     BackupMessageFilter? messageFilter,
@@ -13888,13 +14146,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }) async {
     final nodeKey = selfPublicKeyHex;
     final includeProfile =
-        profileParts.isNotEmpty || publicKeySelected || includePrivateKey;
+        profileParts.isNotEmpty || publicKeySelected || includePrivateKey ||
+        locationPreferences?.isEmpty == false;
     if (includeProfile && !_canUseNodeProfileBackup) return null;
     final nodeProfile =
         profileParts.isEmpty ? null : captureBackupNodeProfile(profileParts);
     final session = includePrivateKey ? txPowerSession : null;
     final revision = _channelInboxRevision;
     bool canSnapshot() =>
+        (!includeProfile || _canUseNodeProfileBackup) &&
+        !_restoringBackupNodeProfile &&
         !_restoringBackupChannels &&
         !_restoringBackupContacts &&
         (!(includeChannels || includeChannelSettings) ||
@@ -13971,6 +14232,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       nodeProfile: nodeProfile,
       publicKeySelected: publicKeySelected,
       nodePrivateKey: nodePrivateKey,
+      locationPreferences: locationPreferences,
       regions: regions,
       portableSettings: portableSettings,
       messageFilter: messageFilter,
@@ -14516,8 +14778,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         // Feature-specific callers listen to receivedFrames for this response.
         break;
       case respCodePrivateKey:
-      case respCodeDisabled:
         // Answers to CMD_EXPORT_PRIVATE_KEY; _exportNodePrivateKey listens.
+        break;
+      case respCodeDisabled:
+        _pendingGenericAckQueue.takePrivateKeyImportDisabled();
         break;
       case respCodeSent:
         _handleMessageSent(frame);
@@ -15837,7 +16101,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _persistContacts() async {
+  Future<void> _persistContacts() => _contactPersistenceWork.run(() async {
     final normalizedContacts = deduplicateContactsByPublicKey(_contacts);
     if (normalizedContacts.length != _contacts.length) {
       _contacts
@@ -15849,15 +16113,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     _clearEstimatesOfNewlyLocated(_contacts, _contactEstimatesCleared);
     await _contactStore.saveContacts(_contacts);
-  }
+  });
 
-  Future<void> _persistDiscoveredContacts() async {
+  Future<void> _persistDiscoveredContacts() => _contactPersistenceWork.run(() async {
     _clearEstimatesOfNewlyLocated(
       _discoveredContacts,
       _discoveredEstimatesCleared,
     );
     await _discoveryContactStore.saveContacts(_discoveredContacts);
-  }
+  });
 
   /// Drops the stored position estimates of the nodes in [contacts] that
   /// have coordinates now and did not at the last save. The map draws an
@@ -22943,6 +23207,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _autoAddSensors = (flags & autoAddSensorFlag) != 0;
       _overwriteOldest = (flags & autoAddOverwriteOldestFlag) != 0;
       _autoAddConfigRevision++;
+      _backupAutoAddReadSession = _nodeLocalBackupSession;
       _autoAddMaxHops = frame.length > 2 ? frame[2] : null;
     } catch (e) {
       appLogger.error('Failed to parse auto-add config: $e', tag: 'Connector');

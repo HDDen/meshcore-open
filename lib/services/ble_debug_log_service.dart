@@ -72,7 +72,8 @@ class BleDebugLogService extends ChangeNotifier {
     final code = frame[0];
     // The node's private key must never sit in a log anyone can export: the
     // line stays, the bytes do not.
-    if (!outgoing && code == respCodePrivateKey) {
+    if ((!outgoing && code == respCodePrivateKey) ||
+        (outgoing && code == cmdImportPrivateKey)) {
       frame = Uint8List.fromList([code]);
       note = 'payload withheld';
     }
@@ -242,6 +243,8 @@ class BleDebugLogService extends ChangeNotifier {
         return 'CMD_SET_FLOOD_SCOPE';
       case cmdExportPrivateKey:
         return 'CMD_EXPORT_PRIVATE_KEY';
+      case cmdImportPrivateKey:
+        return 'CMD_IMPORT_PRIVATE_KEY';
       case cmdSendRawPacket:
         return 'CMD_SEND_RAW_PACKET';
       default:

@@ -9,60 +9,6 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get backupRestore_title => 'Резервное копирование';
-
-  @override
-  String get backupRestore_subtitle => 'Сохранение и восстановление данных приложения и настроек ноды';
-
-  @override
-  String get backupRestore_import => 'Импорт';
-
-  @override
-  String get backupRestore_selectImportFile => 'Импорт файла';
-
-  @override
-  String get backupRestore_password => 'Пароль (необязательный)';
-
-  @override
-  String get backupRestore_items => 'Данные для копирования и восстановления';
-
-  @override
-  String get backupRestore_locationSettings => 'Настройки местоположения';
-
-  @override
-  String get backupRestore_privateKey => 'Закрытый ключ ноды';
-
-  @override
-  String get backupRestore_ipfsKey => 'Ключ API IPFS';
-
-  @override
-  String get backupRestore_stadiaMapKey => 'Ключ API Stadia Maps';
-
-  @override
-  String get backupRestore_extraKeys => 'Дополнительные закрытые ключи';
-
-  @override
-  String get backupRestore_passwordRequired => 'Чтобы включить выбранные ключи, задайте пароль резервной копии.';
-
-  @override
-  String get backupRestore_review => 'Просмотреть и восстановить';
-
-  @override
-  String get backupRestore_historySeparate => 'Сохранить историю сообщений отдельным файлом.';
-
-  @override
-  String get backupRestore_invalidSections => 'Некоторые разделы не удалось прочитать.';
-
-  @override
-  String get backupRestore_localApplied => 'Настройки восстановлены.';
-
-  @override
-  String get backupRestore_keysIntro => 'Добавить ключи из файла в текущий профиль. Имеющиеся ключи с тем же открытым ключом сохранятся.';
-
-  @override
-  String get backupRestore_nodeKeyExportOnly => 'Здесь доступен экспорт ключа ноды.';
-
-  @override
   String get appTitle => 'MeshCore Open (Advanced mod)';
 
   @override
@@ -253,6 +199,107 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backupExport_shared =>
       'Резервная копия передана в системное меню сохранения и отправки.';
+
+  @override
+  String get backupRestore_title => 'Резервное копирование';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Сохранение и восстановление данных приложения и настроек ноды';
+
+  @override
+  String get backupRestore_import => 'Импорт';
+
+  @override
+  String get backupRestore_selectImportFile => 'Импорт файла';
+
+  @override
+  String get backupRestore_password => 'Пароль (необязательный)';
+
+  @override
+  String get backupRestore_items => 'Данные для копирования и восстановления';
+
+  @override
+  String get backupRestore_locationSettings => 'Настройки местоположения';
+
+  @override
+  String get backupRestore_autoAddMaxHops =>
+      'Максимум хопов для добавления контактов';
+
+  @override
+  String get backupRestore_privateKey => 'Закрытый ключ ноды';
+
+  @override
+  String get backupRestore_ipfsKey => 'Ключ API IPFS';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Ключ API Stadia Maps';
+
+  @override
+  String get backupRestore_extraKeys => 'Дополнительные закрытые ключи';
+
+  @override
+  String get backupRestore_passwordRequired =>
+      'Чтобы включить выбранные ключи, задайте пароль резервной копии.';
+
+  @override
+  String get backupRestore_review => 'Просмотреть и восстановить';
+
+  @override
+  String get backupRestore_historySeparate =>
+      'Сохранить историю сообщений отдельным файлом.';
+
+  @override
+  String get backupRestore_invalidSections =>
+      'Некоторые разделы не удалось прочитать.';
+
+  @override
+  String get backupRestore_localApplied => 'Настройки восстановлены.';
+
+  @override
+  String get backupRestore_keysIntro =>
+      'Добавить ключи из файла в текущий профиль. Имеющиеся ключи с тем же открытым ключом сохранятся.';
+
+  @override
+  String get backupIdentity_confirmTitle => 'Заменить идентичность ноды?';
+
+  @override
+  String backupIdentity_confirmBody(String node) {
+    return 'Заменить основной закрытый ключ ноды «$node» ключом из резервной копии? Изменение сохраняется на ноде. Приложение переподключится и загрузит данные новой идентичности.';
+  }
+
+  @override
+  String get backupIdentity_currentKey => 'Текущий открытый ключ';
+
+  @override
+  String get backupIdentity_backupKey => 'Открытый ключ из копии';
+
+  @override
+  String get backupIdentity_completed =>
+      'Идентичность ноды проверена. Новый ключ установлен.';
+
+  @override
+  String get backupIdentity_notReady =>
+      'Дождитесь синхронизации и завершения отправок, затем откройте подтверждение заново.';
+
+  @override
+  String get backupIdentity_unsupported =>
+      'В этой прошивке импорт закрытого ключа отключён.';
+
+  @override
+  String get backupIdentity_rejected => 'Нода отклонила замену идентичности.';
+
+  @override
+  String get backupIdentity_unconfirmed =>
+      'Результат записи ключа не подтверждён. Переподключитесь и проверьте открытый ключ ноды перед повторной попыткой.';
+
+  @override
+  String get backupIdentity_reconnect =>
+      'Нода подтвердила запись ключа. Переподключитесь для проверки новой идентичности.';
+
+  @override
+  String get backupRestore_nodeKeyExportOnly =>
+      'Здесь доступен экспорт ключа ноды.';
 
   @override
   String get backupExport_failed => 'Не удалось сохранить резервную копию.';

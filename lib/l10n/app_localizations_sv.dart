@@ -200,6 +200,107 @@ class AppLocalizationsSv extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
+  String get backupRestore_title => 'Backup & Restore';
+
+  @override
+  String get backupRestore_subtitle =>
+      'Save and restore app data and radio settings';
+
+  @override
+  String get backupRestore_import => 'Import';
+
+  @override
+  String get backupRestore_selectImportFile => 'Import file';
+
+  @override
+  String get backupRestore_password => 'Password (optional)';
+
+  @override
+  String get backupRestore_items => 'Backup and restore items';
+
+  @override
+  String get backupRestore_locationSettings => 'Location settings';
+
+  @override
+  String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
+
+  @override
+  String get backupRestore_privateKey => 'Node private key';
+
+  @override
+  String get backupRestore_ipfsKey => 'IPFS API key';
+
+  @override
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+
+  @override
+  String get backupRestore_extraKeys => 'Additional private keys';
+
+  @override
+  String get backupRestore_passwordRequired =>
+      'Set a backup password to include the selected keys.';
+
+  @override
+  String get backupRestore_review => 'Review and restore';
+
+  @override
+  String get backupRestore_historySeparate =>
+      'Export message history to a separate file.';
+
+  @override
+  String get backupRestore_invalidSections =>
+      'Some sections could not be read.';
+
+  @override
+  String get backupRestore_localApplied => 'Settings restored.';
+
+  @override
+  String get backupRestore_keysIntro =>
+      'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
+
+  @override
+  String get backupIdentity_confirmTitle => 'Replace node identity?';
+
+  @override
+  String backupIdentity_confirmBody(String node) {
+    return 'Replace the main private key of node “$node” with the key from this backup? The change is saved on the node. The app will reconnect and load data for the new identity.';
+  }
+
+  @override
+  String get backupIdentity_currentKey => 'Current public key';
+
+  @override
+  String get backupIdentity_backupKey => 'Public key from the backup';
+
+  @override
+  String get backupIdentity_completed =>
+      'Node identity verified. The new key is active.';
+
+  @override
+  String get backupIdentity_notReady =>
+      'Wait for synchronization and message sending to finish, then reopen the confirmation.';
+
+  @override
+  String get backupIdentity_unsupported =>
+      'This firmware has private-key import disabled.';
+
+  @override
+  String get backupIdentity_rejected =>
+      'The node rejected the identity replacement.';
+
+  @override
+  String get backupIdentity_unconfirmed =>
+      'The result of the key write could not be confirmed. Reconnect and check the node public key before trying again.';
+
+  @override
+  String get backupIdentity_reconnect =>
+      'The node confirmed the key write. Reconnect to verify the new identity.';
+
+  @override
+  String get backupRestore_nodeKeyExportOnly =>
+      'You can export the node key here.';
+
+  @override
   String get backupExport_failed => 'Could not save the backup.';
 
   @override

@@ -3259,13 +3259,48 @@ transaction, with indexed pages and the same channel binding rules.
 It emits only v1 message history sections and checks the 32 MiB
 restore limit before handing the file to the OS.
 
+The Settings export group opens one `BackupScreen` for import and export.
+It uses expandable groups and the existing v1 envelope. Combined export
+stores shared portable settings in upstream `appSettings` and fork settings
+in `mcoaAppSettings`, with existing lists, profiles, filters and training.
+Import decrypts once, validates sections independently, and passes typed
+plans to the existing preview and confirmation screens. Portable settings
+merge through `AppSettingsService`. Device paths, connection bindings and
+model files belong to the destination installation. Optional API credentials
+and private keys require encrypted output. The `mcoaAdditionalIdentities`
+extension contains names and validated key pairs. Import unlocks the current
+vault, merges by full public key in one compare-and-set, and encrypts under
+the destination vault password. The radio's main private key is restored
+through an explicit identity-replacement confirmation showing both public
+keys. `BackupNodeIdentity` validates the expanded scalar and derives the
+public key, checking every declared key in v1 or official input. Restore is
+bound to the preview's node session and waits for idle outgoing work. The
+`CMD_IMPORT_PRIVATE_KEY` (24) write is serialized with private-key exports.
+Other physical writes are blocked during the command. Its payload is removed
+before eager or deferred debug logging. OK/ERR/disabled replies release the
+correct pending command. On an uncertain outcome the app reconnects and
+verifies SELF_INFO without reissuing the import. A confirmed identity change
+uses the ordinary fresh handshake and per-key store/cache binding. Failure
+to verify keeps the result explicit and disconnects an unverified session.
+History retains its separate export transaction and file. Inline upstream
+history remains importable. Location preferences carry GPS variables,
+contact auto-add settings and the app's zero-hop advert option in upstream
+`locationSettings`. Every device command checks the preview's destination
+session and current settings at dispatch, waits for ACK, then adopts the
+confirmed state. Auto-add export requires a response in the current session.
+Contact summary refreshes and the contact/discovery save queues are observed
+through `PersistenceBackgroundWork` until their actual Futures finish.
+A sync END or session reset does not complete those writes. Backup restore
+tests drain these persistence leases before closing the SQLite fixture;
+the regression holds a real contact write across a handshake reset.
+
 Portable display settings can be backed up separately from the scanner
 or included with the node lists. The v1 `mcoaDisplaySettings` section
 holds an allowlist of language, built-in theme mode, units, scaling and
-message display preferences. The importer accepts those fields from the
-upstream `appSettings` section too. MCOa uses its own section on export
-because upstream would otherwise replace the full settings map with
-this partial one. Restore checks the changed fields against the
+message display preferences and model download offers. The importer accepts
+those fields from upstream `appSettings` too. Legacy display-only export uses
+its own section so upstream cannot mistake it for the complete app map.
+The unified export includes both the shared map and this extension. Restore checks the changed fields against the
 preview and saves through `AppSettingsService` to the active profile.
 The settings backup may carry catalog IDs for translation and AEIC models.
 They are hints for the restore preview. Only an explicit confirmation starts
@@ -4184,7 +4219,7 @@ A **transport restart** (`_restartActiveTransport`, handed to the optional modul
 - **Send**: `MeshCoreConnector.sendFrame(Uint8List data, {String? channelSendQueueId, bool expectsGenericAck, bool waitForGenericAck})`
 - **Receive**: `Stream<Uint8List> get receivedFrames`
 - **Protocol constants** (`meshcore_protocol.dart`): `maxFrameSize = 176`, `maxTextPayloadBytes = 160`, `maxChannelDataLength = 165`, `appProtocolVersion = 4`. Command codes are top-level `cmd*` consts (app→device, 1…65), responses `respCode*` (with v3 variants `…RecvV3`), async pushes `pushCode*` (`0x80`…`0x90`), mesh-layer `payloadType*`. Frames are built/parsed with `BufferWriter` / `BufferReader` and `build*Frame` / `parse*` helpers.
-- **Reply pairing**: `PendingCommandReplies` (`connector/pending_command_replies.dart`, from upstream) enrols every command whose reply is known in `_sendFrameDirect`, before the write: `replyCodeForCommand` names OK, SENT or the specific response, a GET_CONTACT_BY_KEY being matched by key. `_handleCompanionFrame` hands every frame of the node to `completeReply` ahead of the switch (a frame another client wrote through us is skipped), `_handleOk` takes the oldest entry waiting for OK and `_handleErrorFrame` the oldest of any kind, and entries older than ten seconds are pruned before either, so a reply that never came cannot take a later one. `waitForGenericAck` and `_sendFrameAndWaitForCommandAck` wait up to five seconds for the command's own reply and throw its ERR as a `CommandFailedException` carrying the firmware's error code; before, a waiting send took the first OK or ERR of any command. The fork's own commands are in the table (the three `CMD_SIGN_*`, the default flood scope pair, `CMD_SEND_RAW_PACKET`), so that a signing session's OK cannot complete a channel send; the signing session still reads its replies from `receivedFrames` itself. `CMD_EXPORT_PRIVATE_KEY` stays out on purpose: a node built without the export answers `RESP_CODE_DISABLED`, which no entry pairs, and the entry left behind would take the next ERR. Frames the settings-sections bridge writes straight to the transport are not enrolled.
+- **Reply pairing**: `PendingCommandReplies` (`connector/pending_command_replies.dart`, from upstream) enrols every command whose reply is known in `_sendFrameDirect`, before the write: `replyCodeForCommand` names OK, SENT or the specific response, a GET_CONTACT_BY_KEY being matched by key. `_handleCompanionFrame` hands every frame of the node to `completeReply` ahead of the switch (a frame another client wrote through us is skipped), `_handleOk` takes the oldest entry waiting for OK and `_handleErrorFrame` the oldest of any kind, and entries older than ten seconds are pruned before either, so a reply that never came cannot take a later one. `waitForGenericAck` and `_sendFrameAndWaitForCommandAck` wait up to five seconds for the command's own reply and throw its ERR as a `CommandFailedException` carrying the firmware's error code; before, a waiting send took the first OK or ERR of any command. The fork's own commands are in the table (the three `CMD_SIGN_*`, the default flood scope pair, `CMD_SEND_RAW_PACKET`), so that a signing session's OK cannot complete a channel send; the signing session still reads its replies from `receivedFrames` itself. `CMD_IMPORT_PRIVATE_KEY` expects OK, ERR, or DISABLED and is serialized with key exports so a DISABLED reply can release its import entry. `CMD_EXPORT_PRIVATE_KEY` stays out on purpose: a node built without the export answers `RESP_CODE_DISABLED`, which no entry pairs, and the entry left behind would take the next ERR. Frames the settings-sections bridge writes straight to the transport are not enrolled.
 
 ### BLE — Nordic UART Service (NUS)
 - **Service UUID**: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`

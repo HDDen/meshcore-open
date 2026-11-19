@@ -69,6 +69,20 @@ void main() {
     expect(entry.description, 'RX RESP_CODE_BATT_AND_STORAGE • 4200mV • snapshot');
   });
 
+  test('imported private key is removed before eager or deferred logging', () {
+    for (final deferred in [false, true]) {
+      final log = _log(deferred: deferred);
+      final input = Uint8List.fromList([cmdImportPrivateKey, ...List.filled(64, 0xa5)]);
+      log.logFrame(input, outgoing: true);
+      final entry = log.entries.single;
+      expect(entry.payload, [cmdImportPrivateKey]);
+      expect(entry.description, 'TX CMD_IMPORT_PRIVATE_KEY • payload withheld');
+      expect(entry.hexPreview, '18');
+      expect(log.rawLogRxEntries, isEmpty);
+      expect(input.skip(1), everyElement(0xa5));
+    }
+  });
+
   test('private response is sanitized before any deferred formatting', () {
     final log = _log(deferred: true);
     // Только искусственные одинаковые байты, не реальный ключ.

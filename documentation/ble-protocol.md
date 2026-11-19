@@ -106,6 +106,8 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 19 | CMD_REBOOT | Reboot device |
 | 20 | CMD_GET_BATT_AND_STORAGE | Query battery and storage |
 | 22 | CMD_DEVICE_QUERY | Query device info |
+| 23 | CMD_EXPORT_PRIVATE_KEY | Export the 64-byte expanded node identity when enabled in firmware |
+| 24 | CMD_IMPORT_PRIVATE_KEY | Replace the persistent node identity using a 64-byte expanded private key, when enabled in firmware |
 | 26 | CMD_SEND_LOGIN | Login to repeater/room |
 | 27 | CMD_SEND_STATUS_REQ | Request repeater status |
 | 30 | CMD_GET_CONTACT_BY_KEY | Get contact by public key |
@@ -128,6 +130,16 @@ On unexpected disconnection, auto-reconnect with exponential backoff:
 | 63 | CMD_SET_DEFAULT_FLOOD_SCOPE | Set the node's default flood scope with `[63, name31, key16]`, or clear it with `[63]` |
 | 64 | CMD_GET_DEFAULT_FLOOD_SCOPE | Query the node's default flood scope |
 | 66 | CMD_RUN_CLI_COMMAND | Локальный CLI подключённой companion-ноды, MeshCore 1.18+, firmware code 14+ |
+
+### Восстановление основного закрытого ключа
+
+`CMD_IMPORT_PRIVATE_KEY` имеет формат `[24][expanded_private_key x64]`.
+Это развёрнутый закрытый ключ MeshCore. Прошивка проверяет его, сохраняет
+идентичность и пересчитывает секреты контактов. Ответ — `RESP_CODE_OK`,
+`RESP_CODE_ERR` или `RESP_CODE_DISABLED`, если импорт выключен при сборке.
+MCOa запрашивает отдельное подтверждение замены, сопоставляет открытые ключи,
+скрывает тело команды из журнала и проверяет `SELF_INFO` после переподключения.
+Потерянный ACK приводит к проверке состояния ноды без повторной записи ключа.
 
 ### APP_START и периодический GPS-опрос
 

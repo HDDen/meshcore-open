@@ -11,6 +11,8 @@ import 'package:meshcore_open/helpers/backup_channel_settings.dart';
 import 'package:meshcore_open/helpers/backup_contact_restore.dart';
 import 'package:meshcore_open/helpers/backup_contact_settings.dart';
 import 'package:meshcore_open/helpers/backup_node_profile.dart';
+import 'package:meshcore_open/helpers/backup_node_identity.dart';
+import 'package:meshcore_open/helpers/backup_location_preferences.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
@@ -20,6 +22,7 @@ import 'package:meshcore_open/models/contact_group.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/review_mode/review_frames.dart';
 import 'package:meshcore_open/services/backup_file_codec.dart';
+import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
@@ -74,6 +77,48 @@ class _NoPreferencesDirectory extends PathProviderPlatform {
   }
 }
 
+class _ContactWriteGate {
+  final started = Completer<void>();
+  final release = Completer<void>();
+}
+
+class _HeldContactDatabase extends MessageHistoryDatabase {
+  _HeldContactDatabase() : super.withExecutor(NativeDatabase.memory());
+
+  _ContactWriteGate? _nextWrite;
+  final _held = <_ContactWriteGate>[];
+
+  _ContactWriteGate holdNextContactWrite() {
+    final gate = _ContactWriteGate();
+    _nextWrite = gate;
+    _held.add(gate);
+    return gate;
+  }
+
+  void releaseHeldWrites() {
+    for (final gate in _held) {
+      if (!gate.release.isCompleted) gate.release.complete();
+    }
+  }
+
+  @override
+  Future<void> writeNodeContacts({
+    required String nodeKey,
+    required Map<String, String> upserts,
+    required List<String> deleteKeys,
+  }) async {
+    final gate = _nextWrite;
+    if (gate != null) {
+      _nextWrite = null;
+      gate.started.complete();
+      await gate.release.future;
+    }
+    await super.writeNodeContacts(
+      nodeKey: nodeKey, upserts: upserts, deleteKeys: deleteKeys,
+    );
+  }
+}
+
 class _Radio {
   _Radio() {
     connector.setReconnectContextForTest(
@@ -84,6 +129,11 @@ class _Radio {
   }
 
   final connector = MeshCoreConnector();
+  Uint8List radioPublicKey = _publicKey;
+  Uint8List? identityAfterWrite;
+  int identityReply = respCodeOk;
+  bool loseIdentityReply = false;
+  final identityWrites = <List<int>>[];
   final slots = {
     0: _channel(0, 'Unrelated', 1),
     2: _channel(2, 'Current', 2),
@@ -142,7 +192,8 @@ class _Radio {
       final work = connector.backgroundWorkSnapshot;
       if (!done.isCompleted &&
           work.countFor(BackgroundWorkKind.channelSync) == 0 &&
-          work.countFor(BackgroundWorkKind.messageReplay) == 0) {
+          work.countFor(BackgroundWorkKind.messageReplay) == 0 &&
+          work.countFor(BackgroundWorkKind.persistence) == 0) {
         done.complete();
       }
     }
@@ -153,7 +204,7 @@ class _Radio {
       await done.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () => throw TimeoutException(
-          'Channel work did not drain: '
+          'Sync and persistence work did not drain: '
           '${connector.backgroundWorkSnapshot.counts}',
         ),
       );
@@ -166,6 +217,7 @@ class _Radio {
     await connector.getContacts(preserveExisting: true);
     expect(connector.hasLoadedContacts, isTrue);
     expect(connector.isLoadingContacts, isFalse);
+    await waitForChannelWork();
   }
 
   void acknowledge(Channel channel) {
@@ -179,7 +231,7 @@ class _Radio {
         connector.handleFrameForTest([respCodeDeviceInfo, 8, 16, 4]);
       case cmdAppStart:
         connector.handleFrameForTest(ReviewFrames.selfInfo(
-          publicKey: _publicKey,
+          publicKey: radioPublicKey,
           name: 'Restore target',
           latitudeE6: 0,
           longitudeE6: 0,
@@ -240,11 +292,22 @@ class _Radio {
         ));
       case cmdSetAdvertName || cmdSetAdvertLatLon || cmdSetOtherParams ||
           cmdSetRadioParams || cmdSetRadioTxPower || cmdSetPathHashMode ||
-          cmdSetDefaultFloodScope:
+          cmdSetDefaultFloodScope || cmdSetCustomVar || cmdSetAutoAddConfig:
         profileWrites.add(List.of(frame));
         connector.handleFrameForTest(
           frame.first == rejectedProfileCommand ? ReviewFrames.err(6) : ReviewFrames.ok(),
         );
+      case cmdImportPrivateKey:
+        identityWrites.add(List.of(frame));
+        if (identityReply == respCodeDisabled) {
+          connector.handleFrameForTest([respCodeDisabled]);
+        } else if (identityReply == respCodeErr) {
+          connector.handleFrameForTest(ReviewFrames.err(6));
+        } else {
+          if (identityAfterWrite case final key?) radioPublicKey = key;
+          if (loseIdentityReply) throw TimeoutException('Synthetic lost identity reply');
+          connector.handleFrameForTest(ReviewFrames.ok());
+        }
       case cmdSetChannel:
         final response = Uint8List.fromList(frame)..[0] = respCodeChannelInfo;
         final channel = Channel.fromFrame(response)!;
@@ -265,6 +328,7 @@ void main() {
   final storage = MessageHistoryStorage.instance;
   late PathProviderPlatform savedPaths;
   late _Radio radio;
+  late _HeldContactDatabase database;
 
   Future<List<Channel>> cachedChannels([String? node]) =>
       (ChannelStore()..setPublicKeyHex = node ?? _node).loadChannels();
@@ -276,11 +340,8 @@ void main() {
     PrefsManager.reset();
     await PrefsManager.initialize();
     await storage.resetForTesting();
-    await storage.initializeAndMigrate(
-      databaseFactory: () => MessageHistoryDatabase.withExecutor(
-        NativeDatabase.memory(),
-      ),
-    );
+    database = _HeldContactDatabase();
+    await storage.initializeAndMigrate(databaseFactory: () => database);
     expect(storage.hasDatabase, isTrue);
     ChannelIdentities.instance.resetForTesting();
     await ChannelIdentities.instance.load();
@@ -289,10 +350,12 @@ void main() {
   });
 
   tearDown(() async {
+    database.releaseHeldWrites();
     radio.connector.resetConnectionHandshakeForTest();
     try {
-      // The sync result can arrive while deferred inbox replay still uses
-      // SQLite. Wait for those callbacks before closing the database.
+      // Receiving the final sync frame precedes inbox replay, summary
+      // refreshes and contact writes. Drain their actual Futures before
+      // closing SQLite, including work from an invalidated node session.
       await radio.waitForChannelWork();
     } finally {
       radio.connector.dispose();
@@ -308,6 +371,166 @@ void main() {
         PathProviderPlatform.instance = savedPaths;
       }
     }
+  });
+
+  Future<BackupNodeIdentity> identitySource() => BackupNodeIdentity.read(
+    '307c83864f2833cb427a2ef1c00a013cfdff2768d980c0a3a520f006904de94f'
+    '9b4f0afe280b746a778684e75442502057b7473a03f08f96f5a38e9287e01f8f', hexadecimal: true, publicKeys: const [],
+  );
+
+  void reconnectIdentityForTest() {
+    radio.connector.reconnectAfterIdentityRestoreForTest = () async {
+      radio.connector.resetConnectionHandshakeForTest();
+      await radio.start();
+      await radio.syncContacts();
+    };
+  }
+
+  test('identity restore sends one expanded key and rebinds after verified SELF_INFO', () async {
+    await radio.syncContacts();
+    final source = await identitySource();
+    final oldChannels = await cachedChannels();
+    radio.identityAfterWrite = source.identity.publicKey;
+    reconnectIdentityForTest();
+    final preview = radio.connector.previewBackupNodeIdentity(source)!;
+    final result = await radio.connector.restoreBackupNodeIdentity(preview);
+    expect(result, (written: true, status: BackupNodeIdentityStatus.completed));
+    expect(radio.identityWrites, [
+      buildImportPrivateKeyFrame(hex2Uint8List(source.identity.privateKeyHex)),
+    ]);
+    expect(radio.connector.selfPublicKeyHex, source.publicKey);
+    final current = radio.connector.previewBackupNodeIdentity(source)!;
+    expect(await radio.connector.restoreBackupNodeIdentity(current),
+        (written: false, status: BackupNodeIdentityStatus.completed));
+    expect(radio.identityWrites, hasLength(1));
+    expect((await cachedChannels(_node)).map((channel) => channel.name),
+        oldChannels.map((channel) => channel.name));
+  });
+
+  for (final disabled in [false, true]) {
+    test('rejected identity write keeps the original scope (disabled=$disabled)', () async {
+      await radio.syncContacts();
+      final source = await identitySource();
+      radio.identityReply = disabled ? respCodeDisabled : respCodeErr;
+      radio.identityAfterWrite = source.identity.publicKey;
+      var reconnects = 0;
+      radio.connector.reconnectAfterIdentityRestoreForTest = () async { reconnects++; };
+      final preview = radio.connector.previewBackupNodeIdentity(source)!;
+      final result = await radio.connector.restoreBackupNodeIdentity(preview);
+      expect(result, (written: false, status: disabled
+          ? BackupNodeIdentityStatus.unsupported : BackupNodeIdentityStatus.writeRejected));
+      expect(radio.connector.selfPublicKeyHex, _node);
+      expect(radio.identityWrites, hasLength(1));
+      expect(reconnects, 0);
+      // A disabled reply must not consume the next command's ACK.
+      await radio.connector.sendFrame(buildSetAdvertNameFrame('After rejection'),
+          waitForGenericAck: true);
+    });
+  }
+
+  test('contact persistence remains pending through a connection reset', () async {
+    final gate = database.holdNextContactWrite();
+    final request = radio.connector.getContacts(preserveExisting: true);
+    await gate.started.future.timeout(const Duration(seconds: 5));
+    await request;
+    expect(radio.connector.backgroundWorkSnapshot.countFor(
+      BackgroundWorkKind.persistence,
+    ), greaterThan(0));
+    var drained = false;
+    final completion = radio.waitForChannelWork().then((_) => drained = true);
+    await Future<void>.value();
+    expect(drained, isFalse);
+    radio.connector.resetConnectionHandshakeForTest();
+    expect(radio.connector.backgroundWorkSnapshot.countFor(
+      BackgroundWorkKind.persistence,
+    ), greaterThan(0));
+    gate.release.complete();
+    await completion.timeout(const Duration(seconds: 5));
+    expect(drained, isTrue);
+    expect(await storage.loadNodeContacts(_node.substring(0, 10)), hasLength(1));
+  });
+
+  test('identity confirmation from an older connection cannot write', () async {
+    await radio.syncContacts();
+    final source = await identitySource();
+    final preview = radio.connector.previewBackupNodeIdentity(source)!;
+    radio.connector.resetConnectionHandshakeForTest();
+    final result = await radio.connector.restoreBackupNodeIdentity(preview);
+    expect(result, (written: false, status: BackupNodeIdentityStatus.notReady));
+    expect(radio.identityWrites, isEmpty);
+  });
+
+  test('uncertain identity write verifies the device without repeating the import', () async {
+    await radio.syncContacts();
+    final source = await identitySource();
+    radio.identityAfterWrite = source.identity.publicKey;
+    radio.loseIdentityReply = true;
+    reconnectIdentityForTest();
+    final result = await radio.connector.restoreBackupNodeIdentity(
+      radio.connector.previewBackupNodeIdentity(source)!,
+    );
+    expect(result, (written: true, status: BackupNodeIdentityStatus.completed));
+    expect(radio.identityWrites, hasLength(1));
+    expect(radio.connector.selfPublicKeyHex, source.publicKey);
+  });
+
+  test('location restore merges auto-add flags after ACK and keeps unspecified flags', () async {
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    radio.connector.attachAppSettingsServiceForTest(settings);
+    await radio.connector.sendFrame(buildGetAutoAddFlagsFrame());
+    expect(radio.connector.canBackupAutoAddConfig, isTrue);
+    radio.profileWrites.clear();
+    final source = BackupLocationPreferences.read({
+      'contactSettings': {
+        'autoAddRepeater': true, 'evictDiscoveredContactsEnabled': true,
+      },
+    }, {'contactSettings'});
+    final preview = radio.connector.previewBackupLocationPreferences(source, settings.settings)!;
+    expect(await radio.connector.restoreBackupLocationPreferences(preview), (count: 1, completed: true));
+    expect(radio.profileWrites, [[cmdSetAutoAddConfig, autoAddRepeaterFlag]]);
+    expect(radio.connector.autoAddRepeaters, isTrue);
+    expect(radio.connector.autoAddUsers, isFalse);
+    expect(radio.connector.autoAddOverwriteOldest, isFalse);
+    expect(settings.settings.evictDiscoveredContactsEnabled, isTrue);
+  });
+
+  test('location restore rejects a stale preview and an unconfirmed auto-add write', () async {
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    radio.connector.attachAppSettingsServiceForTest(settings);
+    await radio.connector.sendFrame(buildGetAutoAddFlagsFrame());
+    radio.profileWrites.clear();
+    final source = BackupLocationPreferences.read({
+      'contactSettings': {'autoAddRepeater': true},
+    }, {'contactSettings'});
+    final stale = radio.connector.previewBackupLocationPreferences(source, settings.settings)!;
+    await settings.setEvictDiscoveredContactsEnabled(!settings.settings.evictDiscoveredContactsEnabled);
+    expect(await radio.connector.restoreBackupLocationPreferences(stale), (count: 0, completed: false));
+    expect(radio.profileWrites, isEmpty);
+    final fresh = radio.connector.previewBackupLocationPreferences(source, settings.settings)!;
+    radio.rejectedProfileCommand = cmdSetAutoAddConfig;
+    expect(await radio.connector.restoreBackupLocationPreferences(fresh), (count: 0, completed: false));
+    expect(radio.connector.autoAddRepeaters, isFalse);
+    expect(radio.profileWrites, [[cmdSetAutoAddConfig, autoAddRepeaterFlag]]);
+  });
+
+  test('GPS interval restore requires GPS support and persists confirmed settings', () async {
+    final settings = AppSettingsService();
+    addTearDown(settings.dispose);
+    radio.connector.attachAppSettingsServiceForTest(settings);
+    final source = BackupLocationPreferences.read({'gpsIntervalSeconds': 90}, {'location'});
+    expect(radio.connector.previewBackupLocationPreferences(source, settings.settings), isNull);
+    radio.connector.handleFrameForTest([
+      respCodeCustomVars, ...ascii.encode('gps:0,gps_interval:30'), 0,
+    ]);
+    final preview = radio.connector.previewBackupLocationPreferences(source, settings.settings)!;
+    radio.profileWrites.clear();
+    expect(await radio.connector.restoreBackupLocationPreferences(preview), (count: 1, completed: true));
+    expect(radio.profileWrites, [buildSetCustomVarFrame('gps_interval:90')]);
+    expect(radio.connector.currentCustomVars!['gps_interval'], '90');
+    expect(settings.settings.gpsIntervalSeconds, 90);
+    expect(jsonDecode(PrefsManager.instance.getString('app_settings')!)['gps_interval_seconds'], 90);
   });
 
   test('node profile applies selected writes on ACK and preserves contact flags', () async {

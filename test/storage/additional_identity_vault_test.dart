@@ -67,6 +67,35 @@ void main() {
     expect(await AdditionalIdentityVault.containsPublicKey(radioKey), isFalse);
   });
 
+  test('backup key import merges once, preserves local names and survives reopening', () async {
+    const firstKey =
+        '307c83864f2833cb427a2ef1c00a013cfdff2768d980c0a3a520f006904de94f'
+        '9b4f0afe280b746a778684e75442502057b7473a03f08f96f5a38e9287e01f8f';
+    final local = await AdditionalIdentityEntry.parse('Local name', firstKey);
+    final sameKey = await AdditionalIdentityEntry.parse('Backup name', firstKey);
+    MCKeyPair pair;
+    do {
+      pair = await generateKeyPair();
+    } while (pair.public.first == 0 || pair.public.first == 0xff);
+    final added = await AdditionalIdentityEntry.parse('Imported key', hex.encode(pair.private));
+    final vault = await AdditionalIdentityVault.open(
+      password: 'destination vault password', saved: null,
+    );
+    await vault.save(local);
+    expect(await vault.importMissing([sameKey, added, added]), 1);
+    expect(vault.entries.map((entry) => entry.name), ['Local name', 'Imported key']);
+    final saved = (await storage.readAdditionalIdentityVault())!;
+    expect(saved, isNot(contains(firstKey)));
+    expect(saved, isNot(contains(added.identity.privateKeyHex)));
+    expect(await vault.importMissing([sameKey, added]), 0);
+    expect(await storage.readAdditionalIdentityVault(), saved);
+    final reopened = await AdditionalIdentityVault.open(
+      password: 'destination vault password', saved: saved,
+    );
+    expect(reopened.entries.map((entry) => entry.name), ['Local name', 'Imported key']);
+    expect(reopened.entries.last.identity.privateKeyHex, added.identity.privateKeyHex);
+  });
+
   test('keys stay encrypted in SQLite and can be reopened and edited', () async {
     MCKeyPair pair;
     do {

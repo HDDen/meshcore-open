@@ -196,6 +196,7 @@ const int cmdReboot = 19;
 const int cmdGetBattAndStorage = 20;
 const int cmdDeviceQuery = 22;
 const int cmdExportPrivateKey = 23;
+const int cmdImportPrivateKey = 24;
 const int cmdSendLogin = 26;
 const int cmdSendStatusReq = 27;
 const int cmdGetContactByKey = 30;
@@ -1231,6 +1232,12 @@ Uint8List buildExportContactFrame(Uint8List pubKey) {
   writer.writeByte(cmdExportContact);
   writer.writeBytes(pubKey);
   return writer.toBytes();
+}
+
+/// Imports the firmware's 64-byte expanded private key.
+Uint8List buildImportPrivateKeyFrame(Uint8List key) {
+  if (key.length != 64) throw ArgumentError('Expected a 64-byte private key');
+  return Uint8List.fromList([cmdImportPrivateKey, ...key]);
 }
 
 // Build a import contact frame
