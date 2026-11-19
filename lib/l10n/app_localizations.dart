@@ -17758,6 +17758,12 @@ abstract class AppLocalizations {
   /// **'Could not complete the key action.'**
   String get extraKeys_actionError;
 
+  /// No description provided for @extraKeys_importNodeNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never for this node'**
+  String get extraKeys_importNodeNever;
+
   /// No description provided for @extraKeys_importNodePrompt.
   ///
   /// In en, this message translates to:

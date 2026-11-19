@@ -7,11 +7,16 @@ import '../services/adaptive_tx_power.dart';
 import '../services/additional_identity_vault.dart';
 import '../storage/prefs_manager.dart';
 
+enum _NodeIdentityImportChoice { cancel, never, save }
+
 /// The preference records only the decision, keyed by the full public key.
 abstract final class NodeIdentityImportPrompt {
+  static final _cancelledSessions = Expando<TxPowerSession>();
+
   static String _preferenceKey(String key) => 'node_identity_import_prompt_$key';
 
   static bool shouldOffer(MeshCoreConnector connector, TxPowerSession session) =>
+      _cancelledSessions[connector] != session &&
       connector.isSessionReady &&
       connector.hasCompletedSelfInfoHandshake &&
       !connector.isRestartingTransport &&
@@ -60,7 +65,7 @@ abstract final class NodeIdentityImportPrompt {
     }
     final name = connector.selfName!.trim();
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showDialog<_NodeIdentityImportChoice>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(name),
@@ -68,11 +73,15 @@ abstract final class NodeIdentityImportPrompt {
         content: Text(l10n.extraKeys_importNodePrompt),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(_NodeIdentityImportChoice.cancel),
             child: Text(l10n.common_cancel),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(_NodeIdentityImportChoice.never),
+            child: Text(l10n.extraKeys_importNodeNever),
+          ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(_NodeIdentityImportChoice.save),
             child: Text(l10n.common_ok),
           ),
         ],
@@ -81,8 +90,11 @@ abstract final class NodeIdentityImportPrompt {
     if (!context.mounted || !isCurrentSession()) return;
     final preference = _preferenceKey(session.nodeKey);
     try {
-      if (confirmed != true) {
-        await PrefsManager.instance.setBool(preference, true);
+      if (confirmed != _NodeIdentityImportChoice.save) {
+        _cancelledSessions[connector] = session;
+        if (confirmed == _NodeIdentityImportChoice.never) {
+          await PrefsManager.instance.setBool(preference, true);
+        }
         return;
       }
       final vault = await AdditionalIdentityScreen.unlockVault(

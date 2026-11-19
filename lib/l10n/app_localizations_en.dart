@@ -10543,6 +10543,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get extraKeys_actionError => 'Could not complete the key action.';
 
   @override
+  String get extraKeys_importNodeNever => 'Never for this node';
+
+  @override
   String get extraKeys_importNodePrompt =>
       'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
 

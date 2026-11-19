@@ -134,16 +134,54 @@ void main() {
     expect(node.exports, 0);
   });
 
-  testWidgets('declining remembers the node across reconnects without export', (
-    tester,
-  ) async {
-    final l10n = await showPrompt(tester);
-    await tester.tap(find.text(l10n.common_cancel));
-    await tester.pumpAndSettle();
+  for (final dismissal in ['cancel', 'barrier', 'back']) {
+    testWidgets('$dismissal skips import only for the current session', (tester) async {
+      final l10n = await showPrompt(tester);
+      final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
+      expect(dialog.actions!.map((button) =>
+          ((button as ButtonStyleButton).child as Text).data), [
+        l10n.common_cancel, l10n.extraKeys_importNodeNever, l10n.common_ok,
+      ]);
+      if (dismissal == 'cancel') {
+        await tester.tap(find.text(l10n.common_cancel));
+      } else if (dismissal == 'barrier') {
+        await tester.tapAt(const Offset(5, 5));
+      } else {
+        Navigator.of(tester.element(find.byType(AlertDialog))).pop();
+      }
+      await tester.pumpAndSettle();
+      expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isFalse);
+      expect(node.exports, 0);
+      node.revision++;
+      expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isTrue);
+      await showPrompt(tester);
+      await tester.tap(find.text(l10n.common_cancel));
+      await tester.pumpAndSettle();
+    });
+  }
 
+  testWidgets('never remembers the full public key across sessions and node names', (tester) async {
+    final l10n = await showPrompt(tester);
+    await tester.tap(find.text(l10n.extraKeys_importNodeNever));
+    await tester.pumpAndSettle();
     node.revision++;
     expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isFalse);
     expect(node.exports, 0);
+    final renamed = (await tester.runAsync(() => AdditionalIdentityEntry.parse(
+      'Renamed node', node.entry.identity.privateKeyHex,
+    )))!;
+    final sameKey = _Node(renamed);
+    addTearDown(sameKey.dispose);
+    expect(NodeIdentityImportPrompt.shouldOffer(sameKey, sameKey.txPowerSession), isFalse);
+
+    final different = (await tester.runAsync(() async {
+      final pair = await generateKeyPair();
+      return AdditionalIdentityEntry.parse(node.entry.name, hex.encode(pair.private));
+    }))!;
+    final otherKey = _Node(different);
+    addTearDown(otherKey.dispose);
+    expect(NodeIdentityImportPrompt.shouldOffer(otherKey, otherKey.txPowerSession), isTrue);
+    expect(otherKey.exports, 0);
   });
 
   testWidgets('cancelling vault creation after consent skips export', (
