@@ -265,23 +265,37 @@ void main() {
       sections.enabled.complete();
       await tester.pumpAndSettle();
       expect(opacity(master).opacity, 1);
-      expect(ink(tcp).onTap, isNull);
-      await tester.tap(tile(ble));
+      expect(ink(tcp).onTap, isNotNull);
+      expect(ink(ble).onTap, isNull);
+      await tester.tap(tile(tcp));
       await tester.pumpAndSettle();
       expect(sections.writes.last, ('tcp', true));
+      expect(sections.companionProxyTcpEnabled, isTrue);
+      expect(sections.companionProxyBleEnabled, isFalse);
+      await tester.tap(tile(tcp));
+      await tester.pumpAndSettle();
+      expect(sections.writes.last, ('tcp', false));
 
       sections.setLicense(proxy: true, ble: true);
       await tester.pumpAndSettle();
-      await tester.tap(tile(tcp));
+      await tester.tap(tile(ble));
       await tester.pumpAndSettle();
       expect(sections.writes.last, ('ble', true));
+      expect(sections.companionProxyTcpEnabled, isFalse);
+      expect(sections.companionProxyBleEnabled, isTrue);
+      await tester.tap(tile(ble));
+      await tester.pumpAndSettle();
+      expect(sections.writes.last, ('ble', false));
 
       sections.setLicense(proxy: false, ble: false);
       await tester.pumpAndSettle();
       for (final action in [master, tcp, ble]) {
         expect(ink(action).onTap, isNull);
       }
-      expect(sections.writes, hasLength(3));
+      expect(sections.writes, [
+        ('companion', true), ('tcp', true), ('tcp', false),
+        ('ble', true), ('ble', false),
+      ]);
     } finally {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();

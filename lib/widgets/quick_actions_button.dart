@@ -108,12 +108,11 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
       QuickAction.floodAdvert || QuickAction.zeroHopAdvert || QuickAction.discover =>
         _online,
       QuickAction.companionProxy => proxyAllowed,
-      // The labels describe the proxy side. Each setting names its transport.
       QuickAction.tcpProxy => proxyAllowed &&
-          sections?.allowsCompanionProxyBle == true &&
+          sections?.allowsCompanionProxyTcp == true &&
           sections?.companionProxyEnabled == true,
       QuickAction.bleProxy => proxyAllowed &&
-          sections?.allowsCompanionProxyTcp == true &&
+          sections?.allowsCompanionProxyBle == true &&
           sections?.companionProxyEnabled == true,
       QuickAction.manageKeys => connector.additionalIdentityInbox != null,
       QuickAction.channelMessage1 || QuickAction.channelMessage2 =>
@@ -125,8 +124,8 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
     QuickAction.adaptiveTxPower => widget.service.settings.adaptiveTxPower.enabled,
     QuickAction.channelRetries => widget.service.settings.channelMinHopsEnabled,
     QuickAction.companionProxy => widget.sections?.companionProxyEnabled == true,
-    QuickAction.tcpProxy => widget.sections?.companionProxyBleEnabled == true,
-    QuickAction.bleProxy => widget.sections?.companionProxyTcpEnabled == true,
+    QuickAction.tcpProxy => widget.sections?.companionProxyTcpEnabled == true,
+    QuickAction.bleProxy => widget.sections?.companionProxyBleEnabled == true,
     _ => false,
   };
 
@@ -179,10 +178,10 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
             throw StateError('Could not change proxy state');
           }
         case QuickAction.tcpProxy:
-          await sections!.setCompanionProxyBleEnabled(enable);
+          await sections!.setCompanionProxyTcpEnabled(enable);
           if (_active(action) != enable) throw StateError('Proxy state unchanged');
         case QuickAction.bleProxy:
-          await sections!.setCompanionProxyTcpEnabled(enable);
+          await sections!.setCompanionProxyBleEnabled(enable);
           if (_active(action) != enable) throw StateError('Proxy state unchanged');
         case QuickAction.cliCommand1:
         case QuickAction.cliCommand2:
