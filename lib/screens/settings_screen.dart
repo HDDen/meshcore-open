@@ -159,29 +159,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      InkWell(
+                      _tappableTile(
+                        context,
+                        icon: Icons.backup_outlined,
+                        title: l10n.backupRestore_title,
+                        subtitle: l10n.backupRestore_subtitle,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const BackupScreen()),
                         ),
-                        child: _buildNavTileContent(
-                          context,
-                          icon: Icons.backup_outlined,
-                          title: l10n.backupRestore_title,
-                          subtitle: l10n.backupRestore_subtitle,
-                        ),
                       ),
                       const Divider(height: 1, indent: 16),
-                      InkWell(
+                      _tappableTile(
+                        context,
+                        icon: Icons.download_outlined,
+                        title: l10n.settings_export,
+                        subtitle: l10n.settings_exportSubtitle,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const ExportScreen()),
-                        ),
-                        child: _buildNavTileContent(
-                          context,
-                          icon: Icons.download_outlined,
-                          title: l10n.settings_export,
-                          subtitle: l10n.settings_exportSubtitle,
                         ),
                       ),
                     ],
