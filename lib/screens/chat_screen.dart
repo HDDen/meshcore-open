@@ -85,6 +85,7 @@ import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../storage/mco_image_gallery_store.dart';
 import '../widgets/contact_chat_title.dart';
+import '../widgets/routing_sheet.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -108,6 +109,10 @@ class ChatScreen extends StatefulWidget {
   final String? initialMessageId;
   final bool showRadioHistoryInitially;
 
+  /// Chats opened inside an identity group keep that sender while sharing history.
+  final String? fixedSenderKey;
+  final String? fixedSenderName;
+
   /// Empty for a room login made with the radio's key.
   final String? roomLoginSenderKey;
 
@@ -118,6 +123,8 @@ class ChatScreen extends StatefulWidget {
     this.initialMessageId,
     this.showRadioHistoryInitially = false,
     this.roomLoginSenderKey,
+    this.fixedSenderKey,
+    this.fixedSenderName,
   });
 
   @override
@@ -174,8 +181,11 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ContactHistoryCandidate> _historyCandidates = const [];
   bool _historyBannerDismissed = false;
 
-  String get _composerDraftKey =>
-      ComposerDraftCache.contactKey(widget.contact.publicKeyHex);
+  String get _composerDraftKey => widget.fixedSenderKey == null
+      ? ComposerDraftCache.contactKey(widget.contact.publicKeyHex)
+      : ComposerDraftCache.additionalIdentityKey(
+          widget.fixedSenderKey!, widget.contact.publicKeyHex,
+        );
 
   /// Message ids whose MCOimg variant the user flipped away from the default
   /// (the default is "show pack original" when the mod setting is enabled,
@@ -202,6 +212,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _additionalSenderKey = widget.fixedSenderKey;
+    _senderReady = widget.fixedSenderKey != null;
     _restoreComposerDraft();
     _textController.addListener(_onTextFieldTextChange);
     _textController.addListener(_updateMentionSuggestions);
@@ -356,12 +368,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final inbox = connector.additionalIdentityInbox;
     if (inbox == null || !_supportsAdditionalSender) return;
     try {
-      final loginSender = widget.roomLoginSenderKey;
+      final loginSender = widget.fixedSenderKey ?? widget.roomLoginSenderKey;
       final preferred = loginSender ??
           await inbox.preferredSender(widget.contact.publicKeyHex);
       if (!mounted) return;
       final key = preferred == '' ||
-              (widget.showRadioHistoryInitially && !_sharesContactHistory)
+              (widget.fixedSenderKey == null &&
+                  widget.showRadioHistoryInitially && !_sharesContactHistory)
           ? null
           : preferred;
       setState(() {
@@ -441,6 +454,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return key == null
         ? connector.selfName ?? context.l10n.channels_senderNameDefault
         : connector.additionalIdentityInbox?.entryFor(key)?.name ??
+              (widget.fixedSenderKey == key ? widget.fixedSenderName : null) ??
               context.l10n.extraKeys_locked;
   }
 
@@ -1198,7 +1212,14 @@ class _ChatScreenState extends State<ChatScreen> {
               senderName: showSender
                   ? _additionalSenderLabel(context, connector)
                   : null,
-              onPickSender: showSender && _senderReady && !_changingSender
+              onOpenRouting: widget.fixedSenderKey == null
+                  ? null
+                  : () => ContactRoutingSheet.show(
+                      context, contact: _resolveContact(connector),
+                      ensureContactBeforeWriting: true,
+                    ),
+              onPickSender: widget.fixedSenderKey == null &&
+                      showSender && _senderReady && !_changingSender
                   ? () => _pickAdditionalSender(connector)
                   : null,
             ),
@@ -1209,6 +1230,12 @@ class _ChatScreenState extends State<ChatScreen> {
             Consumer<MeshCoreConnector>(
               builder: (context, connector, _) => ContactChatRoutingButton(
                 contact: _resolveContact(connector),
+                onPressed: widget.fixedSenderKey == null
+                    ? null
+                    : () => ContactRoutingSheet.show(
+                        context, contact: _resolveContact(connector),
+                        ensureContactBeforeWriting: true,
+                      ),
               ),
             ),
             const QuickActionsHeaderButton(header: QuickActionsHeader.contact),
@@ -1218,6 +1245,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 return ContactChatMenu(
                   connector: connector,
                   contact: _resolveContact(connector),
+                  canEditTelemetry: widget.fixedSenderKey == null ||
+                      connector.getContactByPubKeyHex(widget.contact.publicKeyHex) != null,
                   onSearch: () => unawaited(_showMessageSearch()),
                   onClear: () => unawaited(_confirmClearChat(context, connector)),
                 );

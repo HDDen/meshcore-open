@@ -12,7 +12,8 @@ import 'package:meshcore_open/helpers/contact_share_helper.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/additional_identity_message.dart';
-import 'package:meshcore_open/models/app_settings.dart' show QuickAnswer;
+import 'package:meshcore_open/models/app_settings.dart'
+    show QuickAnswer, SharedMessageHistoryMode, SharedMessageHistoryModeValue;
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -35,6 +36,7 @@ import 'package:meshcore_open/storage/region_store.dart';
 import 'package:meshcore_open/widgets/byte_count_input.dart';
 import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
 import 'package:meshcore_open/widgets/contact_chat_composer.dart';
+import 'package:meshcore_open/widgets/contact_chat_title.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
 import 'package:meshcore_open/widgets/tx_power_boost_badge.dart';
@@ -272,6 +274,30 @@ class _ComposerNode extends _SenderPickerNode {
   @override
   Future<List<String>> loadContactQuickAnswerIds(String contactKeyHex) async =>
       ['reply'];
+}
+
+
+class _SharedIdentityNode extends _ComposerNode {
+  _SharedIdentityNode(this.inbox) : super(inbox);
+
+  final _SenderPickerInbox inbox;
+  String radioText = 'History of the radio node';
+
+  @override
+  List<Message> getMessages(Contact contact) => [
+    _directPost('radio', radioText, 1),
+  ];
+
+  @override
+  List<Message> getMessagesForAdditionalSender(Contact contact, String key) => [
+    ...getMessages(contact),
+    for (final row in inbox.rows)
+      if (row.senderKey == contact.publicKeyHex)
+        row.toChatMessage(
+          identityName: inbox.entryFor(row.recipientKey)?.name,
+          sharedHistory: true,
+        ),
+  ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 }
 
 class _IdentityRoutingNode extends _SenderPickerNode {
@@ -729,6 +755,85 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
   });
+
+
+  for (final locale in ['en', 'ru']) {
+    testWidgets('additional key follows contact Shared History and keeps its sender ($locale)', (tester) async {
+      final entry = (await tester.runAsync(() async {
+        const seed = '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60';
+        final expanded = Uint8List.fromList((await Sha512().hash(hex.decode(seed))).bytes);
+        expanded[0] &= 248;
+        expanded[31] = (expanded[31] & 63) | 64;
+        return AdditionalIdentityEntry.parse('Extra key', hex.encode(expanded));
+      }))!;
+      final key = entry.identity.publicKeyHex;
+      final inbox = _SenderPickerInbox()
+        ..unlock([entry])
+        ..rows = [_identityRow(key, 2, 'History of the selected key')];
+      final node = _SharedIdentityNode(inbox);
+      final settings = AppSettingsService();
+      final scale = ChatTextScaleService();
+      addTearDown(node.dispose);
+      addTearDown(settings.dispose);
+      addTearDown(scale.dispose);
+      final draftKey = ComposerDraftCache.additionalIdentityKey(key, _contact.publicKeyHex);
+      addTearDown(() => ComposerDraftCache.clear(draftKey));
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+          ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+        ],
+        child: MaterialApp(
+          locale: Locale(locale),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AdditionalIdentityChatScreen(
+            inbox: inbox, connector: node, peer: _contact,
+            recipientKey: key, recipientName: entry.name,
+            senderKey: _contact.publicKeyHex, senderName: _contact.name,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      final input = find.descendant(
+        of: find.byType(ContactChatComposer),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(input, 'Draft from extra key');
+      for (final mode in [
+        SharedMessageHistoryMode.contacts,
+        SharedMessageHistoryMode.all,
+        SharedMessageHistoryMode.channels,
+        SharedMessageHistoryMode.disabled,
+        SharedMessageHistoryMode.contacts,
+      ]) {
+        await settings.updateSettings(settings.settings.copyWith(sharedMessageHistoryMode: mode));
+        await tester.pumpAndSettle();
+        final shared = mode.includesContacts;
+        expect(find.byType(ChatScreen), shared ? findsOneWidget : findsNothing);
+        expect(find.text('History of the radio node', findRichText: true),
+            shared ? findsOneWidget : findsNothing);
+        expect(find.text('History of the selected key', findRichText: true), findsOneWidget);
+        expect(tester.widget<ContactChatTitle>(find.byType(ContactChatTitle)).senderName, entry.name);
+        expect(tester.widget<ContactChatTitle>(find.byType(ContactChatTitle)).onPickSender, isNull);
+        expect(tester.widget<TextField>(input).controller!.text, 'Draft from extra key');
+        expect(inbox.selections, isEmpty);
+      }
+      expect(node.routeIsCurrent?.call(), isTrue);
+      expect(node.activations, greaterThan(0));
+      node.radioText = 'New message for the radio node';
+      node.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.text(node.radioText, findRichText: true), findsOneWidget);
+      final l10n = AppLocalizations.of(tester.element(find.byType(AppBar)));
+      await tester.tap(find.byTooltip(l10n.chat_sendMessage));
+      await tester.pumpAndSettle();
+      expect(node.sent, [(key, _contact.publicKeyHex, 'Draft from extra key')]);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 
   testWidgets('additional identity uses the common composer and its wire byte limit', (
     tester,

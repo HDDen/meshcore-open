@@ -10,6 +10,7 @@ import '../helpers/composer_draft_cache.dart';
 import '../l10n/l10n.dart';
 import '../models/additional_identity_message.dart';
 import '../models/contact.dart';
+import '../models/app_settings.dart' show SharedMessageHistoryModeValue;
 import '../services/additional_identity_inbox.dart';
 import '../services/app_settings_service.dart';
 import '../services/chat_text_scale_service.dart';
@@ -28,9 +29,9 @@ import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/routing_sheet.dart';
 import '../widgets/sync_progress_overlay.dart';
-import 'chat_screen.dart' show ContactMessageBubble;
+import 'chat_screen.dart' show ChatScreen, ContactMessageBubble;
 
-class AdditionalIdentityChatScreen extends StatefulWidget {
+class AdditionalIdentityChatScreen extends StatelessWidget {
   const AdditionalIdentityChatScreen({
     super.key,
     required this.inbox,
@@ -51,11 +52,40 @@ class AdditionalIdentityChatScreen extends StatefulWidget {
   final String senderName;
 
   @override
-  State<AdditionalIdentityChatScreen> createState() =>
+  Widget build(BuildContext context) {
+    final shared = context.select<AppSettingsService, bool>(
+      (service) => service.settings.sharedMessageHistoryMode.includesContacts,
+    );
+    if (shared) {
+      return ChatScreen(
+        contact: connector.getContactByPubKeyHex(senderKey) ?? peer,
+        fixedSenderKey: recipientKey,
+        fixedSenderName: recipientName,
+      );
+    }
+    return _AdditionalIdentityThreadScreen(chat: this);
+  }
+}
+
+/// Isolated SQLite paging is only needed when contact Shared History is off.
+class _AdditionalIdentityThreadScreen extends StatefulWidget {
+  const _AdditionalIdentityThreadScreen({required this.chat});
+
+  final AdditionalIdentityChatScreen chat;
+  AdditionalIdentityInbox get inbox => chat.inbox;
+  MeshCoreConnector get connector => chat.connector;
+  Contact get peer => chat.peer;
+  String get recipientKey => chat.recipientKey;
+  String get recipientName => chat.recipientName;
+  String get senderKey => chat.senderKey;
+  String get senderName => chat.senderName;
+
+  @override
+  State<_AdditionalIdentityThreadScreen> createState() =>
       _AdditionalIdentityChatScreenState();
 }
 
-class _AdditionalIdentityChatScreenState extends State<AdditionalIdentityChatScreen> {
+class _AdditionalIdentityChatScreenState extends State<_AdditionalIdentityThreadScreen> {
   static const _pageSize = 100;
 
   final _route = ChatRouteActivity();

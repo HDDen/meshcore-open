@@ -14,6 +14,7 @@ import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
 import '../models/contact.dart';
+import '../models/additional_identity_message.dart';
 import '../services/app_settings_service.dart';
 import '../services/additional_identity_inbox.dart';
 import '../storage/channel_message_store.dart';
@@ -390,29 +391,40 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
       final next = (rows.last.receivedAtMs, rows.last.rowId);
       if (next == before) break;
       before = next;
-      final room = contact.type == advTypeRoom;
-      sources.add(_MessageSearchSourceDescriptor(
-        workerSource: StoredMessageSearchSource(
-          sourceId: 'identity|$recipient|${contact.publicKeyHex}|${next.$1}|${next.$2}',
-          type: room ? StoredMessageSearchType.room : StoredMessageSearchType.contact,
-          contactName: contact.name,
-          jsonString: jsonEncode([
-            for (final row in rows)
-              {
-                'messageId': 'identity:$recipient:${row.rowId}',
-                'timestamp': row.timestampSeconds * 1000,
-                'text': row.text,
-                'isOutgoing': row.isOutgoing,
-                if (row.roomAuthorHex case final author?)
-                  'fourByteRoomContactKey': base64Encode(hex.decode(author)),
-              },
-          ]),
-        ),
-        type: room ? MessageSearchEntryType.room : MessageSearchEntryType.contact,
-        contact: contact,
+      sources.add(_additionalSource(
+        contact, rows,
+        'identity|$recipient|${contact.publicKeyHex}|${next.$1}|${next.$2}',
       ));
     }
     return sources;
+  }
+
+  _MessageSearchSourceDescriptor _additionalSource(
+    Contact contact,
+    List<AdditionalIdentityMessage> rows,
+    String sourceId,
+  ) {
+    final room = contact.type == advTypeRoom;
+    return _MessageSearchSourceDescriptor(
+      workerSource: StoredMessageSearchSource(
+        sourceId: sourceId,
+        type: room ? StoredMessageSearchType.room : StoredMessageSearchType.contact,
+        contactName: contact.name,
+        jsonString: jsonEncode([
+          for (final row in rows)
+            {
+              'messageId': 'identity:${row.recipientKey}:${row.rowId}',
+              'timestamp': row.timestampSeconds * 1000,
+              'text': row.text,
+              'isOutgoing': row.isOutgoing,
+              if (row.roomAuthorHex case final author?)
+                'fourByteRoomContactKey': base64Encode(hex.decode(author)),
+            },
+        ]),
+      ),
+      type: room ? MessageSearchEntryType.room : MessageSearchEntryType.contact,
+      contact: contact,
+    );
   }
 
   List<String> _normalizedSearchQueries(String query, AppSettings settings) {
@@ -655,6 +667,19 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
     );
     if (contacts.isEmpty) return const [];
     final result = <_MessageSearchSourceDescriptor>[];
+
+    final inbox = connector.additionalIdentityInbox;
+    if (settings.sharedMessageHistoryMode.includesContacts && inbox != null && inbox.isUnlocked) {
+      for (final contact in contacts) {
+        final rows = await inbox.sharedMessages(contact.publicKeyHex);
+        if (!mounted || generation != _generation) return result;
+        if (rows.isNotEmpty) {
+          result.add(_additionalSource(
+            contact, rows, 'identity|shared|${contact.publicKeyHex}',
+          ));
+        }
+      }
+    }
 
     final currentStore = MessageStore()..setPublicKeyHex = currentScope;
     for (final contact in contacts) {
