@@ -9,6 +9,7 @@ import '../services/additional_identity_vault.dart';
 import '../storage/message_history_storage.dart';
 import '../widgets/additional_identity_key_dialog.dart';
 import '../widgets/mesh_ui.dart';
+import '../helpers/node_identity_import_preferences.dart';
 
 class AdditionalIdentityScreen extends StatefulWidget {
   const AdditionalIdentityScreen._(this.vault, this.rememberedUnlock, this.inbox);
@@ -59,7 +60,7 @@ class AdditionalIdentityScreen extends StatefulWidget {
 
 enum _KeyAction { edit, advertise, delete }
 
-enum _VaultAction { add, password, remember }
+enum _VaultAction { add, password, remember, clearBlockedNodes }
 
 class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
   bool _busy = false;
@@ -102,6 +103,14 @@ class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
     final remember = !_rememberedUnlock;
     await _vault.setUnlockRemembered(remember);
     _rememberedUnlock = remember;
+  });
+
+  Future<void> _clearBlockedNodes() => _run(() async {
+    await NodeIdentityImportPreferences.clearBlockedNodes();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.extraKeys_importNodeBlocksCleared)),
+    );
   });
 
   Future<void> _chooseAction(AdditionalIdentityEntry entry) async {
@@ -195,6 +204,7 @@ class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
               _VaultAction.add => _edit(),
               _VaultAction.password => _changePassword(),
               _VaultAction.remember => _toggleRememberedUnlock(),
+              _VaultAction.clearBlockedNodes => _clearBlockedNodes(),
             },
             itemBuilder: (_) => [
               PopupMenuItem(
@@ -204,6 +214,10 @@ class _AdditionalIdentityScreenState extends State<AdditionalIdentityScreen> {
               PopupMenuItem(
                 value: _VaultAction.password,
                 child: Text(l10n.extraKeys_setPassword),
+              ),
+              PopupMenuItem(
+                value: _VaultAction.clearBlockedNodes,
+                child: Text(l10n.extraKeys_clearImportNodeBlocks),
               ),
               CheckedPopupMenuItem(
                 value: _VaultAction.remember,

@@ -13,6 +13,7 @@ import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/utils/keys.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/widgets/node_identity_import_prompt.dart';
 
 import '../support/history_test_environment.dart';
@@ -123,6 +124,10 @@ void main() {
       );
       await vault.save(node.entry);
     });
+    await PrefsManager.instance.setBool(
+      'node_identity_import_prompt_${node.txPowerSession.nodeKey}', true,
+    );
+    await NodeIdentityImportPrompt.clearBlockedNodes();
     final screen = await pumpScreen(tester);
     expect(node.additionalIdentityInbox!.isUnlocked, isFalse);
     var checked = false;
@@ -206,6 +211,28 @@ void main() {
     addTearDown(otherKey.dispose);
     expect(NodeIdentityImportPrompt.shouldOffer(otherKey, otherKey.txPowerSession), isTrue);
     expect(otherKey.exports, 0);
+  });
+
+  testWidgets('clearing blocked nodes restores offers and preserves unrelated preferences', (tester) async {
+    final l10n = await showPrompt(tester);
+    await tester.tap(find.text(l10n.extraKeys_importNodeNever));
+    await tester.pumpAndSettle();
+    node.revision++;
+    expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isFalse);
+    final prefs = PrefsManager.instance;
+    final otherKey = '01' * 32;
+    await prefs.setBool('node_identity_import_prompt_$otherKey', true);
+    await prefs.setBool('node_identity_import_prompt_enabled', false);
+    await prefs.setString('unrelated_setting', 'preserved');
+    await NodeIdentityImportPrompt.clearBlockedNodes();
+    expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isTrue);
+    expect(prefs.containsKey('node_identity_import_prompt_${node.txPowerSession.nodeKey}'), isFalse);
+    expect(prefs.containsKey('node_identity_import_prompt_$otherKey'), isFalse);
+    expect(prefs.getBool('node_identity_import_prompt_enabled'), isFalse);
+    expect(prefs.getString('unrelated_setting'), 'preserved');
+    expect(node.exports, 0);
+    await NodeIdentityImportPrompt.clearBlockedNodes();
+    expect(NodeIdentityImportPrompt.shouldOffer(node, node.txPowerSession), isTrue);
   });
 
   testWidgets('cancelling vault creation after consent skips export', (

@@ -17770,6 +17770,18 @@ abstract class AppLocalizations {
   /// **'Ask to save the node’s private key on connection for later offline use'**
   String get extraKeys_importNodePromptEnabled;
 
+  /// No description provided for @extraKeys_clearImportNodeBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the list of nodes with blocked key requests'**
+  String get extraKeys_clearImportNodeBlocks;
+
+  /// No description provided for @extraKeys_importNodeBlocksCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'List cleared. Key requests will resume on future connections.'**
+  String get extraKeys_importNodeBlocksCleared;
+
   /// No description provided for @extraKeys_importNodePrompt.
   ///
   /// In en, this message translates to:

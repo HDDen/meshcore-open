@@ -10680,6 +10680,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Запрашивать закрытый ключ ноды при подключении для последующей оффлайн-работы';
 
   @override
+  String get extraKeys_clearImportNodeBlocks =>
+      'Очистить список нод, для которых запрещён запрос ключей';
+
+  @override
+  String get extraKeys_importNodeBlocksCleared =>
+      'Список очищен. Запросы ключей возобновятся при следующих подключениях.';
+
+  @override
   String get extraKeys_importNodePrompt =>
       'Сохранить закрытый ключ и имя узла в списке ключей, чтобы иметь возможность получать адресованные ему сообщения даже без физического подключения и отправлять от его имени личные сообщения?';
 

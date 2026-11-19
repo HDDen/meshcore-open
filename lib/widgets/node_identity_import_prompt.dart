@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/node_identity_import_preferences.dart';
 import '../l10n/l10n.dart';
 import '../screens/additional_identity_screen.dart';
 import '../services/adaptive_tx_power.dart';
@@ -14,6 +15,11 @@ abstract final class NodeIdentityImportPrompt {
   static final _cancelledSessions = Expando<TxPowerSession>();
 
   static String _preferenceKey(String key) => 'node_identity_import_prompt_$key';
+
+  /// Clear persisted per-node decisions, keeping vault entries and settings.
+  /// Imported identities still skip the offer through the vault's key index.
+  static Future<void> clearBlockedNodes() =>
+      NodeIdentityImportPreferences.clearBlockedNodes();
 
   static bool shouldOffer(MeshCoreConnector connector, TxPowerSession session) =>
       connector.nodeIdentityImportPromptEnabled &&

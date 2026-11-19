@@ -10646,6 +10646,14 @@ class AppLocalizationsSl extends AppLocalizations {
       'Ask to save the node’s private key on connection for later offline use';
 
   @override
+  String get extraKeys_clearImportNodeBlocks =>
+      'Clear the list of nodes with blocked key requests';
+
+  @override
+  String get extraKeys_importNodeBlocksCleared =>
+      'List cleared. Key requests will resume on future connections.';
+
+  @override
   String get extraKeys_importNodePrompt =>
       'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
 
