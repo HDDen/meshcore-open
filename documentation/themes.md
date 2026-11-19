@@ -27,6 +27,10 @@ indicators. Their timestamps are two days before you opened the editor.
 Switching tabs preserves your draft. Preview controls do not send messages or
 change read state, and the preview does not connect to a radio.
 
+Background, Accent, Chat background, Icons and Map markers start collapsed.
+Tap a section heading or its **+** to expand it; tap again (**minus**) to fold
+it. Sections open independently and folding preserves your draft.
+
 ## Creating and sharing a theme
 
 Tap **Create theme** and enter a name. Choose a background and accent from the

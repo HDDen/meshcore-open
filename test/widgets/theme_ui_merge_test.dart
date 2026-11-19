@@ -6,6 +6,9 @@ import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/chat_background.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
 import 'package:meshcore_open/screens/themes_screen.dart';
+import 'package:meshcore_open/screens/theme_editor_screen.dart';
+import 'package:meshcore_open/widgets/mcoa_theme_editor_section.dart';
+import 'package:meshcore_open/widgets/mcoa_theme_preview.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_background_image_store.dart';
 import 'package:meshcore_open/services/chat_background_service.dart';
@@ -111,6 +114,64 @@ void main() {
     expect(settings.settings.customThemes.single, settings.activeCustomTheme);
     expect(find.text('Field notes'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('theme sections start folded and preserve edits independently', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(app(const ThemeEditorScreen()));
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ThemeEditorScreen)),
+    );
+    final sections = tester.widgetList<McoaThemeEditorSection>(
+      find.byType(McoaThemeEditorSection),
+    );
+    expect(sections, hasLength(5));
+    expect(sections.every((section) => !section.expanded), isTrue);
+    expect(find.text(l10n.themes_backgroundHelp), findsNothing);
+    expect(find.text(l10n.themes_accentHelp), findsNothing);
+
+    final background = find.byKey(
+      const ValueKey('theme-section-background-toggle'),
+    );
+    final accent = find.byKey(const ValueKey('theme-section-accent-toggle'));
+    await tester.tap(background);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.themes_backgroundHelp), findsOneWidget);
+    expect(find.text(l10n.themes_accentHelp), findsNothing);
+    final hex = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == l10n.themes_hexColor,
+    );
+    await tester.enterText(hex, '#123456');
+    await tester.pump();
+    await tester.tap(find.descendant(
+      of: background,
+      matching: find.byIcon(Icons.remove),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.themes_backgroundHelp), findsNothing);
+    expect(
+      tester.widget<McoaThemePreview>(find.byType(McoaThemePreview))
+          .theme.background,
+      const Color(0xFF123456),
+    );
+    await tester.tap(accent);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.themes_accentHelp), findsOneWidget);
+    expect(find.text(l10n.themes_backgroundHelp), findsNothing);
+    await tester.tap(accent);
+    await tester.pumpAndSettle();
+    await tester.tap(background);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(hex).controller!.text, '#123456');
+    expect(settings.activeCustomTheme, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
 
   testWidgets('U19b: a new backdrop keeps the draft and input usable', (tester) async {

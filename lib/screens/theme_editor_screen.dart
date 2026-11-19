@@ -17,6 +17,7 @@ import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/chat_background.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/mcoa_theme_preview.dart';
+import '../widgets/mcoa_theme_editor_section.dart';
 import '../widgets/themed_icon.dart';
 
 /// Background choices offered as one-tap swatches: dark first, then light.
@@ -85,6 +86,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
   final _nameFocus = FocusNode();
   final _scrollController = ScrollController();
   final _previewOpenedAt = DateTime.now();
+  final _expandedSections = <String>{};
   late Color _background;
   late Color _accent;
   late Map<String, ThemeIconOverride> _icons;
@@ -245,6 +247,20 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
     }
   }
 
+  Widget _themeSection(String id, String title, Widget child) =>
+      McoaThemeEditorSection(
+        key: ValueKey('theme-section-$id'),
+        id: id,
+        title: title,
+        expanded: _expandedSections.contains(id),
+        onToggle: () => setState(() {
+          if (!_expandedSections.add(id)) {
+            _expandedSections.remove(id);
+          }
+        }),
+        child: child,
+      );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -301,88 +317,103 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
                   ],
                 ),
               ),
-            SectionHeader(l10n.themes_background),
-            _ColorPicker(
-              help: l10n.themes_backgroundHelp,
-              swatches: kThemeBackgroundSwatches,
-              value: _background,
-              onChanged: (c) => setState(() => _background = c),
+            _themeSection(
+              'background',
+              l10n.themes_background,
+              _ColorPicker(
+                help: l10n.themes_backgroundHelp,
+                swatches: kThemeBackgroundSwatches,
+                value: _background,
+                onChanged: (c) => setState(() => _background = c),
+              ),
             ),
-            SectionHeader(l10n.themes_accent),
-            _ColorPicker(
-              help: l10n.themes_accentHelp,
-              swatches: kThemeAccentSwatches,
-              value: _accent,
-              onChanged: (c) => setState(() => _accent = c),
+            _themeSection(
+              'accent',
+              l10n.themes_accent,
+              _ColorPicker(
+                help: l10n.themes_accentHelp,
+                swatches: kThemeAccentSwatches,
+                value: _accent,
+                onChanged: (c) => setState(() => _accent = c),
+              ),
             ),
-            SectionHeader(l10n.themes_chatBackground),
-            MeshCard(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.themes_chatBackgroundHelp,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
+            _themeSection(
+              'chat-background',
+              l10n.themes_chatBackground,
+              MeshCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.themes_chatBackgroundHelp,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  ChatBackgroundPicker(
-                    value: _chatBackground,
-                    onChanged: (value) =>
-                        setState(() => _chatBackground = value),
-                  ),
-                  if (_chatBackground != null)
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.themes_chatBackgroundEverywhere),
-                      subtitle: Text(l10n.themes_chatBackgroundEverywhereHelp),
-                      value: _chatBackgroundEverywhere,
+                    const SizedBox(height: 12),
+                    ChatBackgroundPicker(
+                      value: _chatBackground,
                       onChanged: (value) =>
-                          setState(() => _chatBackgroundEverywhere = value),
+                          setState(() => _chatBackground = value),
                     ),
-                ],
+                    if (_chatBackground != null)
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.themes_chatBackgroundEverywhere),
+                        subtitle: Text(l10n.themes_chatBackgroundEverywhereHelp),
+                        value: _chatBackgroundEverywhere,
+                        onChanged: (value) =>
+                            setState(() => _chatBackgroundEverywhere = value),
+                      ),
+                  ],
+                ),
               ),
             ),
-            SectionHeader(l10n.themes_icons),
-            MeshCard(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-                    child: Text(
-                      l10n.themes_iconsHelp,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
+            _themeSection(
+              'icons',
+              l10n.themes_icons,
+              MeshCard(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                      child: Text(
+                        l10n.themes_iconsHelp,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                  for (final slot in ThemeIconSlot.values)
-                    if (!slot.isMapMarker) _iconTile(slot),
-                ],
+                    for (final slot in ThemeIconSlot.values)
+                      if (!slot.isMapMarker) _iconTile(slot),
+                  ],
+                ),
               ),
             ),
-            SectionHeader(l10n.themes_mapMarkers),
-            MeshCard(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-                    child: Text(
-                      l10n.themes_mapMarkersHelp,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
+            _themeSection(
+              'map-markers',
+              l10n.themes_mapMarkers,
+              MeshCard(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                      child: Text(
+                        l10n.themes_mapMarkersHelp,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                  for (final slot in ThemeIconSlot.values)
-                    if (slot.isMapMarker) _iconTile(slot),
-                ],
+                    for (final slot in ThemeIconSlot.values)
+                      if (slot.isMapMarker) _iconTile(slot),
+                  ],
+                ),
               ),
             ),
             Padding(
