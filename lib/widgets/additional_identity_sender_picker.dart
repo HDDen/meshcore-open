@@ -7,7 +7,7 @@ import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../services/additional_identity_inbox.dart';
 
-/// An empty string explicitly selects the connected radio identity.
+/// An empty string clears the sender override and selects the connected radio.
 Future<String?> pickAdditionalIdentitySender(
   BuildContext context, {
   required AdditionalIdentityInbox inbox,
@@ -23,8 +23,13 @@ Future<String?> pickAdditionalIdentitySender(
       children: [
         ListTile(
           selected: selected == null,
-          title: Text(radioName ?? l10n.channels_senderNameDefault),
-          subtitle: radioKey.isEmpty ? null : Text(radioKey),
+          title: Text(l10n.common_default),
+          subtitle: radioName == null && radioKey.isEmpty
+              ? null
+              : Text([
+                  ?radioName,
+                  if (radioKey.isNotEmpty) radioKey,
+                ].join('\n')),
           onTap: () => Navigator.pop(dialogContext, ''),
         ),
         for (final entry in inbox.entries)

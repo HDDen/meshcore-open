@@ -395,7 +395,9 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       if (!mounted || selected == null) return;
       final key = selected.isEmpty ? null : selected;
-      if (key == _additionalSenderKey) return;
+      // A radio-history visit can temporarily show the default while a saved
+      // override still exists. Explicitly choosing Default must clear it too.
+      if (key != null && key == _additionalSenderKey) return;
       if (key != null &&
           !await ensureAdditionalIdentityRoomAccess(
             context, connector, key, _resolveContact(connector),

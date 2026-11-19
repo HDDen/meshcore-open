@@ -1685,7 +1685,10 @@ from pending to sent on companion OK and to delivered on a matching
 direct ACK or encrypted PATH ACK. Pending sends expire after 45 seconds
 and are failed when the radio session ends. No automatic retries are
 scheduled for these raw sends. Ordinary personal chats remember the selected
-sender by full peer key in profile SQLite. The radio is the default. An
+sender by full peer key in profile SQLite. The sender picker has an explicit
+Default option, showing the radio name and public key underneath; it deletes
+the saved override even when a notification temporarily selected radio history.
+The radio is the default. An
 unavailable saved key blocks sends until it is unlocked or replaced. With
 Shared History off, selecting an additional sender shows only its thread.
 Read counts and Android notification suppression follow the visible thread.

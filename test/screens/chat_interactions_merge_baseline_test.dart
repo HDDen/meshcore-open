@@ -1347,6 +1347,24 @@ void main() {
       expect(node.routeIsCurrent?.call(), isTrue);
       expect(inbox.selections, {_contact.publicKeyHex: key});
 
+      // Default clears the persisted override even when this visit already
+      // displays radio history (for example, after opening a notification).
+      await tester.tap(sender('Radio node'));
+      await tester.pumpAndSettle();
+      final defaultOption = find.widgetWithText(ListTile, 'Default');
+      expect(tester.widget<ListTile>(defaultOption).selected, isTrue);
+      await tester.tap(defaultOption);
+      await tester.pumpAndSettle();
+      expect(inbox.selections, isEmpty);
+      expect(sender('Radio node'), findsOneWidget);
+      expect(radioHistory, findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await openChat();
+      expect(sender('Radio node'), findsOneWidget);
+      expect(keyHistory, findsNothing);
+      expect(inbox.selections, isEmpty);
+      inbox.selections[_contact.publicKeyHex] = key;
+
       await tester.pumpWidget(const SizedBox.shrink());
       final activationsBeforeReopening = node.activations;
       await openChat();
@@ -1365,7 +1383,7 @@ void main() {
 
       await tester.tap(sender('Key unavailable'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ListTile, 'Radio node'));
+      await tester.tap(find.widgetWithText(ListTile, 'Default'));
       await tester.pumpAndSettle();
       // With every additional key locked, returning to the radio hides the picker.
       expect(sender('Radio node'), findsNothing);
