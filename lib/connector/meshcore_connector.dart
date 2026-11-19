@@ -2205,6 +2205,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   ? MessageStatus.sent
                   : message.status,
               sharedHistorySourceName: sourceName,
+              sharedHistorySourceKey: scope,
             ),
           ),
         );

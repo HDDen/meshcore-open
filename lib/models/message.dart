@@ -84,6 +84,9 @@ class Message {
   /// `ExactQuoteHelper.rendersAsQuote`.
   final bool replyIsExact;
   final String? sharedHistorySourceName;
+
+  /// In-memory origin identity, or the legacy node-history storage scope.
+  final String? sharedHistorySourceKey;
   final String? sourceLabel;
 
   // NEW: Retry logic fields
@@ -198,6 +201,7 @@ class Message {
     this.replyToText,
     this.replyIsExact = false,
     this.sharedHistorySourceName,
+    this.sharedHistorySourceKey,
     this.sourceLabel,
     this.retryCount = 0,
     this.sendAttemptLimit,
@@ -306,6 +310,7 @@ class Message {
     Object? replyToText = _unset,
     bool? replyIsExact,
     Object? sharedHistorySourceName = _unset,
+    Object? sharedHistorySourceKey = _unset,
     Object? sourceLabel = _unset,
     bool? isOutgoing,
     Map<String, List<String?>>? reactions,
@@ -383,6 +388,9 @@ class Message {
       sharedHistorySourceName: sharedHistorySourceName == _unset
           ? this.sharedHistorySourceName
           : sharedHistorySourceName as String?,
+      sharedHistorySourceKey: sharedHistorySourceKey == _unset
+          ? this.sharedHistorySourceKey
+          : sharedHistorySourceKey as String?,
       sourceLabel: sourceLabel == _unset
           ? this.sourceLabel
           : sourceLabel as String?,

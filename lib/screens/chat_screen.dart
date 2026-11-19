@@ -21,6 +21,7 @@ import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_share_helper.dart';
 import '../helpers/keyboard_focus_utils.dart';
 import '../helpers/composer_draft_cache.dart';
+import '../helpers/contact_history_identity.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
 import '../helpers/message_markup.dart';
@@ -1505,7 +1506,12 @@ class _ChatScreenState extends State<ChatScreen> {
                               service.settings.showMcoImagePackReplacements,
                         );
                     final bubble = ContactMessageBubble(
-                      message: message,
+                      message: contactHistoryForIdentity(
+                        message,
+                        selectedIdentityKey: _additionalSenderKey,
+                        radioKey: connector.selfPublicKeyHex,
+                        radioName: connector.selfName,
+                      ),
                       isHighlighted: _highlightedMessageId == message.messageId,
                       senderName: resolvedContact.type == advTypeRoom
                           ? "${contact.name} [$fourByteHex]"

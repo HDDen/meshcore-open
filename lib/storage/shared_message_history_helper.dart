@@ -235,7 +235,7 @@ class SharedMessageHistoryHelper {
       if (cancelled()) return const [];
       final sourceName = _sourceNameForScope(scope);
       for (final message in messages) {
-        result.add(_asHistoricalContactMessage(message, sourceName));
+        result.add(_asHistoricalContactMessage(message, sourceName, scope));
         if (++processedMessages % 200 == 0) {
           await Future<void>.delayed(Duration.zero);
           if (cancelled()) return const [];
@@ -388,12 +388,13 @@ class SharedMessageHistoryHelper {
     );
   }
 
-  Message _asHistoricalContactMessage(Message message, String sourceName) {
+  Message _asHistoricalContactMessage(Message message, String sourceName, String scope) {
     return message.copyWith(
       status: message.isOutgoing && message.status == MessageStatus.pending
           ? MessageStatus.sent
           : message.status,
       sharedHistorySourceName: sourceName,
+      sharedHistorySourceKey: scope,
     );
   }
 }

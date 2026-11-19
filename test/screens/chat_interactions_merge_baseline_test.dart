@@ -815,6 +815,8 @@ void main() {
         expect(find.text('History of the radio node', findRichText: true),
             shared ? findsOneWidget : findsNothing);
         expect(find.text('History of the selected key', findRichText: true), findsOneWidget);
+        expect(find.text('sync Radio node'), shared ? findsOneWidget : findsNothing);
+        expect(find.text('sync Extra key'), findsNothing);
         expect(tester.widget<ContactChatTitle>(find.byType(ContactChatTitle)).senderName, entry.name);
         expect(tester.widget<ContactChatTitle>(find.byType(ContactChatTitle)).onPickSender, isNull);
         expect(tester.widget<TextField>(input).controller!.text, 'Draft from extra key');

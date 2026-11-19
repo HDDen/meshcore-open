@@ -82,6 +82,7 @@ extension AdditionalIdentityMessageProjection on AdditionalIdentityMessage {
       compressionOriginalBytes: compression?.originalBytes,
       compressionPayloadBytes: compression?.payloadBytes,
       sharedHistorySourceName: sharedHistory ? identityName : null,
+      sharedHistorySourceKey: recipientKey,
       containerTimestamp:
           mcmp?.timestamp ?? decoded?.mcotxtMessage?.metadataTimestamp,
       containerSenderName: isOutgoing ? identityName : null,
