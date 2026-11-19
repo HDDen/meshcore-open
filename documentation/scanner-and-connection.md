@@ -1,5 +1,9 @@
 # Scanner & Connection
 
+## Mobile reconnect after background suspension
+
+On Android and iOS, returning to the app immediately retries a lost BLE or TCP connection instead of waiting for the scheduled backoff. A pending timer is accelerated without adding a second attempt, and an active connection attempt is not duplicated. On iOS, a connection attempt whose readiness wait has exceeded 20 seconds is cancelled and retried. Failed attempts continue through the normal reconnect backoff. Already connected CoreBluetooth peripherals resume service discovery without waiting for a new connection event. Manual disconnects and offline history do not trigger this recovery.
+
 ## BLE Scanner (Home Screen)
 
 The BLE Scanner is the app's home screen, displayed immediately on launch.

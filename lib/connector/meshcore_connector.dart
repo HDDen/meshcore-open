@@ -457,6 +457,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   StreamSubscription<NotificationReply>? _notificationReplySubscription;
   Timer? _selfInfoRetryTimer;
   ReconnectWait? _reconnectTimer;
+  bool _reconnectImmediately = false;
+  bool _autoReconnectInFlight = false;
   ReconnectPowerSettings? _reconnectPowerSettings;
   Duration Function()? _reconnectClock;
   Timer? _batteryPollTimer;
@@ -6819,7 +6821,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool get _shouldUseIosNativeBleCentral =>
       PlatformInfo.isIOS && _iosNativeBleCentralEnabled;
 
-  Future<void> _connectIosNativeBleCentral(BluetoothDevice device) async {
+  static const _iosBleReadyTimeout = Duration(seconds: 20);
+
+  @visibleForTesting
+  Future<void> connectIosNativeBleForTest(String deviceId, {
+    Duration readinessTimeout = _iosBleReadyTimeout,
+  }) => _connectIosNativeBleCentral(
+      BluetoothDevice.fromId(deviceId), readinessTimeout: readinessTimeout,
+    );
+
+  Future<void> _connectIosNativeBleCentral(BluetoothDevice device, {
+    Duration readinessTimeout = _iosBleReadyTimeout,
+  }) async {
+    final generation = _bleConnectGeneration;
     await _iosBleCentralSubscription?.cancel();
     _iosBleCentralSubscription = _iosBleCentralEvents
         .receiveBroadcastStream()
@@ -6833,8 +6847,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         'txUuid': MeshCoreUuids.txCharacteristic,
         'restoreEnabled': true,
         'reconnectOnRestore': true,
+      }).timeout(readinessTimeout, onTimeout: () {
+        throw TimeoutException('iOS BLE readiness timed out after $readinessTimeout');
       });
     } catch (_) {
+      if (generation != _bleConnectGeneration) rethrow;
+      try {
+        await _iosBleCentralMethod.invokeMethod<void>('disconnect').timeout(_disconnectStepTimeout);
+      } catch (_) {
+        // Teardown must not hang behind a second missing platform reply.
+      }
+      if (generation != _bleConnectGeneration) rethrow;
       _usingIosNativeBleCentral = false;
       await _iosBleCentralSubscription?.cancel();
       _iosBleCentralSubscription = null;
@@ -7878,6 +7901,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           PlatformInfo.isWeb);
 
   void _cancelReconnectTimer() {
+    _reconnectImmediately = false;
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
   }
@@ -7895,6 +7919,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   );
 
   void _refreshReconnectDelay() {
+    if (_reconnectImmediately) return;
     final pending = _reconnectTimer;
     if (pending == null) return;
     pending.updateDelay(Duration(
@@ -7902,18 +7927,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ));
   }
 
-  void _scheduleReconnect() {
+  void _scheduleReconnect({bool immediately = false}) {
     if (!_shouldAutoReconnect) return;
-    if (_reconnectTimer?.isActive == true) return;
+    if (_reconnectTimer?.isActive == true) {
+      if (immediately) {
+        _reconnectImmediately = true;
+        _reconnectTimer!.updateDelay(Duration.zero);
+      }
+      return;
+    }
+    _reconnectImmediately = immediately;
 
     final reconnectTransport = _reconnectTransport;
     final attemptIndex = _reconnectAttempts;
     final delayMs = _nextReconnectDelayMs();
     _reconnectTimer = ReconnectWait(
       attemptIndex: attemptIndex,
-      delay: Duration(milliseconds: delayMs),
+      delay: immediately ? Duration.zero : Duration(milliseconds: delayMs),
       now: _reconnectClock,
       onElapsed: () async {
+        _reconnectImmediately = false;
         if (!_shouldAutoReconnect || reconnectTransport != _reconnectTransport) {
           return;
         }
@@ -7922,6 +7955,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           return;
         }
 
+        if (_autoReconnectInFlight) return;
+        _autoReconnectInFlight = true;
         try {
           switch (reconnectTransport) {
             case MeshCoreTransportType.bluetooth:
@@ -7950,6 +7985,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           }
         } catch (_) {
           _scheduleReconnect();
+        } finally {
+          _autoReconnectInFlight = false;
         }
       },
     );
@@ -22473,6 +22510,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        (PlatformInfo.isAndroid || PlatformInfo.isIOS)) {
+      _resumeMobileRecovery();
+    }
     if (!PlatformInfo.isIOS) return;
     final now = DateTime.now();
     final previous = _lastAppLifecycleState;
@@ -22491,7 +22532,46 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       );
     }
     if (state == AppLifecycleState.resumed) {
+      _resumeIosBleRecovery(now);
       unawaited(_probeIosBleAfterResume(now));
+    }
+  }
+
+  @visibleForTesting
+  void resumeMobileRecoveryForTest() => _resumeMobileRecovery();
+
+  void _resumeMobileRecovery() {
+    if (!_shouldAutoReconnect || _autoReconnectInFlight ||
+        _state != MeshCoreConnectionState.disconnected) {
+      return;
+    }
+    _scheduleReconnect(immediately: true);
+  }
+
+  @visibleForTesting
+  void resumeIosBleRecoveryForTest(DateTime now, {DateTime? connectStartedAt}) {
+    _lastBleConnectStartedAt = connectStartedAt;
+    _resumeIosBleRecovery(now);
+  }
+
+  void _resumeIosBleRecovery(DateTime now) {
+    if (_disposed || !_shouldAutoReconnect ||
+        _reconnectTransport != MeshCoreTransportType.bluetooth) {
+      return;
+    }
+    if (_state == MeshCoreConnectionState.connecting) {
+      final started = _lastBleConnectStartedAt;
+      if (started != null && now.difference(started) >= _iosBleReadyTimeout) {
+        _appDebugLogService?.warn(
+          'iOS BLE foreground recovery: expired connection attempt, restarting',
+          tag: 'BLE iOS',
+        );
+        unawaited(disconnect(manual: false).then((_) => _resumeMobileRecovery()));
+      }
+      return;
+    }
+    if (_state == MeshCoreConnectionState.disconnected) {
+      _resumeMobileRecovery();
     }
   }
 
@@ -22507,22 +22587,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     _iosBleResumeProbeInFlight = true;
+    final generation = _bleConnectGeneration;
+    bool sameSession() => !_disposed && generation == _bleConnectGeneration &&
+        isConnected && _activeTransport == MeshCoreTransportType.bluetooth;
     await Future<void>.delayed(const Duration(milliseconds: 600));
     try {
-      if (!isConnected || _activeTransport != MeshCoreTransportType.bluetooth) {
-        return;
-      }
+      if (!sameSession()) return;
       final probeStartedAt = DateTime.now();
       _appDebugLogService?.info(
         'iOS BLE resume probe: ${_iosBleSessionSnapshot(probeStartedAt)}',
         tag: 'BLE iOS',
       );
-      await sendFrame(buildGetDeviceTimeFrame());
+      await sendFrame(buildGetDeviceTimeFrame()).timeout(const Duration(seconds: 5));
       await Future<void>.delayed(const Duration(seconds: 5));
       final lastRxAfterProbe = _lastBleRxAt ?? _lastRxTime;
-      if (isConnected &&
-          _activeTransport == MeshCoreTransportType.bluetooth &&
-          !lastRxAfterProbe.isAfter(probeStartedAt)) {
+      if (sameSession() && !lastRxAfterProbe.isAfter(probeStartedAt)) {
         _appDebugLogService?.warn(
           'iOS BLE resume probe got no RX, forcing reconnect: '
           '${_iosBleSessionSnapshot(DateTime.now())}',
@@ -22536,7 +22615,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         '${_iosBleSessionSnapshot(DateTime.now())}',
         tag: 'BLE iOS',
       );
-      unawaited(disconnect(manual: false));
+      if (sameSession()) unawaited(disconnect(manual: false));
     } finally {
       _iosBleResumeProbeInFlight = false;
     }

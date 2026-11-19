@@ -301,6 +301,110 @@ void main() {
     expect(connector.reconnectTimerActiveForTest, isFalse);
   });
 
+  _reconnectWidgetTest('iOS foreground resumes a lost BLE retry without duplicating a live timer', (tester, cleanup) async {
+    final connector = _connector(cleanup: cleanup);
+    connector.resumeIosBleRecoveryForTest(DateTime.utc(2026));
+    expect(connector.reconnectTimerActiveForTest, isTrue);
+    connector.resumeIosBleRecoveryForTest(DateTime.utc(2026));
+    expect(connector.reconnectAttemptsForTest, 1);
+    await tester.pump(const Duration(seconds: 1));
+    expect(connector.attempts, hasLength(1));
+    expect(connector.attempts.single.transport, MeshCoreTransportType.bluetooth);
+  });
+
+  _reconnectWidgetTest('iOS foreground tears down an expired BLE attempt and schedules recovery', (tester, cleanup) async {
+    final connector = _connector(cleanup: cleanup, state: MeshCoreConnectionState.connecting);
+    final now = DateTime.utc(2026);
+    connector.resumeIosBleRecoveryForTest(now, connectStartedAt: now.subtract(const Duration(minutes: 5)));
+    await tester.pump();
+    expect(connector.state, MeshCoreConnectionState.disconnected);
+    expect(connector.reconnectTimerActiveForTest, isTrue);
+    await tester.pump(const Duration(seconds: 1));
+    expect(connector.attempts, hasLength(1));
+  });
+
+  for (final state in [MeshCoreConnectionState.connected, MeshCoreConnectionState.connecting]) {
+    _reconnectWidgetTest('iOS foreground preserves a healthy or recent $state BLE session', (tester, cleanup) async {
+      final connector = _connector(cleanup: cleanup, state: state);
+      final now = DateTime.utc(2026);
+      connector.resumeIosBleRecoveryForTest(now, connectStartedAt: now.subtract(const Duration(seconds: 2)));
+      await tester.pump(const Duration(seconds: 2));
+      expect(connector.state, state);
+      expect(connector.attempts, isEmpty);
+      expect(connector.reconnectTimerActiveForTest, isFalse);
+    });
+  }
+
+  _reconnectWidgetTest('iOS foreground respects manual disconnect, offline and other transports', (tester, cleanup) async {
+    for (final connector in [
+      _connector(cleanup: cleanup, manual: true),
+      _connector(cleanup: cleanup, offline: true),
+      _connector(cleanup: cleanup, transport: MeshCoreTransportType.tcp),
+      _connector(cleanup: cleanup, transport: MeshCoreTransportType.usb),
+    ]) {
+      connector.resumeIosBleRecoveryForTest(DateTime.utc(2026));
+      await tester.pump(const Duration(seconds: 2));
+      expect(connector.attempts, isEmpty);
+      expect(connector.reconnectTimerActiveForTest, isFalse);
+    }
+  });
+
+  for (final transport in [MeshCoreTransportType.bluetooth, MeshCoreTransportType.tcp]) {
+    _reconnectWidgetTest('mobile resume immediately replaces the pending $transport retry', (tester, cleanup) async {
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      final h = await _powerConnector(tester, cleanup, transport: transport);
+      _consumeFastPrefix(h.connector);
+      h.connector.scheduleReconnectForTest();
+      final scheduledCount = h.connector.reconnectAttemptsForTest;
+      h.connector.resumeMobileRecoveryForTest();
+      h.connector.resumeMobileRecoveryForTest();
+      // A power-profile callback must not postpone the already requested immediate retry.
+      await h.settings.setBackgroundReconnectIntervalSeconds(600);
+      expect(h.connector.reconnectAttemptsForTest, scheduledCount);
+      expect(h.connector.attempts, isEmpty);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(h.connector.attempts, hasLength(1));
+      expect(h.connector.attempts.single.transport, transport);
+      expect(h.connector.attempts.single.automatic, isTrue);
+      await tester.pump(const Duration(seconds: 180));
+      expect(h.connector.attempts, hasLength(1));
+    });
+
+    _reconnectWidgetTest('mobile resume starts a missing $transport retry without waiting', (tester, cleanup) async {
+      final connector = _connector(cleanup: cleanup, transport: transport);
+      connector.resumeMobileRecoveryForTest();
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(connector.attempts, hasLength(1));
+    });
+  }
+
+  _reconnectWidgetTest('mobile resume never overlaps an in-flight attempt', (tester, cleanup) async {
+    final connector = _connector(cleanup: cleanup);
+    connector.heldAttempt = Completer<void>();
+    connector.resumeMobileRecoveryForTest();
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(connector.attempts, hasLength(1));
+    connector.resumeMobileRecoveryForTest();
+    await tester.pump(const Duration(minutes: 1));
+    expect(connector.attempts, hasLength(1));
+    expect(connector.reconnectTimerActiveForTest, isFalse);
+  });
+
+  _reconnectWidgetTest('mobile resume respects manual, offline, connected and unsupported sessions', (tester, cleanup) async {
+    for (final connector in [
+      _connector(cleanup: cleanup, manual: true),
+      _connector(cleanup: cleanup, offline: true),
+      _connector(cleanup: cleanup, state: MeshCoreConnectionState.connected),
+      _connector(cleanup: cleanup, transport: MeshCoreTransportType.usb),
+      _connector(cleanup: cleanup, transport: MeshCoreTransportType.review),
+    ]) {
+      connector.resumeMobileRecoveryForTest();
+      await tester.pump();
+      expect(connector.attempts, isEmpty);
+      expect(connector.reconnectTimerActiveForTest, isFalse);
+    }
+  });
+
   group('power saving regressions', () {
     _reconnectWidgetTest('custom minimum keeps every baseline delay in the background', (tester, cleanup) async {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);

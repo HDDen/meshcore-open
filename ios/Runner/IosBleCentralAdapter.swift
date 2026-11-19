@@ -94,6 +94,7 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
     targetRemoteId = remoteId
     restoreEnabled = args["restoreEnabled"] as? Bool ?? true
     reconnectOnRestore = args["reconnectOnRestore"] as? Bool ?? true
+    pendingConnect?(FlutterError(code: "superseded", message: "BLE connection attempt was replaced", details: nil))
     pendingConnect = result
 
     if centralManager == nil {
@@ -116,7 +117,11 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
   private func connectToPeripheral(remoteId: UUID) {
     guard let manager = centralManager else { return }
     if let current = targetPeripheral, current.identifier == remoteId {
-      manager.connect(current, options: nil)
+      if current.state == .connected {
+        self.centralManager(manager, didConnect: current)
+      } else if current.state != .connecting {
+        manager.connect(current, options: nil)
+      }
       return
     }
     let peripherals = manager.retrievePeripherals(withIdentifiers: [remoteId])
@@ -127,10 +132,15 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
     }
     targetPeripheral = peripheral
     peripheral.delegate = self
-    manager.connect(peripheral, options: nil)
+    if peripheral.state == .connected {
+      self.centralManager(manager, didConnect: peripheral)
+    } else if peripheral.state != .connecting {
+      manager.connect(peripheral, options: nil)
+    }
   }
 
   private func disconnect() {
+    pendingConnect?(FlutterError(code: "disconnected", message: "BLE connection was cancelled", details: nil))
     pendingConnect = nil
     completePendingSends(errorCode: "disconnected", message: "BLE central disconnected")
     if let peripheral = targetPeripheral, let manager = centralManager {
@@ -230,7 +240,11 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
       peripheral.delegate = self
       emit(["event": "restored", "remoteId": peripheral.identifier.uuidString])
       if reconnectOnRestore {
-        central.connect(peripheral, options: nil)
+        if peripheral.state == .connected {
+          if serviceUuid != nil { self.centralManager(central, didConnect: peripheral) }
+        } else if peripheral.state != .connecting {
+          central.connect(peripheral, options: nil)
+        }
       }
     } else {
       emit(["event": "restored"])
@@ -245,6 +259,8 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
       pendingConnect = nil
       return
     }
+    rxCharacteristic = nil
+    txCharacteristic = nil
     emit(["event": "connected", "remoteId": peripheral.identifier.uuidString])
     peripheral.discoverServices([serviceUuid])
   }
@@ -264,6 +280,8 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
       rxCharacteristic = nil
       txCharacteristic = nil
       completePendingSends(errorCode: "disconnected", message: "BLE central disconnected")
+      pendingConnect?(FlutterError(code: "disconnected", message: "BLE disconnected before readiness", details: nil))
+      pendingConnect = nil
       emit([
         "event": "disconnected",
         "remoteId": peripheral.identifier.uuidString,
@@ -306,7 +324,13 @@ final class IosBleCentralAdapter: NSObject, CBCentralManagerDelegate, CBPeripher
       pendingConnect = nil
       return
     }
-    peripheral.setNotifyValue(true, for: tx)
+    if tx.isNotifying {
+      pendingConnect?(nil)
+      pendingConnect = nil
+      emit(["event": "ready", "remoteId": peripheral.identifier.uuidString])
+    } else {
+      peripheral.setNotifyValue(true, for: tx)
+    }
   }
 
   func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
