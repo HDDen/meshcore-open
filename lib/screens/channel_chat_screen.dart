@@ -149,11 +149,15 @@ class ChannelChatScreen extends StatefulWidget {
   final int initialUnreadCount;
   final String? initialMessageId;
 
+  /// Render-only theme samples: no route tracking, storage or radio work.
+  final List<ChannelMessage>? previewMessages;
+
   const ChannelChatScreen({
     super.key,
     required this.channel,
     this.initialUnreadCount = 0,
     this.initialMessageId,
+    this.previewMessages,
   });
 
   @override
@@ -265,6 +269,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.previewMessages != null) return;
     _restoreComposerDraft();
     _textController.addListener(_onTextFieldTextChange);
     _textController.addListener(_updateMentionSuggestions);
@@ -338,6 +343,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (widget.previewMessages != null) return;
     final route = ModalRoute.of(context);
     _routeActivity.updateRoute(route);
     if (!identical(route, _route)) {
@@ -1034,6 +1040,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final samples = widget.previewMessages;
+    if (samples != null) {
+      final connector = context.read<MeshCoreConnector>();
+      final settings = context.watch<AppSettingsService>();
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final message in samples)
+            _buildMessageBubble(message, 1, connector, settings, false),
+        ],
+      );
+    }
     final connector = context.read<MeshCoreConnector>();
     final nodeKey = context.select<MeshCoreConnector, String>(
       (connector) => connector.selfPublicKeyHex,
@@ -1762,10 +1780,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // node stored without ever seeing our rules.
     final blockedBody =
         message.wasBlocked ||
-            BlockedSenders.instance.hidesStoredMessage(
-              message,
-              connector.channelDisplayName(widget.channel.index),
-            )
+            (widget.previewMessages == null &&
+                BlockedSenders.instance.hidesStoredMessage(
+                  message,
+                  connector.channelDisplayName(widget.channel.index),
+                ))
         ? message.text
         : null;
     final bodyText = blockedBody == null ? message.text : '';

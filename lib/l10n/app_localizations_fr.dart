@@ -10393,6 +10393,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get themes_preview => 'Aperçu';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => 'Quelqu\'un sur le réseau ce soir ?';
 
   @override

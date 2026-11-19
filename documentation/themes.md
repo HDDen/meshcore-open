@@ -17,6 +17,16 @@ map markers and chat backgrounds. These settings are stored on the device.
 The active theme is marked in the list. A custom theme's background determines
 whether it uses light or dark surfaces.
 
+## Previewing a theme
+
+The editor has four preview tabs: **Channel chat**, **Direct chat**,
+**Channels**, and **Contacts**. They show the same message bubbles, delivery
+badges, input field and list cards as the app, with synthetic names, keys and
+messages. The chat examples include routing, signal, region and compression
+indicators. Their timestamps are two days before you opened the editor.
+Switching tabs preserves your draft. Preview controls do not send messages or
+change read state, and the preview does not connect to a radio.
+
 ## Creating and sharing a theme
 
 Tap **Create theme** and enter a name. Choose a background and accent from the

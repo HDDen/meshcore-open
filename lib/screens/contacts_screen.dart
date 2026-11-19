@@ -3286,6 +3286,32 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 }
 
+/// Uses the same contact card as the list, without starting a contacts screen.
+class ContactThemePreviewTile extends StatelessWidget {
+  const ContactThemePreviewTile({
+    super.key,
+    required this.contact,
+    required this.pathLabel,
+    required this.lastSeenText,
+  });
+
+  final Contact contact;
+  final String pathLabel;
+  final String lastSeenText;
+
+  @override
+  Widget build(BuildContext context) => _ContactTile(
+    item: _ContactListItemData.fromContact(
+      contact: contact,
+      pathHashByteWidth: 2,
+      unreadCount: 0,
+      lastSeenText: lastSeenText,
+      pathLabel: pathLabel,
+    ),
+    onTap: () {},
+  );
+}
+
 class _ContactListItemData {
   final Contact contact;
   final int unreadCount;

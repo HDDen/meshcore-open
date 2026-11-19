@@ -56,7 +56,9 @@ class _NodeKeySettingsDialogState extends State<NodeKeySettingsDialog> {
       return false;
     }
     if (entry.identity.publicKeyHex == _entry!.identity.publicKeyHex &&
-        entry.identity.privateKeyHex == _entry!.identity.privateKeyHex) return true;
+        entry.identity.privateKeyHex == _entry!.identity.privateKeyHex) {
+      return true;
+    }
     try {
       final identity = await BackupNodeIdentity.read(
         entry.identity.privateKeyHex,

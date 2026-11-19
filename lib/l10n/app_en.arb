@@ -5113,6 +5113,8 @@
   "themes_newTitle": "New theme",
   "themes_pasteCode": "Paste theme code",
   "themes_preview": "Preview",
+  "themes_previewChannelChat": "Channel chat",
+  "themes_previewDirectChat": "Direct chat",
   "themes_previewIncoming": "Anyone on the mesh tonight?",
   "themes_previewOutgoing": "Loud and clear!",
   "themes_previewSwitch": "Notifications",

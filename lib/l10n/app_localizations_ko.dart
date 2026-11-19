@@ -9902,6 +9902,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themes_preview => '미리보기';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => '오늘 밤 메시에 계신 분 있나요?';
 
   @override

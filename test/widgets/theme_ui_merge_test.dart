@@ -95,6 +95,15 @@ void main() {
       240,
       scrollable: find.byType(Scrollable).first,
     );
+    // The richer preview changes the lazy list height during scrolling.
+    // Wait for layout, then bring the target into the viewport again.
+    await tester.pumpAndSettle();
+    await Scrollable.ensureVisible(
+      tester.element(save),
+      alignment: 0.5,
+    );
+    await tester.pumpAndSettle();
+    expect(save.hitTestable(), findsOneWidget);
     await tester.tap(save);
     await tester.pumpAndSettle();
 

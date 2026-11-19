@@ -9898,6 +9898,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get themes_preview => 'プレビュー';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => '今夜、メッシュにいる人はいますか?';
 
   @override

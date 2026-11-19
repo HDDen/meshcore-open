@@ -10295,6 +10295,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get themes_preview => 'Förhandsvisning';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => 'Är det någon på nätet ikväll?';
 
   @override

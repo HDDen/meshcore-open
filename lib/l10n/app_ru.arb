@@ -3978,6 +3978,8 @@
   "themes_newTitle": "Новая тема",
   "themes_pasteCode": "Вставить код темы",
   "themes_preview": "Предпросмотр",
+  "themes_previewChannelChat": "Чат канала",
+  "themes_previewDirectChat": "Direct-чат",
   "themes_previewIncoming": "Кто-нибудь сегодня на связи?",
   "themes_previewOutgoing": "Слышу вас отлично!",
   "themes_previewSwitch": "Уведомления",

@@ -450,6 +450,7 @@ the badge follows the same rule and never shows a fingerprint for invalid or unv
   Selecting a stock mode clears the active ID. Individual invalid theme entries
   are filtered during settings load. A batch import validates the resulting
   library and publishes it in one settings update.
+- The MCOa theme editor uses `widgets/mcoa_theme_preview.dart` with four tabs (channel chat, direct chat, channels, contacts). It renders production bubbles, composer and list cards with synthetic fixtures from `helpers/mcoa_theme_preview_data.dart`; no live connector is constructed, no read state is changed, and no storage/radio initialization runs in the preview modes of the channel screens. Sample timestamps are two days before opening the editor and remain stable while colors change. The upstream preview remains in the editor source, unused.
 - `CustomTheme` and `theme_file.dart` support upstream share JSON and JSONL. Exchange exports include a namespaced `mcoa` object containing only `version: 1` (`helpers/mcoa_theme_extension.dart`); the same serializer serves copied share codes and JSONL. Upstream/legacy themes without this section remain importable, and local theme storage is unchanged.
   The library holds up to 64 themes and 4 MiB of encoded icons, with a 128 KiB
   decoded limit per icon. Exchange files are limited to 16 MiB and individual

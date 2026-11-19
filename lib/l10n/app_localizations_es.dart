@@ -10361,6 +10361,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get themes_preview => 'Vista previa';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => '¿Alguien en la malla esta noche?';
 
   @override

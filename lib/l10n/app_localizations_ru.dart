@@ -10336,6 +10336,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themes_preview => 'Предпросмотр';
 
   @override
+  String get themes_previewChannelChat => 'Чат канала';
+
+  @override
+  String get themes_previewDirectChat => 'Direct-чат';
+
+  @override
   String get themes_previewIncoming => 'Кто-нибудь сегодня на связи?';
 
   @override

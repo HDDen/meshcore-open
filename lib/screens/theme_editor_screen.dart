@@ -16,6 +16,7 @@ import '../theme/theme_icons.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/chat_background.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/mcoa_theme_preview.dart';
 import '../widgets/themed_icon.dart';
 
 /// Background choices offered as one-tap swatches: dark first, then light.
@@ -83,6 +84,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
   late final TextEditingController _nameController;
   final _nameFocus = FocusNode();
   final _scrollController = ScrollController();
+  final _previewOpenedAt = DateTime.now();
   late Color _background;
   late Color _accent;
   late Map<String, ThemeIconOverride> _icons;
@@ -282,7 +284,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
               ),
             ),
             SectionHeader(l10n.themes_preview),
-            _ThemePreview(theme: _draft),
+            McoaThemePreview(theme: _draft, openedAt: _previewOpenedAt),
             if (lowContrast)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -553,9 +555,12 @@ class _SwatchButton extends StatelessWidget {
 }
 
 /// A miniature screen rendered with the draft theme.
+// Retained as the upstream preview; MCOa uses McoaThemePreview.
+// ignore: unused_element
 class _ThemePreview extends StatelessWidget {
   final CustomTheme theme;
 
+  // ignore: unused_element
   const _ThemePreview({required this.theme});
 
   @override

@@ -9706,6 +9706,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themes_preview => '预览';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => '今晚网络里有人吗？';
 
   @override

@@ -17170,6 +17170,18 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get themes_preview;
 
+  /// No description provided for @themes_previewChannelChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel chat'**
+  String get themes_previewChannelChat;
+
+  /// No description provided for @themes_previewDirectChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct chat'**
+  String get themes_previewDirectChat;
+
   /// No description provided for @themes_previewIncoming.
   ///
   /// In en, this message translates to:

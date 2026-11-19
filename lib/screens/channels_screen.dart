@@ -73,7 +73,14 @@ import '../review_mode/review_mode_banner.dart';
 class ChannelsScreen extends StatefulWidget {
   final bool hideBackButton;
 
-  const ChannelsScreen({super.key, this.hideBackButton = false});
+  /// Render-only cards; opening this mode never starts synchronization.
+  final List<Channel>? previewChannels;
+
+  const ChannelsScreen({
+    super.key,
+    this.hideBackButton = false,
+    this.previewChannels,
+  });
 
   @override
   State<ChannelsScreen> createState() => _ChannelsScreenState();
@@ -105,6 +112,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   @override
   void initState() {
     super.initState();
+    if (widget.previewChannels != null) return;
     if (PlatformInfo.isDesktop) {
       HardwareKeyboard.instance.addHandler(_handleDesktopKeyEvent);
     }
@@ -358,6 +366,24 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final samples = widget.previewChannels;
+    if (samples != null) {
+      final connector = context.watch<MeshCoreConnector>();
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final channel in samples)
+            (_buildChannelTile(
+              context,
+              connector,
+              ChannelMessageStore(),
+              channel,
+              isMuted: channel.index != 0,
+              hideChannelIndexIndicator: false,
+            ) as ListEntrance).child,
+        ],
+      );
+    }
     final connector = context.watch<MeshCoreConnector>();
     if (_loadedCommunitiesBackupRevision != connector.communitiesBackupRevision) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -703,6 +729,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     // A hidden body stays hidden in this list too, or the preview puts back
     // exactly what the chat took away.
     final lastBlocked =
+        widget.previewChannels == null &&
         lastMessage != null &&
         (lastMessage.wasBlocked ||
             BlockedSenders.instance.hidesStoredMessage(

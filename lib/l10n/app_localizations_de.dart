@@ -10372,6 +10372,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get themes_preview => 'Vorschau';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => 'Ist heute Abend jemand im Mesh?';
 
   @override

@@ -10346,6 +10346,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get themes_preview => 'Előnézet';
 
   @override
+  String get themes_previewChannelChat => 'Channel chat';
+
+  @override
+  String get themes_previewDirectChat => 'Direct chat';
+
+  @override
   String get themes_previewIncoming => 'Van valaki a hálón ma este?';
 
   @override
