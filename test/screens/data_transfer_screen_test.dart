@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/screens/data_transfer_screen.dart';
 import 'package:meshcore_open/storage/data_root_core.dart';
@@ -45,6 +45,25 @@ void main() {
     await tester.pump();
 
     expect(answers, [true]);
+  });
+
+  testWidgets('portable migration shows its full selectable destination before consent', (tester) async {
+    const target = '/home/alice/.local/share/mcoa/userdata';
+    await tester.pumpWidget(DataTransferOfferApp(
+      offer: const DataTransferOffer(
+        target: target,
+        legacy: LegacyDataLocations(support: '/opt/mcoa/userdata/support',
+          temporary: '/opt/mcoa/userdata/temp', portableLayout: true),
+        sources: ['/opt/mcoa/userdata/support'],
+      ),
+      size: Future.value(100),
+      onDecided: (_) {},
+    ));
+    await tester.pumpAndSettle();
+    final destination = find.byKey(const ValueKey('data-transfer-target'));
+    expect(tester.widget<SelectableText>(destination).data, target);
+    expect(tester.getTopLeft(destination).dy, lessThan(tester.getTopLeft(find.text('Copy')).dy));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('empty data is the other answer', (tester) async {

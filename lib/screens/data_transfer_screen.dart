@@ -86,7 +86,16 @@ class _DataTransferOfferAppState extends State<DataTransferOfferApp> {
           style: theme.textTheme.headlineSmall,
         ),
         const SizedBox(height: 16),
-        Text(l10n.dataTransfer_offerBody(offer.target)),
+        if (offer.legacy.portableLayout) ...[
+          Text(l10n.dataTransfer_portableOfferBody('').trimRight()),
+          const SizedBox(height: 8),
+          SelectableText(
+            offer.target,
+            key: const ValueKey('data-transfer-target'),
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ] else
+          Text(l10n.dataTransfer_offerBody(offer.target)),
         const SizedBox(height: 12),
         Text(l10n.dataTransfer_offerSources),
         for (final source in offer.sources) Text(source),

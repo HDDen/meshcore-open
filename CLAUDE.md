@@ -180,13 +180,24 @@ Screens consume these via `Consumer<T>` (or `context.watch<T>()` / `context.read
 
 ### Data folder (Windows and Linux)
 
-On Windows and Linux everything the app writes lives in one folder of its own, so that several copies, or several profiles of one copy, run side by side, connected to different nodes, without sharing a preferences file or a database, and so that a portable copy leaves nothing behind in the system. The folder is `userdata` beside the executable unless `--data-dir=<path>` names another, absolute or relative to the executable's folder rather than the working directory, so a shortcut and a terminal open the same one. The last `--data-dir` wins, quotes are dropped from it on Windows (`--data-dir="C:\My Data\"` arrives as `C:\My Data"`, the closing backslash read as escaping the quote), and `--data-dir` with no path stops the start on an error screen rather than guessing. macOS, Android, iOS and the web keep the system directories (`DataRootMode.system`), and macOS does not read the argument.
+Windows defaults to `userdata` beside its launcher. Linux defaults to
+`$XDG_DATA_HOME/mcoa/userdata`, falling back to `$HOME/.local/share/mcoa/userdata`
+when XDG is absent/relative; without an absolute XDG or HOME, startup reports an
+unavailable directory instead of writing beside `/opt`. `linux_data_directory.dart`
+keeps this selection pure and testable. Both accept `--data-dir=<path>` or
+`--data-dir <path>`, with last occurrence winning and missing values failing
+closed. Absolute overrides are used directly; relative overrides remain relative
+to the executable, independent of shortcut working directory. The Windows native
+runner repeats both argument forms before Dart starts to select its window-state
+file. macOS, Android, iOS and web retain system directories; macOS ignores this
+argument. All default Linux copies now share one profile unless given overrides;
+the existing profile lock prevents simultaneous writes.
 
 `prepareDataRoot` (`storage/data_root_io.dart`; the rules in the pure `data_root_core.dart`, a web stub behind `data_root.dart`) runs first in `main()`, at stage `MCO-STARTUP-110`. It replaces `PathProviderPlatform.instance` with a subclass of the platform's own provider whose four directories are folders of the data folder, made when first asked for, and hands the same provider to the Windows and Linux preference stores, which keep a `pathProvider` field of their own, marked for tests yet the only way to give them a folder, and would otherwise go on writing to the system folder. The stores and services needed no change: `getApplicationSupportDirectory()` and its siblings simply answer differently. Downloads and the save dialogs stay the system's.
 
 For the Linux AppImage, `linuxAppImageLauncher` checks that the resolved
-binary is the runner inside APPDIR before it accepts APPIMAGE. Portable data
-and relative `--data-dir` values resolve beside that outer file. Migration
+binary is the runner inside APPDIR before it accepts APPIMAGE. Relative `--data-dir` values resolve beside that outer file; the default
+data directory is in the user home/XDG directory. Migration
 restart uses it with the original arguments, and startup timing logs beside it.
 The plain bundle still resolves relative paths beside its own executable.
 
@@ -4765,3 +4776,17 @@ notification into a microtask, so surviving Provider consumers are notified afte
 Flutter unlocks the tree during route teardown. A disposed service suppresses
 that pending notification; running Wardrive sessions remain untouched. The map
 route-replacement regression keeps the Provider alive to exercise this path.
+
+
+Linux profile migration first considers `DataRoot.previousPortablePath`, the
+`userdata` beside the bundle/AppImage launcher, when the destination is new and
+non-overlapping. A portable-layout `LegacyDataLocations` copies complete support,
+cache, temp and documents subtrees; known SQLite databases still use snapshots.
+Only target housekeeping files survive interrupted-copy cleanup. Portable source
+locks, migration state and window state are not copied, the source is never
+modified, and cleanup is marked kept. If no previous portable profile exists,
+the original legacy-system-folder offer remains. Populated destinations are
+never overwritten. `documentation/data-directories.md` covers both CLI argument
+forms, absolute/relative paths and Linux desktop entry quoting.
+
+The portable-profile migration offer renders its destination as a separate bold SelectableText before the action buttons, independent of the translated explanatory sentence. The full path remains visible and copyable before consent.

@@ -18369,6 +18369,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.'**
   String get backup_officialFormatHint;
+
+  /// No description provided for @dataTransfer_portableOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous portable installation has user data beside the application. Copy it into the new user data folder?\n{target}'**
+  String dataTransfer_portableOfferBody(String target);
 }
 
 class _AppLocalizationsDelegate

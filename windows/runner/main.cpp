@@ -117,7 +117,11 @@ std::wstring DataFolder() {
     for (int i = 1; i < argc; i++) {
       const std::wstring_view argument = argv[i];
       if (argument == kDataDirArgument) {
-        given.emplace();
+        if (i + 1 < argc && std::wstring_view(argv[i + 1]).substr(0, 2) != L"--") {
+          given.emplace(argv[++i]);
+        } else {
+          given.emplace();
+        }
       } else if (argument.size() > kDataDirArgument.size() &&
                  argument.compare(0, kDataDirArgument.size(),
                                   kDataDirArgument) == 0 &&

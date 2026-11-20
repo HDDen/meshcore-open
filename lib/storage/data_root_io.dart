@@ -11,6 +11,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import 'package:shared_preferences_windows/shared_preferences_windows.dart';
 
 import '../helpers/linux_appimage.dart';
+import '../helpers/linux_data_directory.dart';
 import 'data_root_core.dart';
 
 export 'data_transfer_io.dart';
@@ -28,6 +29,7 @@ RandomAccessFile? _lock;
 Future<DataRootOutcome> prepareDataRoot(List<String> args) async {
   DataRoot.launchArguments = List.unmodifiable(args);
   DataRoot.launchExecutable = null;
+  DataRoot.previousPortablePath = null;
   if (Platform.isWindows || Platform.isLinux) {
     final executable = Platform.resolvedExecutable;
     final launcher = Platform.isLinux
@@ -38,11 +40,18 @@ Future<DataRootOutcome> prepareDataRoot(List<String> args) async {
           )
         : executable;
     if (launcher != executable) DataRoot.launchExecutable = launcher;
+    final defaultRoot = Platform.isLinux
+        ? linuxDefaultDataDirectory(Platform.environment, p.context) : null;
+    final explicit = args.any((arg) => arg == DataRoot.argument || arg.startsWith('${DataRoot.argument}='));
+    if (Platform.isLinux && !explicit && defaultRoot == null) {
+      return const DataRootUnavailable('XDG_DATA_HOME / HOME');
+    }
     final selection = selectDataRoot(
       args: args,
       executablePath: launcher,
       portable: true,
       context: p.context,
+      defaultRoot: defaultRoot,
     );
     final folder = selection.path;
     if (folder == null) {
@@ -50,6 +59,10 @@ Future<DataRootOutcome> prepareDataRoot(List<String> args) async {
         '${DataRoot.argument}=',
         missingPath: true,
       );
+    }
+    if (Platform.isLinux) {
+      final old = p.join(p.dirname(launcher), DataRoot.defaultFolderName);
+      if (!p.equals(old, folder)) DataRoot.previousPortablePath = old;
     }
     DataRoot.mode = DataRootMode.portable;
     DataRoot.path = folder;

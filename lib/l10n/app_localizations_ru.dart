@@ -10995,4 +10995,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backup_officialFormatHint =>
       'Создаётся незашифрованный JSON. Пароль не применяется. Включаются только данные официального формата; настройки MCOa и дополнительные ключи не экспортируются.';
+
+  @override
+  String dataTransfer_portableOfferBody(String target) {
+    return 'Рядом с приложением найдены данные предыдущей портативной версии. Скопировать их в новую пользовательскую папку?\n$target';
+  }
 }

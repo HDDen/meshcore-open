@@ -10355,4 +10355,9 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get backup_officialFormatHint =>
       'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.';
+
+  @override
+  String dataTransfer_portableOfferBody(String target) {
+    return 'A previous portable installation has user data beside the application. Copy it into the new user data folder?\n$target';
+  }
 }

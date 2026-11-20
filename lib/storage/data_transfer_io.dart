@@ -68,7 +68,7 @@ Future<DataTransferOffer?> findDataTransferOffer({
   if (DataRoot.mode != DataRootMode.portable || root == null) return null;
   clearInterruptedTransfer(root);
   if (!isNewDataFolder(root)) return null;
-  final from = legacy ?? await currentLegacyDataLocations();
+  final from = legacy ?? _previousPortableProfile(root) ?? await currentLegacyDataLocations();
   if (from == null || !_holdsData(from.support)) return null;
   return DataTransferOffer(
     target: root,
@@ -77,12 +77,35 @@ Future<DataTransferOffer?> findDataTransferOffer({
       from.support,
       if (from.cache case final cache? when Directory(cache).existsSync())
         cache,
-      if (Directory(_tileFolder(from)).existsSync()) _tileFolder(from),
-      for (final folder in _modelFolders(from))
-        if (Directory(folder).existsSync()) folder,
+      if (from.portableLayout) ...[
+        from.temporary,
+        ?from.documents,
+      ] else ...[
+        if (Directory(_tileFolder(from)).existsSync()) _tileFolder(from),
+        for (final folder in _modelFolders(from))
+          if (Directory(folder).existsSync()) folder,
+      ],
     ],
     copiedBefore: _readCopiedMarker(from.support),
   );
+}
+
+// Prefer the profile from the immediately preceding portable installation.
+// Only offer a copy into a new target; never switch back to /opt implicitly.
+LegacyDataLocations? _previousPortableProfile(String target) {
+  final source = DataRoot.previousPortablePath;
+  if (source == null || p.equals(source, target) ||
+      p.isWithin(source, target) || p.isWithin(target, source)) {
+    return null;
+  }
+  final support = p.join(source, DataRoot.supportFolder);
+  try {
+    if (!_holdsData(support)) return null;
+    return LegacyDataLocations(support: support, portableLayout: true,
+      cache: p.join(source, DataRoot.cacheFolder),
+      temporary: p.join(source, DataRoot.temporaryFolder),
+      documents: p.join(source, DataRoot.documentsFolder));
+  } on FileSystemException { return null; }
 }
 
 /// Whether [root] is new: missing, or holding nothing but the lock and the
@@ -255,9 +278,9 @@ Future<void> _transfer(
     'started': started.toIso8601String(),
     'finished': DateTime.now().toUtc().toIso8601String(),
     'sources': sources,
-    'cleanup': 'pending',
+    'cleanup': from.portableLayout ? 'kept' : 'pending',
   });
-  _appendCopiedMarker(from.support, root);
+  if (!from.portableLayout) _appendCopiedMarker(from.support, root);
 }
 
 class _Copy {
@@ -279,7 +302,9 @@ class _Plan {
 _Plan _plan(String root, LegacyDataLocations from) {
   final plan = _Plan();
   final support = p.join(root, '${DataRoot.supportFolder}$_partial');
-  _addFolder(plan, root, from.support, support, skip: _skippedInSupport);
+  _addFolder(plan, root, from.support, support,
+    skip: (relative) => _skippedInSupport(relative) &&
+        (!from.portableLayout || relative != LegacyData.sharedImageCacheIndex));
   for (final name in LegacyData.databases) {
     final source = p.join(from.support, name);
     if (!File(source).existsSync()) continue;
@@ -299,6 +324,13 @@ _Plan _plan(String root, LegacyDataLocations from) {
       cache,
       p.join(root, '${DataRoot.cacheFolder}$_partial'),
     );
+  }
+  if (from.portableLayout) {
+    _addFolder(plan, root, from.temporary, p.join(root, '${DataRoot.temporaryFolder}$_partial'));
+    if (from.documents case final documents?) {
+      _addFolder(plan, root, documents, p.join(root, '${DataRoot.documentsFolder}$_partial'));
+    }
+    return plan;
   }
   final recorded = _recordedTiles(p.join(from.support, LegacyData.tileDatabase));
   _addFolder(

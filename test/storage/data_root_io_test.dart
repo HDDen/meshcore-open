@@ -194,6 +194,16 @@ void main() {
       skip: portableHost ? null : notPortable,
     );
 
+    test('separate data-dir argument selects a writable profile with spaces', () async {
+      final folder = inRoot('profile with spaces');
+      final args = ['--data-dir', folder];
+      expect(await prepareDataRoot(args), isA<DataRootReady>());
+      expect(DataRoot.path, folder);
+      expect(DataRoot.launchArguments, args);
+      expect((await getApplicationSupportDirectory()).path, '$folder${_sep}support');
+      expect(File('$folder${_sep}profile.lock').existsSync(), isTrue);
+    }, skip: portableHost ? null : notPortable);
+
     test(
       'an empty --data-dir stops the start before any folder is touched',
       () async {

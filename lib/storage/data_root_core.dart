@@ -2,8 +2,8 @@ import 'package:path/path.dart' as p;
 
 /// Where this run keeps its data.
 enum DataRootMode {
-  /// Windows and Linux: a folder of the app's own, `userdata` next to the
-  /// launcher or the one `--data-dir` names, holding every directory the
+  /// Windows: `userdata` next to the launcher. Linux: a user-owned folder
+  /// under XDG_DATA_HOME. Either accepts `--data-dir`, holding every directory the
   /// app writes to.
   portable,
 
@@ -50,11 +50,15 @@ abstract final class DataRoot {
   /// The outer AppImage launcher when the executable runs inside an image.
   static String? launchExecutable;
 
+  /// A previous Linux portable profile offered for copying, never used implicitly.
+  static String? previousPortablePath;
+
   static void resetForTesting() {
     mode = DataRootMode.system;
     path = null;
     launchArguments = const [];
     launchExecutable = null;
+    previousPortablePath = null;
   }
 }
 
@@ -95,20 +99,22 @@ DataRootSelection selectDataRoot({
   required String executablePath,
   required bool portable,
   required p.Context context,
+  String? defaultRoot,
 }) {
   if (!portable) return const DataRootSelection.system();
   final appFolder = context.dirname(executablePath);
   String? given;
-  for (final arg in args) {
+  for (var i = 0; i < args.length; i++) {
+    final arg = args[i];
     if (arg == DataRoot.argument) {
-      given = '';
+      given = i + 1 < args.length && !args[i + 1].startsWith('--') ? args[++i] : '';
     } else if (arg.startsWith('${DataRoot.argument}=')) {
       given = arg.substring(DataRoot.argument.length + 1);
     }
   }
   if (given == null) {
     return DataRootSelection.portable(
-      context.join(appFolder, DataRoot.defaultFolderName),
+      defaultRoot ?? context.join(appFolder, DataRoot.defaultFolderName),
     );
   }
   var value = given.trim();
@@ -197,8 +203,10 @@ class LegacyDataLocations {
     required this.temporary,
     this.cache,
     this.documents,
+    this.portableLayout = false,
   });
 
+  final bool portableLayout;
   final String support;
   final String temporary;
   final String? cache;

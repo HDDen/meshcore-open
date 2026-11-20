@@ -457,7 +457,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "de": [
@@ -918,7 +919,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "es": [
@@ -1379,7 +1381,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "fr": [
@@ -1840,7 +1843,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "hu": [
@@ -2301,7 +2305,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "it": [
@@ -2762,7 +2767,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "ja": [
@@ -3223,7 +3229,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "ko": [
@@ -3684,7 +3691,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "nl": [
@@ -4145,7 +4153,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "pl": [
@@ -4606,7 +4615,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "pt": [
@@ -5067,7 +5077,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "sk": [
@@ -5528,7 +5539,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "sl": [
@@ -5989,7 +6001,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "sv": [
@@ -6450,7 +6463,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "uk": [
@@ -6911,7 +6925,8 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ],
 
   "zh": [
@@ -7372,6 +7387,7 @@
     "extraKeys_ackWithoutPath",
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
-    "backup_officialFormatHint"
+    "backup_officialFormatHint",
+    "dataTransfer_portableOfferBody"
   ]
 }

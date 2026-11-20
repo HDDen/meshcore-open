@@ -59,6 +59,30 @@ void main() {
     scratch.deleteSync(recursive: true);
   });
 
+  test('a previous portable profile is offered and copied without changing its source', () async {
+    final old = p.join(scratch.path, 'opt', 'mcoa', 'userdata');
+    DataRoot.previousPortablePath = old;
+    _write(p.join(old, 'support', 'shared_preferences.json'), '{"test":true}');
+    _write(p.join(old, 'cache', 'image.bin'), 'cache');
+    _write(p.join(old, 'temp', 'arbitrary.bin'), 'temporary');
+    _write(p.join(old, 'documents', 'custom', 'file.bin'), 'document');
+    _write(p.join(old, DataRoot.lockFileName), 'old lock');
+    final offer = await findDataTransferOffer();
+    expect(offer, isNotNull);
+    expect(offer!.legacy.portableLayout, isTrue);
+    expect(offer.target, root);
+    await transferData(offer);
+    for (final relative in ['support/shared_preferences.json', 'cache/image.bin',
+      'temp/arbitrary.bin', 'documents/custom/file.bin']) {
+      expect(File(p.join(root, relative)).readAsStringSync(), File(p.join(old, relative)).readAsStringSync());
+    }
+    expect(File(p.join(root, DataRoot.lockFileName)).readAsStringSync(), '1');
+    expect(File(p.join(old, DataRoot.lockFileName)).readAsStringSync(), 'old lock');
+    expect(File(p.join(old, 'support', LegacyData.copiedMarkerFileName)).existsSync(), isFalse);
+    expect(readTransferState(root)!['cleanup'], 'kept');
+    expect(await findDataTransferOffer(), isNull);
+  });
+
   test('the old folder names match the runners and the stores', () {
     final runner = File('windows/runner/Runner.rc').readAsStringSync();
     expect(

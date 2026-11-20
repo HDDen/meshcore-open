@@ -34,8 +34,8 @@ but also for Windows and iOS (as .ipa files)
 10. **Live path tracing and delivery progress** — the app listens to repeater retransmissions of
     its own packets, so a path trace fills in hop by hop while it is still running, and an
     outgoing direct message shows how far it has travelled.
-11. **Portable data folder** on Windows and Linux: the app keeps everything in `userdata` next
-    to the executable, so a copy moves together with its data, and several copies or profiles
+11. **Selectable data folder** on Windows and Linux: Windows defaults to `userdata` next
+    to the executable; Linux defaults to the user home/XDG data directory, so a copy moves together with its data, and several copies or profiles
     run side by side, each connected to its own node.
 
 - **Repository:** <https://github.com/HDDen/meshcore-open>
@@ -414,23 +414,17 @@ to the selected message. Windows and Linux users can open it with `Ctrl+F`.
 
 ### Portable data folder (Windows and Linux)
 
-On Windows and Linux the app keeps everything it writes in one folder, `userdata`, next to the
-executable: settings, the message history and the other databases, map tiles (downloaded offline
-regions included), received images, the GIF cache and the image codec models. A copy of the app
-moves together with its data, a backup is a copy of that folder taken while the app is closed,
-and nothing goes into the system folders or the registry, apart from the notification
-registration Windows asks for, one per data folder; the registration of earlier versions
-is removed once no such version is running. The folder has to be writable: an app started from `Program Files`
-shows an error screen instead of starting, and should be moved to a folder you can write to.
+On Windows the default is `userdata` beside the executable. On Linux the default is
+`$XDG_DATA_HOME/mcoa/userdata`, or `~/.local/share/mcoa/userdata` when XDG_DATA_HOME is unset
+or relative. Linux can therefore be installed in a read-only location such as `/opt` without
+writing user data beside the program. Both platforms accept `--data-dir=<path>` and
+`--data-dir <path>`; absolute paths are used directly, relative paths count from the executable
+folder (the outer AppImage folder on Linux), never the shortcut's working directory.
 
-Several copies of the app run side by side without sharing anything, each connected to its own
-node. One copy can also keep several profiles: start it with `--data-dir=<path>`, an absolute
-path or one relative to the app's folder, for example from a shortcut:
-
-```
-mco_advanced.exe --data-dir=node-868
-./mco_advanced --data-dir="/home/me/mesh data/node-868"
-```
+Windows copies have separate defaults; Linux copies share the per-user default. Use explicit
+profile paths to run independent Linux copies simultaneously. The profile lock prevents two
+processes from writing the same profile. Examples and shortcut syntax for Windows, Linux and
+the current macOS limitation are in [Data directories and launch shortcuts](documentation/data-directories.md).
 
 Every profile has its own data folder, and two profiles of one copy can run at the same time.
 Each copy and profile shows its notifications under an identity of its own, named after its
@@ -448,7 +442,10 @@ skips the copy. Close other running copies of the app before copying. At a later
 asks whether the old folders may be deleted now: only its own folders and the files it copied
 are removed, "Keep" ends the question, and the old data can be deleted by hand at any time.
 
-macOS, Android and iOS keep their data where they always did.
+On Linux a new profile first offers to copy a previous `userdata` beside the bundle or
+AppImage, if present, otherwise it offers older system-location data. Portable originals are
+left untouched and are not offered for automatic deletion. An existing destination profile
+is never overwritten or merged. macOS, Android and iOS keep their system data directories.
 
 If the app starts slowly, run it once with `--loading-timing`: it appends the duration of every
 startup step to `loading_timing.txt` next to the executable, which is worth attaching to a
