@@ -4719,3 +4719,23 @@ shared set-other-params command, then refreshes device info. Unchanged values,
 including firmware mode 2, cause no shared-parameter write. Privacy has no Multi
 ACK toggle and reads connector.multiAcks at Save to avoid overwriting a newer
 contact-settings choice. Cancel sends nothing. Existing localization keys reused.
+
+### Companion proxy identity bindings
+
+`CompanionProxyAccount.identityKey` is a nullable full public key. Null preserves
+physical-node access; a bound key missing from the unlocked inbox never falls
+back. `companion_proxy_identity.dart` intercepts commands before cache/forward
+routing, projects SELF_INFO/public key/name and private-key export per client,
+and rejects only direct private-key import (24) and local CLI key writes.
+`CompanionIdentityCommand` recognizes optional CLI tags and projects key-read
+replies. Other commands, including node configuration, signing, remote CLI in
+TXT and arbitrary raw packets, retain ordinary forwarding without inspection
+or rewriting of raw payloads. Plain
+DMs use the app's existing additional-identity send and ACK tracking; remote control commands retain their normal proxy path.
+Bound clients have an independent inbox built by `CompanionProxyIdentityMessages`,
+without shared history, primary messages or raw RX-log broadcasts. Additional
+identity changes drive refreshes; replies and asynchronous transport writes
+recheck key availability. Deleting/locking a key closes the session and requests
+peer disconnect on BLE where supported. Reauthentication never clears the stored
+binding. Account binding changes disconnect existing clients. Labels live in
+service ARBs, so existing licences do not need replacement.

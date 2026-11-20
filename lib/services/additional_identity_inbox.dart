@@ -196,7 +196,7 @@ class AdditionalIdentityInbox extends ChangeNotifier {
     if (changed && !_disposed) notifyListeners();
   }
 
-  Future<void> send({
+  Future<int> send({
     required String identityKey,
     required Contact peer,
     required String text,
@@ -294,6 +294,7 @@ class AdditionalIdentityInbox extends ChangeNotifier {
       }
       rethrow;
     }
+    return hash;
   }
 
   Future<int> _nextTimestamp(

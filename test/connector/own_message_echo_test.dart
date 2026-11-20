@@ -832,6 +832,13 @@ Future<void> main() async {
       );
       expect(rows, hasLength(1));
       expect(rows.single.senderKey, pubKeyToHex(_aliceKey));
+      final exposed = node.connector.companionProxyIdentity(entry.identity.publicKeyHex)!;
+      expect(exposed['publicKey'], entry.identity.publicKey);
+      expect((exposed['privateKey'] as Uint8List).length, 64);
+      final isolated = await node.connector.companionProxyIdentityMessages(entry.identity.publicKeyHex, 0);
+      expect(isolated.where((row) => row.containsKey('frame')), hasLength(1));
+      expect(await node.connector.companionProxyIdentityMessages(entry.identity.publicKeyHex, rows.single.rowId), isEmpty);
+
       expect(rows.single.text, 'Одинаковое сообщение');
     }
     expect(node.messages, isEmpty);

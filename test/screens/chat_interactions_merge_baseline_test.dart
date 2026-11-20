@@ -252,12 +252,13 @@ class _SenderPickerNode extends _PagedNode {
   int additionalIdentityMaxTextBytes(Contact peer) => 100;
 
   @override
-  Future<void> sendAdditionalIdentityMessage(
+  Future<int> sendAdditionalIdentityMessage(
     String identityKey,
     Contact peer,
     String text,
   ) async {
     sent.add((identityKey, peer.publicKeyHex, text));
+    return 0x12345678; // Synthetic ACK hash; this fake performs no radio send.
   }
 }
 

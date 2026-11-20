@@ -86,6 +86,7 @@ import '../helpers/ui_notification_batcher.dart';
 import '../helpers/channel_mention_matcher.dart';
 import '../helpers/heard_channel_packets.dart';
 import '../helpers/additional_identity_text_packet.dart';
+import '../helpers/companion_proxy_identity_messages.dart';
 import '../helpers/meshcore_expanded_identity.dart';
 import '../services/additional_identity_inbox.dart';
 import '../services/additional_identity_vault.dart' show AdditionalIdentityEntry;
@@ -1281,6 +1282,37 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   CompanionCliSession? _companionCli;
   bool _cliProxyHandled = false;
   bool get companionCliRoutingEnabled => true;
+
+  Object? get companionProxyIdentityNotifier => additionalIdentityInbox;
+  String get companionProxyPrimaryKey => selfPublicKeyHex;
+
+  Map<String, String> get companionProxyIdentities => {
+    for (final entry in additionalIdentityInbox?.entries ?? <AdditionalIdentityEntry>[])
+      entry.identity.publicKeyHex: entry.name,
+  };
+
+  Map<String, Object>? companionProxyIdentity(String key) {
+    final entry = additionalIdentityInbox?.entryFor(key);
+    if (entry == null || additionalIdentityInbox?.isUnlocked != true) return null;
+    return {'name': entry.name, 'publicKey': entry.identity.publicKey,
+      'privateKey': Uint8List.fromList([...hexToPubKey(entry.identity.privateKeyHex.substring(0, 64)), ...hexToPubKey(entry.identity.privateKeyHex.substring(64))])};
+  }
+
+  Future<List<Map<String, Object>>> companionProxyIdentityMessages(String key, int afterRow) =>
+      CompanionProxyIdentityMessages.read(additionalIdentityInbox, key, afterRow);
+
+  Future<int> companionProxyIdentitySend(String key, Uint8List frame) async {
+    if (frame.length < 14 || frame[1] != txtTypePlain) {
+      throw const FormatException('Only plain direct messages are supported');
+    }
+    final peers = allContactsUnfiltered.where((peer) =>
+      peer.type == advTypeChat && peer.publicKey.length >= 6 &&
+      Iterable<int>.generate(6).every((i) => peer.publicKey[i] == frame[7 + i])).toList();
+    if (peers.length != 1) throw StateError('Ambiguous or unknown contact');
+    final text = utf8.decode(frame.sublist(13));
+    return sendAdditionalIdentityMessage(key, peers.single, text);
+  }
+
   bool get supportsCompanionCli => supportsCompanionCliFirmware(
     protocolCode: _firmwareVerCode, version: _firmwareVersion);
   CompanionCliSession get companionCli => _companionCli ??= CompanionCliSession(
@@ -19630,7 +19662,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     ).inMilliseconds;
   }
 
-  Future<void> sendAdditionalIdentityMessage(
+  Future<int> sendAdditionalIdentityMessage(
     String identityKey,
     Contact peer,
     String text,
@@ -19649,10 +19681,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
     final target = _additionalIdentityRoute(currentPeer);
     final requestedAt = DateTime.now();
-    await _runChannelCommandLocked(() async {
+    return _runChannelCommandLocked(() async {
       await _waitForRadioQuiet(lastInboundRxTime: _lastContactMsgRxTime);
       if (!isCurrent()) throw StateError('Radio session changed');
-      await inbox.send(
+      return inbox.send(
         identityKey: identityKey,
         peer: currentPeer,
         text: text,
