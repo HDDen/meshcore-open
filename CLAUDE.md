@@ -4328,7 +4328,7 @@ by the owner; native Linux/device checks remain pending.
 
 ## Dependencies
 
-App version: `9.5.0-mcoa.1.12.0+47` — Dart SDK constraint: `^3.9.2`. The base
+App version: `9.5.3-mcoa.1.13.0+47` — Dart SDK constraint: `^3.9.2`. The base
 is upstream's version (9.5.0 since its build 13), the fork's own release
 number follows `-mcoa.`, the build number counts the fork's builds; the base
 was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
