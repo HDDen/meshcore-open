@@ -570,3 +570,6 @@ Official-format JSON is unencrypted, regardless of the password field. A node
 private key is included only if its checkbox is selected. Keep the regular format
 for encrypted backups, MCOa extensions and application histories. Channel message
 retention is exported as null because MCOa has no corresponding stored value.
+
+См. [Папки данных и параметры ярлыков](data-directories.md): Windows/Linux,
+абсолютные и относительные пути, AppImage, миграция и ограничения macOS.
