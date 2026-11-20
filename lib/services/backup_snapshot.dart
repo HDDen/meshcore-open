@@ -9,6 +9,7 @@ import '../helpers/backup_message_filter.dart';
 import '../helpers/backup_node_profile.dart';
 import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
+import '../helpers/official_backup_export.dart';
 import '../models/app_settings_backup.dart';
 import '../models/channel.dart';
 import '../models/community.dart';
@@ -191,6 +192,23 @@ class BackupSnapshot {
         : 'backup';
     final name = ['meshcore-$kind', if (stem.isNotEmpty) stem, stamp].join('-');
     return '$name.json';
+  }
+
+  /// Official files are plaintext JSON, including a private key only when selected.
+  String encodeOfficial({int? manualAddContacts, Map<int, String> channelRegions = const {}}) {
+    final document = OfficialBackupExport.document(
+      publicKey: sourcePublicKey, profile: _nodeProfile,
+      privateKeyBase64: nodePrivateKey,
+      contacts: _sections['contacts'], channels: _sections['channels'],
+      autoAdd: locationPreferences?.contacts ?? const {},
+      manualAddContacts: manualAddContacts,
+      regions: regions, channelRegions: channelRegions,
+    );
+    final contents = const JsonEncoder.withIndent('  ').convert(document);
+    if (utf8.encode(contents).length > backupMaxJsonBytes) {
+      throw const BackupFileTooLarge();
+    }
+    return contents;
   }
 
   Future<String> encode({required String password}) async {

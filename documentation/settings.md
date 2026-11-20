@@ -555,3 +555,18 @@ Structured log entries (Info / Warning / Error), with tag, message, and timestam
 ## About
 
 Shows the standard Flutter about dialog with app name, version, and legal notice.
+
+### Official MeshCore export format
+
+In Backup, enable **Export in the official MeshCore app format** above Create
+backup to produce a configuration JSON with official root-level fields such as
+`public_key`, `radio_settings`, `channels` and `contacts`. The switch defaults off.
+This mode requires a connected, ready node. Only selected data supported by that
+format is exported. App-specific settings and additional identities are omitted
+from the output JSON. The format switch never changes their checkbox values or
+availability; the interface retains the user selection.
+
+Official-format JSON is unencrypted, regardless of the password field. A node
+private key is included only if its checkbox is selected. Keep the regular format
+for encrypted backups, MCOa extensions and application histories. Channel message
+retention is exported as null because MCOa has no corresponding stored value.

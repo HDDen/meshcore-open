@@ -13600,6 +13600,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  int get backupManualAddContactFlags => _manualAddContactFlags;
+
   bool get canBackupAutoAddConfig => _canUseNodeProfileBackup &&
       supportsAutoAddConfig && _backupAutoAddReadSession == _nodeLocalBackupSession;
 

@@ -133,6 +133,30 @@ void main() {
     return tester.element(find.byType(BackupScreen)).l10n;
   }
 
+  testWidgets('official format defaults off and leaves unsupported selection controls unchanged', (tester) async {
+    await show(tester, const BackupScreen());
+    final toggle = find.byKey(const ValueKey('backup-official-format'));
+    await _reveal(tester, toggle);
+    expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+    final mod = find.byKey(ValueKey('backup-${PortableAppSettings.extension}'));
+    tester.state<ScrollableState>(find.byType(Scrollable).first).position.jumpTo(0);
+    await tester.pump();
+    await _reveal(tester, mod);
+    expect(tester.widget<CheckboxListTile>(mod).onChanged, isNotNull);
+    expect(tester.widget<CheckboxListTile>(mod).value, isTrue);
+    await _reveal(tester, toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    tester.state<ScrollableState>(find.byType(Scrollable).first).position.jumpTo(0);
+    await tester.pump();
+    await _reveal(tester, mod);
+    expect(tester.widget<CheckboxListTile>(mod).value, isTrue);
+    expect(tester.widget<CheckboxListTile>(mod).onChanged, isNotNull);
+  });
+
   for (final language in ['en', 'ru']) {
     testWidgets('unified backup exports portable sections offline ($language, scale 2)', (tester) async {
       tester.view.physicalSize = const Size(390, 844);

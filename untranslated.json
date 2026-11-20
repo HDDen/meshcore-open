@@ -455,7 +455,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "de": [
@@ -914,7 +916,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "es": [
@@ -1373,7 +1377,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "fr": [
@@ -1832,7 +1838,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "hu": [
@@ -2291,7 +2299,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "it": [
@@ -2750,7 +2760,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "ja": [
@@ -3209,7 +3221,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "ko": [
@@ -3668,7 +3682,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "nl": [
@@ -4127,7 +4143,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "pl": [
@@ -4586,7 +4604,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "pt": [
@@ -5045,7 +5065,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "sk": [
@@ -5504,7 +5526,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "sl": [
@@ -5963,7 +5987,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "sv": [
@@ -6422,7 +6448,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "uk": [
@@ -6881,7 +6909,9 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ],
 
   "zh": [
@@ -7340,6 +7370,8 @@
     "themes_mcoaSignal",
     "themes_mcoaSenderNameBrightness",
     "extraKeys_ackWithoutPath",
-    "extraKeys_ackWithoutPathHelper"
+    "extraKeys_ackWithoutPathHelper",
+    "backup_officialFormat",
+    "backup_officialFormatHint"
   ]
 }

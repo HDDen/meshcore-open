@@ -4739,3 +4739,20 @@ recheck key availability. Deleting/locking a key closes the session and requests
 peer disconnect on BLE where supported. Reauthentication never clears the stored
 binding. Account binding changes disconnect existing clients. Labels live in
 service ARBs, so existing licences do not need replacement.
+
+### Official MeshCore configuration export
+
+The unified `BackupScreen` has a default-off official-format switch immediately
+before Create backup. `BackupSnapshot.encodeOfficial` delegates to
+`OfficialBackupExport`: a plaintext root-level official configuration, not the
+Open v1 envelope. The password field remains available for import and normal
+export but does not encrypt official output. Private key inclusion remains
+explicit; additional identities and app-only settings are filtered out only
+when capturing the official export. Their checkboxes remain selected and editable
+according to normal availability, regardless of export format. Official
+export requires a ready physical node and always includes its public key. Radio
+frequency is kHz, bandwidth Hz, keys hex, contact times seconds, coordinates
+strings. Channel slots are retained with empty placeholder objects; contact hop
+lists retain their per-hop hash width. Available regions and channel assignments
+use their 16-byte scope keys. Auto-add settings and manual contact flags use only
+read-back node state. Unsupported app history/retention data is not invented.

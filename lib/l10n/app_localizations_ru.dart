@@ -10987,4 +10987,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get extraKeys_ackWithoutPathHelper =>
       'Не отправлять PATH с вложенным ACK, чтобы не влиять на сохранённый у отправителя маршрут; в случае flood-отправки отправляется ответный flood-ACK, по которому отправитель всё же сможет назначить маршрут.';
+
+  @override
+  String get backup_officialFormat =>
+      'Экспорт в формат официального приложения MeshCore';
+
+  @override
+  String get backup_officialFormatHint =>
+      'Создаётся незашифрованный JSON. Пароль не применяется. Включаются только данные официального формата; настройки MCOa и дополнительные ключи не экспортируются.';
 }

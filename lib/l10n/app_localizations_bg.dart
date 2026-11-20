@@ -11019,4 +11019,12 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get extraKeys_ackWithoutPathHelper =>
       'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.';
+
+  @override
+  String get backup_officialFormat =>
+      'Export in the official MeshCore app format';
+
+  @override
+  String get backup_officialFormatHint =>
+      'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.';
 }

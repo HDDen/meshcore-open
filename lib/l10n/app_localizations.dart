@@ -18357,6 +18357,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.'**
   String get extraKeys_ackWithoutPathHelper;
+
+  /// No description provided for @backup_officialFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Export in the official MeshCore app format'**
+  String get backup_officialFormat;
+
+  /// No description provided for @backup_officialFormatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.'**
+  String get backup_officialFormatHint;
 }
 
 class _AppLocalizationsDelegate

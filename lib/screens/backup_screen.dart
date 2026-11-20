@@ -11,6 +11,7 @@ import '../helpers/backup_node_profile.dart';
 import '../helpers/backup_node_identity.dart';
 import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
+import '../helpers/official_backup_export.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
@@ -42,6 +43,9 @@ Future<_ImportedSections> _inspect(
 Future<String> _encode(
   ({BackupSnapshot snapshot, String password}) input,
 ) => input.snapshot.encode(password: input.password);
+
+String _encodeOfficial(({BackupSnapshot snapshot, int? manualAddContacts, Map<int, String> channelRegions}) input) =>
+    input.snapshot.encodeOfficial(manualAddContacts: input.manualAddContacts, channelRegions: input.channelRegions);
 
 Future<XFile?> _pickFile() =>
     openFile(acceptedTypeGroups: const [backupJsonFileType]);
@@ -85,6 +89,7 @@ class _BackupScreenState extends State<BackupScreen> {
   XFile? _file;
   _ImportedSections? _imported;
   bool _busy = false;
+  bool _officialFormat = false;
   String? _notice;
 
   @override
@@ -154,11 +159,20 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  Future<void> _export(MeshCoreConnector node, Set<String> items) async {
+  Future<void> _export(MeshCoreConnector node, Set<String> selection) async {
+    // Format filters the output only; it never changes selection controls.
+    final items = _officialFormat
+        ? selection.where(OfficialBackupExport.items.contains).toSet()
+        : selection;
+    if (!_busy && items.isEmpty) {
+      setState(() => _notice = context.l10n.backupExport_empty);
+      return;
+    }
     if (_busy || items.isEmpty) return;
-    final password = _password.text;
+    final official = _officialFormat;
+    final password = official ? '' : _password.text;
     final l10n = context.l10n;
-    if (password.isEmpty && items.any(_secretItems.contains)) {
+    if (!official && password.isEmpty && items.any(_secretItems.contains)) {
       setState(() => _notice = l10n.backupRestore_passwordRequired);
       return;
     }
@@ -215,7 +229,7 @@ class _BackupScreenState extends State<BackupScreen> {
         setState(() => _notice = l10n.backupExport_notReady);
         return;
       }
-      final snapshot = items.any(_nodeItems.contains)
+      final snapshot = official || items.any(_nodeItems.contains)
           ? await node.snapshotBackup(
               includeChannels: items.contains('channels'),
               includeContacts: items.contains('contacts'),
@@ -226,7 +240,7 @@ class _BackupScreenState extends State<BackupScreen> {
               includeCommunities: items.contains('communities'),
               appSettings: display,
               profileParts: parts,
-              publicKeySelected: items.contains('publicKey'),
+              publicKeySelected: official || items.contains('publicKey'),
               includePrivateKey: items.contains('privateKey'),
               locationPreferences: node.captureBackupLocationPreferences(items, app),
               regions: regions,
@@ -250,9 +264,17 @@ class _BackupScreenState extends State<BackupScreen> {
             snapshot == null ? l10n.backupExport_notReady : l10n.backupExport_empty);
         return;
       }
-      final contents = await compute(
-        _encode, (snapshot: snapshot, password: password),
-      );
+      final contents = official
+          ? await compute(_encodeOfficial, (
+              snapshot: snapshot,
+              manualAddContacts: items.contains('contactSettings') || items.contains('privacySettings')
+                  ? node.backupManualAddContactFlags : null,
+              channelRegions: {
+                if (items.contains('channels'))
+                  for (final channel in node.channels) channel.index: node.getChannelRegion(channel.index),
+              },
+            ))
+          : await compute(_encode, (snapshot: snapshot, password: password));
       if (!mounted) return;
       final saved = await widget.saveFile(
         contents, snapshot.fileName, sharePositionOrigin: saveOrigin,
@@ -713,6 +735,14 @@ class _BackupScreenState extends State<BackupScreen> {
                     ],
                   ],
                 ),
+              ),
+              SwitchListTile(
+                key: const ValueKey('backup-official-format'),
+                title: Text(l10n.backup_officialFormat),
+                subtitle: Text(l10n.backup_officialFormatHint,
+                  style: Theme.of(context).textTheme.bodySmall),
+                value: _officialFormat,
+                onChanged: _busy ? null : (value) => setState(() => _officialFormat = value),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
