@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../helpers/companion_cli_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/quick_actions_settings.dart';
+import '../models/quick_actions_header_settings.dart';
 import '../services/app_settings_service.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/mesh_ui.dart';
@@ -42,6 +44,13 @@ class QuickActionsSettingsScreen extends StatelessWidget {
     final service = context.watch<AppSettingsService>();
     final items = service.settings.quickActions.items;
     final l10n = context.l10n;
+    final header = service.settings.quickActionsHeader;
+    final display = header.display;
+    final intervals = QuickActionsHeaderSettings.allowedIntervalsMs;
+    final intervalIndex = intervals.indexOf(header.intervalMsFor(display));
+    String intervalText(int milliseconds) => l10n.quickActions_intervalSeconds(
+      NumberFormat('0.#', Localizations.localeOf(context).toLanguageTag()).format(milliseconds / 1000),
+    );
     return Scaffold(
       appBar: AppBar(title: AdaptiveAppBarTitle(l10n.quickActions_settings)),
       body: SafeArea(
@@ -77,25 +86,52 @@ class QuickActionsSettingsScreen extends StatelessWidget {
               ),
               MeshCard(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButton<int>(
-                  value: 0,
+                child: DropdownButton<QuickActionsHeaderDisplay>(
+                  key: const ValueKey('quick-actions-header-display'),
+                  value: display,
                   isExpanded: true,
                   items: [
-                    DropdownMenuItem(value: 0, child: Text(l10n.quickActions_icon)),
-                    DropdownMenuItem(
-                      value: 1,
-                      enabled: false,
-                      child: Text(l10n.quickActions_noise),
-                    ),
-                    DropdownMenuItem(
-                      value: 2,
-                      enabled: false,
-                      child: Text(l10n.quickActions_extraHops),
-                    ),
+                    for (final mode in QuickActionsHeaderDisplay.values)
+                      DropdownMenuItem(
+                        value: mode, enabled: mode.selectable,
+                        child: Text(mode.label(l10n)),
+                      ),
                   ],
-                  onChanged: (_) {},
+                  onChanged: (mode) {
+                    if (mode == null || !mode.selectable) return;
+                    final settings = service.settings;
+                    service.updateSettings(settings.copyWith(
+                      quickActionsHeader: settings.quickActionsHeader.copyWith(display: mode),
+                    ));
+                  },
                 ),
               ),
+              if (display.hasPolling)
+                MeshCard(
+                  key: const ValueKey('quick-actions-header-interval'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(l10n.quickActions_updateInterval),
+                      Text(intervalText(intervals[intervalIndex])),
+                      Slider(
+                        value: intervalIndex.toDouble(), min: 0,
+                        max: (intervals.length - 1).toDouble(),
+                        divisions: intervals.length - 1,
+                        label: intervalText(intervals[intervalIndex]),
+                        semanticFormatterCallback: (value) => intervalText(intervals[value.round()]),
+                        onChanged: (value) {
+                          final settings = service.settings;
+                          service.updateSettings(settings.copyWith(
+                            quickActionsHeader: settings.quickActionsHeader.withInterval(
+                              display, intervals[value.round()],
+                            ),
+                          ));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
           onReorderItem: (oldIndex, newIndex) {

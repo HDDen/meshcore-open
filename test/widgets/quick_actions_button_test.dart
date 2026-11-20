@@ -3,12 +3,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/companion_radio_stats.dart';
 import 'package:meshcore_open/models/quick_actions_settings.dart';
+import 'package:meshcore_open/models/quick_actions_header_settings.dart';
 import 'package:meshcore_open/screens/quick_actions_settings_screen.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -44,6 +46,23 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   final radioStatsNotifier = ValueNotifier<CompanionRadioStats?>(null);
+
+  @override
+  final ValueNotifier<int> radioStatsPollingOwners = ValueNotifier<int>(0);
+
+  @override
+  bool get radioStatsAirActivityPulse => false;
+
+  @override
+  void acquireRadioStatsPolling() {
+    radioStatsPollingOwners.value++;
+  }
+
+  @override
+  void releaseRadioStatsPolling() {
+    if (radioStatsPollingOwners.value > 0) radioStatsPollingOwners.value--;
+  }
+
 
   int? power = 17;
   @override
@@ -85,6 +104,7 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   void dispose() {
+    radioStatsPollingOwners.dispose();
     radioStatsNotifier.dispose();
     repeaterActivity.dispose();
     super.dispose();
@@ -200,6 +220,7 @@ Future<void> _open(
   AppSettingsService settings, {
   SettingsSectionsService? sections,
   bool useHeader = false,
+  bool openPanel = true,
 }) async {
   await tester.pumpWidget(
     MultiProvider(
@@ -225,8 +246,10 @@ Future<void> _open(
       ),
     ),
   );
-  await tester.tap(find.byTooltip('Quick actions'));
-  await tester.pumpAndSettle();
+  if (openPanel) {
+    await tester.tap(find.byTooltip('Quick actions'));
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -236,6 +259,65 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  testWidgets('header noise opens the panel and never polls in background or when hidden', (tester) async {
+    final radio = _Radio()..statsSupported = true;
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    addTearDown(() => tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settings.updateSettings(settings.settings.copyWith(
+      quickActions: _visibleActions(const []),
+      quickActionsHeader: QuickActionsHeaderSettings(display: QuickActionsHeaderDisplay.noise)
+          .withInterval(QuickActionsHeaderDisplay.noise, 500),
+    ));
+    await _open(tester, radio, settings, useHeader: true, openPanel: false);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(radio.noiseReads, 1);
+    radio.radioStatsNotifier.value = CompanionRadioStats(
+      noiseFloorDbm: -109, lastRssiDbm: -90, lastSnrDb: 5,
+      txAirSecs: 0, rxAirSecs: 0, receivedAt: DateTime(2026, 11, 20),
+    );
+    await tester.pump();
+    final reading = find.byKey(const ValueKey('quick-actions-header-reading'));
+    expect(find.descendant(of: reading, matching: find.text('-109\ndBm')), findsOneWidget);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    final paused = radio.noiseReads;
+    await tester.pump(const Duration(seconds: 5));
+    expect(radio.noiseReads, paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(radio.noiseReads, paused + 1);
+    await settings.updateSettings(settings.settings.copyWith(showQuickActionsInMainHeader: false));
+    await tester.pump();
+    final hidden = radio.noiseReads;
+    await tester.pump(const Duration(seconds: 3));
+    expect(radio.noiseReads, hidden);
+    expect(reading, findsNothing);
+    await settings.updateSettings(settings.settings.copyWith(showQuickActionsInMainHeader: true));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.tap(find.byTooltip('Quick actions'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    final covered = radio.noiseReads;
+    await tester.pump(const Duration(seconds: 3));
+    expect(radio.noiseReads, covered);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    await settings.updateSettings(settings.settings.copyWith(quickActionsHeader:
+      settings.settings.quickActionsHeader.copyWith(display: QuickActionsHeaderDisplay.icon)));
+    await tester.pump();
+    final icon = radio.noiseReads;
+    await tester.pump(const Duration(seconds: 3));
+    expect(radio.noiseReads, icon);
+    expect(reading, findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  }, variant: TargetPlatformVariant({foundation.TargetPlatform.android}));
+
 
   testWidgets('barrier dismissal stops live queries before reverse animation ends', (tester) async {
     final radio = _Radio()..statsSupported = true;

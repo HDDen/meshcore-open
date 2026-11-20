@@ -5,6 +5,32 @@ contact header. **Configure** opens **Modification settings → General → Widg
 settings**, where each action can be shown, hidden and reordered independently.
 The three header switches control where the panel button appears.
 
+## Header display
+
+In **Widget settings → Header button**, choose **Icon** or **Noise level**.
+The latter shows the current noise floor in dBm instead of the widgets icon;
+pressing it still opens the quick-actions panel. **Extra hops** is reserved and
+cannot yet be selected.
+
+Selecting a live display reveals **Refresh interval** below the selector.
+The slider has seven steps: 0.5, 1, 2, 3, 5, 7 and 10 seconds. One second is the
+default. The app retains each live display's interval independently when you
+switch modes. This preference applies only to header buttons; the Noise floor
+widget inside the panel continues to poll once per second.
+
+Header polling requires a visible header on the current route and a ready
+node. On Android and iOS it continues while the app is visible but unfocused
+(`inactive`), including Android split screen/floating windows. It pauses only
+when the app is actually hidden/backgrounded (`hidden`/`paused`) or detached.
+Windows, Linux and macOS have no app-lifecycle pause policy for this header:
+losing window focus does not stop its queries. Web retains its existing
+visibility policy.
+
+On every platform, hiding the header, covering its route (including opening
+the quick-actions panel), choosing Icon or losing the connection still stops
+header queries. Returning to a visible, allowed header resumes its configured
+cadence. Unsupported statistics show a dash and do not send queries.
+
 ## Live radio widgets
 
 - **Noise floor** shows the latest radio noise reading in dBm. Pressing it

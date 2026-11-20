@@ -5,6 +5,7 @@ import 'translation_support.dart';
 import 'power_saving_settings.dart';
 import 'low_battery_alert_settings.dart';
 import 'quick_actions_settings.dart';
+import 'quick_actions_header_settings.dart';
 import '../helpers/cyr2lat.dart';
 
 String normalizeIpfsGateway(String value) {
@@ -303,6 +304,7 @@ class AppSettings {
   final bool uiScaleApplyToIcons;
 
   final QuickActionsSettings quickActions;
+  final QuickActionsHeaderSettings quickActionsHeader;
   final bool showQuickActionsInMainHeader;
   final bool showQuickActionsInChannelHeader;
   final bool showQuickActionsInContactHeader;
@@ -823,6 +825,7 @@ class AppSettings {
     this.mcoImageReplacementsSharpness = 0,
     this.uiScale = 1.0,
     this.quickActions = const QuickActionsSettings.defaults(),
+    this.quickActionsHeader = const QuickActionsHeaderSettings.defaults(),
     this.showQuickActionsInMainHeader = true,
     this.showQuickActionsInChannelHeader = true,
     this.showQuickActionsInContactHeader = true,
@@ -1010,6 +1013,7 @@ class AppSettings {
       'mco_image_replacements_sharpness': mcoImageReplacementsSharpness,
       'ui_scale': uiScale,
       'quick_actions': quickActions.toJson(),
+      'quick_actions_header': quickActionsHeader.toJson(),
       'quick_actions_in_main_header': showQuickActionsInMainHeader,
       'quick_actions_in_channel_header': showQuickActionsInChannelHeader,
       'quick_actions_in_contact_header': showQuickActionsInContactHeader,
@@ -1230,6 +1234,7 @@ class AppSettings {
           (json['mco_image_replacements_sharpness'] as num?)?.toInt() ?? 0,
       uiScale: (json['ui_scale'] as num?)?.toDouble() ?? 1.0,
       quickActions: QuickActionsSettings.fromJson(json['quick_actions']),
+      quickActionsHeader: QuickActionsHeaderSettings.fromJson(json['quick_actions_header']),
       showQuickActionsInMainHeader: json['quick_actions_in_main_header'] != false,
       showQuickActionsInChannelHeader: json['quick_actions_in_channel_header'] != false,
       showQuickActionsInContactHeader: json['quick_actions_in_contact_header'] != false,
@@ -1513,6 +1518,7 @@ class AppSettings {
     int? mcoImageReplacementsSharpness,
     double? uiScale,
     QuickActionsSettings? quickActions,
+    QuickActionsHeaderSettings? quickActionsHeader,
     bool? showQuickActionsInMainHeader,
     bool? showQuickActionsInChannelHeader,
     bool? showQuickActionsInContactHeader,
@@ -1685,6 +1691,7 @@ class AppSettings {
           mcoImageReplacementsSharpness ?? this.mcoImageReplacementsSharpness,
       uiScale: uiScale ?? this.uiScale,
       quickActions: quickActions ?? this.quickActions,
+      quickActionsHeader: quickActionsHeader ?? this.quickActionsHeader,
       showQuickActionsInMainHeader:
           showQuickActionsInMainHeader ?? this.showQuickActionsInMainHeader,
       showQuickActionsInChannelHeader:

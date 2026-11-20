@@ -10643,6 +10643,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get quickActions_icon => 'Icon';
 
   @override
+  String get quickActions_updateInterval => 'Refresh interval';
+
+  @override
+  String quickActions_intervalSeconds(String seconds) {
+    return '$seconds s';
+  }
+
+  @override
   String get quickActions_noise => 'Noise level';
 
   @override

@@ -17644,6 +17644,18 @@ abstract class AppLocalizations {
   /// **'Icon'**
   String get quickActions_icon;
 
+  /// No description provided for @quickActions_updateInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh interval'**
+  String get quickActions_updateInterval;
+
+  /// No description provided for @quickActions_intervalSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String quickActions_intervalSeconds(String seconds);
+
   /// No description provided for @quickActions_noise.
   ///
   /// In en, this message translates to:

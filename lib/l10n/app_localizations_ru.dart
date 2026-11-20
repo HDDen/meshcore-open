@@ -10614,6 +10614,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickActions_icon => 'Иконка';
 
   @override
+  String get quickActions_updateInterval => 'Интервал обновления';
+
+  @override
+  String quickActions_intervalSeconds(String seconds) {
+    return '$seconds с';
+  }
+
+  @override
   String get quickActions_noise => 'Уровень шума';
 
   @override

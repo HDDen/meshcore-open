@@ -9,6 +9,7 @@ import '../helpers/companion_cli_protocol.dart';
 import '../helpers/quick_action_radio_polling.dart';
 import '../l10n/l10n.dart';
 import '../models/quick_actions_settings.dart';
+import '../models/quick_actions_header_settings.dart';
 import '../screens/additional_identity_screen.dart';
 import '../screens/companion_cli_screen.dart';
 import '../screens/discovery_screen.dart';
@@ -42,14 +43,91 @@ class QuickActionsHeaderButton extends StatelessWidget {
       (connector) => connector.isConnected && !connector.isOfflineMode,
     );
     if (!visible || !connected) return const SizedBox.shrink();
-    return QuickActionsButton(connector: context.read<MeshCoreConnector>());
+    return _QuickActionsHeaderIndicator(connector: context.read<MeshCoreConnector>());
+  }
+}
+
+class _QuickActionsHeaderIndicator extends StatefulWidget {
+  const _QuickActionsHeaderIndicator({required this.connector});
+  final MeshCoreConnector connector;
+
+  @override
+  State<_QuickActionsHeaderIndicator> createState() => _QuickActionsHeaderIndicatorState();
+}
+
+class _QuickActionsHeaderIndicatorState extends State<_QuickActionsHeaderIndicator> {
+  QuickActionRadioPolling? _polling;
+  ModalRoute<dynamic>? _route;
+  bool _tickerEnabled = false;
+
+  void _configurePolling() {
+    final service = context.read<AppSettingsService>();
+    final current = _polling;
+    if (current == null || !identical(current.connector, widget.connector) ||
+        !identical(current.settings, service)) {
+      current?.dispose();
+      _polling = QuickActionRadioPolling(
+        widget.connector, service, source: QuickActionPollingSource.header,
+        isVisible: () => mounted && _tickerEnabled && _route?.isCurrent == true,
+      );
+    }
+    _polling!.update();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _route = ModalRoute.of(context);
+    _tickerEnabled = TickerMode.valuesOf(context).enabled;
+    _configurePolling();
+  }
+
+  @override
+  void didUpdateWidget(covariant _QuickActionsHeaderIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.connector, widget.connector)) _configurePolling();
+  }
+
+  @override
+  void dispose() {
+    _polling?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final display = context.select<AppSettingsService, QuickActionsHeaderDisplay>(
+      (service) => service.settings.quickActionsHeader.display,
+    );
+    if (display == QuickActionsHeaderDisplay.icon || !display.selectable) {
+      return QuickActionsButton(connector: widget.connector);
+    }
+    return ValueListenableBuilder(
+      valueListenable: widget.connector.radioStatsNotifier,
+      builder: (context, stats, _) {
+        final noise = widget.connector.supportsCompanionRadioStats ? stats?.noiseFloorDbm : null;
+        return QuickActionsButton(
+          connector: widget.connector,
+          icon: SizedBox(
+            key: const ValueKey('quick-actions-header-reading'),
+            width: 36, height: 40,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('${noise ?? '—'}\ndBm',
+                textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelSmall),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
 class QuickActionsButton extends StatelessWidget {
-  const QuickActionsButton({super.key, required this.connector});
+  const QuickActionsButton({super.key, required this.connector, this.icon});
 
   final MeshCoreConnector connector;
+  final Widget? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +135,7 @@ class QuickActionsButton extends StatelessWidget {
       tooltip: context.l10n.quickActions_title,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints.tightFor(width: 40, height: 48),
-      icon: const Icon(Icons.widgets_outlined, size: 20),
+      icon: icon ?? const Icon(Icons.widgets_outlined, size: 20),
       onPressed: () async {
         final settings = context.read<AppSettingsService>();
         final sections = context.read<SettingsSectionsService?>();

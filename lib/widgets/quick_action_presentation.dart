@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/quick_actions_settings.dart';
+import '../models/quick_actions_header_settings.dart';
 
 extension QuickActionPresentation on QuickAction {
   IconData get icon => switch (this) {
@@ -57,4 +58,12 @@ extension QuickActionItemPresentation on QuickActionItem {
       QuickAction.channelMessage2 => '${l10n.quickActions_sendChannel} 2',
     };
   }
+}
+
+extension QuickActionsHeaderDisplayPresentation on QuickActionsHeaderDisplay {
+  String label(AppLocalizations l10n) => switch (this) {
+    QuickActionsHeaderDisplay.icon => l10n.quickActions_icon,
+    QuickActionsHeaderDisplay.noise => l10n.quickActions_noise,
+    QuickActionsHeaderDisplay.extraHops => l10n.quickActions_extraHops,
+  };
 }
