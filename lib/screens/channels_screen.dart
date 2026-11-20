@@ -1150,19 +1150,18 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               ],
             ),
             if (showDragHandle && dragIndex != null) ...[
+              const SizedBox(width: 4),
               ReorderableDragStartListener(
                 index: dragIndex,
                 child: MouseRegion(
                   cursor: SystemMouseCursors.grab,
                   child: Tooltip(
                     message: context.l10n.channels_dragToReorder,
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
                       child: Icon(
-                        Icons.drag_indicator,
-                        size: 28,
-                        color: McoaChatListStyle.color(context, 'icons', scheme.onSurface),
+                        Icons.drag_handle,
+                        color: McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                       ),
                     ),
                   ),

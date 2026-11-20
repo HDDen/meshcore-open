@@ -1153,6 +1153,37 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  for (final contactType in [advTypeChat, advTypeRoom]) {
+    testWidgets('contact and room drag handles match channel handles (type=$contactType)', (tester) async {
+      final contact = Contact(
+        publicKey: Uint8List.fromList(List.filled(32, 0x45)),
+        name: 'History contact', type: contactType, pathLength: -1,
+        path: Uint8List(0), lastSeen: DateTime.utc(2026), hasMessages: true,
+      );
+      connector.contactData.add(contact);
+      await settings.updateSettings(settings.settings.copyWith(
+        roomServerShowNotemptyContactsOnChatscreen: contactType == advTypeChat,
+        roomServerShowNotemptyOnChatscreen: contactType == advTypeRoom,
+        roomServerDisableRoomAndContactsSorting: false));
+      try {
+        await show(tester, const ChannelsScreen(hideBackButton: true));
+        await tester.pumpAndSettle();
+        final card = find.byKey(ValueKey('contact_chat_${contact.publicKeyHex}'));
+        final channel = find.byKey(const ValueKey('channel_1'));
+        final handle = find.descendant(of: card, matching: find.byIcon(Icons.drag_handle));
+        final channelHandle = find.descendant(of: channel, matching: find.byIcon(Icons.drag_handle));
+        expect(handle, findsOneWidget);
+        expect(find.descendant(of: card, matching: find.byIcon(Icons.drag_indicator)), findsNothing);
+        expect(tester.getSize(handle), tester.getSize(channelHandle));
+        expect(tester.widget<Icon>(handle).color, tester.widget<Icon>(channelHandle).color);
+        expect(find.ancestor(of: handle, matching: find.byType(ReorderableDragStartListener)), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    });
+  }
+
   for (final legacy in [true, false]) {
     testWidgets('CLI can enter and leave a folder without duplication, legacy=$legacy', (tester) async {
       connector.channelData.clear();
@@ -1355,7 +1386,8 @@ void main() {
       greaterThan(tester.getTopLeft(find.text(l10n.listFilter_unreadOnly)).dy),
     );
     expect(tester.widget<CheckedPopupMenuItem<Object?>>(checkedItem).checked, isFalse);
-    await tester.tap(option);
+    await tester.ensureVisible(checkedItem);
+    await tester.tap(checkedItem);
     await tester.pumpAndSettle();
     expect(find.text(cached.name), findsNothing);
     expect(find.text(stored.name), findsOneWidget);
@@ -1380,7 +1412,8 @@ void main() {
     expect(reopenedView.contactsNodeOnly, isTrue);
     await openFilters();
     expect(tester.widget<CheckedPopupMenuItem<Object?>>(checkedItem).checked, isTrue);
-    await tester.tap(option);
+    await tester.ensureVisible(checkedItem);
+    await tester.tap(checkedItem);
     await tester.pumpAndSettle();
     expect(find.text(cached.name), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
