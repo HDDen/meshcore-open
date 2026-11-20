@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 import 'package:cryptography/cryptography.dart';
 
+import '../helpers/responsive_key_pair_search.dart';
+import '../helpers/key_search_executor.dart';
+
 Uint8List randomBytes(int length) {
   final random = Random.secure();
   final bytes = Uint8List(length);
@@ -69,19 +72,49 @@ class _KeyHashPrefix {
 }
 
 class KeyPairSearcher {
+  KeyPairSearcher({Future<MCKeyPair> Function()? generatePair})
+      : _generatePair = generatePair ?? generateKeyPair,
+        _useWorker = generatePair == null && supportsKeySearchIsolates;
+
+  // Injection exercises event responsiveness without searching random keys.
+  final Future<MCKeyPair> Function() _generatePair;
+  final bool _useWorker;
+  final _executor = KeySearchExecutor();
+  int _revision = 0;
+
+  void cancel() {
+    _revision++;
+    _executor.cancel();
+  }
+
   Future<MCKeyPair?> findMatchingKeyPair(
     String prefixStr,
     int maxMilliseconds,
   ) async {
-    final int now = DateTime.now().millisecondsSinceEpoch;
-    final int endTime = now + maxMilliseconds;
-    final _KeyHashPrefix keyHashPrefix = _KeyHashPrefix(prefixStr);
-    while (DateTime.now().millisecondsSinceEpoch < endTime) {
-      final MCKeyPair keys = await generateKeyPair();
-      if (keyHashPrefix.matches(keys.public)) {
-        return keys;
-      }
-    }
-    return null;
+    final revision = ++_revision;
+    _executor.cancel();
+    final keyHashPrefix = _KeyHashPrefix(prefixStr);
+    if (maxMilliseconds <= 0) return null;
+    final result = _useWorker
+        ? await _executor.run<(String, int), MCKeyPair>(
+            _findDefaultKeyPairBatch, (prefixStr, maxMilliseconds))
+        : await responsiveKeyPairSearch<MCKeyPair>(
+            generate: _generatePair,
+            matches: (keys) => keyHashPrefix.matches(keys.public),
+            maxMilliseconds: maxMilliseconds,
+            isCancelled: () => revision != _revision,
+          );
+    return revision == _revision ? result : null;
   }
+}
+
+// A top-level worker entry avoids sending UI state or controller closures.
+Future<MCKeyPair?> _findDefaultKeyPairBatch((String, int) request) {
+  final prefix = _KeyHashPrefix(request.$1);
+  return responsiveKeyPairSearch<MCKeyPair>(
+    generate: generateKeyPair,
+    matches: (keys) => prefix.matches(keys.public),
+    maxMilliseconds: request.$2,
+    yieldToEvents: false,
+  );
 }

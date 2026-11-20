@@ -11,12 +11,22 @@ import 'package:meshcore_open/services/additional_identity_vault.dart';
 import 'package:meshcore_open/widgets/additional_identity_key_dialog.dart';
 
 class _PendingSearch extends KeyPairSearcher {
-  final result = Completer<MCKeyPair?>();
+  final results = <Completer<MCKeyPair?>>[];
+  Completer<MCKeyPair?> get result => results.first;
+  int cancellations = 0;
+
+  @override
+  void cancel() {
+    cancellations++;
+    super.cancel();
+  }
   String? prefix;
   @override
   Future<MCKeyPair?> findMatchingKeyPair(String prefixStr, int maxMilliseconds) {
     prefix = prefixStr;
-    return result.future;
+    final pending = Completer<MCKeyPair?>();
+    results.add(pending);
+    return pending.future;
   }
 }
 
@@ -78,10 +88,31 @@ void main() {
       await tester.enterText(secret, '');
       await tester.pumpAndSettle();
       expect(preview(), isEmpty);
-      await tester.ensureVisible(find.byTooltip(l10n.repeater_generatePrvKey));
-      await tester.tap(find.byTooltip(l10n.repeater_generatePrvKey));
-      await settlePreview();
-      final generated = tester.widget<TextField>(secret).controller!.text;
+      final generateButton = find.byTooltip(l10n.repeater_generatePrvKey);
+      await tester.ensureVisible(generateButton);
+      final secretController = tester.widget<TextField>(secret).controller!;
+      // Generation explicitly yields to event-queue timers. Start and await
+      // the real crypto work in runAsync, then render it with fake-clock pumps.
+      // Polling only the public preview can finish before a private key exists.
+      await tester.runAsync(() async {
+        final generated = Completer<void>();
+        void keyChanged() {
+          if (secretController.text.length == 128 && !generated.isCompleted) {
+            generated.complete();
+          }
+        }
+        secretController.addListener(keyChanged);
+        try {
+          await tester.tap(generateButton);
+          await generated.future.timeout(const Duration(seconds: 5));
+        } finally {
+          secretController.removeListener(keyChanged);
+        }
+      });
+      await tester.pumpAndSettle();
+      final generated = secretController.text;
+      expect(generated, matches(RegExp(r'^[a-fA-F0-9]{128}$')),
+          reason: 'generation must finish before checking the derived public key');
       final derived = (await tester.runAsync(() => MeshCoreExpandedIdentity.fromHex(generated)))!;
       expect(preview(), derived.publicKeyHex);
       await tester.tap(find.text(l10n.common_cancel));
@@ -107,7 +138,21 @@ void main() {
       expect(stop, findsOneWidget);
       await tester.tap(stop);
       await tester.pumpAndSettle();
+      expect(pending.cancellations, 1);
+      expect(find.byTooltip(l10n.repeater_generatePrvKey), findsOneWidget);
+      await tester.tap(find.byTooltip(l10n.repeater_generatePrvKey));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(pending.results, hasLength(2));
+      // A result from the stopped search must not overwrite the key or stop
+      // the new search, even if it arrives while that new search is active.
       pending.result.complete(MCKeyPair(Uint8List(32)..[0] = 0x11, Uint8List(64)));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byTooltip(l10n.repeater_stopGeneratingPrvKey), findsOneWidget);
+      expect(tester.widget<TextField>(secret).controller!.text, entry.identity.privateKeyHex);
+      await tester.tap(find.byTooltip(l10n.repeater_stopGeneratingPrvKey));
+      await tester.pumpAndSettle();
+      expect(pending.cancellations, 2);
+      pending.results[1].complete(MCKeyPair(Uint8List(32)..[0] = 0x22, Uint8List(64)));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(secret).controller!.text, entry.identity.privateKeyHex);
       expect(preview(), entry.identity.publicKeyHex);

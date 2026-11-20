@@ -64,10 +64,12 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
 
   void _stopGenerating() {
     _generationRevision++;
+    _searcher.cancel();
     if (mounted) setState(() { _searching = false; _busy = false; });
   }
 
   Future<void> _generate() async {
+    if (_busy) return;
     final prefix = _prefix.text.trim().toLowerCase();
     // These first bytes are reserved by MeshCore and cannot yield valid keys.
     if (prefix.startsWith('00') || prefix.startsWith('ff')) {
@@ -117,6 +119,7 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
   @override
   void dispose() {
     _generationRevision++;
+    _searcher.cancel();
     _prefix.dispose();
     _key.removeListener(_refreshPublicKey);
     _publicKey.dispose();
@@ -164,7 +167,10 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
       ),
       actions: [
         TextButton(
-          onPressed: widget.nodeKey && _busy && !_searching ? null : () => Navigator.pop(context),
+          onPressed: widget.nodeKey && _busy && !_searching ? null : () {
+            if (_searching) _stopGenerating();
+            Navigator.pop(context);
+          },
           child: Text(widget.nodeKey ? l10n.common_close : l10n.common_cancel),
         ),
         FilledButton(onPressed: _busy ? null : _submit, child: Text(widget.nodeKey ? l10n.common_save : l10n.common_ok)),

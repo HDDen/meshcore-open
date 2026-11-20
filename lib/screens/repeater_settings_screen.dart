@@ -145,7 +145,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
   double _loadAllProgress = 0;
   final Set<String> _loadedKeys = {};
   bool _searchingForKeyPair = false;
-  bool _stopSearchingForKeyPair = false;
+  int _keySearchRevision = 0;
   StreamSubscription<Uint8List>? _frameSubscription;
   RepeaterCommandService? _commandService;
 
@@ -281,7 +281,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     for (final controller in _extraControllers.values) {
       controller.dispose();
     }
-    _stopSearchingForKeyPair = true;
+    _keySearchRevision++;
+    _keyPairSearcher.cancel();
     super.dispose();
   }
 
@@ -1392,34 +1393,36 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     }
   }
 
-  void _startSearchingForKeyPair() async {
+  void _startSearchingForKeyPair() {
     if (_searchingForKeyPair) return;
-    setState(() {
-      _searchingForKeyPair = true;
-      _stopSearchingForKeyPair = false;
-    });
-    _searchForKeyPair();
+    final revision = ++_keySearchRevision;
+    setState(() => _searchingForKeyPair = true);
+    unawaited(_searchForKeyPair(revision));
   }
 
-  void _searchForKeyPair() async {
-    if (_stopSearchingForKeyPair) {
-      if (mounted) setState(() => _searchingForKeyPair = false);
-      return;
-    }
-    final String prefix = _prvKeyPrefixController.text.trim();
-    MCKeyPair? keys = await _keyPairSearcher.findMatchingKeyPair(
-      prefix,
-      _searchChunkTime,
-    );
-    if (!mounted) return;
-    if (keys == null) {
-      // Ran out of time; schedule another attempt.
-      Timer.run(_searchForKeyPair);
-    } else {
-      setState(() => _searchingForKeyPair = false);
-      _prvKeyController.text = pubKeyToHex(keys.private);
-      _pubKeyController.text = pubKeyToHex(keys.public);
-      _markChanged(_SettingField.prvKey);
+  void _stopSearchingForKeyPair() {
+    _keySearchRevision++;
+    _keyPairSearcher.cancel();
+    setState(() => _searchingForKeyPair = false);
+  }
+
+  Future<void> _searchForKeyPair(int revision) async {
+    final prefix = _prvKeyPrefixController.text.trim();
+    try {
+      while (mounted && revision == _keySearchRevision) {
+        final keys = await _keyPairSearcher.findMatchingKeyPair(prefix, _searchChunkTime);
+        if (!mounted || revision != _keySearchRevision) return;
+        if (keys != null) {
+          _prvKeyController.text = pubKeyToHex(keys.private);
+          _pubKeyController.text = pubKeyToHex(keys.public);
+          _markChanged(_SettingField.prvKey);
+          break;
+        }
+      }
+    } finally {
+      if (mounted && revision == _keySearchRevision) {
+        setState(() => _searchingForKeyPair = false);
+      }
     }
   }
 
@@ -2675,7 +2678,8 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
             prefix: _prvKeyPrefixController,
             searching: _searchingForKeyPair,
             onGenerate: _startSearchingForKeyPair,
-            onStop: () => _stopSearchingForKeyPair = true,
+            onStop: _stopSearchingForKeyPair,
+            editable: !_searchingForKeyPair,
             privateError: _prvKeyController.text.isNotEmpty &&
                     !_prvKeyPattern.hasMatch(_prvKeyController.text)
                 ? l10n.repeater_prvKeyLengthError(_prvKeyHexLength) : null,

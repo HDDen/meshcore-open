@@ -315,3 +315,19 @@ Nine configuration cards, each with its own per-field refresh button(s):
 ## Region configuration and companion statistics
 
 Repeater region commands configure the relay’s forwarding policy. The app’s [region list and channel selector](regions.md) choose scopes for outgoing channel floods; adding a name locally does not configure a repeater. [Companion radio statistics](radio-statistics.md) describe your paired radio rather than the remote repeater shown here.
+
+
+### Stopping key-prefix generation
+
+On Android, iOS and desktop, key generation runs in a separate isolate. Stop
+and the dialog's Cancel/Close action terminate that worker; reopening or
+restarting creates a new search. On web, cancellation is checked within the
+cooperative search loop, between individual cryptographic candidates.
+
+The key-generation stop icon stays active while private-key and prefix editing
+are temporarily disabled. Search regularly yields to input and frame processing
+so long prefix searches remain cancellable, including in the additional-key
+and connected-node key dialogs. Stop ends the current search without applying
+a late result; an existing key stays unchanged. Starting again begins a new
+search, and closing the screen also discards the pending result. This changes
+local generation only; it sends no key to the device until you save it.
