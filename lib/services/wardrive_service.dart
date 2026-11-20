@@ -88,6 +88,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
 
   StreamSubscription<Uint8List>? _framesSubscription;
   bool _disposed = false;
+  bool _mapStateNotificationScheduled = false;
   int _locationRevision = 0;
   late final _continuousLocation = ContinuousLocationSubscription<Position>(
     prepare: _ensureLocationAvailable,
@@ -529,7 +530,7 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void clearMapState() {
-    if (_isRunning) return;
+    if (_disposed || _isRunning) return;
     _showMapState = false;
     _usePhoneLocationForDisplay = false;
     _currentDiscoveryPublicKeys.clear();
@@ -541,7 +542,14 @@ class WardriveService extends ChangeNotifier with WidgetsBindingObserver {
     _lastSampleError = null;
     _lastAutoDiscoveryError = null;
     _nextAutoDiscoveryAt = null;
-    notifyListeners();
+    // MapScreen.dispose calls this while Flutter finalizes the widget tree.
+    // Mutate immediately, but notify surviving consumers after tree unlock.
+    if (_mapStateNotificationScheduled) return;
+    _mapStateNotificationScheduled = true;
+    scheduleMicrotask(() {
+      _mapStateNotificationScheduled = false;
+      if (!_disposed) notifyListeners();
+    });
   }
 
   void _scheduleAutoDiscovery(Duration delay) {

@@ -4756,3 +4756,12 @@ strings. Channel slots are retained with empty placeholder objects; contact hop
 lists retain their per-hop hash width. Available regions and channel assignments
 use their 16-byte scope keys. Auto-add settings and manual contact flags use only
 read-back node state. Unsupported app history/retention data is not invented.
+
+### Wardrive state on map teardown
+
+`MapScreen.dispose` clears transient Wardrive map state immediately when capture
+is not running. `WardriveService.clearMapState` coalesces only its listener
+notification into a microtask, so surviving Provider consumers are notified after
+Flutter unlocks the tree during route teardown. A disposed service suppresses
+that pending notification; running Wardrive sessions remain untouched. The map
+route-replacement regression keeps the Provider alive to exercise this path.

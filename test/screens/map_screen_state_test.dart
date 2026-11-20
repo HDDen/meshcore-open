@@ -365,6 +365,30 @@ void main() {
     }
   });
 
+  testWidgets('leaving the map clears wardrive state after widget tree unlock', (tester) async {
+    try {
+      final harness = await _Harness.pump(tester, nodes: [], zoom: 15);
+      harness.wardrive.showMapState();
+      await tester.pump();
+      expect(harness.wardrive.hasMapState, isTrue);
+      final navigator = Navigator.of(tester.element(find.byType(MapScreen)));
+      unawaited(navigator.pushReplacement<void, void>(PageRouteBuilder<void>(
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (_, _, _) => Scaffold(body: Consumer<WardriveService>(
+          builder: (_, wardrive, _) => Text(wardrive.hasMapState ? 'map state' : 'map cleared'),
+        )),
+      )));
+      await _pumpFrames(tester);
+      expect(find.byType(MapScreen), findsNothing);
+      expect(harness.wardrive.hasMapState, isFalse);
+      expect(find.text('map cleared'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await _Harness.unmount(tester);
+    }
+  });
+
   group('U06b3 baseline: fork path-trace builder', () {
     List<int> hop(int width, int first) =>
         List<int>.generate(width, (index) => first + index);
