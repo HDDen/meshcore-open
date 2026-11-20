@@ -10635,6 +10635,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get quickActions_bleProxy => 'BLE proxy';
 
   @override
+  String get quickActions_radioNoise => 'Noise floor';
+
+  @override
+  String get quickActions_radioTxPower => 'Radio TX power';
+
+  @override
   String get quickActions_radioStats => 'Radio statistics';
 
   @override

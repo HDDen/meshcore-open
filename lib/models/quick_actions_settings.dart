@@ -18,7 +18,9 @@ enum QuickAction {
   readChannels,
   readDirect,
   readAll,
-  channelIndices;
+  channelIndices,
+  radioNoise,
+  radioTxPower;
 
   bool get isCliCommand => this == cliCommand1 || this == cliCommand2;
   bool get isChannelMessage => this == channelMessage1 || this == channelMessage2;

@@ -4064,6 +4064,8 @@
   "quickActions_companionProxy": "Companion-прокси",
   "quickActions_tcpProxy": "Прокси TCP",
   "quickActions_bleProxy": "Прокси BLE",
+  "quickActions_radioNoise": "Уровень шума",
+  "quickActions_radioTxPower": "Мощность радио",
   "quickActions_radioStats": "Статистика радио",
   "quickActions_sensors": "Просмотр датчиков",
   "quickActions_readChannels": "Прочитать каналы",

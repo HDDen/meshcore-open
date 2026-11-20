@@ -19,6 +19,10 @@ class _NoPreferencesDirectory extends PathProviderPlatform {
 // Открытие транспорта, первый load БД и cold initial sync здесь не запускаются.
 class _HandshakeConnector extends MeshCoreConnector {
   bool connected = true;
+  bool radioSnapshotReady = false;
+
+  @override
+  bool get isSessionReady => radioSnapshotReady || super.isSessionReady;
   final frames = <List<int>>[];
   final gates = <Completer<void>>[];
   Future<void> Function(int command)? beforeWrite;
@@ -48,11 +52,12 @@ class _HandshakeConnector extends MeshCoreConnector {
     return gate;
   }
 
-  void selfInfo() {
+  void selfInfo({int power = 0}) {
     // Cached-path fixture: stores остаются без привязки к ноде.
     setCachedSelfInfoKeyForTest(key);
     final frame = Uint8List(68);
     frame[0] = respCodeSelfInfo;
+    frame[2] = power & 0xff;
     frame.setRange(4, 36, key);
     frame.setRange(58, 67, 'synthetic'.codeUnits);
     handleFrameForTest(frame);
@@ -102,6 +107,7 @@ Future<void> _withHandshake(WidgetTester tester,
 
 void main() {
   const timeout = Timeout(Duration(seconds: 30));
+
   late PathProviderPlatform savedPaths;
   setUpAll(() {
     savedPaths = PathProviderPlatform.instance;
@@ -114,6 +120,42 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  testWidgets('quick-action power refresh reads SELF_INFO without handshake or config writes', (tester) async {
+    await _withHandshake(tester, (c) async {
+      c.selfInfo(power: 17);
+      c.radioSnapshotReady = true;
+      c.frames.clear();
+      final refresh = _Result(c.refreshRadioPower());
+      await tester.pump();
+      expect(c.commands, [cmdAppStart]);
+      expect(c.selfLocationWaiterCountForTest, 1);
+      c.selfInfo(power: 22);
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(refresh.completed, isTrue);
+      expect(refresh.error, isNull);
+      expect(c.currentTxPower, 22);
+      expect(c.commands, [cmdAppStart]);
+      expect(c.selfInfoRetryActiveForTest, isFalse);
+      expect(c.selfLocationWaiterCountForTest, 0);
+    });
+  }, timeout: timeout);
+
+  testWidgets('quick-action power refresh times out cleanly and skips unready sessions', (tester) async {
+    await _withHandshake(tester, (c) async {
+      await c.refreshRadioPower();
+      expect(c.commands, isEmpty);
+      c.radioSnapshotReady = true;
+      final refresh = _Result(c.refreshRadioPower());
+      await tester.pump();
+      expect(c.commands, [cmdAppStart]);
+      await tester.pump(const Duration(seconds: 2));
+      expect(refresh.completed, isTrue);
+      expect(refresh.error, isNull);
+      expect(c.selfLocationWaiterCountForTest, 0);
+      expect(c.selfInfoRetryActiveForTest, isFalse);
+    });
+  }, timeout: timeout);
 
   testWidgets('baseline: request returns after writes while SELF_INFO remains pending', (tester) async {
     await _withHandshake(tester, (c) async {

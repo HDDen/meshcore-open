@@ -10635,6 +10635,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickActions_bleProxy => 'Прокси BLE';
 
   @override
+  String get quickActions_radioNoise => 'Уровень шума';
+
+  @override
+  String get quickActions_radioTxPower => 'Мощность радио';
+
+  @override
   String get quickActions_radioStats => 'Статистика радио';
 
   @override

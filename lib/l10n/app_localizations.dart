@@ -17686,6 +17686,18 @@ abstract class AppLocalizations {
   /// **'BLE proxy'**
   String get quickActions_bleProxy;
 
+  /// No description provided for @quickActions_radioNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise floor'**
+  String get quickActions_radioNoise;
+
+  /// No description provided for @quickActions_radioTxPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio TX power'**
+  String get quickActions_radioTxPower;
+
   /// No description provided for @quickActions_radioStats.
   ///
   /// In en, this message translates to:

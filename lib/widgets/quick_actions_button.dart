@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/companion_cli_protocol.dart';
+import '../helpers/quick_action_radio_polling.dart';
 import '../l10n/l10n.dart';
 import '../models/quick_actions_settings.dart';
 import '../screens/additional_identity_screen.dart';
@@ -13,6 +14,7 @@ import '../screens/companion_cli_screen.dart';
 import '../screens/discovery_screen.dart';
 import '../screens/companion_radio_stats_screen.dart';
 import '../screens/telemetry_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/quick_actions_settings_screen.dart';
 import '../services/app_settings_service.dart';
 import 'quick_action_presentation.dart';
@@ -93,6 +95,48 @@ class _QuickActionsDialog extends StatefulWidget {
 class _QuickActionsDialogState extends State<_QuickActionsDialog> {
   QuickAction? _pending;
   String? _error;
+  ModalRoute<dynamic>? _route;
+  late final QuickActionRadioPolling _radioPolling;
+
+  @override
+  void initState() {
+    super.initState();
+    _radioPolling = QuickActionRadioPolling(
+      widget.connector, widget.service,
+      isVisible: () => mounted && _route?.isCurrent == true,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _route = ModalRoute.of(context);
+    _radioPolling.update();
+  }
+
+  @override
+  void dispose() {
+    _radioPolling.dispose();
+    super.dispose();
+  }
+
+  void _close([_QuickActionsDestination? destination]) {
+    _radioPolling.dispose();
+    Navigator.pop<_QuickActionsDestination>(context, destination);
+  }
+
+  String? _reading(QuickAction action) {
+    if (action == QuickAction.radioNoise) {
+      final stats = _online && widget.connector.supportsCompanionRadioStats
+          ? widget.connector.radioStatsNotifier.value : null;
+      return '${stats?.noiseFloorDbm ?? '—'}\ndBm';
+    }
+    if (action == QuickAction.radioTxPower) {
+      final power = _online ? widget.connector.currentTxPower : null;
+      return '${power ?? '—'}\ndBm';
+    }
+    return null;
+  }
 
   bool get _online => widget.connector.isConnected && !widget.connector.isOfflineMode;
 
@@ -105,7 +149,9 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
     return switch (item.action) {
       QuickAction.adaptiveTxPower => widget.service.settings.channelMinHopsEnabled,
       QuickAction.channelRetries || QuickAction.channelIndices => true,
-      QuickAction.radioStats => _online && connector.supportsCompanionRadioStats,
+      QuickAction.radioStats || QuickAction.radioNoise =>
+          _online && connector.supportsCompanionRadioStats,
+      QuickAction.radioTxPower => _online && connector.isSessionReady,
       QuickAction.sensors => _online && connector.selfPublicKey?.isNotEmpty == true,
       QuickAction.readChannels || QuickAction.readDirect || QuickAction.readAll =>
           !connector.isOfflineMode,
@@ -151,14 +197,17 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
         MaterialPageRoute(builder: (_) => const DiscoveryScreen(startDiscovery: true)),
       ),
       QuickAction.manageKeys => AdditionalIdentityScreen.open,
-      QuickAction.radioStats => (context) => Navigator.of(context).push<void>(
+      QuickAction.radioStats || QuickAction.radioNoise => (context) => Navigator.of(context).push<void>(
         MaterialPageRoute(builder: (_) => const CompanionRadioStatsScreen()),
+      ),
+      QuickAction.radioTxPower => (context) => SettingsScreen.openRadioSettings(
+        context, connector: connector,
       ),
       QuickAction.sensors => (context) async { pushSelfTelemetryScreen(context); },
       _ => null,
     };
     if (destination != null) {
-      Navigator.pop(context, destination);
+      _close(destination);
       return;
     }
 
@@ -222,6 +271,8 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
             reportFailure: true,
           );
         case QuickAction.radioStats:
+        case QuickAction.radioNoise:
+        case QuickAction.radioTxPower:
         case QuickAction.sensors:
         case QuickAction.companionCli:
         case QuickAction.discover:
@@ -259,13 +310,17 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
       active: _active(item.action),
       available: available,
       pending: _pending == item.action,
+      reading: _reading(item.action),
       onTap: _pending == null && available ? () => _activate(item) : null,
     );
   }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([widget.service, widget.connector, widget.sections]),
+    listenable: Listenable.merge([
+      widget.service, widget.connector, widget.sections,
+      widget.connector.radioStatsNotifier,
+    ]),
     builder: (context, _) {
       final l10n = context.l10n;
       final scheme = Theme.of(context).colorScheme;
@@ -285,7 +340,9 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
       final minimum = math.max(diameter, 70 * labelScale);
       final columns = ((width + gap) / (minimum + gap)).floor().clamp(1, 5);
       final tileWidth = (width - (columns - 1) * gap) / columns;
-      return AlertDialog(
+      return PopScope<_QuickActionsDestination>(
+        onPopInvokedWithResult: (didPop, _) { if (didPop) _radioPolling.dispose(); },
+        child: AlertDialog(
         semanticLabel: l10n.quickActions_title,
         scrollable: true,
         insetPadding: inset,
@@ -323,18 +380,15 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop<_QuickActionsDestination>(
-              context,
-              QuickActionsSettingsScreen.open,
-            ),
+            onPressed: () => _close(QuickActionsSettingsScreen.open),
             child: Text(l10n.quickActions_configure),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => _close(),
             child: Text(l10n.common_close),
           ),
         ],
-      );
+      ));
     },
   );
 }
@@ -349,6 +403,7 @@ class _QuickActionTile extends StatelessWidget {
     required this.available,
     required this.pending,
     required this.onTap,
+    required this.reading,
   });
 
   final QuickActionItem item;
@@ -359,6 +414,7 @@ class _QuickActionTile extends StatelessWidget {
   final bool available;
   final bool pending;
   final VoidCallback? onTap;
+  final String? reading;
 
   @override
   Widget build(BuildContext context) {
@@ -388,11 +444,23 @@ class _QuickActionTile extends StatelessWidget {
                     color: active ? scheme.primary : scheme.surfaceContainerHighest,
                     border: active ? null : Border.all(color: scheme.primary),
                   ),
-                  child: Icon(
+                  child: reading == null ? Icon(
                     item.action.icon,
                     size: math.min(iconSize, diameter),
                     color: active ? scheme.onPrimary : scheme.primary,
                     applyTextScaling: false,
+                  ) : Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        reading!, textAlign: TextAlign.center,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: active ? scheme.onPrimary : scheme.primary,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

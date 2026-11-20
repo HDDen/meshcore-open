@@ -5,6 +5,21 @@ import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/quick_actions_settings.dart';
 
 void main() {
+  test('live radio actions append once and preserve saved visibility/order', () {
+    final legacy = QuickActionsSettings.fromJson([
+      {'action': 'channelRetries', 'visible': false},
+      {'action': 'radioStats', 'visible': true},
+    ]);
+    expect(legacy.items.take(2).map((item) => item.action),
+        [QuickAction.channelRetries, QuickAction.radioStats]);
+    expect(legacy.items.where((item) => item.action == QuickAction.radioNoise), hasLength(1));
+    expect(legacy.items.where((item) => item.action == QuickAction.radioTxPower), hasLength(1));
+    final edited = legacy.update(const QuickActionItem(QuickAction.radioNoise, visible: false));
+    final restored = QuickActionsSettings.fromJson(edited.toJson());
+    expect(restored.items.firstWhere((item) => item.action == QuickAction.radioNoise).visible, isFalse);
+    expect(restored.items.firstWhere((item) => item.action == QuickAction.radioTxPower).visible, isTrue);
+  });
+
   test('quick actions keep their order and independent presets in settings', () {
     final defaults = AppSettings.fromJson({}).quickActions;
     expect(defaults.items.map((item) => item.action), QuickAction.values);

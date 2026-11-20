@@ -7,6 +7,7 @@ import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/channel.dart';
+import 'package:meshcore_open/models/companion_radio_stats.dart';
 import 'package:meshcore_open/models/quick_actions_settings.dart';
 import 'package:meshcore_open/screens/quick_actions_settings_screen.dart';
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
@@ -37,8 +38,23 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   @override
   int? get batteryMillivolts => 3950;
 
+  bool statsSupported = false;
   @override
-  bool get supportsCompanionRadioStats => false;
+  bool get supportsCompanionRadioStats => statsSupported;
+
+  @override
+  final radioStatsNotifier = ValueNotifier<CompanionRadioStats?>(null);
+
+  int? power = 17;
+  @override
+  int? get currentTxPower => power;
+
+  int noiseReads = 0;
+  int powerReads = 0;
+  @override
+  Future<void> requestRadioStats() async { noiseReads++; }
+  @override
+  Future<void> refreshRadioPower({Duration timeout = const Duration(seconds: 2)}) async { powerReads++; }
 
   @override
   Uint8List get selfPublicKey => Uint8List(32)..[0] = 1;
@@ -69,6 +85,7 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
 
   @override
   void dispose() {
+    radioStatsNotifier.dispose();
     repeaterActivity.dispose();
     super.dispose();
   }
@@ -219,6 +236,75 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  testWidgets('barrier dismissal stops live queries before reverse animation ends', (tester) async {
+    final radio = _Radio()..statsSupported = true;
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    await settings.updateSettings(settings.settings.copyWith(quickActions: _visibleActions(const [
+      QuickActionItem(QuickAction.radioNoise, visible: true),
+      QuickActionItem(QuickAction.radioTxPower, visible: true),
+    ])));
+    await _open(tester, radio, settings);
+    await tester.tapAt(const Offset(2, 2));
+    await tester.pump();
+    final stopped = (radio.noiseReads, radio.powerReads);
+    await tester.pump(const Duration(seconds: 3));
+    expect((radio.noiseReads, radio.powerReads), stopped);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('live radio tiles update readings and stop querying when popup closes', (tester) async {
+    final radio = _Radio()..statsSupported = true;
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    await settings.updateSettings(settings.settings.copyWith(quickActions: _visibleActions(const [
+      QuickActionItem(QuickAction.radioNoise, visible: true),
+      QuickActionItem(QuickAction.radioTxPower, visible: true),
+    ])));
+    await _open(tester, radio, settings);
+    expect((radio.noiseReads, radio.powerReads), (1, 1));
+    expect(find.text('—\ndBm'), findsOneWidget);
+    expect(find.text('17\ndBm'), findsOneWidget);
+    radio.radioStatsNotifier.value = CompanionRadioStats(
+      noiseFloorDbm: -117, lastRssiDbm: -90, lastSnrDb: 5,
+      txAirSecs: 0, rxAirSecs: 0, receivedAt: DateTime(2026, 11, 20),
+    );
+    radio.power = 22;
+    radio.notifyListeners();
+    await tester.pump();
+    expect(find.text('-117\ndBm'), findsOneWidget);
+    expect(find.text('22\ndBm'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+    expect((radio.noiseReads, radio.powerReads), (2, 2));
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    final stopped = (radio.noiseReads, radio.powerReads);
+    await tester.pump(const Duration(seconds: 3));
+    expect((radio.noiseReads, radio.powerReads), stopped);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('hidden live tiles never query the node', (tester) async {
+    final radio = _Radio()..statsSupported = true;
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    await settings.updateSettings(settings.settings.copyWith(quickActions: _visibleActions(const [
+      QuickActionItem(QuickAction.channelIndices, visible: true),
+    ])));
+    await _open(tester, radio, settings);
+    await tester.pump(const Duration(seconds: 3));
+    expect((radio.noiseReads, radio.powerReads), (0, 0));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
 
   testWidgets('header puts quick actions before battery and reacts to proxy rights', (
     tester,

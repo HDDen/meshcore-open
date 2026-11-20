@@ -8763,6 +8763,26 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _scheduleSelfInfoRetry();
   });
 
+  /// Read actual radio power without starting a handshake/config sync.
+  Future<void> refreshRadioPower({
+    Duration timeout = const Duration(seconds: 2),
+  }) => _selfInfoWork.run(() async {
+    if (!isConnected || isOfflineMode || !isSessionReady ||
+        _awaitingSelfInfo || _isLoadingContacts) {
+      return;
+    }
+    final waiter = Completer<void>();
+    _selfInfoRefreshWaiters.add(waiter);
+    try {
+      await _sendAppStart();
+      await waiter.future.timeout(timeout, onTimeout: () {});
+    } catch (_) {
+      // Live indicators keep their last reading on a transient failure.
+    } finally {
+      _selfInfoRefreshWaiters.remove(waiter);
+    }
+  });
+
   Future<({double latitude, double longitude})?> refreshSelfLocation({
     Duration timeout = const Duration(seconds: 3),
   }) => _selfInfoWork.run(() async {

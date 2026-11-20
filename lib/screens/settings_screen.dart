@@ -53,6 +53,13 @@ const int _minTxPowerDbm = -9;
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  static Future<void> openRadioSettings(
+    BuildContext context, {required MeshCoreConnector connector}
+  ) => showDialog<void>(
+    context: context,
+    builder: (_) => _RadioSettingsDialog(connector: connector),
+  );
+
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
@@ -954,10 +961,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showRadioSettings(BuildContext context, MeshCoreConnector connector) {
-    showDialog(
-      context: context,
-      builder: (context) => _RadioSettingsDialog(connector: connector),
-    );
+    SettingsScreen.openRadioSettings(context, connector: connector);
   }
 
   void _editPathHashMode(BuildContext context, MeshCoreConnector connector) {

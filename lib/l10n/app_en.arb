@@ -5250,6 +5250,8 @@
   "quickActions_companionProxy": "Companion proxy",
   "quickActions_tcpProxy": "TCP proxy",
   "quickActions_bleProxy": "BLE proxy",
+  "quickActions_radioNoise": "Noise floor",
+  "quickActions_radioTxPower": "Radio TX power",
   "quickActions_radioStats": "Radio statistics",
   "quickActions_sensors": "View sensors",
   "quickActions_readChannels": "Read channels",

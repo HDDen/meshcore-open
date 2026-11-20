@@ -783,7 +783,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           .showChannelPreviewSender,
       style: MeshTheme.mono(
         fontSize: 11.5,
-        color: McoaChatListStyle.color(context, 'preview', widgetTextColor ?? scheme.onSurfaceVariant),
+        color: widgetTextColor ?? McoaChatListStyle.color(context, 'preview', scheme.onSurfaceVariant),
       ),
       blocked: lastBlocked,
     );
@@ -804,7 +804,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         margin:
             margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        color: McoaChatListStyle.override(context, 'background') ?? widgetColor,
+        color: widgetColor ?? McoaChatListStyle.override(context, 'background'),
         borderColor: McoaChatListStyle.override(context, 'border'),
         onTap: () {
           HapticFeedback.selectionClick();
@@ -892,7 +892,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w500,
-                                  color: McoaChatListStyle.override(context, 'title') ?? widgetTextColor,
+                                  color: widgetTextColor ?? McoaChatListStyle.override(context, 'title'),
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -927,7 +927,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: McoaChatListStyle.color(context, 'preview', widgetTextColor ?? scheme.onSurfaceVariant),
+                          color: widgetTextColor ?? McoaChatListStyle.color(context, 'preview', scheme.onSurfaceVariant),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -947,7 +947,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       _relativeTime(lastTime),
                       style: MeshTheme.mono(
                         fontSize: 11,
-                        color: McoaChatListStyle.color(context, 'icons', widgetTextColor ?? scheme.onSurfaceVariant),
+                        color: widgetTextColor ?? McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                       ),
                     ),
                   const SizedBox(height: 4),
@@ -972,7 +972,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               context.read<AppSettingsService>().getChannelNotificationMode(channel.muteKey),
                             ),
                             size: 14,
-                            color: McoaChatListStyle.color(context, 'icons', widgetTextColor ?? scheme.onSurfaceVariant),
+                            color: widgetTextColor ?? McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                           ),
                         ),
                       for (
@@ -983,7 +983,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         _buildChannelCompressionIndicator(
                           context,
                           compressionLabels[index],
-                          textColor: McoaChatListStyle.override(context, 'icons') ?? widgetTextColor,
+                          textColor: widgetTextColor ?? McoaChatListStyle.override(context, 'icons'),
                         ),
                       ],
                     ],
@@ -999,7 +999,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     child: Icon(
                       Icons.drag_handle,
                       color:
-                          McoaChatListStyle.override(context, 'icons') ?? widgetTextColor ??
+                          widgetTextColor ?? McoaChatListStyle.override(context, 'icons') ??
                           Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -1965,7 +1965,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           : null,
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        color: McoaChatListStyle.override(context, 'background') ?? groupWidgetColor,
+        color: groupWidgetColor ?? McoaChatListStyle.override(context, 'background'),
         shape: McoaChatListStyle.override(context, 'border') == null ? null
             : RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(MeshRadii.md),
@@ -1983,7 +1983,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 group.name,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: McoaChatListStyle.override(context, 'title') ?? groupWidgetTextColor,
+                  color: groupWidgetTextColor ?? McoaChatListStyle.override(context, 'title'),
                 ),
               ),
               trailing: Row(
@@ -1995,7 +1995,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ],
                   Icon(
                     isExpanded ? Icons.remove : Icons.add,
-                    color: McoaChatListStyle.override(context, 'icons') ?? groupWidgetTextColor,
+                    color: groupWidgetTextColor ?? McoaChatListStyle.override(context, 'icons'),
                   ),
                   if (showDragHandle && dragIndex != null) ...[
                     const SizedBox(width: 8),
@@ -2005,6 +2005,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         Icons.drag_handle,
                         color:
                             groupWidgetTextColor ??
+                            McoaChatListStyle.override(context, 'icons') ??
                             Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),

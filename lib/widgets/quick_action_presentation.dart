@@ -21,6 +21,8 @@ extension QuickActionPresentation on QuickAction {
     QuickAction.readDirect => Icons.mark_chat_read_outlined,
     QuickAction.readAll => Icons.done_all,
     QuickAction.channelIndices => Icons.tag_outlined,
+    QuickAction.radioNoise => Icons.noise_aware,
+    QuickAction.radioTxPower => Icons.settings_input_antenna,
     QuickAction.cliCommand1 || QuickAction.cliCommand2 => Icons.code,
     QuickAction.channelMessage1 || QuickAction.channelMessage2 =>
       Icons.send_outlined,
@@ -47,6 +49,8 @@ extension QuickActionItemPresentation on QuickActionItem {
       QuickAction.readDirect => l10n.quickActions_readDirect,
       QuickAction.readAll => l10n.quickActions_readAll,
       QuickAction.channelIndices => l10n.quickActions_channelIndices,
+      QuickAction.radioNoise => l10n.quickActions_radioNoise,
+      QuickAction.radioTxPower => l10n.quickActions_radioTxPower,
       QuickAction.cliCommand1 => '${l10n.quickActions_cliCommand} 1',
       QuickAction.cliCommand2 => '${l10n.quickActions_cliCommand} 2',
       QuickAction.channelMessage1 => '${l10n.quickActions_sendChannel} 1',

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_preview_data.dart';
+import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/screens/channels_screen.dart';
+import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
 import 'package:meshcore_open/screens/contacts_screen.dart';
@@ -43,6 +47,21 @@ const _theme = CustomTheme(
   background: Color(0xFF17112A), accent: Color(0xFFA855F7),
 );
 
+class _ChannelColorData extends McoaThemePreviewData {
+  _ChannelColorData() : super(
+    openedAt: DateTime(2026, 11, 20), incomingText: 'Incoming',
+    outgoingText: 'Outgoing', defaultSender: 'Default',
+  );
+  Color? channelBackground;
+  Color? channelForeground;
+  @override
+  int? getChannelWidgetColor(int index) => index == 0 ? channelBackground?.toARGB32() : null;
+  @override
+  int? getChannelWidgetTextColor(int index) => index == 0 ? channelForeground?.toARGB32() : null;
+  @override
+  bool isChannelMcmpEnabled(int index) => index == 0;
+}
+
 void main() {
   late AppSettingsService settings;
   setUp(() {
@@ -61,6 +80,50 @@ void main() {
       home: Scaffold(body: SingleChildScrollView(child: child)),
     ),
   );
+
+  testWidgets('channel colors override theme slots independently and clearing restores them', (tester) async {
+    final data = _ChannelColorData();
+    addTearDown(data.dispose);
+    await tester.pumpWidget(app(Theme(
+      data: MeshTheme.fromCustom(_theme.copyWith(mcoa: const McoaThemeOptions(colors: _colors))),
+      child: ChangeNotifierProvider<MeshCoreConnector>.value(
+        value: data, child: ChannelsScreen(previewChannels: data.channels),
+      ),
+    )));
+    await tester.pumpAndSettle();
+    const customBackground = Color(0xFF123456);
+    const customForeground = Color(0xFFABCDEF);
+    final card = find.byKey(const ValueKey('channel_0'));
+    final otherCard = find.byKey(const ValueKey('channel_7'));
+    for (final colors in <(Color?, Color?)>[
+      (null, null), (customBackground, null),
+      (customBackground, customForeground), (null, customForeground), (null, null),
+    ]) {
+      data.channelBackground = colors.$1;
+      data.channelForeground = colors.$2;
+      data.notifyListeners();
+      await tester.pump();
+      expect(tester.widget<MeshCard>(card).color, colors.$1 ?? _colors['chats_background']);
+      expect(tester.widget<Text>(find.text('Public')).style!.color,
+          colors.$2 ?? _colors['chats_title']);
+      final previews = tester.widgetList<Text>(find.descendant(of: card, matching: find.byType(Text)))
+          .where((text) => text.textSpan != null);
+      expect(previews.first.textSpan!.style!.color, colors.$2 ?? _colors['chats_preview']);
+      expect(tester.widget<Text>(find.descendant(of: card, matching: find.text('MC'))).style!.color,
+          colors.$2 ?? _colors['chats_icons']);
+      expect(tester.widget<MeshCard>(otherCard).color, _colors['chats_background']);
+      expect(tester.widget<Text>(find.text('Echo')).style!.color, _colors['chats_title']);
+      // Index and unread colors remain independent of the old per-channel
+      // foreground control, as they were before theme overrides existed.
+      final index = tester.widget<StatusChip>(find.descendant(of: card, matching: find.byType(StatusChip)));
+      expect(index.textColor, _colors['chats_index_text']);
+      final unread = tester.widget<UnreadBadge>(find.descendant(of: card, matching: find.byType(UnreadBadge)));
+      expect(unread.textColor, _colors['chats_unread_text']);
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('real channel and contact cards use all independent list slots', (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
