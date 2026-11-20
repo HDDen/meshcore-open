@@ -46,6 +46,7 @@ void main() {
 
   testWidgets('badge colors do not tint hop text; only hop text overrides do', (tester) async {
     Widget app(Color? hopText) => MaterialApp(
+      themeAnimationStyle: AnimationStyle.noAnimation,
       theme: MeshTheme.fromCustom(CustomTheme(
         id: 'custom:hop-independence',
         name: 'Hops',
