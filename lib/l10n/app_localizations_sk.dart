@@ -10848,5 +10848,87 @@ class AppLocalizationsSk extends AppLocalizations {
   String get themes_mcoaLink => 'Link color';
 
   @override
+  String get themes_mcoaMetadataBackground => 'Metadata background';
+
+  @override
+  String get themes_mcoaMetadataTopPadding => 'Metadata inner padding';
+
+  @override
+  String get themes_mcoaSearchBorder => 'Search: border';
+
+  @override
+  String get themes_mcoaSearchContactsBackground =>
+      'Search: background (contacts)';
+
+  @override
+  String get themes_mcoaSearchBackground => 'Search: background';
+
+  @override
+  String get themes_mcoaSearchText => 'Search: text';
+
+  @override
+  String get themes_mcoaSearchHintIcons => 'Search: placeholder and icons';
+
+  @override
+  String get themes_mcoaChats => 'Chats';
+
+  @override
+  String get themes_mcoaChatBorder => 'Card border';
+
+  @override
+  String get themes_mcoaChatBackground => 'Card background';
+
+  @override
+  String get themes_mcoaChatTitle => 'Chat title';
+
+  @override
+  String get themes_mcoaChatPreview => 'Message preview';
+
+  @override
+  String get themes_mcoaChatIcons => 'Icon color';
+
+  @override
+  String get themes_mcoaIndexBorder => 'Index border';
+
+  @override
+  String get themes_mcoaIndexBackground => 'Index background';
+
+  @override
+  String get themes_mcoaIndexText => 'Index text';
+
+  @override
+  String get themes_mcoaIndexDot => 'Index dot';
+
+  @override
+  String get themes_mcoaUnreadBackground => 'Unread counter background';
+
+  @override
+  String get themes_mcoaUnreadText => 'Unread counter text';
+
+  @override
+  String get themes_mcoaContactKey => 'Public key color';
+
+  @override
+  String get themes_mcoaPrefixBorder => 'Prefix border';
+
+  @override
+  String get themes_mcoaPrefixBackground => 'Prefix background';
+
+  @override
+  String get themes_mcoaPrefixText => 'Prefix text';
+
+  @override
+  String get themes_mcoaChannelIndices => 'Channel indices';
+
+  @override
+  String get themes_mcoaSeparateMetadata => 'Separate metadata';
+
+  @override
+  String get themes_mcoaMetadataSpacing => 'Message-to-metadata spacing';
+
+  @override
   String get themes_mcoaSignal => 'Signal color';
+
+  @override
+  String get themes_mcoaSenderNameBrightness => 'Sender name brightness';
 }

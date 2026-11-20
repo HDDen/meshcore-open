@@ -110,6 +110,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
       uiScalePercent: options.uiScalePercent ?? (settings.uiScale * 100).round().clamp(50, 200).toInt(),
       senderNameScalePercent: options.senderNameScalePercent ?? settings.senderNameScalePercent,
       simplifiedMentions: options.simplifiedMentions ?? settings.simplifiedMentions,
+      showChannelIndices: options.showChannelIndices ?? !settings.hideChannelIndexIndicator,
     );
     _background = source?.background ?? kThemeBackgroundSwatches.first;
     _accent = source?.accent ?? kThemeAccentSwatches.first;

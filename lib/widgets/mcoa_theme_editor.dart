@@ -11,6 +11,7 @@ import 'mcoa_theme_editor_section.dart';
 import 'mcoa_theme_color_control.dart';
 import 'mcoa_theme_palette.dart';
 import 'mesh_ui.dart';
+import 'mcoa_chat_list_style.dart';
 
 class McoaThemeEditor extends StatefulWidget {
   const McoaThemeEditor({
@@ -58,6 +59,13 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
   Color _defaultColor(String key) {
     final base = MeshTheme.fromCustom(widget.theme.copyWith(mcoa: const McoaThemeOptions()));
     final scheme = base.colorScheme;
+    if (key == 'chats_search_contacts_background') {
+      return widget.theme.mcoa.colors['chats_search_background'] ??
+          McoaChatListStyle.fallback(base, 'search_background');
+    }
+    if (key.startsWith('chats_')) {
+      return McoaChatListStyle.fallback(base, key.substring(6));
+    }
     final outgoing = key.startsWith('outgoing_');
     final bubble = base.extension<MeshBubbleTheme>()!;
     final ink = outgoing ? bubble.meInk : scheme.onSurface;
@@ -94,6 +102,7 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
       'hop_border' => scheme.outlineVariant,
       'hop_background' => scheme.surfaceContainerHigh,
       'hop_text' => scheme.onSurfaceVariant,
+      'metadata_background' => scheme.surface,
       _ => Colors.transparent,
     };
   }
@@ -156,6 +165,83 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
     );
   }
 
+  Widget _senderNameBrightness() {
+    final options = widget.theme.mcoa;
+    final explicit = options.colors.containsKey('incoming_sender_name');
+    return Padding(
+      key: const ValueKey('mcoa-sender-name-brightness'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(context.l10n.themes_mcoaSenderNameBrightness),
+          Slider(
+            value: options.incomingSenderNameBrightness.toDouble(),
+            min: -100,
+            max: 100,
+            divisions: 200,
+            label: '${options.incomingSenderNameBrightness}%',
+            onChanged: explicit ? null : (value) => widget.onChanged(
+              options.copyWith(incomingSenderNameBrightness: value.round()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metadataTopPadding(String direction) {
+    final options = widget.theme.mcoa;
+    final outgoing = direction == 'outgoing';
+    final value = outgoing ? options.outgoingMetadataTopPadding : options.incomingMetadataTopPadding;
+    return Padding(
+      key: ValueKey('mcoa-$direction-metadata-top-padding'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(context.l10n.themes_mcoaMetadataTopPadding),
+          Slider(
+            value: value.toDouble(),
+            min: 0,
+            max: McoaThemeOptions.maxMetadataTopPadding.toDouble(),
+            divisions: McoaThemeOptions.maxMetadataTopPadding,
+            label: '$value px',
+            onChanged: !options.separateMetadataFor(outgoing) ? null : (value) => widget.onChanged(
+              outgoing
+                  ? options.copyWith(outgoingMetadataTopPadding: value.round())
+                  : options.copyWith(incomingMetadataTopPadding: value.round()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metadataSpacing() {
+    final options = widget.theme.mcoa;
+    return Padding(
+      key: const ValueKey('mcoa-incoming-metadata-spacing'),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(context.l10n.themes_mcoaMetadataSpacing),
+          Slider(
+            value: options.incomingMetadataSpacing.toDouble(),
+            min: 0,
+            max: McoaThemeOptions.maxIncomingMetadataSpacing.toDouble(),
+            divisions: McoaThemeOptions.maxIncomingMetadataSpacing,
+            label: '${options.incomingMetadataSpacing} px',
+            onChanged: (value) => widget.onChanged(
+              options.copyWith(incomingMetadataSpacing: value.round()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _percent(String key, String label, int value, int min, int max,
       ValueChanged<int> onChanged) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -192,8 +278,10 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
     List<Widget> messageColors(String direction) => [
       _color('${direction}_border', direction == 'incoming' ? l10n.themes_mcoaIncomingBorder : l10n.themes_mcoaOutgoingBorder),
       _color('${direction}_background', direction == 'incoming' ? l10n.themes_mcoaIncomingBackground : l10n.themes_mcoaOutgoingBackground),
-      if (direction == 'incoming')
+      if (direction == 'incoming') ...[
+        _senderNameBrightness(),
         _color('incoming_sender_name', l10n.themes_mcoaIncomingSenderName),
+      ],
       _color('${direction}_text', direction == 'incoming' ? l10n.themes_mcoaIncomingText : l10n.themes_mcoaOutgoingText),
       _color('${direction}_badges', direction == 'incoming' ? l10n.themes_mcoaIncomingBadges : l10n.themes_mcoaOutgoingBadges),
       _color('${direction}_quote_background', l10n.themes_mcoaQuoteBackground),
@@ -206,6 +294,19 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
       _color('${direction}_hop_text', l10n.themes_mcoaHopText),
       _color('${direction}_link', l10n.themes_mcoaLink),
       _color('${direction}_signal', l10n.themes_mcoaSignal),
+      _color('${direction}_metadata_background', l10n.themes_mcoaMetadataBackground),
+      if (direction == 'incoming') _metadataSpacing(),
+      _metadataTopPadding(direction),
+      SwitchListTile(
+        key: ValueKey('mcoa-separate-$direction-metadata'),
+        title: Text(l10n.themes_mcoaSeparateMetadata),
+        value: widget.theme.mcoa.separateMetadataFor(direction == 'outgoing'),
+        onChanged: (value) => widget.onChanged(
+          direction == 'incoming'
+              ? widget.theme.mcoa.copyWith(separateIncomingMetadata: value)
+              : widget.theme.mcoa.copyWith(separateOutgoingMetadata: value),
+        ),
+      ),
     ];
     return Form(
       key: _form,
@@ -231,6 +332,28 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
           ]),
           _section('incoming', l10n.themes_mcoaIncoming, messageColors('incoming')),
           _section('outgoing', l10n.themes_mcoaOutgoing, messageColors('outgoing')),
+          _section('chats', l10n.themes_mcoaChats, [
+            _color('chats_border', l10n.themes_mcoaChatBorder),
+            _color('chats_background', l10n.themes_mcoaChatBackground),
+            _color('chats_title', l10n.themes_mcoaChatTitle),
+            _color('chats_preview', l10n.themes_mcoaChatPreview),
+            _color('chats_icons', l10n.themes_mcoaChatIcons),
+            _color('chats_index_border', l10n.themes_mcoaIndexBorder),
+            _color('chats_index_background', l10n.themes_mcoaIndexBackground),
+            _color('chats_index_text', l10n.themes_mcoaIndexText),
+            _color('chats_index_dot', l10n.themes_mcoaIndexDot),
+            _color('chats_unread_background', l10n.themes_mcoaUnreadBackground),
+            _color('chats_unread_text', l10n.themes_mcoaUnreadText),
+            _color('chats_search_border', l10n.themes_mcoaSearchBorder),
+            _color('chats_search_background', l10n.themes_mcoaSearchBackground),
+            _color('chats_search_contacts_background', l10n.themes_mcoaSearchContactsBackground),
+            _color('chats_search_text', l10n.themes_mcoaSearchText),
+            _color('chats_search_hint_icons', l10n.themes_mcoaSearchHintIcons),
+            _color('chats_key', l10n.themes_mcoaContactKey),
+            _color('chats_prefix_border', l10n.themes_mcoaPrefixBorder),
+            _color('chats_prefix_background', l10n.themes_mcoaPrefixBackground),
+            _color('chats_prefix_text', l10n.themes_mcoaPrefixText),
+          ]),
           _section('preferences', l10n.themes_mcoaOptions, [
             _percent('dpi', l10n.themes_mcoaDpi,
               options.uiScalePercent ?? (settings.uiScale * 100).round(), 50, 200,
@@ -242,6 +365,12 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
               title: Text(l10n.settings_modSettingsSimplifiedMentions),
               value: options.simplifiedMentions ?? settings.simplifiedMentions,
               onChanged: (value) => widget.onChanged(options.copyWith(simplifiedMentions: value)),
+            ),
+            SwitchListTile(
+              key: const ValueKey('mcoa-channel-indices'),
+              title: Text(l10n.themes_mcoaChannelIndices),
+              value: options.showChannelIndices ?? !settings.hideChannelIndexIndicator,
+              onChanged: (value) => widget.onChanged(options.copyWith(showChannelIndices: value)),
             ),
           ]),
         ],

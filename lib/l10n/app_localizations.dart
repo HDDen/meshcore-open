@@ -18154,11 +18154,173 @@ abstract class AppLocalizations {
   /// **'Link color'**
   String get themes_mcoaLink;
 
+  /// No description provided for @themes_mcoaMetadataBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata background'**
+  String get themes_mcoaMetadataBackground;
+
+  /// No description provided for @themes_mcoaMetadataTopPadding.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata inner padding'**
+  String get themes_mcoaMetadataTopPadding;
+
+  /// No description provided for @themes_mcoaSearchBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: border'**
+  String get themes_mcoaSearchBorder;
+
+  /// No description provided for @themes_mcoaSearchContactsBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: background (contacts)'**
+  String get themes_mcoaSearchContactsBackground;
+
+  /// No description provided for @themes_mcoaSearchBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: background'**
+  String get themes_mcoaSearchBackground;
+
+  /// No description provided for @themes_mcoaSearchText.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: text'**
+  String get themes_mcoaSearchText;
+
+  /// No description provided for @themes_mcoaSearchHintIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Search: placeholder and icons'**
+  String get themes_mcoaSearchHintIcons;
+
+  /// No description provided for @themes_mcoaChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get themes_mcoaChats;
+
+  /// No description provided for @themes_mcoaChatBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Card border'**
+  String get themes_mcoaChatBorder;
+
+  /// No description provided for @themes_mcoaChatBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Card background'**
+  String get themes_mcoaChatBackground;
+
+  /// No description provided for @themes_mcoaChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat title'**
+  String get themes_mcoaChatTitle;
+
+  /// No description provided for @themes_mcoaChatPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Message preview'**
+  String get themes_mcoaChatPreview;
+
+  /// No description provided for @themes_mcoaChatIcons.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon color'**
+  String get themes_mcoaChatIcons;
+
+  /// No description provided for @themes_mcoaIndexBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Index border'**
+  String get themes_mcoaIndexBorder;
+
+  /// No description provided for @themes_mcoaIndexBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Index background'**
+  String get themes_mcoaIndexBackground;
+
+  /// No description provided for @themes_mcoaIndexText.
+  ///
+  /// In en, this message translates to:
+  /// **'Index text'**
+  String get themes_mcoaIndexText;
+
+  /// No description provided for @themes_mcoaIndexDot.
+  ///
+  /// In en, this message translates to:
+  /// **'Index dot'**
+  String get themes_mcoaIndexDot;
+
+  /// No description provided for @themes_mcoaUnreadBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread counter background'**
+  String get themes_mcoaUnreadBackground;
+
+  /// No description provided for @themes_mcoaUnreadText.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread counter text'**
+  String get themes_mcoaUnreadText;
+
+  /// No description provided for @themes_mcoaContactKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key color'**
+  String get themes_mcoaContactKey;
+
+  /// No description provided for @themes_mcoaPrefixBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefix border'**
+  String get themes_mcoaPrefixBorder;
+
+  /// No description provided for @themes_mcoaPrefixBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefix background'**
+  String get themes_mcoaPrefixBackground;
+
+  /// No description provided for @themes_mcoaPrefixText.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefix text'**
+  String get themes_mcoaPrefixText;
+
+  /// No description provided for @themes_mcoaChannelIndices.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel indices'**
+  String get themes_mcoaChannelIndices;
+
+  /// No description provided for @themes_mcoaSeparateMetadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate metadata'**
+  String get themes_mcoaSeparateMetadata;
+
+  /// No description provided for @themes_mcoaMetadataSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Message-to-metadata spacing'**
+  String get themes_mcoaMetadataSpacing;
+
   /// No description provided for @themes_mcoaSignal.
   ///
   /// In en, this message translates to:
   /// **'Signal color'**
   String get themes_mcoaSignal;
+
+  /// No description provided for @themes_mcoaSenderNameBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name brightness'**
+  String get themes_mcoaSenderNameBrightness;
 }
 
 class _AppLocalizationsDelegate

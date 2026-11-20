@@ -12,7 +12,7 @@ import '../services/additional_identity_inbox.dart';
 import '../theme/mesh_theme.dart';
 import 'mesh_ui.dart';
 import 'middle_ellipsis_text.dart';
-import 'unread_badge.dart';
+import 'mcoa_chat_list_style.dart';
 
 class AdditionalIdentityContacts extends StatefulWidget {
   const AdditionalIdentityContacts({
@@ -76,7 +76,7 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
     final primaryKey = widget.connector.selfPublicKeyHex;
     final mono = MeshTheme.mono(
       fontSize: 9,
-      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      color: McoaChatListStyle.color(context, 'key', scheme.onSurfaceVariant.withValues(alpha: 0.7)),
     );
     return FutureBuilder(
       future: _threads,
@@ -94,6 +94,8 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
               return Column(
                 children: [
                   MeshCard(
+                        color: McoaChatListStyle.override(context, 'background'),
+                        borderColor: McoaChatListStyle.override(context, 'border'),
                     key: ValueKey('additional-identity:$key'),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     onTap: () => setState(() {
@@ -113,6 +115,7 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 15,
+                                  color: McoaChatListStyle.override(context, 'title'),
                                   fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w500,
                                 ),
                               ),
@@ -120,15 +123,16 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                               const SizedBox(height: 3),
                               DecoratedBox(
                                 decoration: BoxDecoration(
-                                  color: scheme.surfaceContainerHighest,
+                                  color: McoaChatListStyle.color(context, 'prefix_background', scheme.surfaceContainerHighest),
                                   borderRadius: BorderRadius.circular(MeshRadii.xs),
-                                  border: Border.all(color: scheme.outline),
+                                  border: Border.all(color: McoaChatListStyle.color(context, 'prefix_border', scheme.outline)),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                   child: Text(
                                     key.substring(0, prefixLength).toUpperCase(),
-                                    style: MeshTheme.mono(fontSize: 13, fontWeight: FontWeight.w700),
+                                    style: MeshTheme.mono(fontSize: 13, fontWeight: FontWeight.w700,
+                                      color: McoaChatListStyle.override(context, 'prefix_text')),
                                   ),
                                 ),
                               ),
@@ -137,10 +141,10 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                         ),
                         if (unread > 0) ...[
                           const SizedBox(width: 8),
-                          UnreadBadge(count: unread),
+                          McoaChatListUnreadBadge(count: unread),
                         ],
                         const SizedBox(width: 8),
-                        Icon(expanded ? Icons.remove : Icons.add),
+                        Icon(expanded ? Icons.remove : Icons.add, color: McoaChatListStyle.override(context, 'icons')),
                       ],
                     ),
                   ),
@@ -158,6 +162,8 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                   if (expanded)
                     for (final contact in contacts)
                       MeshCard(
+                        color: McoaChatListStyle.override(context, 'background'),
+                        borderColor: McoaChatListStyle.override(context, 'border'),
                         key: ValueKey((key, contact.senderKey)),
                         margin: const EdgeInsets.fromLTRB(32, 2, 16, 2),
                         padding: EdgeInsets.zero,
@@ -186,6 +192,7 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                         ),
                         child: ListTile(
                           title: Text(
+                            style: TextStyle(color: McoaChatListStyle.override(context, 'title')),
                             widget.connector.getContactByPubKeyHex(contact.senderKey)?.name
                                 ?? contact.senderName,
                           ),
@@ -196,7 +203,7 @@ class _AdditionalIdentityContactsState extends State<AdditionalIdentityContacts>
                           trailing: contact.unread > 0
                               ? Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: [UnreadBadge(count: contact.unread)],
+                                  children: [McoaChatListUnreadBadge(count: contact.unread)],
                                 )
                               : null,
                         ),

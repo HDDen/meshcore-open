@@ -93,7 +93,7 @@ import '../widgets/channel_edit_sheet.dart';
 import '../widgets/channel_sender_name_dialog.dart';
 import '../widgets/channel_sender_name_line.dart';
 import '../widgets/chat_additional_actions_menu.dart';
-import '../widgets/chat_bubble_box.dart';
+import '../widgets/mcoa_chat_bubble_box.dart';
 import '../widgets/composer_text_builder.dart';
 import '../widgets/chat_zoom_wrapper.dart';
 import '../widgets/emoji_picker.dart';
@@ -109,6 +109,7 @@ import '../widgets/tx_power_boost_badge.dart';
 import '../widgets/message_translation_button.dart';
 import '../widgets/markup_text_editing_controller.dart';
 import '../widgets/mention_chip.dart';
+import '../widgets/mcoa_message_metadata_spacing.dart';
 import '../widgets/channel_notification_mode_sheet.dart';
 import '../widgets/formatted_message_text.dart';
 import '../widgets/mention_suggestions_panel.dart';
@@ -1945,7 +1946,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ? scheme.onSurface
         : _colorForName(message.senderName);
     final senderNameColor = isOutgoing ? defaultSenderNameColor
-        : McoaThemeStyle.color(context, 'sender_name', defaultSenderNameColor, outgoing: false);
+        : McoaThemeStyle.senderNameColor(context, defaultSenderNameColor,
+            colored: !settingsService.settings.monochromeSenderNames);
     final metaColor = McoaThemeStyle.color(context, 'badges',
         textColor.withValues(alpha: 0.65), outgoing: isOutgoing);
     final borderRadius = isOutgoing
@@ -1989,7 +1991,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   onSecondaryTapUp: PlatformInfo.isDesktop
                       ? (_) => unawaited(_showMessageActions(message))
                       : null,
-                  child: ChatBubbleBox(
+                  child: McoaChatBubbleBox(
+                    outgoing: isOutgoing,
+                    metadataVisible: enableTracing,
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeInOut,
                     padding: isMediaMessage
@@ -2493,6 +2497,18 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         //   ),
                         // ],
                         if (enableTracing) ...[
+                          if ((!isOutgoing &&
+                                  McoaThemeStyle.of(context).incomingMetadataSpacing > 0) ||
+                              McoaThemeStyle.of(context).separateMetadataFor(isOutgoing))
+                            McoaMessageMetadataSpacing(
+                              metadataTopPadding: McoaThemeStyle.of(context)
+                                  .metadataTopPaddingFor(isOutgoing).toDouble(),
+                              messageBottomPadding: McoaThemeStyle.of(context)
+                                  .separateMetadataFor(isOutgoing)
+                                      ? (isMediaMessage ? 4 : 8) : 0,
+                              height: isOutgoing ? 0 : McoaThemeStyle.of(context)
+                                  .incomingMetadataSpacing.toDouble(),
+                            ),
                           // A message heard with no repeater in between has
                           // no hop list, but it does have a reading, and that
                           // is the one measured over a single link rather than

@@ -69,8 +69,26 @@ photo from your device, the photo is included.
 
 ## MCOa theme settings
 
-The editor's **MCOa settings** block contains four collapsed sections:
-**Interface**, **Incoming**, **Outgoing**, and **MCOa settings**. These cards use
+The **Channels** preview includes the same search field used in the channel list, above the two sample cards. Preview search is inert. In **Chats**, **Search: border**, **Search: background**, **Search: text**, and **Search: placeholder and icons** follow the unread-counter colors; the contacts-only background follows the shared background. These optional colors affect real channel and contact search as well as preview. Border geometry/focus width, search text, clear/filter actions and filtering behavior stay intact; clearing a color restores the current input theme. **Search: background (contacts)** appears after the shared search background and overrides only the contact screen, including its collapsed search box. Clearing it restores the shared search background, then the current input theme if the shared color is also unset. It is stored as `mcoa.colors.chats_search_contacts_background` and does not affect channel search or its preview. The other colors use `chats_search_border`, `chats_search_background`, `chats_search_text` and `chats_search_hint_icons` in `mcoa.colors`.
+
+
+**Chats** controls the channel and contact list cards, including their previews, room-server and additional-key entries, CompanionCLI and channel groups. Its 20 optional colors are card border/background, chat title, message preview, service icons/text, channel index border/background/text/dot, unread counter background/text, contact public key and prefix border/background/text, plus search border/background/text/placeholder-and-icons. Service ink covers compression/mute/date indicators and the contact route/location/last-seen line. Avatar colors stay independent. An unset color retains the existing appearance, including individual channel colors. These settings use `mcoa.colors.chats_*` keys and are included in storage and exports.
+
+**MCOa settings → Channel indices** is on when indices are shown (it inverses the application's Hide channel indices setting). Like the other preference switches, it applies once on explicit activation/save-and-apply. You can change the application setting afterward without the theme forcing it back, including after restarting the app. The optional preference is stored as `mcoa.preferences.show_channel_indices`; old themes leave the app preference unchanged. Editing this switch only updates the draft and preview until the theme is applied.
+
+
+**Incoming / Outgoing → Metadata background** sets the separated metadata area's color independently for each direction. The swatch and editable HEX field support the same palette, alpha and reset behavior as other optional theme colors. Clearing the field restores the theme surface color. The metadata background forms one continuous backing beneath the rounded message area. Its upper edge does not form a second pair of rounded corners at the join; the bottom corners remain rounded. This applies to both directions and does not change spacing or bubble width.
+
+**Incoming / Outgoing → Metadata inner padding** adds 0–40 logical pixels at the top inside the metadata area, default 0. Each slider is enabled only while that direction's **Separate metadata** switch is on. The value is retained when separation is switched off. Unlike the message-to-metadata gap, this inset belongs to the metadata background and does not enlarge the rounded message area; existing small gaps within metadata remain. Colors and both padding values are included in theme storage/sharing under `mcoa.colors.incoming_metadata_background`, `mcoa.colors.outgoing_metadata_background`, `mcoa.incoming_metadata_top_padding` and `mcoa.outgoing_metadata_top_padding`.
+
+**Incoming → Separate metadata** is off by default. It gives incoming metadata its own background using its **Metadata background** color (or the current theme surface color when unset), while the message area retains its incoming background and rounded corners. Both halves of the message-to-metadata gap remain in the message area. This works in channel, direct, room and additional-key chats and their previews; **Outgoing → Separate metadata** independently enables the same appearance for outgoing messages and is also off by default. Both directions keep their own message background and badge colors. The extra spacing slider remains an incoming-only setting. The independent switches are stored as `mcoa.separate_incoming_metadata` and `mcoa.separate_outgoing_metadata` and do not change app preferences.
+
+
+**Incoming → Message-to-metadata spacing** adds 0–40 logical pixels between the message body and its metadata. The default is 0, preserving the current layout. The additional gap consists of two equal empty halves, reserved for separate styling later. It applies to incoming channel, direct and room messages, including the preview; outgoing messages retain their spacing. Existing small gaps between metadata rows remain unchanged. The value is saved and shared in `mcoa.incoming_metadata_spacing`; it does not change application preferences.
+
+
+The editor's **MCOa settings** block contains five collapsed sections:
+**Interface**, **Incoming**, **Outgoing**, **Chats**, and **MCOa settings**. These cards use
 compact internal padding without an additional inset around their rows. Color rows open
 the same continuous HSV palette (saturation/value square and hue slider) used
 for channel widget colors, plus HEX and opacity inputs; **Default** clears that override. Each color swatch
@@ -103,8 +121,14 @@ colors retain their meaning.
 
 DPI accepts 50–200%, sender names accept 25–400%, with up to three digits.
 The switch uses the application's simplified mentions setting. **Incoming →
-Sender name**, placed before message text, sets the sender-name color in channel
-and contact chats. Clearing it restores the application's ordinary sender-name
+Sender name** sets the sender-name color in channel and contact chats. The
+**Sender name brightness** slider precedes it: its midpoint leaves colored
+names unchanged, moving left darkens them, and moving right lightens them while
+preserving hue and transparency. It applies only to the application's colored
+sender names; monochrome names retain their normal appearance. Setting an
+explicit sender-name color resets brightness to the midpoint and disables the
+slider. Clearing the color re-enables it at the midpoint, without restoring an
+old brightness value. Brightness is stored with the theme and included in exports. Clearing it restores the application's ordinary sender-name
 coloring. Themes no longer change the global monochrome sender names setting;
 that obsolete preference in older MCOa theme files is ignored. The preview updates without changing application
 preferences. **Save and use**, or selecting the saved theme later, applies these

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../helpers/mcoa_theme_options.dart';
+import '../helpers/mcoa_sender_name_brightness.dart';
 
 class McoaThemeStyle extends ThemeExtension<McoaThemeStyle> {
   const McoaThemeStyle(this.options);
@@ -15,6 +16,17 @@ class McoaThemeStyle extends ThemeExtension<McoaThemeStyle> {
   ) {
     final direction = outgoing ?? McoaMessageScope.outgoingOf(context);
     return of(context).colors['${direction ? 'outgoing' : 'incoming'}_$part'] ?? fallback;
+  }
+
+  static Color senderNameColor(BuildContext context, Color fallback, {required bool colored}) {
+    final options = of(context);
+    final explicit = options.colors['incoming_sender_name'];
+    if (explicit != null) {
+      return explicit;
+    }
+    return colored
+        ? adjustSenderNameBrightness(fallback, options.incomingSenderNameBrightness)
+        : fallback;
   }
 
   static ThemeData apply(ThemeData base, McoaThemeOptions options) {

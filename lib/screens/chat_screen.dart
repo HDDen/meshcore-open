@@ -58,7 +58,7 @@ import '../services/chat_text_scale_service.dart';
 import '../services/mco_image_pack_originals.dart';
 import '../services/translation_service.dart';
 import '../widgets/additional_identity_sender_picker.dart';
-import '../widgets/chat_bubble_box.dart';
+import '../widgets/mcoa_chat_bubble_box.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/contact_history_link_banner.dart';
 import '../widgets/confirm_clear_dialog.dart';
@@ -101,6 +101,7 @@ import '../widgets/holiday_animations.dart';
 import '../widgets/pending_send_cancel_bar.dart';
 import '../widgets/stop_sending_bar.dart';
 import '../widgets/mention_chip.dart';
+import '../widgets/mcoa_message_metadata_spacing.dart';
 import '../widgets/reply_quote_box.dart';
 import '../widgets/chat_route_activity.dart';
 import '../widgets/swipe_reply_bubble.dart';
@@ -2950,7 +2951,8 @@ class ContactMessageBubble extends StatelessWidget {
         ? scheme.onSurface
         : _colorForName(senderName);
     final senderNameColor = isOutgoing ? defaultSenderNameColor
-        : McoaThemeStyle.color(context, 'sender_name', defaultSenderNameColor, outgoing: false);
+        : McoaThemeStyle.senderNameColor(context, defaultSenderNameColor,
+            colored: !settingsService.settings.monochromeSenderNames);
     // A body that arrived while its author was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link. Everything below
     // reads `bodyText`, so revealing the text cannot bring those handlers
@@ -3132,7 +3134,8 @@ class ContactMessageBubble extends StatelessWidget {
                   const SizedBox(width: 6),
                 ],
                 Flexible(
-                  child: ChatBubbleBox(
+                  child: McoaChatBubbleBox(
+                    outgoing: isOutgoing,
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeInOut,
                     padding: isMediaMessage
@@ -3578,6 +3581,18 @@ class ContactMessageBubble extends StatelessWidget {
                             ],
                           ),
                         ],
+                        if ((!isOutgoing &&
+                                McoaThemeStyle.of(context).incomingMetadataSpacing > 0) ||
+                            McoaThemeStyle.of(context).separateMetadataFor(isOutgoing))
+                          McoaMessageMetadataSpacing(
+                            metadataTopPadding: McoaThemeStyle.of(context)
+                                .metadataTopPaddingFor(isOutgoing).toDouble(),
+                            messageBottomPadding: McoaThemeStyle.of(context)
+                                .separateMetadataFor(isOutgoing)
+                                    ? (isMediaMessage ? 4 : 8) : 0,
+                            height: isOutgoing ? 0 : McoaThemeStyle.of(context)
+                                .incomingMetadataSpacing.toDouble(),
+                          ),
                         // Incoming signature badge: room-server chats only,
                         // on its own line above the message time, independent
                         // of the message-tracing setting. Direct messages

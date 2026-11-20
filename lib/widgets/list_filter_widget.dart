@@ -111,6 +111,7 @@ class _ToggleNodeContactsAction extends _ContactsFilterAction {
 
 class ContactsFilterMenu extends StatelessWidget {
   final ContactSortOption sortOption;
+  final Widget icon;
   final ContactTypeFilter typeFilter;
   final bool showUnreadOnly;
   final ValueChanged<ContactSortOption> onSortChanged;
@@ -120,6 +121,7 @@ class ContactsFilterMenu extends StatelessWidget {
   final ValueChanged<bool>? onNodeContactsOnlyChanged;
 
   const ContactsFilterMenu({
+    this.icon = const Icon(Icons.filter_list_outlined),
     super.key,
     required this.sortOption,
     required this.typeFilter,
@@ -135,6 +137,7 @@ class ContactsFilterMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return SortFilterMenu<_ContactsFilterAction>(
+      icon: icon,
       tooltip: l10n.listFilter_tooltip,
       sections: [
         SortFilterMenuSection(

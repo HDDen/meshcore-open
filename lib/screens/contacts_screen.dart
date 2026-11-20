@@ -58,7 +58,8 @@ import '../widgets/repeater_options_sheet.dart';
 import '../widgets/node_info_sheet.dart' show showRoomLoginDialog;
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
-import '../widgets/unread_badge.dart';
+import '../widgets/mcoa_chat_list_style.dart';
+import '../widgets/mcoa_chat_search_field.dart';
 import '../helpers/snack_bar_builder.dart';
 import 'channels_screen.dart';
 import 'chat_screen.dart';
@@ -1355,6 +1356,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     UiViewStateService viewState,
   ) {
     return ContactsFilterMenu(
+      icon: Icon(Icons.filter_list_outlined,
+        color: McoaChatListStyle.override(context, 'search_hint_icons')),
       sortOption: viewState.contactsSortOption,
       typeFilter: viewState.contactsTypeFilter,
       showUnreadOnly: viewState.contactsShowUnreadOnly,
@@ -1704,8 +1707,9 @@ class _ContactsScreenState extends State<ContactsScreen>
                 height: controlHeight,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
+                    color: McoaChatListStyle.searchBackground(context, contacts: true),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: McoaChatListStyle.color(context, 'search_border', Theme.of(context).colorScheme.outline),
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1713,7 +1717,8 @@ class _ContactsScreenState extends State<ContactsScreen>
                     children: [
                       Expanded(
                         child: viewState.contactsSearchExpanded
-                            ? TextField(
+                            ? McoaChatSearchField(
+                                contacts: true,
                                 controller: _searchController,
                                 focusNode: _searchFocusNode,
                                 autofocus: !_suppressSearchAutofocus,
@@ -1761,13 +1766,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                             viewState.contactsSearchExpanded
                                 ? Icons.close
                                 : Icons.search,
+                            color: McoaChatListStyle.override(context, 'search_hint_icons'),
                           ),
                         ),
                       ),
                       Container(
                         width: 1,
                         height: 24,
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                        color: McoaChatListStyle.color(context, 'search_border', Theme.of(context).colorScheme.outlineVariant),
                       ),
                       SizedBox(
                         width: 48,
@@ -3416,6 +3422,8 @@ class _ContactTile extends StatelessWidget {
           ? (_) => onLongPress!()
           : null,
       child: MeshCard(
+        color: McoaChatListStyle.override(context, 'background'),
+        borderColor: McoaChatListStyle.override(context, 'border'),
         onTap: onTap,
         onLongPress: onLongPress,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -3467,17 +3475,17 @@ class _ContactTile extends StatelessWidget {
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                             fontSize: 15,
-                            color: scheme.onSurface,
+                            color: McoaChatListStyle.color(context, 'title', scheme.onSurface),
                           ),
                         ),
                       ),
                       if (item.isFavorite) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.star, size: 13, color: MeshPalette.warn),
+                        Icon(Icons.star, size: 13, color: McoaChatListStyle.color(context, 'icons', MeshPalette.warn)),
                       ],
                       if (item.unreadCount > 0) ...[
                         const SizedBox(width: 6),
-                        UnreadBadge(count: item.unreadCount),
+                        McoaChatListUnreadBadge(count: item.unreadCount),
                       ],
                     ],
                   ),
@@ -3486,7 +3494,7 @@ class _ContactTile extends StatelessWidget {
                     text: item.publicKeyLabel,
                     style: MeshTheme.mono(
                       fontSize: 9,
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: McoaChatListStyle.color(context, 'key', scheme.onSurfaceVariant.withValues(alpha: 0.7)),
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -3502,7 +3510,7 @@ class _ContactTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
-                            color: scheme.onSurfaceVariant,
+                            color: McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                           ),
                         ),
                       ),
@@ -3517,7 +3525,7 @@ class _ContactTile extends StatelessWidget {
                               Icon(
                                 Icons.location_on,
                                 size: 13,
-                                color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
+                                color: McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant.withValues(alpha: 0.55)),
                               ),
                             ],
                             const SizedBox(width: 6),
@@ -3529,8 +3537,8 @@ class _ContactTile extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: MeshTheme.mono(
                                   fontSize: 11,
-                                  color: item.unreadCount > 0
-                                      ? MeshPalette.blue : scheme.onSurfaceVariant,
+                                  color: McoaChatListStyle.override(context, 'icons') ?? (item.unreadCount > 0
+                                      ? MeshPalette.blue : scheme.onSurfaceVariant),
                                 ),
                               ),
                             ),
@@ -3548,7 +3556,7 @@ class _ContactTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
-                        color: scheme.onSurfaceVariant,
+                        color: McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                       ),
                     ),
                   ],
@@ -3586,9 +3594,9 @@ class _KeyPrefixBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
+          color: McoaChatListStyle.color(context, 'prefix_background', scheme.surfaceContainerHighest),
           borderRadius: BorderRadius.circular(MeshRadii.xs),
-          border: Border.all(color: scheme.outline),
+          border: Border.all(color: McoaChatListStyle.color(context, 'prefix_border', scheme.outline)),
         ),
         child: Text(
           prefix,
@@ -3596,7 +3604,7 @@ class _KeyPrefixBadge extends StatelessWidget {
           style: MeshTheme.mono(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: scheme.onSurface,
+            color: McoaChatListStyle.color(context, 'prefix_text', scheme.onSurface),
             letterSpacing: 0.6,
           ),
         ),

@@ -119,6 +119,10 @@ class StatusChip extends StatelessWidget {
   final IconData? icon;
   final bool pulse;
   final double fontSize;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? textColor;
+  final Color? dotColor;
 
   const StatusChip({
     super.key,
@@ -127,19 +131,20 @@ class StatusChip extends StatelessWidget {
     this.icon,
     this.pulse = false,
     this.fontSize = 11.5,
+    this.backgroundColor, this.borderColor, this.textColor, this.dotColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final background = Color.alphaBlend(color.withValues(alpha: 0.12),
+    final background = backgroundColor ?? Color.alphaBlend(color.withValues(alpha: 0.12),
         Theme.of(context).colorScheme.surfaceContainerLow);
-    final markColor = readableAccent(color, background, minContrast: 3);
+    final markColor = dotColor ?? readableAccent(color, background, minContrast: 3);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: backgroundColor ?? color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(MeshRadii.pill),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: borderColor ?? color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -157,7 +162,7 @@ class StatusChip extends StatelessWidget {
               style: MeshTheme.mono(
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: textColor ?? Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),

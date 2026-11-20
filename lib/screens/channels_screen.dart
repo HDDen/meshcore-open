@@ -48,7 +48,8 @@ import '../widgets/quick_switch_bar.dart';
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/unknown_app_data_placeholder.dart';
-import '../widgets/unread_badge.dart';
+import '../widgets/mcoa_chat_list_style.dart';
+import '../widgets/mcoa_chat_search_field.dart';
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/companion_cli_list_layout.dart';
 import '../helpers/companion_cli_group_members.dart';
@@ -372,6 +373,25 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: McoaChatSearchField(
+              key: const ValueKey('theme-preview-channel-search'),
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              readOnly: true,
+              decoration: InputDecoration(
+                hintText: context.l10n.channels_searchChannels,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.filter_list_outlined,
+                    color: McoaChatListStyle.override(context, 'search_hint_icons')),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+          ),
           for (final channel in samples)
             (_buildChannelTile(
               context,
@@ -379,7 +399,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               ChannelMessageStore(),
               channel,
               isMuted: channel.index != 0,
-              hideChannelIndexIndicator: false,
+              hideChannelIndexIndicator: McoaChatListStyle.hidePreviewIndex(context),
             ) as ListEntrance).child,
         ],
       );
@@ -555,7 +575,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: TextField(
+                        child: McoaChatSearchField(
                           controller: _searchController,
                           focusNode: _searchFocusNode,
                           decoration: InputDecoration(
@@ -763,7 +783,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           .showChannelPreviewSender,
       style: MeshTheme.mono(
         fontSize: 11.5,
-        color: widgetTextColor ?? scheme.onSurfaceVariant,
+        color: McoaChatListStyle.color(context, 'preview', widgetTextColor ?? scheme.onSurfaceVariant),
       ),
       blocked: lastBlocked,
     );
@@ -784,7 +804,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         margin:
             margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        color: widgetColor,
+        color: McoaChatListStyle.override(context, 'background') ?? widgetColor,
+        borderColor: McoaChatListStyle.override(context, 'border'),
         onTap: () {
           HapticFeedback.selectionClick();
           final unread = connector.getUnreadCountForChannelIndex(channel.index);
@@ -871,7 +892,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w500,
-                                  color: widgetTextColor,
+                                  color: McoaChatListStyle.override(context, 'title') ?? widgetTextColor,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -879,12 +900,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         ),
                         if (!hideChannelIndexIndicator) ...[
                           const SizedBox(width: 6),
-                          StatusChip(
-                            label: context.l10n.channels_indexChip(
-                              channel.index,
-                            ),
-                            color: MeshPalette.blue,
-                            fontSize: 10,
+                          McoaChannelIndexChip(
+                            label: context.l10n.channels_indexChip(channel.index),
                           ),
                         ],
                       ],
@@ -910,7 +927,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: widgetTextColor ?? scheme.onSurfaceVariant,
+                          color: McoaChatListStyle.color(context, 'preview', widgetTextColor ?? scheme.onSurfaceVariant),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -930,7 +947,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       _relativeTime(lastTime),
                       style: MeshTheme.mono(
                         fontSize: 11,
-                        color: widgetTextColor ?? scheme.onSurfaceVariant,
+                        color: McoaChatListStyle.color(context, 'icons', widgetTextColor ?? scheme.onSurfaceVariant),
                       ),
                     ),
                   const SizedBox(height: 4),
@@ -944,7 +961,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 ? 4
                                 : 0,
                           ),
-                          child: UnreadBadge(count: unreadCount),
+                          child: McoaChatListUnreadBadge(count: unreadCount),
                         ),
                       ],
                       if (isMuted)
@@ -955,7 +972,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                               context.read<AppSettingsService>().getChannelNotificationMode(channel.muteKey),
                             ),
                             size: 14,
-                            color: widgetTextColor ?? scheme.onSurfaceVariant,
+                            color: McoaChatListStyle.color(context, 'icons', widgetTextColor ?? scheme.onSurfaceVariant),
                           ),
                         ),
                       for (
@@ -966,7 +983,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                         _buildChannelCompressionIndicator(
                           context,
                           compressionLabels[index],
-                          textColor: widgetTextColor,
+                          textColor: McoaChatListStyle.override(context, 'icons') ?? widgetTextColor,
                         ),
                       ],
                     ],
@@ -982,7 +999,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     child: Icon(
                       Icons.drag_handle,
                       color:
-                          widgetTextColor ??
+                          McoaChatListStyle.override(context, 'icons') ?? widgetTextColor ??
                           Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -1042,6 +1059,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       key: ValueKey('contact_chat_entrance_${contact.publicKeyHex}'),
       index: listIndex,
       child: MeshCard(
+        color: McoaChatListStyle.override(context, 'background'),
+        borderColor: McoaChatListStyle.override(context, 'border'),
         key: ValueKey('contact_chat_${contact.publicKeyHex}'),
         margin:
             margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -1075,6 +1094,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     contactLabel,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
+                      color: McoaChatListStyle.override(context, 'title'),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1094,7 +1114,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       lastPreview,
                       style: MeshTheme.mono(
                         fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
+                        color: McoaChatListStyle.color(context, 'preview', scheme.onSurfaceVariant),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1106,7 +1126,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                           ? context.l10n.chat_contactTypeRoom
                           : context.l10n.chat_contactTypeNode,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: McoaChatListStyle.color(context, 'preview', scheme.onSurfaceVariant),
                       ),
                     ),
                   ],
@@ -1122,11 +1142,11 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   _relativeTime(lastTime),
                   style: MeshTheme.mono(
                     fontSize: 11,
-                    color: scheme.onSurfaceVariant,
+                    color: McoaChatListStyle.color(context, 'icons', scheme.onSurfaceVariant),
                   ),
                 ),
                 const SizedBox(height: 4),
-                if (unreadCount > 0) UnreadBadge(count: unreadCount),
+                if (unreadCount > 0) McoaChatListUnreadBadge(count: unreadCount),
               ],
             ),
             if (showDragHandle && dragIndex != null) ...[
@@ -1142,7 +1162,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       child: Icon(
                         Icons.drag_indicator,
                         size: 28,
-                        color: scheme.onSurface,
+                        color: McoaChatListStyle.color(context, 'icons', scheme.onSurface),
                       ),
                     ),
                   ),
@@ -1294,6 +1314,8 @@ class _ChannelsScreenState extends State<ChannelsScreen>
 
   Widget _buildFilterButton(UiViewStateService viewState) {
     return SortFilterMenu<ChannelSortOption>(
+      icon: Icon(Icons.filter_list_outlined,
+        color: McoaChatListStyle.override(context, 'search_hint_icons')),
       tooltip: context.l10n.listFilter_tooltip,
       sections: [
         SortFilterMenuSection<ChannelSortOption>(
@@ -1943,7 +1965,12 @@ class _ChannelsScreenState extends State<ChannelsScreen>
           : null,
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        color: groupWidgetColor,
+        color: McoaChatListStyle.override(context, 'background') ?? groupWidgetColor,
+        shape: McoaChatListStyle.override(context, 'border') == null ? null
+            : RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(MeshRadii.md),
+                side: BorderSide(color: McoaChatListStyle.override(context, 'border')!),
+              ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1956,19 +1983,19 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 group.name,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: groupWidgetTextColor,
+                  color: McoaChatListStyle.override(context, 'title') ?? groupWidgetTextColor,
                 ),
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (unreadCount > 0) ...[
-                    UnreadBadge(count: unreadCount),
+                    McoaChatListUnreadBadge(count: unreadCount),
                     const SizedBox(width: 8),
                   ],
                   Icon(
                     isExpanded ? Icons.remove : Icons.add,
-                    color: groupWidgetTextColor,
+                    color: McoaChatListStyle.override(context, 'icons') ?? groupWidgetTextColor,
                   ),
                   if (showDragHandle && dragIndex != null) ...[
                     const SizedBox(width: 8),

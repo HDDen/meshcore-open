@@ -10,6 +10,40 @@ import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:meshcore_open/widgets/reply_quote_box.dart';
 
 void main() {
+  testWidgets('name brightness changes colored names only and explicit ink wins', (tester) async {
+    const fallback = Color(0xFF336699);
+    const explicit = Color(0xFFAA55BB);
+    Widget app(McoaThemeOptions options) => MaterialApp(
+      themeAnimationStyle: AnimationStyle.noAnimation,
+      theme: MeshTheme.fromCustom(CustomTheme(
+        id: 'custom:name-brightness',
+        name: 'Names',
+        background: Colors.white,
+        accent: Colors.blue,
+        mcoa: options,
+      )),
+      home: Builder(builder: (context) => Column(children: [
+        Text('colored', style: TextStyle(
+          color: McoaThemeStyle.senderNameColor(context, fallback, colored: true),
+        )),
+        Text('monochrome', style: TextStyle(
+          color: McoaThemeStyle.senderNameColor(context, fallback, colored: false),
+        )),
+      ])),
+    );
+    await tester.pumpWidget(app(const McoaThemeOptions(incomingSenderNameBrightness: 50)));
+    expect(tester.widget<Text>(find.text('colored')).style!.color!.computeLuminance(),
+        greaterThan(fallback.computeLuminance()));
+    expect(tester.widget<Text>(find.text('monochrome')).style!.color, fallback);
+    await tester.pumpWidget(app(const McoaThemeOptions(
+      incomingSenderNameBrightness: 50,
+      colors: {'incoming_sender_name': explicit},
+    )));
+    expect(tester.widget<Text>(find.text('colored')).style!.color, explicit);
+    expect(tester.widget<Text>(find.text('monochrome')).style!.color, explicit);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('badge colors do not tint hop text; only hop text overrides do', (tester) async {
     Widget app(Color? hopText) => MaterialApp(
       theme: MeshTheme.fromCustom(CustomTheme(

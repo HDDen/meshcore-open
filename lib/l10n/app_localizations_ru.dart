@@ -10883,5 +10883,86 @@ class AppLocalizationsRu extends AppLocalizations {
   String get themes_mcoaLink => 'Цвет ссылок';
 
   @override
+  String get themes_mcoaMetadataBackground => 'Фон метаданных';
+
+  @override
+  String get themes_mcoaMetadataTopPadding => 'Внутренний отступ метаданных';
+
+  @override
+  String get themes_mcoaSearchBorder => 'Поиск: граница';
+
+  @override
+  String get themes_mcoaSearchContactsBackground => 'Поиск: фон (контакты)';
+
+  @override
+  String get themes_mcoaSearchBackground => 'Поиск: фон';
+
+  @override
+  String get themes_mcoaSearchText => 'Поиск: текст';
+
+  @override
+  String get themes_mcoaSearchHintIcons => 'Поиск: заполнитель и иконки';
+
+  @override
+  String get themes_mcoaChats => 'Чаты';
+
+  @override
+  String get themes_mcoaChatBorder => 'Граница карточки';
+
+  @override
+  String get themes_mcoaChatBackground => 'Фон карточки';
+
+  @override
+  String get themes_mcoaChatTitle => 'Название чата';
+
+  @override
+  String get themes_mcoaChatPreview => 'Превью сообщений';
+
+  @override
+  String get themes_mcoaChatIcons => 'Цвет иконок';
+
+  @override
+  String get themes_mcoaIndexBorder => 'Граница индекса';
+
+  @override
+  String get themes_mcoaIndexBackground => 'Фон индекса';
+
+  @override
+  String get themes_mcoaIndexText => 'Текст индекса';
+
+  @override
+  String get themes_mcoaIndexDot => 'Точка в индексе';
+
+  @override
+  String get themes_mcoaUnreadBackground => 'Фон счётчика';
+
+  @override
+  String get themes_mcoaUnreadText => 'Текст счётчика';
+
+  @override
+  String get themes_mcoaContactKey => 'Цвет ключа';
+
+  @override
+  String get themes_mcoaPrefixBorder => 'Граница префикса';
+
+  @override
+  String get themes_mcoaPrefixBackground => 'Фон префикса';
+
+  @override
+  String get themes_mcoaPrefixText => 'Текст префикса';
+
+  @override
+  String get themes_mcoaChannelIndices => 'Индексы каналов';
+
+  @override
+  String get themes_mcoaSeparateMetadata => 'Отделить метаданные';
+
+  @override
+  String get themes_mcoaMetadataSpacing => 'Отступ метаданных от сообщения';
+
+  @override
   String get themes_mcoaSignal => 'Цвет сигнала';
+
+  @override
+  String get themes_mcoaSenderNameBrightness => 'Яркость имени отправителя';
 }

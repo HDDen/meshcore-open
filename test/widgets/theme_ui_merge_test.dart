@@ -185,6 +185,45 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('sender brightness starts centered and resets when sender ink is specified', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(app(const ThemeEditorScreen()));
+    await tester.pumpAndSettle();
+    final toggle = find.byKey(const ValueKey('theme-section-mcoa-incoming-toggle'));
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    final root = find.byKey(const ValueKey('mcoa-sender-name-brightness'));
+    final slider = find.descendant(of: root, matching: find.byType(Slider));
+    await tester.ensureVisible(slider);
+    expect(tester.widget<Slider>(slider).value, 0);
+    expect(tester.widget<Slider>(slider).onChanged, isNotNull);
+    final settingsBefore = settings.settings.toJson();
+    await tester.drag(slider, const Offset(90, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.incomingSenderNameBrightness, greaterThan(0));
+    final hex = find.byKey(const ValueKey('mcoa-color-hex-incoming_sender_name'));
+    await tester.ensureVisible(hex);
+    await tester.enterText(hex, '#123456');
+    await tester.pump();
+    expect(tester.widget<Slider>(slider).value, 0);
+    expect(tester.widget<Slider>(slider).onChanged, isNull);
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.incomingSenderNameBrightness, 0);
+    await tester.enterText(hex, '');
+    await tester.pump();
+    expect(tester.widget<Slider>(slider).value, 0);
+    expect(tester.widget<Slider>(slider).onChanged, isNotNull);
+    expect(settings.settings.toJson(), settingsBefore);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('theme sections start folded and preserve edits independently', (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
@@ -198,7 +237,7 @@ void main() {
     final sections = tester.widgetList<McoaThemeEditorSection>(
       find.byType(McoaThemeEditorSection),
     );
-    expect(sections, hasLength(9));
+    expect(sections, hasLength(10));
     expect(sections.every((section) => !section.expanded), isTrue);
     expect(find.text(l10n.settings_modSettingsMonochromeSenderNames), findsNothing);
     expect(find.text(l10n.themes_backgroundHelp), findsNothing);
