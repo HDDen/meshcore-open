@@ -10979,4 +10979,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themes_mcoaSenderNameBrightness => 'Яркость имени отправителя';
+
+  @override
+  String get extraKeys_ackWithoutPath =>
+      'Подтверждать доставку не передавая маршрут';
+
+  @override
+  String get extraKeys_ackWithoutPathHelper =>
+      'Не отправлять PATH с вложенным ACK, чтобы не влиять на сохранённый у отправителя маршрут; в случае flood-отправки отправляется ответный flood-ACK, по которому отправитель всё же сможет назначить маршрут.';
 }

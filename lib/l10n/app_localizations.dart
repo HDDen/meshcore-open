@@ -18345,6 +18345,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sender name brightness'**
   String get themes_mcoaSenderNameBrightness;
+
+  /// No description provided for @extraKeys_ackWithoutPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm delivery without sending a route'**
+  String get extraKeys_ackWithoutPath;
+
+  /// No description provided for @extraKeys_ackWithoutPathHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.'**
+  String get extraKeys_ackWithoutPathHelper;
 }
 
 class _AppLocalizationsDelegate

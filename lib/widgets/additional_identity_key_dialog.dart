@@ -43,6 +43,7 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
   int _keyRevision = 0;
   bool _busy = false;
   bool _invalid = false;
+  late bool _ackWithoutPath = widget.previous?.ackWithoutPath ?? true;
 
   @override
   void initState() {
@@ -105,6 +106,7 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
         _name.text,
         _key.text,
         previous: widget.previous,
+        ackWithoutPath: _ackWithoutPath,
       );
       if (!mounted) return;
       if (widget.onSave != null && !await widget.onSave!(entry)) return;
@@ -155,6 +157,16 @@ class _AdditionalIdentityKeyDialogState extends State<AdditionalIdentityKeyDialo
             onPrefixChanged: (_) => setState(() => _invalid = false),
           ),
           if (!widget.nodeKey) ...[
+            const SizedBox(height: 12),
+            SwitchListTile(
+              key: const ValueKey('additional-key-ack-without-path'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.extraKeys_ackWithoutPath),
+              subtitle: Text(l10n.extraKeys_ackWithoutPathHelper,
+                style: Theme.of(context).textTheme.bodySmall),
+              value: _ackWithoutPath,
+              onChanged: _busy ? null : (value) => setState(() => _ackWithoutPath = value),
+            ),
             const SizedBox(height: 8),
             Text(l10n.extraKeys_encrypted, style: Theme.of(context).textTheme.bodySmall),
           ],

@@ -19708,6 +19708,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     DirectEchoPlaintext plaintext, {
     bool Function()? isCurrent,
     Uint8List? roomRecipientKey,
+    bool forceFloodAck = false,
     ({MeshCoreExpandedIdentity identity, _RawPacket packet})? pathReturn,
   }) async {
     if (_directEchoAckUnsupported || !isConnected ||
@@ -19722,7 +19723,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       randomByte: roomRecipientKey == null ? math.Random.secure().nextInt(256) : 0,
     );
     final ackBytes = roomRecipientKey == null ? ack : Uint8List.sublistView(ack, 0, 4);
-    final route = resolvePathSelection(contact);
+    final route = forceFloodAck
+        ? const PathSelection(pathBytes: [], hopCount: -1, useFlood: true)
+        : resolvePathSelection(contact);
     // The region our own flood sends to this contact take: its own, none
     // when it is marked unscoped, else the node's default scope.
     final contactRegion = getContactRegion(contact.publicKeyHex);
@@ -20138,14 +20141,19 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             isCurrent: isCurrent,
           );
           if (receipt != null && receipt.isCurrent()) {
-            final identity = packet.isFlood && receipt.roomRecipientKey == null
-                ? inbox.entryFor(receipt.recipientKey)?.identity
+            final entry = inbox.entryFor(receipt.recipientKey);
+            final plainFloodAck = packet.isFlood &&
+                receipt.roomRecipientKey == null && (entry?.ackWithoutPath ?? true);
+            final identity = packet.isFlood && receipt.roomRecipientKey == null &&
+                    !plainFloodAck
+                ? entry?.identity
                 : null;
             unawaited(_sendDirectEchoAck(
               receipt.contact,
               receipt.plaintext,
               isCurrent: receipt.isCurrent,
               roomRecipientKey: receipt.roomRecipientKey,
+              forceFloodAck: plainFloodAck,
               pathReturn: identity == null
                   ? null
                   : (identity: identity, packet: packet),

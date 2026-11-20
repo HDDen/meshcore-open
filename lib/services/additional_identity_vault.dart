@@ -12,7 +12,10 @@ import '../storage/message_history_storage.dart';
 import '../utils/keys.dart';
 
 class AdditionalIdentityEntry {
-  AdditionalIdentityEntry._(this.name, this.identity);
+  AdditionalIdentityEntry._(this.name, this.identity, {this.ackWithoutPath = true});
+
+  /// Confirm delivery without advertising a replacement route to this identity.
+  final bool ackWithoutPath;
 
   final String name;
   final MeshCoreExpandedIdentity identity;
@@ -21,6 +24,7 @@ class AdditionalIdentityEntry {
     String name,
     String key, {
     AdditionalIdentityEntry? previous,
+    bool? ackWithoutPath,
   }) async {
     final checked = _checkedRadioName(name);
     if (checked != previous?.name && RegExp(r'[\[\]\\:,?*]').hasMatch(checked)) {
@@ -29,6 +33,7 @@ class AdditionalIdentityEntry {
     return AdditionalIdentityEntry._(
       checked,
       await MeshCoreExpandedIdentity.fromHex(key),
+      ackWithoutPath: ackWithoutPath ?? previous?.ackWithoutPath ?? true,
     );
   }
 
@@ -36,13 +41,14 @@ class AdditionalIdentityEntry {
     required String name,
     required Uint8List privateKey,
     required String expectedPublicKey,
+    bool ackWithoutPath = true,
   }) async {
     final checked = _checkedRadioName(name);
     final identity = await MeshCoreExpandedIdentity.fromBytes(
       privateKey,
       expectedPublicKey: expectedPublicKey,
     );
-    return AdditionalIdentityEntry._(checked, identity);
+    return AdditionalIdentityEntry._(checked, identity, ackWithoutPath: ackWithoutPath);
   }
 
   static String _checkedRadioName(String name) {
@@ -55,9 +61,10 @@ class AdditionalIdentityEntry {
     return trimmed;
   }
 
-  Map<String, String> _toJson() => {
+  Map<String, Object> _toJson() => {
     'name': name,
     'key': identity.privateKeyHex,
+    'ackWithoutPath': ackWithoutPath,
   };
 }
 
@@ -239,6 +246,7 @@ class AdditionalIdentityVault {
       entries.add(AdditionalIdentityEntry._(
         AdditionalIdentityEntry._checkedRadioName(entry['name'] as String),
         await MeshCoreExpandedIdentity.fromHex(entry['key'] as String),
+        ackWithoutPath: entry['ackWithoutPath'] != false,
       ));
     }
     final vault = AdditionalIdentityVault._(history, saved, secrets)

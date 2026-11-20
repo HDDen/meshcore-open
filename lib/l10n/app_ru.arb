@@ -4174,5 +4174,7 @@
   "themes_mcoaSeparateMetadata": "Отделить метаданные",
   "themes_mcoaMetadataSpacing": "Отступ метаданных от сообщения",
   "themes_mcoaSignal": "Цвет сигнала",
-  "themes_mcoaSenderNameBrightness": "Яркость имени отправителя"
+  "themes_mcoaSenderNameBrightness": "Яркость имени отправителя",
+  "extraKeys_ackWithoutPath": "Подтверждать доставку не передавая маршрут",
+  "extraKeys_ackWithoutPathHelper": "Не отправлять PATH с вложенным ACK, чтобы не влиять на сохранённый у отправителя маршрут; в случае flood-отправки отправляется ответный flood-ACK, по которому отправитель всё же сможет назначить маршрут."
 }

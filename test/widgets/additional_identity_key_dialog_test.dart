@@ -72,6 +72,12 @@ void main() {
       }
       open();
       await tester.pumpAndSettle();
+      final ackToggle = find.byKey(const ValueKey('additional-key-ack-without-path'));
+      expect(tester.widget<SwitchListTile>(ackToggle).value, isTrue);
+      await tester.ensureVisible(ackToggle);
+      await tester.tap(ackToggle);
+      await tester.pumpAndSettle();
+      expect(tester.widget<SwitchListTile>(ackToggle).value, isFalse);
       expect(preview(), isEmpty);
       expect(tester.widget<TextField>(public).readOnly, isTrue);
       expect(tester.widget<TextField>(public).minLines, greaterThan(1));
@@ -81,6 +87,7 @@ void main() {
       await tester.enterText(secret, entry.identity.privateKeyHex);
       await settlePreview();
       expect(preview(), entry.identity.publicKeyHex);
+      expect(tester.widget<SwitchListTile>(ackToggle).value, isFalse);
       await tester.enterText(secret, 'invalid');
       await tester.pump();
       expect(preview(), isEmpty);
@@ -117,7 +124,9 @@ void main() {
       expect(preview(), derived.publicKeyHex);
       await tester.tap(find.text(l10n.common_cancel));
       await tester.pumpAndSettle();
-      open(previous: entry);
+      final configured = (await tester.runAsync(() => AdditionalIdentityEntry.parse(
+        entry.name, entry.identity.privateKeyHex, previous: entry, ackWithoutPath: false)))!;
+      open(previous: configured);
       await tester.pumpAndSettle();
       expect(preview(), entry.identity.publicKeyHex);
       await tester.tap(find.text(l10n.common_cancel));

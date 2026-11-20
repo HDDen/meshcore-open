@@ -306,3 +306,18 @@ URL preview switches still control downloads; mesh AEIC/MCOimg are independent.
 ## Regions, Mesh Images, and Radio Statistics
 
 See [Regions](regions.md) for default scopes, per-message labels, and reply-region inheritance; [Image Messages](image-messages.md) for model installation and reconstruction; and [Companion Radio Statistics](radio-statistics.md) for connected-radio measurements.
+
+## Additional identity delivery acknowledgements
+
+The add/edit dialog for an additional private key includes **Confirm delivery
+without sending a route**, enabled by default for new and existing keys.
+With it enabled, a received Direct message is acknowledged along the saved route
+to the sender (or by Flood if none is known). A received Flood message always
+gets a plain Flood ACK. Neither response advertises a replacement route through
+PATH. The sender's application may still use observed radio traffic for its own
+routing decisions; this option does not control the remote application.
+
+Turn the option off to restore PATH with an embedded ACK for received Flood
+messages, enabling automatic route discovery. The setting is saved per key,
+travels with encrypted key backups, and does not affect the connected node's
+own identity or room-post acknowledgements.

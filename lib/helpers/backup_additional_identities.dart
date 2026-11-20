@@ -13,12 +13,13 @@ class BackupAdditionalIdentities {
 
   final List<AdditionalIdentityEntry> entries;
 
-  List<Map<String, String>> toJson() => [
+  List<Map<String, Object>> toJson() => [
     for (final entry in entries)
       {
         'name': entry.name,
         'publicKey': entry.identity.publicKeyHex,
         'privateKey': entry.identity.privateKeyHex,
+        'ackWithoutPath': entry.ackWithoutPath,
       },
   ];
 
@@ -32,7 +33,8 @@ class BackupAdditionalIdentities {
       if (row is! Map<String, Object?> ||
           row['name'] is! String ||
           row['publicKey'] is! String ||
-          row['privateKey'] is! String) {
+          row['privateKey'] is! String ||
+          (row.containsKey('ackWithoutPath') && row['ackWithoutPath'] is! bool)) {
         throw const FormatException('Invalid additional key');
       }
       final publicKey = (row['publicKey'] as String).toLowerCase();
@@ -48,6 +50,7 @@ class BackupAdditionalIdentities {
           name: row['name'] as String,
           privateKey: bytes,
           expectedPublicKey: publicKey,
+          ackWithoutPath: row['ackWithoutPath'] != false,
         ));
       } finally {
         bytes.fillRange(0, bytes.length, 0);

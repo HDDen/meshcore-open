@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:convert/convert.dart';
+import 'package:meshcore_open/helpers/backup_additional_identities.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/services/additional_identity_vault.dart';
@@ -19,6 +20,33 @@ void main() {
     await environment.setUp();
   });
   tearDown(environment.tearDown);
+
+  test('ACK route policy defaults on and survives edits, vault and backup round trips', () async {
+    MCKeyPair pair;
+    do {
+      pair = await generateKeyPair();
+    } while (pair.public.first == 0 || pair.public.first == 0xff);
+    final original = await AdditionalIdentityEntry.parse('Test key', hex.encode(pair.private));
+    expect(original.ackWithoutPath, isTrue);
+    final changed = await AdditionalIdentityEntry.parse(original.name,
+      original.identity.privateKeyHex, previous: original, ackWithoutPath: false);
+    final renamed = await AdditionalIdentityEntry.parse('Renamed',
+      changed.identity.privateKeyHex, previous: changed);
+    expect(renamed.ackWithoutPath, isFalse);
+    final vault = await AdditionalIdentityVault.open(password: 'test policy', saved: null);
+    await vault.save(renamed);
+    final reopened = await AdditionalIdentityVault.open(password: 'test policy',
+      saved: await storage.readAdditionalIdentityVault());
+    expect(reopened.entries.single.ackWithoutPath, isFalse);
+    final rows = BackupAdditionalIdentities(reopened.entries).toJson();
+    final backup = await BackupAdditionalIdentities.read(rows);
+    expect(backup.entries.single.ackWithoutPath, isFalse);
+    rows.single.remove('ackWithoutPath');
+    final legacy = await BackupAdditionalIdentities.read(rows);
+    expect(legacy.entries.single.ackWithoutPath, isTrue);
+    rows.single['ackWithoutPath'] = 'false';
+    await expectLater(BackupAdditionalIdentities.read(rows), throwsFormatException);
+  });
 
   test('a radio import verifies the public key and keeps the radio name', () async {
     MCKeyPair pair;

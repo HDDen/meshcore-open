@@ -691,7 +691,8 @@ Future<void> main() async {
     }, skip: skip);
   }
 
-  test('remembered identities receive separate histories and ACK each attempt',
+  for (final ackWithoutPath in [true, false]) {
+  test('remembered identities receive separate histories and ACK each attempt (ackWithoutPath=$ackWithoutPath)',
       () async {
     FlutterSecureStorage.setMockInitialValues({});
     final storage = MessageHistoryStorage.instance;
@@ -708,7 +709,8 @@ Future<void> main() async {
       );
       expanded[0] &= 248;
       expanded[31] = (expanded[31] & 63) | 64;
-      return AdditionalIdentityEntry.parse(name, hex.encode(expanded));
+      return AdditionalIdentityEntry.parse(name, hex.encode(expanded),
+          ackWithoutPath: ackWithoutPath);
     }
 
     final first = await createIdentity(
@@ -776,37 +778,54 @@ Future<void> main() async {
     await _waitFor(() => node.rawPackets.length >= 3, 'three ACKs');
     await _settle();
     expect(node.rawPackets, hasLength(3));
-    expect(
-      node.rawPackets.where((frame) => frame[2] >> 2 == payloadTypeACK),
-      hasLength(2),
-    );
-    final reply = node.rawPackets.singleWhere(
-      (frame) => frame[2] >> 2 == payloadTypePATH,
-    );
-    expect(reply.sublist(0, 3), [cmdSendRawPacket, 2, payloadTypePATH << 2]);
-    final returnPayload = reply.sublist(8);
-    final expectedCode = ChannelRawPacket.regionTransportCode(
-      region, payloadTypePATH, returnPayload,
-    );
-    expect(reply.sublist(3, 8), [expectedCode & 0xff, expectedCode >> 8, 0, 0, 0]);
-    expect(returnPayload.sublist(0, 2), [
-      _aliceKey.first,
-      second.identity.publicKey.first,
-    ]);
+    if (ackWithoutPath) {
+      expect(node.rawPackets.every((frame) => frame[2] >> 2 == payloadTypeACK), isTrue);
+      // Alice already has a two-hop route. The reply to a received Flood must
+      // still be a bare Flood ACK, never a routed ACK or an empty PATH return.
+      final reply = node.rawPackets.singleWhere((frame) => frame[2] & 3 == 1);
+      expect(reply[3] & 63, 0);
+      final hash = MessageRetryService.computeExpectedAckHash(
+        1700000000, 0, 'Одинаковое сообщение', _aliceKey,
+      );
+      expect(reply.sublist(4, 8), _le32(hash));
+      for (final direct in node.rawPackets.where((frame) => frame[2] & 3 == 2)) {
+        expect(direct[3] & 63, 2);
+        expect(direct.sublist(4, 6), [0x10, 0x20]);
+      }
+      expect(node.rawPackets.where((frame) => frame[2] & 3 == 2), hasLength(2));
+    } else {
+      expect(
+        node.rawPackets.where((frame) => frame[2] >> 2 == payloadTypeACK),
+        hasLength(2),
+      );
+      final reply = node.rawPackets.singleWhere(
+        (frame) => frame[2] >> 2 == payloadTypePATH,
+      );
+      expect(reply.sublist(0, 3), [cmdSendRawPacket, 2, payloadTypePATH << 2]);
+      final returnPayload = reply.sublist(8);
+      final expectedCode = ChannelRawPacket.regionTransportCode(
+        region, payloadTypePATH, returnPayload,
+      );
+      expect(reply.sublist(3, 8), [expectedCode & 0xff, expectedCode >> 8, 0, 0, 0]);
+      expect(returnPayload.sublist(0, 2), [
+        _aliceKey.first,
+        second.identity.publicKey.first,
+      ]);
 
-    final secret = second.identity.sharedSecret(_aliceKey);
-    final cipher = ECBBlockCipher(AESEngine())
-      ..init(false, KeyParameter(secret.sublist(0, 16)));
-    final body = Uint8List(16);
-    cipher.processBlock(returnPayload, 4, body, 0);
-    final hash = MessageRetryService.computeExpectedAckHash(
-      1700000000, 0, 'Одинаковое сообщение', _aliceKey,
-    );
-    expect(body.sublist(0, 11), [packedPath, ...hops, payloadTypeACK, ..._le32(hash), 0]);
-    expect(
-      returnPayload.sublist(2),
-      ChannelEchoRecovery.encryptedPayloadFor(secret, body),
-    );
+      final secret = second.identity.sharedSecret(_aliceKey);
+      final cipher = ECBBlockCipher(AESEngine())
+        ..init(false, KeyParameter(secret.sublist(0, 16)));
+      final body = Uint8List(16);
+      cipher.processBlock(returnPayload, 4, body, 0);
+      final hash = MessageRetryService.computeExpectedAckHash(
+        1700000000, 0, 'Одинаковое сообщение', _aliceKey,
+      );
+      expect(body.sublist(0, 11), [packedPath, ...hops, payloadTypeACK, ..._le32(hash), 0]);
+      expect(
+        returnPayload.sublist(2),
+        ChannelEchoRecovery.encryptedPayloadFor(secret, body),
+      );
+    }
     for (final entry in [first, second]) {
       final rows = await storage.readAdditionalIdentityMessages(
         entry.identity.publicKeyHex,
@@ -883,6 +902,7 @@ Future<void> main() async {
     await _settle();
     expect(node.rawPackets, hasLength(4));
   }, skip: skip);
+  }
 
   group('heard through the RX log with direct echo recovery on', () {
     test('our own packet on its way to the contact is not a message from '

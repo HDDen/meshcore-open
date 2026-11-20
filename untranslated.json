@@ -453,7 +453,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "de": [
@@ -910,7 +912,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "es": [
@@ -1367,7 +1371,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "fr": [
@@ -1824,7 +1830,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "hu": [
@@ -2281,7 +2289,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "it": [
@@ -2738,7 +2748,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "ja": [
@@ -3195,7 +3207,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "ko": [
@@ -3652,7 +3666,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "nl": [
@@ -4109,7 +4125,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "pl": [
@@ -4566,7 +4584,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "pt": [
@@ -5023,7 +5043,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "sk": [
@@ -5480,7 +5502,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "sl": [
@@ -5937,7 +5961,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "sv": [
@@ -6394,7 +6420,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "uk": [
@@ -6851,7 +6879,9 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ],
 
   "zh": [
@@ -7308,6 +7338,8 @@
     "themes_mcoaSeparateMetadata",
     "themes_mcoaMetadataSpacing",
     "themes_mcoaSignal",
-    "themes_mcoaSenderNameBrightness"
+    "themes_mcoaSenderNameBrightness",
+    "extraKeys_ackWithoutPath",
+    "extraKeys_ackWithoutPathHelper"
   ]
 }

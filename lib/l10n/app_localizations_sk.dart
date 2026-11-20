@@ -10945,4 +10945,12 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get themes_mcoaSenderNameBrightness => 'Sender name brightness';
+
+  @override
+  String get extraKeys_ackWithoutPath =>
+      'Confirm delivery without sending a route';
+
+  @override
+  String get extraKeys_ackWithoutPathHelper =>
+      'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.';
 }
