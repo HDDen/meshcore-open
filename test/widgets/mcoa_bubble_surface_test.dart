@@ -8,6 +8,68 @@ import 'package:meshcore_open/widgets/mcoa_chat_bubble_box.dart';
 import 'package:meshcore_open/widgets/mcoa_message_metadata_spacing.dart';
 
 void main() {
+  for (final outgoing in [false, true]) {
+    testWidgets('separated bubble menu covers blank body, spacing and metadata (outgoing=$outgoing)', (tester) async {
+      var menuTaps = 0;
+      var menuLongPresses = 0;
+      var linkTaps = 0;
+      await tester.pumpWidget(MaterialApp(
+        themeAnimationStyle: AnimationStyle.noAnimation,
+        theme: McoaThemeStyle.apply(ThemeData.dark(), const McoaThemeOptions(
+          separateIncomingMetadata: true, separateOutgoingMetadata: true,
+        )),
+        home: Scaffold(body: Align(alignment: Alignment.topLeft,
+          child: GestureDetector(
+            onTap: () { menuTaps++; },
+            onLongPress: () { menuLongPresses++; },
+            child: McoaChatBubbleBox(
+              outgoing: outgoing, duration: Duration.zero,
+              constraints: const BoxConstraints.tightFor(width: 240),
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(16))),
+              child: Column(mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start, children: [
+                GestureDetector(
+                  key: const ValueKey('bubble-link'), behavior: HitTestBehavior.opaque,
+                  onTap: () { linkTaps++; },
+                  child: const SizedBox(width: 70, height: 40, child: Text('link')),
+                ),
+                const McoaMessageMetadataSpacing(height: 16),
+                const SizedBox(width: 100, height: 20, child: Text('badges')),
+              ]),
+            ),
+          ),
+        )),
+      ));
+      final surfaceFinder = find.byType(McoaBubbleSurface);
+      final rect = tester.getRect(surfaceFinder);
+      final surface = tester.renderObject<RenderMcoaBubbleSurface>(surfaceFinder);
+      final emptyBody = Offset(rect.right - 20, rect.top + 30);
+      final blankPoints = [
+        emptyBody,
+        Offset(rect.left + 3, rect.top + 30), // left padding
+        Offset(rect.center.dx, rect.top + surface.messageRect.bottom - 3), // spacer
+        Offset(rect.right - 20, rect.bottom - 18), // empty metadata background
+      ];
+      for (var i = 0; i < blankPoints.length; i++) {
+        await tester.tapAt(blankPoints[i]);
+        await tester.pump();
+        expect(menuTaps, i + 1);
+      }
+      await tester.longPressAt(emptyBody);
+      expect(menuLongPresses, 1);
+      await tester.tap(find.byKey(const ValueKey('bubble-link')));
+      await tester.pump();
+      expect(linkTaps, 1);
+      expect(menuTaps, blankPoints.length, reason: 'interactive child retains its gesture');
+      await tester.tapAt(Offset(rect.right + 5, rect.center.dy));
+      expect(menuTaps, blankPoints.length, reason: 'outside the bubble is not a menu target');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('metadata backing extends behind rounded messages in both directions', (tester) async {
     const radius = BorderRadius.all(Radius.circular(16));
     for (final outgoing in [false, true]) {

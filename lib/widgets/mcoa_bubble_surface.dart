@@ -101,6 +101,13 @@ class RenderMcoaBubbleSurface extends RenderProxyBox {
 
   Rect get metadataRect => Rect.fromLTRB(0, messageRect.bottom, size.width, size.height);
 
+  // Match DecoratedBox: painted background and padding must participate in
+  // hit testing, not just the text and badges. RenderBox tests children first,
+  // preserving links/mentions before the enclosing message's menu gesture.
+  @override
+  bool hitTestSelf(Offset position) =>
+      _decoration.hitTest(size, position, textDirection: _textDirection);
+
   @override
   void paint(PaintingContext context, Offset offset) {
     final metadata = metadataRect;
