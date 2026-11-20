@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/chat_background.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -41,6 +42,37 @@ void main() {
     await service.loadSettings();
     return service;
   }
+
+  test('MCOa preferences apply only on activation and remain manually editable', () async {
+    final service = await open();
+    await service.setMonochromeSenderNames(false);
+    final theme = _forest.copyWith(mcoa: const McoaThemeOptions(
+      uiScalePercent: 120,
+      senderNameScalePercent: 113,
+      simplifiedMentions: true,
+    ));
+    await service.saveCustomTheme(theme);
+    expect(service.settings.uiScale, 1.35);
+    await service.setActiveTheme(theme.id);
+    expect(service.settings.uiScale, 1.2);
+    expect(service.settings.senderNameScalePercent, 113);
+    expect(service.settings.simplifiedMentions, isTrue);
+    expect(service.settings.monochromeSenderNames, isFalse);
+    await service.setUiScale(1.1);
+    await service.setSimplifiedMentions(false);
+    final reopened = await open();
+    expect(reopened.activeCustomTheme, theme);
+    expect(reopened.settings.uiScale, 1.1);
+    expect(reopened.settings.senderNameScalePercent, 113);
+    expect(reopened.settings.simplifiedMentions, isFalse);
+    expect(reopened.settings.monochromeSenderNames, isFalse);
+    await reopened.setActiveTheme(theme.id);
+    expect(reopened.settings.uiScale, 1.2);
+    expect(reopened.settings.simplifiedMentions, isTrue);
+    await reopened.setSimplifiedMentions(false);
+    await reopened.saveCustomTheme(theme, apply: true);
+    expect(reopened.settings.simplifiedMentions, isTrue);
+  });
 
   test('U19a: save, apply, edit and reopen preserve the stock appearance settings', () async {
     final service = await open();

@@ -3,7 +3,7 @@ import 'package:meshcore_open/models/app_settings.dart';
 
 // The size of sender names in channel and room bubbles: a percentage the
 // bubbles multiply their sender-name font size by, kept with the settings,
-// offered on a slider over fifteen sizes and snapped to one of them.
+// offered on a slider over fifteen sizes, with exact percentages from themes.
 
 void main() {
   test('sender names are drawn at their own size by default', () {
@@ -29,13 +29,13 @@ void main() {
     expect(restored.senderNameScale, 2.5);
   });
 
-  test('a stored value is snapped to the nearest size the slider offers', () {
+  test('stored exact percentages survive and the slider still snaps choices', () {
     int restored(int stored) => AppSettings.fromJson({
       'sender_name_scale_percent': stored,
     }).senderNameScalePercent;
 
-    expect(restored(110), 100);
-    expect(restored(115), 125);
+    expect(restored(110), 110);
+    expect(restored(115), 115);
     expect(restored(0), 25);
     expect(restored(999), 400);
     // Halfway between two sizes, the smaller one.

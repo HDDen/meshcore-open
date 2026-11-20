@@ -10,6 +10,7 @@ import '../l10n/l10n.dart';
 import '../models/power_saving_settings.dart';
 import '../services/app_settings_service.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import '../theme/theme_icons.dart';
 import 'themed_icon.dart';
 
@@ -375,13 +376,18 @@ class SignalBars extends StatelessWidget {
 class RouteChip extends StatelessWidget {
   final bool isDirect;
   final int? hops;
+  final Color? foregroundColor;
 
-  const RouteChip({super.key, required this.isDirect, this.hops});
+  const RouteChip({super.key, required this.isDirect, this.hops, this.foregroundColor});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final message = context.dependOnInheritedWidgetOfExactType<McoaMessageScope>();
+    final colors = message == null ? const <String, Color>{} : McoaThemeStyle.of(context).colors;
+    final direction = message?.outgoing == true ? 'outgoing' : 'incoming';
+    final ink = colors['${direction}_hop_text'] ?? foregroundColor ?? scheme.onSurfaceVariant;
     final label =
         (isDirect
                 ? (hops == null || hops == 0
@@ -392,9 +398,9 @@ class RouteChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+        color: colors['${direction}_hop_background'] ?? scheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(MeshRadii.xs),
-        border: Border.all(color: scheme.outlineVariant),
+        border: Border.all(color: colors['${direction}_hop_border'] ?? scheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -402,13 +408,13 @@ class RouteChip extends StatelessWidget {
           Icon(
             isDirect ? Icons.trending_flat : Icons.podcasts,
             size: 11,
-            color: scheme.onSurfaceVariant,
+            color: ink,
           ),
           const SizedBox(width: 3),
           Text(
             label,
             style: MeshTheme.accentLabel(
-              color: scheme.onSurfaceVariant,
+              color: ink,
               fontSize: 8.5,
             ),
           ),

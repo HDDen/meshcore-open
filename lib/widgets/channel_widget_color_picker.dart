@@ -126,10 +126,6 @@ class _ChannelWidgetColorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hsv = selectedColorValue == null
-        ? const HSVColor.fromAHSV(1, 0, 1, 1)
-        : HSVColor.fromColor(Color(selectedColorValue!));
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -150,19 +146,45 @@ class _ChannelWidgetColorSection extends StatelessWidget {
           onTap: onDefaultTap,
         ),
         const SizedBox(height: 8),
-        _SaturationValuePicker(
-          hsv: hsv,
-          onChanged: (nextHsv) =>
-              onColorChanged(_colorToArgb(nextHsv.toColor())),
-        ),
-        const SizedBox(height: 12),
-        _HueSlider(
-          hue: hsv.hue,
-          onChanged: (nextHue) {
-            onColorChanged(_colorToArgb(hsv.withHue(nextHue).toColor()));
-          },
+        ChannelColorPalette(
+          color: selectedColorValue == null ? const Color(0xFFFF0000) : Color(selectedColorValue!),
+          onChanged: (color) => onColorChanged(_colorToArgb(color)),
         ),
       ],
+    );
+  }
+}
+
+const _maxPaletteSquareSize = 220.0;
+
+/// Shared saturation/value square and hue slider used by channel and theme colors.
+class ChannelColorPalette extends StatelessWidget {
+  const ChannelColorPalette({super.key, required this.color, required this.onChanged});
+
+  final Color color;
+  final ValueChanged<Color> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final hsv = HSVColor.fromColor(color);
+    // Dialogs ask for intrinsic height; LayoutBuilder cannot provide it.
+    // Bound the shared palette before a dialog measures its children.
+    return SizedBox(
+      height: _maxPaletteSquareSize + 12 + 28,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _SaturationValuePicker(
+            hsv: hsv,
+            onChanged: (value) => onChanged(value.toColor()),
+          ),
+          const SizedBox(height: 12),
+          _HueSlider(
+            hue: hsv.hue,
+            onChanged: (value) => onChanged(hsv.withHue(value).toColor()),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -177,7 +199,7 @@ class _SaturationValuePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = math.min(constraints.maxWidth, 220.0);
+        final size = math.min(constraints.maxWidth, _maxPaletteSquareSize);
         final knobLeft = hsv.saturation * size;
         final knobTop = (1 - hsv.value) * size;
 

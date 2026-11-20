@@ -8,6 +8,8 @@ import 'package:meshcore_open/models/custom_theme.dart';
 import 'package:meshcore_open/screens/themes_screen.dart';
 import 'package:meshcore_open/screens/theme_editor_screen.dart';
 import 'package:meshcore_open/widgets/mcoa_theme_editor_section.dart';
+import 'package:meshcore_open/widgets/mcoa_theme_editor.dart';
+import 'package:meshcore_open/widgets/channel_widget_color_picker.dart';
 import 'package:meshcore_open/widgets/mcoa_theme_preview.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/chat_background_image_store.dart';
@@ -116,6 +118,73 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('MCOa color picker updates the draft and Default removes the override', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(app(const ThemeEditorScreen()));
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(tester.element(find.byType(ThemeEditorScreen)));
+    final toggle = find.byKey(const ValueKey('theme-section-mcoa-interface-toggle'));
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    final row = find.byKey(const ValueKey('mcoa-color-header'));
+    await tester.ensureVisible(row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChannelColorPalette), findsOneWidget);
+    final hex = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == l10n.themes_hexColor,
+    );
+    await tester.enterText(hex, '#123456');
+    await tester.pump();
+    await tester.tap(find.text(l10n.common_save));
+    await tester.pumpAndSettle();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.colors['header'], const Color(0xFF123456));
+    expect(settings.activeCustomTheme, isNull);
+    final inline = find.byKey(const ValueKey('mcoa-color-hex-header'));
+    expect(tester.widget<TextField>(inline).controller!.text, '#123456');
+    await tester.enterText(inline, '#80445566');
+    await tester.pump();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.colors['header'], const Color(0x80445566));
+    final swatch = find.byKey(const ValueKey('mcoa-color-swatch-header'));
+    expect((tester.widget<Container>(swatch).decoration! as BoxDecoration).color,
+        const Color(0x80445566));
+    await tester.enterText(inline, '#12');
+    await tester.pump();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.colors['header'], const Color(0x80445566));
+    await tester.enterText(inline, '');
+    await tester.pump();
+    final draft = tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor)).theme;
+    expect(draft.mcoa.colors, isNot(contains('header')));
+    expect(tester.widget<TextField>(inline).controller!.text, isEmpty);
+    expect((tester.widget<Container>(swatch).decoration! as BoxDecoration).color,
+        draft.background);
+    await tester.enterText(inline, '12ab34');
+    await tester.pump();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.colors['header'], const Color(0xFF12AB34));
+    expect(tester.widget<TextField>(inline).controller!.text, '12ab34');
+    await tester.ensureVisible(row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.themes_default));
+    await tester.pumpAndSettle();
+    expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
+        .theme.mcoa.colors, isNot(contains('header')));
+    expect(tester.widget<TextField>(inline).controller!.text, isEmpty);
+    expect(settings.activeCustomTheme, isNull);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('theme sections start folded and preserve edits independently', (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
@@ -129,8 +198,9 @@ void main() {
     final sections = tester.widgetList<McoaThemeEditorSection>(
       find.byType(McoaThemeEditorSection),
     );
-    expect(sections, hasLength(5));
+    expect(sections, hasLength(9));
     expect(sections.every((section) => !section.expanded), isTrue);
+    expect(find.text(l10n.settings_modSettingsMonochromeSenderNames), findsNothing);
     expect(find.text(l10n.themes_backgroundHelp), findsNothing);
     expect(find.text(l10n.themes_accentHelp), findsNothing);
 

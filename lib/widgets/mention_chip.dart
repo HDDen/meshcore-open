@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 
 /// How an `@name` mention is drawn inside a message bubble.
 ///
@@ -41,7 +42,11 @@ class MentionChip extends StatelessWidget {
       decoration: simplified
           ? null
           : BoxDecoration(
-              border: Border.all(color: MeshPalette.blue, width: 1),
+              color: McoaThemeStyle.color(context, 'mention_background', Colors.transparent),
+              border: Border.all(
+                color: McoaThemeStyle.color(context, 'mention_border', MeshPalette.blue),
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(MeshRadii.xs),
             ),
       child: Text(
@@ -53,7 +58,7 @@ class MentionChip extends StatelessWidget {
             : MeshTheme.mono(
                 fontSize: 12 * textScale,
                 fontWeight: FontWeight.w700,
-                color: MeshPalette.blue,
+                color: McoaThemeStyle.color(context, 'mention_text', MeshPalette.blue),
               ),
       ),
     );

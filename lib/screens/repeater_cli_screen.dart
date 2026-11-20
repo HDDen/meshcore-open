@@ -8,6 +8,7 @@ import '../models/contact.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_composer_style.dart';
 import '../utils/platform_info.dart';
 import '../widgets/confirm_clear_dialog.dart';
 import '../widgets/debug_frame_viewer.dart';
@@ -662,6 +663,7 @@ class _RepeaterCliScreenState extends State<RepeaterCliScreen> {
                     width: 48,
                     height: 48,
                     child: IconButton.filledTonal(
+                      style: McoaComposerStyle.sendButton(context),
                       tooltip: l10n.repeater_cliSend,
                       icon: const Icon(Icons.send, size: 24),
                       onPressed: connected

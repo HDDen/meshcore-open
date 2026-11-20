@@ -48,6 +48,7 @@ List<InlineSpan> signalReadingSpans({
   required int? rssi,
   required int? spreadingFactor,
   required bool afterHopList,
+  Color? colorOverride,
 }) {
   final spans = <InlineSpan>[];
   String glue() => spans.isEmpty && !afterHopList ? '' : '\u00A0';
@@ -55,7 +56,7 @@ List<InlineSpan> signalReadingSpans({
     spans.add(
       TextSpan(
         text: '${glue()}${snr.toStringAsFixed(1)}dB',
-        style: TextStyle(color: snrUiFromSNR(snr, spreadingFactor).color),
+        style: TextStyle(color: colorOverride ?? snrUiFromSNR(snr, spreadingFactor).color),
       ),
     );
   }
@@ -63,7 +64,7 @@ List<InlineSpan> signalReadingSpans({
     spans.add(
       TextSpan(
         text: '${glue()}${rssi}dBm',
-        style: TextStyle(color: loraRssiColor(rssi)),
+        style: TextStyle(color: colorOverride ?? loraRssiColor(rssi)),
       ),
     );
   }

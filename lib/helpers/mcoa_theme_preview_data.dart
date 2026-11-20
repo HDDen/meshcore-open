@@ -58,11 +58,16 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
         psk: Uint8List.fromList(List.filled(16, 0x43)),
       ),
     ];
+    final incomingBody = '$incomingText\nhttps://localhost';
+    final outgoingBody = '$outgoingText\nhttps://localhost';
     channelMessages = [
       ChannelMessage(
         messageId: 'theme-channel-incoming',
+        replyToSenderName: 'Alice',
+        replyToText: outgoingText,
+        replyIsExact: true,
         senderName: 'senderName',
-        text: incomingText,
+        text: incomingBody,
         timestamp: time,
         receivedAt: time,
         isOutgoing: false,
@@ -79,8 +84,11 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
       ),
       ChannelMessage(
         messageId: 'theme-channel-outgoing',
+        replyToSenderName: 'senderName',
+        replyToText: incomingText,
+        replyIsExact: true,
         senderName: defaultSender,
-        text: outgoingText,
+        text: outgoingBody,
         timestamp: replyTime,
         receivedAt: replyTime,
         sentByRadioAt: replyTime,
@@ -108,7 +116,7 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
       Message(
         messageId: 'theme-direct-incoming',
         senderKey: alice.publicKey,
-        text: incomingText,
+        text: incomingBody,
         timestamp: time,
         receivedAt: time,
         isOutgoing: false,
@@ -120,7 +128,7 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
       Message(
         messageId: 'theme-direct-outgoing',
         senderKey: alice.publicKey,
-        text: outgoingText,
+        text: outgoingBody,
         timestamp: replyTime,
         receivedAt: replyTime,
         isOutgoing: true,
@@ -200,6 +208,7 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
     if (const {
       #canStopChannelSending,
       #isChannelFilterEnabled,
+      #isChannelSenderNameOurs,
       #isContactUrlImagesEnabled,
       #isChannelMcmpEnabled,
       #isChannelSmazEnabled,
@@ -228,6 +237,8 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
 class McoaThemePreviewSettings extends AppSettingsService {
   McoaThemePreviewSettings(AppSettings source)
     : _preview = source.copyWith(
+        incomingQuoteAsMentions: false,
+        simplifiedMentions: false,
         enableMessageTracing: true,
         enableTimeSeconds: true,
         showCompressionRatio: true,

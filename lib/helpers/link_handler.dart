@@ -4,6 +4,7 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../l10n/l10n.dart';
 import '../utils/platform_info.dart';
+import '../theme/mcoa_theme_style.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-chat
 import '../helpers/contact_link.dart';
 import '../helpers/mesh_link_linkifier.dart';
@@ -12,12 +13,27 @@ import '../widgets/channel_link_import.dart'; // channel-qr-chat
 import '../widgets/contact_link_import.dart';
 
 class LinkHandler {
+  static Color? configuredLinkColor(BuildContext context) {
+    final message = context.dependOnInheritedWidgetOfExactType<McoaMessageScope>();
+    if (message == null) {
+      return null;
+    }
+    return McoaThemeStyle.of(context).colors[
+      message.outgoing ? 'outgoing_link' : 'incoming_link'
+    ];
+  }
+
   static TextStyle defaultLinkStyle(BuildContext context, TextStyle base) {
     final brightness = Theme.of(context).brightness;
     final orange = brightness == Brightness.dark
         ? const Color(0xFFFFB74D)
         : const Color(0xFFE65100);
-    return base.copyWith(color: orange, decoration: TextDecoration.underline);
+    final configured = configuredLinkColor(context);
+    return base.copyWith(
+      color: configured ?? orange,
+      decoration: TextDecoration.underline,
+      decorationColor: configured ?? base.decorationColor,
+    );
   }
 
   /// The system text scale as a linear factor for [style]'s size.
@@ -47,7 +63,11 @@ class LinkHandler {
     TextScaler? textScaler,
     VoidCallback? onSecondaryTap,
   }) {
-    final effectiveLinkStyle = linkStyle ?? defaultLinkStyle(context, style);
+    final configured = configuredLinkColor(context);
+    final effectiveLinkStyle = (linkStyle ?? defaultLinkStyle(context, style)).copyWith(
+      color: configured,
+      decorationColor: configured,
+    );
     const options = LinkifyOptions(humanize: false, defaultToHttps: false);
     const linkifiers = [
       MeshLinkLinkifier(),

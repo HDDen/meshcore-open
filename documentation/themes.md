@@ -23,7 +23,11 @@ The editor has four preview tabs: **Channel chat**, **Direct chat**,
 **Channels**, and **Contacts**. They show the same message bubbles, delivery
 badges, input field and list cards as the app, with synthetic names, keys and
 messages. The chat examples include routing, signal, region and compression
-indicators. Their timestamps are two days before you opened the editor.
+indicators. Channel chat also shows incoming and outgoing quotes, plus both
+bordered and simplified mentions together in both message bodies. These examples are
+independent of your messaging preferences. Their timestamps are two days
+before you opened the editor.
+Both chat previews include a new line with `https://localhost` in each message.
 Switching tabs preserves your draft. Preview controls do not send messages or
 change read state, and the preview does not connect to a radio.
 
@@ -44,10 +48,10 @@ clipboard. **Paste theme code** imports and applies it. **Export to file** and
 **Export my themes** create a .jsonl file with one theme per line. **Import from
 file** adds the themes to your library and keeps your current selection.
 
-MCOa exports add `"mcoa": {"version": 1}` to each theme object. This is the
+MCOa exports add a `mcoa` section with `"version": 1` to each theme object. This is the
 version of the MCOa theme extension, not the app version. Share codes use the
 same format. Upstream readers ignore this section; themes without it still
-import normally. The extension currently contains no other fields.
+import normally. Optional colors and activation preferences are described below.
 
 ## Chat backgrounds
 
@@ -62,6 +66,55 @@ or channel if you reconnect with a different radio.
 
 Photos are stored locally as JPEG XL. When you share a theme that uses a
 photo from your device, the photo is included.
+
+## MCOa theme settings
+
+The editor's **MCOa settings** block contains four collapsed sections:
+**Interface**, **Incoming**, **Outgoing**, and **MCOa settings**. These cards use
+compact internal padding without an additional inset around their rows. Color rows open
+the same continuous HSV palette (saturation/value square and hue slider) used
+for channel widget colors, plus HEX and opacity inputs; **Default** clears that override. Each color swatch
+also has a compact editable HEX field below it. A complete RGB or ARGB value
+updates the swatch and preview immediately, with or without a leading `#`.
+Clearing this field removes the override. Its faint hint and swatch show the
+inherited theme color; they do not write that fallback into the theme. Interface colors
+cover the status bar, app header and its text. A top-inset overlay also paints
+this status-bar color on iOS and edge-to-edge Android without consuming safe-area
+padding. Incoming and outgoing messages
+have independent border, background, text, badge, quote and mention colors,
+plus separate hop-counter borders, backgrounds and text. The general badge
+color never changes hop-counter text; unset hop text uses the ordinary hop-chip
+color. Simplified mentions always have transparent backgrounds and inherit
+the message text color, regardless of the configured mention background or
+mention text color. Mention background/text overrides style only bordered mentions.
+
+Interface colors also cover the chat composer background, actions icon, input
+border/background/placeholder/text, send button background/icon, and the byte
+counter's normal, almost-full and exceeded states. Existing counter thresholds
+and message limits are unchanged. These input overrides apply to chat composers;
+other byte-counted fields retain their ordinary theme. The repeater CLI command
+send button also uses the chat send-button background and icon colors. The preview shows its
+zero-byte counter while keeping the placeholder visible.
+Each direction also has a link color (including its underline) and a signal
+color for SNR/RSSI inside messages. An unset link color uses the standard link
+style; an unset signal color uses the normal reception-quality scale. Signal
+indicators outside message bubbles retain that scale. Failed-message warning
+colors retain their meaning.
+
+DPI accepts 50–200%, sender names accept 25–400%, with up to three digits.
+The switch uses the application's simplified mentions setting. **Incoming →
+Sender name**, placed before message text, sets the sender-name color in channel
+and contact chats. Clearing it restores the application's ordinary sender-name
+coloring. Themes no longer change the global monochrome sender names setting;
+that obsolete preference in older MCOa theme files is ignored. The preview updates without changing application
+preferences. **Save and use**, or selecting the saved theme later, applies these
+preferences once. You can change them afterwards in app settings; the active
+theme does not force them back, including after restarting the app.
+
+Colors and these activation preferences are saved in the optional `mcoa`
+section of both stored themes and shared JSON/JSONL. The upstream theme fields
+are unchanged. Legacy themes use the existing defaults; unsupported MCOa
+extension versions and unknown fields are ignored.
 
 ## Automatic holiday themes
 

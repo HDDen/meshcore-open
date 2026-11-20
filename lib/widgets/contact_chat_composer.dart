@@ -6,6 +6,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/inserted_text_limiter.dart';
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import 'byte_count_input.dart';
 import 'chat_additional_actions_menu.dart';
 import 'composer_text_builder.dart';
@@ -27,6 +28,7 @@ class ContactChatComposer extends StatelessWidget {
     this.insertedTextLimit,
     this.showRetryLimit = true,
     this.enabled = true,
+    this.showByteCounterWhenEmpty = false,
   });
 
   final String contactName;
@@ -42,6 +44,7 @@ class ContactChatComposer extends StatelessWidget {
   final int? insertedTextLimit;
   final bool showRetryLimit;
   final bool enabled;
+  final bool showByteCounterWhenEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -63,13 +66,17 @@ class ContactChatComposer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: McoaThemeStyle.of(context).colors['composer_background'] ?? scheme.surface,
         border: Border(top: BorderSide(color: theme.dividerColor)),
       ),
       child: SafeArea(
         child: Row(
           children: [
-            if (actions != null) ChatComposerSideAction(child: actions!),
+            if (actions != null)
+              ChatComposerSideAction(child: IconTheme.merge(
+                data: IconThemeData(color: McoaThemeStyle.of(context).colors['composer_action_icon']),
+                child: actions!,
+              )),
             ?translationButton,
             Expanded(
               child: ComposerTextBuilder(
@@ -78,6 +85,8 @@ class ContactChatComposer extends StatelessWidget {
                   final gifId = GifHelper.parseGif(text);
                   if (gifId != null) return _gifPreview(gifId, scheme);
                   return ByteCountedTextField(
+                    mcoaComposer: true,
+                    hideCounterWhenEmpty: !showByteCounterWhenEmpty,
                     maxBytes: maxBytes,
                     softLimitBytes: showRetryLimit
                         ? maxTextPayloadBytesAfterFullLengthAttempts

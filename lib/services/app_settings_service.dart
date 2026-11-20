@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import '../models/app_settings.dart';
 import '../models/app_settings_backup.dart';
 import '../models/custom_theme.dart';
+import '../helpers/mcoa_theme_preferences.dart';
+import '../helpers/mcoa_theme_options.dart';
 import '../models/holiday_schedule.dart';
 import '../models/low_battery_alert_settings.dart';
 import '../storage/channel_identity_store.dart';
@@ -969,9 +971,14 @@ class AppSettingsService extends ChangeNotifier {
     }
     final automaticId = autoHoliday?.themeId;
     if (automaticId != null && automaticId == id) return;
-    final next = _dismissAutoHoliday(_settings.copyWith(activeThemeId: id));
+    final selected = _themeById(id);
+    final next = applyMcoaThemePreferences(
+      _dismissAutoHoliday(_settings.copyWith(activeThemeId: id)),
+      selected?.mcoa ?? const McoaThemeOptions(),
+    );
     if (next.activeThemeId == _settings.activeThemeId &&
-        next.holidayThemeDismissed == _settings.holidayThemeDismissed) {
+        next.holidayThemeDismissed == _settings.holidayThemeDismissed &&
+        (selected?.mcoa.isEmpty ?? true)) {
       return;
     }
     await updateSettings(next);
@@ -979,7 +986,10 @@ class AppSettingsService extends ChangeNotifier {
 
   Future<void> saveCustomTheme(CustomTheme theme, {bool apply = false}) async {
     final themes = List<CustomTheme>.of(_settings.customThemes);
-    final snapshot = theme.copyWith(icons: Map.unmodifiable(theme.icons));
+    final snapshot = theme.copyWith(
+      icons: Map.unmodifiable(theme.icons),
+      mcoa: theme.mcoa.copyWith(colors: theme.mcoa.colors),
+    );
     final index = themes.indexWhere((saved) => saved.id == theme.id);
     if (index < 0) {
       themes.add(snapshot);
@@ -1049,7 +1059,14 @@ class AppSettingsService extends ChangeNotifier {
       customThemes: List.unmodifiable(themes),
       activeThemeId: activeId,
     );
-    await updateSettings(manualChoice ? _dismissAutoHoliday(next) : next);
+    final selected = CustomTheme.presetById(activeId ?? '') ??
+        themes.where((theme) => theme.id == activeId).firstOrNull;
+    await updateSettings(manualChoice
+        ? applyMcoaThemePreferences(
+            _dismissAutoHoliday(next),
+            selected?.mcoa ?? const McoaThemeOptions(),
+          )
+        : next);
   }
 
   Future<void> setLanguageOverride(String? value) async {

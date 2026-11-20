@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/theme_image_codec.dart';
+import '../helpers/mcoa_theme_options.dart';
 import '../l10n/l10n.dart';
 import '../models/chat_background.dart';
 import '../models/custom_theme.dart';
@@ -18,6 +19,7 @@ import '../widgets/chat_background.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/mcoa_theme_preview.dart';
 import '../widgets/mcoa_theme_editor_section.dart';
+import '../widgets/mcoa_theme_editor.dart';
 import '../widgets/themed_icon.dart';
 
 /// Background choices offered as one-tap swatches: dark first, then light.
@@ -87,6 +89,8 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
   final _scrollController = ScrollController();
   final _previewOpenedAt = DateTime.now();
   final _expandedSections = <String>{};
+  final _mcoaEditorKey = GlobalKey<McoaThemeEditorState>();
+  late McoaThemeOptions _mcoa;
   late Color _background;
   late Color _accent;
   late Map<String, ThemeIconOverride> _icons;
@@ -100,6 +104,13 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
   void initState() {
     super.initState();
     final source = widget.existing ?? widget.startFrom;
+    final settings = context.read<AppSettingsService>().settings;
+    final options = source?.mcoa ?? const McoaThemeOptions();
+    _mcoa = options.copyWith(
+      uiScalePercent: options.uiScalePercent ?? (settings.uiScale * 100).round().clamp(50, 200).toInt(),
+      senderNameScalePercent: options.senderNameScalePercent ?? settings.senderNameScalePercent,
+      simplifiedMentions: options.simplifiedMentions ?? settings.simplifiedMentions,
+    );
     _background = source?.background ?? kThemeBackgroundSwatches.first;
     _accent = source?.accent ?? kThemeAccentSwatches.first;
     _icons = Map.of(source?.icons ?? const {});
@@ -126,6 +137,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
     icons: Map.unmodifiable(_icons),
     chatBackground: _chatBackground,
     chatBackgroundEverywhere: _chatBackgroundEverywhere,
+    mcoa: _mcoa,
   );
 
   Widget _iconTile(ThemeIconSlot slot) {
@@ -225,6 +237,7 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
       }
       return;
     }
+    if (_mcoaEditorKey.currentState?.validate() == false) return;
     final settingsService = context.read<AppSettingsService>();
     final theme = _draft.copyWith(
       id: widget.existing?.id ?? settingsService.newCustomThemeId(),
@@ -415,6 +428,11 @@ class _ThemeEditorScreenState extends State<ThemeEditorScreen> {
                   ],
                 ),
               ),
+            ),
+            McoaThemeEditor(
+              key: _mcoaEditorKey,
+              theme: _draft,
+              onChanged: (options) => setState(() => _mcoa = options),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),

@@ -4,6 +4,7 @@ import '../helpers/gif_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import 'blocked_message_body.dart';
 import 'formatted_message_text.dart';
 import 'gif_message.dart';
@@ -45,7 +46,8 @@ class ReplyQuoteBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
+    final previewTextColor = McoaThemeStyle.color(context, 'quote_text',
+        colorScheme.onSurface.withValues(alpha: 0.7));
     final trimmed = text.trim();
     final gifId = hidden ? null : GifHelper.parseGif(text);
     final image = hidden || gifId != null
@@ -113,7 +115,8 @@ class ReplyQuoteBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: McoaThemeStyle.color(context, 'quote_background',
+              colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
           borderRadius: BorderRadius.circular(MeshRadii.sm),
           border: Border(
             left: BorderSide(color: colorScheme.primary, width: 3),
@@ -127,7 +130,8 @@ class ReplyQuoteBox extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11 * textScale,
                 fontWeight: FontWeight.bold,
-                color: ownQuote ? colorScheme.primary : colorScheme.onSurface,
+                color: McoaThemeStyle.color(context, 'quote_text',
+                    ownQuote ? colorScheme.primary : colorScheme.onSurface),
               ),
             ),
             const SizedBox(height: 2),

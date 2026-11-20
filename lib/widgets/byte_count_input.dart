@@ -9,6 +9,7 @@ import '../helpers/markup_editing.dart';
 import '../helpers/message_markup.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../l10n/l10n.dart';
+import '../theme/mcoa_composer_style.dart';
 import 'markup_color_picker.dart';
 
 /// A [TextField] that displays a live UTF-8 byte counter.
@@ -90,6 +91,9 @@ class ByteCountedTextField extends StatefulWidget {
   /// burst of keystrokes or of rebuilds costs one encoding.
   final Duration? countDelay;
 
+  /// Apply MCOa chat composer colors, leaving other uses of this field intact.
+  final bool mcoaComposer;
+
   /// The wait before the counter encodes a changed text: short enough not
   /// to be noticed, long enough to cover a burst of connector notifications,
   /// each of which rebuilds the screen and hands the field a fresh encoder
@@ -119,6 +123,7 @@ class ByteCountedTextField extends StatefulWidget {
     this.softLimitBytes,
     this.softLimitNote,
     this.countDelay,
+    this.mcoaComposer = false,
   });
 
   @override
@@ -375,11 +380,21 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
         ? widget.softLimitNote
         : null;
 
-    final counterColor = ratio > widget.errorThreshold
+    final defaultCounterColor = ratio > widget.errorThreshold
         ? Theme.of(context).colorScheme.error
         : ratio > widget.warningThreshold
         ? Theme.of(context).colorScheme.tertiary
         : Theme.of(context).colorScheme.onSurfaceVariant;
+
+    final counterColor = widget.mcoaComposer
+        ? McoaComposerStyle.counter(context, ratio, widget.warningThreshold,
+            widget.errorThreshold, defaultCounterColor)
+        : defaultCounterColor;
+    final decoration = widget.decoration ?? InputDecoration(
+      hintText: widget.hintText,
+      border: const OutlineInputBorder(),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -409,16 +424,10 @@ class _ByteCountedTextFieldState extends State<ByteCountedTextField> {
                 ),
               ],
               textCapitalization: widget.textCapitalization,
-              decoration:
-                  widget.decoration ??
-                  InputDecoration(
-                    hintText: widget.hintText,
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
+              style: widget.mcoaComposer ? McoaComposerStyle.text(context) : null,
+              decoration: widget.mcoaComposer
+                  ? McoaComposerStyle.decoration(context, decoration)
+                  : decoration,
               textInputAction: _effectiveTextInputAction,
               onSubmitted: widget.onSubmitted,
               contextMenuBuilder: (context, editableTextState) =>

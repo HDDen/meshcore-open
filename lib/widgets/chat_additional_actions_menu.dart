@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../theme/theme_icons.dart';
+import '../theme/mcoa_theme_style.dart';
 import 'themed_icon.dart';
 
 class ChatComposerSideAction extends StatelessWidget {
@@ -55,6 +56,7 @@ class ChatComposerSendButton extends StatelessWidget {
         message: tooltip,
         child: Material(
           color:
+              McoaThemeStyle.of(context).colors['composer_send_background'] ??
               backgroundColor ??
               (enabled ? scheme.primary : scheme.surfaceContainerHighest),
           shape: const CircleBorder(),
@@ -70,6 +72,7 @@ class ChatComposerSendButton extends StatelessWidget {
                 ThemeIconSlot.send,
                 size: iconSize,
                 color:
+                    McoaThemeStyle.of(context).colors['composer_send_icon'] ??
                     foregroundColor ??
                     (enabled ? scheme.onPrimary : scheme.onSurfaceVariant),
               ),
@@ -117,6 +120,7 @@ class ChatAdditionalActionsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.add_circle_outline),
+      color: McoaThemeStyle.of(context).colors['composer_action_icon'],
       tooltip: context.l10n.chat_additionalActions,
       onPressed: () => _showActions(context),
     );

@@ -17913,6 +17913,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not confirm posting access for this key. Check the room password and connection.'**
   String get extraKeys_roomLoginFailed;
+
+  /// No description provided for @themes_mcoaHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOa settings:'**
+  String get themes_mcoaHeading;
+
+  /// No description provided for @themes_mcoaInterface.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface'**
+  String get themes_mcoaInterface;
+
+  /// No description provided for @themes_mcoaIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get themes_mcoaIncoming;
+
+  /// No description provided for @themes_mcoaOutgoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing'**
+  String get themes_mcoaOutgoing;
+
+  /// No description provided for @themes_mcoaOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'MCOa settings'**
+  String get themes_mcoaOptions;
+
+  /// No description provided for @themes_mcoaStatusBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Status bar color'**
+  String get themes_mcoaStatusBar;
+
+  /// No description provided for @themes_mcoaHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Header color'**
+  String get themes_mcoaHeader;
+
+  /// No description provided for @themes_mcoaHeaderText.
+  ///
+  /// In en, this message translates to:
+  /// **'Header text color'**
+  String get themes_mcoaHeaderText;
+
+  /// No description provided for @themes_mcoaQuoteBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote background'**
+  String get themes_mcoaQuoteBackground;
+
+  /// No description provided for @themes_mcoaQuoteText.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote text'**
+  String get themes_mcoaQuoteText;
+
+  /// No description provided for @themes_mcoaMentionBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention border'**
+  String get themes_mcoaMentionBorder;
+
+  /// No description provided for @themes_mcoaMentionBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention background'**
+  String get themes_mcoaMentionBackground;
+
+  /// No description provided for @themes_mcoaMentionText.
+  ///
+  /// In en, this message translates to:
+  /// **'Mention text color'**
+  String get themes_mcoaMentionText;
+
+  /// No description provided for @themes_mcoaDpi.
+  ///
+  /// In en, this message translates to:
+  /// **'DPI scale, %'**
+  String get themes_mcoaDpi;
+
+  /// No description provided for @themes_mcoaSenderSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name size, %'**
+  String get themes_mcoaSenderSize;
+
+  /// No description provided for @themes_mcoaIncomingBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming message border'**
+  String get themes_mcoaIncomingBorder;
+
+  /// No description provided for @themes_mcoaIncomingBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming message background'**
+  String get themes_mcoaIncomingBackground;
+
+  /// No description provided for @themes_mcoaIncomingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming message text'**
+  String get themes_mcoaIncomingText;
+
+  /// No description provided for @themes_mcoaIncomingBadges.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming message badges'**
+  String get themes_mcoaIncomingBadges;
+
+  /// No description provided for @themes_mcoaOutgoingBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing message border'**
+  String get themes_mcoaOutgoingBorder;
+
+  /// No description provided for @themes_mcoaOutgoingBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing message background'**
+  String get themes_mcoaOutgoingBackground;
+
+  /// No description provided for @themes_mcoaOutgoingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing message text'**
+  String get themes_mcoaOutgoingText;
+
+  /// No description provided for @themes_mcoaOutgoingBadges.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing message badges'**
+  String get themes_mcoaOutgoingBadges;
+
+  /// No description provided for @themes_mcoaOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get themes_mcoaOpacity;
+
+  /// No description provided for @themes_mcoaComposerBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Composer background'**
+  String get themes_mcoaComposerBackground;
+
+  /// No description provided for @themes_mcoaComposerActionIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat actions icon color'**
+  String get themes_mcoaComposerActionIcon;
+
+  /// No description provided for @themes_mcoaComposerInputBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Input border'**
+  String get themes_mcoaComposerInputBorder;
+
+  /// No description provided for @themes_mcoaComposerInputBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Input background'**
+  String get themes_mcoaComposerInputBackground;
+
+  /// No description provided for @themes_mcoaComposerInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Input placeholder'**
+  String get themes_mcoaComposerInputHint;
+
+  /// No description provided for @themes_mcoaComposerInputText.
+  ///
+  /// In en, this message translates to:
+  /// **'Input text'**
+  String get themes_mcoaComposerInputText;
+
+  /// No description provided for @themes_mcoaComposerSendBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Send button background'**
+  String get themes_mcoaComposerSendBackground;
+
+  /// No description provided for @themes_mcoaComposerSendIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Send icon color'**
+  String get themes_mcoaComposerSendIcon;
+
+  /// No description provided for @themes_mcoaComposerCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Byte counter color'**
+  String get themes_mcoaComposerCounter;
+
+  /// No description provided for @themes_mcoaComposerCounterWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Byte counter color (almost full)'**
+  String get themes_mcoaComposerCounterWarning;
+
+  /// No description provided for @themes_mcoaComposerCounterError.
+  ///
+  /// In en, this message translates to:
+  /// **'Byte counter color (exceeded)'**
+  String get themes_mcoaComposerCounterError;
+
+  /// No description provided for @themes_mcoaHopBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop counter: border'**
+  String get themes_mcoaHopBorder;
+
+  /// No description provided for @themes_mcoaHopBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop counter: background'**
+  String get themes_mcoaHopBackground;
+
+  /// No description provided for @themes_mcoaHopText.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop counter: text'**
+  String get themes_mcoaHopText;
+
+  /// No description provided for @themes_mcoaIncomingSenderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender name'**
+  String get themes_mcoaIncomingSenderName;
+
+  /// No description provided for @themes_mcoaLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link color'**
+  String get themes_mcoaLink;
+
+  /// No description provided for @themes_mcoaSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal color'**
+  String get themes_mcoaSignal;
 }
 
 class _AppLocalizationsDelegate

@@ -10770,4 +10770,128 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get extraKeys_roomLoginFailed =>
       'Could not confirm posting access for this key. Check the room password and connection.';
+
+  @override
+  String get themes_mcoaHeading => 'MCOa settings:';
+
+  @override
+  String get themes_mcoaInterface => 'Interface';
+
+  @override
+  String get themes_mcoaIncoming => 'Incoming';
+
+  @override
+  String get themes_mcoaOutgoing => 'Outgoing';
+
+  @override
+  String get themes_mcoaOptions => 'MCOa settings';
+
+  @override
+  String get themes_mcoaStatusBar => 'Status bar color';
+
+  @override
+  String get themes_mcoaHeader => 'Header color';
+
+  @override
+  String get themes_mcoaHeaderText => 'Header text color';
+
+  @override
+  String get themes_mcoaQuoteBackground => 'Quote background';
+
+  @override
+  String get themes_mcoaQuoteText => 'Quote text';
+
+  @override
+  String get themes_mcoaMentionBorder => 'Mention border';
+
+  @override
+  String get themes_mcoaMentionBackground => 'Mention background';
+
+  @override
+  String get themes_mcoaMentionText => 'Mention text color';
+
+  @override
+  String get themes_mcoaDpi => 'DPI scale, %';
+
+  @override
+  String get themes_mcoaSenderSize => 'Sender name size, %';
+
+  @override
+  String get themes_mcoaIncomingBorder => 'Incoming message border';
+
+  @override
+  String get themes_mcoaIncomingBackground => 'Incoming message background';
+
+  @override
+  String get themes_mcoaIncomingText => 'Incoming message text';
+
+  @override
+  String get themes_mcoaIncomingBadges => 'Incoming message badges';
+
+  @override
+  String get themes_mcoaOutgoingBorder => 'Outgoing message border';
+
+  @override
+  String get themes_mcoaOutgoingBackground => 'Outgoing message background';
+
+  @override
+  String get themes_mcoaOutgoingText => 'Outgoing message text';
+
+  @override
+  String get themes_mcoaOutgoingBadges => 'Outgoing message badges';
+
+  @override
+  String get themes_mcoaOpacity => 'Opacity';
+
+  @override
+  String get themes_mcoaComposerBackground => 'Composer background';
+
+  @override
+  String get themes_mcoaComposerActionIcon => 'Chat actions icon color';
+
+  @override
+  String get themes_mcoaComposerInputBorder => 'Input border';
+
+  @override
+  String get themes_mcoaComposerInputBackground => 'Input background';
+
+  @override
+  String get themes_mcoaComposerInputHint => 'Input placeholder';
+
+  @override
+  String get themes_mcoaComposerInputText => 'Input text';
+
+  @override
+  String get themes_mcoaComposerSendBackground => 'Send button background';
+
+  @override
+  String get themes_mcoaComposerSendIcon => 'Send icon color';
+
+  @override
+  String get themes_mcoaComposerCounter => 'Byte counter color';
+
+  @override
+  String get themes_mcoaComposerCounterWarning =>
+      'Byte counter color (almost full)';
+
+  @override
+  String get themes_mcoaComposerCounterError => 'Byte counter color (exceeded)';
+
+  @override
+  String get themes_mcoaHopBorder => 'Hop counter: border';
+
+  @override
+  String get themes_mcoaHopBackground => 'Hop counter: background';
+
+  @override
+  String get themes_mcoaHopText => 'Hop counter: text';
+
+  @override
+  String get themes_mcoaIncomingSenderName => 'Sender name';
+
+  @override
+  String get themes_mcoaLink => 'Link color';
+
+  @override
+  String get themes_mcoaSignal => 'Signal color';
 }

@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../helpers/mcoa_theme_preview_data.dart';
+import '../helpers/mcoa_theme_preferences.dart';
 import '../l10n/l10n.dart';
 import '../models/custom_theme.dart';
+import '../models/channel_message.dart';
 import '../screens/channel_chat_screen.dart';
 import '../screens/channels_screen.dart';
 import '../screens/chat_screen.dart';
@@ -14,6 +16,8 @@ import '../theme/mesh_theme.dart';
 import 'chat_background.dart';
 import 'contact_chat_composer.dart';
 import 'contact_chat_title.dart';
+import 'formatted_message_text.dart';
+import 'mention_chip.dart';
 
 /// Interactive tabs around inert, production chat/list widgets.
 class McoaThemePreview extends StatefulWidget {
@@ -52,10 +56,12 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
       child: Theme(
         data: MeshTheme.fromCustom(widget.theme),
         child: MultiProvider(
-          key: ValueKey((Localizations.localeOf(context), widget.openedAt, source)),
+          key: ValueKey((Localizations.localeOf(context), widget.openedAt, source, widget.theme.mcoa)),
           providers: [
             ChangeNotifierProvider<AppSettingsService>(
-              create: (_) => McoaThemePreviewSettings(source),
+              create: (_) => McoaThemePreviewSettings(
+                applyMcoaThemePreferences(source, widget.theme.mcoa),
+              ),
             ),
             ChangeNotifierProvider<MeshCoreConnector>(
               create: (_) => McoaThemePreviewData(
@@ -67,7 +73,7 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
             ),
           ],
           child: Builder(
-            builder: (context) => Container(
+            builder: (context) => _scaledPreview(context, source.uiScale, Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
@@ -111,10 +117,21 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
                   ),
                 ],
               ),
-            ),
+            )),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _scaledPreview(BuildContext context, double originalScale, Widget child) {
+    final media = MediaQuery.of(context);
+    final scale = context.read<AppSettingsService>().settings.uiScale;
+    return MediaQuery(
+      data: media.copyWith(textScaler: TextScaler.linear(
+        media.textScaler.scale(1) * scale / (originalScale > 0 ? originalScale : 1),
+      )),
+      child: child,
     );
   }
 
@@ -126,15 +143,23 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _header(context, data),
+          if (widget.theme.mcoa.colors['status_bar'] case final color?)
+            SizedBox(height: 8, child: ColoredBox(color: color, child: const SizedBox.expand())),
+          ColoredBox(
+            color: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
+            child: IconTheme.merge(
+              data: IconThemeData(color: Theme.of(context).appBarTheme.foregroundColor),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
+                child: _header(context, data),
+              ),
+            ),
+          ),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: _tab == 0
-                ? ChannelChatScreen(
-                    channel: data.chatChannel,
-                    previewMessages: data.channelMessages,
-                  )
+                ? _channelChatSamples(context, data)
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -153,6 +178,7 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
             controller: _controller,
             focusNode: _focus,
             maxBytes: 150,
+            showByteCounterWhenEmpty: true,
             onSend: () {},
             actions: IconButton(
               icon: const Icon(Icons.add_circle_outline),
@@ -195,6 +221,53 @@ class _McoaThemePreviewState extends State<McoaThemePreview> {
       children: [
         Positioned.fill(child: ChatBackgroundLayer(background: background)),
         content,
+      ],
+    );
+  }
+
+  Widget _channelChatSamples(BuildContext context, McoaThemePreviewData data) =>
+      ChannelChatScreen(
+        channel: data.chatChannel,
+        previewMessages: data.channelMessages,
+        previewMessageBodyBuilder: (message, style, textScale) =>
+            _previewMessageBody(context, message, style, textScale),
+      );
+
+  Widget _previewMessageBody(
+    BuildContext context,
+    ChannelMessage message,
+    TextStyle style,
+    double textScale,
+  ) {
+    return FormattedMessageText(
+      key: ValueKey(
+        message.isOutgoing
+            ? 'theme-preview-outgoing-body'
+            : 'theme-preview-incoming-body',
+      ),
+      text: message.text,
+      style: style,
+      textScale: textScale,
+      simplified: false,
+      textScaler: TextScaler.linear(
+        context.read<AppSettingsService>().settings.uiScale,
+      ),
+      leadingSpans: [
+        for (final simplified in [false, true]) ...[
+          WidgetSpan(
+            alignment: simplified
+                ? PlaceholderAlignment.baseline
+                : PlaceholderAlignment.middle,
+            baseline: simplified ? TextBaseline.alphabetic : null,
+            child: MentionChip(
+              senderName: 'senderName',
+              textScale: textScale,
+              simplified: simplified,
+              textStyle: style,
+            ),
+          ),
+          const TextSpan(text: ' '),
+        ],
       ],
     );
   }

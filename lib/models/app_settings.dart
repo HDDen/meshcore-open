@@ -254,7 +254,7 @@ class AppSettings {
   final int senderNameScalePercent;
 
   /// The sizes the sender-name slider offers: not evenly spaced, so a
-  /// stored value is snapped to the nearest of them.
+  /// slider selection is snapped to the nearest; theme inputs keep exact percentages.
   static const List<int> senderNameScaleOptions = [
     25,
     50,
@@ -1221,9 +1221,9 @@ class AppSettings {
                   50)
               .clamp(10, 100)
               .toInt(),
-      senderNameScalePercent: snapSenderNameScalePercent(
-        (json['sender_name_scale_percent'] as num?)?.toInt() ?? 100,
-      ),
+      senderNameScalePercent:
+          ((json['sender_name_scale_percent'] as num?)?.toInt() ?? 100)
+              .clamp(25, 400).toInt(),
       mcoImageScaleNearestNeighbor:
           json['mco_image_scale_nearest_neighbor'] as bool? ?? true,
       mcoImageReplacementsSharpness:

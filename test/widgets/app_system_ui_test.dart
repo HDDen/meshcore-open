@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/app_system_ui_style.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/models/custom_theme.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 
 const _frameKey = ValueKey('system-ui-frame');
@@ -19,6 +21,39 @@ Widget _app({ThemeMode mode = ThemeMode.system, Widget? home}) => MaterialApp(
 );
 
 void main() {
+  testWidgets('MCOa paints the status bar without consuming the top inset', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(top: 24, bottom: 16);
+    tester.view.viewPadding = const FakeViewPadding(top: 24, bottom: 16);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+    const custom = CustomTheme(
+      id: 'custom:bars',
+      name: 'Bars',
+      background: Colors.white,
+      accent: Colors.blue,
+      mcoa: McoaThemeOptions(colors: {'status_bar': Colors.black}),
+    );
+    final theme = MeshTheme.fromCustom(custom);
+    expect(appSystemUiStyle(theme).statusBarIconBrightness, Brightness.light);
+    double? topInset;
+    await tester.pumpWidget(MaterialApp(
+      theme: theme,
+      builder: (_, child) => AppSystemUi(child: child!),
+      home: Builder(builder: (context) {
+        topInset = MediaQuery.viewPaddingOf(context).top;
+        return const SizedBox.expand();
+      }),
+    ));
+    await tester.pump();
+    final bar = find.byKey(const ValueKey('mcoa-status-bar'));
+    expect(tester.getSize(bar).height, 24);
+    expect(tester.widget<ColoredBox>(bar).color, Colors.black);
+    expect(topInset, 24);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final brightness in Brightness.values) {
     final theme = brightness == Brightness.dark
         ? MeshTheme.dark()

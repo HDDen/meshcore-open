@@ -126,6 +126,7 @@ import '../widgets/translated_message_content.dart';
 import '../widgets/unknown_app_data_placeholder.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import '../widgets/chat_background.dart';
 import '../widgets/holiday_animations.dart';
 import '../storage/mco_image_gallery_store.dart';
@@ -151,6 +152,8 @@ class ChannelChatScreen extends StatefulWidget {
 
   /// Render-only theme samples: no route tracking, storage or radio work.
   final List<ChannelMessage>? previewMessages;
+  final Widget? Function(ChannelMessage message, TextStyle style, double textScale)?
+      previewMessageBodyBuilder;
 
   const ChannelChatScreen({
     super.key,
@@ -158,6 +161,7 @@ class ChannelChatScreen extends StatefulWidget {
     this.initialUnreadCount = 0,
     this.initialMessageId,
     this.previewMessages,
+    this.previewMessageBodyBuilder,
   });
 
   @override
@@ -1923,24 +1927,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final bubbleColor = showFailureVisual
         ? scheme.errorContainer
         : isOutgoing
-        ? bubbleTheme.me
-        : scheme.surfaceContainerLow;
+        ? McoaThemeStyle.color(context, 'background', bubbleTheme.me, outgoing: true)
+        : McoaThemeStyle.color(context, 'background', scheme.surfaceContainerLow, outgoing: false);
     final bubbleBorder = showFailureVisual
         ? scheme.error
         : isOutgoing
-        ? bubbleTheme.meBorder
-        : scheme.outlineVariant;
+        ? McoaThemeStyle.color(context, 'border', bubbleTheme.meBorder, outgoing: true)
+        : McoaThemeStyle.color(context, 'border', scheme.outlineVariant, outgoing: false);
     final textColor = showFailureVisual
         ? scheme.onErrorContainer
         : isOutgoing
-        ? bubbleTheme.meInk
-        : scheme.onSurface;
+        ? McoaThemeStyle.color(context, 'text', bubbleTheme.meInk, outgoing: true)
+        : McoaThemeStyle.color(context, 'text', scheme.onSurface, outgoing: false);
     final senderNameScale = settingsService.settings.senderNameScale;
     final senderNameGapScale = settingsService.settings.senderNameGapScale;
-    final senderNameColor = settingsService.settings.monochromeSenderNames
+    final defaultSenderNameColor = settingsService.settings.monochromeSenderNames
         ? scheme.onSurface
         : _colorForName(message.senderName);
-    final metaColor = textColor.withValues(alpha: 0.65);
+    final senderNameColor = isOutgoing ? defaultSenderNameColor
+        : McoaThemeStyle.color(context, 'sender_name', defaultSenderNameColor, outgoing: false);
+    final metaColor = McoaThemeStyle.color(context, 'badges',
+        textColor.withValues(alpha: 0.65), outgoing: isOutgoing);
     final borderRadius = isOutgoing
         ? const BorderRadius.only(
             topLeft: Radius.circular(MeshRadii.lg),
@@ -2522,6 +2529,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                           ),
                                         if (showSignalReading)
                                           ...signalReadingSpans(
+                                            colorOverride: McoaThemeStyle.of(context).colors[
+                                              isOutgoing ? 'outgoing_signal' : 'incoming_signal'
+                                            ],
                                             snr: message.snr,
                                             rssi: message.rssi,
                                             spreadingFactor:
@@ -2877,12 +2887,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         padding: EdgeInsets.symmetric(vertical: 3, horizontal: isOutgoing ? 0 : 8),
         onReply: () => _setReplyingTo(message),
         hint: _buildReplySwipeHint(isStart: false, iconOnly: isOutgoing),
-        child: messageBody,
+        child: McoaMessageScope(outgoing: isOutgoing, child: messageBody),
       );
     } else {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
-        child: messageBody,
+        child: McoaMessageScope(outgoing: isOutgoing, child: messageBody),
       );
     }
   }
@@ -2992,6 +3002,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // multiplier for backward compatibility with the untouched system scale).
     final uiScale = context.read<AppSettingsService>().settings.uiScale;
     final bodyTextScaler = TextScaler.linear(uiScale);
+    final previewBody = widget.previewMessages == null
+        ? null
+        : widget.previewMessageBodyBuilder?.call(message, textStyle, textScale);
+    if (previewBody != null) return previewBody;
     if (replyMentionName == null || replyMentionName.isEmpty) {
       return TranslatedMessageContent(
         displayText: displayText,
@@ -3105,12 +3119,14 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             connector.getChannelMergedMessages(widget.channel),
             quotedMessageId,
           );
-    final quoteBlocked = BlockedSenders.instance.hidesQuotedMessage(
-      quoted: quoted,
-      senderName: message.replyToSenderName,
-      channelName: connector.channelDisplayName(widget.channel.index),
-      isOwnQuote: isOwnNode,
-    );
+    final quoteBlocked =
+        widget.previewMessages == null &&
+        BlockedSenders.instance.hidesQuotedMessage(
+          quoted: quoted,
+          senderName: message.replyToSenderName,
+          channelName: connector.channelDisplayName(widget.channel.index),
+          isOwnQuote: isOwnNode,
+        );
     final quoteFiltered =
         !isOwnNode &&
         (quoted?.isFiltered ?? false) &&
@@ -3119,7 +3135,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         ? ''
         : (message.replyToText ?? '');
     final colorScheme = Theme.of(context).colorScheme;
-    final previewTextColor = colorScheme.onSurface.withValues(alpha: 0.7);
+    final previewTextColor = McoaThemeStyle.color(context, 'quote_text',
+        colorScheme.onSurface.withValues(alpha: 0.7), outgoing: message.isOutgoing);
 
     final parsedContent = _parsedMessageContent(
       cacheKey: 'reply:${message.messageId}',
@@ -3220,7 +3237,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: McoaThemeStyle.color(context, 'quote_background',
+              colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              outgoing: message.isOutgoing),
           borderRadius: BorderRadius.circular(MeshRadii.sm),
           border: Border(
             left: BorderSide(color: colorScheme.primary, width: 3),
@@ -3234,7 +3253,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               style: TextStyle(
                 fontSize: 11 * textScale,
                 fontWeight: FontWeight.bold,
-                color: isOwnNode ? colorScheme.primary : colorScheme.onSurface,
+                color: McoaThemeStyle.color(context, 'quote_text',
+                    isOwnNode ? colorScheme.primary : colorScheme.onSurface,
+                    outgoing: message.isOutgoing),
               ),
             ),
             const SizedBox(height: 2),
@@ -4667,7 +4688,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: scheme.surface,
+            color: McoaThemeStyle.of(context).colors['composer_background'] ?? scheme.surface,
             border: Border(
               top: BorderSide(color: scheme.outlineVariant, width: 1),
             ),
@@ -4788,6 +4809,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         );
                       }
                       return ByteCountedTextField(
+                        mcoaComposer: true,
                         maxBytes: maxBytes,
                         controller: _textController,
                         focusNode: _textFieldFocusNode,

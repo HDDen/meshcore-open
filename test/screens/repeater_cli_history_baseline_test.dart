@@ -12,6 +12,9 @@ import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/contact.dart';
+import 'package:meshcore_open/models/custom_theme.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/models/path_selection.dart';
 import 'package:meshcore_open/screens/repeater_cli_screen.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -147,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<AppLocalizations> show(WidgetTester tester, String locale, {double textScale = 1}) async {
+  Future<AppLocalizations> show(WidgetTester tester, String locale, {double textScale = 1, ThemeData? theme}) async {
     tester.view.physicalSize = const Size(1000, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -155,6 +158,7 @@ void main() {
     await tester.pumpWidget(ChangeNotifierProvider<MeshCoreConnector>.value(
       value: connector,
       child: MaterialApp(
+        theme: theme,
         locale: Locale(locale),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -459,6 +463,30 @@ void main() {
       );
     }
   }
+
+  testWidgets('CLI send button inherits the chat send colors', (tester) async {
+    const background = Color(0xFF123456);
+    const foreground = Color(0xFFABCDEF);
+    await show(tester, 'en', theme: MeshTheme.fromCustom(const CustomTheme(
+      id: 'custom:cli-send',
+      name: 'CLI send',
+      background: Colors.white,
+      accent: Colors.blue,
+      mcoa: McoaThemeOptions(colors: {
+        'composer_send_background': background,
+        'composer_send_icon': foreground,
+      }),
+    )));
+    final button = tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.send),
+    );
+    expect(button.onPressed, isNotNull);
+    expect(button.style!.backgroundColor!.resolve({}), background);
+    expect(button.style!.foregroundColor!.resolve({}), foreground);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await drainSql(tester);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('baseline: a reply from another repeater cannot finish this console command', (tester) async {
     final l10n = await show(tester, 'en');

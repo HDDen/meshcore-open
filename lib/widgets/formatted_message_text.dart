@@ -102,7 +102,11 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
   /// Spans are cached because each rebuild would otherwise allocate a fresh set
   /// of tap recognizers, and the old ones have to be disposed by hand.
   List<InlineSpan> _spansFor(BuildContext context) {
+    final linkStyle = LinkHandler.defaultLinkStyle(context, widget.style);
+    final linkColor = LinkHandler.configuredLinkColor(context);
     final key = Object.hash(
+      linkStyle,
+      linkColor,
       widget.text,
       widget.simplified,
       widget.markupEnabled,
@@ -114,7 +118,6 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
     if (_builtFor == key) return _spans;
 
     _disposeRecognizers();
-    final linkStyle = LinkHandler.defaultLinkStyle(context, widget.style);
     // A coordinate keeps the body colour and is marked by an underline alone —
     // the look a message that is nothing but coordinates already has.
     final spans = <InlineSpan>[...widget.leadingSpans];
@@ -162,7 +165,10 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
             spans.add(
               TextSpan(
                 text: element.text,
-                style: _applyMarkup(linkStyle, block.styles),
+                style: _applyMarkup(linkStyle, block.styles).copyWith(
+                  color: linkColor,
+                  decorationColor: linkColor,
+                ),
                 recognizer: recognizer,
               ),
             );

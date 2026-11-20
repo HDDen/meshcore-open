@@ -10759,4 +10759,129 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get extraKeys_roomLoginFailed =>
       'Не удалось подтвердить право отправки с этого ключа. Проверьте пароль комнаты и связь.';
+
+  @override
+  String get themes_mcoaHeading => 'Настройки MCOa:';
+
+  @override
+  String get themes_mcoaInterface => 'Интерфейс';
+
+  @override
+  String get themes_mcoaIncoming => 'Входящие';
+
+  @override
+  String get themes_mcoaOutgoing => 'Исходящие';
+
+  @override
+  String get themes_mcoaOptions => 'Настройки MCOa';
+
+  @override
+  String get themes_mcoaStatusBar => 'Цвет статусбара';
+
+  @override
+  String get themes_mcoaHeader => 'Цвет шапки';
+
+  @override
+  String get themes_mcoaHeaderText => 'Цвет текста в шапке';
+
+  @override
+  String get themes_mcoaQuoteBackground => 'Фон цитаты';
+
+  @override
+  String get themes_mcoaQuoteText => 'Текст цитаты';
+
+  @override
+  String get themes_mcoaMentionBorder => 'Граница упоминания';
+
+  @override
+  String get themes_mcoaMentionBackground => 'Фон упоминания';
+
+  @override
+  String get themes_mcoaMentionText => 'Цвет текста упоминания';
+
+  @override
+  String get themes_mcoaDpi => 'Регулировка DPI, %';
+
+  @override
+  String get themes_mcoaSenderSize => 'Размер имён отправителей, %';
+
+  @override
+  String get themes_mcoaIncomingBorder => 'Граница входящего сообщения';
+
+  @override
+  String get themes_mcoaIncomingBackground => 'Фон входящего сообщения';
+
+  @override
+  String get themes_mcoaIncomingText => 'Текст входящего сообщения';
+
+  @override
+  String get themes_mcoaIncomingBadges => 'Бейджи входящего сообщения';
+
+  @override
+  String get themes_mcoaOutgoingBorder => 'Граница исходящего сообщения';
+
+  @override
+  String get themes_mcoaOutgoingBackground => 'Фон исходящего сообщения';
+
+  @override
+  String get themes_mcoaOutgoingText => 'Текст исходящего сообщения';
+
+  @override
+  String get themes_mcoaOutgoingBadges => 'Бейджи исходящего сообщения';
+
+  @override
+  String get themes_mcoaOpacity => 'Непрозрачность';
+
+  @override
+  String get themes_mcoaComposerBackground => 'Фон нижней области';
+
+  @override
+  String get themes_mcoaComposerActionIcon => 'Цвет иконки действий в чате';
+
+  @override
+  String get themes_mcoaComposerInputBorder => 'Граница поля ввода';
+
+  @override
+  String get themes_mcoaComposerInputBackground => 'Фон поля ввода';
+
+  @override
+  String get themes_mcoaComposerInputHint => 'Заполнитель в поле ввода';
+
+  @override
+  String get themes_mcoaComposerInputText => 'Текст в поле ввода';
+
+  @override
+  String get themes_mcoaComposerSendBackground => 'Фон кнопки отправки';
+
+  @override
+  String get themes_mcoaComposerSendIcon => 'Цвет иконки отправки';
+
+  @override
+  String get themes_mcoaComposerCounter => 'Цвет счётчика байт';
+
+  @override
+  String get themes_mcoaComposerCounterWarning =>
+      'Цвет счётчика байт (почти заполнено)';
+
+  @override
+  String get themes_mcoaComposerCounterError =>
+      'Цвет счётчика байт (превышено)';
+
+  @override
+  String get themes_mcoaHopBorder => 'Счётчик хопов: граница';
+
+  @override
+  String get themes_mcoaHopBackground => 'Счётчик хопов: фон';
+
+  @override
+  String get themes_mcoaHopText => 'Счётчик хопов: текст';
+
+  @override
+  String get themes_mcoaIncomingSenderName => 'Имя отправителя';
+
+  @override
+  String get themes_mcoaLink => 'Цвет ссылок';
+
+  @override
+  String get themes_mcoaSignal => 'Цвет сигнала';
 }

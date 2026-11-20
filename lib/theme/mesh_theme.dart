@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../helpers/readable_accent.dart';
 import '../models/custom_theme.dart';
+import 'mcoa_theme_style.dart';
 import '../widgets/themed_icon.dart';
 
 /// MeshCore palette — high-contrast slate surfaces with sky-blue accents.
@@ -427,13 +428,13 @@ class MeshTheme {
     );
 
     final me = Color.lerp(bg, accent, dark ? 0.35 : 0.22)!;
-    return _build(
+    return McoaThemeStyle.apply(_build(
       scheme,
       dark ? Brightness.dark : Brightness.light,
       bubble: MeshBubbleTheme(me: me, meBorder: accent, meInk: onColor(me)),
       icons: MeshIconTheme(custom.icons),
       map: MeshMapTheme(accent: accent, tileTint: bg),
-    );
+    ), custom.mcoa);
   }
 
   static ThemeData _build(

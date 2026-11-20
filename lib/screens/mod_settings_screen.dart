@@ -303,7 +303,7 @@ class ModSettingsScreen extends StatelessWidget {
                       // 400 by 25), so the slider runs over their indexes.
                       Slider(
                         value: AppSettings.senderNameScaleOptions
-                            .indexOf(settings.senderNameScalePercent)
+                            .indexOf(AppSettings.snapSenderNameScalePercent(settings.senderNameScalePercent))
                             .clamp(0, AppSettings.senderNameScaleOptions.length - 1)
                             .toDouble(),
                         min: 0,

@@ -95,6 +95,7 @@ import '../helpers/snack_bar_builder.dart';
 import '../helpers/contact_history_candidates.dart';
 import '../widgets/unread_divider.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import '../widgets/chat_background.dart';
 import '../widgets/holiday_animations.dart';
 import '../widgets/pending_send_cancel_bar.dart';
@@ -2906,7 +2907,12 @@ class ContactMessageBubble extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => McoaMessageScope(
+    outgoing: message.isOutgoing,
+    child: Builder(builder: _buildBubble),
+  );
+
+  Widget _buildBubble(BuildContext context) {
     final settingsService = context.watch<AppSettingsService>();
     final enableTracing = settingsService.settings.enableMessageTracing;
     // flutter_linkify ignores the ambient MediaQuery scaler, so the message
@@ -2940,9 +2946,11 @@ class ContactMessageBubble extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final senderNameScale = settingsService.settings.senderNameScale;
     final senderNameGapScale = settingsService.settings.senderNameGapScale;
-    final senderNameColor = settingsService.settings.monochromeSenderNames
+    final defaultSenderNameColor = settingsService.settings.monochromeSenderNames
         ? scheme.onSurface
         : _colorForName(senderName);
+    final senderNameColor = isOutgoing ? defaultSenderNameColor
+        : McoaThemeStyle.color(context, 'sender_name', defaultSenderNameColor, outgoing: false);
     // A body that arrived while its author was blocked is never parsed: no
     // pin, no image, no shared contact, no coordinate link. Everything below
     // reads `bodyText`, so revealing the text cannot bring those handlers
@@ -3002,17 +3010,19 @@ class ContactMessageBubble extends StatelessWidget {
     final bubbleColor = isFailed
         ? scheme.errorContainer
         : isOutgoing
-        ? bubbleTheme.me
-        : scheme.surfaceContainerLow;
+        ? McoaThemeStyle.color(context, 'background', bubbleTheme.me, outgoing: true)
+        : McoaThemeStyle.color(context, 'background', scheme.surfaceContainerLow, outgoing: false);
     final bubbleBorder = isFailed
         ? scheme.error
         : isOutgoing
-        ? bubbleTheme.meBorder
-        : scheme.outlineVariant;
+        ? McoaThemeStyle.color(context, 'border', bubbleTheme.meBorder, outgoing: true)
+        : McoaThemeStyle.color(context, 'border', scheme.outlineVariant, outgoing: false);
     final textColor = isFailed
         ? scheme.onErrorContainer
-        : (isOutgoing ? bubbleTheme.meInk : scheme.onSurface);
-    final metaColor = textColor.withValues(alpha: 0.65);
+        : McoaThemeStyle.color(context, 'text',
+            isOutgoing ? bubbleTheme.meInk : scheme.onSurface, outgoing: isOutgoing);
+    final metaColor = McoaThemeStyle.color(context, 'badges',
+        textColor.withValues(alpha: 0.65), outgoing: isOutgoing);
     final showTxPowerBoostBadge = isOutgoing &&
         message.status == MessageStatus.delivered &&
         message.sentWithTxPowerBoost;
@@ -3635,6 +3645,9 @@ class ContactMessageBubble extends StatelessWidget {
                                         ),
                                       if (showFloodRouteReading)
                                         ...signalReadingSpans(
+                                          colorOverride: McoaThemeStyle.of(context).colors[
+                                            isOutgoing ? 'outgoing_signal' : 'incoming_signal'
+                                          ],
                                           snr: floodRoute.snr,
                                           rssi: floodRoute.rssi,
                                           spreadingFactor: connector.currentSf,

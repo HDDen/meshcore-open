@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 import '../helpers/theme_media.dart';
-import '../helpers/mcoa_theme_extension.dart';
+import '../helpers/mcoa_theme_options.dart';
 import '../theme/theme_icons.dart';
 import 'chat_background.dart';
 
@@ -50,6 +50,7 @@ class CustomTheme {
 
   /// When true, [chatBackground] also replaces chats' own backgrounds.
   final bool chatBackgroundEverywhere;
+  final McoaThemeOptions mcoa;
 
   const CustomTheme({
     required this.id,
@@ -59,6 +60,7 @@ class CustomTheme {
     this.icons = const {},
     this.chatBackground,
     this.chatBackgroundEverywhere = false,
+    this.mcoa = const McoaThemeOptions(),
   });
 
   bool get isPreset => id.startsWith(presetIdPrefix);
@@ -97,6 +99,7 @@ class CustomTheme {
     Map<String, ThemeIconOverride>? icons,
     Object? chatBackground = _unset,
     bool? chatBackgroundEverywhere,
+    McoaThemeOptions? mcoa,
   }) {
     return CustomTheme(
       id: id ?? this.id,
@@ -104,6 +107,7 @@ class CustomTheme {
       background: background ?? this.background,
       accent: accent ?? this.accent,
       icons: icons ?? this.icons,
+      mcoa: mcoa ?? this.mcoa,
       chatBackground: identical(chatBackground, _unset)
           ? this.chatBackground
           : chatBackground as ChatBackground?,
@@ -116,6 +120,7 @@ class CustomTheme {
   Map<String, dynamic> toJson() => {
     'id': id,
     ..._contentJson(),
+    if (!mcoa.isEmpty) 'mcoa': mcoa.toJson(),
     if (chatBackground != null) 'chat_background': chatBackground!.toJson(),
     if (chatBackgroundEverywhere) 'chat_background_everywhere': true,
   };
@@ -137,6 +142,7 @@ class CustomTheme {
       background: parseHexColor(json['background']) ?? const Color(0xFF0B1220),
       accent: parseHexColor(json['accent']) ?? const Color(0xFF0EA5E9),
       icons: parseThemeIcons(json['icons']),
+      mcoa: McoaThemeOptions.fromJson(json['mcoa']),
       chatBackground: ChatBackground.fromJson(json['chat_background']),
       chatBackgroundEverywhere: json['chat_background_everywhere'] == true,
     );
@@ -171,7 +177,7 @@ class CustomTheme {
     final chat = chatBackground?.toShareJson();
     return jsonEncode({
       ..._contentJson(),
-      'mcoa': mcoaThemeExtension,
+      'mcoa': mcoa.toJson(),
       'chatBackground': ?chat,
       if (chat != null && chatBackgroundEverywhere)
         'chatBackgroundEverywhere': true,
@@ -196,6 +202,7 @@ class CustomTheme {
         background: background,
         accent: accent,
         icons: parseThemeIcons(decoded['icons']),
+        mcoa: McoaThemeOptions.fromJson(decoded['mcoa']),
         // Only colors and inline pictures: an image-store ID from another
         // device would point at nothing here.
         chatBackground: _sharedChatBackground(decoded['chatBackground']),
@@ -210,6 +217,7 @@ class CustomTheme {
       other.name == name &&
       other.background == background &&
       other.accent == accent &&
+      other.mcoa == mcoa &&
       mapEquals(other.icons, icons) &&
       other.chatBackground == chatBackground &&
       other.chatBackgroundEverywhere == chatBackgroundEverywhere;
@@ -229,6 +237,7 @@ class CustomTheme {
     ),
     chatBackground,
     chatBackgroundEverywhere,
+    mcoa,
   );
 
   static ChatBackground? _sharedChatBackground(Object? json) {
