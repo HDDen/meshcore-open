@@ -1705,6 +1705,59 @@ Future<void> main() async {
       expect(arguments['payload'], 'message:${pubKeyToHex(roomKey)}');
     });
 
+    for (final (scenario, lifecycle, visible, sameChannel, suppress) in [
+      ('visible channel', AppLifecycleState.resumed, true, true, true),
+      ('visible inactive window', AppLifecycleState.inactive, true, true, true),
+      ('covered channel', AppLifecycleState.resumed, false, true, false),
+      ('different channel', AppLifecycleState.resumed, true, false, false),
+      ('backgrounded channel', AppLifecycleState.paused, true, true, false),
+      ('hidden channel', AppLifecycleState.hidden, true, true, false),
+    ]) {
+      test('channel notification with $scenario', () async {
+        final binding = TestWidgetsFlutterBinding.ensureInitialized();
+        final previous = binding.lifecycleState ?? AppLifecycleState.detached;
+        binding.handleAppLifecycleStateChanged(lifecycle);
+        addTearDown(() => binding.handleAppLifecycleStateChanged(previous));
+        final harness = await _Harness.start();
+        final connector = harness.connector;
+        addTearDown(harness.settings.dispose);
+        addTearDown(connector.dispose);
+        await harness.addChannel(0, 'Test', _psk(1));
+        if (!sameChannel) {
+          await harness.addChannel(1, 'Other', _psk(2));
+        }
+        final openIndex = sameChannel ? 0 : 1;
+        addTearDown(connector.trackChannelChatRoute(openIndex, () => visible));
+        connector.setActiveChannel(openIndex);
+        await _settle();
+
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 0,
+          timestampSeconds: _timestamp,
+          senderName: 'Alice',
+          text: 'hello',
+        ));
+        final history = ChannelMessageStore()
+          ..setPublicKeyHex = connector.selfPublicKeyHex
+          ..registerChannel(
+            connector.channels.singleWhere((channel) => channel.index == 0),
+          );
+        await _waitFor(
+          () async => (await history.loadChannelMessages(0))
+              .any((message) => message.text == 'hello'),
+          'the stored channel message',
+        );
+        if (suppress) {
+          await _settle();
+          expect(plugin.shown, isEmpty);
+        } else {
+          await _waitFor(() => plugin.shown.length == 1, 'the notification');
+          final arguments = _NotificationPlugin.argumentsOf(plugin.shown.single);
+          expect(arguments['payload'], 'channel:0');
+        }
+      });
+    }
+
     test('a channel message names the channel and the sender', () async {
       final harness = await _Harness.start();
       await harness.addChannel(0, 'Test', _psk(1));

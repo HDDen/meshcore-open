@@ -926,6 +926,13 @@ deletes the files older than `_notificationImageLifetime` (24 hours), since a
 toast can be shown again from the action centre well after `show`
 (`test/connector/queued_message_notifications_test.dart`).
 
+Channel notifications also check the current channel route before enqueueing,
+using `visible_channel_notification.dart`. A visible channel suppresses alerts
+on every platform while the app is resumed, inactive or has no lifecycle state;
+keyboard focus does not affect that decision. Hidden, paused and detached apps
+still notify. A registered covered route overrides the legacy active-channel
+fallback, so an old chat under another screen does not suppress notifications.
+
 ### Structured message notification summaries (U06c1)
 
 `NotificationService.formatNotificationText(text, l10n)` uses the chat's

@@ -68,8 +68,7 @@ class _Connector extends MeshCoreConnector {
   Completer<void>? refreshGate;
   final frames = <List<int>>[];
 
-  _Connector({int version = 10, MessageFilterService? messageFilterService})
-      : super(messageFilterService: messageFilterService) {
+  _Connector({int version = 10, super.messageFilterService}) {
     final info = Uint8List(82);
     info[0] = respCodeDeviceInfo;
     info[1] = version;

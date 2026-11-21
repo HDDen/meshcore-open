@@ -33,6 +33,7 @@ import '../models/app_settings.dart';
 import '../models/path_selection.dart';
 import '../models/translation_support.dart';
 import '../helpers/blocked_senders.dart';
+import '../helpers/visible_channel_notification.dart';
 import '../helpers/background_work_tracker.dart';
 import '../helpers/persistence_background_work.dart';
 import '../helpers/frame_background_work.dart';
@@ -18404,6 +18405,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (message.isOutgoing || _appSettingsService == null) return;
     final channelIndex = message.channelIndex;
     if (channelIndex == null || _isSuppressedChannelSlot(channelIndex)) return;
+    if (suppressVisibleChannelNotification(
+      isVisible: _channelChatRoutes.isVisible(channelIndex) ??
+          _activeChannelIndex == channelIndex,
+      lifecycleState: WidgetsBinding.instance.lifecycleState,
+    )) {
+      return;
+    }
 
     final settings = _appSettingsService!.settings;
     if (!settings.notificationsEnabled || !settings.notifyOnNewChannelMessage) {

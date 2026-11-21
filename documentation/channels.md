@@ -219,6 +219,13 @@ When loading older saved settings without a separate nearby-repeater target, the
 | Mark as Unread | Incoming messages only | Marks this message and all subsequent incoming messages as unread |
 | Delete | All messages | Removes locally (not from mesh) |
 
+## Notifications in an open channel
+
+Incoming messages do not raise notifications while that channel is the visible
+chat and the application is visible, including while composing a message.
+Other channels still notify normally. Notifications resume when the application
+is hidden or backgrounded, subject to the existing notification settings.
+
 ## Message filter
 
 Open **Settings → App Settings section → Message filter** to enable the
