@@ -5,10 +5,21 @@ import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/quick_actions_header_settings.dart';
 
 void main() {
-  test('legacy settings retain the icon and a one-second live-mode default', () {
-    final header = AppSettings.fromJson({}).quickActionsHeader;
+  test('explicitly saved icon and refresh interval remain unchanged', () {
+    final header = QuickActionsHeaderSettings.fromJson({
+      'display': 'icon', 'intervals_ms': {'noise': 2000},
+    });
     expect(header.display, QuickActionsHeaderDisplay.icon);
-    expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 1000);
+    expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 2000);
+    expect(const QuickActionsHeaderSettings.defaults().display,
+        QuickActionsHeaderDisplay.noise);
+    expect(QuickActionsHeaderSettings().intervalMsFor(QuickActionsHeaderDisplay.noise),
+        7000);
+  });
+  test('new and legacy settings default to noise with a seven-second interval', () {
+    final header = AppSettings.fromJson({}).quickActionsHeader;
+    expect(header.display, QuickActionsHeaderDisplay.noise);
+    expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 7000);
   });
 
   test('all seven steps survive storage and mode changes independently of popup buttons', () {
@@ -32,14 +43,14 @@ void main() {
   test('unknown/unavailable displays and malformed periods are safe defaults', () {
     for (final display in [null, 'unknown', 'extraHops', 1]) {
       expect(QuickActionsHeaderSettings.fromJson({'display': display}).display,
-          QuickActionsHeaderDisplay.icon);
+          QuickActionsHeaderDisplay.noise);
     }
     for (final interval in <Object?>[null, '500', 500.0, 0, -1, 501, 10001]) {
       final header = QuickActionsHeaderSettings.fromJson({
         'display': 'noise', 'intervals_ms': {'noise': interval},
       });
       expect(header.display, QuickActionsHeaderDisplay.noise);
-      expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 1000);
+      expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 7000);
     }
     final input = {QuickActionsHeaderDisplay.noise: 500};
     final header = QuickActionsHeaderSettings(intervalsMs: input);

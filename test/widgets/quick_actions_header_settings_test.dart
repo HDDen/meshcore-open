@@ -42,7 +42,16 @@ void main() {
     final dropdown = tester.widget<DropdownButton<QuickActionsHeaderDisplay>>(selector);
     expect(dropdown.items!.firstWhere((item) => item.value == QuickActionsHeaderDisplay.noise).enabled, isTrue);
     expect(dropdown.items!.firstWhere((item) => item.value == QuickActionsHeaderDisplay.extraHops).enabled, isFalse);
-    expect(find.byKey(const ValueKey('quick-actions-header-interval')), findsNothing);
+    expect(dropdown.value, QuickActionsHeaderDisplay.noise);
+    final defaultInterval = find.byKey(const ValueKey('quick-actions-header-interval'));
+    expect(tester.widget<Slider>(find.descendant(
+      of: defaultInterval, matching: find.byType(Slider),
+    )).value, 5);
+    await tester.tap(selector);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Icon').last);
+    await tester.pumpAndSettle();
+    expect(defaultInterval, findsNothing);
     await tester.tap(selector);
     await tester.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 3));
     await tester.tap(find.text('Noise level').last);

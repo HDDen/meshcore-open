@@ -11,12 +11,12 @@ enum QuickActionsHeaderDisplay {
 /// popup action visibility/order and its one-second cadence independent.
 class QuickActionsHeaderSettings {
   const QuickActionsHeaderSettings.defaults()
-      : display = QuickActionsHeaderDisplay.icon, _intervals = null;
+      : display = QuickActionsHeaderDisplay.noise, _intervals = null;
 
   QuickActionsHeaderSettings({
-    QuickActionsHeaderDisplay display = QuickActionsHeaderDisplay.icon,
+    QuickActionsHeaderDisplay display = QuickActionsHeaderDisplay.noise,
     Map<QuickActionsHeaderDisplay, int> intervalsMs = const {},
-  }) : display = display.selectable ? display : QuickActionsHeaderDisplay.icon,
+  }) : display = display.selectable ? display : QuickActionsHeaderDisplay.noise,
        _intervals = Map.unmodifiable({
          for (final entry in intervalsMs.entries)
            if (entry.key.hasPolling && allowedIntervalsMs.contains(entry.value))
@@ -24,7 +24,7 @@ class QuickActionsHeaderSettings {
        });
 
   static const allowedIntervalsMs = [500, 1000, 2000, 3000, 5000, 7000, 10000];
-  static const defaultIntervalMs = 1000;
+  static const defaultIntervalMs = 7000;
   final QuickActionsHeaderDisplay display;
   final Map<QuickActionsHeaderDisplay, int>? _intervals;
 
@@ -53,7 +53,7 @@ class QuickActionsHeaderSettings {
 
   factory QuickActionsHeaderSettings.fromJson(Object? raw) {
     if (raw is! Map) return const QuickActionsHeaderSettings.defaults();
-    var display = QuickActionsHeaderDisplay.icon;
+    var display = QuickActionsHeaderDisplay.noise;
     for (final mode in QuickActionsHeaderDisplay.values) {
       if (mode.selectable && mode.name == raw['display']) {
         display = mode;
