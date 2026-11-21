@@ -106,6 +106,10 @@ Settings take effect when saved. A snackbar confirms the update.
 
 ## App Settings
 
+The main settings screen also links directly to **Message filter**, immediately
+after App Settings and before Mod settings, matching upstream navigation.
+Use it to enable filtering and configure spam rules; see [Message filter](channels.md#message-filter).
+
 A dedicated sub-screen for app-level preferences (nothing here is sent to the device). All settings persist locally via SharedPreferences.
 
 Language, map time-filter and unit choices remain scrollable on short screens

@@ -34,6 +34,7 @@ import 'donate_screen.dart';
 import 'companion_radio_stats_screen.dart';
 import 'export_screen.dart';
 import 'mod_settings_screen.dart';
+import 'message_filter_settings_screen.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/app_update_controls.dart';
 import '../utils/app_build_info.dart';
@@ -100,6 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         top: false,
         child: Consumer<MeshCoreConnector>(
           builder: (context, connector, child) {
+            final messageFilter = connector.messageFilterService;
             return ListView(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
               children: [
@@ -141,6 +143,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: l10n.settings_appSettingsSubtitle,
                   ),
                 ),
+                if (messageFilter != null)
+                  MeshCard(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => MessageFilterSettingsScreen(
+                          service: messageFilter,
+                          channels: connector.channels,
+                        ),
+                      ),
+                    ),
+                    child: _buildNavTileContent(
+                      context,
+                      icon: Icons.filter_alt_outlined,
+                      title: l10n.messageFilter_title,
+                    ),
+                  ),
                 MeshCard(
                   onTap: () => Navigator.push(
                     context,

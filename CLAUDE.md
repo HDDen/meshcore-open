@@ -1150,6 +1150,10 @@ itself, which is deleted instead. The behaviour lives in two files:
 while parsing a frame). Two widgets carry the UI — `blocked_message_body.dart` for the
 placeholder and `blocked_senders_sheet.dart` for the list.
 
+Message filter settings are reached from the main Settings screen, in the
+App Settings section after App Settings and before Mod settings, as upstream.
+Mod settings contains no duplicate entry.
+
 Channel message filter rules use a separate verdict. The profile starts with
 filtering disabled. When enabled, rules evaluate newly stored inbound posts
 after packet deduplication and the sender block. The verdict lives in the

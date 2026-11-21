@@ -17,6 +17,8 @@ import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/radio_settings.dart';
 import 'package:meshcore_open/screens/export_screen.dart';
 import 'package:meshcore_open/screens/settings_screen.dart';
+import 'package:meshcore_open/screens/message_filter_settings_screen.dart';
+import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/services/app_debug_log_service.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/app_update_service.dart';
@@ -66,7 +68,8 @@ class _Connector extends MeshCoreConnector {
   Completer<void>? refreshGate;
   final frames = <List<int>>[];
 
-  _Connector({int version = 10}) {
+  _Connector({int version = 10, MessageFilterService? messageFilterService})
+      : super(messageFilterService: messageFilterService) {
     final info = Uint8List(82);
     info[0] = respCodeDeviceInfo;
     info[1] = version;
@@ -109,10 +112,14 @@ Future<void> _withScreen(
   Future<void> Function(_Connector, AppLocalizations) check, {
   int version = 10,
   Locale locale = const Locale('en'),
+  MessageFilterService? messageFilterService,
   Size size = const Size(1100, 1800),
   double textScale = 1,
 }) async {
-  final connector = _Connector(version: version);
+  final connector = _Connector(
+    version: version,
+    messageFilterService: messageFilterService,
+  );
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   try {
@@ -264,6 +271,34 @@ void _expectCompleteRadioLabel(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  testWidgets('main settings opens the existing message filter after app settings', (tester) async {
+    final service = MessageFilterService();
+    addTearDown(service.dispose);
+    await _withScreen(tester, (connector, l10n) async {
+      final filter = find.text(l10n.messageFilter_title);
+      await _revealSetting(tester, filter);
+      expect(filter, findsOneWidget);
+      expect(
+        tester.getTopLeft(filter).dy,
+        greaterThan(tester.getTopLeft(find.text(l10n.settings_appSettings).last).dy),
+      );
+      expect(
+        tester.getTopLeft(filter).dy,
+        lessThan(tester.getTopLeft(find.text(l10n.settings_modSettings)).dy),
+      );
+      await tester.tap(filter);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      final screen = tester.widget<MessageFilterSettingsScreen>(
+        find.byType(MessageFilterSettingsScreen),
+      );
+      expect(screen.service, same(service));
+      expect(screen.channels, orderedEquals(connector.channels));
+      expect(connector.frames, isEmpty);
+      expect(tester.takeException(), isNull);
+    }, messageFilterService: service);
+  });
+
   late PathProviderPlatform savedPaths;
   setUpAll(() {
     savedPaths = PathProviderPlatform.instance;

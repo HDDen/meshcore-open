@@ -221,7 +221,7 @@ When loading older saved settings without a separate nearby-repeater target, the
 
 ## Message filter
 
-Open **Mod settings → Message storage → Message filter** to enable the
+Open **Settings → App Settings section → Message filter** to enable the
 filter. It starts off. Rules match the text, sender name, or both, using a
 substring, whole word, or exact match. Rules apply to newly received channel
 posts, and you can exclude individual channels. The rule editor scrolls

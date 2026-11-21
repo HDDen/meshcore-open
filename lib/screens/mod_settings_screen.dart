@@ -15,7 +15,6 @@ import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/low_battery_settings_card.dart';
 import '../widgets/sync_progress_overlay.dart';
 import 'additional_identity_screen.dart';
-import 'message_filter_settings_screen.dart';
 import 'message_history_database_screen.dart';
 import 'quick_actions_settings_screen.dart';
 
@@ -24,8 +23,6 @@ class ModSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final connector = context.read<MeshCoreConnector?>();
-    final messageFilter = connector?.messageFilterService;
     return Scaffold(
       appBar: AppBar(
         title: AdaptiveAppBarTitle(context.l10n.settings_modSettings),
@@ -942,23 +939,6 @@ class ModSettingsScreen extends StatelessWidget {
                 SectionHeader(
                   context.l10n.settings_modSettingsMessageStorage,
                 ),
-                if (messageFilter != null)
-                  MeshCard(
-                    padding: EdgeInsets.zero,
-                    child: ListTile(
-                      leading: const Icon(Icons.filter_alt_outlined),
-                      title: Text(context.l10n.messageFilter_title),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => MessageFilterSettingsScreen(
-                            service: messageFilter,
-                            channels: connector!.channels,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 MeshCard(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
