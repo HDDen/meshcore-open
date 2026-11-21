@@ -117,3 +117,23 @@ helper `channel_image_replay.dart` восстанавливает чанки и�
 У бинарного кадра AEIC нет времени сообщения; исходное время получения и
 радиометрики в таком повторе клиенту не передаются. Эти изменения требуют обычной
 пересборки приложения; новые модели и нативные библиотеки не требуются.
+
+## AEIC packet propagation retries
+
+The existing channel option to resend until enough hops or different nearby
+repeaters are heard also applies to AEIC images. Each data chunk and optional
+XOR parity chunk is watched independently. Only chunks below the threshold
+are resent, using the same retry limit, listening interval and alternative
+first-hop-repeater threshold as channel messages. Repeated echoes from the
+same first-hop hash count once; hash widths of 1–3 bytes are respected.
+
+The initial image progress still counts packets accepted by the node. Coverage
+checks and limited retries continue in the background after that burst. Echoes
+are evidence of propagation, not recipient delivery confirmations. Exhausting
+the limit logs a warning without changing the image to failed. Disconnecting,
+disposing the connector, or changing the node/channel binding prevents further
+retries. The original channel scope and chunk pacing are retained.
+
+No AEIC headers, payloads, parity calculations or receiver formats change; each
+retry sends exactly the original chunk bytes. Disabling the channel option
+keeps the previous single-burst behavior.

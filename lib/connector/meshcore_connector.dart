@@ -107,6 +107,7 @@ import '../helpers/key_prefix_match.dart';
 import '../helpers/versioned_map.dart';
 import '../helpers/channel_resend_coverage.dart';
 import '../helpers/channel_resend_control.dart';
+import '../helpers/aeic_chunk_resends.dart';
 import '../helpers/channel_resend_warning.dart';
 import '../helpers/cyr2lat.dart';
 import '../helpers/exact_quote_helper.dart';
@@ -10703,7 +10704,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  final _aeicChunkResends = AeicChunkResends();
+
   void _cancelChannelHopControls() {
+    _aeicChunkResends.cancelAll();
     for (final control in _channelHopControls.values) {
       control.cancel();
     }
@@ -11016,31 +11020,104 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // caller would record a complete outgoing image and tell the user "sent"
     // after transmitting a prefix of the chunks. Track it explicitly.
     var sentAll = true;
-    await _runScopedChannelSend(() async {
-      for (var i = 0; i < blobs.length; i++) {
-        if (!isConnected) {
-          sentAll = false;
-          return;
+    final settings = _appSettingsService?.settings;
+    final tracked = settings?.channelMinHopsEnabled == true
+        ? [for (final blob in blobs)
+            _aeicChunkResends.track(channelIndex, blob, selfKey: _selfPublicKey)]
+        : <AeicChunkResend>[];
+    final nodeKey = selfPublicKeyHex;
+    final revision = _channelInboxRevision;
+    final channelId = _findChannelByIndex(channelIndex)?.storageId;
+    final region = _channelSendScope(channelIndex);
+    var watching = false;
+    try {
+      await _runScopedChannelSend(() async {
+        for (var i = 0; i < blobs.length; i++) {
+          if (!isConnected) {
+            sentAll = false;
+            return;
+          }
+          if (i > 0) await Future<void>.delayed(interChunkDelay);
+          // Same collision avoidance as every other channel send. On a quiet mesh
+          // this returns almost immediately; interChunkDelay is what actually
+          // paces the chunks so we do not talk over our own previous packet.
+          await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+          await _sendFrameAndWaitForCommandAck(
+            buildSendChannelDataFrame(channelIndex, dataTypeAeicImage, blobs[i]),
+          );
+          onProgress?.call(i + 1, blobs.length);
         }
-        if (i > 0) await Future<void>.delayed(interChunkDelay);
-        // Same collision avoidance as every other channel send. On a quiet mesh
-        // this returns almost immediately; interChunkDelay is what actually
-        // paces the chunks so we do not talk over our own previous packet.
-        await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
-        await _sendFrameAndWaitForCommandAck(
-          buildSendChannelDataFrame(channelIndex, dataTypeAeicImage, blobs[i]),
-        );
-        onProgress?.call(i + 1, blobs.length);
+      }, region: region);
+      if (sentAll && tracked.isNotEmpty) {
+        bool canContinue() => !_disposed && isConnected &&
+            selfPublicKeyHex == nodeKey && _channelInboxRevision == revision &&
+            _findChannelByIndex(channelIndex)?.storageId == channelId;
+        for (final packet in tracked) {
+          bool satisfied() {
+            final live = _appSettingsService?.settings;
+            return packet.satisfied(
+              minHops: settings!.channelMinHops,
+              countRepeaters: live?.channelMinHopsCountRepeaters ?? false,
+              minRepeaters: live?.channelMinHopsRepeaterCount ?? 2,
+            );
+          }
+          unawaited(_outgoingQueueWork.runRetry(() async {
+            try {
+              await packet.watch(
+                maxResends: settings!.channelMinHopsRetries,
+                delay: () => _channelHopCheckDelay,
+                now: () => _channelResendNow(),
+                canContinue: canContinue,
+                isSatisfied: satisfied,
+                resend: (_) => _runScopedChannelSend(() async {
+                  if (packet.cancelled || !canContinue() || satisfied()) { return; }
+                  if (interChunkDelay > Duration.zero) {
+                    await Future<void>.delayed(interChunkDelay);
+                  }
+                  await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
+                  if (packet.cancelled || !canContinue() || satisfied()) { return; }
+                  await _sendFrameAndWaitForCommandAck(
+                    buildSendChannelDataFrame(channelIndex, dataTypeAeicImage, packet.blob),
+                  );
+                }, region: region,
+                  canSend: () => !packet.cancelled && canContinue() && !satisfied()),
+              );
+              if (!packet.cancelled && canContinue() && !satisfied()) {
+                _appDebugLogService?.warn(
+                  'AEIC packet only heard at ${packet.maxHops} hops via '
+                  '${packet.distinctRepeaters} first-hop repeaters; giving up',
+                  tag: 'Channel resend',
+                );
+              }
+            } catch (error) {
+              _appDebugLogService?.warn('AEIC packet resend failed: $error',
+                  tag: 'Channel resend');
+            } finally {
+              _aeicChunkResends.release(packet);
+            }
+          }));
+        }
+        watching = true;
       }
-    }, region: _channelSendScope(channelIndex));
-    return sentAll;
+      return sentAll;
+    } finally {
+      if (!watching) {
+        for (final packet in tracked) {
+          _aeicChunkResends.release(packet);
+        }
+      }
+    }
   });
 
   Future<void> _runScopedChannelSend(
     Future<void> Function() action, {
     required String region,
     bool waitForScopeReset = true,
+    bool Function()? canSend,
   }) => _runChannelCommandLocked(() async {
+    // A queued AEIC retry can be cancelled or reach its coverage target while
+    // another command owns the radio. Do not change scope in that case.
+    if (canSend?.call() == false) { return; }
     // An empty channel region deliberately clears any previous app override,
     // handing scope selection back to the node's default-region setting.
     // This must happen for unscoped channels too: otherwise a stale scope
@@ -20239,7 +20316,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             if (decryptedBytes == null) continue;
           }
           if (packet.payloadType == _payloadTypeGroupData) {
-            if (_countImageChunkRepeat(channel.index, decryptedBytes)) return;
+            if (_countImageChunkRepeat(channel.index, decryptedBytes,
+              pathBytes: packet.pathBytes,
+              hopCount: packet.isFlood ? packet.hopCount : 0,
+              hashWidth: packet.pathHashWidth,
+            )) {
+              return;
+            }
             final packetRegion = _resolvePacketRegion(packet);
             final groupData = _groupDataOf(decryptedBytes);
             final heardKey =
@@ -20472,7 +20555,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// never fires for it. The decrypted body is
   /// `[dataType u16][len][payload]`, the same layout [_parseLogRxChannelData]
   /// reads.
-  bool _countImageChunkRepeat(int channelIndex, Uint8List decryptedBytes) {
+  bool _countImageChunkRepeat(int channelIndex, Uint8List decryptedBytes, {
+    required Uint8List pathBytes,
+    required int hopCount,
+    required int hashWidth,
+  }) {
     if (decryptedBytes.length < 3) return false;
     final reader = BufferReader(decryptedBytes);
     final dataType = reader.readByte() | (reader.readByte() << 8);
@@ -20481,7 +20568,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     // Claimed as an image frame either way: a truncated one is still not a
     // message, and handing it on would only produce a parse failure.
     if (dataLength > reader.remaining) return true;
-    _onImageChunkRepeat?.call(reader.readBytes(dataLength), channelIndex);
+    final blob = reader.readBytes(dataLength);
+    _aeicChunkResends.heard(channelIndex, blob,
+      pathBytes: pathBytes, hopCount: hopCount, hashWidth: hashWidth);
+    _onImageChunkRepeat?.call(blob, channelIndex);
     return true;
   }
 

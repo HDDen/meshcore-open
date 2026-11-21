@@ -2476,6 +2476,21 @@ channel's region. The scope on the wire is applied for images identically to tex
 `sendImageChunks` wraps the whole burst in `_runScopedChannelSend`, so every chunk of one image
 goes out under one scope and no other channel send can slip in between them.
 
+The channel minimum-propagation option also watches AEIC data and parity packets
+through `helpers/aeic_chunk_resends.dart`. The connector registers exact channel/blob
+pairs before the initial burst, retains early RX-log echoes, and starts bounded
+background retry work after the burst. It counts maximum flood hops or distinct
+first-hop hashes (1-3 bytes, excluding self for the latter). Each incomplete chunk
+gets the existing delay/retry budget; satisfied chunks stop independently. Retry
+writes recheck coverage, cancellation and node/channel binding after scope/quiet
+waits, reuse the original region and blob, and honor inter-chunk pacing. Listening
+holds no radio scope lock. `_cancelChannelHopControls` also cancels all AEIC waits.
+Exhaustion logs a propagation shortfall, not delivery failure. Existing image
+progress and per-chunk repeat counters retain their meanings. Wire formats and
+packet deduplication are unchanged. Helper tests cover coverage/deadlines/cancel;
+`image_send_work_tracking_test.dart` covers wire identity, settings, retry work and
+an encrypted GRP_DATA RX-log echo.
+
 The chunk layout follows the parity toggle in the send preview (`imageChunkDataSizes`). With
 parity every chunk but the last is full: a contract with every shipped receiver, whose parity
 recovery refuses to rebuild a short chunk that is not the last one. Without parity the same

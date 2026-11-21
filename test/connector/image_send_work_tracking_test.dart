@@ -7,6 +7,8 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/connector/pending_command_replies.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
 import 'package:meshcore_open/models/power_saving_settings.dart';
+import 'package:meshcore_open/helpers/channel_raw_packet.dart';
+import 'package:meshcore_open/services/image_chunk_transport.dart' show dataTypeAeicImage;
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -139,6 +141,122 @@ void main() {
     await PrefsManager.initialize();
   });
   tearDown(PrefsManager.reset);
+
+  for (final enabled in [false, true]) {
+    testWidgets('AEIC packet retries honor enablement and keep bytes ($enabled)', (tester) async {
+      await _withImage(tester, (c) async {
+        c.setChannelResendClockForTest(tester.binding.clock.now);
+        await c.settings.updateSettings(c.settings.settings.copyWith(
+          channelMinHopsEnabled: enabled,
+          channelMinHops: 2,
+          channelMinHopsRetries: 2,
+          channelMinHopsDelaySeconds: 3,
+        ));
+        final result = _Result(c.send(blobs: [_blobs.first], delay: Duration.zero));
+        await tester.pump();
+        expect(result.value, isTrue);
+        List<List<int>> packets() => c.frames.where((f) => f[0] == cmdSendChannelData).toList();
+        final first = List<int>.of(packets().single);
+        expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), enabled ? 1 : 0);
+        for (var i = 0; i < 3; i++) {
+          await tester.pump(const Duration(seconds: 3));
+        }
+        expect(packets(), enabled ? [first, first, first] : [first]);
+        expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), 0);
+      });
+    }, timeout: timeout);
+  }
+
+  for (final stop in ['disconnect', 'dispose', 'initial error']) {
+    testWidgets('AEIC retry work is released on $stop', (tester) async {
+      await _withImage(tester, (c) async {
+        c.setChannelResendClockForTest(tester.binding.clock.now);
+        await c.settings.updateSettings(c.settings.settings.copyWith(
+          channelMinHopsEnabled: true,
+          channelMinHopsRetries: 2,
+          channelMinHopsDelaySeconds: 3,
+        ));
+        if (stop == 'initial error') {
+          c.replyFor = (frame) => frame[0] == cmdSendChannelData
+              ? [respCodeErr, 3] : [respCodeOk];
+        }
+        final result = _Result(c.send(blobs: [_blobs.first], delay: Duration.zero));
+        await tester.pump();
+        if (stop == 'initial error') {
+          expect(result.error, isNotNull);
+        } else {
+          expect(result.value, isTrue);
+          expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), 1);
+          c.connected = false;
+          if (stop == 'dispose') {
+            c.dispose();
+          }
+        }
+        final count = c.frames.where((f) => f[0] == cmdSendChannelData).length;
+        await tester.pump(const Duration(seconds: 3));
+        expect(c.frames.where((f) => f[0] == cmdSendChannelData).length, count);
+        expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), 0);
+      });
+    }, timeout: timeout);
+  }
+
+  testWidgets('AEIC raw echo completes only the matching chunk retry', (tester) async {
+    await _withImage(tester, (c) async {
+      c.setChannelResendClockForTest(tester.binding.clock.now);
+      await c.settings.updateSettings(c.settings.settings.copyWith(
+        channelMinHopsEnabled: true,
+        channelMinHops: 2,
+        channelMinHopsRetries: 1,
+        channelMinHopsDelaySeconds: 3,
+      ));
+      final psk = Uint8List.fromList(List<int>.generate(16, (i) => i + 1));
+      final info = Uint8List(50)..[0] = respCodeChannelInfo..[1] = 2;
+      info.setRange(2, 6, 'Test'.codeUnits);
+      info.setRange(34, 50, psk);
+      // CHANNEL_INFO also loads persisted channel settings/history. Await the
+      // real handler outside fake async before starting the send under test.
+      await tester.runAsync(() => c.handleChannelInfoForTest(info));
+      Future<void> advanceUntil(bool Function() done, String phase) async {
+        for (var step = 0; step < 200 && !done(); step++) {
+          // pump() with no duration only drains microtasks. Advancing fake
+          // time also executes the zero-duration inter-chunk timer.
+          await tester.pump(const Duration(milliseconds: 1));
+        }
+        expect(done(), isTrue,
+          reason: '$phase; commands=${c.codes}; '
+              'active work=${c.backgroundWorkSnapshot.activeCount}');
+      }
+      final result = _Result(c.send(delay: Duration.zero));
+      await advanceUntil(() => result.completed, 'initial two-chunk send');
+      expect(result.error, isNull);
+      expect(result.value, isTrue);
+      expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), 2);
+      // The same encrypted GRP_DATA body as firmware; two 2-byte path hashes.
+      final blob = _blobs.first;
+      final plaintext = Uint8List.fromList([
+        dataTypeAeicImage & 0xFF, dataTypeAeicImage >> 8, blob.length, ...blob,
+      ]);
+      c.handleFrameForTest(Uint8List.fromList([
+        pushCodeLogRxData, 32, 186,
+        (payloadTypeGRPDATA << 2) | 1, (1 << 6) | 2,
+        0x11, 0x22, 0x33, 0x44,
+        ...ChannelRawPacket.groupTextPayload(psk: psk, plaintext: plaintext),
+      ]));
+      await advanceUntil(
+        () => c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry) == 1,
+        'matching raw echo completes one retry watcher',
+      );
+      // The RX-log also starts a real radio-quiet window. This test checks
+      // immediate per-packet completion, independently of that clock; bounded
+      // retransmission and unchanged bytes are covered in the tests above.
+      final packets = c.frames.where((f) => f[0] == cmdSendChannelData).toList();
+      expect(packets.length, 2);
+      c.connected = false;
+      c.dispose();
+      await tester.pump();
+      expect(c.backgroundWorkSnapshot.countFor(BackgroundWorkKind.retry), 0);
+    });
+  }, timeout: timeout);
 
   testWidgets('image lease covers interchunk pacing with Off after the first write has drained', (tester) async {
     await _withImage(tester, (c) async {
