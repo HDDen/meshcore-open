@@ -1213,6 +1213,18 @@ history source. Bulk verdicts reuse the learning prompt once per action and
 the existing row-level feedback writes. Bulk delete resolves current local
 rows and pending sends, keeps shared copies and unloaded SQLite pages, and
 waits for the selected row writes. Shared posts can be copied from either list.
+Single filtered-message placeholders show the actual sender with bodySmall
+typography; the filtering reason remains available inside the expanded tile.
+`FilteredChannelMessage.review` bypasses the ExpansionTile and stretches its
+left-aligned content to the review list width. Review sender-unblock uses the
+filter service's queued rule write to disable matching sender rules, preserving
+IDs, patterns, key bindings and unrelated text rules. `FilterRuleField.mcmpKey`
+is strict verified-key-only matching, editable as 64 hex characters with Exact
+locked; menu-created signed sender rules use this field. It is serialized in
+the existing namespaced `mcoaMessageFilter` backup section, never the official
+MeshCore export. Legacy name rules with optional key bindings remain readable.
+The channel message menu places Select messages immediately before Delete;
+its eligibility and selection callback are unchanged.
 The message menu can add an exact sender-name rule or prefill the shared
 rule editor with message text. The editor reserves space for its floating
 label when the field is scrolled above the keyboard. The channel menu uses

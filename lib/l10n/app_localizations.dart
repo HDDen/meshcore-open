@@ -17347,7 +17347,7 @@ abstract class AppLocalizations {
   /// No description provided for @messageFilter_rulePattern.
   ///
   /// In en, this message translates to:
-  /// **'Word, phrase or name'**
+  /// **'Word, phrase, name or MCMP key'**
   String get messageFilter_rulePattern;
 
   /// No description provided for @messageFilter_ruleWhere.
@@ -18399,6 +18399,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filter messages from “{name}” in channels where the filter is on, using their verified MCMP key when available and their name otherwise?'**
   String messageFilter_filterSenderKeyConfirm(String name);
+
+  /// No description provided for @messageFilter_ruleFieldMcmpKey.
+  ///
+  /// In en, this message translates to:
+  /// **'MCMP key'**
+  String get messageFilter_ruleFieldMcmpKey;
+
+  /// No description provided for @messageFilter_invalidMcmpKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 64-character hexadecimal public key'**
+  String get messageFilter_invalidMcmpKey;
+
+  /// No description provided for @messageFilter_unblockSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock sender'**
+  String get messageFilter_unblockSender;
 }
 
 class _AppLocalizationsDelegate

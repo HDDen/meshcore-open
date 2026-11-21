@@ -88,6 +88,12 @@ class MessageFilterRules {
     ];
     for (final (rule, pattern) in rules) {
       if (rule.field == FilterRuleField.text) continue;
+      if (rule.field == FilterRuleField.mcmpKey) {
+        if (senderKey != null && senderKey == rule.senderKeyHex) {
+          return FilterVerdict(reason: FilterReason.senderRule, detail: rule.pattern);
+        }
+        continue;
+      }
       if (SenderFilterIdentity.matches(
         boundKey: rule.senderKeyHex,
         verifiedKey: senderKey,
@@ -105,7 +111,7 @@ class MessageFilterRules {
     }
 
     for (final (rule, pattern) in rules) {
-      if (rule.field == FilterRuleField.sender) continue;
+      if (rule.field == FilterRuleField.sender || rule.field == FilterRuleField.mcmpKey) continue;
       if (MessageFilterText.matchesNormalized(
         pattern,
         rule.match,

@@ -267,6 +267,8 @@ history. The learning controls are available on platforms that use SQLite.
 Filtered posts stay in channel history. Choose between an expandable
 placeholder and hiding the row. Adjacent filtered posts on the same day
 can share a placeholder with a count. Tap it to review those posts.
+A single-message placeholder shows the actual sender name in compact text;
+the filtering reason is shown when expanded.
 To review all loaded filtered posts, open
 **Filtered messages** from the channel menu. Use **Not spam** to restore a
 post. The channel menu has a switch to apply the filter to this channel.
@@ -284,6 +286,21 @@ In the message menu, **Mark as spam**, **Filter this sender**, and **Filter simi
 messages** appear in that order, with the theme's accent color on their icons
 and labels. If the legacy sender blocker has been explicitly enabled, the group
 appears immediately before **Block contact**.
+
+**Select messages** appears near the bottom of the message menu, immediately before
+**Delete**.
+
+The filtered-message review displays posts openly, at full width and aligned left.
+**Unblock sender**, next to **Not spam**, disables all matching sender-name or
+verified-key rules without deleting them. It leaves text rules and other senders
+unchanged. Shared copies remain read-only.
+
+The rule editor offers **MCMP key** (64 hexadecimal public-key characters) with
+locked **Exact** matching. This type matches only a verified MCMP signature,
+regardless of the sender name; unsigned posts do not match a key-only rule.
+Filtering a verified signed sender from the message menu creates this rule type.
+MCMP rules round-trip inside the existing `mcoaMessageFilter` backup section;
+they are not exported as upstream text/name rules or in official MeshCore format.
 
 ### Legacy sender blocker
 

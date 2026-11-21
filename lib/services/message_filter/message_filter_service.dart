@@ -66,6 +66,20 @@ class MessageFilterService extends ChangeNotifier {
         notifyListeners();
       });
 
+  bool hasSenderRule(String sender, String? verifiedKey) => _rules.any((rule) =>
+      rule.enabled && rule.field != FilterRuleField.text &&
+      MessageFilterRules([rule]).match(sender, '', verifiedSenderKey: verifiedKey) != null);
+
+  Future<void> disableSenderRules(String sender, String? verifiedKey) =>
+      _writeRules(() => [
+        for (final rule in _rules)
+          if (rule.enabled && rule.field != FilterRuleField.text &&
+              MessageFilterRules([rule]).match(sender, '', verifiedSenderKey: verifiedKey) != null)
+            rule.withEnabled(false)
+          else
+            rule,
+      ]);
+
   Future<void> addRule(FilterRule rule) =>
       _writeRules(() => [..._rules, rule]);
 

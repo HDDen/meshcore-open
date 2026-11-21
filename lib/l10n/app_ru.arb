@@ -4007,7 +4007,7 @@
   "messageFilter_rulesScope": "Изменения правил применяются к новым сообщениям.",
   "messageFilter_addRule": "Добавить правило",
   "messageFilter_editRule": "Изменить правило",
-  "messageFilter_rulePattern": "Слово, фраза или имя",
+  "messageFilter_rulePattern": "Слово, фраза, имя или MCMP-ключ",
   "messageFilter_ruleWhere": "Где искать",
   "messageFilter_ruleFieldText": "Текст сообщения",
   "messageFilter_ruleFieldSender": "Имя отправителя",
@@ -4184,5 +4184,8 @@
   "messageFilter_senderByKey": "По ключу MCMP",
   "messageFilter_senderByName": "По имени отправителя",
   "messageFilter_senderKeyHelp": "Сообщения с этим проверенным ключом фильтруются и после смены имени. Другой проверенный ключ пропускается. Без проверенной подписи используется имя отправителя.",
-  "messageFilter_filterSenderKeyConfirm": "Фильтровать сообщения от «{name}» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?"
+  "messageFilter_filterSenderKeyConfirm": "Фильтровать сообщения от «{name}» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?",
+  "messageFilter_ruleFieldMcmpKey": "MCMP-ключ",
+  "messageFilter_invalidMcmpKey": "Введите открытый ключ из 64 hex-символов",
+  "messageFilter_unblockSender": "Разблокировать отправителя"
 }

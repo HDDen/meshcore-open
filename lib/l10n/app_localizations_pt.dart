@@ -10438,7 +10438,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messageFilter_editRule => 'Edit rule';
 
   @override
-  String get messageFilter_rulePattern => 'Word, phrase or name';
+  String get messageFilter_rulePattern => 'Word, phrase, name or MCMP key';
 
   @override
   String get messageFilter_ruleWhere => 'Look in';
@@ -11013,4 +11013,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String messageFilter_filterSenderKeyConfirm(String name) {
     return 'Filter messages from “$name” in channels where the filter is on, using their verified MCMP key when available and their name otherwise?';
   }
+
+  @override
+  String get messageFilter_ruleFieldMcmpKey => 'MCMP key';
+
+  @override
+  String get messageFilter_invalidMcmpKey =>
+      'Enter a 64-character hexadecimal public key';
+
+  @override
+  String get messageFilter_unblockSender => 'Unblock sender';
 }

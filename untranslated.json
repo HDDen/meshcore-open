@@ -462,7 +462,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "de": [
@@ -928,7 +931,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "es": [
@@ -1394,7 +1400,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "fr": [
@@ -1860,7 +1869,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "hu": [
@@ -2326,7 +2338,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "it": [
@@ -2792,7 +2807,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "ja": [
@@ -3258,7 +3276,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "ko": [
@@ -3724,7 +3745,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "nl": [
@@ -4190,7 +4214,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "pl": [
@@ -4656,7 +4683,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "pt": [
@@ -5122,7 +5152,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "sk": [
@@ -5588,7 +5621,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "sl": [
@@ -6054,7 +6090,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "sv": [
@@ -6520,7 +6559,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "uk": [
@@ -6986,7 +7028,10 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ],
 
   "zh": [
@@ -7452,6 +7497,9 @@
     "messageFilter_senderByKey",
     "messageFilter_senderByName",
     "messageFilter_senderKeyHelp",
-    "messageFilter_filterSenderKeyConfirm"
+    "messageFilter_filterSenderKeyConfirm",
+    "messageFilter_ruleFieldMcmpKey",
+    "messageFilter_invalidMcmpKey",
+    "messageFilter_unblockSender"
   ]
 }

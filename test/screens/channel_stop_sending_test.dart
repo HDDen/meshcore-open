@@ -193,7 +193,8 @@ void main() {
       final tiles = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
       int index(String label) => tiles.indexWhere((tile) =>
           tile.title is Text && (tile.title! as Text).data == label);
-      final block = index(legacy ? l10n.chat_blockSender : l10n.common_delete);
+      final block = index(legacy ? l10n.chat_blockSender : l10n.chat_selectMessages);
+      expect(index(l10n.chat_selectMessages), index(l10n.common_delete) - 1);
       expect(index(l10n.chat_blockSender), legacy ? greaterThanOrEqualTo(0) : -1);
       final labels = [
         if (MessageFilterService.learningAvailable) l10n.messageFilter_markSpam,
@@ -242,8 +243,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.common_save));
     await tester.pumpAndSettle();
-    expect(filter.rules.last.pattern, message.senderName);
-    expect(filter.rules.last.field, FilterRuleField.sender);
+    expect(filter.rules.last.pattern, message.verifiedSenderKeyHex);
+    expect(filter.rules.last.field, FilterRuleField.mcmpKey);
     expect(filter.rules.last.match, FilterRuleMatch.exact);
     expect(filter.rules.last.senderKeyHex, message.verifiedSenderKeyHex);
     expect(filter.learningEnabled, isFalse);

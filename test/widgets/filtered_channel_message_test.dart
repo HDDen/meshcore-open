@@ -24,12 +24,18 @@ class _Store extends MessageFilterStore {
   MessageFilterSettings settings = const MessageFilterSettings(enabled: true);
   Completer<void>? holdSave;
   int saves = 0;
+  List<FilterRule> rules = const [];
 
   @override
   MessageFilterSettings loadSettings() => settings;
 
   @override
-  List<FilterRule> loadRules() => const [];
+  List<FilterRule> loadRules() => rules;
+
+  @override
+  Future<void> saveRules(List<FilterRule> value) async {
+    rules = List.of(value);
+  }
 
   @override
   Future<({int spam, int notSpam})> loadTrainingLabelCounts() async =>
@@ -128,6 +134,58 @@ Future<AppLocalizations> _open(
 }
 
 void main() {
+  testWidgets('sender unblock preserves and disables rules without marking posts', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(PrefsManager.reset);
+    await tester.runAsync(PrefsManager.initialize);
+    const rule = FilterRule(id: 'name', pattern: 'Alice',
+      field: FilterRuleField.sender, match: FilterRuleMatch.exact);
+    final store = _Store()..rules = [rule];
+    final service = MessageFilterService(store: store)..load();
+    final connector = _Connector(messageFilterService: service);
+    addTearDown(service.dispose);
+    addTearDown(connector.dispose);
+    final l10n = await _open(tester, connector, verdict: null);
+    expect(find.text(l10n.messageFilter_notSpam), findsOneWidget);
+    await tester.tap(find.text(l10n.messageFilter_unblockSender));
+    await tester.pumpAndSettle();
+    expect(service.rules, [rule.withEnabled(false)]);
+    expect(store.rules, service.rules);
+    expect(connector.marks, isEmpty);
+    // Complete the debounced history write inside the widget test zone.
+    // addTearDown runs after the pending-timer invariant is checked.
+    await connector.flushChannelRuleVerdicts();
+  });
+
+  testWidgets('filtered placeholder shows sender with compact typography', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(PrefsManager.reset);
+    await tester.runAsync(PrefsManager.initialize);
+    final service = MessageFilterService(store: _Store())..load();
+    final connector = _Connector(messageFilterService: service);
+    addTearDown(service.dispose);
+    addTearDown(connector.dispose);
+
+    final l10n = await _open(tester, connector, verdict: null);
+    final tile = tester.widget<ExpansionTile>(find.byType(ExpansionTile));
+    final compactStyle = Theme.of(
+      tester.element(find.byType(FilteredChannelMessage)),
+    ).textTheme.bodySmall;
+    expect((tile.title as Text).style, compactStyle);
+    expect((tile.subtitle as Text).data, 'Alice');
+    expect((tile.subtitle as Text).style, compactStyle);
+    expect(find.text(l10n.messageFilter_reasonManual), findsOneWidget);
+    expect(find.text('Alice: Example post'), findsOneWidget);
+
+    await tester.tap(find.text(l10n.messageFilter_ghostSingle));
+    await tester.pumpAndSettle();
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text(l10n.messageFilter_reasonManual), findsNothing);
+    expect(find.text('Alice: Example post'), findsNothing);
+  });
+
   testWidgets('U34 baseline: review keeps a shared post separate and read-only', (
     tester,
   ) async {
@@ -182,7 +240,9 @@ void main() {
     expect(find.text(l10n.messageFilter_notSpam), findsNothing);
     expect(connector.marks, isEmpty);
 
-    await tester.longPress(find.text(l10n.messageFilter_ghostSingle));
+    expect(find.byType(ExpansionTile), findsNothing);
+    expect(tester.getSize(tile).width, tester.getSize(find.byType(ListView)).width);
+    await tester.longPress(find.text('Alice'));
     await tester.pumpAndSettle();
     expect(find.text(l10n.chat_selectedCount(1)), findsOneWidget);
     expect(find.byTooltip(l10n.messageFilter_notSpam), findsNothing);
@@ -232,7 +292,8 @@ void main() {
     await tester.pumpAndSettle();
     final appBar = find.byType(AppBar);
     final l10n = AppLocalizations.of(tester.element(appBar));
-    await tester.longPress(find.text(l10n.messageFilter_ghostSingle).first);
+    expect(find.byType(ExpansionTile), findsNothing);
+    await tester.longPress(find.text('Alice').first);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip(MaterialLocalizations.of(
       tester.element(appBar),

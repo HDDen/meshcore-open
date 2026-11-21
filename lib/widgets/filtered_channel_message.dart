@@ -18,6 +18,7 @@ class FilteredChannelMessage extends StatelessWidget {
     required this.channel,
     required this.connector,
     this.initiallyExpanded = false,
+    this.review = false,
     this.onSelect,
   });
 
@@ -25,6 +26,7 @@ class FilteredChannelMessage extends StatelessWidget {
   final Channel channel;
   final MeshCoreConnector connector;
   final bool initiallyExpanded;
+  final bool review;
   final VoidCallback? onSelect;
 
   @override
@@ -43,41 +45,69 @@ class FilteredChannelMessage extends StatelessWidget {
       FilterReason.learned => l10n.messageFilter_reasonLearned,
     };
     final detail = verdict.detail;
-    final tile = ExpansionTile(
-      key: PageStorageKey(channelPostIdentity(message)),
-      initiallyExpanded: initiallyExpanded,
-      leading: const Icon(Icons.filter_alt_outlined),
-      title: Text(l10n.messageFilter_ghostSingle),
-      subtitle: Text(reason),
-      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      expandedCrossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (detail != null) ...[
-          Text(detail),
-          const SizedBox(height: 8),
-        ],
-        SelectableText(
-          '${message.senderName}: ${message.text}',
-          // Separate the text's scroll offset from the tile's expansion state.
-          key: const PageStorageKey('filtered-message-text'),
-        ),
-        if (!connector.isOfflineSharedMode &&
-            message.sharedHistorySourceName == null)
-          TextButton(
-            onPressed: () => saveChannelMessageVerdict(
-              context,
-              connector,
-              channel,
-              message,
-              null,
+    final compactStyle = Theme.of(context).textTheme.bodySmall;
+    final service = connector.messageFilterService;
+    final senderKey = BlockedSenders.verifiedKeyOf(message);
+    final editable = !connector.isOfflineSharedMode && message.sharedHistorySourceName == null;
+    final content = <Widget>[
+      Text(message.senderName, style: compactStyle),
+      Text(reason, style: compactStyle),
+      if (detail != null) Text(detail, style: compactStyle),
+      const SizedBox(height: 8),
+      SelectableText(
+        '${message.senderName}: ${message.text}',
+        key: const PageStorageKey('filtered-message-text'),
+      ),
+      if (editable)
+        Wrap(
+          spacing: 8,
+          children: [
+            TextButton(
+              onPressed: () => saveChannelMessageVerdict(context, connector, channel, message, null),
+              child: Text(l10n.messageFilter_notSpam),
             ),
-            child: Text(l10n.messageFilter_notSpam),
-          ),
-      ],
-    );
+            if (service != null && service.hasSenderRule(message.senderName, senderKey))
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await service.disableSenderRules(message.senderName, senderKey);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.messageFilter_saveError)),
+                      );
+                    }
+                  }
+                },
+                child: Text(l10n.messageFilter_unblockSender),
+              ),
+          ],
+        ),
+    ];
+    final Widget tile = review
+        ? SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: content,
+              ),
+            ),
+          )
+        : ExpansionTile(
+            key: PageStorageKey(channelPostIdentity(message)),
+            initiallyExpanded: initiallyExpanded,
+            leading: const Icon(Icons.filter_alt_outlined),
+            title: Text(l10n.messageFilter_ghostSingle, style: compactStyle),
+            subtitle: Text(message.senderName, style: compactStyle),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+            children: content,
+          );
     return onSelect == null
         ? tile
-        : GestureDetector(onLongPress: onSelect, child: tile);
+        : GestureDetector(behavior: HitTestBehavior.opaque, onLongPress: onSelect, child: tile);
   }
 }
 
@@ -320,7 +350,7 @@ class _FilteredChannelReviewState extends State<_FilteredChannelReview> {
                       channel: channel,
                       message: message,
                       connector: connector,
-                      initiallyExpanded: group != null,
+                      review: true,
                       onSelect: toggle,
                     );
                     final key = ValueKey(channelPostIdentity(message));

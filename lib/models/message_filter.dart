@@ -3,7 +3,7 @@ library;
 
 import '../helpers/sender_filter_identity.dart';
 
-enum FilterRuleField { text, sender, both }
+enum FilterRuleField { text, sender, both, mcmpKey }
 
 enum FilterRuleMatch { contains, wholeWord, exact }
 
@@ -60,23 +60,29 @@ class FilterRule {
   };
 
   factory FilterRule.fromJson(Map<String, dynamic> json) {
+    final field = _enumFromName(FilterRuleField.values, json['field'], FilterRuleField.text);
+    final key = SenderFilterIdentity.keyFromJson(json['senderKeyHex']);
+    if (field == FilterRuleField.mcmpKey && key == null) {
+      throw const FormatException('MCMP key rule requires a valid key');
+    }
     return FilterRule(
       id: json['id'] as String? ?? '',
       pattern: json['pattern'] as String? ?? '',
-      field: _enumFromName(
-        FilterRuleField.values,
-        json['field'],
-        FilterRuleField.text,
-      ),
-      match: _enumFromName(
+      field: field,
+      match: field == FilterRuleField.mcmpKey ? FilterRuleMatch.exact : _enumFromName(
         FilterRuleMatch.values,
         json['match'],
         FilterRuleMatch.contains,
       ),
       enabled: json['enabled'] as bool? ?? true,
-      senderKeyHex: SenderFilterIdentity.keyFromJson(json['senderKeyHex']),
+      senderKeyHex: key,
     );
   }
+
+  FilterRule withEnabled(bool value) => FilterRule(
+    id: id, pattern: pattern, field: field, match: match,
+    enabled: value, senderKeyHex: senderKeyHex,
+  );
 
   @override
   bool operator ==(Object other) =>

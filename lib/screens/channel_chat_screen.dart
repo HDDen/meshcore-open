@@ -5606,15 +5606,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (_canSelectMessage(connector, message))
-                  ListTile(
-                    leading: const Icon(Icons.check_circle_outline),
-                    title: Text(context.l10n.chat_selectMessages),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      _toggleMessageSelection(connector, message);
-                    },
-                  ),
                 ListTile(
                   leading: const Icon(Icons.reply),
                   title: Text(context.l10n.chat_reply),
@@ -5851,6 +5842,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onTap: () {
                       Navigator.pop(sheetContext);
                       _toggleSenderBlock(message);
+                    },
+                  ),
+                if (_canSelectMessage(connector, message))
+                  ListTile(
+                    leading: const Icon(Icons.check_circle_outline),
+                    title: Text(context.l10n.chat_selectMessages),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _toggleMessageSelection(connector, message);
                     },
                   ),
                 ListTile(

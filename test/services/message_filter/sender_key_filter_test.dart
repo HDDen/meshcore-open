@@ -25,6 +25,39 @@ void main() {
   });
   tearDown(PrefsManager.reset);
 
+  test('explicit MCMP rules require the verified key and round-trip in backups', () {
+    final keyed = FilterRule(id: 'mcmp', pattern: key,
+      field: FilterRuleField.mcmpKey, match: FilterRuleMatch.exact, senderKeyHex: key);
+    final matcher = MessageFilterRules([keyed]);
+    expect(matcher.match('Renamed', 'hello', verifiedSenderKey: key), isNotNull);
+    expect(matcher.match(key, key), isNull);
+    expect(matcher.match('Alice', 'hello', verifiedSenderKey: other), isNull);
+    expect(FilterRule.fromJson(keyed.toJson()), keyed);
+    expect(() => FilterRule.fromJson({...keyed.toJson(), 'senderKeyHex': null}),
+      throwsFormatException);
+    final backup = BackupMessageFilter.capture(const MessageFilterSettings(), [keyed]);
+    expect(BackupMessageFilter.fromPreferences(backup.toPreferences()).rules, [keyed]);
+  });
+
+  test('unblock disables matching sender rules and keeps unrelated rules', () async {
+    final filter = MessageFilterService();
+    addTearDown(filter.dispose);
+    final rules = [
+      FilterRule(id: 'mcmp', pattern: key, field: FilterRuleField.mcmpKey,
+        match: FilterRuleMatch.exact, senderKeyHex: key),
+      rule(id: 'name'), rule(id: 'other', boundKey: other),
+      const FilterRule(id: 'text', pattern: 'Alice'),
+    ];
+    await filter.replaceRules(rules);
+    expect(filter.hasSenderRule('Alice', key), isTrue);
+    await filter.disableSenderRules('Alice', key);
+    expect(filter.rules, [rules[0].withEnabled(false), rules[1].withEnabled(false), rules[2], rules[3]]);
+    expect(filter.hasSenderRule('Alice', key), isFalse);
+    final loaded = MessageFilterService()..load();
+    addTearDown(loaded.dispose);
+    expect(loaded.rules, filter.rules);
+  });
+
   test('optional key survives JSON while old rules keep their old shape', () {
     final keyed = rule(boundKey: key);
     expect(FilterRule.fromJson(jsonDecode(jsonEncode(keyed.toJson()))), keyed);

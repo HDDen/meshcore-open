@@ -53,8 +53,8 @@ Future<void> addChannelSenderFilter(
     context,
     () => service.addRule(FilterRule(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      pattern: name,
-      field: FilterRuleField.sender,
+      pattern: key ?? name,
+      field: key == null ? FilterRuleField.sender : FilterRuleField.mcmpKey,
       match: FilterRuleMatch.exact,
       senderKeyHex: key,
     )),

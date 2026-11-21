@@ -8,6 +8,24 @@ import 'package:meshcore_open/services/backup_import_planner.dart';
 import 'package:meshcore_open/services/backup_snapshot.dart';
 
 void main() {
+  test('MCMP rules export only in the MCOa section and restore unchanged', () async {
+    final key = 'ab' * 32;
+    final rule = FilterRule(id: 'mcmp', pattern: key,
+      field: FilterRuleField.mcmpKey, match: FilterRuleMatch.exact,
+      enabled: false, senderKeyHex: key);
+    final backup = BackupMessageFilter.capture(const MessageFilterSettings(), [rule]);
+    final snapshot = BackupSnapshot(messageFilter: backup, createdAt: DateTime.utc(2026));
+    final encoded = await snapshot.encode(password: '');
+    final payload = await const BackupFileCodec().decode(encoded, password: '');
+    expect(payload['items'], [BackupMessageFilter.section]);
+    final sections = payload['sections'] as Map;
+    expect(sections.keys, [BackupMessageFilter.section]);
+    final restored = await const BackupImportPlanner().inspect(
+      encoded, password: '', messageFilterOnly: true,
+    );
+    expect(restored.messageFilter!.rules, [rule]);
+  });
+
   test('reads an upstream filter backup without activating it or copying its corpus', () async {
     final id = 'ab' * 8;
     final contents = await const BackupFileCodec().encode({

@@ -10434,7 +10434,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messageFilter_editRule => 'Изменить правило';
 
   @override
-  String get messageFilter_rulePattern => 'Слово, фраза или имя';
+  String get messageFilter_rulePattern => 'Слово, фраза, имя или MCMP-ключ';
 
   @override
   String get messageFilter_ruleWhere => 'Где искать';
@@ -11015,4 +11015,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String messageFilter_filterSenderKeyConfirm(String name) {
     return 'Фильтровать сообщения от «$name» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?';
   }
+
+  @override
+  String get messageFilter_ruleFieldMcmpKey => 'MCMP-ключ';
+
+  @override
+  String get messageFilter_invalidMcmpKey =>
+      'Введите открытый ключ из 64 hex-символов';
+
+  @override
+  String get messageFilter_unblockSender => 'Разблокировать отправителя';
 }
