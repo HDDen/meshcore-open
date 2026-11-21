@@ -26,6 +26,7 @@ import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/app_route_observer.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
+import 'package:meshcore_open/widgets/edge_swipe_pop.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -454,6 +455,8 @@ void main() {
         );
         final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
         final title = find.text(l10n.contacts_pathTrace);
+        expect(find.ancestor(of: title,
+          matching: find.byType(EdgeSwipePopBlocker)), findsOneWidget);
         final mode = find.widgetWithText(
           ChoiceChip,
           l10n.map_pathTraceModeAsEntered,

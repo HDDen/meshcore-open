@@ -1,4 +1,22 @@
+import 'package:flutter/gestures.dart' as gestures;
+import 'package:flutter/rendering.dart' as rendering;
 import 'package:flutter/widgets.dart';
+
+/// Excludes this hit-tested area from the app-wide edge-back gesture without
+/// consuming its taps, text selection or scrolling gestures.
+class EdgeSwipePopBlocker extends StatelessWidget {
+  const EdgeSwipePopBlocker({super.key, required this.child});
+
+  static final _marker = Object();
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => MetaData(
+    metaData: _marker,
+    behavior: HitTestBehavior.translucent,
+    child: child,
+  );
+}
 
 class EdgeSwipePop extends StatefulWidget {
   final Widget child;
@@ -33,6 +51,15 @@ class _EdgeSwipePopState extends State<EdgeSwipePop> {
         widget.navigatorKey?.currentState ?? Navigator.of(context);
     if (!navigator.canPop()) return;
     if (event.position.dx > widget.edgeWidth) return;
+    final hits = gestures.HitTestResult();
+    WidgetsBinding.instance.hitTestInView(hits, event.position, event.viewId);
+    for (final entry in hits.path) {
+      final target = entry.target;
+      if (target is rendering.RenderMetaData &&
+          identical(target.metaData, EdgeSwipePopBlocker._marker)) {
+        return;
+      }
+    }
     _pointerId = event.pointer;
     _startPosition = event.position;
     _triggered = false;

@@ -351,3 +351,7 @@ poll status, start GPS or transmit packets.
 The map uses the same details layout and retains its existing repeater action
 menu and wardrive coverage controls. Offline details remain readable; radio
 actions are blocked.
+
+The trace-building panel ignores the app-wide edge-back swipe when the gesture
+starts over its surface. Use Close or the system Back button to hide it;
+editing, buttons and map gestures outside the panel remain available.

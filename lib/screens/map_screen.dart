@@ -34,6 +34,7 @@ import '../services/map_marker_service.dart';
 import '../services/map_tile_cache_service.dart';
 import '../services/telemetry_location_request.dart';
 import '../widgets/contact_location_request_button.dart';
+import '../widgets/edge_swipe_pop.dart';
 import '../services/network_map/network_map_api_client.dart';
 import '../services/network_map/network_map_availability.dart';
 import '../helpers/marker_message.dart';
@@ -8425,7 +8426,7 @@ class _MapScreenState extends State<MapScreen>
       top: 16,
       left: 16,
       right: 16,
-      child: DecoratedBox(
+      child: EdgeSwipePopBlocker(child: DecoratedBox(
         key: _pathTracePanelKey,
         decoration: BoxDecoration(
           color: MapPalette.panelOn(brightness),
@@ -8538,7 +8539,7 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 
