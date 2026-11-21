@@ -72,6 +72,18 @@ class _RuleDialogState extends State<_RuleDialog> {
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: l10n.messageFilter_rulePattern),
           ),
+          if (_field != FilterRuleField.text) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(rule?.senderKeyHex == null
+                  ? l10n.messageFilter_senderByName : l10n.messageFilter_senderByKey),
+            ),
+            if (rule?.senderKeyHex case final key?) ...[
+              SelectableText(key),
+              Text(l10n.messageFilter_senderKeyHelp),
+            ],
+          ],
           DropdownButtonFormField<FilterRuleField>(
             initialValue: _field,
             isExpanded: true,
@@ -84,7 +96,7 @@ class _RuleDialogState extends State<_RuleDialog> {
                 ),
             ],
             onChanged: (value) {
-              if (value != null) _field = value;
+              if (value != null) { setState(() { _field = value; }); }
             },
           ),
           DropdownButtonFormField<FilterRuleMatch>(
@@ -126,6 +138,8 @@ class _RuleDialogState extends State<_RuleDialog> {
                     field: _field,
                     match: _match,
                     enabled: rule?.enabled ?? true,
+                    senderKeyHex: _field == FilterRuleField.text
+                        ? null : rule?.senderKeyHex,
                   )),
                 ),
           child: Text(l10n.common_save),

@@ -36,8 +36,12 @@ class MessageFilterStore {
           (entry['enabled'] != null && entry['enabled'] is! bool)) {
         continue;
       }
-      final rule = FilterRule.fromJson(entry);
-      if (rule.id.isNotEmpty && rule.pattern.trim().isNotEmpty) rules.add(rule);
+      try {
+        final rule = FilterRule.fromJson(entry);
+        if (rule.id.isNotEmpty && rule.pattern.trim().isNotEmpty) rules.add(rule);
+      } on FormatException {
+        continue;
+      }
     }
     return rules;
   }

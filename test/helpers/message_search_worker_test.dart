@@ -5,6 +5,30 @@ import 'package:meshcore_open/helpers/message_search_worker.dart';
 import 'package:meshcore_open/models/message_filter.dart';
 
 void main() {
+  test('sender-key rules use verified identity consistently in stored search', () {
+    final key = 'ab' * 32;
+    final other = 'cd' * 32;
+    final rows = jsonEncode([
+      for (final (id, name, status, claimed) in [
+        ('renamed', 'Renamed', 'valid', key),
+        ('other-key', 'Alice', 'valid', other),
+        ('unsigned', 'Alice', 'none', other),
+        ('invalid', 'Alice', 'invalid', other),
+        ('unverified-renamed', 'Renamed', 'invalid', key),
+      ]) {
+        'messageId': id, 'senderName': name, 'text': 'hello', 'timestamp': 1000,
+        'mcmpSignatureStatus': status, 'verifiedSenderKeyHex': claimed,
+      },
+    ]);
+    final hits = searchStoredMessageBatch(StoredMessageSearchRequest(
+      normalizedQuery: 'hello',
+      channelFilterRules: [FilterRule(id: 'sender', pattern: 'Alice',
+        field: FilterRuleField.sender, match: FilterRuleMatch.exact, senderKeyHex: key)],
+      sources: [StoredMessageSearchSource(sourceId: 'channel', jsonString: rows,
+        type: StoredMessageSearchType.channel, hideFiltered: true)],
+    ));
+    expect(hits.map((hit) => hit.messageId), ['other-key', 'unverified-renamed']);
+  });
   test('batch search keeps source identity and is case-insensitive', () {
     final hits = searchStoredMessageBatch(
       StoredMessageSearchRequest(

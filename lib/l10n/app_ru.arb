@@ -4180,5 +4180,9 @@
   "backup_officialFormat": "Экспорт в формат официального приложения MeshCore",
   "backup_officialFormatHint": "Создаётся незашифрованный JSON. Пароль не применяется. Включаются только данные официального формата; настройки MCOa и дополнительные ключи не экспортируются.",
   "dataTransfer_portableOfferBody": "Рядом с приложением найдены данные предыдущей портативной версии. Скопировать их в новую пользовательскую папку?\n{target}",
-  "@dataTransfer_portableOfferBody": {"placeholders": {"target": {"type": "String"}}}
+  "@dataTransfer_portableOfferBody": {"placeholders": {"target": {"type": "String"}}},
+  "messageFilter_senderByKey": "По ключу MCMP",
+  "messageFilter_senderByName": "По имени отправителя",
+  "messageFilter_senderKeyHelp": "Сообщения с этим проверенным ключом фильтруются и после смены имени. Другой проверенный ключ пропускается. Без проверенной подписи используется имя отправителя.",
+  "messageFilter_filterSenderKeyConfirm": "Фильтровать сообщения от «{name}» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?"
 }

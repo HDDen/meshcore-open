@@ -458,7 +458,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "de": [
@@ -920,7 +924,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "es": [
@@ -1382,7 +1390,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "fr": [
@@ -1844,7 +1856,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "hu": [
@@ -2306,7 +2322,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "it": [
@@ -2768,7 +2788,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "ja": [
@@ -3230,7 +3254,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "ko": [
@@ -3692,7 +3720,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "nl": [
@@ -4154,7 +4186,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "pl": [
@@ -4616,7 +4652,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "pt": [
@@ -5078,7 +5118,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "sk": [
@@ -5540,7 +5584,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "sl": [
@@ -6002,7 +6050,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "sv": [
@@ -6464,7 +6516,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "uk": [
@@ -6926,7 +6982,11 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ],
 
   "zh": [
@@ -7388,6 +7448,10 @@
     "extraKeys_ackWithoutPathHelper",
     "backup_officialFormat",
     "backup_officialFormatHint",
-    "dataTransfer_portableOfferBody"
+    "dataTransfer_portableOfferBody",
+    "messageFilter_senderByKey",
+    "messageFilter_senderByName",
+    "messageFilter_senderKeyHelp",
+    "messageFilter_filterSenderKeyConfirm"
   ]
 }

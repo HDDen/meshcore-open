@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../models/message_filter.dart';
+import '../helpers/sender_filter_identity.dart';
 import '../services/message_filter/message_filter_service.dart';
 import 'channel_filter_rule_dialog.dart';
 
@@ -10,14 +11,29 @@ Future<void> addChannelSenderFilter(
   MessageFilterService service, {
   required String channelId,
   required String sender,
+  String? verifiedSenderKey,
 }) async {
   final name = sender.trim();
+  final key = SenderFilterIdentity.normalizeKey(verifiedSenderKey);
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       scrollable: true,
       title: Text(context.l10n.messageFilter_filterSender),
-      content: Text(context.l10n.messageFilter_filterSenderConfirm(name)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(key == null
+              ? context.l10n.messageFilter_filterSenderConfirm(name)
+              : context.l10n.messageFilter_filterSenderKeyConfirm(name)),
+          if (key != null) ...[
+            const SizedBox(height: 12),
+            Text(context.l10n.messageFilter_senderByKey),
+            SelectableText(key),
+          ],
+        ],
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
@@ -40,6 +56,7 @@ Future<void> addChannelSenderFilter(
       pattern: name,
       field: FilterRuleField.sender,
       match: FilterRuleMatch.exact,
+      senderKeyHex: key,
     )),
     showRuleSaved: true,
   );

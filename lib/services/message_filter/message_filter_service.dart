@@ -260,6 +260,7 @@ class MessageFilterService extends ChangeNotifier {
             body,
             normalizedSender: normalizedSender,
             normalizedText: normalizedText,
+            verifiedSenderKey: verifiedSenderKey,
           );
     if (rule != null) return rule;
     if (checksRepeatedCharacters &&

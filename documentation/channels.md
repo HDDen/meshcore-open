@@ -271,7 +271,18 @@ To review all loaded filtered posts, open
 **Filtered messages** from the channel menu. Use **Not spam** to restore a
 post. The channel menu has a switch to apply the filter to this channel.
 Long-press an incoming post to start a rule from its sender name or text.
-A sender rule matches that exact name across filtered channels.
+Sender rules created from a successfully verified MCMP message retain its public
+key. Signed posts with that key match even after a name change; a different
+verified key with the same name does not match. Without a verified signature,
+the rule falls back to its stored name. Old rules without a key keep their
+name-only behavior. The rule list marks keyed rules with a key icon and
+**By verified MCMP key**; confirmation and the editor show the full public key.
+The editor retains that identity when renaming the rule or toggling it; changing
+the field to Text removes the sender binding. Keys survive settings export/import.
+
+In the message menu, **Mark as spam**, **Filter this sender**, and **Filter similar
+messages** appear in that order immediately before **Block contact**, with the
+theme's accent color on their icons and labels.
 Choose **Mark as spam** to filter the post manually. On platforms with local learning, both actions ask to turn it on
 when it is off. Confirm to turn on learning and then apply the action.
 Cancel closes the prompt without applying the action. Cancelling **Not

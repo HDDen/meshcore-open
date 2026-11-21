@@ -11000,4 +11000,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String dataTransfer_portableOfferBody(String target) {
     return 'Рядом с приложением найдены данные предыдущей портативной версии. Скопировать их в новую пользовательскую папку?\n$target';
   }
+
+  @override
+  String get messageFilter_senderByKey => 'По ключу MCMP';
+
+  @override
+  String get messageFilter_senderByName => 'По имени отправителя';
+
+  @override
+  String get messageFilter_senderKeyHelp =>
+      'Сообщения с этим проверенным ключом фильтруются и после смены имени. Другой проверенный ключ пропускается. Без проверенной подписи используется имя отправителя.';
+
+  @override
+  String messageFilter_filterSenderKeyConfirm(String name) {
+    return 'Фильтровать сообщения от «$name» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?';
+  }
 }

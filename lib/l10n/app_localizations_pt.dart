@@ -10998,4 +10998,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String dataTransfer_portableOfferBody(String target) {
     return 'A previous portable installation has user data beside the application. Copy it into the new user data folder?\n$target';
   }
+
+  @override
+  String get messageFilter_senderByKey => 'By verified MCMP key';
+
+  @override
+  String get messageFilter_senderByName => 'By sender name';
+
+  @override
+  String get messageFilter_senderKeyHelp =>
+      'A verified matching key is filtered even after a name change. A different verified key is allowed. Without a verified signature, the sender name is used.';
+
+  @override
+  String messageFilter_filterSenderKeyConfirm(String name) {
+    return 'Filter messages from “$name” in channels where the filter is on, using their verified MCMP key when available and their name otherwise?';
+  }
 }

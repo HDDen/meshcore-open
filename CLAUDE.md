@@ -1161,6 +1161,20 @@ Message filter settings are reached from the main Settings screen, in the
 App Settings section after App Settings and before Mod settings, as upstream.
 Mod settings contains no duplicate entry.
 
+Sender filter rules may retain an optional `senderKeyHex` from a successfully
+verified MCMP message (`helpers/sender_filter_identity.dart`). Ingest, history
+projection and stored search prioritize a verified key over the name: the same
+key under a new name matches, a different verified key does not, and unsigned or
+unverified messages fall back to the existing normalized-name rule. Old rules
+without the field are unchanged. Invalid persisted keys are skipped rather than
+silently broadening the rule. The key participates in rule equality and backup
+merge identity, survives enable/disable and editor saves, and is cleared when the
+editor changes the field to text-only. The list shows a key icon and localized
+identity label; confirmation/editor display the full public key. The channel
+message menu puts the three accent-colored spam actions immediately before Block
+contact, preserving their mark/sender/similar order. Generated localization Dart
+is owner-generated from the ARB changes.
+
 Channel message filter rules use a separate verdict. The profile starts with
 filtering disabled. When enabled, rules evaluate newly stored inbound posts
 after packet deduplication and the sender block. The verdict lives in the

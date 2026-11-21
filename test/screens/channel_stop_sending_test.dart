@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
+import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
@@ -149,6 +150,8 @@ void main() {
     final message = ChannelMessage(
       senderName: 'Alice',
       text: 'An ordinary message',
+      mcmpSignatureStatus: McmpSignatureStatus.valid,
+      verifiedSenderKeyHex: 'ab' * 32,
       timestamp: now,
       receivedAt: now,
       isOutgoing: false,
@@ -183,6 +186,24 @@ void main() {
       final position = tester.getTopLeft(bubble) + const Offset(12, 6);
       await tester.longPressAt(position);
       await tester.pumpAndSettle();
+      final tiles = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
+      int index(String label) => tiles.indexWhere((tile) =>
+          tile.title is Text && (tile.title! as Text).data == label);
+      final block = index(l10n.chat_blockSender);
+      final labels = [
+        if (MessageFilterService.learningAvailable) l10n.messageFilter_markSpam,
+        l10n.messageFilter_filterSender,
+        l10n.messageFilter_filterLikeThis,
+      ];
+      for (var i = 0; i < labels.length; i++) {
+        expect(index(labels[i]), block - labels.length + i);
+        final tile = tiles[index(labels[i])];
+        final accent = Theme.of(tester.element(filterLike)).colorScheme.primary;
+        expect(tile.iconColor, accent);
+        expect(tile.textColor, accent);
+      }
+      await tester.ensureVisible(filterLike);
+      await tester.pumpAndSettle();
     }
 
     await openMessageActions();
@@ -204,7 +225,7 @@ void main() {
     await tester.tap(filterSender);
     await tester.pumpAndSettle();
     expect(
-      find.text(l10n.messageFilter_filterSenderConfirm(message.senderName)),
+      find.text(l10n.messageFilter_filterSenderKeyConfirm(message.senderName)),
       findsOneWidget,
     );
     await tester.tap(find.text(l10n.common_cancel));
@@ -219,6 +240,7 @@ void main() {
     expect(filter.rules.last.pattern, message.senderName);
     expect(filter.rules.last.field, FilterRuleField.sender);
     expect(filter.rules.last.match, FilterRuleMatch.exact);
+    expect(filter.rules.last.senderKeyHex, message.verifiedSenderKeyHex);
     expect(filter.learningEnabled, isFalse);
     expect(find.byType(FilteredChannelMessage), findsOneWidget);
 

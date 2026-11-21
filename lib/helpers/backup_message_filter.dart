@@ -83,7 +83,11 @@ class BackupMessageFilter {
           !_knownEnum(rule['match'], FilterRuleMatch.values)) {
         continue;
       }
-      parsed.add(FilterRule.fromJson(rule));
+      try {
+        parsed.add(FilterRule.fromJson(rule));
+      } on FormatException {
+        continue;
+      }
     }
     return List.unmodifiable(parsed);
   }
@@ -114,8 +118,9 @@ class BackupMessageFilter {
       current.repeatedCharacters != next.repeatedCharacters,
       current.excludedChannelIds.length != next.excludedChannelIds.length,
     ].where((changed) => changed).length;
-    (String, FilterRuleField, FilterRuleMatch) matchKey(FilterRule rule) =>
-        (MessageFilterText.normalize(rule.pattern), rule.field, rule.match);
+    (String, FilterRuleField, FilterRuleMatch, String?) matchKey(FilterRule rule) =>
+        (MessageFilterText.normalize(rule.pattern), rule.field, rule.match,
+          rule.senderKeyHex);
     final ids = {for (final rule in currentRules) rule.id};
     final matches = {for (final rule in currentRules) matchKey(rule)};
     final added = <FilterRule>[];

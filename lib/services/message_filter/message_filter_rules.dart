@@ -1,4 +1,6 @@
 import '../../helpers/reaction_helper.dart';
+import '../../helpers/mcmp_app_codec.dart';
+import '../../helpers/sender_filter_identity.dart';
 import '../../models/channel_message.dart';
 import '../../models/message_filter.dart';
 import 'message_filter_text.dart';
@@ -32,6 +34,8 @@ class MessageFilterRules {
       isOutgoing: message.isOutgoing,
       wasBlocked: message.wasBlocked,
       restored: message.filterRestored,
+      verifiedSenderKey: message.mcmpSignatureStatus == McmpSignatureStatus.valid
+          ? message.verifiedSenderKeyHex : null,
     );
     return verdict == previous
         ? message
@@ -45,6 +49,7 @@ class MessageFilterRules {
     required bool isOutgoing,
     required bool wasBlocked,
     required bool restored,
+    String? verifiedSenderKey,
   }) {
     if (isOutgoing || wasBlocked || restored) return previous;
     if (previous != null &&
@@ -59,7 +64,7 @@ class MessageFilterRules {
         ReactionHelper.parseReaction(text) != null) {
       return previous;
     }
-    return match(sender, body);
+    return match(sender, body, verifiedSenderKey: verifiedSenderKey);
   }
 
   FilterVerdict? match(
@@ -67,17 +72,23 @@ class MessageFilterRules {
     String body, {
     String? normalizedSender,
     String? normalizedText,
+    String? verifiedSenderKey,
   }) {
+    final senderKey = SenderFilterIdentity.normalizeKey(verifiedSenderKey);
     final rules = _normalized ??= [
       for (final rule in _rules)
         if (rule.enabled) (rule, MessageFilterText.normalize(rule.pattern)),
     ];
     for (final (rule, pattern) in rules) {
       if (rule.field == FilterRuleField.text) continue;
-      if (MessageFilterText.matchesNormalized(
-        pattern,
-        rule.match,
-        normalizedSender ??= MessageFilterText.normalize(sender),
+      if (SenderFilterIdentity.matches(
+        boundKey: rule.senderKeyHex,
+        verifiedKey: senderKey,
+        nameMatches: MessageFilterText.matchesNormalized(
+          pattern,
+          rule.match,
+          normalizedSender ??= MessageFilterText.normalize(sender),
+        ),
       )) {
         return FilterVerdict(
           reason: FilterReason.senderRule,

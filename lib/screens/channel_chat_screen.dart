@@ -5581,6 +5581,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         message.sharedHistorySourceName == null;
     // Blocking is the consequential half of that entry; lifting it is not, so
     // only that half is red.
+    final filterActionColor = Theme.of(context).colorScheme.primary;
     final blockActionColor = isSenderBlocked
         ? null
         : Theme.of(context).colorScheme.error;
@@ -5611,53 +5612,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     onTap: () {
                       Navigator.pop(sheetContext);
                       _toggleMessageSelection(connector, message);
-                    },
-                  ),
-                if (canFilterMessage && MessageFilterService.learningAvailable)
-                  ListTile(
-                    leading: const Icon(Icons.flag_outlined),
-                    title: Text(context.l10n.messageFilter_markSpam),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      unawaited(saveChannelMessageVerdict(
-                        context,
-                        connector,
-                        widget.channel,
-                        message,
-                        const FilterVerdict(reason: FilterReason.manual),
-                      ));
-                    },
-                  ),
-                if (canFilterMessage && message.senderName.trim().isNotEmpty)
-                  ListTile(
-                    leading: const Icon(Icons.person_search_outlined),
-                    title: Text(context.l10n.messageFilter_filterSender),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      unawaited(addChannelSenderFilter(
-                        context,
-                        filter,
-                        channelId: filterChannelId,
-                        sender: message.senderName,
-                      ));
-                    },
-                  ),
-                if (canFilterMessage &&
-                    message.text.trim().isNotEmpty &&
-                    !MessageFilterText.isStructuredPayload(
-                      message.text.trimLeft(),
-                    ))
-                  ListTile(
-                    leading: const Icon(Icons.filter_alt_outlined),
-                    title: Text(context.l10n.messageFilter_filterLikeThis),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      unawaited(addChannelTextFilter(
-                        context,
-                        filter,
-                        channelId: filterChannelId,
-                        text: message.text,
-                      ));
                     },
                   ),
                 ListTile(
@@ -5827,6 +5781,60 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       unawaited(
                         _showCanvasEditor(maxBytes, initialImage: mcoImage),
                       );
+                    },
+                  ),
+                if (canFilterMessage && MessageFilterService.learningAvailable)
+                  ListTile(
+                    iconColor: filterActionColor,
+                    textColor: filterActionColor,
+                    leading: const Icon(Icons.flag_outlined),
+                    title: Text(context.l10n.messageFilter_markSpam),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(saveChannelMessageVerdict(
+                        context,
+                        connector,
+                        widget.channel,
+                        message,
+                        const FilterVerdict(reason: FilterReason.manual),
+                      ));
+                    },
+                  ),
+                if (canFilterMessage && message.senderName.trim().isNotEmpty)
+                  ListTile(
+                    iconColor: filterActionColor,
+                    textColor: filterActionColor,
+                    leading: const Icon(Icons.person_search_outlined),
+                    title: Text(context.l10n.messageFilter_filterSender),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(addChannelSenderFilter(
+                        context,
+                        filter,
+                        channelId: filterChannelId,
+                        sender: message.senderName,
+                        verifiedSenderKey: BlockedSenders.verifiedKeyOf(message),
+                      ));
+                    },
+                  ),
+                if (canFilterMessage &&
+                    message.text.trim().isNotEmpty &&
+                    !MessageFilterText.isStructuredPayload(
+                      message.text.trimLeft(),
+                    ))
+                  ListTile(
+                    iconColor: filterActionColor,
+                    textColor: filterActionColor,
+                    leading: const Icon(Icons.filter_alt_outlined),
+                    title: Text(context.l10n.messageFilter_filterLikeThis),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      unawaited(addChannelTextFilter(
+                        context,
+                        filter,
+                        channelId: filterChannelId,
+                        text: message.text,
+                      ));
                     },
                   ),
                 if (!message.isOutgoing)

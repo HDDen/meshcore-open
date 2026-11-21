@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../models/message_filter.dart';
+import 'sender_filter_identity.dart';
 import '../services/message_filter/message_filter_rules.dart';
 
 import 'mcmp_app_codec.dart';
@@ -140,6 +141,8 @@ void _searchStoredMessages({
           isOutgoing: entry['isOutgoing'] == true,
           wasBlocked: entry['wasBlocked'] == true,
           restored: entry['filterRestored'] == true,
+          verifiedSenderKey: entry['mcmpSignatureStatus'] == McmpSignatureStatus.valid.name
+              ? SenderFilterIdentity.normalizeKey(entry['verifiedSenderKeyHex']) : null,
         );
         isFiltered = verdict != null;
         if (isFiltered) continue;

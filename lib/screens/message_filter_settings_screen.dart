@@ -249,9 +249,11 @@ class _MessageFilterSettingsScreenState
             for (final rule in service.rules)
               ListTile(
                 title: Text(rule.pattern),
+                leading: rule.senderKeyHex == null ? null : const Icon(Icons.key),
                 subtitle: Text(
                   '${filterRuleFieldLabel(context, rule.field)} · '
-                  '${filterRuleMatchLabel(context, rule.match)}',
+                  '${filterRuleMatchLabel(context, rule.match)}'
+                  '${rule.field == FilterRuleField.text ? '' : '\n${rule.senderKeyHex == null ? l10n.messageFilter_senderByName : l10n.messageFilter_senderByKey}'}',
                 ),
                 onTap: _saving ? null : () => _editRule(rule),
                 trailing: Switch(
@@ -268,6 +270,7 @@ class _MessageFilterSettingsScreenState
                                   field: current.field,
                                   match: current.match,
                                   enabled: enabled,
+                                  senderKeyHex: current.senderKeyHex,
                                 )
                               else
                                 current,

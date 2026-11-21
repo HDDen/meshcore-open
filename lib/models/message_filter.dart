@@ -1,6 +1,8 @@
 /// User-defined channel message rules and their persisted verdicts.
 library;
 
+import '../helpers/sender_filter_identity.dart';
+
 enum FilterRuleField { text, sender, both }
 
 enum FilterRuleMatch { contains, wholeWord, exact }
@@ -37,6 +39,7 @@ class FilterRule {
   final FilterRuleField field;
   final FilterRuleMatch match;
   final bool enabled;
+  final String? senderKeyHex;
 
   const FilterRule({
     required this.id,
@@ -44,6 +47,7 @@ class FilterRule {
     this.field = FilterRuleField.text,
     this.match = FilterRuleMatch.contains,
     this.enabled = true,
+    this.senderKeyHex,
   });
 
   Map<String, dynamic> toJson() => {
@@ -52,6 +56,7 @@ class FilterRule {
     'field': field.name,
     'match': match.name,
     'enabled': enabled,
+    'senderKeyHex': ?senderKeyHex,
   };
 
   factory FilterRule.fromJson(Map<String, dynamic> json) {
@@ -69,6 +74,7 @@ class FilterRule {
         FilterRuleMatch.contains,
       ),
       enabled: json['enabled'] as bool? ?? true,
+      senderKeyHex: SenderFilterIdentity.keyFromJson(json['senderKeyHex']),
     );
   }
 
@@ -79,10 +85,11 @@ class FilterRule {
       other.pattern == pattern &&
       other.field == field &&
       other.match == match &&
-      other.enabled == enabled;
+      other.enabled == enabled &&
+      other.senderKeyHex == senderKeyHex;
 
   @override
-  int get hashCode => Object.hash(id, pattern, field, match, enabled);
+  int get hashCode => Object.hash(id, pattern, field, match, enabled, senderKeyHex);
 }
 
 class FilterExample {

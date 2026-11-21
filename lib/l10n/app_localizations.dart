@@ -18375,6 +18375,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A previous portable installation has user data beside the application. Copy it into the new user data folder?\n{target}'**
   String dataTransfer_portableOfferBody(String target);
+
+  /// No description provided for @messageFilter_senderByKey.
+  ///
+  /// In en, this message translates to:
+  /// **'By verified MCMP key'**
+  String get messageFilter_senderByKey;
+
+  /// No description provided for @messageFilter_senderByName.
+  ///
+  /// In en, this message translates to:
+  /// **'By sender name'**
+  String get messageFilter_senderByName;
+
+  /// No description provided for @messageFilter_senderKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A verified matching key is filtered even after a name change. A different verified key is allowed. Without a verified signature, the sender name is used.'**
+  String get messageFilter_senderKeyHelp;
+
+  /// No description provided for @messageFilter_filterSenderKeyConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter messages from “{name}” in channels where the filter is on, using their verified MCMP key when available and their name otherwise?'**
+  String messageFilter_filterSenderKeyConfirm(String name);
 }
 
 class _AppLocalizationsDelegate
