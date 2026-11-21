@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../helpers/legacy_sender_blocker.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/channel_path_signal_helper.dart';
 import '../helpers/mcmp_app_codec.dart';
@@ -166,6 +167,9 @@ class Message {
   /// cleared, exactly like `ChannelMessage.wasBlocked` — lifting a block must
   /// not resurrect a marker or a `del:` command from the muted period.
   final bool wasBlocked;
+
+  /// The persisted stamp only affects behavior while the legacy mode is on.
+  bool get isLegacyBlocked => LegacySenderBlocker.instance.enabled && wasBlocked;
 
   Message({
     required this.senderKey,

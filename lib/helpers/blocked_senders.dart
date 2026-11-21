@@ -6,6 +6,7 @@ import '../models/channel_message.dart';
 import '../models/message.dart';
 import '../storage/blocked_sender_store.dart';
 import 'mcmp_app_codec.dart';
+import 'legacy_sender_blocker.dart';
 
 /// Channel senders the user has muted.
 ///
@@ -33,7 +34,15 @@ import 'mcmp_app_codec.dart';
 /// Neither question ever drops a message on receipt or removes one from
 /// history, and neither reaches messages that predate the block.
 class BlockedSenders extends ChangeNotifier {
-  BlockedSenders._();
+  BlockedSenders._() {
+    LegacySenderBlocker.instance.addListener(() {
+      _revision++;
+      _lastChangeRequiresMessageStamp = false;
+      notifyListeners();
+    });
+  }
+
+  bool get enabled => LegacySenderBlocker.instance.enabled;
 
   static final BlockedSenders instance = BlockedSenders._();
 
@@ -105,6 +114,7 @@ class BlockedSenders extends ChangeNotifier {
   /// exemption, letting through only a post that provably verified to a
   /// different key.
   BlockedSenderRule? roomRuleFor(Message message) {
+    if (!enabled) { return null; }
     if (message.isOutgoing || message.isCli) return null;
     final rules = this.rules;
     if (rules.isEmpty) return null;
@@ -179,6 +189,7 @@ class BlockedSenders extends ChangeNotifier {
   /// and then removing them from contacts is the natural pair of actions, and
   /// it used to switch the block off.
   BlockedSenderRule? ruleFor(ChannelMessage message, String channelName) {
+    if (!enabled) { return null; }
     if (message.isOutgoing) return null;
     final rules = this.rules;
     if (rules.isEmpty) return null;
@@ -230,7 +241,7 @@ class BlockedSenders extends ChangeNotifier {
   bool hidesMessageWidget(ChannelMessage message, String channelName) {
     final rule = ruleFor(message, channelName);
     if (rule == null || !rule.hideMessageWidgets) return false;
-    return message.wasBlocked || !message.receivedAt.isBefore(rule.blockedAt);
+    return message.isLegacyBlocked || !message.receivedAt.isBefore(rule.blockedAt);
   }
 
   /// Whether a quoted message's text must be replaced by the placeholder.
@@ -256,9 +267,9 @@ class BlockedSenders extends ChangeNotifier {
     required String channelName,
     required bool isOwnQuote,
   }) {
-    if (isOwnQuote) return false;
+    if (!enabled || isOwnQuote) return false;
     if (quoted != null) {
-      return quoted.wasBlocked || hidesStoredMessage(quoted, channelName);
+      return quoted.isLegacyBlocked || hidesStoredMessage(quoted, channelName);
     }
     final name = senderName?.trim();
     if (name == null || name.isEmpty) return false;

@@ -2806,7 +2806,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final previous = messages[position];
     if (channelPostIdentity(previous) != channelPostIdentity(message) ||
         previous.isOutgoing ||
-        previous.wasBlocked ||
+        previous.isLegacyBlocked ||
         BlockedSenders.instance.hidesStoredMessage(previous, channel.name)) {
       return false;
     }
@@ -3219,7 +3219,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Contact contact,
     Message message,
   ) async {
-    if (message.isOutgoing || message.wasBlocked) return;
+    if (!BlockedSenders.instance.enabled || message.isOutgoing || message.wasBlocked) return;
     final contactKeyHex = contact.publicKeyHex;
     var changed = false;
     final flagged = <String>{message.messageId};
@@ -3277,7 +3277,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     Channel channel,
     ChannelMessage message,
   ) async {
-    if (message.isOutgoing || message.wasBlocked) return;
+    if (!BlockedSenders.instance.enabled || message.isOutgoing || message.wasBlocked) return;
     var changed = false;
     final flagged = <ChannelMessage>[];
     final messages = _channelMessages[channel.index];
@@ -21334,6 +21334,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleBlockedSendersChanged() {
+    if (_messageFilterService != null && !kIsWeb) {
+      _channelRuleVerdictWriter.schedule();
+    }
     if (BlockedSenders.instance.lastChangeRequiresMessageStamp) {
       unawaited(applyBlockedSenderRules());
     }
@@ -21345,7 +21348,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// Whole-row visibility is deliberately absent here: its eye switch is read
   /// dynamically and never rewrites channel history.
   Future<void> applyBlockedSenderRules({int? channelIndex}) async {
-    if (BlockedSenders.instance.rules.isEmpty) return;
+    if (!BlockedSenders.instance.enabled || BlockedSenders.instance.rules.isEmpty) return;
     var changed = false;
     for (final entry in _channelMessages.entries) {
       if (channelIndex != null && entry.key != channelIndex) continue;
@@ -22113,7 +22116,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (filter != null &&
           filter.hasActiveChecks &&
           !processedMessage.isOutgoing &&
-          !processedMessage.wasBlocked &&
+          !processedMessage.isLegacyBlocked &&
           reactionInfo == null) {
         final channelId =
             _channelMessageStore.channelIdentityForIndex(channelIndex)?.pskId;

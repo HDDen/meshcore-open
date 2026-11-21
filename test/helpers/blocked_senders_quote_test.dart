@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/blocked_senders.dart';
+import 'package:meshcore_open/helpers/legacy_sender_blocker.dart';
 import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -48,9 +49,11 @@ void main() {
     PrefsManager.reset();
     await PrefsManager.initialize();
     await clearRules();
+    LegacySenderBlocker.instance.setEnabled(true);
   });
 
   tearDown(() async {
+    LegacySenderBlocker.instance.setEnabled(false);
     await clearRules();
     PrefsManager.reset();
   });

@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/blocked_senders.dart';
+import 'package:meshcore_open/helpers/legacy_sender_blocker.dart';
 import 'package:meshcore_open/helpers/mcoimg_codec.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/helpers/channel_app_data_helper.dart';
@@ -832,6 +833,8 @@ Future<void> main() async {
         final history = ChannelMessageStore()
           ..setPublicKeyHex = connector.selfPublicKeyHex
           ..registerChannel(connector.channels.single);
+        LegacySenderBlocker.instance.setEnabled(true);
+        addTearDown(() => LegacySenderBlocker.instance.setEnabled(false));
         final blocked = BlockedSenders.instance;
         await blocked.blockName('Alice');
         try {
@@ -1757,6 +1760,33 @@ Future<void> main() async {
         }
       });
     }
+
+    test('dormant legacy rules neither block delivery nor suppress notifications', () async {
+      LegacySenderBlocker.instance.setEnabled(false);
+      final harness = await _Harness.start();
+      final connector = harness.connector;
+      addTearDown(harness.settings.dispose);
+      addTearDown(connector.dispose);
+      await harness.addChannel(0, 'Test', _psk(1));
+      final blocked = BlockedSenders.instance;
+      await blocked.blockName('Alice');
+      try {
+        connector.handleFrameForTest(_channelMessageFrame(
+          channelIndex: 0, timestampSeconds: _timestamp,
+          senderName: 'Alice', text: 'ordinary post',
+        ));
+        await _waitFor(() => plugin.shown.length == 1, 'notification with legacy off');
+        final args = _NotificationPlugin.argumentsOf(plugin.shown.single);
+        expect(args['body'], 'Alice: ordinary post');
+        final channel = connector.channels.singleWhere((c) => c.index == 0);
+        final message = connector.getLoadedChannelMessages(channel).single;
+        expect(message.wasBlocked, isFalse);
+        expect(connector.getUnreadCountForChannel(channel), 1);
+        expect(blocked.rules.containsKey('Alice'), isTrue);
+      } finally {
+        await blocked.unblock('Alice');
+      }
+    });
 
     test('a channel message names the channel and the sender', () async {
       final harness = await _Harness.start();

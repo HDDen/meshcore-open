@@ -18,6 +18,7 @@ import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
 import 'helpers/message_url_image_helper.dart';
+import 'helpers/legacy_sender_blocker_binding.dart';
 import 'models/image_codec_support.dart';
 import 'screens/data_folder_problem_screen.dart';
 import 'screens/data_transfer_screen.dart';
@@ -713,6 +714,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   bool _directEchoRecoveryPromptShowing = false;
   TxPowerSession? _nodeIdentityImportChecked;
   bool _nodeIdentityImportShowing = false;
+  late final LegacySenderBlockerBinding _legacySenderBlocker;
 
   @override
   void initState() {
@@ -720,6 +722,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     iosAppPresentationActive.addListener(_syncHolidayThemeForeground);
     _syncHolidayThemeForeground();
+    _legacySenderBlocker = LegacySenderBlockerBinding(widget.settingsSectionsService);
     widget.settingsSectionsService.setUiContextProvider(
       () => MeshCoreApp._navigatorKey.currentContext,
     );
@@ -865,6 +868,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     widget.connector.removeListener(_handleConnectionStateChanged);
     unawaited(widget.connector.flushChannelRuleVerdicts());
     widget.connector.messageFilterService?.flushRecentClean();
+    _legacySenderBlocker.dispose();
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();

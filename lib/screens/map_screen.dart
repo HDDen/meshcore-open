@@ -5754,7 +5754,7 @@ class _MapScreenState extends State<MapScreen>
         // Blocked: no pin, and its `del:` command hides nobody else's. Both
         // halves of the answer are asked here rather than on the finished pin
         // list, because by then `absorb` has already recorded the command.
-        if (message.wasBlocked ||
+        if (message.isLegacyBlocked ||
             BlockedSenders.instance.hidesStoredMessage(
               message,
               connector.channelDisplayName(channel.index),
@@ -8703,7 +8703,7 @@ class _MapConnectorSnapshot {
         // Arrived while its room author was muted: no pin, and its `del:`
         // erases nobody else's. Ahead of `absorb` for the same reason the
         // channel loop is.
-        if (message.wasBlocked) continue;
+        if (message.isLegacyBlocked) continue;
         final text = message.text.trimLeft();
         if (!text.startsWith('m:') &&
             !text.startsWith(SharedMarkerDeletion.prefix)) {
@@ -8748,7 +8748,7 @@ class _MapConnectorSnapshot {
             // Blocking flags one already-received message without touching
             // anything else about it, and that has to reach the cache. So does
             // a manual signature re-check, which the info dialog repeats.
-            message.wasBlocked,
+            message.isLegacyBlocked,
             message.mcmpSignatureStatus,
             // The first repeat is what stops the spinner, and it changes
             // nothing else about the message. Nor does giving up, which

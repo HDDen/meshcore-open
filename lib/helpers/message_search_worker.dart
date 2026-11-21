@@ -34,6 +34,7 @@ class StoredMessageSearchRequest {
   final List<StoredMessageSearchSource> sources;
   final Map<String, String> roomSenderNamesByPrefix;
   final List<FilterRule>? channelFilterRules;
+  final bool legacyBlockerEnabled;
 
   const StoredMessageSearchRequest({
     this.normalizedQuery,
@@ -41,6 +42,7 @@ class StoredMessageSearchRequest {
     required this.sources,
     this.roomSenderNamesByPrefix = const {},
     this.channelFilterRules,
+    this.legacyBlockerEnabled = false,
   });
 
   List<String> get effectiveNormalizedQueries {
@@ -85,6 +87,7 @@ List<StoredMessageSearchHit> searchStoredMessageBatch(
       normalizedQueries: normalizedQueries,
       roomSenderNamesByPrefix: request.roomSenderNamesByPrefix,
       channelRules: source.hideFiltered ? matcher : null,
+      legacyBlockerEnabled: request.legacyBlockerEnabled,
       results: results,
     );
   }
@@ -97,6 +100,7 @@ void _searchStoredMessages({
   required Map<String, String> roomSenderNamesByPrefix,
   required List<StoredMessageSearchHit> results,
   required MessageFilterRules? channelRules,
+  required bool legacyBlockerEnabled,
 }) {
   dynamic decoded;
   try {
@@ -139,7 +143,7 @@ void _searchStoredMessages({
           sender: senderName,
           text: text,
           isOutgoing: entry['isOutgoing'] == true,
-          wasBlocked: entry['wasBlocked'] == true,
+          wasBlocked: legacyBlockerEnabled && entry['wasBlocked'] == true,
           restored: entry['filterRestored'] == true,
           verifiedSenderKey: entry['mcmpSignatureStatus'] == McmpSignatureStatus.valid.name
               ? SenderFilterIdentity.normalizeKey(entry['verifiedSenderKeyHex']) : null,

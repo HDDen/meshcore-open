@@ -281,8 +281,18 @@ The editor retains that identity when renaming the rule or toggling it; changing
 the field to Text removes the sender binding. Keys survive settings export/import.
 
 In the message menu, **Mark as spam**, **Filter this sender**, and **Filter similar
-messages** appear in that order immediately before **Block contact**, with the
-theme's accent color on their icons and labels.
+messages** appear in that order, with the theme's accent color on their icons
+and labels. If the legacy sender blocker has been explicitly enabled, the group
+appears immediately before **Block contact**.
+
+### Legacy sender blocker
+
+The old **Block contact** and **Blocked senders** actions are hidden and inactive
+by default. Existing rules and blocked-message metadata are retained, but do not
+hide messages or suppress notifications while the mechanism is off. The modern
+message filter works independently. Private builds can restore the old mechanism
+through its dedicated access phrase; a saved grant survives restart. The existing
+private-module access reset turns it off again. Public builds keep it disabled.
 Choose **Mark as spam** to filter the post manually. On platforms with local learning, both actions ask to turn it on
 when it is off. Confirm to turn on learning and then apply the action.
 Cancel closes the prompt without applying the action. Cancelling **Not

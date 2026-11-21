@@ -1033,7 +1033,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final authorName = message.replyToSenderName?.trim();
     if (!quotesAsMentions ||
         message.isOutgoing ||
-        message.wasBlocked ||
+        message.isLegacyBlocked ||
         authorName == null ||
         authorName.isEmpty) {
       return null;
@@ -1055,11 +1055,11 @@ class _ChatScreenState extends State<ChatScreen> {
     bool showMcoReplacements,
   ) {
     final authorName = message.replyToSenderName?.trim();
-    if (message.wasBlocked || authorName == null || authorName.isEmpty) {
+    if (message.isLegacyBlocked || authorName == null || authorName.isEmpty) {
       return null;
     }
     final quotedId = message.replyToMessageId;
-    final hidden = _findLoadedMessage(connector, quotedId)?.wasBlocked ?? false;
+    final hidden = _findLoadedMessage(connector, quotedId)?.isLegacyBlocked ?? false;
     return ReplyQuoteBox(
       authorName: authorName,
       text: hidden ? '' : (message.replyToText ?? ''),
@@ -2203,7 +2203,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _toggleRoomAuthorBlockWithoutScrolling(Message message) async {
     final blocked = BlockedSenders.instance;
     final authorId = BlockedSenders.roomAuthorIdOf(message);
-    if (authorId == null) return;
+    if (!blocked.enabled || authorId == null) return;
     if (blocked.isRoomAuthorBlocked(message)) {
       await blocked.unblockRoomAuthor(authorId);
       return;
@@ -2479,7 +2479,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 // than muted; and a post of ours could only be hidden by
                 // somebody adopting our own identity, which the author prefix
                 // does not allow in the first place.
-                if (contact.type == advTypeRoom &&
+                if (BlockedSenders.instance.enabled && contact.type == advTypeRoom &&
                     !message.isOutgoing &&
                     !message.isCli &&
                     BlockedSenders.roomAuthorIdOf(message) != null)
@@ -2958,7 +2958,7 @@ class ContactMessageBubble extends StatelessWidget {
     // reads `bodyText`, so revealing the text cannot bring those handlers
     // back, and neither can lifting the block — that governs what arrives
     // afterwards.
-    final blockedBody = message.wasBlocked ? message.text : null;
+    final blockedBody = message.isLegacyBlocked ? message.text : null;
     final bodyText = blockedBody == null ? message.text : '';
     // Ordinary text alone needs this check; reuse it for preview and hint.
     late final hasPotentialImage = MessageUrlImageHelper.hasPotentialImageUrl(bodyText);

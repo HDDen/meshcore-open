@@ -3,10 +3,11 @@ import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/helpers/legacy_sender_blocker.dart';
+import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
-import 'package:meshcore_open/models/message_filter.dart';
 import 'package:meshcore_open/storage/channel_identity_store.dart';
 import 'package:meshcore_open/storage/channel_message_store.dart';
 import 'package:meshcore_open/storage/channel_name_keyed_store.dart';
@@ -119,6 +120,25 @@ Future<void> main() async {
     );
     store.replaceChannels([_channel(2, 'Горы-2026')]);
   }
+
+  test('new filter can update dormant legacy rows without removing their stamps', () async {
+    final policy = LegacySenderBlocker.instance;
+    policy.setEnabled(false);
+    addTearDown(() => policy.setEnabled(false));
+    await seedAndRename(oldest: _message('a', 1).copyWith(wasBlocked: true));
+    const verdict = FilterVerdict(reason: FilterReason.senderRule, detail: 'Alice');
+    await MessageHistoryStorage.instance.updateChannelRuleVerdicts({oldKey: {'a': verdict}});
+    final saved = (await store.loadChannelMessages(2)).singleWhere((m) => m.messageId == 'a');
+    expect(saved.wasBlocked, isTrue);
+    expect(saved.isLegacyBlocked, isFalse);
+    expect(saved.filterVerdict, verdict);
+    policy.setEnabled(true);
+    await MessageHistoryStorage.instance.updateChannelRuleVerdicts({oldKey: {'a': null}});
+    final active = (await store.loadChannelMessages(2)).singleWhere((m) => m.messageId == 'a');
+    expect(active.wasBlocked, isTrue);
+    expect(active.isLegacyBlocked, isTrue);
+    expect(active.filterVerdict, verdict);
+  }, skip: skip);
 
   test('a renamed channel reads the history of its former name', () async {
     await seedAndRename();

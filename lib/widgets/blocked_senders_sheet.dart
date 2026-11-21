@@ -16,6 +16,7 @@ class BlockedSendersSheet extends StatefulWidget {
   const BlockedSendersSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    if (!BlockedSenders.instance.enabled) { return Future<void>.value(); }
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

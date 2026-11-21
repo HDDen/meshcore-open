@@ -476,7 +476,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ),
                   onTap: () => _showMessageSearch(context),
                 ),
-                PopupMenuItem(
+                if (BlockedSenders.instance.enabled) PopupMenuItem(
                   child: PopupMenuRow(
                     icon: Icons.block,
                     iconColor: Colors.red,
@@ -751,7 +751,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     final lastBlocked =
         widget.previewChannels == null &&
         lastMessage != null &&
-        (lastMessage.wasBlocked ||
+        (lastMessage.isLegacyBlocked ||
             BlockedSenders.instance.hidesStoredMessage(
               lastMessage,
               connector.channelDisplayName(channel.index),

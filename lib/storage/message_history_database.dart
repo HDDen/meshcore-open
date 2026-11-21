@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../helpers/contact_option_storage.dart';
 import '../helpers/message_text_codec.dart';
 import '../helpers/delivery_observation_write_plan.dart';
+import '../helpers/legacy_sender_blocker.dart';
 import '../models/additional_identity_message.dart';
 import '../models/message.dart' show MessageStatus;
 import '../models/companion_cli_entry.dart';
@@ -2999,7 +3000,8 @@ JOIN history_messages AS latest
             final detail = row.value?.detail;
             batch.customStatement(
               _updateChannelRuleVerdictSql,
-              [reason, reason, detail, channel.key, row.key, reason, detail],
+              [reason, reason, detail, channel.key, row.key,
+                LegacySenderBlocker.instance.enabled ? 1 : 0, reason, detail],
             );
           }
         }
@@ -3012,7 +3014,7 @@ SET message_json = CASE WHEN ? IS NULL
   ELSE json_set(message_json, '$.filterReason', ?, '$.filterDetail', ?)
 END
 WHERE kind = 1 AND storage_key = ? AND message_id = ? AND is_outgoing = 0
-  AND COALESCE(json_extract(message_json, '$.wasBlocked'), 0) = 0
+  AND (? = 0 OR COALESCE(json_extract(message_json, '$.wasBlocked'), 0) = 0)
   AND COALESCE(json_extract(message_json, '$.filterRestored'), 0) = 0
   AND COALESCE(json_extract(message_json, '$.filterReason'), '')
       IN ('', 'textRule', 'senderRule')

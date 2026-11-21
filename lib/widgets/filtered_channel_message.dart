@@ -104,7 +104,7 @@ bool canSelectChannelVerdict(
 ) =>
     !connector.isOfflineSharedMode &&
     !message.isOutgoing &&
-    !message.wasBlocked &&
+    !message.isLegacyBlocked &&
     message.sharedHistorySourceName == null &&
     !BlockedSenders.instance.isSenderBlocked(
       message,
@@ -254,7 +254,7 @@ class _FilteredChannelReviewState extends State<_FilteredChannelReview> {
       candidates = const [];
     }
     final messages = candidates.where((message) =>
-        !message.wasBlocked &&
+        !message.isLegacyBlocked &&
         !BlockedSenders.instance.hidesStoredMessage(message, name)).toList();
     final selecting = _selection.isActive(connector, connector.selfPublicKeyHex);
     final selected = selecting

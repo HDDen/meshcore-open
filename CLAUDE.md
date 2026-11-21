@@ -1148,6 +1148,20 @@ region is the channel's own or the node's default scope.
 
 ### Blocked senders
 
+The legacy sender blocker is dormant by default. `LegacySenderBlocker` is a
+pure-Dart runtime gate reflected from `SettingsSectionsService` by the app-root
+binding. Only its independent private phrase access level enables it; the public
+stub always denies it. Resetting module access revokes the gate live. This level
+does not unlock Dev/South or enable unrelated private sections. Old rules and raw
+`wasBlocked` flags are never deleted or rewritten by gating. Message models expose
+`isLegacyBlocked` for runtime consumers; serializers and merges retain the raw
+flag. Block/unblock and block-list menu entries are hidden while dormant, including
+room-author actions. Notifications, previews, quotes, markers and transcript
+visibility ignore legacy blocks while off. The modern spam filter remains active;
+its history projection invalidates when the gate changes, and SQL/search carry the
+mode explicitly so old stamps do not prevent modern filtering. Existing legacy
+quote tests opt in, and menu tests cover both modes.
+
 A sender muted from a message's long-press menu keeps arriving — nothing is dropped on receipt or
 removed from history — but their messages are neither shown nor acted on. It covers **channel
 posts and room-server posts**; a one-to-one conversation has nothing to mute, being the contact

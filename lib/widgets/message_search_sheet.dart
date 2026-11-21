@@ -10,6 +10,7 @@ import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/cancellable_compute.dart';
 import '../helpers/message_search_worker.dart';
+import '../helpers/legacy_sender_blocker.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
 import '../models/channel.dart';
@@ -317,6 +318,7 @@ class _MessageSearchSheetState extends State<MessageSearchSheet> {
                 sources: batch.map((source) => source.workerSource).toList(),
                 roomSenderNamesByPrefix: roomSenderNamesByPrefix,
                 channelFilterRules: connector.messageFilterService?.rules,
+                legacyBlockerEnabled: LegacySenderBlocker.instance.enabled,
               ),
               debugLabel: 'message-search',
             );

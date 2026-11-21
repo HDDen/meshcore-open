@@ -8,6 +8,7 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
+import 'package:meshcore_open/helpers/legacy_sender_blocker.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
@@ -130,9 +131,12 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('U27g: channel actions create rules and toggle one channel', (
+  for (final legacy in [false, true]) {
+  testWidgets('U27g: channel actions create rules and toggle one channel (legacy=$legacy)', (
     tester,
   ) async {
+    LegacySenderBlocker.instance.setEnabled(legacy);
+    addTearDown(() => LegacySenderBlocker.instance.setEnabled(false));
     final filter = MessageFilterService();
     await filter.updateSettings(const MessageFilterSettings(enabled: true));
     final node = _Node(messageFilterService: filter);
@@ -189,7 +193,8 @@ void main() {
       final tiles = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
       int index(String label) => tiles.indexWhere((tile) =>
           tile.title is Text && (tile.title! as Text).data == label);
-      final block = index(l10n.chat_blockSender);
+      final block = index(legacy ? l10n.chat_blockSender : l10n.common_delete);
+      expect(index(l10n.chat_blockSender), legacy ? greaterThanOrEqualTo(0) : -1);
       final labels = [
         if (MessageFilterService.learningAvailable) l10n.messageFilter_markSpam,
         l10n.messageFilter_filterSender,
@@ -271,6 +276,8 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 5));
   });
+
+  }
 
   testWidgets('U34: channel selection copies loaded messages in chat order', (
     tester,

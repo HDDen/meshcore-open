@@ -1,4 +1,5 @@
 import '../../helpers/reaction_helper.dart';
+import '../../helpers/legacy_sender_blocker.dart';
 import '../../helpers/mcmp_app_codec.dart';
 import '../../helpers/sender_filter_identity.dart';
 import '../../models/channel_message.dart';
@@ -11,11 +12,17 @@ class MessageFilterRules {
 
   final List<FilterRule> _rules;
   List<(FilterRule, String)>? _normalized;
-  final _projected = Expando<ChannelMessage>();
+  var _projected = Expando<ChannelMessage>();
+  bool _legacyEnabled = LegacySenderBlocker.instance.enabled;
 
   /// View-only verdicts. Keep memoized copies for unchanged message snapshots
   /// so receiving a packet does not recheck every row in the loaded window.
   ChannelMessage project(ChannelMessage message) {
+    final legacy = LegacySenderBlocker.instance.enabled;
+    if (_legacyEnabled != legacy) {
+      _legacyEnabled = legacy;
+      _projected = Expando<ChannelMessage>();
+    }
     if (_rules.isEmpty && !message.isFiltered) return message;
     final cached = _projected[message];
     if (cached != null) return cached;
@@ -32,7 +39,7 @@ class MessageFilterRules {
       sender: message.senderName,
       text: message.text,
       isOutgoing: message.isOutgoing,
-      wasBlocked: message.wasBlocked,
+      wasBlocked: message.isLegacyBlocked,
       restored: message.filterRestored,
       verifiedSenderKey: message.mcmpSignatureStatus == McmpSignatureStatus.valid
           ? message.verifiedSenderKeyHex : null,

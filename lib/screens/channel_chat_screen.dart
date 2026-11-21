@@ -1283,7 +1283,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ),
                 // Not gated on offline mode: the block list is local data
                 // and stays editable with no radio attached.
-                PopupMenuItem(
+                if (BlockedSenders.instance.enabled) PopupMenuItem(
                   value: 'blockedSenders',
                   child: PopupMenuRow(
                     icon: Icons.block,
@@ -1731,7 +1731,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ) {
     if (message.isFiltered &&
         connector.isChannelFilterEnabled(widget.channel) &&
-        !message.wasBlocked &&
+        !message.isLegacyBlocked &&
         !BlockedSenders.instance.hidesStoredMessage(
           message,
           connector.channelDisplayName(widget.channel.index),
@@ -1784,7 +1784,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // reach a copy merged in from another node's shared history, which that
     // node stored without ever seeing our rules.
     final blockedBody =
-        message.wasBlocked ||
+        message.isLegacyBlocked ||
             (widget.previewMessages == null &&
                 BlockedSenders.instance.hidesStoredMessage(
                   message,
@@ -3871,7 +3871,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           final message = row.message;
           return message != null &&
               message.isFiltered &&
-              !message.wasBlocked &&
+              !message.isLegacyBlocked &&
               !blocked.hidesStoredMessage(message, channelName);
         },
         canJoin: (newer, older) =>
@@ -5450,6 +5450,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final channelName = context.read<MeshCoreConnector>().channelDisplayName(
       widget.channel.index,
     );
+    if (!blocked.enabled) { return; }
     if (blocked.isSenderBlocked(message, channelName)) {
       await blocked.unblock(message.senderName);
       return;
@@ -5463,7 +5464,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   bool _canSelectMessage(MeshCoreConnector connector, ChannelMessage message) =>
-      !message.wasBlocked &&
+      !message.isLegacyBlocked &&
       !BlockedSenders.instance.hidesStoredMessage(
         message,
         connector.channelDisplayName(widget.channel.index),
@@ -5576,7 +5577,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         filterChannelId != null &&
         !connector.isOfflineSharedMode &&
         !message.isOutgoing &&
-        !message.wasBlocked &&
+        !message.isLegacyBlocked &&
         !isSenderBlocked &&
         message.sharedHistorySourceName == null;
     // Blocking is the consequential half of that entry; lifting it is not, so
@@ -5837,7 +5838,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       ));
                     },
                   ),
-                if (!message.isOutgoing)
+                if (BlockedSenders.instance.enabled && !message.isOutgoing)
                   ListTile(
                     leading: const Icon(Icons.block),
                     iconColor: blockActionColor,
