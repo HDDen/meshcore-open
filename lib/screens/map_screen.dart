@@ -8773,6 +8773,7 @@ class _MapConnectorSnapshot {
         connector.isConnected,
         connector.hasReadableSession,
         connector.selfPublicKeyHex,
+        _bytesSignature(connector.selfPublicKey),
         connector.lastRadioName,
         connector.selfLatitude,
         connector.selfLongitude,

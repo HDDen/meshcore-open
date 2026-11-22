@@ -3987,7 +3987,8 @@ scope/generation/channel/boundary results; pages merge with the live window so
 arrivals during I/O remain. Route cache loads validate pending-load identity and
 generation before replaying events, including after clearing one contact or
 provider disposal. Map connector selection includes contact/marker/battery/radio
-signatures, with a separate unread selector for the navigation bar; retain the
+signatures (including live public-key bytes for trace invalidation), with a
+separate unread selector for the navigation bar; retain the
 fork session-only camera policy. The HTTP profiling reset tool and guide are
 ported. Owner runs analysis and regression tests before the next merge stage.
 
