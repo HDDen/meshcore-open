@@ -242,7 +242,9 @@ void main() {
 
     expect(find.byType(ExpansionTile), findsNothing);
     expect(tester.getSize(tile).width, tester.getSize(find.byType(ListView)).width);
-    await tester.longPress(find.text('Alice'));
+    expect(find.text('Alice'), findsNothing);
+    expect(find.text(l10n.messageFilter_reasonManual), findsNothing);
+    await tester.longPressAt(tester.getTopLeft(tile) + const Offset(4, 4));
     await tester.pumpAndSettle();
     expect(find.text(l10n.chat_selectedCount(1)), findsOneWidget);
     expect(find.byTooltip(l10n.messageFilter_notSpam), findsNothing);
@@ -293,7 +295,9 @@ void main() {
     final appBar = find.byType(AppBar);
     final l10n = AppLocalizations.of(tester.element(appBar));
     expect(find.byType(ExpansionTile), findsNothing);
-    await tester.longPress(find.text('Alice').first);
+    await tester.longPressAt(
+      tester.getTopLeft(find.byType(FilteredChannelMessage).first) + const Offset(4, 4),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip(MaterialLocalizations.of(
       tester.element(appBar),

@@ -291,6 +291,8 @@ appears immediately before **Block contact**.
 **Delete**.
 
 The filtered-message review displays posts openly, at full width and aligned left.
+Each post shows only the sender-and-message line above its actions; the repeated
+sender, rule reason and rule pattern header is omitted.
 **Unblock sender**, next to **Not spam**, disables all matching sender-name or
 verified-key rules without deleting them. It leaves text rules and other senders
 unchanged. Shared copies remain read-only.

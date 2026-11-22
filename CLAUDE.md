@@ -1216,7 +1216,9 @@ waits for the selected row writes. Shared posts can be copied from either list.
 Single filtered-message placeholders show the actual sender with bodySmall
 typography; the filtering reason remains available inside the expanded tile.
 `FilteredChannelMessage.review` bypasses the ExpansionTile and stretches its
-left-aligned content to the review list width. Review sender-unblock uses the
+left-aligned content to the review list width. Review omits the repeated sender,
+filter reason and rule detail header, keeping only the sender-and-message body
+and actions. Review sender-unblock uses the
 filter service's queued rule write to disable matching sender rules, preserving
 IDs, patterns, key bindings and unrelated text rules. `FilterRuleField.mcmpKey`
 is strict verified-key-only matching, editable as 64 hex characters with Exact

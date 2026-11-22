@@ -50,10 +50,12 @@ class FilteredChannelMessage extends StatelessWidget {
     final senderKey = BlockedSenders.verifiedKeyOf(message);
     final editable = !connector.isOfflineSharedMode && message.sharedHistorySourceName == null;
     final content = <Widget>[
-      Text(message.senderName, style: compactStyle),
-      Text(reason, style: compactStyle),
-      if (detail != null) Text(detail, style: compactStyle),
-      const SizedBox(height: 8),
+      if (!review) ...[
+        Text(message.senderName, style: compactStyle),
+        Text(reason, style: compactStyle),
+        if (detail != null) Text(detail, style: compactStyle),
+        const SizedBox(height: 8),
+      ],
       SelectableText(
         '${message.senderName}: ${message.text}',
         key: const PageStorageKey('filtered-message-text'),
