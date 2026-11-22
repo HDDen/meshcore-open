@@ -11,6 +11,8 @@ MeshCore Open can send a highly compressed image as channel GRP_DATA packets. Un
 
 Downloads use the configured Hugging Face model bundle, support resume, and verify file checksums. Download the model while internet is available. Once installed, encoding and reconstruction run locally; photos are not uploaded for inference. Compatible recipients need the same supported codec/model format.
 
+Сборка при недоступности GitHub Releases ONNX Runtime: [инструкция для Linux и Windows](onnx-offline-release-build.md). В ней используется официальный NuGet-пакет 1.22.0 и release-скрипт приватного модуля.
+
 ## Linux release bundle
 
 The `lite-aeic` and `full` profiles bundle ONNX Runtime beside the image plugin.
