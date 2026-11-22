@@ -41,6 +41,8 @@
 	<string>This app connects to MeshCore nodes on your local network.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app uses your location to tag wardrive discovery requests and update your MeshCore node position.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app saves the pictures you choose to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app lets you pick a photo to compress and send over the mesh.</string>
 	<key>UIApplicationSceneManifest</key>

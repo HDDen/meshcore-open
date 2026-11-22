@@ -4005,6 +4005,13 @@ workflows for security reasons. Do not introduce tag-triggered AppImage
 publishing, release-write permissions, or automatic release creation. Keep
 existing local packaging tools and data-directory/portable behaviour unchanged.
 
+**iOS usage-description stage prepared 2026-11-22: `c0702806`.** Add
+`NSPhotoLibraryAddUsageDescription` for saving images to the photo library.
+Keep the existing fork `NSLocalNetworkUsageDescription` (already covers this
+upstream addition), location description, Bluetooth descriptions and background
+modes. The plist was parsed and compared against HEAD; runtime permission
+prompts and image saving still require an iOS device check.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
