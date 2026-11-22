@@ -11139,44 +11139,45 @@ class AppLocalizationsRu extends AppLocalizations {
       'Подключитесь к радио, чтобы отправлять сообщения';
 
   @override
-  String get backupRestore_bookmarks => 'Bookmarks';
+  String get backupRestore_bookmarks => 'Закладки';
 
   @override
-  String get chat_bookmark => 'Bookmark';
+  String get chat_bookmark => 'Добавить в закладки';
 
   @override
-  String get chat_removeBookmark => 'Remove bookmark';
+  String get chat_removeBookmark => 'Удалить из закладок';
 
   @override
-  String get chat_showBookmarks => 'Show bookmarks';
+  String get chat_showBookmarks => 'Показать закладки';
 
   @override
-  String get bookmarks_title => 'Bookmarks';
+  String get bookmarks_title => 'Закладки';
 
   @override
-  String get bookmarks_empty => 'No bookmarked messages';
+  String get bookmarks_empty => 'Нет сообщений в закладках';
 
   @override
-  String get bookmarks_channel => 'Channel';
+  String get bookmarks_channel => 'Канал';
 
   @override
-  String get bookmarks_contact => 'Contact';
+  String get bookmarks_contact => 'Контакт';
 
   @override
-  String get bookmarks_remove => 'Remove bookmark';
+  String get bookmarks_remove => 'Удалить из закладок';
 
   @override
-  String get settings_exportBookmarks => 'Export bookmarks to Markdown';
+  String get settings_exportBookmarks => 'Экспорт закладок в Markdown';
 
   @override
   String get settings_exportBookmarksSubtitle =>
-      'Share or save bookmarked messages as a Markdown file.';
+      'Поделиться сообщениями из закладок или сохранить их в файл Markdown.';
 
   @override
-  String get settings_exportBookmarksSuccess => 'Bookmarks exported.';
+  String get settings_exportBookmarksSuccess => 'Закладки экспортированы.';
 
   @override
-  String get settings_exportBookmarksNoBookmarks => 'No bookmarks to export.';
+  String get settings_exportBookmarksNoBookmarks =>
+      'Нет закладок для экспорта.';
 
   @override
   String get bookmarks_saveFailed => 'Не удалось обновить закладки.';

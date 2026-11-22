@@ -5666,10 +5666,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MessageBookmarkAction(connector: connector, bookmark: BookmarkedMessage.fromChannel(
-                  message: message, channelId: widget.channel.storageId ?? 'slot:${widget.channel.index}',
-                  channelName: widget.channel.name, senderName: message.senderName,
-                )),
                 ListTile(
                   leading: const Icon(Icons.reply),
                   title: Text(context.l10n.chat_reply),
@@ -5909,6 +5905,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       _toggleSenderBlock(message);
                     },
                   ),
+                MessageBookmarkAction(connector: connector, bookmark: BookmarkedMessage.fromChannel(
+                  message: message, channelId: widget.channel.storageId ?? 'slot:${widget.channel.index}',
+                  channelName: widget.channel.name, senderName: message.senderName,
+                )),
                 if (_canSelectMessage(connector, message))
                   ListTile(
                     leading: const Icon(Icons.check_circle_outline),

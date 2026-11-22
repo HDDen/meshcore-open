@@ -4249,5 +4249,18 @@
   "connectSheet_stopReconnecting": "Остановить переподключение",
   "connectSheet_reconnectFailed": "Не удалось связаться с {name}. Убедитесь, что оно включено и находится рядом.",
   "chat_composerOffline": "Подключитесь к радио, чтобы отправлять сообщения",
-  "bookmarks_saveFailed": "Не удалось обновить закладки."
+  "bookmarks_saveFailed": "Не удалось обновить закладки.",
+  "backupRestore_bookmarks": "Закладки",
+  "chat_bookmark": "Добавить в закладки",
+  "chat_removeBookmark": "Удалить из закладок",
+  "chat_showBookmarks": "Показать закладки",
+  "bookmarks_title": "Закладки",
+  "bookmarks_empty": "Нет сообщений в закладках",
+  "bookmarks_channel": "Канал",
+  "bookmarks_contact": "Контакт",
+  "bookmarks_remove": "Удалить из закладок",
+  "settings_exportBookmarks": "Экспорт закладок в Markdown",
+  "settings_exportBookmarksSubtitle": "Поделиться сообщениями из закладок или сохранить их в файл Markdown.",
+  "settings_exportBookmarksSuccess": "Закладки экспортированы.",
+  "settings_exportBookmarksNoBookmarks": "Нет закладок для экспорта."
 }

@@ -5727,20 +5727,7 @@
     "imageSend_tryAnother",
     "imageSend_versionsHint",
     "imageSend_versionLabel",
-    "imageSend_versionPackets",
-    "backupRestore_bookmarks",
-    "chat_bookmark",
-    "chat_removeBookmark",
-    "chat_showBookmarks",
-    "bookmarks_title",
-    "bookmarks_empty",
-    "bookmarks_channel",
-    "bookmarks_contact",
-    "bookmarks_remove",
-    "settings_exportBookmarks",
-    "settings_exportBookmarksSubtitle",
-    "settings_exportBookmarksSuccess",
-    "settings_exportBookmarksNoBookmarks"
+    "imageSend_versionPackets"
   ],
 
   "sk": [
