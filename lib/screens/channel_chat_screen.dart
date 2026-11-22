@@ -3709,9 +3709,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   ///
   /// GRP_DATA is not echoed back to the sender and an image is not a
   /// [ChannelMessage], so without this the sender sees a "sent" snack bar and
-  /// an otherwise empty conversation. The entry lands in `decoded` directly:
-  /// an outgoing image is never queued for inference, so showing your own
-  /// photo costs no model memory.
+  /// an otherwise empty conversation. Reuse the selected reconstruction in
+  /// the receiver-preview cache; if unavailable, retain the manual-decode
+  /// placeholder and original photo. No new inference is queued here.
   ///
   /// Best effort throughout: a failure here has already been preceded by a
   /// successful transmission, so it must not turn into an error the user sees.
@@ -3745,6 +3745,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         senderPrefix: senderPrefix,
         imgId: chunkSet.imgId,
         previewPng: previewPng,
+        receiverPreviewPng: result.previewPng,
         // The very bytes the recipients decode, so our own preview of their
         // view cannot drift from what they actually get.
         bitstream: result.payload,

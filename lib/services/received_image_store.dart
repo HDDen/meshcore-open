@@ -1203,13 +1203,16 @@ class ReceivedImageStore extends ChangeNotifier {
   /// like a received image the burst cap parked: the sender sees the same
   /// placeholder their recipients see, and nothing is decoded until they ask.
   /// [bitstream] is kept for that — the same ~156 B the recipients will decode,
-  /// so the preview cannot differ from what they get.
+  /// so the preview cannot differ from what they get. If the send sheet already
+  /// decoded the selected version, [receiverPreviewPng] reuses that result in
+  /// the existing receiver-preview blob and no additional inference is queued.
   Future<ReceivedImageEntry> registerOutgoing({
     required int channelIndex,
     String? channelId,
     required int senderPrefix,
     required int imgId,
     required Uint8List previewPng,
+    Uint8List? receiverPreviewPng,
     required Uint8List bitstream,
     required AeicRatePoint rate,
     required int chunkCount,
@@ -1228,6 +1231,16 @@ class ReceivedImageStore extends ChangeNotifier {
     // cached on the entry); the next launch then reports it as evicted rather
     // than pointing at a file that was never written.
     final pngWritten = await blobs.writePng(streamId, previewPng);
+    var receiverPreviewWritten = false;
+    if (receiverPreviewPng != null) {
+      try {
+        await blobs.writeReceiverPreview(streamId, receiverPreviewPng);
+        receiverPreviewWritten = await blobs.receiverPreviewSize(streamId) != null;
+      } on Exception catch (error) {
+        // Keep the selected pixels for this session even if disk storage fails.
+        debugPrint('Outgoing image preview could not be saved: $error');
+      }
+    }
     final bitstreamWritten = await blobs.writeBitstream(streamId, bitstream);
     final entry = ReceivedImageEntry(
       streamId: streamId,
@@ -1251,6 +1264,9 @@ class ReceivedImageStore extends ChangeNotifier {
       pngStored: pngWritten,
       pngByteCount: pngWritten ? previewPng.length : 0,
       pngBytes: previewPng,
+      receiverPreviewPng: receiverPreviewPng,
+      receiverPreviewStored: receiverPreviewWritten,
+      receiverPreviewByteCount: receiverPreviewWritten ? receiverPreviewPng!.length : 0,
       region: region,
       regionInfoAvailable: regionInfoAvailable,
     );

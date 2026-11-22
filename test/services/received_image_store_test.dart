@@ -881,6 +881,40 @@ void main() {
   });
 
   group('outgoing', () {
+    test('the chosen send preview survives restart without another decode', () async {
+      final h = _build();
+      final original = Uint8List.fromList(List<int>.filled(64, 1));
+      final chosen = Uint8List.fromList(List<int>.filled(32, 2));
+      final entry = await h.store.registerOutgoing(
+        channelIndex: 1, senderPrefix: kSelf, imgId: 8,
+        previewPng: original, receiverPreviewPng: chosen,
+        bitstream: _payload(20), rate: AeicRatePoint.ft32, chunkCount: 2,
+        region: 'north', regionInfoAvailable: true,
+      );
+      expect(entry.pngBytes, orderedEquals(original));
+      expect(entry.receiverPreviewPng, orderedEquals(chosen));
+      expect(entry.receiverPreviewStored, isTrue);
+      expect(entry.storedBytes, 64 + 32 + 20);
+      expect(entry.region, 'north');
+      expect(h.decoder.calls, 0);
+      expect(h.store.decodeQueue, isEmpty);
+      h.store.dispose();
+
+      final decoder = _FakeDecoder();
+      final reborn = ReceivedImageStore(blobs: h.blobs, decoder: decoder, clock: h.clock);
+      addTearDown(reborn.dispose);
+      await reborn.load();
+      await Future.wait([
+        reborn.ensurePng(entry.streamId),
+        reborn.ensureReceiverPreview(entry.streamId),
+      ]);
+      final loaded = reborn.entryFor(entry.streamId)!;
+      expect(loaded.pngBytes, orderedEquals(original));
+      expect(loaded.receiverPreviewPng, orderedEquals(chosen));
+      expect(loaded.region, 'north');
+      expect(decoder.calls, 0);
+    });
+
     test('registerOutgoing parks, keeping the crop and the bitstream', () async {
       final h = _build();
       final entry = await h.store.registerOutgoing(

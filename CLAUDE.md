@@ -4024,6 +4024,22 @@ not reload unrelated view state from that screen. Keep intentionally deleted
 upstream slot/filter fixtures deleted. The requested target is now prepared,
 without committing; owner analysis and Flutter tests are still required.
 
+**Next range, image-versions stage prepared 2026-11-22: `98ca4463`.**
+Target for this range is `34ea0cb7`; continue one first-parent step at a time.
+Port up to six AEIC send reconstructions and selectable original/receiver
+previews. Variant zero retains the full-frame preprocessing; variants select
+small deterministic source rectangles without changing AEIC framing or entropy
+coding. Reuse the fork receiver-preview blob for the chosen reconstruction,
+keeping the original, region, repeat statistics, manual-decode fallback and
+budget accounting. No second inference is scheduled for a selected preview.
+The owner explicitly keeps the fork per-chunk minimum-hop/repeater retry policy;
+do not add upstream one-shot repair timers or its parallel echo tracker.
+Preserve the already accepted backup/order fixes, profile templates, SQLite,
+localizations and intentional deletions. Evaluation tools live under
+`tools/aeic/eval` and are not runtime dependencies. SQLite may be extended for
+bookmarks in the later stage if appropriate; keep backup previews and identity
+scoping. The owner runs Flutter checks and device profiling; no commit here.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
