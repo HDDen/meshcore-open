@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../helpers/cancellable_compute.dart';
+import '../helpers/canvas_encoding_versions.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
@@ -3060,7 +3061,7 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
     _showGrid = PrefsManager.instance.getBool(_prefsShowGridKey) ?? true;
     _showRuler = PrefsManager.instance.getBool(_prefsShowRulerKey) ?? false;
     _compressionLevel = _loadSavedCompressionLevel();
-    _encodingVersion = image.encodingVersion;
+    _encodingVersion = canvasEncodingVersionForImport(image.encodingVersion);
     _paletteProfile = image.paletteProfile;
     if (image.paletteProfile.isDynamic) {
       _dynamicPaletteProfile = image.paletteProfile;
@@ -3225,15 +3226,9 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
   bool get _supportsCompressionLevelSelection =>
       _encodingVersion != MCOImageEncodingVersion.v1Legacy;
 
-  List<MCOImageEncodingVersion> get _availableEncodingVersions {
-    if (_isEditingV4RasterLayer) {
-      return [MCOImageEncodingVersion.v3];
-    }
-    // v4 does not depend on the binary channel transport: a direct or room
-    // chat opens the editor without it and sends the image as `im4:` text,
-    // which is why the size estimate falls back to the text length there.
-    return [MCOImageEncodingVersion.v3, MCOImageEncodingVersion.v4];
-  }
+  List<MCOImageEncodingVersion> get _availableEncodingVersions =>
+      canvasEncodingVersions(
+        editingV4RasterLayer: _isEditingV4RasterLayer);
 
   int _maxCanvasSizeForEncoding(MCOImageEncodingVersion version) {
     return version == MCOImageEncodingVersion.v1Legacy
@@ -8793,14 +8788,18 @@ class _CanvasEditorScreenState extends State<CanvasEditorScreen> {
           _payloadRefreshProgressPercent = null;
           _payloadRefreshElapsed = null;
           _payloadRefreshStopwatch = null;
-          _currentEncodedCandidate = imported.encoded;
-          _currentEncodedCacheKey = _MCOImageEncodeCacheKey.fromRequest(
-            _buildEncodeRequest(),
-          );
-          _currentPayloadChars = _displayPayloadSizeForEncoded(
-            imported.encoded,
-          );
+          final reuseImported = imported.image.encodingVersion == _encodingVersion;
+          _currentEncodedCandidate = reuseImported ? imported.encoded : null;
+          _currentEncodedCacheKey = reuseImported
+              ? _MCOImageEncodeCacheKey.fromRequest(_buildEncodeRequest()) : null;
+          _currentPayloadChars = reuseImported
+              ? _displayPayloadSizeForEncoded(imported.encoded) : 0;
         });
+        if (imported.image.encodingVersion != _encodingVersion) {
+          // v1/v2 are read-only: compute a new v3 result, never label the old
+          // bytes as a v3 cache hit or send them as the edited image.
+          _markPayloadDirty();
+        }
         unawaited(_saveCanvasPalette(imported.image.paletteProfile));
         unawaited(_saveCanvasSize(imported.image.width, imported.image.height));
         return;

@@ -141,3 +141,5 @@ keeps the previous single-burst behavior.
 ## MCOimg raster display
 
 MCOimg raster images use the same compact rectangle painting in chat, the canvas editor and PNG rendering. Adjacent same-color pixels are painted together; transparency and pixel colors remain unchanged. A four-byte solid image can legitimately describe a full 256x256 canvas and is not rejected because its file is small. This rendering path is separate from the AEIC model decoder described above.
+
+Legacy MCOimg v1/v2 images remain readable. The canvas editor creates only v3/v4: importing a legacy image preserves its pixels and dimensions but selects v3 and calculates a new encoded result. The original file is not modified.

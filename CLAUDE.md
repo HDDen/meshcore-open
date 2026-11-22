@@ -4941,3 +4941,5 @@ Contact-name retention: `retainedAdvertName` preserves a known name for omitted/
 Firmware contact ingestion uses `Contact.fromFrame(..., preserveEmptyName: true)` so empty names remain distinguishable from a literal name "Unknown" until merging. The parser default keeps its legacy Unknown display fallback for other callers.
 
 `ChannelRegionFilterLine` shows outgoing region then region-filter icon/summary on one natural-width line. The unread count is omitted to save header space. A horizontal scroll view keeps long region names fully available without wrapping or ellipsis.
+
+Canvas format policy lives in `helpers/canvas_encoding_versions.dart`. The editor creates v3/v4 only. Legacy v1/v2 images decode unchanged but import into v3; their original encoded candidate is discarded and a fresh v3 calculation is scheduled, preventing legacy bytes from being reused under a v3 cache key. Initial images use the same format normalization. v4 raster-layer editing remains v3-only.
