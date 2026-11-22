@@ -373,6 +373,9 @@ new membership does not save it.
 
 ### Managing Communities
 
+The header menu ends with **Search messages**, **Manage Communities** (when online),
+a separator, **Disconnect**, and **Settings**.
+
 From the channels screen overflow menu → "Manage Communities". Opens a draggable scrollable sheet (resizable 30–90% of screen height):
 
 - Each community shows its name and a short community ID (first 8 hex characters)

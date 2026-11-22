@@ -1305,7 +1305,7 @@ class _MapScreenState extends State<MapScreen>
                     tooltip: context.l10n.map_lineOfSight,
                   ),
                 PopupMenuButton(
-                  itemBuilder: (context) => [
+                  itemBuilder: (context) => <PopupMenuEntry<dynamic>>[
                     if (!connector.isOfflineMode &&
                         !_isBuildingPathTrace &&
                         selfDisplayPosition != null)
@@ -1371,6 +1371,7 @@ class _MapScreenState extends State<MapScreen>
                       ),
                       onTap: () => _openChannelMarkerSettings(connector),
                     ),
+                    const PopupMenuDivider(),
                     PopupMenuItem(
                       child: PopupMenuRow(
                         icon: Icons.logout,

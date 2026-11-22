@@ -3,10 +3,13 @@ import 'dart:typed_data';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MissingPluginException, SystemChannels;
+import 'package:flutter/services.dart'
+    show MethodChannel, MissingPluginException, SystemChannels;
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:mco_service/mco_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidFlutterLocalNotificationsPlugin;
 import 'package:provider/provider.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +31,7 @@ import 'package:meshcore_open/screens/contacts_screen.dart';
 import 'package:meshcore_open/screens/manual_path_trace_screen.dart';
 import 'package:meshcore_open/screens/channels_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/services/notification_service.dart';
 import 'package:meshcore_open/services/companion_cli_session.dart';
 import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/channel_group_store.dart';
@@ -191,6 +195,27 @@ class _Connector extends MeshCoreConnector {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const notificationChannel = MethodChannel('dexterous.com/flutter/local_notifications');
+  setUpAll(() {
+    // Widget tests have no native plugin registrant; use the same adapter as
+    // the connector notification tests rather than swallowing init errors.
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notificationChannel, (call) async {
+          switch (call.method) {
+            case 'initialize':
+            case 'areNotificationsEnabled':
+              return true;
+            default:
+              return null;
+          }
+        });
+  });
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notificationChannel, null);
+  });
   late _Connector connector;
   late AppSettingsService settings;
   late UiViewStateService view;
@@ -201,6 +226,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();
     await PrefsManager.initialize();
+    NotificationService().resetForTest();
     connector = _Connector();
     settings = AppSettingsService();
     view = UiViewStateService();
@@ -208,6 +234,7 @@ void main() {
   });
   tearDown(() {
     connector.dispose(); settings.dispose(); view.dispose(); PrefsManager.reset();
+    NotificationService().resetForTest();
     PathProviderPlatform.instance = previousPaths;
   });
 

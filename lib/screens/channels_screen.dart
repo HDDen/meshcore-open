@@ -452,30 +452,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
               // onTap handlers run after the menu route pops, so they must
               // capture the screen's context — not the itemBuilder's menu
               // context, which is deactivated by then.
-              itemBuilder: (menuContext) => [
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.logout,
-                    iconColor: Theme.of(menuContext).colorScheme.error,
-                    text: menuContext.l10n.common_disconnect,
-                  ),
-                  onTap: () => _disconnect(context),
-                ),
-                if (!connector.isOfflineMode)
-                  PopupMenuItem(
-                    child: PopupMenuRow(
-                      icon: Icons.groups,
-                      text: menuContext.l10n.community_manageCommunities,
-                    ),
-                    onTap: () => _showManageCommunitiesDialog(context),
-                  ),
-                PopupMenuItem(
-                  child: PopupMenuRow(
-                    icon: Icons.search,
-                    text: menuContext.l10n.chat_searchMessages,
-                  ),
-                  onTap: () => _showMessageSearch(context),
-                ),
+              itemBuilder: (menuContext) => <PopupMenuEntry<dynamic>>[
                 if (BlockedSenders.instance.enabled) PopupMenuItem(
                   child: PopupMenuRow(
                     icon: Icons.block,
@@ -487,8 +464,32 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(
+                    icon: Icons.search,
+                    text: menuContext.l10n.chat_searchMessages,
+                  ),
+                  onTap: () => _showMessageSearch(context),
+                ),
+                if (!connector.isOfflineMode)
+                  PopupMenuItem(
+                    child: PopupMenuRow(
+                      icon: Icons.groups,
+                      text: menuContext.l10n.community_manageCommunities,
+                    ),
+                    onTap: () => _showManageCommunitiesDialog(context),
+                  ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  child: PopupMenuRow(
+                    icon: Icons.logout,
+                    iconColor: Theme.of(menuContext).colorScheme.error,
+                    text: menuContext.l10n.common_disconnect,
+                  ),
+                  onTap: () => _disconnect(context),
+                ),
+                PopupMenuItem(
+                  child: PopupMenuRow(
                     icon: Icons.settings,
-                    text: menuContext.l10n.settings_title,
+                    text: menuContext.l10n.common_settings,
                   ),
                   onTap: () {
                     if (blockIfOffline(context, connector)) return;
