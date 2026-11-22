@@ -36,7 +36,6 @@ import '../models/app_settings.dart';
 import '../models/contact_group.dart';
 import '../services/app_settings_service.dart';
 import '../services/ui_view_state_service.dart';
-import '../services/wardrive_service.dart';
 import '../theme/mesh_theme.dart';
 import '../theme/theme_icons.dart';
 import '../utils/contact_search.dart';
@@ -49,14 +48,12 @@ import '../widgets/list_filter_widget.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
-import '../widgets/node_memory_prompt.dart';
+import '../widgets/repeater_actions.dart';
 import '../widgets/channel_link_import.dart'; // channel-qr-paste
 import '../widgets/contact_link_import.dart';
 import '../widgets/message_search_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/quick_answers_selection_dialog.dart';
-import '../widgets/repeater_login_dialog.dart';
-import '../widgets/repeater_options_sheet.dart';
 import '../widgets/node_info_sheet.dart' show showRoomLoginDialog;
 import '../widgets/popup_menu_row.dart';
 import '../widgets/sync_progress_overlay.dart';
@@ -69,7 +66,6 @@ import 'contact_qr_scanner_screen.dart';
 import 'discovery_screen.dart';
 import 'manual_path_trace_screen.dart';
 import 'map_screen.dart';
-import 'repeater_hub_screen.dart';
 import 'settings_screen.dart';
 
 enum RoomLoginDestination { chat, management }
@@ -2260,29 +2256,6 @@ class _ContactsScreenState extends State<ContactsScreen>
     }
   }
 
-  void _showRepeaterLogin(BuildContext context, Contact repeater) {
-    if (!ensureRadioConnected(context)) return;
-    showDialog(
-      context: context,
-      builder: (context) => RepeaterLoginDialog(
-        repeater: repeater,
-        onLogin: (password, isAdmin) {
-          // Navigate to repeater hub screen after successful login
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RepeaterHubScreen(
-                repeater: repeater,
-                password: password,
-                isAdmin: isAdmin,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   void _showRoomLogin(
     BuildContext context,
     Contact room,
@@ -2608,101 +2581,12 @@ class _ContactsScreenState extends State<ContactsScreen>
     BuildContext context,
     MeshCoreConnector connector,
     Contact repeater,
-  ) {
-    final wardrive = context.read<WardriveService>();
-    showRepeaterOptionsSheet(
-      context: context,
-      repeater: repeater,
-      onPing: () {
-        final hashByteWidth = connector.pathHashByteWidth;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PathTraceMapScreen(
-              title: context.l10n.contacts_repeaterPing,
-              path: Uint8List(0),
-              flipPathAround: true,
-              targetContact: repeater,
-              pathHashByteWidth: hashByteWidth,
-              useLiveTargetPath: false,
-            ),
-          ),
-        );
-      },
-      onManage: () => unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          repeater,
-          (stored) => _showRepeaterLogin(context, stored),
-        ),
-      ),
-      onRequestRegions: () => unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          repeater,
-          (stored) =>
-              _openRepeaterRegionRequestTrace(context, connector, stored),
-        ),
-      ),
-      onToggleFavorite: () => unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          repeater,
-          (stored) => unawaited(
-            connector.setContactFlags(stored, isFavorite: !stored.isFavorite),
-          ),
-        ),
-      ),
-      extraTilesBuilder: (sheetContext) => context
-          .read<SettingsSectionsService>()
-          .contactActionTiles(
-            sheetContext,
-            navigatorContext: context,
-            contactName: repeater.name,
-            contactType: repeater.type,
-            contactKeyHex: repeater.publicKeyHex,
-            spreadingFactor: connector.currentSf,
-            loadRecords: ({isCancelled}) => _loadServiceChannelRecords(
-              connector,
-              includeSharedHistory: context
-                  .read<AppSettingsService>()
-                  .settings
-                  .sharedMessageHistoryMode
-                  .includesChannels,
-              isCancelled: isCancelled,
-            ),
-            loadNodes: () => _serviceNodes(connector),
-            openTrace: (pathBytes, hashByteWidth) =>
-                _openServiceTrace(context, pathBytes, hashByteWidth),
-            openEstimate: (estimate) =>
-                _openServiceEstimate(context, estimate),
-          ),
-      ignoredInWardrive: wardrive.isRepeaterIgnored(repeater.publicKeyHex),
-      onWardriveIgnoredChanged: (ignored) => unawaited(
-        wardrive.setRepeaterIgnored(repeater.publicKeyHex, ignored),
-      ),
-      onShare: () => unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          repeater,
-          (stored) => unawaited(_contactExport(stored.publicKey)),
-        ),
-      ),
-      onShareZeroHop: () => unawaited(
-        runWithContactOnNode(
-          context,
-          connector,
-          repeater,
-          (stored) => unawaited(_contactZeroHop(stored.publicKey)),
-        ),
-      ),
-      onDelete: () => _confirmDelete(context, connector, repeater),
-    );
-  }
+  ) => showRepeaterActions(
+    context, connector, repeater,
+    exportContact: (stored) => _contactExport(stored.publicKey),
+    shareZeroHop: (stored) => _contactZeroHop(stored.publicKey),
+    onDelete: () => _confirmDelete(context, connector, repeater),
+  );
 
   void _showContactOptions(
     BuildContext context,
@@ -3229,25 +3113,6 @@ class _ContactsScreenState extends State<ContactsScreen>
         .clamp(1, contact.publicKey.length)
         .toInt();
     return Uint8List.fromList(contact.publicKey.sublist(0, width));
-  }
-
-  void _openRepeaterRegionRequestTrace(
-    BuildContext context,
-    MeshCoreConnector connector,
-    Contact repeater,
-  ) {
-    final hashByteWidth = connector.pathHashByteWidth;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MapScreen(
-          initialTracePath: _contactPathPrefix(repeater, hashByteWidth),
-          initialTraceHashByteWidth: hashByteWidth,
-          initializeInitialTraceViewport: true,
-          regionRequestTarget: repeater,
-        ),
-      ),
-    );
   }
 
   void _confirmDelete(

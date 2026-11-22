@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChannels;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mco_service/mco_service.dart';
+import 'package:meshcore_open/services/wardrive_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -52,6 +54,8 @@ Contact _node(
 class _FakeConnector extends MeshCoreConnector {
   final List<Contact> discovered = [];
   final Set<String> known = {};
+  final saved = <String, Contact>{};
+  final favoriteCalls = <Contact>[];
   final frames = StreamController<Uint8List>.broadcast();
   final written = <Uint8List>[];
 
@@ -73,6 +77,17 @@ class _FakeConnector extends MeshCoreConnector {
 
   @override
   Set<String> get knownContactKeys => Set.unmodifiable(known);
+
+  @override
+  Contact? getContactByPubKeyHex(String key) => saved[key] ??
+      discovered.where((contact) => contact.publicKeyHex == key && known.contains(key)).firstOrNull;
+
+  @override
+  Future<void> setContactFlags(Contact contact, {
+    bool? isFavorite, bool? teleBase, bool? teleLoc, bool? teleEnv,
+  }) async {
+    favoriteCalls.add(contact);
+  }
 
   @override
   int get discoveredRevision => revision;
@@ -121,6 +136,18 @@ class _FakeConnector extends MeshCoreConnector {
     revision++;
     notifyListeners();
   }
+}
+
+class _Wardrive extends ChangeNotifier implements WardriveService {
+  final ignored = <String>{};
+  @override
+  bool isRepeaterIgnored(String key) => ignored.contains(key);
+  @override
+  Future<void> setRepeaterIgnored(String key, bool value) async {
+    if (value) { ignored.add(key); } else { ignored.remove(key); }
+  }
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 final AppLocalizations _l10n = lookupAppLocalizations(const Locale('en'));
@@ -177,7 +204,11 @@ class _Harness {
       ..discovered.addAll(discovered)
       ..known.addAll(known);
     final settings = AppSettingsService();
+    final wardrive = _Wardrive();
+    final sections = SettingsSectionsService();
     addTearDown(() {
+      wardrive.dispose();
+      sections.dispose();
       settings.dispose();
       connector.dispose();
       unawaited(connector.frames.close());
@@ -188,6 +219,8 @@ class _Harness {
         providers: [
           ChangeNotifierProvider<MeshCoreConnector>.value(value: connector),
           ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+          ChangeNotifierProvider<WardriveService>.value(value: wardrive),
+          ChangeNotifierProvider<SettingsSectionsService>.value(value: sections),
         ],
         child: MaterialApp(
           locale: locale,
@@ -290,6 +323,35 @@ void main() {
   });
 
   tearDown(PrefsManager.reset);
+
+  testWidgets('a saved discovery repeater opens current contact actions', (tester) async {
+    final heard = _node(14, 'Heard repeater', type: advTypeRepeater);
+    final stored = heard.copyWith(name: 'Saved repeater', flags: contactFlagFavorite);
+    try {
+      final harness = await _Harness.pump(tester,
+        discovered: [heard], known: {heard.publicKeyHex});
+      harness.connector.saved[heard.publicKeyHex] = stored;
+      final tag = await harness.discover(tester);
+      await harness.answer(tester, heard, tag: tag);
+      await tester.tap(find.text('Heard repeater'));
+      await _pumpRows(tester);
+      expect(find.text('Saved repeater'), findsOneWidget);
+      expect(find.text(_l10n.contacts_ping), findsOneWidget);
+      expect(find.text(_l10n.contacts_manageRepeater), findsOneWidget);
+      expect(find.text(_l10n.contacts_requestRegions), findsOneWidget);
+      expect(find.text(_l10n.contacts_ShareContact), findsOneWidget);
+      expect(find.text(_l10n.contacts_ShareContactZeroHop), findsOneWidget);
+      expect(find.text(_l10n.contacts_deleteContact), findsOneWidget);
+      expect(find.text(_l10n.discoveredContacts_addContact), findsNothing);
+      await tester.tap(find.byIcon(Icons.star));
+      await _pumpRows(tester);
+      expect(harness.connector.favoriteCalls, [same(stored)]);
+      expect(harness.connector.written.where((frame) => frame.first == cmdImportContact), isEmpty);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await _Harness.unmount(tester);
+    }
+  });
 
   for (final language in ['en', 'ru']) {
     for (final layout in [

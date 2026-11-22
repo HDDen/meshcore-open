@@ -28,6 +28,7 @@ import '../widgets/list_filter_widget.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/middle_ellipsis_text.dart';
 import '../widgets/popup_menu_row.dart';
+import '../widgets/repeater_actions.dart';
 import '../helpers/snack_bar_builder.dart';
 
 enum DiscoverySortOption { lastSeen, name, type }
@@ -314,16 +315,21 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         ? context.l10n.common_unknownDevice
         : contact.name;
 
-    // A node that is already a contact is listed only because it answered
-    // the discovery request: there is nothing to do with it here, so the
-    // card says so, takes no tap and fades back.
+    // Saved responders stay dimmed and labelled. A saved repeater opens the
+    // same actions as Contacts, using its current node record rather than
+    // the potentially stale discovery snapshot.
     final card = MeshCard(
       // A tap opens the menu, and adding the contact is the first entry in
       // it. Importing straight from the tap made the most consequential
       // action of the screen the easiest one to trigger by accident, on a
       // list whose rows are the width of the screen.
       onTap: alreadyAdded
-          ? null
+          ? (contact.type == advTypeRepeater ? () {
+              final stored = connector.getContactByPubKeyHex(contact.publicKeyHex);
+              if (stored != null && stored.type == advTypeRepeater) {
+                showRepeaterActions(this.context, connector, stored);
+              }
+            } : null)
           : () => _showContactContextMenu(contact, connector),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(

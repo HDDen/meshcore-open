@@ -195,6 +195,12 @@ replacement when overwrite-oldest is enabled. The app activates the contact
 only after the radio acknowledges the save; a full-table error leaves it in
 the discovered list. No extra clock request is sent.
 
+When a discovery responder is a repeater already saved in the node, tapping its
+card opens the same action menu as in Contacts: ping, management, region request,
+favourites, wardrive visibility, sharing and deletion. The menu uses the current
+saved contact record. The dimmed card and Already in contacts label remain;
+unknown nodes keep their discovery menu.
+
 ### Scan for Nearby Nodes
 
 On the Discovered Contacts screen, tap the radar icon (**Scan for nearby nodes**) to ask nodes within direct radio range to identify themselves, instead of waiting for their next advert. The button appears only while connected to firmware with version code 8 or newer.
