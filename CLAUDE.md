@@ -3998,6 +3998,13 @@ only its version from `99.0.2+28` to `99.0.3+29`. Retain the fork release
 or dependency changes belong to this stage; the next stage is `84fc394e`
 (AppImage release packaging).
 
+**AppImage publishing stage skipped by owner, 2026-11-22: `84fc394e`.**
+Record upstream ancestry without adopting its workflow or README changes.
+The owner distributes Linux builds as archives and has disabled GitHub
+workflows for security reasons. Do not introduce tag-triggered AppImage
+publishing, release-write permissions, or automatic release creation. Keep
+existing local packaging tools and data-directory/portable behaviour unchanged.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
