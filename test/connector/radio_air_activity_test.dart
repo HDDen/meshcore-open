@@ -6,6 +6,8 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/storage/prefs_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:meshcore_open/widgets/radio_stats_entry.dart';
@@ -135,9 +137,19 @@ void main() {
   group('a new screen', () {
     testWidgets('a dot built after the frame, on a screen opened later, '
         'blinks as the one that saw it did', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      PrefsManager.reset();
+      await tester.runAsync(PrefsManager.initialize);
+      addTearDown(PrefsManager.reset);
       final connector = _ConnectedConnector();
       final settings = AppSettingsService();
       addTearDown(settings.dispose);
+      addTearDown(connector.dispose);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
+      });
+      await settings.updateSettings(settings.settings.copyWith(hideRadioStatsButton: false));
       connector.handleFrameForTest(_statsFrame(txAirSecs: 10, rxAirSecs: 20));
       connector.handleFrameForTest(_statsFrame(txAirSecs: 12, rxAirSecs: 20));
       // Past the two seconds the flag used to last: the screen switch comes

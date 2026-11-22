@@ -2570,6 +2570,26 @@ Turns the app into a mesh coverage scanner (`services/wardrive_service.dart`, dr
 
 Background wardriving (`map_wardriveInBackground`, Android only) needs five things the phone may refuse: the notification permission, location services on, location allowed all the time, background activity not restricted, and the battery optimization exemption (`WardriveBackgroundRequirement`, `helpers/wardrive_background_requirements.dart`; on Android 13 and newer the last two are one three-way battery setting, unrestricted, optimized or restricted, and `ActivityManager.isBackgroundRestricted` is checked beside `PowerManager.isIgnoringBatteryOptimizations` for the 9 to 12 phones that keep them as two switches, the restriction opening the app's own settings page). Turning the option on checks them and, with one missing, asks for that one alone: the runtime prompt where Android has one, else its system screen, waited out until the app comes back (`WardriveForegroundService.requestAndroidRequirement`); the option stays off while anything is missing, a snackbar names what (`map_wardriveBackgroundNeeds`), and the next tap asks for the next missing requirement in order, round the end, so a screen the user backed out of is not the only one offered (`nextWardriveBackgroundRequirement`). No system screen opens by itself; the loop that walked every screen in turn (`ensureAndroidRequirements`, until 2026-10-09) is gone. A session started with the option on checks the requirements without asking, and a permission revoked meanwhile turns the option off, the session running in the foreground and the panel naming the requirement (`backgroundRequirementMissing`, `map_wardriveBackgroundOff`) (`test/helpers/wardrive_background_requirements_test.dart`).
 
+### Per-channel region display filter
+
+`helpers/channel_region_filter.dart` owns a normalized display denylist: empty
+string is explicitly unscoped, `!unknown` is unresolved or absent metadata,
+other names omit a leading #. Choices always begin with No region and Unknown
+regions, then the sorted known/disabled names; new names are allowed. The
+screen-only `ChannelRegionFilterTimeline` caches by source identity and denylist
+contents before transcript grouping, without altering stored/shared history,
+unread counts, notifications, wire data or flood scopes. A restricted page keeps
+the existing older-history control. `widgets/channel_region_filter_control.dart`
+provides the header funnel/allowed-summary and a Save/Cancel switch dialog.
+`ChannelRegionFilterStore` uses the lazy auxiliary `channel_region_filters` SQL
+table via MessageHistoryStorage (web preferences only). Rows use node scope and
+PSK storage ID, preserving explicit empty choices. Connector changes are applied
+after durable writes and guarded by node session/channel identity. Channel
+settings backup reads this SQL setting separately; hiddenRegions serializes a
+canonical JSON denylist only in mcoaChannelSettings. Restore inserts only absent
+rows atomically, reloads channel state and does not require denied region names
+to exist at the destination. No generated database or localization Dart is edited.
+
 ### Region / flood-scope routing
 Channels can be tagged with a named region; `cmdSetFloodScope` (54) / `cmdSetDefaultFloodScope` (63) hash `#<name>` (SHA-256, first 16 bytes) into a scope. Managed in `region_management_screen.dart`; persisted in `region_store` / `channel_region_store`.
 

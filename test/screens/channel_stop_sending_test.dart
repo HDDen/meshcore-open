@@ -54,11 +54,16 @@ void main() {
     await filter.updateSettings(const MessageFilterSettings(enabled: true));
     final node = _Node(messageFilterService: filter);
     final settings = AppSettingsService();
+    await settings.updateSettings(settings.settings.copyWith(incomingQuoteAsMentions: false));
     final scale = ChatTextScaleService();
     addTearDown(filter.dispose);
     addTearDown(node.dispose);
     addTearDown(settings.dispose);
     addTearDown(scale.dispose);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
 
     final channel = Channel.fromHex(0, 'synthetic', Channel.publicChannelPsk);
     final now = DateTime(2026, 1, 1, 12);
@@ -148,6 +153,10 @@ void main() {
     addTearDown(settings.dispose);
     addTearDown(translation.dispose);
     addTearDown(scale.dispose);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
 
     final channel = Channel.fromHex(0, 'synthetic', Channel.publicChannelPsk);
     final now = DateTime.utc(2026);
@@ -291,6 +300,10 @@ void main() {
     addTearDown(settings.dispose);
     addTearDown(translation.dispose);
     addTearDown(scale.dispose);
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    });
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     String? clipboard;
     messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {

@@ -5374,5 +5374,9 @@
   "@messageFilter_filterSenderKeyConfirm": {"placeholders": {"name": {"type": "String"}}},
   "messageFilter_ruleFieldMcmpKey": "MCMP key",
   "messageFilter_invalidMcmpKey": "Enter a 64-character hexadecimal public key",
-  "messageFilter_unblockSender": "Unblock sender"
+  "messageFilter_unblockSender": "Unblock sender",
+  "channelRegionFilter_title": "Show messages from regions",
+  "channelRegionFilter_noneAllowed": "None",
+  "channelRegionFilter_saveError": "Could not save the region filter",
+  "channelRegionFilter_unknown": "Unknown regions"
 }

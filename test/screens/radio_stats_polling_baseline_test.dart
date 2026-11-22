@@ -89,11 +89,10 @@ Future<_Harness> _open(
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   await harness.settings.updateSettings(harness.settings.settings.copyWith(
     powerSaving: powerSaving,
+    // This suite exercises the indicator independently of the app default.
+    hideRadioStatsButton: hidden,
   ));
   harness.connector.attachAppSettingsServiceForTest(harness.settings);
-  if (hidden) {
-    await harness.settings.setHideRadioStatsButton(true);
-  }
   // Avoid a perpetual progress animation in tests of route visibility.
   harness.connector.handleFrameForTest(_statsFrame());
   await tester.pumpWidget(

@@ -18417,6 +18417,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unblock sender'**
   String get messageFilter_unblockSender;
+
+  /// No description provided for @channelRegionFilter_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Show messages from regions'**
+  String get channelRegionFilter_title;
+
+  /// No description provided for @channelRegionFilter_noneAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get channelRegionFilter_noneAllowed;
+
+  /// No description provided for @channelRegionFilter_saveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the region filter'**
+  String get channelRegionFilter_saveError;
+
+  /// No description provided for @channelRegionFilter_unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown regions'**
+  String get channelRegionFilter_unknown;
 }
 
 class _AppLocalizationsDelegate

@@ -24,6 +24,8 @@ import '../helpers/marker_message.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_filtered_row_grouping.dart';
+import '../helpers/channel_region_filter.dart';
+import '../widgets/channel_region_filter_control.dart';
 import '../helpers/last_value_memo.dart';
 import '../helpers/channel_echo_recovery.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-share
@@ -170,6 +172,31 @@ class ChannelChatScreen extends StatefulWidget {
 }
 
 class _ChannelChatScreenState extends State<ChannelChatScreen> {
+  final _regionFilterTimeline = ChannelRegionFilterTimeline();
+
+  Future<void> _configureRegionFilter(MeshCoreConnector connector) async {
+    final node = connector.selfPublicKeyHex;
+    final channelId = widget.channel.storageId;
+    final hidden = await showChannelRegionFilterDialog(
+      context,
+      knownRegions: RegionStore().loadRegions(),
+      hidden: connector.getChannelHiddenRegions(widget.channel.index),
+    );
+    if (hidden == null || !mounted || connector.selfPublicKeyHex != node ||
+        widget.channel.storageId != channelId) {
+      return;
+    }
+    try {
+      await connector.setChannelHiddenRegions(widget.channel, hidden);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.channelRegionFilter_saveError)),
+        );
+      }
+    }
+  }
+
   static final RegExp _replyWhitespacePattern = RegExp(r'\s+');
 
   final MarkupTextEditingController _textController =
@@ -708,7 +735,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       _messageKeyFor(messageId)?.currentContext;
 
   List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
-    return connector.getChannelMessageTimeline(widget.channel);
+    return _regionFilterTimeline.resolve(
+      connector.getChannelMessageTimeline(widget.channel),
+      connector.getChannelHiddenRegions(widget.channel.index),
+    );
   }
 
   _ParsedChannelMessageContent _parsedMessageContent({
@@ -1129,13 +1159,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          '$regionHeader • ${context.l10n.chat_unread(unreadCount)}',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.normal,
-                          ),
+                        ChannelRegionFilterLine(
+                          regionHeader: regionHeader,
+                          unread: context.l10n.chat_unread(unreadCount),
+                          knownRegions: RegionStore().loadRegions(),
+                          hidden: connector.getChannelHiddenRegions(widget.channel.index),
+                          onConfigure: () => _configureRegionFilter(connector),
                         ),
                         // The sender name of the channel, tappable on its
                         // own text; the rest of the header keeps the region.
@@ -1354,7 +1383,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       connector: connector,
                     );
                     final newest = messages.lastOrNull;
-                    final compacted = timeline.hideFiltered ||
+                    final compacted = connector.getChannelHiddenRegions(widget.channel.index).isNotEmpty ||
+                        timeline.hideFiltered ||
                         (timeline.filterEnabled &&
                             reversedRows.any((row) => row.filteredGroup != null));
                     final oldest = compacted

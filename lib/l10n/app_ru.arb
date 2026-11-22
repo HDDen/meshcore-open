@@ -4187,5 +4187,9 @@
   "messageFilter_filterSenderKeyConfirm": "Фильтровать сообщения от «{name}» во всех каналах, где включён фильтр, по проверенному ключу MCMP, если он известен, иначе — по имени?",
   "messageFilter_ruleFieldMcmpKey": "MCMP-ключ",
   "messageFilter_invalidMcmpKey": "Введите открытый ключ из 64 hex-символов",
-  "messageFilter_unblockSender": "Разблокировать отправителя"
+  "messageFilter_unblockSender": "Разблокировать отправителя",
+  "channelRegionFilter_title": "Показывать сообщения с регионом",
+  "channelRegionFilter_noneAllowed": "Нет",
+  "channelRegionFilter_saveError": "Не удалось сохранить фильтр регионов",
+  "channelRegionFilter_unknown": "Неизвестные регионы"
 }

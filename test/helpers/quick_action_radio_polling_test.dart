@@ -62,7 +62,8 @@ void main() {
       addTearDown(settings.dispose);
       await _configure(settings, {});
       await settings.updateSettings(settings.settings.copyWith(quickActionsHeader:
-        QuickActionsHeaderSettings(display: QuickActionsHeaderDisplay.noise)));
+        QuickActionsHeaderSettings(display: QuickActionsHeaderDisplay.noise)
+            .withInterval(QuickActionsHeaderDisplay.noise, 1000)));
       var visible = true;
       final polling = QuickActionRadioPolling(radio, settings,
           source: QuickActionPollingSource.header, isVisible: () => visible);

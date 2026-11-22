@@ -84,10 +84,11 @@ void main() {
   });
 
   group('showCompressionRatio setting', () {
-    test('is disabled by default', () {
-      expect(AppSettings().showCompressionRatio, isFalse);
+    test('is enabled by default', () {
+      expect(AppSettings().showCompressionRatio, isTrue);
       expect(AppSettings().compressionRatioWithSenderName, isFalse);
-      expect(AppSettings.fromJson(const {}).showCompressionRatio, isFalse);
+      expect(AppSettings.fromJson(const {}).showCompressionRatio, isTrue);
+      expect(AppSettings.fromJson({'show_compression_ratio': false}).showCompressionRatio, isFalse);
       expect(
         AppSettings.fromJson(const {}).compressionRatioWithSenderName,
         isFalse,

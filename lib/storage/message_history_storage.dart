@@ -1638,6 +1638,21 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
   /// Whether the database is open: false on the web, which never creates it,
   /// and in a process that has not initialised the storage, such as a unit
   /// test.
+  Future<String?> readChannelRegionFilter(String node, String channel) async =>
+      hasDatabase ? _database!.readChannelRegionFilter(node, channel) : null;
+
+  Future<bool> importChannelRegionFilter(String node, String channel, String hidden) =>
+      _persistenceWork.run(() async {
+        if (!hasDatabase) throw StateError('Message history database is not open');
+        return _database!.importChannelRegionFilter(node, channel, hidden);
+      });
+
+  Future<void> writeChannelRegionFilter(String node, String channel, String hidden) =>
+      _persistenceWork.run(() async {
+        if (!hasDatabase) throw StateError('Message history database is not open');
+        await _database!.writeChannelRegionFilter(node, channel, hidden);
+      });
+
   bool get hasDatabase => _initialized && _database != null;
 
   bool get hasAdaptiveTxPowerJournal => hasDatabase || (kIsWeb && _initialized);

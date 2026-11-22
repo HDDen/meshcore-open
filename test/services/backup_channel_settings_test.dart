@@ -15,6 +15,26 @@ final _first = Channel.fromHex(2, 'First', '01' * 16);
 final _second = Channel.fromHex(7, 'Second', '02' * 16);
 
 void main() {
+  test('region display denylist exports only to MCOa and restores by channel identity', () async {
+    final id = _first.storageId!;
+    final source = BackupChannelSettings({
+      (id, BackupChannelOption.hiddenRegions): '["","!unknown","north"]',
+    }, []);
+    expect(source.toPreferences(_scope), isEmpty);
+    expect(source.toPreferences(_scope, forkOnly: true), {
+      'channel_hidden_regions_${_scope}_$id': '["","!unknown","north"]',
+    });
+    final contents = await BackupSnapshot(sourcePublicKey: _node,
+      channelSettings: source, createdAt: DateTime.utc(2026)).encode(password: '');
+    final plan = await const BackupImportPlanner().inspect(contents,
+      password: '', channelSettingsOnly: true);
+    expect(plan.channelSettings!.values, source.values);
+    final preview = plan.channelSettings!.preview(session: Object(),
+      bindings: backupChannelBindings([_first]), current: {}, canRestoreOrder: false,
+      hasCyr2LatProfile: (_) => false, hasRegion: (_) => false);
+    expect(preview.writes.values.single, '["","!unknown","north"]');
+  });
+
   test('reads v1 channel settings and order without interpreting slot keys', () async {
     final id = _first.storageId!;
     final second = _second.storageId!;

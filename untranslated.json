@@ -465,7 +465,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "de": [
@@ -934,7 +938,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "es": [
@@ -1403,7 +1411,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "fr": [
@@ -1872,7 +1884,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "hu": [
@@ -2341,7 +2357,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "it": [
@@ -2810,7 +2830,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "ja": [
@@ -3279,7 +3303,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "ko": [
@@ -3748,7 +3776,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "nl": [
@@ -4217,7 +4249,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "pl": [
@@ -4686,7 +4722,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "pt": [
@@ -5155,7 +5195,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "sk": [
@@ -5624,7 +5668,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "sl": [
@@ -6093,7 +6141,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "sv": [
@@ -6562,7 +6614,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "uk": [
@@ -7031,7 +7087,11 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ],
 
   "zh": [
@@ -7500,6 +7560,10 @@
     "messageFilter_filterSenderKeyConfirm",
     "messageFilter_ruleFieldMcmpKey",
     "messageFilter_invalidMcmpKey",
-    "messageFilter_unblockSender"
+    "messageFilter_unblockSender",
+    "channelRegionFilter_title",
+    "channelRegionFilter_noneAllowed",
+    "channelRegionFilter_saveError",
+    "channelRegionFilter_unknown"
   ]
 }

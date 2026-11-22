@@ -11025,4 +11025,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get messageFilter_unblockSender => 'Разблокировать отправителя';
+
+  @override
+  String get channelRegionFilter_title => 'Показывать сообщения с регионом';
+
+  @override
+  String get channelRegionFilter_noneAllowed => 'Нет';
+
+  @override
+  String get channelRegionFilter_saveError =>
+      'Не удалось сохранить фильтр регионов';
+
+  @override
+  String get channelRegionFilter_unknown => 'Неизвестные регионы';
 }

@@ -57,3 +57,31 @@ If the original message has no known region, the reply uses the channel’s effe
 Scoped sends temporarily set the companion’s flood scope (`[54, 0, key]`, or `[54, 1]` for No region on firmware code 12+), send the message, and then clear the scope override (`buildSetFloodScopeFrame('')`, `[54, 0]`); they do not restore a previously set scope. Channels with no scope to apply send without any scope command, so the radio default region applies. Channel sends are serialized to prevent another channel from inheriting the temporary setting. Repeaters and companion firmware must support the relevant scope functionality.
 
 See [channels](channels.md), [routing paths](routing-paths.md), and [protocol metadata](ble-protocol.md#regions-and-image-data).
+
+## Per-channel message display filter (MCOa)
+
+Tap the funnel between the sending region and unread count in a channel header.
+The dialog **Show messages from regions** starts with **No region**, then
+**Unknown regions**, followed by known region names. Every switch starts on.
+Save applies the switches; Cancel leaves the filter unchanged.
+
+Only disabled categories are saved. A newly added region is therefore visible
+until explicitly disabled. No region means a message known to be unscoped;
+Unknown regions includes unresolved region codes and older messages without
+region metadata. Disabled names no longer in the region list remain in the
+dialog so they can be re-enabled.
+
+An outlined funnel means unrestricted display. A filled funnel shows the first
+allowed category and `+n` for the others; **None** means every listed category
+is disabled. This filters incoming, outgoing and shared-history rows in that
+channel's transcript. It does not delete messages, change spam verdicts, mark
+messages read, suppress notifications or change the outgoing flood scope.
+Older history can still be loaded when a page is hidden by the display filter.
+
+Native builds store a JSON denylist in the auxiliary SQL table
+`channel_region_filters`, keyed by node scope and channel PSK identity; radio
+slot reuse cannot transfer a saved setting to another channel. Web uses its
+preferences backend. The channel-settings backup includes this option in
+`mcoaChannelSettings`, outside upstream settings. Restore maps PSK identities to
+the destination channel and preserves an existing destination choice, including
+an explicit empty denylist. Official MeshCore format omits the option.

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../models/channel.dart';
+import 'channel_region_filter.dart';
 import '../storage/region_store.dart' show kUnscopedRegion;
 
 enum BackupChannelOption {
@@ -14,7 +15,8 @@ enum BackupChannelOption {
   cyr2latProfile('channel_cyr2lat_', infix: 'profile_', codec: true),
   sendingDelay('channel_sending_delay_'),
   urlImages('channel_url_images_'),
-  region('channel_region_');
+  region('channel_region_'),
+  hiddenRegions('channel_hidden_regions_');
 
   const BackupChannelOption(
     this.prefix, {
@@ -42,6 +44,7 @@ enum BackupChannelOption {
     mcmpVersion => value is int && (value == 2 || value == 3) ? value : null,
     cyr2latProfile => value is String && value.isNotEmpty ? value : null,
     region => value is String ? value.trim() : null,
+    hiddenRegions => ChannelRegionFilter.canonical(value),
     _ => value is bool ? value : null,
   };
 }

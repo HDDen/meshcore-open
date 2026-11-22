@@ -245,6 +245,17 @@ class _NotificationPlugin {
 class _QueueConnector extends MeshCoreConnector {
   _QueueConnector({super.messageFilterService});
 
+  bool _closedForTest = false;
+  @override
+  void dispose() {
+    // Some tests deliberately dispose before their registered cleanup.
+    if (_closedForTest) {
+      return;
+    }
+    _closedForTest = true;
+    super.dispose();
+  }
+
   final List<Uint8List> sent = [];
 
   /// Read as each CMD_SYNC_NEXT_MESSAGE goes out: how much of the watched
@@ -316,6 +327,7 @@ class _Harness {
     final connector = _QueueConnector(
       messageFilterService: messageFilterService,
     );
+    addTearDown(connector.dispose);
     final settings = AppSettingsService();
     await settings.updateSettings(
       settings.settings.copyWith(

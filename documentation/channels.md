@@ -6,6 +6,13 @@ Channels are broadcast group-chat spaces secured by a 16-byte pre-shared key (PS
 
 The number of active channels is determined by the firmware (default 40); the device reports its actual limit at login.
 
+## Region display filter (MCOa)
+
+The funnel beside the sending region opens the per-channel region denylist.
+No region and Unknown regions are separate switches, both on by default.
+See [regions](regions.md#per-channel-message-display-filter-mcoa) for storage,
+indicator, unknown-region and export behavior.
+
 ## How to Access
 
 QuickSwitchBar tab 1 (middle) from any main screen.

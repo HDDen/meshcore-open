@@ -1417,6 +1417,43 @@ ON heard_packets (region_hash, heard_at_ms)
 ''');
   }
 
+  Future<void> _ensureChannelRegionFilters() => customStatement('''
+CREATE TABLE IF NOT EXISTS channel_region_filters (
+  node_key TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  hidden_regions TEXT NOT NULL,
+  PRIMARY KEY (node_key, channel_id)
+)
+''');
+
+  Future<String?> readChannelRegionFilter(String node, String channel) async {
+    await _ensureChannelRegionFilters();
+    final row = await customSelect(
+      'SELECT hidden_regions FROM channel_region_filters WHERE node_key = ? AND channel_id = ?',
+      variables: [Variable<String>(node), Variable<String>(channel)],
+    ).getSingleOrNull();
+    return row?.read<String>('hidden_regions');
+  }
+
+  Future<bool> importChannelRegionFilter(String node, String channel, String hidden) async {
+    await _ensureChannelRegionFilters();
+    final count = await customUpdate(
+      'INSERT INTO channel_region_filters (node_key, channel_id, hidden_regions) VALUES (?, ?, ?) '
+      'ON CONFLICT(node_key, channel_id) DO NOTHING',
+      variables: [Variable<String>(node), Variable<String>(channel), Variable<String>(hidden)],
+    );
+    return count > 0;
+  }
+
+  Future<void> writeChannelRegionFilter(String node, String channel, String hidden) async {
+    await _ensureChannelRegionFilters();
+    await customStatement(
+      'INSERT INTO channel_region_filters (node_key, channel_id, hidden_regions) VALUES (?, ?, ?) '
+      'ON CONFLICT(node_key, channel_id) DO UPDATE SET hidden_regions = excluded.hidden_regions',
+      [node, channel, hidden],
+    );
+  }
+
   /// Per-contact settings of one node: `name` names the setting and `value`
   /// holds it as text. The contact's flood region is the first of them. An
   /// auxiliary table like the two above, so a database that predates it

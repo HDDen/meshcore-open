@@ -2,6 +2,7 @@ import '../helpers/backup_channel_settings.dart';
 import '../models/channel.dart';
 import 'channel_name_keyed_store.dart';
 import 'prefs_manager.dart';
+import 'channel_region_filter_store.dart';
 
 /// Backup reads the same name keys as the active channel stores, without
 /// triggering migration. Export reads only settings owned by this node.
@@ -43,8 +44,24 @@ class BackupChannelSettingsStore with ChannelNameKeyedStore {
     return values;
   }
 
+  Future<Map<BackupChannelSettingKey, Object>> readRegionFilters(
+    Iterable<BackupChannelBinding> bindings,
+  ) async {
+    final values = <BackupChannelSettingKey, Object>{};
+    final store = ChannelRegionFilterStore();
+    for (final channel in bindings) {
+      final encoded = await store.read(scope, channel.id);
+      if (encoded != null) values[(channel.id, BackupChannelOption.hiddenRegions)] = encoded;
+    }
+    return values;
+  }
+
   Future<bool> writeIfMissing(BackupChannelWriteKey target, Object value) async {
     final (channel, option) = target;
+    if (option == BackupChannelOption.hiddenRegions) {
+      final store = ChannelRegionFilterStore();
+      return store.importIfMissing(scope, channel.id, value as String);
+    }
     final key = ChannelNameKeyedStore.nameStorageKey(option.localPrefix(scope), channel.name);
     final prefs = PrefsManager.instance;
     if (prefs.containsKey(key)) return false;

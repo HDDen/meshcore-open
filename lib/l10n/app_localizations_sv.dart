@@ -10977,4 +10977,17 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get messageFilter_unblockSender => 'Unblock sender';
+
+  @override
+  String get channelRegionFilter_title => 'Show messages from regions';
+
+  @override
+  String get channelRegionFilter_noneAllowed => 'None';
+
+  @override
+  String get channelRegionFilter_saveError =>
+      'Could not save the region filter';
+
+  @override
+  String get channelRegionFilter_unknown => 'Unknown regions';
 }

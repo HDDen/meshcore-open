@@ -163,6 +163,8 @@ import '../storage/contact_identity_store.dart';
 import '../storage/channel_order_store.dart';
 import '../storage/channel_settings_store.dart';
 import '../storage/backup_channel_settings_store.dart';
+import '../storage/channel_region_filter_store.dart';
+import '../helpers/channel_region_filter.dart';
 import '../storage/channel_region_store.dart';
 import '../storage/contact_region_store.dart';
 import '../storage/channel_store.dart';
@@ -854,6 +856,41 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Map<int, String?> _channelCyr2LatProfileId = {};
   final Map<int, int?> _channelWidgetColor = {};
   final Map<int, int?> _channelWidgetTextColor = {};
+  final Map<int, Set<String>> _channelHiddenRegions = {};
+  final Map<int, String> _channelRegionFilterIds = {};
+
+  String? _channelRegionFilterId(int index) {
+    for (final channel in _channels.isNotEmpty ? _channels : _cachedChannels) {
+      if (channel.index == index) {
+        return channel.storageId;
+      }
+    }
+    return null;
+  }
+
+  Set<String> getChannelHiddenRegions(int index) =>
+      _channelRegionFilterIds[index] == _channelRegionFilterId(index)
+          ? _channelHiddenRegions[index] ?? const {} : const {};
+
+  Future<void> setChannelHiddenRegions(Channel channel, Set<String> hidden) async {
+    final node = selfPublicKeyHex;
+    final id = channel.storageId;
+    final session = _nodeLocalBackupSession;
+    bool current() => selfPublicKeyHex == node && _nodeLocalBackupSession == session &&
+        _channelRegionFilterId(channel.index) == id;
+    if (node.length < 10 || id == null || !current()) {
+      throw StateError('Channel region filter session changed');
+    }
+    final normalized = ChannelRegionFilter.normalized(hidden);
+    await ChannelRegionFilterStore().write(node.substring(0, 10), id, normalized);
+    if (!current()) {
+      return;
+    }
+    _channelHiddenRegions[channel.index] = normalized;
+    _channelRegionFilterIds[channel.index] = id;
+    notifyListeners();
+  }
+
   final Map<int, Region> _channelRegions = {};
 
   /// The region each contact's flood sends are scoped with, keyed by contact
@@ -5164,6 +5201,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelWidgetTextColor.clear();
     _channelUrlImagesEnabled.clear();
     _channelRegions.clear();
+    _channelHiddenRegions.clear();
+    _channelRegionFilterIds.clear();
     final channelCount = maxChannels ?? _maxChannels;
     for (int i = 0; i < channelCount; i++) {
       await _loadChannelSettingsForIndex(
@@ -5223,9 +5262,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       channelIndex,
     );
     final region = await channelRegionStore.loadRegion(channelIndex);
+    final channelId = channelSettingsStore.channelIdentityForIndex(channelIndex)?.pskId;
+    final hiddenRegions = channelId == null ? null : await ChannelRegionFilterStore().read(
+      channelSettingsStore.publicKeyHex, channelId,
+    );
     if ((expectedPublicKeyHex != null && expectedPublicKeyHex != selfPublicKeyHex) ||
         stillCurrent?.call() == false) {
       return;
+    }
+    if (channelId != null && _channelRegionFilterId(channelIndex) == channelId) {
+      _channelHiddenRegions[channelIndex] = ChannelRegionFilter.decode(hiddenRegions);
+      _channelRegionFilterIds[channelIndex] = channelId;
     }
     _channelCyr2LatProfileId.remove(channelIndex);
     _channelMcmpEnabled[channelIndex] = mcmpEnabled;
@@ -14190,6 +14237,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final ids = {for (final (id, _) in source.values.keys) id};
     final affected = bindings.values.where((channel) => ids.contains(channel.id));
     final current = store.read(affected, includeInherited: true);
+    current.addAll(await store.readRegionFilters(affected));
+    if (!_canUseChannelSettingsBackup || _nodeLocalBackupSession != session) return null;
     // Channel edits update the active codec before persisting all its flags.
     for (final channel in affected) {
       final slot = channel.slot;
@@ -14401,11 +14450,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       final idsBySlot = {for (final channel in bindings.values) channel.slot: channel.id};
       final store = BackupChannelSettingsStore(nodeKey.substring(0, 10), _channels);
       channelSettings = BackupChannelSettings(
-        store.read(bindings.values, includeInherited: false),
+        {
+          ...store.read(bindings.values, includeInherited: false),
+          ...await store.readRegionFilters(bindings.values),
+        },
         {for (final slot in order) ?idsBySlot[slot]},
       );
     }
 
+    if (!canSnapshot()) return null;
     return BackupSnapshot(
       sourcePublicKey: nodeKey,
       nodeName: deviceDisplayName,
