@@ -52,6 +52,7 @@ Pull-to-refresh (swipe down) forces a re-fetch of channels from the device firmw
 ### Sorting Options
 
 - **Manual** (default): Drag-and-drop reordering, persisted (drag handles are hidden when a search query is active)
+  - Groups with **Allow ordering in group** retain their saved manual order. With unread priority enabled, unread entries move first while the manual order within unread and read entries is preserved; counts do not introduce alphabetical ordering.
 - **A–Z**: Alphabetical
 - **Latest messages**: Most recent first
 - **Unread**: Most unread first

@@ -3,6 +3,22 @@ import 'dart:math';
 import '../models/channel.dart';
 import '../models/channel_group.dart';
 
+/// Unread priority is a display-only stable partition of the saved manual
+/// group order. It must not introduce an alphabetical/count-based tiebreaker.
+List<T> manualChannelGroupDisplayOrder<T>(
+  List<T> items, {
+  required bool unreadFirst,
+  required int Function(T item) unreadCount,
+}) {
+  if (!unreadFirst) return List<T>.of(items);
+  final unread = <T>[];
+  final read = <T>[];
+  for (final item in items) {
+    (unreadCount(item) > 0 ? unread : read).add(item);
+  }
+  return [...unread, ...read];
+}
+
 final RegExp _legacyPeerGroupKeyPattern = RegExp(
   r'^(?:room|contact):([0-9a-f]{64})$',
   caseSensitive: false,

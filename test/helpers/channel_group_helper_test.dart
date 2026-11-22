@@ -14,6 +14,28 @@ void main() {
     return a.name.toLowerCase().compareTo(b.name.toLowerCase());
   }
 
+  group('manual group display order', () {
+    test('all-read items retain non-alphabetical saved order', () {
+      final original = ['Zulu', 'Alpha', 'Mike'];
+      for (final unreadFirst in [false, true]) {
+        expect(manualChannelGroupDisplayOrder(original,
+          unreadFirst: unreadFirst, unreadCount: (_) => 0), original);
+      }
+    });
+
+    test('unread priority preserves both partitions regardless of counts', () {
+      final original = ['Zulu', 'Beta', 'Alpha', 'Mike'];
+      final counts = {'Beta': 1, 'Mike': 9};
+      final result = manualChannelGroupDisplayOrder(original,
+        unreadFirst: true, unreadCount: (item) => counts[item] ?? 0);
+      expect(result, ['Beta', 'Mike', 'Zulu', 'Alpha']);
+      expect(original, ['Zulu', 'Beta', 'Alpha', 'Mike']);
+      expect(manualChannelGroupDisplayOrder(original,
+        unreadFirst: false, unreadCount: (_) => throw StateError('Not needed')),
+        original);
+    });
+  });
+
   group('ChannelGroupHelper', () {
     test('keeps empty groups at their manual top-level position', () {
       final entries = buildManualChannelEntries(

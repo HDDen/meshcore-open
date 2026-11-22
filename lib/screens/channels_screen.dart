@@ -2695,7 +2695,17 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     ChannelSortOption sortOption, {
     required bool sortUnreadFirst,
   }) {
-    if (sortOption == ChannelSortOption.manual && !sortUnreadFirst) return;
+    if (sortOption == ChannelSortOption.manual) {
+      final ordered = manualChannelGroupDisplayOrder(
+        items,
+        unreadFirst: sortUnreadFirst,
+        unreadCount: (item) => _unreadCountForItem(connector, item),
+      );
+      items
+        ..clear()
+        ..addAll(ordered);
+      return;
+    }
 
     final needsTime = sortOption == ChannelSortOption.latestMessages;
     final needsUnread =

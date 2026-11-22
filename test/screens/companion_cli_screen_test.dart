@@ -1256,6 +1256,46 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
+    for (final unreadFirst in [false, true]) {
+      testWidgets('manual channel group order survives unread priority and drag: legacy=$legacy unread=$unreadFirst', (tester) async {
+        connector.supported = false;
+        await settings.updateSettings(settings.settings.copyWith(
+          channelsUnreadSorting: unreadFirst,
+          roomServerShowNotemptyContactsOnChatscreen: true,
+          roomServerDisableRoomAndContactsSorting: legacy,
+        ));
+        final store = ChannelGroupStore()..setPublicKeyHex = connector.selfPublicKeyHex;
+        await store.saveGroups(const [ChannelGroup(name: 'Manual group',
+          channelNames: ['Beta', 'Alpha'], allowOrderingInGroup: true)]);
+        await store.saveExpandedGroupNames({'Manual group'});
+        await show(tester, const ChannelsScreen(hideBackButton: true));
+        await tester.pumpAndSettle();
+
+        void expectBetaFirst() {
+          expect(tester.getTopLeft(find.text('Beta')).dy,
+            lessThan(tester.getTopLeft(find.text('Alpha')).dy));
+        }
+        ReorderableListView nested() => tester.widgetList<ReorderableListView>(
+          find.byType(ReorderableListView)).singleWhere(
+            (list) => list.shrinkWrap && list.itemCount == 2);
+
+        expectBetaFirst(); // Regression: unread priority used to alphabetise all-read rows.
+        nested().onReorderItem!(0, 1);
+        await tester.pumpAndSettle();
+        expect((await store.loadGroups()).single.channelNames, ['Alpha', 'Beta']);
+        nested().onReorderItem!(0, 1);
+        await tester.pumpAndSettle();
+        expectBetaFirst();
+        expect((await store.loadGroups()).single.channelNames, ['Beta', 'Alpha']);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await show(tester, const ChannelsScreen(hideBackButton: true));
+        await tester.pumpAndSettle();
+        expectBetaFirst();
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+
     testWidgets('folder order survives hidden CLI and reopening, legacy=$legacy', (tester) async {
       await settings.updateSettings(settings.settings.copyWith(
         roomServerShowNotemptyContactsOnChatscreen: true,
