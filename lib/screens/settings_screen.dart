@@ -1459,14 +1459,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
-                SwitchListTile(
-                  title: Text(l10n.settings_multiAck),
-                  subtitle: Text(l10n.settings_multiAckSubtitle),
+                FeatureToggleRow(
+                  title: l10n.settings_multiAck,
+                  subtitle: l10n.settings_multiAckSubtitle,
                   value: multiAcks == 1,
                   onChanged: (value) {
                     setDialogState(() => multiAcks = value ? 1 : 0);
                   },
-                  contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 8),
                 // The app's own list, not the node's table: a shorter cap
