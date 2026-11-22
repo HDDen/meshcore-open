@@ -912,13 +912,22 @@ void main() {
     expect(before, [0, 2]);
     await order.saveChannelOrder([2, 0]);
     expect(radio.connector.channels.map((channel) => channel.index), before);
-    var notifications = 0;
-    radio.connector.addListener(() => notifications++);
-
-    await radio.connector.reloadChannelOrder();
-
-    expect(radio.connector.channels.map((channel) => channel.index), [2, 0]);
-    expect(notifications, greaterThan(0));
+    final notifiedOrder = Completer<List<int>>();
+    void observeOrder() {
+      final slots = radio.connector.channels.map((channel) => channel.index).toList();
+      if (slots.isNotEmpty && slots.first == 2 && !notifiedOrder.isCompleted) {
+        notifiedOrder.complete(slots);
+      }
+    }
+    radio.connector.addListener(observeOrder);
+    try {
+      await radio.connector.reloadChannelOrder();
+      expect(radio.connector.channels.map((channel) => channel.index), [2, 0]);
+      // Connector listeners are deliberately delivered by UiNotificationBatcher.
+      expect(await notifiedOrder.future.timeout(const Duration(seconds: 3)), [2, 0]);
+    } finally {
+      radio.connector.removeListener(observeOrder);
+    }
     expect(radio.reads, isEmpty);
     expect(radio.writes, isEmpty);
   });
