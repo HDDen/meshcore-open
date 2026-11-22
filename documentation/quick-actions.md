@@ -52,3 +52,23 @@ A dash is shown until a reading is available. A slow or failed request does not
 queue overlapping reads; each type waits for its previous request to finish.
 TX power polling reads a SELF_INFO snapshot and does not rewrite settings or
 restart the connection handshake. Widget sizes and labels follow app DPI.
+
+## Open related settings
+
+Hold a quick-action tile on touch devices, or right-click it on desktop:
+
+| Quick action | Destination |
+| --- | --- |
+| Adaptive TX power | Modification settings, Adaptive TX power block |
+| Retries | Settings → App settings, minimum-hop/repeater retry block |
+| Companion proxy, TCP proxy, BLE proxy | Modification settings, companion proxy block |
+
+When companion proxy access is not licensed, the proxy shortcuts open license
+management through the private module. A shortcut remains usable when its normal
+toggle is unavailable (for example adaptive TX power while minimum-hop retries
+are off). The settings gesture never toggles the feature itself. The quick-actions
+panel closes and its radio polling stops before navigation. While an action is
+already being applied, settings gestures wait for that action to finish.
+
+Navigation scrolls once to a stable anchor, including sections not yet built by
+the lazy list. Changing settings afterwards does not scroll the page back.

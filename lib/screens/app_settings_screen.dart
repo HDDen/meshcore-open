@@ -32,6 +32,8 @@ import '../widgets/channel_resend_repeater_settings.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/network_map_settings_section.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../helpers/settings_navigation_target.dart';
+import '../widgets/targeted_settings_list.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/cyr2lat.dart';
 import 'map_cache_screen.dart';
@@ -47,7 +49,9 @@ class AppSettingsScreen extends StatelessWidget {
   /// the thing they tapped for is several screens down.
   final bool focusImageMessages;
 
-  const AppSettingsScreen({super.key, this.focusImageMessages = false});
+  const AppSettingsScreen({super.key, this.focusImageMessages = false, this.initialTarget});
+
+  final SettingsNavigationTarget? initialTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +79,8 @@ class AppSettingsScreen extends StatelessWidget {
                     settingsSectionsService,
                     child,
                   ) {
-                    return ListView(
+                    return TargetedSettingsList(
+                      initialTarget: initialTarget,
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
                       children: [
                         // APPEARANCE
@@ -782,6 +787,7 @@ class AppSettingsScreen extends StatelessWidget {
         ),
         const Divider(height: 1, indent: 16),
         SwitchListTile(
+          key: SettingsNavigationTarget.channelMinHops.key,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 4,

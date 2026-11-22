@@ -601,3 +601,12 @@ retention is exported as null because MCOa has no corresponding stored value.
 
 См. [Папки данных и параметры ярлыков](data-directories.md): Windows/Linux,
 абсолютные и относительные пути, AppImage, миграция и ограничения macOS.
+
+## Direct navigation to settings
+
+Quick-action holds and desktop right-clicks can open a settings screen at a
+specific block. Adaptive TX power and companion proxy land in Modification
+settings. Retry options live on the App settings page; their Settings entry
+opens that page directly and reveals the minimum-hop/repeater retry switch.
+The initial positioning happens once, so subsequent edits and manual scrolling
+retain the user's position. Existing normal taps keep their original behavior.

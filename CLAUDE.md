@@ -4909,3 +4909,24 @@ ListTile in channel and shared direct/room/additional-key chat menus uses only
 the nullable Warning override for iconColor/textColor; absent means null. The existing tile subtitle
 alpha of 0.7 is unchanged. Empty HEX/removal restores the original per-action
 fallback, and the existing serializer handles storage, sharing and clearing.
+
+### Quick-action settings anchors
+
+`SettingsNavigationTarget` defines untranslated `settings-target-<enum name>`
+ValueKeys. `TargetedSettingsList` owns a ScrollController and searches for the
+requested key once after layout; for unbuilt lazy rows it walks by 0.8 viewports,
+then uses ensureVisible at alignment 0.1. Attempts/stalls are bounded and mounted
+checks stop callbacks after disposal. Rebuilds retain manual scroll position;
+a different target restarts the search. Default-null targets leave ordinary list
+behavior unchanged. ModSettingsScreen accepts Adaptive TX power / companion proxy
+anchors. SettingsScreen(channelMinHops) renders AppSettingsScreen with the target
+because that switch actually lives on the nested page, skipping unused package
+version loading. Existing image-message focusing remains independent.
+
+QuickActionTile's onLongPress and onSecondaryTap share onConfigure, independent
+of tap availability and disabled while a toggle is pending. The dialog disposes
+its polling and returns a captured navigation callback before the parent pushes
+the page. Proxy callbacks recheck allowsCompanionProxy; otherwise they call the
+service's existing openLicenseManagement API. The private module anchors its
+proxy ServCard with ValueKey('settings-target-companionProxy'), intentionally
+using the shared string contract without a dependency on the host package.

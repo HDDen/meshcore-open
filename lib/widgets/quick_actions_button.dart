@@ -16,6 +16,8 @@ import '../screens/discovery_screen.dart';
 import '../screens/companion_radio_stats_screen.dart';
 import '../screens/telemetry_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/mod_settings_screen.dart';
+import '../helpers/settings_navigation_target.dart';
 import '../screens/quick_actions_settings_screen.dart';
 import '../services/app_settings_service.dart';
 import 'quick_action_presentation.dart';
@@ -373,6 +375,35 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
     }
   }
 
+  _QuickActionsDestination? _settingsDestination(QuickAction action) {
+    final sections = widget.sections;
+    return switch (action) {
+    QuickAction.adaptiveTxPower => (context) => Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const ModSettingsScreen(
+        initialTarget: SettingsNavigationTarget.adaptiveTxPower,
+      )),
+    ),
+    QuickAction.channelRetries => (context) => Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const SettingsScreen(
+        initialTarget: SettingsNavigationTarget.channelMinHops,
+      )),
+    ),
+    QuickAction.companionProxy || QuickAction.tcpProxy || QuickAction.bleProxy =>
+      sections == null ? null : (context) async {
+        if (!sections.allowsCompanionProxy) {
+          sections.openLicenseManagement(context);
+          return;
+        }
+        await Navigator.of(context).push<void>(MaterialPageRoute(
+          builder: (_) => const ModSettingsScreen(
+            initialTarget: SettingsNavigationTarget.companionProxy,
+          ),
+        ));
+      },
+    _ => null,
+    };
+  }
+
   Widget _buildTile({
     required QuickActionItem item,
     required double width,
@@ -380,6 +411,7 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
     required double iconSize,
   }) {
     final available = _available(item);
+    final settingsDestination = _settingsDestination(item.action);
     return _QuickActionTile(
       item: item,
       width: width,
@@ -390,6 +422,8 @@ class _QuickActionsDialogState extends State<_QuickActionsDialog> {
       pending: _pending == item.action,
       reading: _reading(item.action),
       onTap: _pending == null && available ? () => _activate(item) : null,
+      onConfigure: _pending == null && settingsDestination != null
+          ? () => _close(settingsDestination) : null,
     );
   }
 
@@ -482,6 +516,7 @@ class _QuickActionTile extends StatelessWidget {
     required this.pending,
     required this.onTap,
     required this.reading,
+    required this.onConfigure,
   });
 
   final QuickActionItem item;
@@ -493,6 +528,7 @@ class _QuickActionTile extends StatelessWidget {
   final bool pending;
   final VoidCallback? onTap;
   final String? reading;
+  final VoidCallback? onConfigure;
 
   @override
   Widget build(BuildContext context) {
@@ -503,7 +539,7 @@ class _QuickActionTile extends StatelessWidget {
       width: width,
       child: Semantics(
         button: true,
-        enabled: onTap != null,
+        enabled: onTap != null || onConfigure != null,
         selected: active,
         child: AnimatedOpacity(
           opacity: available && !pending ? 1 : 0.45,
@@ -512,6 +548,8 @@ class _QuickActionTile extends StatelessWidget {
             key: ValueKey(item.action),
             borderRadius: BorderRadius.circular(12),
             onTap: onTap,
+            onLongPress: onConfigure,
+            onSecondaryTap: onConfigure,
             child: Column(
               children: [
                 Container(

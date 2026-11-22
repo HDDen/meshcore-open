@@ -12,6 +12,12 @@ import 'package:meshcore_open/models/companion_radio_stats.dart';
 import 'package:meshcore_open/models/quick_actions_settings.dart';
 import 'package:meshcore_open/models/quick_actions_header_settings.dart';
 import 'package:meshcore_open/screens/quick_actions_settings_screen.dart';
+import 'package:meshcore_open/helpers/settings_navigation_target.dart';
+import 'package:meshcore_open/screens/mod_settings_screen.dart';
+import 'package:meshcore_open/screens/settings_screen.dart';
+import 'package:meshcore_open/screens/app_settings_screen.dart';
+import 'package:meshcore_open/services/translation_service.dart';
+import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
 import 'package:meshcore_open/services/additional_identity_inbox.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
@@ -140,6 +146,22 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
 }
 
 class _ProxySections extends SettingsSectionsService {
+  int licenseOpens = 0;
+
+  @override
+  void openLicenseManagement(BuildContext context) {
+    licenseOpens++;
+    Navigator.of(context).push<void>(MaterialPageRoute(builder: (_) =>
+      const Scaffold(body: Text('License management destination'))));
+  }
+
+  @override
+  List<Widget> modSettingsSections(BuildContext context) => licensed ? [
+    const SizedBox(height: 300),
+    ListTile(key: SettingsNavigationTarget.companionProxy.key,
+      title: const Text('Proxy settings destination')),
+  ] : const [];
+
   bool licensed = false;
   bool bleLicensed = false;
   final writes = <(String, bool)>[];
@@ -216,7 +238,7 @@ QuickActionsSettings _visibleActions(List<QuickActionItem> shown) =>
 
 Future<void> _open(
   WidgetTester tester,
-  _Radio radio,
+  MeshCoreConnector radio,
   AppSettingsService settings, {
   SettingsSectionsService? sections,
   bool useHeader = false,
@@ -227,6 +249,7 @@ Future<void> _open(
       providers: [
         ChangeNotifierProvider<MeshCoreConnector>.value(value: radio),
         ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+        ChangeNotifierProvider(create: (_) => TranslationService(settings)),
         if (sections != null)
           ChangeNotifierProvider<SettingsSectionsService>.value(value: sections),
       ],
@@ -253,6 +276,90 @@ Future<void> _open(
 }
 
 void main() {
+  for (final secondary in [false, true]) {
+    for (final action in [QuickAction.adaptiveTxPower, QuickAction.channelRetries]) {
+      testWidgets('quick settings navigation for $action, secondary=$secondary', (tester) async {
+        final radio = MeshCoreConnector();
+        final settings = AppSettingsService();
+        final sections = _ProxySections();
+        addTearDown(radio.dispose);
+        addTearDown(settings.dispose);
+        addTearDown(sections.dispose);
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        });
+        await settings.updateSettings(settings.settings.copyWith(
+          quickActions: _visibleActions([QuickActionItem(action, visible: true)]),
+          channelMinHopsEnabled: false,
+        ));
+        final before = settings.settings.toJson();
+        await _open(tester, radio, settings, sections: sections);
+        final tile = find.byKey(ValueKey(action));
+        if (secondary) {
+          await tester.tap(tile, buttons: kSecondaryMouseButton);
+        } else {
+          await tester.longPress(tile);
+        }
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        final target = action == QuickAction.adaptiveTxPower
+            ? SettingsNavigationTarget.adaptiveTxPower : SettingsNavigationTarget.channelMinHops;
+        if (action == QuickAction.adaptiveTxPower) {
+          expect(tester.widget<ModSettingsScreen>(find.byType(ModSettingsScreen)).initialTarget, target);
+          final l10n = AppLocalizations.of(tester.element(find.byType(ModSettingsScreen)));
+          expect(find.widgetWithText(SwitchListTile, l10n.adaptiveTxPower).hitTestable(), findsOneWidget);
+        } else {
+          expect(tester.widget<SettingsScreen>(find.byType(SettingsScreen)).initialTarget, target);
+          expect(find.byType(AppSettingsScreen), findsOneWidget);
+          expect(find.byKey(target.key).hitTestable(), findsOneWidget);
+        }
+        expect(settings.settings.toJson(), before);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  for (final licensed in [false, true]) {
+    for (final action in [QuickAction.companionProxy, QuickAction.tcpProxy, QuickAction.bleProxy]) {
+      testWidgets('proxy settings/license navigation for $action, licensed=$licensed', (tester) async {
+        final radio = MeshCoreConnector();
+        final settings = AppSettingsService();
+        final sections = _ProxySections()..setLicense(proxy: licensed, ble: false);
+        addTearDown(radio.dispose);
+        addTearDown(settings.dispose);
+        addTearDown(sections.dispose);
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        });
+        await settings.updateSettings(settings.settings.copyWith(
+          quickActions: _visibleActions([QuickActionItem(action, visible: true)]),
+        ));
+        await _open(tester, radio, settings, sections: sections);
+        final tile = find.byKey(ValueKey(action));
+        if (action == QuickAction.tcpProxy) {
+          await tester.tap(tile, buttons: kSecondaryMouseButton);
+        } else {
+          await tester.longPress(tile);
+        }
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(sections.writes, isEmpty);
+        if (licensed) {
+          expect(find.byType(ModSettingsScreen), findsOneWidget);
+          expect(find.text('Proxy settings destination').hitTestable(), findsOneWidget);
+          expect(sections.licenseOpens, 0);
+        } else {
+          expect(find.text('License management destination'), findsOneWidget);
+          expect(sections.licenseOpens, 1);
+          expect(find.byType(ModSettingsScreen), findsNothing);
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     PrefsManager.reset();

@@ -40,6 +40,7 @@ import '../widgets/radio_stats_entry.dart';
 import '../widgets/app_update_controls.dart';
 import '../utils/app_build_info.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../helpers/settings_navigation_target.dart';
 import 'region_management_screen.dart';
 import 'telemetry_screen.dart';
 
@@ -53,7 +54,9 @@ int _toUiCodingRate(int deviceCr) {
 const int _minTxPowerDbm = -9;
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.initialTarget});
+
+  final SettingsNavigationTarget? initialTarget;
 
   static Future<void> openRadioSettings(
     BuildContext context, {required MeshCoreConnector connector}
@@ -74,7 +77,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadVersionInfo();
+    if (widget.initialTarget != SettingsNavigationTarget.channelMinHops) {
+      _loadVersionInfo();
+    }
   }
 
   Future<void> _loadVersionInfo() async {
@@ -87,6 +92,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.initialTarget == SettingsNavigationTarget.channelMinHops) {
+      // The routing entry lives on the nested application-settings page.
+      return AppSettingsScreen(initialTarget: widget.initialTarget);
+    }
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(

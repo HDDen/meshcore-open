@@ -14,12 +14,16 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/power_saving_settings_tile.dart';
 import '../widgets/low_battery_settings_card.dart';
 import '../widgets/sync_progress_overlay.dart';
+import '../helpers/settings_navigation_target.dart';
+import '../widgets/targeted_settings_list.dart';
 import 'additional_identity_screen.dart';
 import 'message_history_database_screen.dart';
 import 'quick_actions_settings_screen.dart';
 
 class ModSettingsScreen extends StatelessWidget {
-  const ModSettingsScreen({super.key});
+  const ModSettingsScreen({super.key, this.initialTarget});
+
+  final SettingsNavigationTarget? initialTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,8 @@ class ModSettingsScreen extends StatelessWidget {
         child: Consumer<AppSettingsService>(
           builder: (context, settingsService, child) {
             final settings = settingsService.settings;
-            return ListView(
+            return TargetedSettingsList(
+              initialTarget: initialTarget,
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
               children: [
                 SectionHeader(context.l10n.settings_modSettingsGeneral),
@@ -610,7 +615,10 @@ class ModSettingsScreen extends StatelessWidget {
                     onChanged: settingsService.setSuppressPhantomChannels,
                   ),
                 ),
-                _AdaptiveTxPowerSettingsCard(settingsService: settingsService),
+                KeyedSubtree(
+                  key: SettingsNavigationTarget.adaptiveTxPower.key,
+                  child: _AdaptiveTxPowerSettingsCard(settingsService: settingsService),
+                ),
                 if (!PlatformInfo.isWeb)
                   MeshCard(
                     padding: EdgeInsets.zero,
