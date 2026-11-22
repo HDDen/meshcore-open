@@ -84,7 +84,7 @@ class ChannelRegionFilterLine extends StatelessWidget {
         key: const ValueKey('channel-header-region-scroll'),
         scrollDirection: Axis.horizontal,
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text('$regionHeader • ', key: const ValueKey('channel-header-region'),
+          Text('$regionHeader •', key: const ValueKey('channel-header-region'),
             maxLines: 1, softWrap: false),
           Tooltip(
             message: context.l10n.channelRegionFilter_title,
