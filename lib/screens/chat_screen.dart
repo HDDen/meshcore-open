@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../models/bookmarked_message.dart';
+import '../widgets/message_bookmark.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -470,7 +472,16 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  bool _showBookmarkedOnly = false;
+
   List<Message> _messagesForDisplay(MeshCoreConnector connector) {
+    final rows = _allMessagesForDisplay(connector);
+    return !_showBookmarkedOnly ? rows : rows.where((message) => connector.isMessageBookmarked(
+      BookmarkSourceType.contact, widget.contact.publicKeyHex, message.messageId,
+    )).toList();
+  }
+
+  List<Message> _allMessagesForDisplay(MeshCoreConnector connector) {
     final revision = connector.uiRevision;
     if (_displayMessagesRevision == revision) {
       return _displayMessagesCache;
@@ -1252,6 +1263,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   contact: _resolveContact(connector),
                   canEditTelemetry: widget.fixedSenderKey == null ||
                       connector.getContactByPubKeyHex(widget.contact.publicKeyHex) != null,
+                  onToggleBookmarks: () => setState(() => _showBookmarkedOnly = !_showBookmarkedOnly),
+                  bookmarksOnly: _showBookmarkedOnly,
                   onSearch: () => unawaited(_showMessageSearch()),
                   onClear: () => unawaited(_confirmClearChat(context, connector)),
                 );
@@ -1382,6 +1395,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildEmptyState() {
+    if (_showBookmarkedOnly) {
+      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(context.l10n.bookmarks_empty),
+        OutlinedButton(onPressed: _isLoadingOlder ? null : _loadOlderMessages,
+          child: Text(context.l10n.messageFilter_loadOlder)),
+      ]));
+    }
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1574,15 +1594,19 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                     // Every bubble but a CLI line takes the reply swipe on a
                     // phone; one whose author is unknown lets it go.
+                    final bookmarkedBubble = MessageBookmarkBadge(
+                      marked: connector.isMessageBookmarked(BookmarkSourceType.contact,
+                          widget.contact.publicKeyHex, message.messageId), child: bubble,
+                    );
                     final replyable =
                         PlatformInfo.isDesktop ||
                             connector.isOfflineMode ||
                             message.isCli
-                        ? bubble
+                        ? bookmarkedBubble
                         : SwipeReplyBubble(
                             onReply: () => _setReplyingTo(message),
                             iconOnlyHint: message.isOutgoing,
-                            child: bubble,
+                            child: bookmarkedBubble,
                           );
                     final isUnreadAnchor =
                         _unreadDividerMessageId != null &&
@@ -2343,6 +2367,12 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                MessageBookmarkAction(connector: context.read<MeshCoreConnector>(),
+                  bookmark: BookmarkedMessage.fromContact(message: message,
+                    contactKey: widget.contact.publicKeyHex, contactName: widget.contact.name,
+                    senderName: message.isOutgoing ? (context.read<MeshCoreConnector>().selfName ?? '') : contact.name,
+                  ),
+                ),
                 if (canReply)
                   ListTile(
                     leading: const Icon(Icons.reply),

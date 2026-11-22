@@ -34,6 +34,7 @@ Future<void> clearReviewModeData() async {
       }
     }
     await history.clearPathHistoriesForNode(prefix);
+    await history.clearMessageBookmarks(prefix);
   }
   final keys = prefs.getKeys().where((key) => key.contains(prefix)).toList();
   for (final key in keys) {

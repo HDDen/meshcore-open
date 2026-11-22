@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../models/app_settings.dart';
+import '../models/bookmarked_message.dart';
 import '../models/channel.dart';
 import '../models/channel_message.dart';
 import '../models/contact.dart';
@@ -184,6 +185,14 @@ class McoaThemePreviewData extends ChangeNotifier implements MeshCoreConnector {
   late final List<Message> directMessages;
   @override
   late final String? selfName;
+
+  // Preview fixtures have no saved bookmarks and never read the bookmark store.
+  @override
+  bool isMessageBookmarked(BookmarkSourceType type, String source, String id) =>
+      false;
+
+  @override
+  int get bookmarkRevision => 0;
 
   // A deliberately closed, render-only interface. Unexpected commands fail
   // locally instead of reaching a radio or touching application storage.

@@ -4049,6 +4049,25 @@ deleted upstream backup/filter/slot fixtures stay deleted. Record this ancestry
 without duplicating the accepted fixes; the remaining stage is `34ea0cb7`
 (bookmarks). No tests, analysis or commit were run by the agent.
 
+**Bookmark stage prepared 2026-11-22: `34ea0cb7`.** Native snapshots are
+independent rows in the existing SQLite `message_bookmarks` auxiliary table,
+indexed by node/time; web uses the compatible preference key. Do not add flags
+to message JSON or rewrite histories when toggling a bookmark. The connector
+warms a scoped lookup, preserves identity-recipient message IDs, checks linked
+contact/channel sources, and fences menu writes against node changes. Chat
+menus offer mark/remove and bookmark-only filtering; spam/region filters remain
+in force, with older-page access. The overview survives original-message
+removal and reloads on node changes. Markdown follows upstream grouping and
+ordering. The main backup screen has an opt-in bookmark item (off by default),
+exports upstream-shaped snapshots, and previews add-only restoration with node
+checks. Official MeshCore export omits bookmarks. Review cleanup removes its
+bookmark rows; original models, wire formats, SQLite histories, previous fixes,
+theme menus, localization values and intentionally deleted files stay intact.
+Theme preview fixtures explicitly return no bookmarks and a fixed zero bookmark
+revision; bookmark reads/writes stay outside their closed render-only contract.
+No workflow/AppImage changes. See documentation/bookmarks.md. Owner runs all
+Flutter checks; this final stage is prepared without committing.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep

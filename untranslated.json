@@ -466,7 +466,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "de": [
@@ -936,7 +950,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "es": [
@@ -1406,7 +1434,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "fr": [
@@ -1876,7 +1918,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "hu": [
@@ -2346,7 +2402,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "it": [
@@ -2816,7 +2886,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "ja": [
@@ -3286,7 +3370,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "ko": [
@@ -3756,7 +3854,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "nl": [
@@ -4226,7 +4338,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "pl": [
@@ -4696,7 +4822,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "pt": [
@@ -5166,7 +5306,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "pt_PT": [
@@ -5549,7 +5703,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "ru": [
@@ -5559,7 +5727,20 @@
     "imageSend_tryAnother",
     "imageSend_versionsHint",
     "imageSend_versionLabel",
-    "imageSend_versionPackets"
+    "imageSend_versionPackets",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks"
   ],
 
   "sk": [
@@ -6029,7 +6210,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "sl": [
@@ -6499,7 +6694,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "sv": [
@@ -6969,7 +7178,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "uk": [
@@ -7439,7 +7662,21 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ],
 
   "zh": [
@@ -7909,6 +8146,20 @@
     "channelRegionFilter_saveError",
     "channelRegionFilter_unknown",
     "themes_mcoaAttention",
-    "themes_mcoaWarning"
+    "themes_mcoaWarning",
+    "backupRestore_bookmarks",
+    "chat_bookmark",
+    "chat_removeBookmark",
+    "chat_showBookmarks",
+    "bookmarks_title",
+    "bookmarks_empty",
+    "bookmarks_channel",
+    "bookmarks_contact",
+    "bookmarks_remove",
+    "settings_exportBookmarks",
+    "settings_exportBookmarksSubtitle",
+    "settings_exportBookmarksSuccess",
+    "settings_exportBookmarksNoBookmarks",
+    "bookmarks_saveFailed"
   ]
 }

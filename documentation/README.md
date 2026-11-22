@@ -75,6 +75,8 @@ MeshCore Open connects to MeshCore LoRa mesh radios over BLE, USB, or TCP. Once 
 | Online network map and opt-in uploads | Internet required |
 | Terrain LOS analysis | Elevation lookup needs internet unless the required data is already cached |
 
+[Закладки сообщений](bookmarks.md) — фильтры, список, Markdown и резервное копирование.
+
 ## Keeping documentation current
 
 When changing a feature, update its access steps, defaults, platform/firmware requirements, failure states, and screenshots. Keep binary framing details in the protocol reference and implementation links. See [contribution guidelines](../CONTRIBUTING.md).

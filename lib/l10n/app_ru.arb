@@ -4248,5 +4248,6 @@
   "connectSheet_chooseRadioSubtitle": "Bluetooth, USB или TCP",
   "connectSheet_stopReconnecting": "Остановить переподключение",
   "connectSheet_reconnectFailed": "Не удалось связаться с {name}. Убедитесь, что оно включено и находится рядом.",
-  "chat_composerOffline": "Подключитесь к радио, чтобы отправлять сообщения"
+  "chat_composerOffline": "Подключитесь к радио, чтобы отправлять сообщения",
+  "bookmarks_saveFailed": "Не удалось обновить закладки."
 }

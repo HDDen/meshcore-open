@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'bookmarks_screen.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -478,6 +479,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     ),
                     onTap: () => _showManageCommunitiesDialog(context),
                   ),
+                PopupMenuItem(
+                  child: PopupMenuRow(icon: Icons.bookmark_border, text: menuContext.l10n.bookmarks_title),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const BookmarksScreen())),
+                ),
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   child: PopupMenuRow(

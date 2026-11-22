@@ -5478,5 +5478,19 @@
   "chat_composerOffline": "Connect to a radio to send messages",
   "@chat_composerOffline": {
     "description": "Shown in place of the message box while no radio is connected"
-  }
+  },
+  "backupRestore_bookmarks": "Bookmarks",
+  "chat_bookmark": "Bookmark",
+  "chat_removeBookmark": "Remove bookmark",
+  "chat_showBookmarks": "Show bookmarks",
+  "bookmarks_title": "Bookmarks",
+  "bookmarks_empty": "No bookmarked messages",
+  "bookmarks_channel": "Channel",
+  "bookmarks_contact": "Contact",
+  "bookmarks_remove": "Remove bookmark",
+  "settings_exportBookmarks": "Export bookmarks to Markdown",
+  "settings_exportBookmarksSubtitle": "Share or save bookmarked messages as a Markdown file.",
+  "settings_exportBookmarksSuccess": "Bookmarks exported.",
+  "settings_exportBookmarksNoBookmarks": "No bookmarks to export.",
+  "bookmarks_saveFailed": "Could not update bookmarks."
 }

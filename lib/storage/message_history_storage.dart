@@ -1659,6 +1659,18 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
         await _database!.writeChannelRegionFilter(node, channel, hidden);
       });
 
+  Future<List<String>> readMessageBookmarks(String node) =>
+      _persistenceWork.run(() => _database!.readMessageBookmarks(node));
+
+  Future<void> writeMessageBookmark(String node, String id, int at, String json) =>
+      _persistenceWork.run(() => _database!.writeMessageBookmark(node, id, at, json));
+
+  Future<void> clearMessageBookmarks(String node) =>
+      _persistenceWork.run(() => _database!.clearMessageBookmarks(node));
+
+  Future<void> removeMessageBookmark(String node, String id) =>
+      _persistenceWork.run(() => _database!.removeMessageBookmark(node, id));
+
   bool get hasDatabase => _initialized && _database != null;
 
   bool get hasAdaptiveTxPowerJournal => hasDatabase || (kIsWeb && _initialized);

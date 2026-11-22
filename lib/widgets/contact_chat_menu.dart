@@ -23,6 +23,8 @@ class ContactChatMenu extends StatelessWidget {
     required this.onSearch,
     required this.onClear,
     this.canEditTelemetry = true,
+    this.onToggleBookmarks,
+    this.bookmarksOnly = false,
   });
 
   final MeshCoreConnector connector;
@@ -30,12 +32,16 @@ class ContactChatMenu extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onClear;
   final bool canEditTelemetry;
+  final VoidCallback? onToggleBookmarks;
+  final bool bookmarksOnly;
 
   @override
   Widget build(BuildContext context) => PopupMenuButton<String>(
     icon: const Icon(Icons.more_vert),
     onSelected: (value) {
       switch (value) {
+        case 'showBookmarks':
+          onToggleBookmarks?.call();
         case 'searchMessages':
           onSearch();
         case 'info':
@@ -62,6 +68,11 @@ class ContactChatMenu extends StatelessWidget {
       }
     },
     itemBuilder: (context) => [
+      if (onToggleBookmarks != null)
+        PopupMenuItem(value: 'showBookmarks', child: PopupMenuRow(
+          icon: bookmarksOnly ? Icons.bookmark : Icons.bookmark_border,
+          text: context.l10n.chat_showBookmarks,
+        )),
       PopupMenuItem(
         value: 'searchMessages',
         child: PopupMenuRow(icon: Icons.search, text: context.l10n.chat_searchMessages),

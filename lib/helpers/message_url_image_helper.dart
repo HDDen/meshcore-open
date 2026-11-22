@@ -77,8 +77,9 @@ class MessageUrlImageHelper {
   static Future<String?> parse(
     String text, {
     String publicGateway = AppSettings.defaultPublicIpfsGateway,
+    bool respectLoadSetting = true,
   }) async {
-    if (!loadLinkImages.value) return null;
+    if (respectLoadSetting && !loadLinkImages.value) return null;
     final generation = _loadingGeneration;
     final trimmed = text.trim();
     if (trimmed.isEmpty) return null;
@@ -110,7 +111,7 @@ class MessageUrlImageHelper {
           caseSensitive: false,
         ),
       );
-      return loadLinkImages.value && generation == _loadingGeneration
+      return (!respectLoadSetting || (loadLinkImages.value && generation == _loadingGeneration))
           ? imageUrl
           : null;
     }

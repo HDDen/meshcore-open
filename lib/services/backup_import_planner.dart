@@ -20,9 +20,11 @@ import '../models/channel.dart';
 import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
+import '../models/bookmarked_message.dart';
 import 'backup_file_codec.dart';
 
 enum BackupRestoreSection {
+  bookmarks,
   channels,
   contacts,
   appSettings,
@@ -51,6 +53,7 @@ class BackupImportPlan {
     required List<Channel>? channels,
     required this.appSettings,
     this.messageHistory,
+    this.bookmarks,
     this.discoveredContactsJson,
     this.contactGroups,
     this.contactSettings,
@@ -75,6 +78,7 @@ class BackupImportPlan {
   final List<Channel>? channels;
   final AppSettingsBackup? appSettings;
   final BackupMessageHistory? messageHistory;
+  final List<BookmarkedMessage>? bookmarks;
   final String? discoveredContactsJson;
   final List<ContactGroup>? contactGroups;
   final BackupContactSettings? contactSettings;
@@ -90,6 +94,7 @@ class BackupImportPlan {
   final BackupNodeIdentity? nodeIdentity;
 
   bool contains(BackupRestoreSection section) => switch (section) {
+    BackupRestoreSection.bookmarks => bookmarks?.isNotEmpty == true,
     BackupRestoreSection.channels => channels?.isNotEmpty == true,
     BackupRestoreSection.contacts => contacts?.isNotEmpty == true,
     BackupRestoreSection.appSettings => appSettings != null,
@@ -181,6 +186,11 @@ class BackupImportPlanner {
     for (final section in BackupRestoreSection.values) {
       try {
         final plan = switch (section) {
+          BackupRestoreSection.bookmarks => BackupImportPlan._(
+            isOfficial: official, sourcePublicKey: null,
+            channels: null, contacts: null, appSettings: null,
+            bookmarks: official ? null : _readBookmarks(payload),
+          ),
           BackupRestoreSection.portableSettings => BackupImportPlan._(
             isOfficial: official, sourcePublicKey: null,
             channels: null, contacts: null, appSettings: null,
@@ -236,6 +246,28 @@ class BackupImportPlanner {
       }
     }
     return (sections: sections, invalid: invalid);
+  }
+
+  List<BookmarkedMessage>? _readBookmarks(Map<String, dynamic> payload) {
+    final sections = payload['sections'];
+    if (sections is! Map) return null;
+    final section = sections['discoveredContacts'];
+    final preferences = section is Map ? section['preferences'] : null;
+    if (preferences is! Map) return null;
+    final rows = <BookmarkedMessage>[];
+    final source = payload['sourcePublicKey'];
+    final expectedKey = source is String && source.length >= 10
+        ? 'message_bookmarks_${source.substring(0, 10).toLowerCase()}' : null;
+    for (final entry in preferences.entries) {
+      if (expectedKey != null && entry.key != expectedKey) continue;
+      if (entry.key is! String || !(entry.key as String).startsWith('message_bookmarks_')) continue;
+      try {
+        final value = entry.value is String ? jsonDecode(entry.value as String) : entry.value;
+        if (value is! List || value.length > 10000) throw const FormatException('Invalid bookmarks');
+        rows.addAll(value.map((row) => BookmarkedMessage.fromJson(Map<String, dynamic>.from(row as Map))));
+      } on Object { throw const FormatException('Invalid bookmarks'); }
+    }
+    return rows.isEmpty ? null : rows;
   }
 
   BackupImportPlan _inspectPayload(

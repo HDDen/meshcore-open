@@ -4,6 +4,7 @@ import 'package:meshcore_open/helpers/mcoa_theme_preview_data.dart';
 import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
+import 'package:meshcore_open/models/bookmarked_message.dart';
 import 'package:meshcore_open/screens/channel_chat_screen.dart';
 import 'package:meshcore_open/screens/channels_screen.dart';
 import 'package:meshcore_open/screens/chat_screen.dart';
@@ -86,6 +87,25 @@ void main() {
     expect(data.alice.publicKeyHex, isNot(data.bob.publicKeyHex));
     expect(data.directMessages.last.tripTimeMs, 1200);
     expect(data.directMessages.last.airtimeMs, 549);
+    expect(data.bookmarkRevision, 0);
+    for (final message in data.channelMessages) {
+      expect(data.isMessageBookmarked(
+        BookmarkSourceType.channel,
+        data.chatChannel.storageId!,
+        message.messageId,
+      ), isFalse);
+    }
+    for (final message in data.directMessages) {
+      expect(data.isMessageBookmarked(
+        BookmarkSourceType.contact,
+        data.alice.publicKeyHex,
+        message.messageId,
+      ), isFalse);
+    }
+    expect(
+      () => data.loadBookmarkedMessages(),
+      throwsUnsupportedError,
+    );
     expect(
       () => data.noSuchMethod(Invocation.method(#sendFrame, [])),
       throwsUnsupportedError,

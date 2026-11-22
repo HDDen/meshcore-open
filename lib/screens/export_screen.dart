@@ -1,3 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:file_selector/file_selector.dart';
+import 'package:share_plus/share_plus.dart';
+import '../services/app_settings_service.dart';
+import '../utils/bookmark_markdown_export.dart';
+import '../utils/platform_info.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +19,7 @@ import '../widgets/mesh_ui.dart';
 import '../widgets/sync_progress_overlay.dart';
 
 class ExportScreen extends StatelessWidget {
+  static const _markdownFileType = XTypeGroup(label: 'Markdown', extensions: ['md']);
   const ExportScreen({super.key});
 
   @override
@@ -33,6 +41,9 @@ class ExportScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
           children: [
+            MeshNavTile(icon: Icons.bookmark_border, title: l10n.settings_exportBookmarks,
+              subtitle: l10n.settings_exportBookmarksSubtitle,
+              onTap: () => _exportBookmarks(context)),
             MeshCard(
               padding: EdgeInsets.zero,
               child: Column(
@@ -82,6 +93,78 @@ class ExportScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportBookmarks(BuildContext context) async {
+    final l10n = context.l10n;
+    try {
+      final bookmarks = await context
+          .read<MeshCoreConnector>()
+          .loadBookmarkedMessages();
+      if (!context.mounted) return;
+      if (bookmarks.isEmpty) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(l10n.settings_exportBookmarksNoBookmarks),
+        );
+        return;
+      }
+
+      final exportedAt = DateTime.now();
+      final markdown = await buildBookmarksMarkdown(
+        bookmarks,
+        publicGateway: context
+            .read<AppSettingsService>()
+            .settings
+            .publicIpfsGateway,
+        exportedAt: exportedAt,
+      );
+      if (!context.mounted) return;
+      final date =
+          '${exportedAt.year.toString().padLeft(4, '0')}'
+          '-${exportedAt.month.toString().padLeft(2, '0')}'
+          '-${exportedAt.day.toString().padLeft(2, '0')}';
+      final filename = 'meshcore-open-bookmarks_$date.md';
+      final file = XFile.fromData(
+        Uint8List.fromList(utf8.encode(markdown)),
+        name: filename,
+        mimeType: 'text/markdown',
+      );
+
+      if (PlatformInfo.isWeb) {
+        await file.saveTo(filename);
+      } else if (PlatformInfo.isDesktop) {
+        final location = await getSaveLocation(
+          suggestedName: filename,
+          acceptedTypeGroups: const [_markdownFileType],
+        );
+        if (location == null || !context.mounted) return;
+        await file.saveTo(location.path);
+      } else {
+        final result = await SharePlus.instance.share(
+          ShareParams(
+            subject: l10n.settings_exportBookmarks,
+            files: [file],
+            fileNameOverrides: [filename],
+            sharePositionOrigin: shareOriginOf(context),
+          ),
+        );
+        if (result.status == ShareResultStatus.dismissed) return;
+      }
+      if (context.mounted) {
+        showDismissibleSnackBar(
+          context,
+          content: Text(l10n.settings_exportBookmarksSuccess),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        showDismissibleSnackBar(
+          context,
+          content: Text('${l10n.settings_gpxExportError} $error'),
+        );
+      }
+    }
   }
 
   Future<void> _export(

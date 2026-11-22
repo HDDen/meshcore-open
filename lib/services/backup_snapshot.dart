@@ -15,6 +15,7 @@ import '../models/channel.dart';
 import '../models/community.dart';
 import '../models/contact.dart';
 import '../models/contact_group.dart';
+import '../models/bookmarked_message.dart';
 import 'backup_file_codec.dart';
 
 /// Immutable selected data from the active profile and, optionally, its node.
@@ -28,6 +29,7 @@ class BackupSnapshot {
     Iterable<ContactGroup>? contactGroups,
     BackupContactSettings? contactSettings,
     Iterable<Community>? communities,
+    Iterable<BookmarkedMessage>? bookmarks,
     String? discoveredContactsJson,
     AppSettingsBackup? appSettings,
     BackupMessageFilter? messageFilter,
@@ -43,7 +45,7 @@ class BackupSnapshot {
   }) : sourcePublicKey =
            channels == null && channelSettings == null && contacts == null &&
                contactGroups == null && discoveredContactsJson == null &&
-               communities == null && contactSettings == null && nodeProfile == null &&
+               communities == null && bookmarks == null && contactSettings == null && nodeProfile == null &&
                !publicKeySelected && nodePrivateKey == null && locationPreferences == null
            ? ''
            : sourcePublicKey?.toLowerCase() ?? '',
@@ -56,6 +58,7 @@ class BackupSnapshot {
        _channelSettings = channelSettings?.isEmpty == true ? null : channelSettings,
        _historyRows = null,
        _sections = {
+         if (bookmarks != null) 'bookmarks': [for (final bookmark in bookmarks) bookmark.toJson()],
          if (channels != null) 'channels': _channelRows(channels),
          if (contacts != null) 'contacts': _contactRows(contacts),
          if (communities != null)
@@ -222,6 +225,7 @@ class BackupSnapshot {
     final preferences = <String, Map<String, Object?>>{};
     for (final entry in _sections.entries) {
       final (section, prefix) = switch (entry.key) {
+        'bookmarks' => ('discoveredContacts', 'message_bookmarks_'),
         'contactGroups' => ('contacts', 'contact_groups'),
         'communities' => ('channels', 'communities_v1'),
         'discoveredContacts' => ('discoveredContacts', 'discovered_contacts'),

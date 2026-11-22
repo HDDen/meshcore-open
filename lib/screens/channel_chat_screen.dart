@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../models/bookmarked_message.dart';
+import '../widgets/message_bookmark.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -737,7 +739,16 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   BuildContext? _tryGetMessageContext(String messageId) =>
       _messageKeyFor(messageId)?.currentContext;
 
+  bool _showBookmarkedOnly = false;
+
   List<ChannelMessage> _messagesForDisplay(MeshCoreConnector connector) {
+    final rows = _allMessagesForDisplay(connector);
+    return !_showBookmarkedOnly ? rows : rows.where((message) => connector.isMessageBookmarked(
+      BookmarkSourceType.channel, widget.channel.storageId ?? 'slot:${widget.channel.index}', message.messageId,
+    )).toList();
+  }
+
+  List<ChannelMessage> _allMessagesForDisplay(MeshCoreConnector connector) {
     return _regionFilterTimeline.resolve(
       connector.getChannelMessageTimeline(widget.channel),
       connector.getChannelHiddenRegions(widget.channel.index),
@@ -1210,6 +1221,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               icon: const Icon(Icons.more_vert),
               onSelected: (value) {
                 switch (value) {
+                  case 'showBookmarks':
+                    setState(() => _showBookmarkedOnly = !_showBookmarkedOnly);
                   case 'searchMessages':
                     unawaited(_showMessageSearch());
                   case 'background':
@@ -1258,6 +1271,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(value: 'showBookmarks', child: PopupMenuRow(
+                  icon: _showBookmarkedOnly ? Icons.bookmark : Icons.bookmark_border,
+                  text: context.l10n.chat_showBookmarks,
+                )),
                 PopupMenuItem(
                   value: 'searchMessages',
                   child: PopupMenuRow(
@@ -1361,7 +1378,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     hideFiltered: connector.hidesFilteredChannelRows(widget.channel),
                     // The attempt badge's spinner follows the resend loop,
                     // which changes nothing in the message list itself.
-                    resendRevision: connector.channelResendRevision,
+                    resendRevision: Object.hash(connector.channelResendRevision, connector.bookmarkRevision),
                   ),
                   shouldRebuild: (previous, next) =>
                       !identical(previous.messages, next.messages) ||
@@ -1383,7 +1400,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       connector: connector,
                     );
                     final newest = messages.lastOrNull;
-                    final compacted = connector.getChannelHiddenRegions(widget.channel.index).isNotEmpty ||
+                    final compacted = _showBookmarkedOnly || connector.getChannelHiddenRegions(widget.channel.index).isNotEmpty ||
                         timeline.hideFiltered ||
                         (timeline.filterEnabled &&
                             reversedRows.any((row) => row.filteredGroup != null));
@@ -1753,6 +1770,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Widget _buildMessageBubble(
+    ChannelMessage message, double scale, MeshCoreConnector connector,
+    AppSettingsService settings, bool urlImagesEnabled,
+  ) => MessageBookmarkBadge(
+    marked: connector.isMessageBookmarked(BookmarkSourceType.channel,
+        widget.channel.storageId ?? 'slot:${widget.channel.index}', message.messageId),
+    child: _buildUnmarkedMessageBubble(message, scale, connector, settings, urlImagesEnabled),
+  );
+
+  Widget _buildUnmarkedMessageBubble(
     ChannelMessage message,
     double textScale,
     MeshCoreConnector connector,
@@ -3864,6 +3890,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     // A link in the identity table changes which images are the channel's.
     final imageVersion = Object.hash(
       _imageStoreVersion,
+      _showBookmarkedOnly,
       ChannelIdentities.instance.revision,
     );
     var order = _transcriptOrder;
@@ -3871,7 +3898,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         !order.matches(messages, imageVersion, widget.channel.index)) {
       // The channel's images are those stamped with the IDs of its identity
       // group; the slot names only those written before the IDs existed.
-      final images = store == null
+      final images = store == null || _showBookmarkedOnly
           ? const <ReceivedImageEntry>[]
           : store.entriesForChannelIds(
               _imageChannelIds(),
@@ -5639,6 +5666,10 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                MessageBookmarkAction(connector: connector, bookmark: BookmarkedMessage.fromChannel(
+                  message: message, channelId: widget.channel.storageId ?? 'slot:${widget.channel.index}',
+                  channelName: widget.channel.name, senderName: message.senderName,
+                )),
                 ListTile(
                   leading: const Icon(Icons.reply),
                   title: Text(context.l10n.chat_reply),

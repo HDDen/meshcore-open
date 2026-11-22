@@ -493,6 +493,39 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     beforeOpen: (_) => _ensureAuxiliaryTables(),
   );
 
+  Future<void> _ensureMessageBookmarksTable() async {
+    await customStatement('''CREATE TABLE IF NOT EXISTS message_bookmarks (
+      node_key TEXT NOT NULL, bookmark_id TEXT NOT NULL,
+      received_at INTEGER NOT NULL, bookmark_json TEXT NOT NULL,
+      PRIMARY KEY (node_key, bookmark_id)
+    )''');
+    await customStatement('CREATE INDEX IF NOT EXISTS message_bookmarks_time '
+        'ON message_bookmarks(node_key, received_at DESC)');
+  }
+
+  Future<List<String>> readMessageBookmarks(String node) async {
+    final rows = await customSelect(
+      'SELECT bookmark_json FROM message_bookmarks WHERE node_key = ? '
+      'ORDER BY received_at DESC, bookmark_id', variables: [Variable<String>(node)],
+    ).get();
+    return [for (final row in rows) row.read<String>('bookmark_json')];
+  }
+
+  Future<void> writeMessageBookmark(String node, String id, int at, String json) => customStatement(
+    'INSERT INTO message_bookmarks(node_key, bookmark_id, received_at, bookmark_json) '
+    'VALUES (?, ?, ?, ?) ON CONFLICT(node_key, bookmark_id) DO UPDATE SET '
+    'received_at = excluded.received_at, bookmark_json = excluded.bookmark_json',
+    [node, id, at, json],
+  );
+
+  Future<void> clearMessageBookmarks(String node) => customStatement(
+    'DELETE FROM message_bookmarks WHERE node_key = ?', [node],
+  );
+
+  Future<void> removeMessageBookmark(String node, String id) => customStatement(
+    'DELETE FROM message_bookmarks WHERE node_key = ? AND bookmark_id = ?', [node, id],
+  );
+
   Future<void> _ensureAuxiliaryTables() async {
     await _ensureLegacyRejectedMessagesTable();
     await _ensureContactLocationCacheTable();
@@ -504,6 +537,7 @@ class MessageHistoryDatabase extends _$MessageHistoryDatabase {
     await _ensureChannelIdentitiesTable();
     await _ensureContactIdentitiesTable();
     await _ensureCliHistoryTables();
+    await _ensureMessageBookmarksTable();
     await _ensurePendingChannelFramesTable();
     await _ensureFilterTrainingExamplesTable();
     await _ensureAdditionalIdentityVaultTable();

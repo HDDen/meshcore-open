@@ -79,7 +79,7 @@ class _BackupScreenState extends State<BackupScreen> {
   static const _nodeItems = {
     'deviceName', 'publicKey', 'privateKey', 'radioSettings', 'location',
     'privacySettings', 'contactSettings', 'contacts', 'perContactSettings', 'contactGroups',
-    'discoveredContacts', 'channels', 'channelSettings', 'communities',
+    'discoveredContacts', 'channels', 'channelSettings', 'communities', 'bookmarks',
   };
   static const _secretItems = {
     'privateKey', PortableAppSettings.ipfsKey, PortableAppSettings.stadiaKey,
@@ -234,6 +234,7 @@ class _BackupScreenState extends State<BackupScreen> {
               includeChannels: items.contains('channels'),
               includeContacts: items.contains('contacts'),
               includeChannelSettings: items.contains('channelSettings'),
+              includeBookmarks: items.contains('bookmarks'),
               includeContactSettings: items.contains('perContactSettings'),
               includeContactGroups: items.contains('contactGroups'),
               includeDiscoveredContacts: items.contains('discoveredContacts'),
@@ -337,6 +338,7 @@ class _BackupScreenState extends State<BackupScreen> {
         BackupRestoreSection.contacts => l10n.contacts_title,
         BackupRestoreSection.contactSettings => l10n.backupContactSettings_label,
         BackupRestoreSection.contactGroups => l10n.backupContactGroups_label,
+        BackupRestoreSection.bookmarks => l10n.backupRestore_bookmarks,
         BackupRestoreSection.discoveredContacts => l10n.backupDiscoveredContacts_label,
         BackupRestoreSection.channels => l10n.channels_title,
         BackupRestoreSection.channelSettings => l10n.backupChannelSettings_label,
@@ -354,6 +356,10 @@ class _BackupScreenState extends State<BackupScreen> {
     String? settingsItem,
   }) async {
     if (_busy) return;
+    if (section == BackupRestoreSection.bookmarks) {
+      await _restoreBookmarks(node, plan);
+      return;
+    }
     if (section == BackupRestoreSection.nodeIdentity) {
       await _restoreNodeIdentity(node, plan.nodeIdentity!);
       return;
@@ -449,6 +455,51 @@ class _BackupScreenState extends State<BackupScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _restoreBookmarks(MeshCoreConnector node, BackupImportPlan plan) async {
+    final key = node.storageKeyHex;
+    if (key.isEmpty) return;
+    final existing = <String>{};
+    try {
+      existing.addAll((await node.loadBookmarkedMessages()).map((entry) => entry.storageId));
+    } on Object {
+      if (mounted) setState(() => _notice = context.l10n.bookmarks_saveFailed);
+      return;
+    }
+    if (!mounted || node.storageKeyHex != key) return;
+    final additions = {
+      for (final entry in plan.bookmarks ?? [])
+        if (!existing.contains(entry.storageId)) entry.storageId: entry,
+    }.values.toList();
+    final l10n = context.l10n;
+    final approved = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: Text(l10n.backupRestore_bookmarks), scrollable: true,
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text(node.deviceDisplayName),
+          SizedBox(width: double.maxFinite, height: 320, child: ListView.builder(
+            itemCount: additions.length,
+            itemBuilder: (_, index) => ListTile(dense: true,
+              title: Text(additions[index].sourceName),
+              subtitle: Text('${additions[index].senderName}: ${additions[index].text}', maxLines: 3, overflow: TextOverflow.ellipsis),
+            ),
+          )),
+        ]),
+      actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.common_cancel)),
+        FilledButton(onPressed: additions.isEmpty ? null : () => Navigator.pop(context, true), child: Text(l10n.backupChannels_apply))],
+    ));
+    if (approved != true || !mounted || node.storageKeyHex != key) return;
+    setState(() => _busy = true);
+    try {
+      final now = {for (final row in await node.loadBookmarkedMessages()) row.storageId};
+      for (final entry in additions) {
+        if (now.add(entry.storageId)) {
+          await node.setBookmarkedMessage(entry, isBookmarked: true, expectedNodeKey: key);
+        }
+      }
+    } on Object {
+      if (mounted) setState(() => _notice = l10n.bookmarks_saveFailed);
+    } finally { if (mounted) setState(() => _busy = false); }
   }
 
   Future<void> _restoreNodeIdentity(
@@ -708,6 +759,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     ]),
                     const Divider(height: 1),
                     _option(node, 'discoveredContacts', l10n.backupDiscoveredContacts_label),
+                    _option(node, 'bookmarks', l10n.backupRestore_bookmarks),
                     const Divider(height: 1),
                     _group(l10n.channels_title, Icons.forum_outlined, [
                       _option(node, 'channels', l10n.channels_title),

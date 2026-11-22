@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/deferred_channel_inbox.dart';
 import '../helpers/history_page_loads.dart';
+import '../models/bookmarked_message.dart';
+import '../storage/bookmark_store.dart';
 import '../models/pending_channel_frame.dart';
 import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
@@ -833,6 +835,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final SharedMessageHistoryHelper _sharedMessageHistoryHelper =
       SharedMessageHistoryHelper();
   final MessageStore _messageStore = MessageStore();
+  final BookmarkStore _bookmarkStore = BookmarkStore();
+  int _bookmarkRevision = 0;
+  int get bookmarkRevision => _bookmarkRevision;
   final ChannelOrderStore _channelOrderStore = ChannelOrderStore();
   final ChannelSettingsStore _channelSettingsStore = ChannelSettingsStore();
   final ChannelRegionStore _channelRegionStore = ChannelRegionStore();
@@ -1698,6 +1703,17 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   void _bindStoresToPublicKey(String publicKeyHex) {
     _channelMessageStore.setPublicKeyHex = publicKeyHex;
     _messageStore.setPublicKeyHex = publicKeyHex;
+    _bookmarkStore.setPublicKeyHex = publicKeyHex;
+    if (publicKeyHex.isNotEmpty) {
+      unawaited(_bookmarkStore.loadBookmarks().then((_) {
+        if (!_disposed && storageKeyHex == publicKeyHex) {
+          _bookmarkRevision++;
+          notifyListeners();
+        }
+      }).catchError((Object error) {
+        appLogger.warn('Could not load bookmarks: $error');
+      }));
+    }
     _channelOrderStore.setPublicKeyHex = publicKeyHex;
     _channelSettingsStore.setPublicKeyHex = publicKeyHex;
     _channelRegionStore.setPublicKeyHex = publicKeyHex;
@@ -4633,6 +4649,45 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     checkSession();
     _adoptDefaultFloodScopeWrite(scope);
     notifyListeners();
+  }
+
+  /// Independent snapshots for the active radio, including offline history.
+  Future<List<BookmarkedMessage>> loadBookmarkedMessages() async {
+    final key = storageKeyHex;
+    _bookmarkStore.setPublicKeyHex = key;
+    final rows = await _bookmarkStore.loadBookmarks();
+    return key == storageKeyHex ? rows : const [];
+  }
+
+  Iterable<String> _bookmarkSources(BookmarkSourceType type, String source) {
+    if (type == BookmarkSourceType.contact) return ContactIdentities.instance.keysOf(source);
+    final channel = _channels.where((channel) => channel.storageId == source).firstOrNull;
+    return {source, ..._imageChannelIdsOf(channel)};
+  }
+
+  bool isMessageBookmarked(BookmarkSourceType type, String source, String id) =>
+      _bookmarkStore.publicKeyHex == (storageKeyHex.length >= 10 ? storageKeyHex.substring(0, 10) : '') &&
+      _bookmarkSources(type, source).any((key) => _bookmarkStore.contains(type, key, id));
+
+  Future<void> setBookmarkedMessage(BookmarkedMessage bookmark, {required bool isBookmarked, String? expectedNodeKey}) async {
+    final key = storageKeyHex;
+    if (key.isEmpty || (expectedNodeKey != null && key != expectedNodeKey)) {
+      throw StateError('Bookmark radio scope changed');
+    }
+    _bookmarkStore.setPublicKeyHex = key;
+    if (isBookmarked) {
+      await _bookmarkStore.saveBookmark(bookmark);
+    } else {
+      final sources = _bookmarkSources(bookmark.sourceType, bookmark.sourceId).toSet();
+      final rows = await _bookmarkStore.loadBookmarks();
+      if (key != storageKeyHex) throw StateError('Bookmark radio scope changed');
+      for (final row in rows.where((row) => row.sourceType == bookmark.sourceType &&
+          row.messageId == bookmark.messageId && sources.contains(row.sourceId))) {
+        if (key != storageKeyHex) throw StateError('Bookmark radio scope changed');
+        await _bookmarkStore.removeBookmark(row);
+      }
+    }
+    if (!_disposed && key == storageKeyHex) { _bookmarkRevision++; notifyListeners(); }
   }
 
   /// Reapplies the current radio's persisted manual channel order.
@@ -14441,6 +14496,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required bool includeContacts,
     AppSettingsBackup? appSettings,
     bool includeDiscoveredContacts = false,
+    bool includeBookmarks = false,
     bool includeContactGroups = false,
     bool includeCommunities = false,
     bool includeContactSettings = false,
@@ -14478,7 +14534,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         selfPublicKeyHex == nodeKey &&
         _channelInboxRevision == revision;
     if ((!includeChannels && !includeContacts &&
-            !includeDiscoveredContacts && !includeContactGroups &&
+            !includeBookmarks && !includeDiscoveredContacts && !includeContactGroups &&
             !includeCommunities && !includeContactSettings && !includeChannelSettings &&
             !includeProfile) ||
         !canSnapshot()) {
@@ -14533,7 +14589,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (!canSnapshot()) return null;
+    final bookmarks = includeBookmarks ? await loadBookmarkedMessages() : null;
+    if (!canSnapshot()) return null;
     return BackupSnapshot(
+      bookmarks: bookmarks,
       sourcePublicKey: nodeKey,
       nodeName: deviceDisplayName,
       channels: includeChannels ? _channels : null,
@@ -15422,6 +15481,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     //set all the stores' public key so they can load the correct data
     _channelMessageStore.setPublicKeyHex = selfPublicKeyHex;
     _messageStore.setPublicKeyHex = selfPublicKeyHex;
+    _bookmarkStore.setPublicKeyHex = selfPublicKeyHex;
+    unawaited(loadBookmarkedMessages().then((_) {
+      if (!_disposed) { _bookmarkRevision++; notifyListeners(); }
+    }).catchError((Object error) { appLogger.warn('Could not load bookmarks: $error'); }));
     _channelOrderStore.setPublicKeyHex = selfPublicKeyHex;
     _channelSettingsStore.setPublicKeyHex = selfPublicKeyHex;
     _channelRegionStore.setPublicKeyHex = selfPublicKeyHex;
