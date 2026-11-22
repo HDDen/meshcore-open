@@ -47,9 +47,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       );
       if (mounted) _reload();
     } on Object {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.bookmarks_saveFailed)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.bookmarks_saveFailed)),
+        );
+      }
     }
   }
 
