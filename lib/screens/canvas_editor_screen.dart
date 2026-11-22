@@ -14,6 +14,7 @@ import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/channel_app_data_helper.dart';
 import '../helpers/mco_image_file_saver.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mco_image_raster_rects.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
@@ -10622,12 +10623,10 @@ class _PixelCanvasPainter extends CustomPainter {
       _paintRulerLabels(canvas, cellWidth, cellHeight);
     }
 
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
-        final colorValue = pixels[y * width + x];
-        if (transparentColor != null && colorValue == transparentColor) {
-          continue;
-        }
+    for (final rect in mcoImageRasterRects(
+      pixels, width, height, transparentColor: transparentColor,
+    )) {
+      final colorValue = rect.color;
         if (profile.isDynamic) {
           final safeColorValue =
               colorValue >= 0 &&
@@ -10644,16 +10643,15 @@ class _PixelCanvasPainter extends CustomPainter {
           final colorIndex = colorValue.clamp(0, palette.length - 1).toInt();
           paint.color = palette[colorIndex];
         }
-        canvas.drawRect(
-          Rect.fromLTWH(
-            canvasOffset.dx + x * cellWidth,
-            canvasOffset.dy + y * cellHeight,
-            cellWidth,
-            cellHeight,
-          ),
-          paint,
-        );
-      }
+      canvas.drawRect(
+        Rect.fromLTWH(
+          canvasOffset.dx + rect.x * cellWidth,
+          canvasOffset.dy + rect.y * cellHeight,
+          rect.width * cellWidth,
+          rect.height * cellHeight,
+        ),
+        paint,
+      );
     }
 
     if (showGrid) {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/mcoimg_codec.dart';
+import '../helpers/mco_image_raster_rects.dart';
 import '../helpers/mcoimg_palette.dart';
 import '../helpers/mcoimg_v3_codec.dart';
 import '../helpers/mcoimg_v4_codec.dart';
@@ -258,23 +259,16 @@ class MCOImageMessage extends StatelessWidget {
     final canvas = ui.Canvas(recorder);
     final paint = ui.Paint()..isAntiAlias = false;
 
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final pixel = image.pixels[y * image.width + x];
-        if (image.transparentColor != null && pixel == image.transparentColor) {
-          continue;
-        }
-        paint.color = _colorForPixelValue(image.paletteProfile, pixel, palette);
-        canvas.drawRect(
-          ui.Rect.fromLTWH(
-            (x * cellSize).toDouble(),
-            (y * cellSize).toDouble(),
-            cellSize.toDouble(),
-            cellSize.toDouble(),
-          ),
-          paint,
-        );
-      }
+    for (final rect in mcoImageRasterRects(
+      image.pixels, image.width, image.height,
+      transparentColor: image.transparentColor,
+    )) {
+      paint.color = _colorForPixelValue(image.paletteProfile, rect.color, palette);
+      canvas.drawRect(
+        ui.Rect.fromLTWH((rect.x * cellSize).toDouble(), (rect.y * cellSize).toDouble(),
+            (rect.width * cellSize).toDouble(), (rect.height * cellSize).toDouble()),
+        paint,
+      );
     }
 
     final picture = recorder.endRecording();
@@ -347,22 +341,17 @@ class _MCOImagePainter extends CustomPainter {
     final paint = Paint()..isAntiAlias = false;
     final transparentColor = image.transparentColor;
 
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final pixel = image.pixels[y * image.width + x];
-        if (transparentColor != null && pixel == transparentColor) {
-          continue;
-        }
-        paint.color = MCOImageMessage._colorForPixelValue(
-          image.paletteProfile,
-          pixel,
-          palette,
-        );
-        canvas.drawRect(
-          Rect.fromLTWH(x * cellWidth, y * cellHeight, cellWidth, cellHeight),
-          paint,
-        );
-      }
+    for (final rect in mcoImageRasterRects(
+      image.pixels, image.width, image.height, transparentColor: transparentColor,
+    )) {
+      paint.color = MCOImageMessage._colorForPixelValue(
+        image.paletteProfile, rect.color, palette,
+      );
+      canvas.drawRect(
+        Rect.fromLTWH(rect.x * cellWidth, rect.y * cellHeight,
+            rect.width * cellWidth, rect.height * cellHeight),
+        paint,
+      );
     }
   }
 

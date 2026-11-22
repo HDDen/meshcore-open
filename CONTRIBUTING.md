@@ -56,6 +56,29 @@ information on good commit messages.
 `dart format .`, `flutter analyze --fatal-infos --fatal-warnings`, and `flutter test`. CI also checks formatting with `dart format --output=none --set-exit-if-changed .`. The continuous development checks will
 fail if issues here are not addressed before hand.
 
+## Android builds on Windows with Pub Cache on another drive
+
+If Kotlin reports `this and base files have different roots` while closing
+incremental caches, the project and plugin sources in Pub Cache are on different
+Windows drives. `android/gradle.properties` disables Kotlin incremental compilation
+with `kotlin.incremental=false` to avoid this path conversion. Gradle caching and
+the Kotlin daemon remain enabled; Kotlin recompilation may take longer.
+
+After this error, stop Gradle and clear the old build outputs once, from the
+repository root in PowerShell, then repeat your usual build command:
+
+```powershell
+Push-Location android
+try { .\gradlew.bat --stop } finally { Pop-Location }
+flutter clean
+flutter pub get
+flutter build apk --release
+```
+
+Use your usual profile, signing options and build arguments if they differ.
+Warnings about annotation targets in a dependency such as `mobile_scanner` are
+separate from the incremental-cache exception.
+
 ## AI-use
 
 Everyone loves some help, AI agents are a tool in many of our belts. The project
