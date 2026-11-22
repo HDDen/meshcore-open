@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/region_request_progress_helper.dart';
+import 'package:meshcore_open/helpers/zero_hop_device_discovery.dart';
 import 'package:meshcore_open/helpers/snack_bar_builder.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/contact.dart';
@@ -13,6 +14,7 @@ import 'package:meshcore_open/storage/region_store.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/utils/app_logger.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
+import 'package:meshcore_open/widgets/node_memory_prompt.dart';
 import 'package:provider/provider.dart';
 
 Future<void> pushRegionManagementScreen(
@@ -54,7 +56,8 @@ class RegionManagementScreen extends StatefulWidget {
 }
 
 class _RegionManagementScreenState extends State<RegionManagementScreen> {
-  static const Duration _repeaterDiscoveryTimeout = Duration(seconds: 15);
+  static const Duration _repeaterDiscoveryTimeout =
+      ZeroHopDeviceDiscovery.responseWindow;
   static const Duration _regionRequestAckTimeout = Duration(seconds: 10);
   static const Duration _regionResponseFallbackTimeout = Duration(seconds: 30);
   static const int _regionResponseMarginMs = 3000;
@@ -422,7 +425,9 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     final hasRepeater = connector.contacts.any(
       (contact) => contact.type == advTypeRepeater,
     );
-    if (!hasRepeater) {
+    // Companion code 13+ can query an unknown zero-hop responder by full key.
+    final supportsUnknownRepeaters = (connector.firmwareVerCode ?? 0) >= 13;
+    if (!hasRepeater && !supportsUnknownRepeaters) {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
@@ -446,10 +451,21 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     final path = widget.initialFetchPath;
     final hopCount = widget.initialFetchHopCount;
     if (repeater == null || path == null || hopCount == null) return;
+    final connector = context.read<MeshCoreConnector>();
+    final nodeKey = connector.storageKeyHex;
+    if (!connector.isConnected) return;
+    // A supplied route must be installed on a real node contact. Unknown
+    // anonymous recipients are always zero-hop, irrespective of the reply path.
+    final stored = await ensureContactOnNode(context, connector, repeater);
+    if (!mounted || stored == null || !connector.isConnected ||
+        connector.storageKeyHex != nodeKey ||
+        connector.getContactByPubKeyHex(stored.publicKeyHex) == null) {
+      return;
+    }
     await _fetchAndShowRegions(
       () => _requestRegionsFromRepeater(
-        context.read<MeshCoreConnector>(),
-        repeater,
+        connector,
+        stored,
         requestPath: path,
         requestHopCount: hopCount,
         requestPathHashByteWidth: widget.initialFetchPathHashByteWidth,
@@ -597,6 +613,10 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Future<Set<Region>> _fetchRegionsFromRepeaters() async {
     final connector = context.read<MeshCoreConnector>();
     final repeaters = await _discoverNearbyRepeaters(connector);
+    appLogger.info(
+      'Region discovery selected ${repeaters.length} repeaters for querying',
+      tag: 'Regions', noNotify: true,
+    );
     final regions = <Region>{};
 
     for (final repeater in repeaters) {
@@ -619,6 +639,10 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     Timer? timeout;
     final completer = Completer<Map<String, Uint8List>>();
     final respondingPublicKeys = <String, Uint8List>{};
+    var rejectedKeyLengths = 0;
+    var discoveryResponses = 0;
+    var otherTags = 0;
+    var otherTypes = 0;
     final tag = DateTime.now().microsecondsSinceEpoch & 0xFFFFFFFF;
 
     void complete() {
@@ -638,16 +662,33 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
         reader.skipBytes(3); // SNR, RSSI, path_len from companion firmware.
 
         final payloadType = reader.readByte();
-        if (((payloadType >> 4) & 0x0F) != controlSubtypeDiscoverResp ||
-            (payloadType & 0x0F) != advTypeRepeater) {
+        if (((payloadType >> 4) & 0x0F) != controlSubtypeDiscoverResp) return;
+        discoveryResponses++;
+        reader.skipBytes(1); // Inbound SNR reported by the responding repeater.
+        final responseTag = reader.readUInt32LE();
+        final type = payloadType & 0x0F;
+        appLogger.info(
+          'Discovery response observed: tag=$responseTag expectedTag=$tag '
+          'type=$type keyBytes=${reader.remaining}',
+          tag: 'Regions', noNotify: true,
+        );
+        if (responseTag != tag) {
+          otherTags++;
           return;
         }
-
-        reader.skipBytes(1); // Inbound SNR reported by the responding repeater.
-        if (reader.readUInt32LE() != tag) return;
-
+        if (type != advTypeRepeater) {
+          otherTypes++;
+          return;
+        }
         final publicKey = reader.readRemainingBytes();
-        if (publicKey.length != pubKeySize) return;
+        if (publicKey.length != pubKeySize) {
+          rejectedKeyLengths++;
+          appLogger.warn(
+            'Discovery response ignored: tag=$tag keyBytes=${publicKey.length}, expected=$pubKeySize',
+            tag: 'Regions', noNotify: true,
+          );
+          return;
+        }
         final publicKeyCopy = Uint8List.fromList(publicKey);
         respondingPublicKeys[pubKeyToHex(publicKeyCopy).toLowerCase()] =
             publicKeyCopy;
@@ -657,8 +698,20 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
     });
 
     try {
-      final payload = buildDiscoveryRequestPayload(tag);
-      await connector.sendFrame(buildSendControlDataFrame(payload));
+      // Match the working Contacts discovery command. Keep full-key replies
+      // so an unknown neighbour can subsequently receive an anonymous request.
+      final payload = buildDiscoveryRequestPayload(tag, typeMask: 0xFF);
+      appLogger.info(
+        'Region discovery started: tag=$tag firmware=${connector.firmwareVerCode} '
+        'knownRepeaters=${knownRepeaters.length} windowMs=${_repeaterDiscoveryTimeout.inMilliseconds}',
+        tag: 'Regions', noNotify: true,
+      );
+      await connector.sendFrame(
+        buildSendControlDataFrame(payload),
+        waitForGenericAck: true,
+      );
+      appLogger.info('Region discovery command acknowledged: tag=$tag',
+        tag: 'Regions', noNotify: true);
       timeout = Timer(_repeaterDiscoveryTimeout, complete);
       final publicKeys = await completer.future;
       final knownByPublicKey = <String, Contact>{
@@ -666,6 +719,14 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           repeater.publicKeyHex.toLowerCase(): repeater,
       };
       final supportsUnknownRepeaters = (connector.firmwareVerCode ?? 0) >= 13;
+      final unknownCount = publicKeys.keys.where((key) => !knownByPublicKey.containsKey(key)).length;
+      appLogger.info(
+        'Region discovery finished: tag=$tag responses=${publicKeys.length} '
+        'unknown=$unknownCount supportsUnknown=$supportsUnknownRepeaters '
+        'rejectedKeyLengths=$rejectedKeyLengths observed=$discoveryResponses '
+        'otherTags=$otherTags otherTypes=$otherTypes',
+        tag: 'Regions', noNotify: true,
+      );
       final discoveredAt = DateTime.now();
       return publicKeys.entries
           .map((entry) {
@@ -684,7 +745,8 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           })
           .whereType<Contact>()
           .toList();
-    } catch (_) {
+    } catch (error) {
+      appLogger.warn('Region discovery failed: $error', tag: 'Regions', noNotify: true);
       timeout?.cancel();
       await subscription.cancel();
       return <Contact>[];
@@ -806,6 +868,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           repeater,
           replyPath,
           replyHopCount,
+          pathHashWidth: pathWidth,
           waitForAck: true,
         );
         pathChangedForRequest = true;
@@ -823,6 +886,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           if (cmd == respCodeErr) {
             if (awaitingSentResponse && expectedTag == null) {
               awaitingSentResponse = false;
+              final errorCode = reader.remaining > 0 ? reader.readByte() : -1;
+              appLogger.warn(
+                'Region request rejected by companion: errorCode=$errorCode',
+                tag: 'Regions', noNotify: true,
+              );
               complete(<Region>{});
             }
             return;
@@ -879,7 +947,12 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
           );
           final completedProgress = progressTracker?.markCompleted();
           if (completedProgress != null) updateProgress(completedProgress);
-          complete(_parseRegionsResponse(payload));
+          final regions = _parseRegionsResponse(payload);
+          appLogger.info(
+            'Region response parsed: tag=$tag acceptedNames=${regions.length}',
+            tag: 'Regions', noNotify: true,
+          );
+          complete(regions);
         } catch (_) {}
       });
 
@@ -894,7 +967,11 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
       awaitingSentResponse = true;
       await connector.sendFrame(frame);
       return await completer.future;
-    } catch (_) {
+    } catch (error) {
+      appLogger.warn(
+        'Region request failed: known=$isKnownRepeater tag=${expectedTag ?? '-'} error=$error',
+        tag: 'Regions', noNotify: true,
+      );
       return <Region>{};
     } finally {
       timeout?.cancel();

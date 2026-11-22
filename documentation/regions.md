@@ -5,7 +5,7 @@ Regions limit which configured repeaters forward a channel flood. They are routi
 ## Add and select regions
 
 1. While connected, open Settings → Regions.
-2. Add a region name manually, or choose Fetch from repeaters and add names from the results. Discovery queries nearby responding repeaters already present in your contacts; an empty result does not prove that no regions exist on the wider mesh.
+2. Add a region name manually, or choose Fetch from repeaters and add names from the results. Discovery queries nearby responding repeaters. Companion firmware code 13+ also supports zero-hop queries to responders absent from the saved contacts; older firmware requires saved contacts. An empty result does not prove that no regions exist on the wider mesh.
 3. Manual names accept lowercase letters, digits, and hyphens, up to 30 characters. Use the exact name configured by your local repeater operators.
 4. Choose a Default region to use for channels without their own override. None means the app sets no default scope (the radio default region, if any, applies).
 5. In channel chat, tap the title or landscape icon to select an override. The subtitle shows the effective region, with `(default)` when inherited from the app default or `(radio default)` when the radio's own default applies.
@@ -33,6 +33,33 @@ The scope used for a channel flood is decided in this order:
 Replying with a message's original region (below) is a one-off override at step 1.
 
 The saved region-name list is global to the app. Default and channel assignments are stored per connected radio identity. Removing a region from the list also clears matching assignments stored for every radio; it does not change repeater configuration or the radio default region stored on a radio.
+
+A routed region request from the map requires the final repeater to be stored
+on the node. If it is absent, the app asks to add it before installing the route;
+Cancel or a failed import sends no region request. The explicit route's hash
+width applies to the outgoing path and the reversed reply path. After the request
+the app restores the contact's previous route, including its original hash width.
+
+## Troubleshooting automatic region discovery
+
+Automatic fetching first broadcasts a full-key zero-hop discovery request with
+the same all-device type mask as Contacts discovery, waits for the companion ACK,
+and collects replies for 60 seconds. Only repeater replies with the matching tag
+are selected for region queries by zero-hop direct delivery. Repeater firmware
+randomises its response delay based on airtime and `tx_delay_factor`; the former
+15-second window could end before a valid reply arrived. An empty result can
+mean no discovery replies, failed region requests, or no usable public names in
+the replies; it does not prove the mesh has no configured regions.
+
+Enable the application debug log and inspect `[Regions]` entries. They record
+`Region discovery started/finished`, the number selected for querying, request
+routing/tag/timeouts, companion rejection codes, and `acceptedNames` in replies.
+Firmware rate-limits discovery and anonymous requests separately. In the checked
+repeater firmware these limits are four discovery requests per 120 seconds and
+four anonymous requests per 180 seconds, shared with other clients' requests.
+When diagnosing repeated empty results, allow at least three minutes before a
+single new attempt. Hidden repeaters and repeaters with forwarding disabled do
+not answer discovery.
 
 ## Regions displayed on messages
 
