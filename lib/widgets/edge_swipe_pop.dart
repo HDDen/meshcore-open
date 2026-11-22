@@ -5,14 +5,15 @@ import 'package:flutter/widgets.dart';
 /// Excludes this hit-tested area from the app-wide edge-back gesture without
 /// consuming its taps, text selection or scrolling gestures.
 class EdgeSwipePopBlocker extends StatelessWidget {
-  const EdgeSwipePopBlocker({super.key, required this.child});
+  const EdgeSwipePopBlocker({super.key, required this.child, this.enabled = true});
 
   static final _marker = Object();
   final Widget child;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) => MetaData(
-    metaData: _marker,
+    metaData: enabled ? _marker : null,
     behavior: HitTestBehavior.translucent,
     child: child,
   );

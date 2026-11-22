@@ -288,6 +288,7 @@ class _Harness {
     required double zoom,
     _FakeConnector? connectorOverride,
     Widget? screenOverride,
+    bool pushWithEdgeSwipe = false,
     bool requestPhoneLocation = false,
     WardriveService Function(MeshCoreConnector)? wardriveFactory,
     UiViewStateService? viewState,
@@ -303,6 +304,11 @@ class _Harness {
     final sections = SettingsSectionsService();
     final paths = PathHistoryService(StorageService());
     final view = viewState ?? UiViewStateService();
+    final navigatorKey = GlobalKey<NavigatorState>();
+    final screen = Consumer<WardriveService>(
+      builder: (_, _, child) => child!,
+      child: screenOverride ?? const MapScreen(),
+    );
     addTearDown(() {
       if (viewState == null) view.dispose();
       wardrive.dispose();
@@ -328,17 +334,25 @@ class _Harness {
           ),
         ],
         child: MaterialApp(
+          navigatorKey: navigatorKey,
+          builder: pushWithEdgeSwipe ? (_, child) => EdgeSwipePop(
+            navigatorKey: navigatorKey, child: child!,
+          ) : null,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           navigatorObservers: [appRouteObserver],
-          home: Consumer<WardriveService>(
-            builder: (_, _, child) => child!,
-            child: screenOverride ?? const MapScreen(),
-          ),
+          home: pushWithEdgeSwipe
+              ? const Scaffold(body: Text('map parent route')) : screen,
         ),
       ),
     );
     await _pumpFrames(tester);
+    if (pushWithEdgeSwipe) {
+      unawaited(navigatorKey.currentState!.push<void>(MaterialPageRoute(
+        builder: (_) => screen,
+      )));
+      await _pumpFrames(tester);
+    }
     return _Harness(connector, wardrive);
   }
 
@@ -462,6 +476,49 @@ void main() {
       expect(gesture.onTap, isNotNull);
       gesture.onTap!();
     }
+
+    testWidgets('edge swipes from the trace panel margin keep its draft open', (tester) async {
+      final connector = _TraceBuilderConnector(1);
+      try {
+        await _Harness.pump(tester, nodes: [], zoom: 15,
+          connectorOverride: connector, pushWithEdgeSwipe: true,
+          screenOverride: MapScreen(
+            initialTracePath: Uint8List.fromList([0x10, 0x11]),
+            initialTraceHashByteWidth: 2,
+          ),
+        );
+        final l10n = AppLocalizations.of(tester.element(find.byType(MapScreen)));
+        final title = find.text(l10n.contacts_pathTrace);
+        final y = tester.getCenter(title).dy;
+        for (final collapsed in [false, true]) {
+          if (collapsed) {
+            await tester.tap(find.widgetWithIcon(IconButton, Icons.expand_more));
+            await _pumpFrames(tester);
+          }
+          // Include the 16px outer margin which the old panel-only blocker missed.
+          for (final x in [4.0, 20.0, 32.0]) {
+            await tester.dragFrom(Offset(x, y), const Offset(150, 0));
+            await _pumpFrames(tester);
+            expect(title, findsOneWidget);
+            expect(find.byType(MapScreen), findsOneWidget);
+          }
+        }
+        await tester.tap(find.widgetWithIcon(IconButton, Icons.expand_less));
+        await _pumpFrames(tester);
+        expect(editorText(tester), '1011');
+        await tester.tap(find.widgetWithText(TextButton, l10n.common_close));
+        await _pumpFrames(tester);
+        expect(title, findsNothing);
+        // Closing the trace re-enables the app gesture without rebuilding the map.
+        await tester.dragFrom(Offset(4, y), const Offset(150, 0));
+        await _pumpFrames(tester);
+        expect(find.text('map parent route'), findsOneWidget);
+        expect(find.byType(MapScreen), findsNothing);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await _Harness.unmount(tester);
+      }
+    });
 
     testWidgets('path trace chevron keeps the route and mode when collapsed', (
       tester,

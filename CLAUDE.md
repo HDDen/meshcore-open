@@ -2102,11 +2102,15 @@ Map editing keeps the fork's local route/width/contact/estimated-position
 derivations and snapshots them on route actions. Raw editor text invalidates
 the saved result without rebuilding the map or writing preferences. Close/back
 hide the builder, Clear removes hops, and a recreated map restores the draft
-only for the same known radio. The trace-builder panel is wrapped in
-`EdgeSwipePopBlocker`: `EdgeSwipePop` checks hit-test metadata before tracking
-an edge gesture, so swiping its surface cannot call maybePop and close it.
-Child taps, editor selection and map gestures outside the panel are unaffected;
-the Close button and explicit system Back retain their behavior.
+only for the same known radio. A stable `EdgeSwipePopBlocker` wraps the complete
+map route and is enabled while the trace builder is open. `EdgeSwipePop` checks
+hit-test metadata before tracking an edge gesture. This includes the panel's
+outer margin, where a swipe previously bypassed panel-only protection and closed
+the builder through PopScope. Toggling only the marker preserves map/editor state.
+Child taps, editor selection and map gestures remain available; the Close button
+and explicit system Back retain their behavior. The map screen regression drives
+the real edge listener from x=4/20/32 in expanded and collapsed modes, then checks
+that Close restores normal edge navigation.
 An explicit initial route takes precedence;
 region-request map instances use a separate local draft. Existing region
 target placement, route slicing, manual normalization, whole-hop undo,

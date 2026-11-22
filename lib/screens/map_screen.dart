@@ -1768,8 +1768,14 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         );
-        _lastBuiltBody = built;
-        return built;
+        // Protect the whole route while the trace panel is open: a back swipe
+        // can start in its outer margin, outside the panel's own hit-test box.
+        final protected = EdgeSwipePopBlocker(
+          enabled: _isBuildingPathTrace,
+          child: built,
+        );
+        _lastBuiltBody = protected;
+        return protected;
       },
     );
   }
@@ -8428,7 +8434,7 @@ class _MapScreenState extends State<MapScreen>
       top: 16,
       left: 16,
       right: 16,
-      child: EdgeSwipePopBlocker(child: DecoratedBox(
+      child: DecoratedBox(
         key: _pathTracePanelKey,
         decoration: BoxDecoration(
           color: MapPalette.panelOn(brightness),
@@ -8541,7 +8547,7 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         ),
-      )),
+      ),
     );
   }
 
