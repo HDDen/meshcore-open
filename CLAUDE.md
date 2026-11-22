@@ -3992,6 +3992,12 @@ separate unread selector for the navigation bar; retain the
 fork session-only camera policy. The HTTP profiling reset tool and guide are
 ported. Owner runs analysis and regression tests before the next merge stage.
 
+**Version-only stage prepared 2026-11-22: `3944c4f4`.** Upstream changes
+only its version from `99.0.2+28` to `99.0.3+29`. Retain the fork release
+`9.5.3-mcoa.1.13.0+47` in all three profiles and the active manifest. No runtime
+or dependency changes belong to this stage; the next stage is `84fc394e`
+(AppImage release packaging).
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
