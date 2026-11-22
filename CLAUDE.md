@@ -4040,6 +4040,15 @@ localizations and intentional deletions. Evaluation tools live under
 bookmarks in the later stage if appropriate; keep backup previews and identity
 scoping. The owner runs Flutter checks and device profiling; no commit here.
 
+**Backup reapplication stage prepared 2026-11-22: `69421243`.** This
+first-parent merge introduces no code changes in the fork: the accepted
+`37bfdd47` adaptations (live settings, channel order and UI-state reload) were
+retained during the image-versions stage. Upstream's backup service, restore
+screen and UI-state changes at this tip match its `37bfdd47` state. Intentionally
+deleted upstream backup/filter/slot fixtures stay deleted. Record this ancestry
+without duplicating the accepted fixes; the remaining stage is `34ea0cb7`
+(bookmarks). No tests, analysis or commit were run by the agent.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
