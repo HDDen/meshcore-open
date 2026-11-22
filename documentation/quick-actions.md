@@ -13,7 +13,7 @@ pressing it still opens the quick-actions panel. **Extra hops** is reserved and
 cannot yet be selected.
 
 Selecting a live display reveals **Refresh interval** below the selector.
-The slider has seven steps: 0.5, 1, 2, 3, 5, 7 and 10 seconds. Seven seconds is the
+The slider has seven steps: 0.5, 1, 2, 3, 5, 7 and 10 seconds. Ten seconds is the
 default. The app retains each live display's interval independently when you
 switch modes. This preference applies only to header buttons; the Noise floor
 widget inside the panel continues to poll once per second.

@@ -1711,7 +1711,7 @@ and licensed proxy APIs. Radio statistics opens the companion stats screen when 
 transport's permission, enabled state and setter. Channel presets require one exact channel-name
 match on the connected radio. CompanionCLI presets share the console queue
 and history, and surface a timeout or transport failure in the panel. The
-header display menu supports Icon and Noise level; Extra hops remains disabled. `QuickActionsHeaderSettings` stores a stable display enum name and per-display refresh milliseconds in `quick_actions_header`, defaulting to noise/7000ms (explicitly saved display and interval choices remain unchanged) and accepting only 500/1000/2000/3000/5000/7000/10000ms. The enum metadata and per-mode interval map support future readings without adding noise-specific AppSettings flags. Only the header indicator uses this choice; clicking still opens the panel. It uses the shared polling helper in header mode, with an independent cadence and session guard; `quick_action_header_lifecycle.dart` allows resumed/inactive on Android/iOS (split-screen/floating windows remain live), pauses only hidden/paused/detached on mobile, and ignores app lifecycle entirely on Windows/Linux/macOS. Header polling does not use the iOS active-presentation gate, which also falls on focus loss; popup policy is unchanged; ModalRoute and TickerMode gate hidden/covered headers. Actual mobile backgrounding cancels header timers; returning to a visible resumed/inactive header resumes its configured cadence. Desktop focus changes do not cancel those timers. Popup polling remains 1s. The conditional slider follows the selector, localizes seconds, and retains its value across icon/noise switches. Its three independent
+header display menu supports Icon and Noise level; Extra hops remains disabled. `QuickActionsHeaderSettings` stores a stable display enum name and per-display refresh milliseconds in `quick_actions_header`, defaulting to noise/10000ms (explicitly saved display and interval choices remain unchanged) and accepting only 500/1000/2000/3000/5000/7000/10000ms. The enum metadata and per-mode interval map support future readings without adding noise-specific AppSettings flags. Only the header indicator uses this choice; clicking still opens the panel. It uses the shared polling helper in header mode, with an independent cadence and session guard; `quick_action_header_lifecycle.dart` allows resumed/inactive on Android/iOS (split-screen/floating windows remain live), pauses only hidden/paused/detached on mobile, and ignores app lifecycle entirely on Windows/Linux/macOS. Header polling does not use the iOS active-presentation gate, which also falls on focus loss; popup policy is unchanged; ModalRoute and TickerMode gate hidden/covered headers. Actual mobile backgrounding cancels header timers; returning to a visible resumed/inactive header resumes its configured cadence. Desktop focus changes do not cancel those timers. Popup polling remains 1s. The conditional slider follows the selector, localizes seconds, and retains its value across icon/noise switches. Its three independent
 switches control the shared app bar, channel chats and direct chats (including
 fixed additional identities). They default to visible for existing profiles.
 
@@ -4863,3 +4863,15 @@ never overwritten. `documentation/data-directories.md` covers both CLI argument
 forms, absolute/relative paths and Linux desktop entry quoting.
 
 The portable-profile migration offer renders its destination as a separate bold SelectableText before the action buttons, independent of the translated explanatory sentence. The full path remains visible and copyable before consent.
+
+### App settings defaults
+
+`AppSettings` constructor and missing-key JSON fallbacks share the MCOa defaults
+documented in `documentation/settings.md`. Defaults enable seconds, path reset,
+oldest-unread jumps, hidden channel mute/header radio statistics, message regions,
+unread channel sorting, compression ratios and incoming quote mentions; advert
+notifications, monochrome senders and legacy room/contact sorting default off.
+The no-retransmission warning defaults to 12 seconds; cancellation delay defaults
+to 5 seconds and the quick-actions header to noise refreshed every 10 seconds.
+Saved booleans and explicit
+warning intervals (including zero) remain unchanged; there is no migration.

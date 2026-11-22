@@ -46,7 +46,7 @@ void main() {
     final defaultInterval = find.byKey(const ValueKey('quick-actions-header-interval'));
     expect(tester.widget<Slider>(find.descendant(
       of: defaultInterval, matching: find.byType(Slider),
-    )).value, 5);
+    )).value, 6);
     await tester.tap(selector);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Icon').last);

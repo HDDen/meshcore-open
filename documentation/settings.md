@@ -7,6 +7,30 @@
 
 Settings are only accessible while a device is connected.
 
+## MCOa defaults
+
+Defaults apply to new or absent settings. Explicitly saved values are retained;
+there is no settings migration.
+
+| Setting | Default |
+| --- | --- |
+| Show seconds | On |
+| Advertisement notifications | Off |
+| Reset path after five failed attempts | On |
+| Jump to oldest unread | On |
+| Hide channel mute switch | On |
+| Hide radio statistics in the header | On |
+| Show message region | On |
+| Sort channels by unread messages | On |
+| Show compression ratio | On |
+| Monochrome sender names | Off |
+| Render incoming quotes as mentions | On |
+| No-retransmission warning interval | 12 seconds |
+| Sending delay for cancellation | 5 seconds |
+| Quick-actions header display | Noise level |
+| Quick-actions header refresh interval | 10 seconds |
+| Keep legacy room/contact sorting | Off |
+
 ## Settings Screen Layout
 
 The settings screen is a scrollable list of cards:

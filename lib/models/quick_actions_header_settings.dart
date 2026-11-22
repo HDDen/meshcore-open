@@ -24,7 +24,7 @@ class QuickActionsHeaderSettings {
        });
 
   static const allowedIntervalsMs = [500, 1000, 2000, 3000, 5000, 7000, 10000];
-  static const defaultIntervalMs = 7000;
+  static const defaultIntervalMs = 10000;
   final QuickActionsHeaderDisplay display;
   final Map<QuickActionsHeaderDisplay, int>? _intervals;
 

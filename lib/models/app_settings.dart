@@ -514,10 +514,11 @@ class AppSettings {
   static const int defaultExactQuoteLimit = 30;
   static const int minExactQuoteLimit = 3;
   static const int maxExactQuoteLimit = 100;
-  static const int defaultNoRetransmissionWarningSeconds = 7;
+  static const int defaultNoRetransmissionWarningSeconds = 12;
   static const int minNoRetransmissionWarningSeconds = 5;
   static const int maxNoRetransmissionWarningSeconds = 15;
   final int sendingDelayForCancellationSeconds;
+  static const int defaultSendingDelayForCancellationSeconds = 5;
   static const int maxSendingDelayForCancellationSeconds = 300;
   static const String defaultDoNotFilterMessagesOnChannels =
       'TerminalCLI\nSomethingElse';
@@ -661,7 +662,7 @@ class AppSettings {
     } else if (value is String) {
       parsed = int.tryParse(value);
     }
-    return (parsed ?? 0)
+    return (parsed ?? defaultSendingDelayForCancellationSeconds)
         .clamp(0, maxSendingDelayForCancellationSeconds)
         .toInt();
   }
@@ -785,7 +786,7 @@ class AppSettings {
   }
 
   AppSettings({
-    this.clearPathOnMaxRetry = false,
+    this.clearPathOnMaxRetry = true,
     this.mapShowRepeaters = true,
     this.mapShowChatNodes = true,
     this.mapShowOtherNodes = true,
@@ -799,7 +800,7 @@ class AppSettings {
     this.mapShowGuessedLocations = true,
     this.mapClusterNodes = true,
     this.enableMessageTracing = true,
-    this.enableTimeSeconds = false,
+    this.enableTimeSeconds = true,
     this.showKeyboardHidingButton = true,
     this.canvasActive = true,
     this.canvasShowLockButton = true,
@@ -807,8 +808,8 @@ class AppSettings {
     this.hideChannelIndexIndicator = true,
     this.showChannelPreviewSender = true,
     this.checkGitHubUpdates = true,
-    this.hideChannelMuteButton = false,
-    this.hideRadioStatsButton = false,
+    this.hideChannelMuteButton = true,
+    this.hideRadioStatsButton = true,
     this.powerSaving = const PowerSavingSettings(),
     this.snrIndicatorAllRepActivity = true,
     this.hideMapZoomControls = false,
@@ -830,12 +831,12 @@ class AppSettings {
     this.showQuickActionsInChannelHeader = true,
     this.showQuickActionsInContactHeader = true,
     this.uiScaleApplyToIcons = true,
-    this.showCompressionRatio = false,
+    this.showCompressionRatio = true,
     this.compressionRatioWithSenderName = false,
-    this.monochromeSenderNames = true,
-    this.showMessageRegion = false,
-    this.channelsUnreadSorting = false,
-    this.incomingQuoteAsMentions = false,
+    this.monochromeSenderNames = false,
+    this.showMessageRegion = true,
+    this.channelsUnreadSorting = true,
+    this.incomingQuoteAsMentions = true,
     this.exactQuote = true,
     this.exactQuoteLatest = true,
     this.exactQuoteLimit = defaultExactQuoteLimit,
@@ -851,7 +852,7 @@ class AppSettings {
     this.backgroundTcpEnabled = true,
     this.roomServerShowNotemptyOnChatscreen = false,
     this.roomServerShowNotemptyContactsOnChatscreen = false,
-    this.roomServerDisableRoomAndContactsSorting = true,
+    this.roomServerDisableRoomAndContactsSorting = false,
     this.mapCacheBounds,
     this.mapCacheMinZoom = 10,
     this.mapCacheMaxZoom = 15,
@@ -865,7 +866,7 @@ class AppSettings {
     this.lowBatteryAlerts = const LowBatteryAlertSettings(),
     this.notifyOnNewMessage = true,
     this.notifyOnNewChannelMessage = true,
-    this.notifyOnNewAdvert = true,
+    this.notifyOnNewAdvert = false,
     this.autoSendZeroHopAdvertOnGpsUpdate = false,
     this.gpsIntervalSeconds = 900,
     this.autoRouteRotationEnabled = false,
@@ -905,7 +906,7 @@ class AppSettings {
     this.tcpServerPort = 0,
     this.tcpServerWifiSsid = '',
     List<TcpConnectionBookmark>? tcpConnectionBookmarks,
-    this.jumpToOldestUnread = false,
+    this.jumpToOldestUnread = true,
     this.loadLinkImages = false,
     this.showLinkImagesByDefault = false,
     this.publicIpfsGateway = defaultPublicIpfsGateway,
@@ -1173,7 +1174,7 @@ class AppSettings {
     }
 
     return AppSettings(
-      clearPathOnMaxRetry: json['clear_path_on_max_retry'] as bool? ?? false,
+      clearPathOnMaxRetry: json['clear_path_on_max_retry'] as bool? ?? true,
       mapShowRepeaters: json['map_show_repeaters'] as bool? ?? true,
       mapShowChatNodes: json['map_show_chat_nodes'] as bool? ?? true,
       mapShowOtherNodes: json['map_show_other_nodes'] as bool? ?? true,
@@ -1190,7 +1191,7 @@ class AppSettings {
           json['map_show_guessed_locations'] as bool? ?? true,
       mapClusterNodes: json['map_cluster_nodes'] as bool? ?? true,
       enableMessageTracing: json['enable_message_tracing'] as bool? ?? true,
-      enableTimeSeconds: json['enable_time_seconds'] as bool? ?? false,
+      enableTimeSeconds: json['enable_time_seconds'] as bool? ?? true,
       showKeyboardHidingButton:
           json['show_keyboard_hiding_button'] as bool? ?? true,
       canvasActive: json['canvas_active'] as bool? ?? true,
@@ -1202,8 +1203,8 @@ class AppSettings {
           json['show_channel_preview_sender'] as bool? ?? true,
       checkGitHubUpdates: json['check_github_updates'] as bool? ?? true,
       hideChannelMuteButton:
-          json['hide_channel_mute_button'] as bool? ?? false,
-      hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? false,
+          json['hide_channel_mute_button'] as bool? ?? true,
+      hideRadioStatsButton: json['hide_radio_stats_button'] as bool? ?? true,
       powerSaving: PowerSavingSettings.fromJson(json['power_saving']),
       snrIndicatorAllRepActivity:
           json['snr_indicator_all_rep_activity'] as bool? ?? true,
@@ -1239,15 +1240,15 @@ class AppSettings {
       showQuickActionsInChannelHeader: json['quick_actions_in_channel_header'] != false,
       showQuickActionsInContactHeader: json['quick_actions_in_contact_header'] != false,
       uiScaleApplyToIcons: json['ui_scale_apply_to_icons'] as bool? ?? true,
-      showCompressionRatio: json['show_compression_ratio'] as bool? ?? false,
+      showCompressionRatio: json['show_compression_ratio'] as bool? ?? true,
       compressionRatioWithSenderName:
           json['compression_ratio_with_sender_name'] as bool? ?? false,
       monochromeSenderNames:
-          json['monochrome_sender_names'] as bool? ?? true,
-      showMessageRegion: json['show_message_region'] as bool? ?? false,
-      channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? false,
+          json['monochrome_sender_names'] as bool? ?? false,
+      showMessageRegion: json['show_message_region'] as bool? ?? true,
+      channelsUnreadSorting: json['channels_unread_sorting'] as bool? ?? true,
       incomingQuoteAsMentions:
-          json['incoming_quote_as_mentions'] as bool? ?? false,
+          json['incoming_quote_as_mentions'] as bool? ?? true,
       exactQuote: json['exact_quote'] as bool? ?? true,
       exactQuoteLatest: json['exact_quote_latest'] as bool? ?? true,
       exactQuoteLimit: normalizeExactQuoteLimit(json['exact_quote_limit']),
@@ -1272,7 +1273,7 @@ class AppSettings {
           false,
       roomServerDisableRoomAndContactsSorting:
           json['room_server_disable_room_and_contacts_sorting'] as bool? ??
-          true,
+          false,
       mapCacheBounds: (json['map_cache_bounds'] as Map?)?.map(
         (key, value) => MapEntry(key.toString(), (value as num).toDouble()),
       ),
@@ -1291,7 +1292,7 @@ class AppSettings {
       notifyOnNewMessage: json['notify_on_new_message'] as bool? ?? true,
       notifyOnNewChannelMessage:
           json['notify_on_new_channel_message'] as bool? ?? true,
-      notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? true,
+      notifyOnNewAdvert: json['notify_on_new_advert'] as bool? ?? false,
       autoSendZeroHopAdvertOnGpsUpdate:
           json['auto_send_zero_hop_advert_on_gps_update'] as bool? ?? false,
       gpsIntervalSeconds:
@@ -1388,7 +1389,7 @@ class AppSettings {
               )
               .toList() ??
           const [],
-      jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? false,
+      jumpToOldestUnread: json['jump_to_oldest_unread'] as bool? ?? true,
       loadLinkImages: json['load_link_images'] as bool? ?? false,
       showLinkImagesByDefault: json['show_link_images_by_default'] as bool? ?? false,
       publicIpfsGateway: json['public_ipfs_gateway'] as String? ?? defaultPublicIpfsGateway,

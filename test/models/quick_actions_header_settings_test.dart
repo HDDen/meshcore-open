@@ -14,12 +14,12 @@ void main() {
     expect(const QuickActionsHeaderSettings.defaults().display,
         QuickActionsHeaderDisplay.noise);
     expect(QuickActionsHeaderSettings().intervalMsFor(QuickActionsHeaderDisplay.noise),
-        7000);
+        10000);
   });
-  test('new and legacy settings default to noise with a seven-second interval', () {
+  test('new and legacy settings default to noise with a ten-second interval', () {
     final header = AppSettings.fromJson({}).quickActionsHeader;
     expect(header.display, QuickActionsHeaderDisplay.noise);
-    expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 7000);
+    expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 10000);
   });
 
   test('all seven steps survive storage and mode changes independently of popup buttons', () {
@@ -50,7 +50,7 @@ void main() {
         'display': 'noise', 'intervals_ms': {'noise': interval},
       });
       expect(header.display, QuickActionsHeaderDisplay.noise);
-      expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 7000);
+      expect(header.intervalMsFor(QuickActionsHeaderDisplay.noise), 10000);
     }
     final input = {QuickActionsHeaderDisplay.noise: 500};
     final header = QuickActionsHeaderSettings(intervalsMs: input);
