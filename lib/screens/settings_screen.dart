@@ -18,6 +18,7 @@ import '../services/map_tile_cache_service.dart';
 import '../services/app_debug_log_service.dart';
 import 'package:mco_service/mco_service.dart';
 import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import '../theme/theme_icons.dart';
 import '../utils/platform_info.dart';
 import '../widgets/app_bar.dart';
@@ -255,8 +256,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context,
                     icon: Icons.monetization_on_outlined,
                     title: l10n.settings_supportDevelopment,
-                    titleColor: MeshPalette.warn,
-                    iconColor: MeshPalette.warn,
+                    titleColor: McoaThemeStyle.attention(context, MeshPalette.warn),
+                    iconColor: McoaThemeStyle.attention(context, MeshPalette.warn),
                   ),
                 ),
                 const AppUpdateSettingsTile(),
@@ -773,8 +774,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.restart_alt,
           title: l10n.settings_rebootDevice,
           subtitle: l10n.settings_rebootDeviceSubtitle,
-          titleColor: MeshPalette.warn,
-          iconColor: MeshPalette.warn,
+          titleColor: McoaThemeStyle.attention(context, MeshPalette.warn),
+          iconColor: McoaThemeStyle.attention(context, MeshPalette.warn),
           onTap: () => _confirmReboot(context, connector),
         ),
         const Divider(height: 1, indent: 16),
@@ -783,8 +784,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.delete_outline,
           title: l10n.settings_deleteAllPaths,
           subtitle: l10n.settings_deleteAllPathsSubtitle,
-          titleColor: MeshPalette.alert,
-          iconColor: MeshPalette.alert,
+          titleColor: McoaThemeStyle.warning(context, MeshPalette.alert),
+          iconColor: McoaThemeStyle.warning(context, MeshPalette.alert),
           onTap: () => _confirmDeleteAllPaths(context, connector),
         ),
       ],

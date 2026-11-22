@@ -10,6 +10,8 @@ import 'package:meshcore_open/helpers/ui_notification_batcher.dart';
 import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
 import 'package:meshcore_open/helpers/legacy_sender_blocker.dart';
 import 'package:meshcore_open/models/app_settings.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/theme/mcoa_theme_style.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/message_filter.dart';
@@ -181,6 +183,10 @@ void main() {
           ChangeNotifierProvider<TranslationService>.value(value: translation),
         ],
         child: MaterialApp(
+          theme: ThemeData(extensions: [
+            McoaThemeStyle(McoaThemeOptions(colors: legacy
+                ? const {'attention': Color(0xFF12AB34), 'warning': Color(0xFF7856AB)} : const {})),
+          ]),
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -204,6 +210,9 @@ void main() {
           tile.title is Text && (tile.title! as Text).data == label);
       final block = index(legacy ? l10n.chat_blockSender : l10n.chat_selectMessages);
       expect(index(l10n.chat_selectMessages), index(l10n.common_delete) - 1);
+      final delete = tiles[index(l10n.common_delete)];
+      expect(delete.iconColor, legacy ? const Color(0xFF7856AB) : isNull);
+      expect(delete.textColor, legacy ? const Color(0xFF7856AB) : isNull);
       expect(index(l10n.chat_blockSender), legacy ? greaterThanOrEqualTo(0) : -1);
       final labels = [
         if (MessageFilterService.learningAvailable) l10n.messageFilter_markSpam,
@@ -213,7 +222,8 @@ void main() {
       for (var i = 0; i < labels.length; i++) {
         expect(index(labels[i]), block - labels.length + i);
         final tile = tiles[index(labels[i])];
-        final accent = Theme.of(tester.element(filterLike)).colorScheme.primary;
+        final accent = legacy ? const Color(0xFF12AB34)
+            : Theme.of(tester.element(filterLike)).colorScheme.primary;
         expect(tile.iconColor, accent);
         expect(tile.textColor, accent);
       }

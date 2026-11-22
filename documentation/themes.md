@@ -69,6 +69,19 @@ photo from your device, the photo is included.
 
 ## MCOa theme settings
 
+
+At the end of **Interface**, **Accent color (Attention)** and **Accent color
+(Warning)** provide independent optional color swatches and editable HEX values.
+The swatches default to the existing amber and red settings-action colors.
+Attention overrides the channel message spam/filter actions, Support development,
+and Reboot device. Warning overrides Delete all paths and the Delete action in channel and direct
+message menus (including room and additional-key chats). Without Warning, the
+message Delete action has no explicit color override. Settings subtitle text
+retains its existing 70% alpha. When an override is cleared, each action returns
+to its original color (message filtering uses the ordinary theme primary).
+The optional keys are `mcoa.colors.attention` and `mcoa.colors.warning`; storage
+and theme sharing remain at MCOa extension version 1.
+
 The **Channels** preview includes the same search field used in the channel list, above the two sample cards. Preview search is inert. In **Chats**, **Search: border**, **Search: background**, **Search: text**, and **Search: placeholder and icons** follow the unread-counter colors; the contacts-only background follows the shared background. These optional colors affect real channel and contact search as well as preview. Border geometry/focus width, search text, clear/filter actions and filtering behavior stay intact; clearing a color restores the current input theme. **Search: background (contacts)** appears after the shared search background and overrides only the contact screen, including its collapsed search box. Clearing it restores the shared search background, then the current input theme if the shared color is also unset. It is stored as `mcoa.colors.chats_search_contacts_background` and does not affect channel search or its preview. The other colors use `chats_search_border`, `chats_search_background`, `chats_search_text` and `chats_search_hint_icons` in `mcoa.colors`.
 
 

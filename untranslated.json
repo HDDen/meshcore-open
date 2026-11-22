@@ -469,7 +469,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "de": [
@@ -942,7 +944,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "es": [
@@ -1415,7 +1419,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "fr": [
@@ -1888,7 +1894,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "hu": [
@@ -2361,7 +2369,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "it": [
@@ -2834,7 +2844,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "ja": [
@@ -3307,7 +3319,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "ko": [
@@ -3780,7 +3794,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "nl": [
@@ -4253,7 +4269,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "pl": [
@@ -4726,7 +4744,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "pt": [
@@ -5199,7 +5219,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "sk": [
@@ -5672,7 +5694,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "sl": [
@@ -6145,7 +6169,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "sv": [
@@ -6618,7 +6644,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "uk": [
@@ -7091,7 +7119,9 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ],
 
   "zh": [
@@ -7564,6 +7594,8 @@
     "channelRegionFilter_title",
     "channelRegionFilter_noneAllowed",
     "channelRegionFilter_saveError",
-    "channelRegionFilter_unknown"
+    "channelRegionFilter_unknown",
+    "themes_mcoaAttention",
+    "themes_mcoaWarning"
   ]
 }

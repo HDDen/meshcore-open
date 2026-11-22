@@ -4191,5 +4191,7 @@
   "channelRegionFilter_title": "Показывать сообщения с регионом",
   "channelRegionFilter_noneAllowed": "Нет",
   "channelRegionFilter_saveError": "Не удалось сохранить фильтр регионов",
-  "channelRegionFilter_unknown": "Неизвестные регионы"
+  "channelRegionFilter_unknown": "Неизвестные регионы",
+  "themes_mcoaAttention": "Акцентный цвет (Attention)",
+  "themes_mcoaWarning": "Акцентный цвет (Warning)"
 }

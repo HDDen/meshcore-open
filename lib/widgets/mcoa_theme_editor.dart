@@ -71,6 +71,8 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
     final ink = outgoing ? bubble.meInk : scheme.onSurface;
     if (key == 'status_bar' || key == 'header') return scheme.surface;
     if (key == 'header_text') return scheme.onSurface;
+    if (key == 'attention') return MeshPalette.warn;
+    if (key == 'warning') return MeshPalette.alert;
     if (key.startsWith('composer_')) {
       return switch (key) {
         'composer_background' => scheme.surface,
@@ -329,6 +331,8 @@ class McoaThemeEditorState extends State<McoaThemeEditor> {
             _color('composer_counter', l10n.themes_mcoaComposerCounter),
             _color('composer_counter_warning', l10n.themes_mcoaComposerCounterWarning),
             _color('composer_counter_error', l10n.themes_mcoaComposerCounterError),
+            _color('attention', l10n.themes_mcoaAttention),
+            _color('warning', l10n.themes_mcoaWarning),
           ]),
           _section('incoming', l10n.themes_mcoaIncoming, messageColors('incoming')),
           _section('outgoing', l10n.themes_mcoaOutgoing, messageColors('outgoing')),

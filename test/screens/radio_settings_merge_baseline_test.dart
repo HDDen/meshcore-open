@@ -17,6 +17,9 @@ import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/radio_settings.dart';
 import 'package:meshcore_open/screens/export_screen.dart';
 import 'package:meshcore_open/screens/settings_screen.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/theme/mcoa_theme_style.dart';
+import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/screens/message_filter_settings_screen.dart';
 import 'package:meshcore_open/services/message_filter/message_filter_service.dart';
 import 'package:meshcore_open/services/app_debug_log_service.dart';
@@ -114,6 +117,7 @@ Future<void> _withScreen(
   MessageFilterService? messageFilterService,
   Size size = const Size(1100, 1800),
   double textScale = 1,
+  ThemeData? theme,
 }) async {
   final connector = _Connector(
     version: version,
@@ -133,6 +137,7 @@ Future<void> _withScreen(
         )),
       ],
       child: MaterialApp(
+        theme: theme,
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -269,6 +274,29 @@ void _expectCompleteRadioLabel(
 }
 
 void main() {
+  for (final custom in [false, true]) {
+    testWidgets('settings Attention/Warning colors preserve subtitle alpha (custom=$custom)', (tester) async {
+      final attention = custom ? const Color(0xFF12AB34) : MeshPalette.warn;
+      final warning = custom ? const Color(0xFF7856AB) : MeshPalette.alert;
+      await _withScreen(tester, (connector, l10n) async {
+        await _revealSetting(tester, find.text(l10n.settings_supportDevelopment));
+        expect(tester.widget<Text>(find.text(l10n.settings_supportDevelopment)).style!.color, attention);
+        expect(tester.widget<Icon>(find.byIcon(Icons.monetization_on_outlined)).color, attention);
+        for (final (title, subtitle, icon, color) in [
+          (l10n.settings_rebootDevice, l10n.settings_rebootDeviceSubtitle, Icons.restart_alt, attention),
+          (l10n.settings_deleteAllPaths, l10n.settings_deleteAllPathsSubtitle, Icons.delete_outline, warning),
+        ]) {
+          await _revealSetting(tester, find.text(title));
+          expect(tester.widget<Text>(find.text(title)).style!.color, color);
+          expect(tester.widget<Text>(find.text(subtitle)).style!.color, color.withValues(alpha: 0.7));
+          final row = find.ancestor(of: find.text(title), matching: find.byType(Row)).first;
+          expect(tester.widget<Icon>(find.descendant(of: row, matching: find.byIcon(icon))).color, color);
+        }
+      }, theme: McoaThemeStyle.apply(ThemeData(), McoaThemeOptions(colors: custom
+          ? {'attention': attention, 'warning': warning} : const {})));
+    });
+  }
+
   TestWidgetsFlutterBinding.ensureInitialized();
   testWidgets('main settings opens the existing message filter after app settings', (tester) async {
     final service = MessageFilterService();

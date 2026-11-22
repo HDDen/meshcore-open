@@ -11038,4 +11038,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get channelRegionFilter_unknown => 'Неизвестные регионы';
+
+  @override
+  String get themes_mcoaAttention => 'Акцентный цвет (Attention)';
+
+  @override
+  String get themes_mcoaWarning => 'Акцентный цвет (Warning)';
 }

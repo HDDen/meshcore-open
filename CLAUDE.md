@@ -4895,3 +4895,17 @@ The no-retransmission warning defaults to 12 seconds; cancellation delay default
 to 5 seconds and the quick-actions header to noise refreshed every 10 seconds.
 Saved booleans and explicit
 warning intervals (including zero) remain unchanged; there is no migration.
+
+### Attention and Warning theme accents
+
+MCOa extension version 1 accepts optional `colors.attention` and `colors.warning`.
+They appear last in the editor Interface palette, with MeshPalette.warn and
+MeshPalette.alert swatch fallbacks. `McoaThemeStyle.attention/warning` resolve
+an override with a caller-provided fallback; the global primary/error schemes
+remain untouched. Channel message filter actions use Attention then the existing
+primary. Settings support/reboot title+icon use Attention then MeshPalette.warn;
+delete-all-paths uses Warning then MeshPalette.alert. The single-message Delete
+ListTile in channel and shared direct/room/additional-key chat menus uses only
+the nullable Warning override for iconColor/textColor; absent means null. The existing tile subtitle
+alpha of 0.7 is unchanged. Empty HEX/removal restores the original per-action
+fallback, and the existing serializer handles storage, sharing and clearing.

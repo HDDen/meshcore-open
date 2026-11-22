@@ -39,6 +39,8 @@ class McoaThemeOptions {
     'composer_counter',
     'composer_counter_warning',
     'composer_counter_error',
+    'attention',
+    'warning',
     'incoming_border',
     'incoming_background',
     'incoming_sender_name',

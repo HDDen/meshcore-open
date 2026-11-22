@@ -5612,7 +5612,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         message.sharedHistorySourceName == null;
     // Blocking is the consequential half of that entry; lifting it is not, so
     // only that half is red.
-    final filterActionColor = Theme.of(context).colorScheme.primary;
+    final filterActionColor = McoaThemeStyle.attention(context, Theme.of(context).colorScheme.primary);
     final blockActionColor = isSenderBlocked
         ? null
         : Theme.of(context).colorScheme.error;
@@ -5885,6 +5885,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline),
+                  iconColor: McoaThemeStyle.of(context).colors['warning'],
+                  textColor: McoaThemeStyle.of(context).colors['warning'],
                   title: Text(context.l10n.common_delete),
                   onTap: () async {
                     Navigator.pop(sheetContext);

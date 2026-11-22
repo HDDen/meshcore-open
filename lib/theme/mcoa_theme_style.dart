@@ -11,6 +11,12 @@ class McoaThemeStyle extends ThemeExtension<McoaThemeStyle> {
   static McoaThemeOptions of(BuildContext context) =>
       Theme.of(context).extension<McoaThemeStyle>()?.options ?? const McoaThemeOptions();
 
+  static Color attention(BuildContext context, Color fallback) =>
+      of(context).colors['attention'] ?? fallback;
+
+  static Color warning(BuildContext context, Color fallback) =>
+      of(context).colors['warning'] ?? fallback;
+
   static Color color(
     BuildContext context, String part, Color fallback, {bool? outgoing}
   ) {

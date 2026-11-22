@@ -18441,6 +18441,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown regions'**
   String get channelRegionFilter_unknown;
+
+  /// No description provided for @themes_mcoaAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color (Attention)'**
+  String get themes_mcoaAttention;
+
+  /// No description provided for @themes_mcoaWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color (Warning)'**
+  String get themes_mcoaWarning;
 }
 
 class _AppLocalizationsDelegate

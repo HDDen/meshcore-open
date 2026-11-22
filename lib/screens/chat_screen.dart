@@ -2511,6 +2511,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ListTile(
                   leading: const Icon(Icons.delete_outline),
+                  iconColor: McoaThemeStyle.of(context).colors['warning'],
+                  textColor: McoaThemeStyle.of(context).colors['warning'],
                   title: Text(context.l10n.common_delete),
                   onTap: () async {
                     Navigator.pop(sheetContext);

@@ -5378,5 +5378,7 @@
   "channelRegionFilter_title": "Show messages from regions",
   "channelRegionFilter_noneAllowed": "None",
   "channelRegionFilter_saveError": "Could not save the region filter",
-  "channelRegionFilter_unknown": "Unknown regions"
+  "channelRegionFilter_unknown": "Unknown regions",
+  "themes_mcoaAttention": "Accent color (Attention)",
+  "themes_mcoaWarning": "Accent color (Warning)"
 }

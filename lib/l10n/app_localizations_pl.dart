@@ -11065,4 +11065,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get channelRegionFilter_unknown => 'Unknown regions';
+
+  @override
+  String get themes_mcoaAttention => 'Accent color (Attention)';
+
+  @override
+  String get themes_mcoaWarning => 'Accent color (Warning)';
 }

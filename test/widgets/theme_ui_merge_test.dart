@@ -9,6 +9,7 @@ import 'package:meshcore_open/screens/themes_screen.dart';
 import 'package:meshcore_open/screens/theme_editor_screen.dart';
 import 'package:meshcore_open/widgets/mcoa_theme_editor_section.dart';
 import 'package:meshcore_open/widgets/mcoa_theme_editor.dart';
+import 'package:meshcore_open/widgets/mcoa_theme_color_control.dart';
 import 'package:meshcore_open/widgets/channel_widget_color_picker.dart';
 import 'package:meshcore_open/widgets/mcoa_theme_preview.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -130,6 +131,15 @@ void main() {
     await tester.ensureVisible(toggle);
     await tester.tap(toggle);
     await tester.pumpAndSettle();
+    final interface = find.byWidgetPredicate((widget) =>
+      widget is McoaThemeEditorSection && widget.id == 'mcoa-interface');
+    final controls = tester.widgetList<McoaThemeColorControl>(find.descendant(
+      of: interface, matching: find.byType(McoaThemeColorControl),
+    )).toList();
+    expect(controls.sublist(controls.length - 2).map((control) => control.id),
+      ['attention', 'warning']);
+    expect(controls[controls.length - 2].fallback, MeshPalette.warn);
+    expect(controls.last.fallback, MeshPalette.alert);
     final row = find.byKey(const ValueKey('mcoa-color-header'));
     await tester.ensureVisible(row);
     await tester.tap(row);

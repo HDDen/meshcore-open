@@ -8,6 +8,19 @@ import 'package:meshcore_open/models/app_settings.dart';
 import 'package:meshcore_open/models/custom_theme.dart';
 
 void main() {
+  test('Attention and Warning round-trip without changing extension version', () {
+    const options = McoaThemeOptions(colors: {
+      'attention': Color(0xFF12AB34), 'warning': Color(0x801234AB),
+    });
+    expect(options.toJson()['version'], 1);
+    expect(McoaThemeOptions.fromJson(options.toJson()), options);
+    final theme = CustomTheme(id: 'accents', name: 'Accents',
+      background: const Color(0xFF101010), accent: const Color(0xFF336699), mcoa: options);
+    expect(CustomTheme.fromShareCode(theme.toShareCode(), newId: theme.id), theme);
+    expect(McoaThemeOptions.fromJson({'version': 1}).colors['attention'], isNull);
+    expect(options.copyWith(colors: {}).colors, isEmpty);
+  });
+
   test('all chat palette slots survive storage and sharing', () {
     final keys = McoaThemeOptions.colorKeys.where((key) => key.startsWith('chats_')).toList();
     expect(keys, hasLength(20));
@@ -204,7 +217,7 @@ void main() {
     expect(AppSettings.fromJson(AppSettings(customThemes: [theme]).toJson())
         .customThemes.single, theme);
     expect(options.toJson()['version'], 1);
-    expect(McoaThemeOptions.colorKeys, hasLength(65));
+    expect(McoaThemeOptions.colorKeys, hasLength(67));
     expect(McoaThemeOptions.fromJson(options.toJson()), options);
     expect(theme.sameContent(theme.copyWith(mcoa: const McoaThemeOptions())), isFalse);
     final upstream = jsonDecode(theme.toShareCode()) as Map<String, dynamic>;
