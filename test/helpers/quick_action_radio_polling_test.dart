@@ -50,11 +50,60 @@ void main() {
   });
   tearDown(PrefsManager.reset);
 
+  testWidgets('header starts after connection, firmware info and initial sync', (tester) async {
+    final radio = _Radio()..connected = false..ready = false..supported = false;
+    final settings = AppSettingsService();
+    addTearDown(radio.dispose);
+    addTearDown(settings.dispose);
+    await _configure(settings, {});
+    await settings.updateSettings(settings.settings.copyWith(
+      quickActionsHeader: QuickActionsHeaderSettings(display: QuickActionsHeaderDisplay.noise)
+          .withInterval(QuickActionsHeaderDisplay.noise, 1000),
+    ));
+    final polling = QuickActionRadioPolling(radio, settings,
+      source: QuickActionPollingSource.header, isVisible: () => true);
+    addTearDown(polling.dispose);
+    polling.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 2));
+    expect(radio.noise, 0);
+    radio.connected = true;
+    radio.notifyListeners();
+    await tester.pump(const Duration(seconds: 2));
+    expect(radio.noise, 0);
+    radio.supported = true;
+    radio.notifyListeners();
+    await tester.pump(const Duration(seconds: 2));
+    expect(radio.noise, 0);
+    radio.ready = true;
+    radio.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(radio.noise, 1);
+    await tester.pump(const Duration(seconds: 1));
+    expect(radio.noise, 2);
+    radio.ready = false;
+    radio.notifyListeners();
+    await tester.pump(const Duration(seconds: 2));
+    expect(radio.noise, 2);
+    radio.ready = true;
+    radio.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(radio.noise, 3);
+    radio.connected = false;
+    radio.notifyListeners();
+    await tester.pump(const Duration(seconds: 2));
+    expect(radio.noise, 3);
+    radio.connected = true;
+    radio.notifyListeners();
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(radio.noise, 4);
+    polling.dispose();
+  });
+
   for (final platform in [
     foundation.TargetPlatform.android, foundation.TargetPlatform.iOS,
     foundation.TargetPlatform.windows, foundation.TargetPlatform.linux, foundation.TargetPlatform.macOS,
   ]) {
-    testWidgets('header lifecycle polling follows visibility rather than focus ($platform)', (tester) async {
+  testWidgets('header lifecycle polling follows visibility rather than focus ($platform)', (tester) async {
       final mobile = platform == foundation.TargetPlatform.android || platform == foundation.TargetPlatform.iOS;
       final radio = _Radio();
       final settings = AppSettingsService();

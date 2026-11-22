@@ -1139,8 +1139,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 ),
                 Consumer<MeshCoreConnector>(
                   builder: (context, connector, _) {
-                    final unreadCount = connector
-                        .getUnreadCountForChannelIndex(widget.channel.index);
                     final radioDefault = connector.defaultRegionScopeLabel;
                     final regionHeader = region.isNotEmpty
                         ? context.l10n.channels_regionSetTo(region)
@@ -1161,7 +1159,6 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       children: [
                         ChannelRegionFilterLine(
                           regionHeader: regionHeader,
-                          unread: context.l10n.chat_unread(unreadCount),
                           knownRegions: RegionStore().loadRegions(),
                           hidden: connector.getChannelHiddenRegions(widget.channel.index),
                           onConfigure: () => _configureRegionFilter(connector),

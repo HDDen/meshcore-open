@@ -4939,3 +4939,5 @@ MCOimg raster painting in `MCOImageMessage` (chat and PNG) and `_PixelCanvasPain
 Contact-name retention: `retainedAdvertName` preserves a known name for omitted/blank names in both raw advert updates and firmware contact refreshes (`_handleContact`, `_handleContactAdvert`, `getFromDiscovered`). Actual nonblank renames still win; malformed Unicode and unsupported glyphs are not silently stripped.
 
 Firmware contact ingestion uses `Contact.fromFrame(..., preserveEmptyName: true)` so empty names remain distinguishable from a literal name "Unknown" until merging. The parser default keeps its legacy Unknown display fallback for other callers.
+
+`ChannelRegionFilterLine` shows outgoing region then region-filter icon/summary on one natural-width line. The unread count is omitted to save header space. A horizontal scroll view keeps long region names fully available without wrapping or ellipsis.

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/helpers/channel_region_filter.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -44,10 +45,56 @@ void main() {
     });
   }
 
+  testWidgets('region and filter stay on one line without unread text', (tester) async {
+    var opened = 0;
+    for (final width in [360.0, 135.0, 90.0]) {
+      await tester.pumpWidget(_app(Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(width: width, child: ChannelRegionFilterLine(
+          regionHeader: 'Region: north',
+          knownRegions: const ['north', 'south'],
+          hidden: const {'', ChannelRegionFilter.unknown},
+          onConfigure: () => opened++,
+        )),
+      )));
+      final region = tester.renderObject<RenderParagraph>(
+        find.byKey(const ValueKey('channel-header-region')),
+      );
+      expect(region.didExceedMaxLines, isFalse);
+      expect(find.byKey(const ValueKey('channel-header-unread')), findsNothing);
+      if (width == 360) {
+        expect(tester.renderObject<RenderParagraph>(find.text('north +1'))
+            .didExceedMaxLines, isFalse);
+      }
+      await tester.ensureVisible(find.byKey(const ValueKey('channel-region-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('channel-region-filter')));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    }
+    expect(opened, 3);
+  });
+
+  testWidgets('a region wider than the header keeps its natural single-line width', (tester) async {
+    await tester.pumpWidget(_app(const SizedBox(width: 80,
+      child: ChannelRegionFilterLine(
+        regionHeader: 'Region: very-long-region-name',
+        knownRegions: [], hidden: {}, onConfigure: _noop,
+      ),
+    )));
+    final region = tester.renderObject<RenderParagraph>(
+      find.byKey(const ValueKey('channel-header-region')),
+    );
+    expect(region.didExceedMaxLines, isFalse);
+    expect(region.size.width, greaterThan(80));
+    expect(region.maxLines, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('header has a clickable empty or filled filter and allowed-region summary', (tester) async {
     var opened = 0;
     Widget line(Set<String> hidden) => Builder(builder: (context) => ChannelRegionFilterLine(
-      regionHeader: 'Region: north', unread: 'Unread: 0',
+      regionHeader: 'Region: north',
       knownRegions: const ['north', 'south'], hidden: hidden,
       onConfigure: () => opened++,
     ));
@@ -63,3 +110,5 @@ void main() {
     expect(find.text(l10n.channelRegionFilter_noneAllowed), findsOneWidget);
   });
 }
+
+void _noop() {}

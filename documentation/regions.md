@@ -85,3 +85,5 @@ preferences backend. The channel-settings backup includes this option in
 `mcoaChannelSettings`, outside upstream settings. Restore maps PSK identities to
 the destination channel and preserves an existing destination choice, including
 an explicit empty denylist. Official MeshCore format omits the option.
+
+В шапке канала назначенный регион и фильтр регионов отображаются в одну строку без переноса и многоточия. Счётчик непрочитанных из этой строки убран. Очень длинную строку можно прокрутить горизонтально.

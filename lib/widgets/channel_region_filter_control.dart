@@ -63,10 +63,9 @@ class _RegionFilterDialogState extends State<_RegionFilterDialog> {
 
 class ChannelRegionFilterLine extends StatelessWidget {
   const ChannelRegionFilterLine({super.key, required this.regionHeader,
-    required this.unread, required this.knownRegions, required this.hidden,
+    required this.knownRegions, required this.hidden,
     required this.onConfigure});
   final String regionHeader;
-  final String unread;
   final List<String> knownRegions;
   final Set<String> hidden;
   final VoidCallback onConfigure;
@@ -81,24 +80,28 @@ class ChannelRegionFilterLine extends StatelessWidget {
     final label = '$first${allowed.length > 1 ? ' +${allowed.length - 1}' : ''}';
     return DefaultTextStyle.merge(
       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
-      child: Row(children: [
-        Flexible(child: Text('$regionHeader • ', overflow: TextOverflow.ellipsis)),
-        Flexible(child: Tooltip(
-          message: context.l10n.channelRegionFilter_title,
-          child: InkWell(
-            key: const ValueKey('channel-region-filter'),
-            onTap: onConfigure,
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(active ? Icons.filter_alt : Icons.filter_alt_outlined, size: 13),
-              if (active) ...[
-                const SizedBox(width: 3),
-                Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
-              ],
-            ]),
+      child: SingleChildScrollView(
+        key: const ValueKey('channel-header-region-scroll'),
+        scrollDirection: Axis.horizontal,
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text('$regionHeader • ', key: const ValueKey('channel-header-region'),
+            maxLines: 1, softWrap: false),
+          Tooltip(
+            message: context.l10n.channelRegionFilter_title,
+            child: InkWell(
+              key: const ValueKey('channel-region-filter'),
+              onTap: onConfigure,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(active ? Icons.filter_alt : Icons.filter_alt_outlined, size: 13),
+                if (active) ...[
+                  const SizedBox(width: 3),
+                  Text(label, maxLines: 1, softWrap: false),
+                ],
+              ]),
+            ),
           ),
-        )),
-        Text(' • $unread'),
-      ]),
+        ]),
+      ),
     );
   }
 }
