@@ -2360,7 +2360,16 @@ class $$HistoryMessagesTableTableManager
                 messageJson: messageJson,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$HistoryMessagesTable, HistoryMessage>(table),
+                  BaseReferences<
+                    _$MessageHistoryDatabase,
+                    $HistoryMessagesTable,
+                    HistoryMessage
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -2513,7 +2522,18 @@ class $$HistoryMetadataTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$HistoryMetadataTable, HistoryMetadataData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$MessageHistoryDatabase,
+                    $HistoryMetadataTable,
+                    HistoryMetadataData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -2831,7 +2851,19 @@ class $$LegacyRejectedMessagesTableTableManager
                 lastAttemptAtMs: lastAttemptAtMs,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $LegacyRejectedMessagesTable,
+                    LegacyRejectedMessage
+                  >(table),
+                  BaseReferences<
+                    _$MessageHistoryDatabase,
+                    $LegacyRejectedMessagesTable,
+                    LegacyRejectedMessage
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
