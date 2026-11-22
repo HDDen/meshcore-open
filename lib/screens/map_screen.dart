@@ -66,6 +66,7 @@ import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
 import '../widgets/map_action_buttons_layer.dart';
 import '../widgets/map_poi_cluster.dart';
+import '../widgets/coincident_repeater_marker_layer.dart';
 import '../widgets/marker_label_dialog.dart';
 import '../widgets/network_map_online_layer.dart';
 import '../widgets/popup_menu_row.dart';
@@ -1563,7 +1564,14 @@ class _MapScreenState extends State<MapScreen>
                         onTap: (repeater) =>
                             _showOnlineRepeater(context, connector, repeater),
                       ),
-                    MarkerLayer(
+                    CoincidentRepeaterMarkerLayer(
+                      maxZoom: _mapMaxZoom,
+                      repeaterKeys: {
+                        if (showLocal)
+                          for (final contact in visibleContacts)
+                            if (contact.type == advTypeRepeater)
+                              contact.publicKeyHex,
+                      },
                       markers: [
                         if (highlightPosition != null &&
                             widget.showHighlightPin)

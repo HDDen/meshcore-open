@@ -122,6 +122,8 @@ All screens are fully implemented (no remaining placeholders).
 | `map_cache_screen.dart` | Download/clear offline map tile cache |
 | `community_qr_scanner_screen.dart` | Scan QR to join a mesh community/channel |
 
+Local repeaters within eight metres of every other member of their group are visually spread at zoom 15 through 18 by `CoincidentRepeaterMarkerLayer` and `coincident_repeater_offsets.dart`. Stable public-key ordering yields compact pixel offsets for markers, labels and hit boxes through marker alignment; geographic points and trace/distance calculations stay unchanged. Groups are built in stable key order with an Earth-centred spatial index; complete-link distance checks prevent long neighbour chains. Pixel projection brings each group around its common centre while retaining real geographic points. The layer recomputes offsets on zoom changes but reuses its MarkerLayer across camera pans to preserve projection caching.
+
 ### Settings / Debug / Diagnostics
 | Screen | Purpose |
 |---|---|

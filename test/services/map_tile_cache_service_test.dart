@@ -88,6 +88,19 @@ void main() {
     tempDir.deleteSync(recursive: true);
   });
 
+  void closeManagerAfterTest(CacheManager manager) {
+    addTearDown(() async {
+      try {
+        // IOFileSystem starts directory creation in its constructor, but
+        // CacheManager.dispose does not await it. createFile waits for that
+        // initialization without writing a file or fetching any tiles.
+        await manager.config.fileSystem.createFile('initialization-probe');
+      } finally {
+        await manager.dispose();
+      }
+    });
+  }
+
   String nextCacheKey() => 'map_tile_cache_service_${cacheIndex++}';
 
   JsonCacheInfoRepository jsonRepository(String cacheKey) =>
@@ -107,6 +120,7 @@ void main() {
     expect(repository.opens, 0);
 
     final provider = service.tileProvider;
+    closeManagerAfterTest(service.cacheManager as CacheManager);
     expect(repository.opens, 1);
     expect(identical(service.tileProvider, provider), isTrue);
     expect(identical(service.cacheManager, service.cacheManager), isTrue);
@@ -133,6 +147,7 @@ void main() {
           fileSystem: IOFileSystem(cacheKey),
         ),
       );
+      closeManagerAfterTest(manager);
       final service = MapTileCacheService(
         appSettingsService: AppSettingsService(),
         cacheManager: manager,
