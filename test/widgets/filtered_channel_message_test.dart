@@ -175,6 +175,16 @@ void main() {
     expect((tile.subtitle as Text).style, compactStyle);
     expect(find.text(l10n.messageFilter_reasonManual), findsOneWidget);
     expect(find.text('Alice: Example post'), findsOneWidget);
+    // Only the placeholder subtitle repeats the author; the expanded body has
+    // no separate author row above the reason and inline 'Alice: ...' text.
+    expect(find.text('Alice'), findsOneWidget);
+    final expanded = find.byKey(const ValueKey('filtered-message-expanded-content'));
+    final bounds = tester.getRect(expanded);
+    final tileBounds = tester.getRect(find.byType(ExpansionTile));
+    expect(bounds.left, closeTo(tileBounds.left + 16, 0.01));
+    expect(bounds.right, closeTo(tileBounds.right - 16, 0.01));
+    expect(tester.getTopLeft(find.byType(SelectableText)).dx,
+      closeTo(bounds.left, 0.01));
 
     await tester.tap(find.text(l10n.messageFilter_ghostSingle));
     await tester.pumpAndSettle();

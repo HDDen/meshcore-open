@@ -51,7 +51,6 @@ class FilteredChannelMessage extends StatelessWidget {
     final editable = !connector.isOfflineSharedMode && message.sharedHistorySourceName == null;
     final content = <Widget>[
       if (!review) ...[
-        Text(message.senderName, style: compactStyle),
         Text(reason, style: compactStyle),
         if (detail != null) Text(detail, style: compactStyle),
         const SizedBox(height: 8),
@@ -59,6 +58,7 @@ class FilteredChannelMessage extends StatelessWidget {
       SelectableText(
         '${message.senderName}: ${message.text}',
         key: const PageStorageKey('filtered-message-text'),
+        style: review ? null : compactStyle,
       ),
       if (editable)
         Wrap(
@@ -104,8 +104,18 @@ class FilteredChannelMessage extends StatelessWidget {
             title: Text(l10n.messageFilter_ghostSingle, style: compactStyle),
             subtitle: Text(message.senderName, style: compactStyle),
             childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            expandedAlignment: Alignment.centerLeft,
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
-            children: content,
+            children: [
+              SizedBox(
+                key: const ValueKey('filtered-message-expanded-content'),
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: content,
+                ),
+              ),
+            ],
           );
     return onSelect == null
         ? tile
