@@ -138,21 +138,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // APP SETTINGS
                 SectionHeader(l10n.settings_appSettings),
-                MeshCard(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AppSettingsScreen(),
-                    ),
-                  ),
-                  child: _buildNavTileContent(
-                    context,
-                    icon: Icons.settings_outlined,
-                    iconSlot: ThemeIconSlot.settings,
-                    title: l10n.settings_appSettings,
-                    subtitle: l10n.settings_appSettingsSubtitle,
-                  ),
-                ),
                 if (messageFilter != null)
                   MeshCard(
                     onTap: () => Navigator.of(context).push(
@@ -169,6 +154,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.messageFilter_title,
                     ),
                   ),
+                MeshCard(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AppSettingsScreen(),
+                    ),
+                  ),
+                  child: _buildNavTileContent(
+                    context,
+                    icon: Icons.settings_outlined,
+                    iconSlot: ThemeIconSlot.settings,
+                    title: l10n.settings_appSettings,
+                    subtitle: l10n.settings_appSettingsSubtitle,
+                  ),
+                ),
                 MeshCard(
                   onTap: () => Navigator.push(
                     context,
