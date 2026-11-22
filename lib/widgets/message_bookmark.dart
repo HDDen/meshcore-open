@@ -33,12 +33,15 @@ class MessageBookmarkAction extends StatelessWidget {
 }
 
 class MessageBookmarkBadge extends StatelessWidget {
-  const MessageBookmarkBadge({super.key, required this.marked, required this.child});
+  const MessageBookmarkBadge({super.key, required this.marked, required this.child, this.cornerRadius = 18});
   final bool marked;
+  final double cornerRadius;
   final Widget child;
   @override
   Widget build(BuildContext context) => !marked ? child : Stack(
-    children: [child, Positioned(top: 2, right: 4, child: IgnorePointer(
+    clipBehavior: Clip.none,
+    children: [child,
+      Positioned(top: (cornerRadius - 2).clamp(0.0, double.infinity).toDouble(), left: -20, child: IgnorePointer(
       child: Icon(Icons.bookmark, size: 14, color: Theme.of(context).colorScheme.primary),
     ))],
   );

@@ -25,6 +25,29 @@ class _Node extends ChangeNotifier implements MeshCoreConnector {
 }
 
 void main() {
+  for (final outgoing in [false, true]) {
+    testWidgets('bookmark keeps the avatar gap without shifting or resizing the bubble ($outgoing)', (tester) async {
+      const bodyKey = ValueKey('bookmark-body');
+      Widget app(bool marked) => MaterialApp(home: Scaffold(body: SizedBox(
+        width: 400,
+        child: Row(mainAxisAlignment: outgoing ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [Flexible(child: MessageBookmarkBadge(marked: marked,
+            child: const SizedBox(key: bodyKey, width: 80, height: 40)))],
+        ),
+      )));
+      await tester.pumpWidget(app(false));
+      final original = tester.getRect(find.byKey(bodyKey));
+      await tester.pumpWidget(app(true));
+      final body = tester.getRect(find.byKey(bodyKey));
+      final icon = tester.getRect(find.byIcon(Icons.bookmark));
+      expect(body.left - icon.right, 6);
+      expect(icon.top - body.top, 16);
+      expect(body, original);
+      expect(body.width, 80);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final changeNode in [false, true]) {
     testWidgets('bookmark action uses the menu radio scope (changed=$changeNode)', (tester) async {
       final node = _Node();

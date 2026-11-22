@@ -1772,11 +1772,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildMessageBubble(
     ChannelMessage message, double scale, MeshCoreConnector connector,
     AppSettingsService settings, bool urlImagesEnabled,
-  ) => MessageBookmarkBadge(
-    marked: connector.isMessageBookmarked(BookmarkSourceType.channel,
-        widget.channel.storageId ?? 'slot:${widget.channel.index}', message.messageId),
-    child: _buildUnmarkedMessageBubble(message, scale, connector, settings, urlImagesEnabled),
-  );
+  ) => _buildUnmarkedMessageBubble(message, scale, connector, settings, urlImagesEnabled);
 
   Widget _buildUnmarkedMessageBubble(
     ChannelMessage message,
@@ -1792,11 +1788,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           message,
           connector.channelDisplayName(widget.channel.index),
         )) {
-      return FilteredChannelMessage(
-        message: message,
-        channel: widget.channel,
-        connector: connector,
-        onSelect: () => _toggleMessageSelection(connector, message),
+      return MessageBookmarkBadge(
+        marked: connector.isMessageBookmarked(BookmarkSourceType.channel,
+            widget.channel.storageId ?? 'slot:${widget.channel.index}', message.messageId),
+        child: FilteredChannelMessage(
+          message: message,
+          channel: widget.channel,
+          connector: connector,
+          onSelect: () => _toggleMessageSelection(connector, message),
+        ),
       );
     }
     final enableTracing = settingsService.settings.enableMessageTracing;
@@ -2048,6 +2048,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       ? (_) => unawaited(_showMessageActions(message))
                       : null,
                   child: McoaChatBubbleBox(
+                    bookmarked: connector.isMessageBookmarked(BookmarkSourceType.channel,
+                        widget.channel.storageId ?? 'slot:${widget.channel.index}', message.messageId),
                     outgoing: isOutgoing,
                     metadataVisible: enableTracing,
                     duration: const Duration(milliseconds: 1000),

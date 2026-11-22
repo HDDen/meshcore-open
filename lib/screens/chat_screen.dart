@@ -1530,6 +1530,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               service.settings.showMcoImagePackReplacements,
                         );
                     final bubble = ContactMessageBubble(
+                      bookmarked: connector.isMessageBookmarked(BookmarkSourceType.contact,
+                          widget.contact.publicKeyHex, message.messageId),
                       message: contactHistoryForIdentity(
                         message,
                         selectedIdentityKey: _additionalSenderKey,
@@ -1594,19 +1596,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                     // Every bubble but a CLI line takes the reply swipe on a
                     // phone; one whose author is unknown lets it go.
-                    final bookmarkedBubble = MessageBookmarkBadge(
-                      marked: connector.isMessageBookmarked(BookmarkSourceType.contact,
-                          widget.contact.publicKeyHex, message.messageId), child: bubble,
-                    );
+
                     final replyable =
                         PlatformInfo.isDesktop ||
                             connector.isOfflineMode ||
                             message.isCli
-                        ? bookmarkedBubble
+                        ? bubble
                         : SwipeReplyBubble(
                             onReply: () => _setReplyingTo(message),
                             iconOnlyHint: message.isOutgoing,
-                            child: bookmarkedBubble,
+                            child: bubble,
                           );
                     final isUnreadAnchor =
                         _unreadDividerMessageId != null &&
@@ -2881,6 +2880,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class ContactMessageBubble extends StatelessWidget {
   final Message message;
+  final bool bookmarked;
   final String senderName;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -2924,6 +2924,7 @@ class ContactMessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.senderName,
+    this.bookmarked = false,
     required this.sourceId,
     required this.textScale,
     this.isHighlighted = false,
@@ -3173,6 +3174,7 @@ class ContactMessageBubble extends StatelessWidget {
                 ],
                 Flexible(
                   child: McoaChatBubbleBox(
+                    bookmarked: bookmarked,
                     outgoing: isOutgoing,
                     duration: const Duration(milliseconds: 1000),
                     curve: Curves.easeInOut,

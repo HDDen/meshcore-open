@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/mcoa_theme_style.dart';
 import 'chat_bubble_box.dart';
 import 'mcoa_bubble_surface.dart';
+import 'message_bookmark.dart';
 
 /// The upstream box remains the default. Separation changes painting only.
 class McoaChatBubbleBox extends StatelessWidget {
@@ -10,6 +11,7 @@ class McoaChatBubbleBox extends StatelessWidget {
     super.key,
     required this.outgoing,
     this.metadataVisible = true,
+    this.bookmarked = false,
     required this.duration,
     this.curve = Curves.linear,
     this.padding,
@@ -20,6 +22,7 @@ class McoaChatBubbleBox extends StatelessWidget {
 
   final bool outgoing;
   final bool metadataVisible;
+  final bool bookmarked;
   final Duration duration;
   final Curve curve;
   final EdgeInsetsGeometry? padding;
@@ -28,7 +31,13 @@ class McoaChatBubbleBox extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => MessageBookmarkBadge(
+    marked: bookmarked,
+    cornerRadius: decoration.borderRadius?.resolve(Directionality.of(context)).topLeft.y ?? 0,
+    child: _buildSurface(context),
+  );
+
+  Widget _buildSurface(BuildContext context) {
     if (!metadataVisible || !McoaThemeStyle.of(context).separateMetadataFor(outgoing)) {
       return ChatBubbleBox(
         duration: duration, curve: curve, padding: padding,
