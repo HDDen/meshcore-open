@@ -3,6 +3,7 @@ import '../services/storage_service.dart';
 import '../services/timeout_prediction_service.dart';
 import '../storage/legacy_key_migration.dart';
 import '../storage/prefs_manager.dart';
+import '../storage/message_history_storage.dart';
 import 'review_radio.dart';
 
 /// Muted channel names as they were when review mode started. Persisted so an
@@ -23,6 +24,17 @@ const _savedGlobalKeyPrefix = 'review_mode_saved_global_';
 Future<void> clearReviewModeData() async {
   final prefs = PrefsManager.instance;
   final prefix = ReviewRadio.storagePrefix;
+  final history = MessageHistoryStorage.instance;
+  if (history.hasDatabase) {
+    for (final kind in MessageHistoryKind.values) {
+      final keyPrefix = kind == MessageHistoryKind.direct
+          ? 'messages_$prefix' : 'channel_messages_$prefix';
+      for (final key in history.getKeys(kind).where((key) => key.startsWith(keyPrefix))) {
+        await history.remove(kind, key);
+      }
+    }
+    await history.clearPathHistoriesForNode(prefix);
+  }
   final keys = prefs.getKeys().where((key) => key.contains(prefix)).toList();
   for (final key in keys) {
     await prefs.remove(key);

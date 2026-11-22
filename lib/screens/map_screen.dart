@@ -725,8 +725,17 @@ class _MapScreenState extends State<MapScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<MeshCoreConnector, AppSettingsService, PathHistoryService>(
-      builder: (context, connector, settingsService, pathHistory, child) {
+    return Selector3<MeshCoreConnector, AppSettingsService, PathHistoryService,
+        (_MapConnectorSnapshot, AppSettings, int)>(
+      selector: (_, connector, settings, paths) => (
+        _MapConnectorSnapshot.fromConnector(connector, connector.allContacts),
+        settings.settings,
+        paths.routesVersion,
+      ),
+      builder: (context, selection, child) {
+        final connector = selection.$1.connector;
+        final settingsService = context.read<AppSettingsService>();
+        final pathHistory = context.read<PathHistoryService>();
         if (!_traceDraftRestored) {
           _restorePathTraceDraft();
         }
@@ -748,10 +757,7 @@ class _MapScreenState extends State<MapScreen>
         // Built once per build: the merge of the node's contacts with the
         // discovered ones costs a millisecond at a thousand nodes.
         final allContacts = connector.allContacts;
-        final connectorSnapshot = _MapConnectorSnapshot.fromConnector(
-          connector,
-          allContacts,
-        );
+        final connectorSnapshot = selection.$1;
         // Only the set of routes matters here: a record refreshed by another
         // advert copy moves `version` but not `routesVersion`.
         final pathHistoryVersion = pathHistory.routesVersion;
@@ -1745,13 +1751,19 @@ class _MapScreenState extends State<MapScreen>
             ),
             bottomNavigationBar: SafeArea(
               top: false,
-              child: QuickSwitchBar(
-                selectedIndex: 2,
-                onDestinationSelected: (index) =>
-                    _handleQuickSwitch(index, context),
-                contactsUnreadCount: connector.getTotalContactsUnreadCount(),
-                channelsUnreadCount: connector.getTotalChannelsUnreadCount(),
-                highContrast: true,
+              child: Selector<MeshCoreConnector, (int, int)>(
+                selector: (_, radio) => (
+                  radio.getTotalContactsUnreadCount(),
+                  radio.getTotalChannelsUnreadCount(),
+                ),
+                builder: (context, unread, child) => QuickSwitchBar(
+                  selectedIndex: 2,
+                  onDestinationSelected: (index) =>
+                      _handleQuickSwitch(index, context),
+                  contactsUnreadCount: unread.$1,
+                  channelsUnreadCount: unread.$2,
+                  highContrast: true,
+                ),
               ),
             ),
           ),
@@ -8654,12 +8666,14 @@ int _mapContactSignature(Contact contact) {
 
 class _MapConnectorSnapshot {
   final MeshCoreConnector connector;
+  final int contactsSignature;
   final int markerSignature;
   final int batterySignature;
   final int uiSignature;
 
   const _MapConnectorSnapshot({
     required this.connector,
+    required this.contactsSignature,
     required this.markerSignature,
     required this.batterySignature,
     required this.uiSignature,
@@ -8752,18 +8766,20 @@ class _MapConnectorSnapshot {
 
     return _MapConnectorSnapshot(
       connector: connector,
+      contactsSignature: Object.hashAll(allContacts.map(_mapContactSignature)),
       markerSignature: Object.hashAll(markerParts),
       batterySignature: batterySignature,
       uiSignature: Object.hash(
         connector.isConnected,
+        connector.hasReadableSession,
+        connector.selfPublicKeyHex,
+        connector.lastRadioName,
         connector.selfLatitude,
         connector.selfLongitude,
         connector.currentFreqHz,
         connector.currentBwHz,
         connector.currentSf,
         connector.currentTxPower,
-        connector.getTotalContactsUnreadCount(),
-        connector.getTotalChannelsUnreadCount(),
       ),
     );
   }
@@ -8771,6 +8787,7 @@ class _MapConnectorSnapshot {
   @override
   bool operator ==(Object other) {
     return other is _MapConnectorSnapshot &&
+        contactsSignature == other.contactsSignature &&
         markerSignature == other.markerSignature &&
         batterySignature == other.batterySignature &&
         uiSignature == other.uiSignature;
@@ -8778,6 +8795,7 @@ class _MapConnectorSnapshot {
 
   @override
   int get hashCode => Object.hash(
+    contactsSignature,
     markerSignature,
     batterySignature,
     uiSignature,

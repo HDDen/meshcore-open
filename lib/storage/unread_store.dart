@@ -38,12 +38,13 @@ class UnreadStore {
         canMigrateLegacyKeys(publicKeyHex)) {
       // Attempt migration from legacy unscoped key on first load
       final legacyJsonString = prefs.getString(_keyPrefix);
-      if (prefs.containsKey(_keyPrefix)) prefs.remove(_keyPrefix);
       if (legacyJsonString != null && legacyJsonString.isNotEmpty) {
         appLogger.info(
           'Migrating channel messages from legacy key $_keyPrefix to scoped key $keyFor',
         );
-        await prefs.setString(keyFor, legacyJsonString);
+        if (await prefs.setString(keyFor, legacyJsonString)) {
+          await prefs.remove(_keyPrefix);
+        }
         jsonString = legacyJsonString;
       }
     }

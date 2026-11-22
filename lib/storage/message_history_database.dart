@@ -1842,6 +1842,13 @@ WHERE contact_key = ? AND node_key IN (?, '')
     );
   }
 
+  /// Deletes only one radio's routes, retaining shared and real-radio histories.
+  Future<void> clearPathHistoriesForNode(String nodeKey) => customUpdate(
+    'DELETE FROM contact_path_history WHERE node_key = ?',
+    variables: [Variable<String>(nodeKey)],
+    updateKind: UpdateKind.delete,
+  );
+
   Future<void> clearPathHistories() => customUpdate(
     'DELETE FROM contact_path_history',
     updateKind: UpdateKind.delete,

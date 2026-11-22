@@ -26,6 +26,7 @@ import 'package:meshcore_open/services/ui_view_state_service.dart';
 import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/utils/app_route_observer.dart';
 import 'package:meshcore_open/widgets/mesh_ui.dart';
+import 'package:meshcore_open/widgets/quick_switch_bar.dart';
 import 'package:meshcore_open/widgets/edge_swipe_pop.dart';
 import 'package:meshcore_open/widgets/path_map_ui.dart';
 import 'package:provider/provider.dart';
@@ -41,6 +42,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _FakeConnector extends MeshCoreConnector {
   final List<Contact> nodes = [];
   final List<Uint8List> sentFrames = [];
+  int contactUnread = 0;
+  int channelUnread = 0;
+
+  @override
+  int getTotalContactsUnreadCount() => contactUnread;
+
+  @override
+  int getTotalChannelsUnreadCount() => channelUnread;
 
   @override
   bool get hasReadableSession => true;
@@ -363,6 +372,25 @@ void main() {
       tempDir.deleteSync(recursive: true);
     } on FileSystemException {
       // A tile cache file may still be open; the directory is temporary.
+    }
+  });
+
+  testWidgets('unread counts update without replacing map layers', (tester) async {
+    try {
+      final harness = await _Harness.pump(
+        tester, nodes: [_node(1, 'Test', 35, -112)], zoom: 15,
+      );
+      final originalLayer = tester.widget<TileLayer>(find.byType(TileLayer).first);
+      harness.connector.contactUnread = 3;
+      harness.connector.channelUnread = 5;
+      harness.connector.notifyListeners();
+      await _pumpFrames(tester);
+      final navigation = tester.widget<QuickSwitchBar>(find.byType(QuickSwitchBar));
+      expect(navigation.contactsUnreadCount, 3);
+      expect(navigation.channelsUnreadCount, 5);
+      expect(tester.widget<TileLayer>(find.byType(TileLayer).first), same(originalLayer));
+    } finally {
+      await _Harness.unmount(tester);
     }
   });
 

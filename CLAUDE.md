@@ -3976,6 +3976,21 @@ Per-conversation **sending delay** (schedule/commit/cancel a queued send), **qui
 **Continuation prepared 2026-11-22:** merge from the previously merged `7895d248` to `0106569e` (tester feedback, offline UI and pt-PT), without committing. Final requested target remains `37bfdd47fe3d2f56d96dad8b824fdc978d6b6b18`; the subsequent SQLite/history upstream batch and later release/iOS/backup commits must follow after this stage is checked by the owner. Preserve the fork SQLite implementation, private module, themes, defaults, localized values and intentional file deletions. New upstream offline behaviour replaces the default legacy chooser as described above; the chooser is retained behind the independent private grant. Standard menu/segment layout helpers and short repeated-publication filtering are carried over without replacing fork-specific menus or the bounded publication index. Painted `MeshSegmentLabel` text participates in hit testing so segment selection works when tapping its label. Cached offline channel lists do not wait for live channel synchronization; that loading gate applies only while connected.
 
 
+**Next stage prepared 2026-11-22: `71905d2e`.** Keep the fork Drift/SQLite
+history/profile databases, migrations, scoped/name-linked histories, backups,
+review cleanup, and desktop tile repository. Review cleanup now removes only
+the simulated node's SQLite messages/routes; shared and real histories remain. Do not add upstream's alternative
+`history_v1.db`, `HistoryStore`/`HistoryArchive`, sqflite FFI dependencies, or
+resurrect intentionally deleted storage/batching files. Native cursor paging
+uses `helpers/history_page_loads.dart` to join concurrent reads and reject stale
+scope/generation/channel/boundary results; pages merge with the live window so
+arrivals during I/O remain. Route cache loads validate pending-load identity and
+generation before replaying events, including after clearing one contact or
+provider disposal. Map connector selection includes contact/marker/battery/radio
+signatures, with a separate unread selector for the navigation bar; retain the
+fork session-only camera policy. The HTTP profiling reset tool and guide are
+ported. Owner runs analysis and regression tests before the next merge stage.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep

@@ -15,7 +15,8 @@ class PathHistoryService extends ChangeNotifier {
   final Map<String, ContactPathHistory> _cache = {};
   final Map<String, int> _autoRotationIndex = {};
   final Map<String, _FloodStats> _floodStats = {};
-  final Map<String, Future<void>> _pendingLoads = {};
+  final Map<String, Future<bool>> _pendingLoads = {};
+  bool _disposed = false;
   int _historyGeneration = 0;
   bool _isClearingAllHistories = false;
 
@@ -116,8 +117,8 @@ class PathHistoryService extends ChangeNotifier {
     if (pathBytes.isEmpty || hopCount < 0) return;
     if (!_cache.containsKey(contactPubKeyHex)) {
       final generation = _historyGeneration;
-      _ensureLoaded(contactPubKeyHex).then((_) {
-        if (generation != _historyGeneration ||
+      _ensureLoaded(contactPubKeyHex).then((loaded) {
+        if (!loaded || _disposed || generation != _historyGeneration ||
             !_cache.containsKey(contactPubKeyHex)) {
           return;
         }
@@ -190,8 +191,8 @@ class PathHistoryService extends ChangeNotifier {
 
     if (!_cache.containsKey(contactPubKeyHex)) {
       final generation = _historyGeneration;
-      _ensureLoaded(contactPubKeyHex).then((_) {
-        if (generation != _historyGeneration ||
+      _ensureLoaded(contactPubKeyHex).then((loaded) {
+        if (!loaded || _disposed || generation != _historyGeneration ||
             !_cache.containsKey(contactPubKeyHex)) {
           return;
         }
@@ -335,7 +336,8 @@ class PathHistoryService extends ChangeNotifier {
     DateTime? timestamp,
     RouteEvidence? adaptiveEvidence,
   }) {
-    if (_isClearingAllHistories) return;
+    if (_disposed || _isClearingAllHistories) return;
+    final generation = _historyGeneration;
     void add() => _addPathRecordInternal(
       contactPubKeyHex,
       hopCount,
@@ -353,34 +355,38 @@ class PathHistoryService extends ChangeNotifier {
     if (_cache.containsKey(contactPubKeyHex)) {
       add();
     } else {
-      _ensureLoaded(contactPubKeyHex).then((_) => add());
+      _ensureLoaded(contactPubKeyHex).then((loaded) {
+        if (loaded && !_disposed && generation == _historyGeneration) add();
+      });
     }
   }
 
-  Future<void> _ensureLoaded(String contactPubKeyHex) {
-    if (_cache.containsKey(contactPubKeyHex)) return Future.value();
-    // A clear or a node switch while the read runs makes its result stale:
-    // it must neither fill the cache nor drop a newer load's entry.
-    final loadGeneration = _historyGeneration;
-    return _pendingLoads[contactPubKeyHex] ??=
-        _loadHistoryFromStorage(contactPubKeyHex)
-            .then((loaded) {
-              if (loadGeneration != _historyGeneration) return;
-              _cache[contactPubKeyHex] ??=
-                  loaded ??
-                  ContactPathHistory(
-                    contactPubKeyHex: contactPubKeyHex,
-                    recentPaths: [],
-                  );
-              _trackAccess(contactPubKeyHex);
-              _evictIfNeeded();
-              _loadedOnce.add(contactPubKeyHex);
-            })
-            .whenComplete(() {
-              if (loadGeneration == _historyGeneration) {
-                _pendingLoads.remove(contactPubKeyHex);
-              }
-            });
+  Future<bool> _ensureLoaded(String contactPubKeyHex) {
+    if (_disposed || _isClearingAllHistories) return Future.value(false);
+    if (_cache.containsKey(contactPubKeyHex)) return Future.value(true);
+    final existing = _pendingLoads[contactPubKeyHex];
+    if (existing != null) return existing;
+    final generation = _historyGeneration;
+    late final Future<bool> pending;
+    pending = _loadHistoryFromStorage(contactPubKeyHex).then((loaded) {
+      if (_disposed || generation != _historyGeneration ||
+          !identical(_pendingLoads[contactPubKeyHex], pending)) {
+        return false;
+      }
+      _cache[contactPubKeyHex] ??= loaded ?? ContactPathHistory(
+        contactPubKeyHex: contactPubKeyHex, recentPaths: [],
+      );
+      _trackAccess(contactPubKeyHex);
+      _evictIfNeeded();
+      _loadedOnce.add(contactPubKeyHex);
+      return true;
+    }).whenComplete(() {
+      if (identical(_pendingLoads[contactPubKeyHex], pending)) {
+        _pendingLoads.remove(contactPubKeyHex);
+      }
+    });
+    _pendingLoads[contactPubKeyHex] = pending;
+    return pending;
   }
 
   void _addPathRecordInternal(
@@ -465,8 +471,8 @@ class PathHistoryService extends ChangeNotifier {
     }
 
     final firstLoad = !_loadedOnce.contains(contactPubKeyHex);
-    _ensureLoaded(contactPubKeyHex).then((_) {
-      if (!firstLoad) return;
+    _ensureLoaded(contactPubKeyHex).then((loaded) {
+      if (!loaded || _disposed || !firstLoad) return;
       if (_cache[contactPubKeyHex]?.recentPaths.isNotEmpty ?? false) {
         _reportLoadedRoutes();
       }
@@ -563,11 +569,15 @@ class PathHistoryService extends ChangeNotifier {
   }
 
   Future<void> clearPathHistory(String contactPubKeyHex) async {
+    if (_disposed) return;
+    _pendingLoads.remove(contactPubKeyHex);
     _cache.remove(contactPubKeyHex);
     _cacheAccessOrder.remove(contactPubKeyHex);
     _autoRotationIndex.remove(contactPubKeyHex);
     _floodStats.remove(contactPubKeyHex);
+    final generation = _historyGeneration;
     await _storage.clearPathHistory(contactPubKeyHex);
+    if (_disposed || generation != _historyGeneration) return;
     _version++;
     _routesVersion++;
     notifyListeners();
@@ -736,6 +746,7 @@ class PathHistoryService extends ChangeNotifier {
   }
 
   Future<void> clearAllHistories() async {
+    if (_disposed) return;
     _isClearingAllHistories = true;
     _historyGeneration++;
     _cache.clear();
@@ -752,6 +763,14 @@ class PathHistoryService extends ChangeNotifier {
     } finally {
       _isClearingAllHistories = false;
     }
+  }
+  @override
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _historyGeneration++;
+    _pendingLoads.clear();
+    super.dispose();
   }
 }
 

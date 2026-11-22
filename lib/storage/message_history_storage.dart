@@ -1338,6 +1338,12 @@ class MessageHistoryStorage implements PendingChannelFrameRepository {
     );
   }
 
+  Future<void> clearPathHistoriesForNode(String nodeKey) async {
+    _requireInitialized();
+    if (kIsWeb) return;
+    await _database!.clearPathHistoriesForNode(nodeKey.toLowerCase());
+  }
+
   Future<void> clearPathHistories() async {
     _requireInitialized();
     if (kIsWeb) return;

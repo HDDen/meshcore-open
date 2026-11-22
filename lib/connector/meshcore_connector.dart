@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import '../helpers/companion_cli_protocol.dart';
 import '../helpers/deferred_channel_inbox.dart';
+import '../helpers/history_page_loads.dart';
 import '../models/pending_channel_frame.dart';
 import '../helpers/low_battery_alert_tracker.dart';
 import '../helpers/companion_cli_support.dart';
@@ -453,6 +454,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   final Set<String> _markerScannedContactKeys = {};
   final Map<String, Future<void>> _conversationLoadFutures = {};
   int _conversationLoadGeneration = 0;
+  final _directPageLoads = HistoryPageLoads<Message>();
+  final _groupPageLoads = HistoryPageLoads<ChannelMessage>();
   // Self public key of the radio whose messages are held in memory.
   String? _messageStateOwnerKey;
   // Self public key whose persisted stores were loaded this link session.
@@ -2702,26 +2705,37 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<List<Message>> loadOlderMessages(
     String contactKeyHex, {
     int count = 50,
-  }) async {
-    if (isOfflineSharedMode) return const [];
-    final currentMessages = _conversations[contactKeyHex] ?? [];
-    if (currentMessages.isEmpty) return const [];
-    final olderMessages = await _messageStore.loadMessagesBefore(
-      contactKeyHex,
-      before: currentMessages.first,
-      limit: count,
-    );
-    if (olderMessages.isEmpty) return const [];
-
-    // Prepend to current conversation
-    final expandedMessages = [...olderMessages, ...currentMessages];
-    if (_isRoomConversation(contactKeyHex)) {
-      expandedMessages.sort(RoomMessageTimelineHelper.compare);
+  }) {
+    if (_disposed || isOfflineSharedMode || count <= 0) {
+      return Future.value(const <Message>[]);
     }
-    _conversations[contactKeyHex] = expandedMessages;
-    notifyListeners();
-
-    return olderMessages;
+    final window = _conversations[contactKeyHex];
+    if (window == null || window.isEmpty) {
+      return Future.value(const <Message>[]);
+    }
+    final boundary = window.first.messageId;
+    final generation = _conversationLoadGeneration;
+    final scope = _messageStore.publicKeyHex;
+    final identity = contactKeyHex;
+    return _directPageLoads.load(
+      key: (scope, generation, identity, 'Before', boundary),
+      current: () => !_disposed && generation == _conversationLoadGeneration &&
+          scope == _messageStore.publicKeyHex && identity == contactKeyHex &&
+          _conversations[contactKeyHex]?.isNotEmpty == true &&
+          _conversations[contactKeyHex]!.first.messageId == boundary,
+      read: () => _messageStore.loadMessagesBefore(
+        contactKeyHex, before: window.first, limit: count,
+      ),
+      apply: (page) {
+        final live = _conversations[contactKeyHex]!;
+        final expanded = <Message>[...page, ...live];
+        if (_isRoomConversation(contactKeyHex)) {
+          expanded.sort(RoomMessageTimelineHelper.compare);
+        }
+        _conversations[contactKeyHex] = expanded;
+        notifyListeners();
+      },
+    );
   }
 
   /// Appends the next persisted page after the newest loaded direct message.
@@ -2730,24 +2744,37 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<List<Message>> loadNewerMessages(
     String contactKeyHex, {
     int count = 50,
-  }) async {
-    if (isOfflineSharedMode) return const [];
-    final currentMessages = _conversations[contactKeyHex] ?? [];
-    if (currentMessages.isEmpty) return const [];
-    final newerMessages = await _messageStore.loadMessagesAfter(
-      contactKeyHex,
-      after: currentMessages.last,
-      limit: count,
-    );
-    if (newerMessages.isEmpty) return const [];
-
-    final expandedMessages = [...currentMessages, ...newerMessages];
-    if (_isRoomConversation(contactKeyHex)) {
-      expandedMessages.sort(RoomMessageTimelineHelper.compare);
+  }) {
+    if (_disposed || isOfflineSharedMode || count <= 0) {
+      return Future.value(const <Message>[]);
     }
-    _conversations[contactKeyHex] = expandedMessages;
-    notifyListeners();
-    return newerMessages;
+    final window = _conversations[contactKeyHex];
+    if (window == null || window.isEmpty) {
+      return Future.value(const <Message>[]);
+    }
+    final boundary = window.last.messageId;
+    final generation = _conversationLoadGeneration;
+    final scope = _messageStore.publicKeyHex;
+    final identity = contactKeyHex;
+    return _directPageLoads.load(
+      key: (scope, generation, identity, 'After', boundary),
+      current: () => !_disposed && generation == _conversationLoadGeneration &&
+          scope == _messageStore.publicKeyHex && identity == contactKeyHex &&
+          _conversations[contactKeyHex]?.isNotEmpty == true &&
+          _conversations[contactKeyHex]!.last.messageId == boundary,
+      read: () => _messageStore.loadMessagesAfter(
+        contactKeyHex, after: window.last, limit: count,
+      ),
+      apply: (page) {
+        final live = _conversations[contactKeyHex]!;
+        final expanded = <Message>[...live, ...page];
+        if (_isRoomConversation(contactKeyHex)) {
+          expanded.sort(RoomMessageTimelineHelper.compare);
+        }
+        _conversations[contactKeyHex] = expanded;
+        notifyListeners();
+      },
+    );
   }
 
   MessageFilterService? get messageFilterService => _messageFilterService;
@@ -4680,26 +4707,35 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<List<ChannelMessage>> loadOlderChannelMessages(
     int channelIndex, {
     int count = 50,
-  }) async {
-    if (isOfflineSharedMode) return const [];
-    final currentMessages = _channelMessages[channelIndex] ?? [];
-    if (currentMessages.isEmpty) return const [];
-    final olderMessages = await _channelMessageStore.loadChannelMessagesBefore(
-      channelIndex,
-      before: currentMessages.first,
-      limit: count,
-      allowLegacyMigration: !isOfflineMode,
+  }) {
+    if (_disposed || isOfflineSharedMode || count <= 0) {
+      return Future.value(const <ChannelMessage>[]);
+    }
+    final window = _channelMessages[channelIndex];
+    if (window == null || window.isEmpty) {
+      return Future.value(const <ChannelMessage>[]);
+    }
+    final boundary = window.first.messageId;
+    final generation = _conversationLoadGeneration;
+    final scope = _channelMessageStore.publicKeyHex;
+    final identity = _channelMessageStore.channelStorageKey(_channelMessageStore.keyFor, channelIndex);
+    return _groupPageLoads.load(
+      key: (scope, generation, identity, 'Before', boundary),
+      current: () => !_disposed && generation == _conversationLoadGeneration &&
+          scope == _channelMessageStore.publicKeyHex && identity == _channelMessageStore.channelStorageKey(_channelMessageStore.keyFor, channelIndex) &&
+          _channelMessages[channelIndex]?.isNotEmpty == true &&
+          _channelMessages[channelIndex]!.first.messageId == boundary,
+      read: () => _channelMessageStore.loadChannelMessagesBefore(
+        channelIndex, before: window.first, limit: count,
+        allowLegacyMigration: !isOfflineMode,
+      ),
+      apply: (page) {
+        final live = _channelMessages[channelIndex]!;
+        final expanded = <ChannelMessage>[...page, ...live];
+        _channelMessages[channelIndex] = _orderedChannelMessages(expanded);
+        notifyListeners();
+      },
     );
-    if (olderMessages.isEmpty) return const [];
-
-    // Prepend to current conversation
-    _channelMessages[channelIndex] = _orderedChannelMessages([
-      ...olderMessages,
-      ...currentMessages,
-    ]);
-    notifyListeners();
-
-    return olderMessages;
   }
 
   /// Appends the next persisted page after the newest loaded channel message.
@@ -4707,25 +4743,35 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   Future<List<ChannelMessage>> loadNewerChannelMessages(
     int channelIndex, {
     int count = 50,
-  }) async {
-    if (isOfflineSharedMode) return const [];
-    final currentMessages = _channelMessages[channelIndex] ?? [];
-    if (currentMessages.isEmpty) return const [];
-    final newerMessages = await _channelMessageStore
-        .loadChannelMessagesAfter(
-          channelIndex,
-          after: currentMessages.last,
-          limit: count,
-          allowLegacyMigration: !isOfflineMode,
-        );
-    if (newerMessages.isEmpty) return const [];
-
-    _channelMessages[channelIndex] = _orderedChannelMessages([
-      ...currentMessages,
-      ...newerMessages,
-    ]);
-    notifyListeners();
-    return newerMessages;
+  }) {
+    if (_disposed || isOfflineSharedMode || count <= 0) {
+      return Future.value(const <ChannelMessage>[]);
+    }
+    final window = _channelMessages[channelIndex];
+    if (window == null || window.isEmpty) {
+      return Future.value(const <ChannelMessage>[]);
+    }
+    final boundary = window.last.messageId;
+    final generation = _conversationLoadGeneration;
+    final scope = _channelMessageStore.publicKeyHex;
+    final identity = _channelMessageStore.channelStorageKey(_channelMessageStore.keyFor, channelIndex);
+    return _groupPageLoads.load(
+      key: (scope, generation, identity, 'After', boundary),
+      current: () => !_disposed && generation == _conversationLoadGeneration &&
+          scope == _channelMessageStore.publicKeyHex && identity == _channelMessageStore.channelStorageKey(_channelMessageStore.keyFor, channelIndex) &&
+          _channelMessages[channelIndex]?.isNotEmpty == true &&
+          _channelMessages[channelIndex]!.last.messageId == boundary,
+      read: () => _channelMessageStore.loadChannelMessagesAfter(
+        channelIndex, after: window.last, limit: count,
+        allowLegacyMigration: !isOfflineMode,
+      ),
+      apply: (page) {
+        final live = _channelMessages[channelIndex]!;
+        final expanded = <ChannelMessage>[...live, ...page];
+        _channelMessages[channelIndex] = _orderedChannelMessages(expanded);
+        notifyListeners();
+      },
+    );
   }
 
   /// Load all persisted channel messages on startup
@@ -23892,6 +23938,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void clearMessagesForContact(Contact contact) {
+    _conversationLoadGeneration++;
     final contactKeyHex = contact.publicKeyHex;
     final messages = _conversations.putIfAbsent(
       contactKeyHex,
@@ -23910,6 +23957,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// the channel has had, and hides the other nodes' copies for the session;
   /// with [allNodes], clears those copies as well.
   void clearMessagesForChannel(int channelIndex, {bool allNodes = false}) {
+    _conversationLoadGeneration++;
     final messages = _channelMessages.putIfAbsent(
       channelIndex,
       () => <ChannelMessage>[],
