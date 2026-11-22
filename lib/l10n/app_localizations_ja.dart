@@ -1335,7 +1335,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_denyAll => 'すべて拒否';
 
   @override
-  String get settings_allowByContact => '連絡先のフラグに従って許可';
+  String get settings_allowByContact => '自分が許可した連絡先のみ';
 
   @override
   String get settings_allowAll => 'すべて許可';
@@ -1370,7 +1370,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_multiAck => 'マルチ ACK';
 
   @override
-  String get settings_multiAckSubtitle => '配信を確実にするため ACK を追加送信します。放送時間が長くなります';
+  String get settings_multiAckSubtitle =>
+      '配信を確実にするため ACK を追加送信します。無線通信時間が長くなります';
 
   @override
   String get settings_telemetryModeUpdated => 'テレメトリモードが更新されました';
@@ -1702,7 +1703,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get appSettings_channelMinHopsSubtitle =>
-      'メッセージが十分な数のリピータから返ってこない場合は、再送信します。放送時間が長くなります。';
+      'メッセージが十分な数のリピータから返ってこない場合は、再送信します。無線通信時間が長くなります。';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
@@ -2776,7 +2777,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get routing_modeFloodHint =>
-      'すべてのリピータを通じてブロードキャストします。最も信頼性は高いですが、空中時間を多く使います。';
+      'すべてのリピータを通じてブロードキャストします。最も信頼性は高いですが、無線通信時間を多く使います。';
 
   @override
   String get routing_modeManualHint => '常に、設定した正確な経路を使います。';
@@ -3757,7 +3758,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'ゲストまたは管理者としてアクセスするには、リピータのパスワードを入力してください。';
+      '管理者パスワードで設定とCLIにアクセスできます。ゲストパスワード（または空欄）ではステータスの表示のみ可能です。';
 
   @override
   String get login_roomDescription => 'ゲストまたは管理者としてアクセスするには、部屋のパスワードを入力してください。';
@@ -4210,7 +4211,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'このリピータのIDをフラッドパス/ループ検出タグにエンコードするために使用されるバイト数。0=1バイト (256個のID、最大64ホップ)、1=2バイト (65,000個のID、最大32ホップ)、2=3バイト (1600万個のID、最大21ホップ)。v1.14より前のファームウェアは常に1バイトのパスを使用します。v1.14以降では2バイトまたは3バイトのパスに設定できます。';
+      'このリピータが送信するアドバートの経路内で使用するIDのサイズです。1バイト（256個のID、最大64ホップ）、2バイト（約6万5千個のID、最大32ホップ）、3バイト（約1600万個のID、最大21ホップ）。転送には影響しません。v1.14以降のリピータはすべてのサイズを転送しますが、古いファームウェアは2バイトまたは3バイトのIDを持つパケットを破棄します。';
 
   @override
   String get repeater_keySettings => 'ノードの鍵を変更';
@@ -4249,14 +4250,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_txDelayHelper =>
-      'フラッドトラフィックの再送信間隔を、パケットの空中時間の倍数として設定します（0～2、デフォルト0.5）。値を大きくすると衝突は減りますが、配信は遅くなります。';
+      'フラッドトラフィックの再送信間隔を、パケットの無線通信時間の倍数として設定します（0～2、デフォルト0.5）。値を大きくすると衝突は減りますが、配信は遅くなります。';
 
   @override
   String get repeater_directTxDelay => '直接TX遅延';
 
   @override
   String get repeater_directTxDelayHelper =>
-      '直接（フラッドではない）トラフィックの再送信間隔を、パケットの空中時間の倍数として設定します（0～2、デフォルト0.3）。';
+      '直接（フラッドではない）トラフィックの再送信間隔を、パケットの無線通信時間の倍数として設定します（0～2、デフォルト0.3）。';
 
   @override
   String get repeater_intThresh => '干渉閾値';
@@ -4500,7 +4501,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetTxDelay =>
-      'フラッドモードのパケットの空中時間に掛ける係数を設定し、ランダムなスロットシステムと組み合わせて転送を遅延させます。（衝突の可能性を減らすため）';
+      'フラッドモードのパケットの無線通信時間に掛ける係数を設定し、ランダムなスロットシステムと組み合わせて転送を遅延させます。（衝突の可能性を減らすため）';
 
   @override
   String get repeater_cliHelpSetDirectTxDelay =>
@@ -6076,7 +6077,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get radioStats_sectionSignal => '信号';
 
   @override
-  String get radioStats_sectionAirtime => '放送時間';
+  String get radioStats_sectionAirtime => '無線通信時間';
 
   @override
   String get radioStats_notConnected => 'ラジオの統計情報を表示するために、デバイスに接続してください。';

@@ -1336,7 +1336,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_denyAll => '모두 거부';
 
   @override
-  String get settings_allowByContact => '연락처 플래그에 따라 허용';
+  String get settings_allowByContact => '내가 허용한 연락처만';
 
   @override
   String get settings_allowAll => '모든 것을 허용';
@@ -1373,7 +1373,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settings_multiAckSubtitle =>
-      '전달을 개선하기 위해 ACK를 추가로 전송합니다. 방송 시간이 더 필요합니다';
+      '전달을 개선하기 위해 ACK를 추가로 전송합니다. 무선 전송 시간이 더 필요합니다';
 
   @override
   String get settings_telemetryModeUpdated => '텔레메트리 모드 업데이트 완료';
@@ -1704,7 +1704,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appSettings_channelMinHopsSubtitle =>
-      '메시지가 충분한 리피터에서 되돌아와 들리지 않으면 다시 전송합니다. 방송 시간이 더 필요합니다.';
+      '메시지가 충분한 리피터에서 되돌아와 들리지 않으면 다시 전송합니다. 무선 전송 시간이 더 필요합니다.';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
@@ -3761,7 +3761,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      '게스트 또는 관리자 권한으로 접속하려면 리피터 비밀번호를 입력하세요.';
+      '관리자 비밀번호로 설정과 CLI에 접근할 수 있습니다. 게스트 비밀번호를 입력하거나 비워 두면 상태만 볼 수 있습니다.';
 
   @override
   String get login_roomDescription => '게스트 또는 관리자 권한으로 접속하려면 방 비밀번호를 입력하세요.';
@@ -4182,7 +4182,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get repeater_dutyCycle => '듀티 사이클';
 
   @override
-  String get repeater_dutyCycleHelper => '허용되는 최대 방송 시간 비율';
+  String get repeater_dutyCycleHelper => '허용되는 최대 무선 전송 시간 비율';
 
   @override
   String repeater_dutyCyclePercent(int percent) {
@@ -4215,7 +4215,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      '이 리피터의 ID를 플러드 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수입니다. 0=1바이트(256개 ID, 최대 64홉), 1=2바이트(65,000개 ID, 최대 32홉), 2=3바이트(1,600만 개 ID, 최대 21홉). v1.14 이전 펌웨어는 항상 1바이트 경로를 사용했으며, v1.14 이상은 2바이트 또는 3바이트 경로로 설정할 수 있습니다.';
+      '이 리피터가 보내는 애드버트의 경로에 사용되는 ID 크기입니다. 1바이트(256개 ID, 최대 64홉), 2바이트(약 6만 5천 개 ID, 최대 32홉), 3바이트(약 1,600만 개 ID, 최대 21홉). 전달에는 영향을 주지 않습니다. v1.14 이상의 리피터는 모든 크기를 전달하지만, 이전 펌웨어는 2바이트 또는 3바이트 ID가 있는 패킷을 폐기합니다.';
 
   @override
   String get repeater_keySettings => '노드 키 변경';
@@ -6082,7 +6082,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get radioStats_sectionSignal => '신호';
 
   @override
-  String get radioStats_sectionAirtime => '방송 시간';
+  String get radioStats_sectionAirtime => '무선 전송 시간';
 
   @override
   String get radioStats_notConnected => '라디오 통계를 보려면 장치에 연결하세요.';
@@ -6111,7 +6111,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String radioStats_txAir(int seconds) {
-    return 'TX 방송 시간 (총): $seconds 초';
+    return 'TX 무선 전송 시간 (총): $seconds 초';
   }
 
   @override

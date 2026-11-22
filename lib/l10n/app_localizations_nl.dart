@@ -1363,7 +1363,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_denyAll => 'Weiger alles';
 
   @override
-  String get settings_allowByContact => 'Toestaan op basis van contactvlaggen';
+  String get settings_allowByContact => 'Alleen contacten die ik toesta';
 
   @override
   String get settings_allowAll => 'Alles toestaan';
@@ -3871,7 +3871,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Voer het wachtwoord van de repeater in voor gast- of beheerderstoegang.';
+      'Het beheerderswachtwoord geeft toegang tot instellingen en de CLI. Een gastwachtwoord (of een leeg veld) geeft alleen de status weer.';
 
   @override
   String get login_roomDescription =>
@@ -4344,7 +4344,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bytes die gebruikt worden om de ID van deze repeater te coderen in flood-pad/lusdetectietags. 0=1 byte (256 ID\'s, tot 64 hops), 1=2 bytes (65.000 ID\'s, tot 32 hops), 2=3 bytes (16 miljoen ID\'s, tot 21 hops). Firmware vóór v1.14 gebruikte altijd 1-byte paden; v1.14 en nieuwer kunnen worden ingesteld op 2- of 3-byte paden.';
+      'Grootte van de ID van deze repeater in de paden van de aankondigingen die hij verzendt: 1 byte (256 IDs, maximaal 64 hops), 2 bytes (65.000 IDs, maximaal 32 hops), 3 bytes (16 miljoen IDs, maximaal 21 hops). Heeft geen invloed op doorsturen: repeaters met v1.14 of nieuwer sturen alle groottes door, maar oudere firmware verwerpt pakketten met IDs van 2 of 3 bytes.';
 
   @override
   String get repeater_keySettings => 'Identiteitssleutels wijzigen';

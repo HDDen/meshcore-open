@@ -1365,7 +1365,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_denyAll => 'Alles verweigern';
 
   @override
-  String get settings_allowByContact => 'Nach Kontakt-Flags zulassen';
+  String get settings_allowByContact => 'Nur von mir erlaubte Kontakte';
 
   @override
   String get settings_allowAll => 'Alles zulassen';
@@ -3885,7 +3885,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Geben Sie das Repeater-Passwort für den Gast- oder Admin-Zugang ein.';
+      'Das Admin-Passwort gibt Einstellungen und CLI frei. Ein Gast-Passwort (oder eine leere Eingabe) erlaubt nur die Statusanzeige.';
 
   @override
   String get login_roomDescription =>
@@ -4359,7 +4359,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bytes, die zur Kodierung der ID dieses Repeaters in Flood-Pfad-/Schleifenerkennungs-Tags verwendet werden. 0 = 1 Byte (256 IDs, bis zu 64 Hops), 1 = 2 Bytes (65.000 IDs, bis zu 32 Hops), 2 = 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Firmware vor v1.14 verwendete immer 1-Byte-Pfade; ab v1.14 lassen sich 2- oder 3-Byte-Pfade konfigurieren.';
+      'Größe der ID dieses Repeaters in den Pfaden seiner gesendeten Ankündigungen: 1 Byte (256 IDs, bis zu 64 Hops), 2 Bytes (65.000 IDs, bis zu 32 Hops), 3 Bytes (16 Millionen IDs, bis zu 21 Hops). Beeinflusst die Weiterleitung nicht: Repeater ab v1.14 leiten alle Größen weiter, ältere Firmware verwirft Pakete mit 2- oder 3-Byte-IDs.';
 
   @override
   String get repeater_keySettings => 'Identitätsschlüssel ändern';

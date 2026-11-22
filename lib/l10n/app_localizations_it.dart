@@ -1363,7 +1363,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_denyAll => 'Negare tutto';
 
   @override
-  String get settings_allowByContact => 'Consenti in base ai flag di contatto';
+  String get settings_allowByContact => 'Solo i contatti che autorizzo';
 
   @override
   String get settings_allowAll => 'Consenti tutto';
@@ -3891,7 +3891,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Inserisci la password del ripetitore per l\'accesso come ospite o amministratore.';
+      'La password amministratore consente di accedere alle impostazioni e alla CLI. Una password ospite (o un campo vuoto) consente solo di visualizzare lo stato.';
 
   @override
   String get login_roomDescription =>
@@ -4369,7 +4369,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Byte utilizzati per codificare l\'ID di questo ripetitore nei tag di percorso flood/rilevamento loop. 0=1 byte (256 ID, fino a 64 salti), 1=2 byte (65.000 ID, fino a 32 salti), 2=3 byte (16 milioni di ID, fino a 21 salti). Il firmware precedente alla v1.14 usava sempre percorsi a 1 byte; v1.14 e versioni successive possono essere configurate per percorsi a 2 o 3 byte.';
+      'Dimensione dell’ID di questo ripetitore nei percorsi degli annunci che invia: 1 byte (256 ID, fino a 64 salti), 2 byte (65 mila ID, fino a 32 salti), 3 byte (16 milioni di ID, fino a 21 salti). Non influisce sull’inoltro: i ripetitori con v1.14 o successiva inoltrano tutte le dimensioni, ma i firmware precedenti scartano i pacchetti con ID di 2 o 3 byte.';
 
   @override
   String get repeater_keySettings => 'Modifica le chiavi di identità';

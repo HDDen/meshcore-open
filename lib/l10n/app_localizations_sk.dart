@@ -1363,7 +1363,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_denyAll => 'Zamietnuť všetko';
 
   @override
-  String get settings_allowByContact => 'Povoliť podľa príznakov kontaktov';
+  String get settings_allowByContact => 'Iba kontakty, ktorým to povolím';
 
   @override
   String get settings_allowAll => 'Povoliť všetko';
@@ -3875,7 +3875,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Zadajte heslo opakovača pre prístup hosťa alebo správcu.';
+      'Heslo správcu sprístupňuje nastavenia a CLI. Heslo hosťa (alebo prázdne pole) umožňuje iba zobrazenie stavu.';
 
   @override
   String get login_roomDescription =>
@@ -4346,7 +4346,7 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bajty použité na zakódovanie ID tohto opakovača v tagoch flood trasy/detekcie slučky. 0=1 bajt (256 ID, až 64 skokov), 1=2 bajty (65 000 ID, až 32 skokov), 2=3 bajty (16 miliónov ID, až 21 skokov). Firmvér pred v1.14 vždy používal 1-bajtové trasy; v1.14 a novšie možno nakonfigurovať na 2- alebo 3-bajtové trasy.';
+      'Veľkosť ID tohto opakovača v trasách oznámení, ktoré odosiela: 1 bajt (256 ID, až 64 skokov), 2 bajty (65 tisíc ID, až 32 skokov), 3 bajty (16 miliónov ID, až 21 skokov). Neovplyvňuje preposielanie: opakovače s v1.14 alebo novšou preposielajú všetky veľkosti, ale starší firmvér zahadzuje pakety s 2- alebo 3-bajtovými ID.';
 
   @override
   String get repeater_keySettings => 'Zmena kľúčov uzla';

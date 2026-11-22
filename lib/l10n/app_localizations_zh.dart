@@ -1328,7 +1328,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_denyAll => '拒绝所有';
 
   @override
-  String get settings_allowByContact => '按联系人标志允许';
+  String get settings_allowByContact => '仅限我允许的联系人';
 
   @override
   String get settings_allowAll => '允许全部';
@@ -3716,7 +3716,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get login_savePasswordSubtitle => '密码将安全地存储在此设备上';
 
   @override
-  String get login_repeaterDescription => '输入转发节点密码以获得访客或管理员访问权限。';
+  String get login_repeaterDescription => '管理员密码可解锁设置和 CLI。访客密码（或留空）仅允许查看状态。';
 
   @override
   String get login_roomDescription => '输入房间密码以获得访客或管理员访问权限。';
@@ -4165,7 +4165,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      '用于在泛洪路径/环路检测标签中编码此中继器 ID 的字节数。0=1 字节（256 个 ID，最多 64 跳），1=2 字节（65K 个 ID，最多 32 跳），2=3 字节（16M 个 ID，最多 21 跳）。v1.14 之前的固件始终使用 1 字节路径；v1.14 及更新版本可配置为 2 或 3 字节路径。';
+      '此中继器发送的通告在路径中使用的 ID 大小：1 字节（256 个 ID，最多 64 跳）、2 字节（约 6.5 万个 ID，最多 32 跳）、3 字节（约 1600 万个 ID，最多 21 跳）。不影响转发：v1.14 及更新版本的中继器转发所有大小，但旧版固件会丢弃带有 2 或 3 字节 ID 的数据包。';
 
   @override
   String get repeater_keySettings => '更改节点密钥';

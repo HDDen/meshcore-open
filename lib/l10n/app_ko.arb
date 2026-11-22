@@ -1068,7 +1068,7 @@
   "login_enterPassword": "비밀번호를 입력하세요",
   "login_savePassword": "비밀번호 저장",
   "login_savePasswordSubtitle": "비밀번호는 이 장치에 안전하게 저장됩니다.",
-  "login_repeaterDescription": "게스트 또는 관리자 권한으로 접속하려면 리피터 비밀번호를 입력하세요.",
+  "login_repeaterDescription": "관리자 비밀번호로 설정과 CLI에 접근할 수 있습니다. 게스트 비밀번호를 입력하거나 비워 두면 상태만 볼 수 있습니다.",
   "login_roomDescription": "게스트 또는 관리자 권한으로 접속하려면 방 비밀번호를 입력하세요.",
   "login_routing": "라우팅",
   "login_routingMode": "라우팅 모드",
@@ -1296,7 +1296,7 @@
   "repeater_loopDetectModerate": "보통",
   "repeater_loopDetectStrict": "엄격",
   "repeater_dutyCycle": "듀티 사이클",
-  "repeater_dutyCycleHelper": "허용되는 최대 방송 시간 비율",
+  "repeater_dutyCycleHelper": "허용되는 최대 무선 전송 시간 비율",
   "repeater_dutyCyclePercent": "{percent}%",
   "@repeater_dutyCyclePercent": {
     "placeholders": {
@@ -1313,7 +1313,7 @@
   "repeater_advancedSettings": "고급",
   "repeater_advancedSettingsSubtitle": "숙련된 운영자를 위한 조절 노브",
   "repeater_pathHashMode": "패스 해시 모드",
-  "repeater_pathHashModeHelper": "이 리피터의 ID를 플러드 경로/루프 감지 태그에 인코딩하는 데 사용되는 바이트 수입니다. 0=1바이트(256개 ID, 최대 64홉), 1=2바이트(65,000개 ID, 최대 32홉), 2=3바이트(1,600만 개 ID, 최대 21홉). v1.14 이전 펌웨어는 항상 1바이트 경로를 사용했으며, v1.14 이상은 2바이트 또는 3바이트 경로로 설정할 수 있습니다.",
+  "repeater_pathHashModeHelper": "이 리피터가 보내는 애드버트의 경로에 사용되는 ID 크기입니다. 1바이트(256개 ID, 최대 64홉), 2바이트(약 6만 5천 개 ID, 최대 32홉), 3바이트(약 1,600만 개 ID, 최대 21홉). 전달에는 영향을 주지 않습니다. v1.14 이상의 리피터는 모든 크기를 전달하지만, 이전 펌웨어는 2바이트 또는 3바이트 ID가 있는 패킷을 폐기합니다.",
   "repeater_txDelay": "플러드 TX 지연",
   "repeater_txDelayHelper": "플러드 트래픽의 재전송 간격을 패킷 전송 시간의 배수로 설정합니다 (0-2, 기본값 0.5). 값이 클수록 충돌이 줄어들지만 전송 속도가 느려집니다.",
   "repeater_directTxDelay": "직접적인 TX 지연",
@@ -2206,7 +2206,7 @@
       }
     }
   },
-  "radioStats_txAir": "TX 방송 시간 (총): {seconds} 초",
+  "radioStats_txAir": "TX 무선 전송 시간 (총): {seconds} 초",
   "@radioStats_txAir": {
     "placeholders": {
       "seconds": {
@@ -2238,7 +2238,7 @@
   "settings_privacySubtitle": "어떤 정보를 공유할지 통제하세요.",
   "settings_privacySettingsDescription": "어떤 정보를 기기가 다른 사람들과 공유할지 선택하세요.",
   "settings_denyAll": "모두 거부",
-  "settings_allowByContact": "연락처 플래그에 따라 허용",
+  "settings_allowByContact": "내가 허용한 연락처만",
   "settings_allowAll": "모든 것을 허용",
   "settings_telemetryBaseMode": "텔레메트리 기본 모드",
   "settings_telemetryLocationMode": "텔레메트리 위치 모드",
@@ -3857,7 +3857,7 @@
   "settings_regionDefaultSubtitle": "지역이 설정되지 않은 채널에 사용됩니다",
   "settings_regionDefaultNone": "없음",
   "settings_telemetryPerContactHint": "연락처에 허용하려면 해당 채팅을 열고 메뉴에서 연락처 설정을 선택하세요.",
-  "settings_multiAckSubtitle": "전달을 개선하기 위해 ACK를 추가로 전송합니다. 방송 시간이 더 필요합니다",
+  "settings_multiAckSubtitle": "전달을 개선하기 위해 ACK를 추가로 전송합니다. 무선 전송 시간이 더 필요합니다",
   "settings_presetCustom": "사용자 지정",
   "settings_radioMatchWarning": "통신하는 모든 노드가 동일한 주파수, 대역폭, 확산 계수를 사용해야 합니다. 코딩 속도(CR)는 달라도 됩니다.",
   "settings_txPowerRangeHelper": "{min}~{max} dBm",
@@ -3865,7 +3865,7 @@
   "settings_pathHashModeHelper": "이 라디오가 보내는 플러딩 패킷의 경로에 기록되는 각 노드 ID의 크기: 1바이트(256개 ID, 최대 64홉), 2바이트(65,000개 ID, 최대 32홉), 3바이트(160만 개 ID, 최대 21홉). ID가 클수록 충돌이 줄어들지만, v1.14보다 오래된 펌웨어의 리피터는 2바이트 또는 3바이트 ID가 든 패킷을 버립니다.",
   "settings_requiresFirmware": "펌웨어 {version} 이상이 필요합니다",
   "appSettings_channelMinHops": "충분히 멀리 전달될 때까지 채널 메시지 재전송",
-  "appSettings_channelMinHopsSubtitle": "메시지가 충분한 리피터에서 되돌아와 들리지 않으면 다시 전송합니다. 방송 시간이 더 필요합니다.",
+  "appSettings_channelMinHopsSubtitle": "메시지가 충분한 리피터에서 되돌아와 들리지 않으면 다시 전송합니다. 무선 전송 시간이 더 필요합니다.",
   "appSettings_channelMinHopsCount": "필요한 홉 수: {count}",
   "appSettings_channelMinHopsRetries": "{count, plural, =1{1회} other{{count}회}}까지 재전송",
   "appSettings_batteryOptimization": "백그라운드 작업",
@@ -3923,7 +3923,7 @@
   "notification_replyAppNotRunning": "MeshCore Open이 실행 중이 아닙니다. 앱을 연 뒤 답장을 다시 보내세요.",
   "snrIndicator_nearByRepeatersDescription": "이 라디오가 직접 들은 리피터입니다. 가장 최근에 들은 순으로 표시됩니다.",
   "radioStats_sectionSignal": "신호",
-  "radioStats_sectionAirtime": "방송 시간",
+  "radioStats_sectionAirtime": "무선 전송 시간",
   "imageSend_lossyNote": "약 {bytes}바이트로 압축됩니다. 수신 측 모델이 복원하므로 세부 내용이 달라집니다.",
   "imageSend_viewOriginal": "원본",
   "imageSend_viewReconstruction": "수신자가 보는 화면",

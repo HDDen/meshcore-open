@@ -1359,7 +1359,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_denyAll => 'Zavrni vse';
 
   @override
-  String get settings_allowByContact => 'Dovoli glede na zastavice stikov';
+  String get settings_allowByContact => 'Samo stiki, ki jih dovolim';
 
   @override
   String get settings_allowAll => 'Dovoli vse';
@@ -3872,7 +3872,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Vnesite geslo ponovitelja za dostop gosta ali skrbnika.';
+      'Skrbniško geslo omogoči dostop do nastavitev in CLI. Geslo gosta (ali prazno polje) omogoča samo ogled stanja.';
 
   @override
   String get login_roomDescription =>
@@ -4340,7 +4340,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bajti, uporabljeni za kodiranje ID-ja tega repetitorja v oznakah flood poti/zaznavanja zank. 0=1 bajt (256 ID-jev, do 64 skokov), 1=2 bajta (65.000 ID-jev, do 32 skokov), 2=3 bajti (16 milijonov ID-jev, do 21 skokov). Vdelana programska oprema pred v1.14 je vedno uporabljala 1-bajtne poti; v1.14 in novejše je mogoče nastaviti na 2- ali 3-bajtne poti.';
+      'Velikost ID-ja tega repetitorja v poteh oznanil, ki jih pošilja: 1 bajt (256 ID-jev, do 64 skokov), 2 bajta (65 tisoč ID-jev, do 32 skokov), 3 bajti (16 milijonov ID-jev, do 21 skokov). Ne vpliva na posredovanje: repetitorji z v1.14 ali novejšo posredujejo vse velikosti, starejša vdelana programska oprema pa zavrže pakete z 2- ali 3-bajtnimi ID-ji.';
 
   @override
   String get repeater_keySettings => 'Sprememba ključev vozlišča';

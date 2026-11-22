@@ -1364,7 +1364,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settings_denyAll => 'Denegar todo';
 
   @override
-  String get settings_allowByContact => 'Permitir por banderas de contacto';
+  String get settings_allowByContact => 'Solo los contactos que yo permita';
 
   @override
   String get settings_allowAll => 'Permitir todo';
@@ -3884,7 +3884,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Introduce la contraseña del repetidor para acceder como invitado o administrador.';
+      'La contraseña de administrador permite acceder a los ajustes y a la CLI. Una contraseña de invitado (o dejarla en blanco) solo permite ver el estado.';
 
   @override
   String get login_roomDescription =>
@@ -4362,7 +4362,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bytes utilizados para codificar el ID de este repetidor en las etiquetas de ruta de inundación/detección de bucles. 0=1 byte (256 IDs, hasta 64 saltos), 1=2 bytes (65.000 IDs, hasta 32 saltos), 2=3 bytes (16 millones de IDs, hasta 21 saltos). El firmware anterior a la v1.14 siempre usaba rutas de 1 byte; la v1.14 y posteriores pueden configurarse para rutas de 2 o 3 bytes.';
+      'Tamaño del ID de este repetidor en las rutas de los anuncios que envía: 1 byte (256 ID, hasta 64 saltos), 2 bytes (65 mil ID, hasta 32 saltos), 3 bytes (16 millones de ID, hasta 21 saltos). No afecta a la retransmisión: los repetidores con v1.14 o posterior retransmiten todos los tamaños, pero el firmware anterior descarta paquetes con ID de 2 o 3 bytes.';
 
   @override
   String get repeater_keySettings => 'Cambiar las claves de identidad';

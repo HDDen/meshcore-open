@@ -1359,7 +1359,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_denyAll => 'Neka alla';
 
   @override
-  String get settings_allowByContact => 'Tillåt via kontaktflaggor';
+  String get settings_allowByContact => 'Endast kontakter som jag tillåter';
 
   @override
   String get settings_allowAll => 'Tillåt alla';
@@ -3864,7 +3864,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Ange repeaterns lösenord för gäst- eller administratörsåtkomst.';
+      'Administratörslösenordet ger tillgång till inställningar och CLI. Ett gästlösenord (eller ett tomt fält) visar endast status.';
 
   @override
   String get login_roomDescription =>
@@ -4336,7 +4336,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Byte som används för att koda denna repeaters ID i taggar för flood-väg/loopdetektering. 0=1 byte (256 ID:n, upp till 64 hopp), 1=2 byte (65 000 ID:n, upp till 32 hopp), 2=3 byte (16 miljoner ID:n, upp till 21 hopp). Firmware före v1.14 använde alltid 1-byte-vägar; v1.14 och nyare kan konfigureras för 2- eller 3-byte-vägar.';
+      'Storleken på denna repeaters ID i vägarna för de annonser den skickar: 1 byte (256 ID:n, upp till 64 hopp), 2 byte (65 000 ID:n, upp till 32 hopp), 3 byte (16 miljoner ID:n, upp till 21 hopp). Påverkar inte vidarebefordran: repeatrar med v1.14 eller senare vidarebefordrar alla storlekar, men äldre firmware släpper paket med ID:n på 2 eller 3 byte.';
 
   @override
   String get repeater_keySettings => 'Ändra identitetsnycklar';

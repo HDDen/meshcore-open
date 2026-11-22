@@ -1367,7 +1367,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_denyAll => 'Odmów wszystkim';
 
   @override
-  String get settings_allowByContact => 'Zezwalaj według flag kontaktowych';
+  String get settings_allowByContact => 'Tylko kontakty, którym zezwolę';
 
   @override
   String get settings_allowAll => 'Zezwalaj na wszystko';
@@ -3905,7 +3905,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Wprowadź hasło przekaźnika, aby uzyskać dostęp gościa lub administratora.';
+      'Hasło administratora odblokowuje ustawienia i CLI. Hasło gościa (lub puste pole) umożliwia tylko podgląd stanu.';
 
   @override
   String get login_roomDescription =>
@@ -4378,7 +4378,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Bajty używane do kodowania identyfikatora tego repeatera w tagach ścieżki flood/wykrywania pętli. 0=1 bajt (256 identyfikatorów, do 64 skoków), 1=2 bajty (65 000 identyfikatorów, do 32 skoków), 2=3 bajty (16 milionów identyfikatorów, do 21 skoków). Firmware sprzed v1.14 zawsze używał ścieżek 1-bajtowych; v1.14 i nowsze można skonfigurować na ścieżki 2- lub 3-bajtowe.';
+      'Rozmiar identyfikatora tego przekaźnika w ścieżkach wysyłanych przez niego rozgłoszeń: 1 bajt (256 identyfikatorów, do 64 skoków), 2 bajty (65 tys. identyfikatorów, do 32 skoków), 3 bajty (16 mln identyfikatorów, do 21 skoków). Nie wpływa na przekazywanie: przekaźniki z v1.14 lub nowszą przekazują wszystkie rozmiary, ale starsze oprogramowanie odrzuca pakiety z identyfikatorami 2- lub 3-bajtowymi.';
 
   @override
   String get repeater_keySettings => 'Zmiana kluczy tożsamości';

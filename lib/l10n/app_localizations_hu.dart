@@ -1361,7 +1361,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_allowByContact =>
-      'Engedélyezés a névjegyek jelzői alapján';
+      'Csak az általam engedélyezett névjegyek';
 
   @override
   String get settings_allowAll => 'Minden engedélyezése';
@@ -1400,7 +1400,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_multiAckSubtitle =>
-      'További ACK-kat küld a jobb kézbesítés érdekében; több műsoridőt igényel';
+      'További ACK-kat küld a jobb kézbesítés érdekében; több adásidőt igényel';
 
   @override
   String get settings_telemetryModeUpdated => 'Telemetriai mód frissítve';
@@ -1743,7 +1743,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get appSettings_channelMinHopsSubtitle =>
-      'Ha az üzenet nem érkezik vissza elég átjátszón keresztül, küldje el újra. Több műsoridőt igényel.';
+      'Ha az üzenet nem érkezik vissza elég átjátszón keresztül, küldje el újra. Több adásidőt igényel.';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
@@ -3882,7 +3882,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Adja meg az átjátszó jelszavát a vendég vagy adminisztrátori hozzáféréshez.';
+      'Az adminisztrátori jelszó hozzáférést ad a beállításokhoz és a CLI-hez. A vendégjelszó (vagy üres mező) csak az állapot megtekintését engedi.';
 
   @override
   String get login_roomDescription =>
@@ -4358,7 +4358,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Az átjátszó azonosítójának kódolására használt bájtok száma a flood-útvonal/hurokészlelési címkékben. 0 = 1 bájt (256 azonosító, legfeljebb 64 ugrás), 1 = 2 bájt (65 000 azonosító, legfeljebb 32 ugrás), 2 = 3 bájt (16 millió azonosító, legfeljebb 21 ugrás). A v1.14 előtti firmware mindig 1 bájtos útvonalakat használt; a v1.14 és újabb verziók 2 vagy 3 bájtos útvonalakra is beállíthatók.';
+      'Az átjátszó azonosítójának mérete az általa küldött hirdetések útvonalaiban: 1 bájt (256 azonosító, legfeljebb 64 ugrás), 2 bájt (65 ezer azonosító, legfeljebb 32 ugrás), 3 bájt (16 millió azonosító, legfeljebb 21 ugrás). A továbbítást nem befolyásolja: a v1.14 vagy újabb átjátszók minden méretet továbbítanak, a régebbi firmware viszont eldobja a 2 vagy 3 bájtos azonosítójú csomagokat.';
 
   @override
   String get repeater_keySettings => 'A csomópont kulcsainak cseréje';

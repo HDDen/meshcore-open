@@ -1367,7 +1367,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_denyAll => 'Отклонить все';
 
   @override
-  String get settings_allowByContact => 'Разрешить по флагам контактов';
+  String get settings_allowByContact => 'Только разрешённые мной контакты';
 
   @override
   String get settings_allowAll => 'Разрешить все';
@@ -1395,11 +1395,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdate =>
-      'Авто-объявление без хопов при обновлении GPS';
+      'Автоматический анонс без хопов при обновлении GPS';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      'Когда GPS-местоположение меняется, отправлять объявление без хопов (требуется геопозиция в объявлении).';
+      'При изменении GPS-координат автоматически отправлять анонс нового местоположения только ближайшим нодам (требуется включить передачу местоположения в анонсе).';
 
   @override
   String get settings_multiAck => 'Несколько подтверждений';
@@ -1736,7 +1736,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_pathHashModeHelper =>
-      'Размер каждого идентификатора узла, записываемого в маршрут flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой старше v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
+      'Размер каждого идентификатора узла, записываемого в маршрут flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой версии ниже v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
 
   @override
   String settings_requiresFirmware(Object version) {
@@ -1898,7 +1898,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appSettings_maxRouteWeightSubtitle =>
-      'Максимальный вес, который может быть перевезён по определённому маршруту при успешных доставках.';
+      'Максимальный вес, который маршрут может накопить благодаря успешным доставкам.';
 
   @override
   String get appSettings_initialRouteWeight => 'Начальный вес маршрута';
@@ -2874,7 +2874,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get routing_modeFloodHint =>
-      'Передача пакета через все репитеры. Самый надёжный способ, но требует больше airtime.';
+      'Передача через все репитеры. Самый надёжный способ, но занимает больше эфирного времени.';
 
   @override
   String get routing_modeManualHint =>
@@ -3883,7 +3883,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Введите пароль репитера для гостевого или администраторского доступа.';
+      'Пароль администратора открывает настройки и CLI. Гостевой пароль (или пустой ввод) позволяет только просматривать статус.';
 
   @override
   String get login_roomDescription =>
@@ -3999,7 +3999,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_clockSyncAfterLoginSubtitle =>
-      'Автоматически отправлять сообщение \"синхронизация времени\" после успешной авторизации.';
+      'Автоматически отправлять команду \"clock sync\" после успешного входа.';
 
   @override
   String get repeater_statusTitle => 'Статус репитера';
@@ -4358,7 +4358,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Байты, используемые для кодирования идентификатора этого ретранслятора в тегах flood-маршрута/обнаружения циклов. 0 = 1 байт (256 идентификаторов, до 64 переходов), 1 = 2 байта (65 000 идентификаторов, до 32 переходов), 2 = 3 байта (16 миллионов идентификаторов, до 21 перехода). Прошивки до v1.14 всегда использовали 1-байтовые маршруты; v1.14 и новее можно настроить на 2- или 3-байтовые маршруты.';
+      'Размер идентификатора этого репитера в маршрутах отправляемых им анонсов: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). На пересылку не влияет: репитеры с прошивкой v1.14 и новее пересылают пакеты с любым из этих размеров, а более старые прошивки отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
 
   @override
   String get repeater_keySettings => 'Смена ключей узла';
@@ -4899,7 +4899,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFreq =>
-      '(Только для настройки) Быстро устанавливает только частоту. Требуется перезагрузка. Рекомендуется использовать функцию \"настройка радио\" для полного набора параметров.';
+      '(Только через последовательную консоль) Быстро устанавливает только частоту. Требуется перезагрузка. Для полного набора радиопараметров рекомендуется использовать команду \"set radio\".';
 
   @override
   String get repeater_cliHelpSetBridgeChannel =>
@@ -10092,18 +10092,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodMaxAdvert => 'Лимит хопов объявлений';
+  String get repeater_floodMaxAdvert => 'Лимит хопов flood-анонсов';
 
   @override
   String get repeater_floodMaxAdvertHelper =>
-      'Максимальное число хопов для объявлений, отправленных через flood (0–64; по умолчанию 8).';
+      'Максимальное число хопов для анонсов, отправленных через flood (0–64; по умолчанию 8).';
 
   @override
   String get repeater_floodMaxUnscoped => 'Лимит хопов без региона';
 
   @override
   String get repeater_floodMaxUnscopedHelper =>
-      'Максимальное число хопов для flood-пакетов без региона (0–64). Небольшое значение, например 3, ограничивает распространение таких пакетов.';
+      'Максимальное число хопов для flood-пакетов без региона (0–64; по умолчанию 64). Небольшое значение, например 3, ограничивает распространение таких пакетов.';
 
   @override
   String get repeater_floodMaxUnscopedUnset => 'Как у общего лимита flood';
@@ -10587,7 +10587,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get messageFilter_enableLearningPrompt =>
-      'Для полноценного функционирования функционала необходимо включить функцию обучения спам-фильтра. Включить это сейчас?';
+      'Чтобы использовать все возможности спам-фильтра, включите обучение. Включить сейчас?';
 
   @override
   String get quickActions_title => 'Быстрые действия';
@@ -10734,7 +10734,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Прошивка не разрешает экспорт закрытого ключа узла.';
 
   @override
-  String get extraKeys_advertise => 'Отправить flood-адверт';
+  String get extraKeys_advertise => 'Отправить flood-анонс';
 
   @override
   String get extraKeys_deleteConfirm =>

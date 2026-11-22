@@ -1367,7 +1367,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_denyAll => 'Refuser tout';
 
   @override
-  String get settings_allowByContact => 'Autoriser par drapeaux de contact';
+  String get settings_allowByContact =>
+      'Uniquement les contacts que j’autorise';
 
   @override
   String get settings_allowAll => 'Autoriser tout';
@@ -3897,7 +3898,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get login_repeaterDescription =>
-      'Entrez le mot de passe du répéteur pour un accès invité ou administrateur.';
+      'Le mot de passe administrateur donne accès aux paramètres et à la CLI. Un mot de passe invité (ou un champ vide) permet uniquement de consulter l’état.';
 
   @override
   String get login_roomDescription =>
@@ -4378,7 +4379,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Octets utilisés pour encoder l\'ID de ce répéteur dans les balises de chemin flood/de détection de boucles. 0 = 1 octet (256 ID, jusqu\'à 64 sauts), 1 = 2 octets (65 000 ID, jusqu\'à 32 sauts), 2 = 3 octets (16 millions d\'ID, jusqu\'à 21 sauts). Les firmwares antérieurs à la v1.14 utilisaient toujours des chemins de 1 octet ; à partir de la v1.14, des chemins de 2 ou 3 octets peuvent être configurés.';
+      'Taille de l’identifiant de ce répéteur dans les chemins des annonces qu’il envoie : 1 octet (256 identifiants, jusqu’à 64 sauts), 2 octets (65 000 identifiants, jusqu’à 32 sauts), 3 octets (16 millions d’identifiants, jusqu’à 21 sauts). Sans effet sur la retransmission : les répéteurs en v1.14 ou ultérieure retransmettent toutes les tailles, mais les anciens firmwares rejettent les paquets avec des identifiants de 2 ou 3 octets.';
 
   @override
   String get repeater_keySettings => 'Modifier les clés d\'identité';
