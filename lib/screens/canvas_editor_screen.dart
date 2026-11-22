@@ -10627,22 +10627,22 @@ class _PixelCanvasPainter extends CustomPainter {
       pixels, width, height, transparentColor: transparentColor,
     )) {
       final colorValue = rect.color;
-        if (profile.isDynamic) {
-          final safeColorValue =
-              colorValue >= 0 &&
-                  colorValue < MCOImageDynamicPalette.global512.length &&
-                  MCOImageDynamicPalette.profileColorIdForGlobalIndex(
-                        profile,
-                        colorValue,
-                      ) !=
-                      null
-              ? colorValue
-              : MCOImagePalette.whiteIndexFor(profile);
-          paint.color = MCOImageDynamicPalette.global512[safeColorValue];
-        } else {
-          final colorIndex = colorValue.clamp(0, palette.length - 1).toInt();
-          paint.color = palette[colorIndex];
-        }
+      if (profile.isDynamic) {
+        final safeColorValue =
+            colorValue >= 0 &&
+                colorValue < MCOImageDynamicPalette.global512.length &&
+                MCOImageDynamicPalette.profileColorIdForGlobalIndex(
+                      profile,
+                      colorValue,
+                    ) !=
+                    null
+            ? colorValue
+            : MCOImagePalette.whiteIndexFor(profile);
+        paint.color = MCOImageDynamicPalette.global512[safeColorValue];
+      } else {
+        final colorIndex = colorValue.clamp(0, palette.length - 1).toInt();
+        paint.color = palette[colorIndex];
+      }
       canvas.drawRect(
         Rect.fromLTWH(
           canvasOffset.dx + rect.x * cellWidth,

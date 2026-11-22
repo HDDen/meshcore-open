@@ -137,3 +137,7 @@ retries. The original channel scope and chunk pacing are retained.
 No AEIC headers, payloads, parity calculations or receiver formats change; each
 retry sends exactly the original chunk bytes. Disabling the channel option
 keeps the previous single-burst behavior.
+
+## MCOimg raster display
+
+MCOimg raster images use the same compact rectangle painting in chat, the canvas editor and PNG rendering. Adjacent same-color pixels are painted together; transparency and pixel colors remain unchanged. A four-byte solid image can legitimately describe a full 256x256 canvas and is not rejected because its file is small. This rendering path is separate from the AEIC model decoder described above.

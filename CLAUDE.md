@@ -4933,3 +4933,5 @@ the page. Proxy callbacks recheck allowsCompanionProxy; otherwise they call the
 service's existing openLicenseManagement API. The private module anchors its
 proxy ServCard with ValueKey('settings-target-companionProxy'), intentionally
 using the shared string contract without a dependency on the host package.
+
+MCOimg raster painting in `MCOImageMessage` (chat and PNG) and `_PixelCanvasPainter` uses `helpers/mco_image_raster_rects.dart`: merge equal horizontal pixel runs vertically when their bounds/color match. Rectangles never overlap, transparent pixels stay skipped, and original palette validation/grid/selection overlays remain. The valid four-byte v2 payload `82 28 FF FF` is a 256x256 white master64 image; it now draws one rectangle instead of 65,536. Wire encoding/decoding is unchanged. `tool/benchmark_mco_image_raster_rects.dart` checks pixel equivalence and counts old/new draw operations; device profiling is still needed for UI timings.

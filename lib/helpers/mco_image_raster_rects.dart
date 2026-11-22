@@ -3,8 +3,11 @@
 typedef McoRasterRect = ({int x, int y, int width, int height, int color});
 
 List<McoRasterRect> mcoImageRasterRects(
-  List<int> pixels, int width, int height, {int? transparentColor}
-) {
+  List<int> pixels,
+  int width,
+  int height, {
+  int? transparentColor,
+}) {
   if (width <= 0 || height <= 0 || pixels.length != width * height) {
     throw ArgumentError('Invalid raster dimensions');
   }
@@ -30,8 +33,13 @@ List<McoRasterRect> mcoImageRasterRects(
       } else {
         current[key] = old;
         final rect = result[old];
-        result[old] = (x: rect.x, y: rect.y, width: rect.width,
-            height: rect.height + 1, color: color);
+        result[old] = (
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height + 1,
+          color: color,
+        );
       }
     }
     previous = current;
