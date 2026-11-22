@@ -190,7 +190,9 @@ class Contact {
     return path;
   }
 
-  static Contact? fromFrame(Uint8List data) {
+  // Merge callers need to distinguish an omitted name from the literal
+  // advertised name "Unknown". Other callers retain the legacy display fallback.
+  static Contact? fromFrame(Uint8List data, {bool preserveEmptyName = false}) {
     if (data.isEmpty) return null;
     final reader = BufferReader(data);
     try {
@@ -262,7 +264,7 @@ class Contact {
 
       return Contact(
         publicKey: pubKey,
-        name: name.isEmpty ? 'Unknown' : name,
+        name: name.isEmpty && !preserveEmptyName ? 'Unknown' : name,
         type: type,
         flags: flags,
         pathLength: hopCount,

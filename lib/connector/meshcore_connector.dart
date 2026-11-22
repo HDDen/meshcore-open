@@ -9007,6 +9007,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             orElse: () => contact,
           );
     return contact.copyWith(
+      name: retainedAdvertName(tmp.name, contact.name),
       rawPacket: tmp.rawPacket,
     );
   }
@@ -9667,7 +9668,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     final subscription = receivedFrames.listen((frame) {
       if (frame.isEmpty || frame[0] != respCodeContact) return;
-      final parsed = Contact.fromFrame(frame);
+      final parsed = Contact.fromFrame(frame, preserveEmptyName: true);
       if (parsed == null || parsed.publicKeyHex != expectedKeyHex) return;
       finish(parsed);
     });
@@ -9845,7 +9846,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
     final subscription = receivedFrames.listen((frame) {
       if (frame.isEmpty || frame[0] != respCodeContact) return;
-      final updated = Contact.fromFrame(frame);
+      final updated = Contact.fromFrame(frame, preserveEmptyName: true);
       if (updated == null) return;
       if (updated.publicKeyHex != contact.publicKeyHex) return;
       // The node returns empty bytes for flood as well as for zero hops.
@@ -16081,7 +16082,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// (type not auto-added, beyond autoadd_max_hops, or storage full;
   /// BaseChatMesh::onAdvertRecv), so it only feeds the discovered list.
   void _handleNewAdvert(Uint8List frame) {
-    final contact = Contact.fromFrame(frame);
+    final contact = Contact.fromFrame(frame, preserveEmptyName: true);
     if (contact == null || listEquals(contact.publicKey, _selfPublicKey)) {
       return;
     }
@@ -16113,7 +16114,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleContact(Uint8List frame, {bool countTowardSync = true}) {
-    final contactTmp = Contact.fromFrame(frame);
+    final contactTmp = Contact.fromFrame(frame, preserveEmptyName: true);
     if (contactTmp != null) {
       // Any CONTACT frame, a sync's or not, says the node holds the contact.
       _contactsUnconfirmedBySync?.remove(contactTmp.publicKeyHex);
@@ -16194,6 +16195,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         _contacts[existingIndex] = retainContactTelemetryFix(
           existing,
           contact.copyWith(
+            name: retainedAdvertName(existing.name, contact.name),
             lastMessageAt: messageSummary.lastMessageAt,
             hasMessages: messageSummary.hasMessages,
             pathOverride: existing.pathOverride, // Preserve user's path choice
@@ -16292,6 +16294,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _contacts[existingIndex] = retainContactTelemetryFix(
         existing,
         contact.copyWith(
+          name: retainedAdvertName(existing.name, contact.name),
           lastMessageAt: messageSummary.lastMessageAt,
           hasMessages: messageSummary.hasMessages,
           pathOverride: existing.pathOverride, // Preserve user's path choice
