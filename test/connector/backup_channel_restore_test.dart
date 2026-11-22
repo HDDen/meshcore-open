@@ -906,6 +906,23 @@ void main() {
     expect(radio.contactWrites, isEmpty);
   });
 
+  test('reload applies a restored SQLite channel order to the live list', () async {
+    final order = ChannelOrderStore()..setPublicKeyHex = _node;
+    final before = radio.connector.channels.map((channel) => channel.index).toList();
+    expect(before, [0, 2]);
+    await order.saveChannelOrder([2, 0]);
+    expect(radio.connector.channels.map((channel) => channel.index), before);
+    var notifications = 0;
+    radio.connector.addListener(() => notifications++);
+
+    await radio.connector.reloadChannelOrder();
+
+    expect(radio.connector.channels.map((channel) => channel.index), [2, 0]);
+    expect(notifications, greaterThan(0));
+    expect(radio.reads, isEmpty);
+    expect(radio.writes, isEmpty);
+  });
+
   test('channel settings and order follow PSK and keep existing choices', () async {
     final channels = radio.connector.channels;
     final first = channels.singleWhere((channel) => channel.index == 0);

@@ -148,7 +148,14 @@ void main() {
     await service.updateSettings(
       service.settings.copyWith(tcpServerAddress: 'edited since preview'),
     );
+    var notifications = 0;
+    service.addListener(() => notifications++);
     expect(await service.restoreAppSettingsBackup(preview), isTrue);
+    // The active service and its listeners must see the restore immediately.
+    expect(service.settings.languageOverride, isNull);
+    expect(service.settings.uiScale, 1.5);
+    expect(service.settings.tcpServerAddress, 'edited since preview');
+    expect(notifications, 1);
     final reloaded = AppSettingsService();
     addTearDown(reloaded.dispose);
     await reloaded.loadSettings();

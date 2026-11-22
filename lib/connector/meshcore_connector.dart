@@ -4635,6 +4635,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  /// Reapplies the current radio's persisted manual channel order.
+  Future<void> reloadChannelOrder() => _loadChannelOrder();
+
   Future<void> _loadChannelOrder({
     String? publicKeyHex,
     bool allowLegacyMigration = true,

@@ -4012,6 +4012,18 @@ upstream addition), location description, Bluetooth descriptions and background
 modes. The plist was parsed and compared against HEAD; runtime permission
 prompts and image saving still require an iOS device check.
 
+**Final requested stage prepared 2026-11-22: `37bfdd47`.** Preserve the
+fork preview-based backup importer and deleted upstream backup service/tests.
+`restoreAppSettingsBackup` already updates the active settings service and
+notifies listeners; `restoreBackupChannelSettings` already applies its restored
+manual slot order in memory. Regression tests cover both rather than replacing
+them with upstream's preference snapshots. Add `reloadChannelOrder` over the
+fork scoped SQLite loader and `UiViewStateService.reload` from upstream. The
+current display-settings importer does not restore `ui_*` preferences, so do
+not reload unrelated view state from that screen. Keep intentionally deleted
+upstream slot/filter fixtures deleted. The requested target is now prepared,
+without committing; owner analysis and Flutter tests are still required.
+
 The fork merges `zjs81/meshcore-open` dev in steps along its first-parent
 history, one `git merge --no-commit <tip>` per step, so that each step is
 tested on its own. The rules that hold across the steps: the ARB files keep
