@@ -8,6 +8,7 @@ import '../helpers/path_helper.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../models/path_history.dart';
+import '../utils/radio_guard.dart';
 import '../screens/path_trace_map.dart';
 import '../services/path_history_service.dart';
 import 'node_memory_prompt.dart';
@@ -503,7 +504,7 @@ class _RoutingSheetBodyState extends State<_RoutingSheetBody> {
                   TextButton.icon(
                     icon: const Icon(Icons.restart_alt, size: 18),
                     label: Text(l10n.routing_forgetPath),
-                    onPressed: _updatingRoute
+                    onPressed: _updatingRoute || isRadioReadOnly(connector)
                         ? null
                         : () => _forgetPath(connector, contact),
                   ),

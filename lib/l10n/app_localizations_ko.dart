@@ -200,38 +200,37 @@ class AppLocalizationsKo extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => '백업 및 복원';
 
   @override
-  String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+  String get backupRestore_subtitle => '앱 데이터와 무전기 설정을 저장하거나 복원합니다';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => '가져오기';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => '파일 가져오기';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => '비밀번호(선택)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => '백업 및 복원 항목';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => '위치 설정';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => '개인 키(민감)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS API 키(민감)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API 키(민감)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1382,10 +1381,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settings_actions => '작업';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => '내보내기';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle => '연락처와 중계기를 GPX로 내보내기';
 
   @override
   String get settings_deleteAllPaths => '모든 경로 삭제';
@@ -1639,7 +1638,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appSettings_languageSl => '슬로베니아어';
 
   @override
-  String get appSettings_languagePt => '포르투갈어';
+  String get appSettings_languagePt => '포르투갈어(브라질)';
 
   @override
   String get appSettings_languageIt => '이탈리아어';
@@ -2163,7 +2162,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get contacts_lastSeenHourAgo => '약 1시간';
+  String get contacts_lastSeenHourAgo => '~ 1시간';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
@@ -10603,4 +10602,46 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => '포르투갈어(포르투갈)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'AI 재구성';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return '오프라인 · $name';
+  }
+
+  @override
+  String get appBar_offline => '오프라인';
+
+  @override
+  String get appBar_reconnecting => '다시 연결 중…';
+
+  @override
+  String get connectSheet_title => '무전기 연결';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return '$name에 다시 연결';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => '무전기 선택';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB 또는 TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => '재연결 중지';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return '$name에 연결할 수 없습니다. 전원이 켜져 있고 가까이 있는지 확인하세요.';
+  }
+
+  @override
+  String get chat_composerOffline => '메시지를 보내려면 무전기에 연결하세요';
 }

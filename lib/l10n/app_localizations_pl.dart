@@ -200,38 +200,38 @@ class AppLocalizationsPl extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Kopia zapasowa i przywracanie';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Zapisz lub przywróć dane aplikacji i ustawienia radia';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importuj';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Importuj plik';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Hasło (opcjonalnie)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Elementy kopii zapasowej i przywracania';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Ustawienia lokalizacji';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Klucz prywatny (wrażliwy)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'Klucz API IPFS (wrażliwy)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Klucz API Stadia Maps (wrażliwy)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1416,10 +1416,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settings_actions => 'Działania';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Eksportuj';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Eksportuj kontakty i przekaźniki jako GPX';
 
   @override
   String get settings_deleteAllPaths => 'Usuń wszystkie trasy';
@@ -1655,7 +1656,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appSettings_themeLight => 'Jasny';
 
   @override
-  String get appSettings_themeDark => 'Ciemny';
+  String get appSettings_themeDark => 'Ciemne';
 
   @override
   String get appSettings_language => 'Język';
@@ -1682,7 +1683,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appSettings_languageSl => 'Słoweński';
 
   @override
-  String get appSettings_languagePt => 'Portugalski';
+  String get appSettings_languagePt => 'Portugalski (Brazylia)';
 
   @override
   String get appSettings_languageIt => 'Włoski';
@@ -11071,4 +11072,47 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugalski (Portugalia)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Odtworzone przez AI';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Ponowne łączenie…';
+
+  @override
+  String get connectSheet_title => 'Połącz z radiem';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Połącz ponownie z $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Wybierz radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB lub TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Zatrzymaj ponowne łączenie';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Nie można połączyć z $name. Upewnij się, że jest włączone i w pobliżu.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Połącz się z radiem, aby wysyłać wiadomości';
 }

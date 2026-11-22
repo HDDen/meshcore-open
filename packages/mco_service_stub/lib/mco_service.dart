@@ -39,6 +39,7 @@ class SettingsSectionsService extends ChangeNotifier {
   bool get applyMService => false;
 
   bool get legacySenderBlockerEnabled => false;
+  bool get legacyOfflineEnabled => false;
 
   // Public builds never supply a proxy TCP reason to the iOS execution policy.
   bool get companionProxyEnabled => false;

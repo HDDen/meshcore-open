@@ -28,7 +28,7 @@
 
 ## Coding Style & Naming Conventions
 - Follow `flutter_lints`, use `lowerCamelCase`/`UpperCamelCase`/`snake_case`, prefer `StatelessWidget` + `Consumer`, and use `const` constructors.
-- Material widgets only; keep screens simple and avoid premature abstractions. Manual disconnects and USB/TCP failures return to the scanner; recoverable BLE loss keeps the current screen visible while automatic reconnection runs.
+- Material widgets only; keep screens simple and avoid premature abstractions. Disconnects keep screens with saved radio data visible and read-only; recoverable BLE/TCP loss reconnects in the background. See documentation/offline-mode.md.
 
 ## Testing Guidelines
 - Tests use `flutter_test`; add `*_test.dart` under `test/` and run `flutter test` before UI/protocol changes.

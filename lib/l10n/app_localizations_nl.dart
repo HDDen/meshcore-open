@@ -200,38 +200,38 @@ class AppLocalizationsNl extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Back-up en herstel';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'App-gegevens en radio-instellingen opslaan of herstellen';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importeren';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Bestand importeren';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Wachtwoord (optioneel)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Items voor back-up en herstel';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Locatie-instellingen';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Privésleutel (gevoelig)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS API-sleutel (gevoelig)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API-sleutel (gevoelig)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1409,10 +1409,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_actions => 'Acties';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exporteren';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Contacten en repeaters exporteren als GPX';
 
   @override
   String get settings_deleteAllPaths => 'Alle paden verwijderen';
@@ -1482,7 +1483,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
+  String get settings_aboutLegalese => '2026 MeshCore open-sourceproject';
 
   @override
   String get settings_aboutDescription =>
@@ -1672,7 +1673,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get appSettings_languageSl => 'Sloveens';
 
   @override
-  String get appSettings_languagePt => 'Portugees';
+  String get appSettings_languagePt => 'Portugees (Brazilië)';
 
   @override
   String get appSettings_languageIt => 'Italiaans';
@@ -11024,4 +11025,47 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugees (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Door AI gereconstrueerd';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Opnieuw verbinden…';
+
+  @override
+  String get connectSheet_title => 'Radio verbinden';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Opnieuw verbinden met $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Kies een radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB of TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Opnieuw verbinden stoppen';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Kan $name niet bereiken. Controleer of het aan staat en in de buurt is.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Verbind met een radio om berichten te versturen';
 }

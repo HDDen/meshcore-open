@@ -1665,7 +1665,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appSettings_languageSl => 'Slovenščina';
 
   @override
-  String get appSettings_languagePt => 'Português';
+  String get appSettings_languagePt => 'Português (Brasil)';
 
   @override
   String get appSettings_languageIt => 'Italiano';
@@ -10912,4 +10912,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Português (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'AI-reconstructed';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Reconnecting…';
+
+  @override
+  String get connectSheet_title => 'Connect a radio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Reconnect to $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Choose a radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB or TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Stop reconnecting';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Couldn\'t reach $name. Make sure it is on and nearby.';
+  }
+
+  @override
+  String get chat_composerOffline => 'Connect to a radio to send messages';
 }

@@ -572,20 +572,28 @@ class _LineOfSightMapScreenState extends State<LineOfSightMapScreen> {
   }
 
   Widget _headerMetric(IconData icon, String value) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: LosPalette.textMuted, size: 16),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: MeshTheme.mono(
-            color: LosPalette.text,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
+    // Capped so very large text scales shrink the reading instead of pushing
+    // the panel off a narrow screen.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 80),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: LosPalette.textMuted, size: 16),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: MeshTheme.mono(
+                color: LosPalette.text,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

@@ -14,6 +14,10 @@ import 'package:meshcore_open/utils/disconnect_navigation_mixin.dart';
 
 class _FakeConnector extends MeshCoreConnector {
   bool readable = true;
+  bool cached = false;
+
+  @override
+  bool get hasRadioData => cached;
   bool recovering = false;
   bool restarting = false;
 
@@ -68,6 +72,18 @@ Future<_FakeConnector> _pumpScreen(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('saved radio data keeps the screen after a permanent disconnect', (tester) async {
+    final connector = await _pumpScreen(tester);
+    connector
+      ..readable = false
+      ..cached = true
+      ..notify();
+    await tester.pumpAndSettle();
+    expect(find.byType(_Screen), findsOneWidget);
+    expect(find.text('screen'), findsOneWidget);
+    expect(find.text('home'), findsNothing);
+  });
+
   testWidgets('a link gone for good sends the screen back to the first route',
       (tester) async {
     final connector = await _pumpScreen(tester);

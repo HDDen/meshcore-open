@@ -30,6 +30,7 @@ import '../utils/platform_info.dart';
 import '../widgets/adaptive_app_bar_title.dart';
 import '../widgets/channel_resend_repeater_settings.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/mesh_nav_tile.dart';
 import '../widgets/network_map_settings_section.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../helpers/settings_navigation_target.dart';
@@ -61,7 +62,7 @@ class AppSettingsScreen extends StatelessWidget {
         centerTitle: true,
         bottom: const SyncProgressAppBarBottom(),
       ),
-      body: SafeArea(
+      body: MeshSettingsTileTheme(child: SafeArea(
         top: false,
         child:
             Consumer4<
@@ -175,7 +176,7 @@ class AppSettingsScreen extends StatelessWidget {
                     );
                   },
             ),
-      ),
+      )),
     );
   }
 
@@ -214,15 +215,15 @@ class AppSettingsScreen extends StatelessWidget {
                 segments: [
                   ButtonSegment(
                     value: 'system',
-                    label: Text(context.l10n.appSettings_themeSystem),
+                    label: MeshSegmentLabel(context.l10n.appSettings_themeSystem),
                   ),
                   ButtonSegment(
                     value: 'light',
-                    label: Text(context.l10n.appSettings_themeLight),
+                    label: MeshSegmentLabel(context.l10n.appSettings_themeLight),
                   ),
                   ButtonSegment(
                     value: 'dark',
-                    label: Text(context.l10n.appSettings_themeDark),
+                    label: MeshSegmentLabel(context.l10n.appSettings_themeDark),
                   ),
                 ],
                 selected: settingsService.activeCustomTheme == null
@@ -2596,6 +2597,8 @@ class AppSettingsScreen extends StatelessWidget {
         return context.l10n.appSettings_languageSl;
       case 'pt':
         return context.l10n.appSettings_languagePt;
+      case 'pt_PT':
+        return context.l10n.appSettings_languagePtPt;
       case 'it':
         return context.l10n.appSettings_languageIt;
       case 'zh':
@@ -2716,6 +2719,16 @@ class AppSettingsScreen extends StatelessWidget {
                     selected: settingsService.settings.languageOverride == 'pt',
                     onTap: () {
                       settingsService.setLanguageOverride('pt');
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  _sheetOption<String?>(
+                    ctx,
+                    label: context.l10n.appSettings_languagePtPt,
+                    value: 'pt_PT',
+                    selected: settingsService.settings.languageOverride == 'pt_PT',
+                    onTap: () {
+                      settingsService.setLanguageOverride('pt_PT');
                       Navigator.pop(ctx);
                     },
                   ),

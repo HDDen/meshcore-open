@@ -200,38 +200,40 @@ class AppLocalizationsBg extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Резервно копие';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Запазване или възстановяване на данните на приложението и настройките на радиото';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Импорт';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Импорт на файл';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Парола (по избор)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items =>
+      'Елементи за резервно копие и възстановяване';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Настройки за местоположение';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Частен ключ (чувствителен)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'API ключ за IPFS (чувствителен)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey =>
+      'API ключ за Stadia Maps (чувствителен)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1415,10 +1417,11 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_actions => 'Действия';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Експорт';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Експорт на контакти и повторители като GPX';
 
   @override
   String get settings_deleteAllPaths => 'Изтрий всички пътища';
@@ -1682,7 +1685,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageSl => 'Словенски';
 
   @override
-  String get appSettings_languagePt => 'Португалски';
+  String get appSettings_languagePt => 'Португалски (Бразилия)';
 
   @override
   String get appSettings_languageIt => 'Италиански';
@@ -2231,27 +2234,27 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_noMembers => 'Няма членове';
 
   @override
-  String get contacts_lastSeenNow => 'Видян току-що';
+  String get contacts_lastSeenNow => 'наскоро';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return 'Преди $minutes минути';
+    return '~ $minutes мин.';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => 'Преди час';
+  String get contacts_lastSeenHourAgo => '~ 1 ч.';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return 'Преди $hours часа';
+    return '~ $hours ч.';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => 'Преди 1 ден';
+  String get contacts_lastSeenDayAgo => '~ 1 дн.';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return 'Преди $days дни';
+    return '~ $days дн.';
   }
 
   @override
@@ -2862,7 +2865,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get routing_title => 'Маршрутизиране';
 
   @override
-  String get routing_modeAuto => 'Автоматично';
+  String get routing_modeAuto => 'Авто';
 
   @override
   String get routing_modeFlood => 'Flood';
@@ -11076,4 +11079,47 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Португалски (Португалия)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Реконструирано от ИИ';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Офлайн · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Офлайн';
+
+  @override
+  String get appBar_reconnecting => 'Повторно свързване…';
+
+  @override
+  String get connectSheet_title => 'Свържи радио';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Свържи отново с $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Избери радио';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB или TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Спри повторното свързване';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Няма връзка с $name. Уверете се, че е включено и наблизо.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Свържете се с радио, за да изпращате съобщения';
 }

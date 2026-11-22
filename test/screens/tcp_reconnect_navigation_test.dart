@@ -108,14 +108,17 @@ class _Settings extends AppSettingsService {
 }
 
 class _Navigation extends NavigatorObserver {
-  int replacements = 0;
-  PageRoute<dynamic>? replacement;
+  int handoffs = 0;
+  PageRoute<dynamic>? mainRoute;
 
   @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    replacements++;
-    if (newRoute is PageRoute<dynamic>) {
-      replacement = newRoute;
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    // The main route's builder is a pure const ChannelsScreen constructor.
+    // Ignore the TCP root and temporary covering routes.
+    if (route is MaterialPageRoute<dynamic> &&
+        route.builder(navigator!.context) is ChannelsScreen) {
+      handoffs++;
+      mainRoute = route;
     }
   }
 }
@@ -167,14 +170,15 @@ void main() {
   // completes. The preparation above takes part of advance()'s frame budget;
   // Flutter's current Material transition alone can take 450 ms. Start a frame,
   // then advance the actual route duration and flush Navigator's disposal.
-  Future<void> finishReplacement(WidgetTester tester, _Navigation observer) async {
-    expect(observer.replacement, isNotNull, reason: 'TCP must request a route replacement');
-    final route = observer.replacement!;
+  Future<void> finishNavigation(WidgetTester tester, _Navigation observer) async {
+    expect(observer.mainRoute, isNotNull, reason: 'TCP must open the main route');
+    final route = observer.mainRoute!;
     await tester.pump();
     await tester.pump(route.transitionDuration + const Duration(milliseconds: 1));
     await tester.pump();
     expect(route.animation?.status, AnimationStatus.completed);
     expect(route.isCurrent, isTrue);
+    expect(route.isFirst, isTrue, reason: 'Connect clears the scanner/TCP stack');
     expect(find.byType(TcpScreen), findsNothing);
   }
 
@@ -206,16 +210,16 @@ void main() {
     expect(settings.endpoints, isEmpty); // A socket alone is not a handshake.
     c.ready();
     await advance(tester);
-    await finishReplacement(tester, observer);
+    await finishNavigation(tester, observer);
     expect(find.byType(ChannelsScreen), findsOneWidget);
     expect(find.byType(TcpScreen), findsNothing);
     expect(settings.endpoints, [(_host, _port)]);
-    expect(observer.replacements, 1);
+    expect(observer.handoffs, 1);
     expect(c.manualDisconnects, 0);
     await close(tester, c, settings);
   });
 
-  testWidgets('repeated ready notifications share one pending save and one route replacement', (tester) async {
+  testWidgets('repeated ready notifications share one pending save and one main-route handoff', (tester) async {
     final c = _Connector();
     final gate = Completer<void>();
     final settings = _Settings()..holdSave = gate;
@@ -231,9 +235,9 @@ void main() {
     expect(find.byType(TcpScreen), findsOneWidget);
     gate.complete();
     await advance(tester);
-    await finishReplacement(tester, observer);
+    await finishNavigation(tester, observer);
     expect(find.byType(ChannelsScreen), findsOneWidget);
-    expect(observer.replacements, 1);
+    expect(observer.handoffs, 1);
     expect(c.manualDisconnects, 0);
     await close(tester, c, settings);
   });
@@ -250,12 +254,12 @@ void main() {
     await advance(tester);
     expect(find.text('cover'), findsOneWidget);
     expect(settings.endpoints, isEmpty);
-    expect(observer.replacements, 0);
+    expect(observer.handoffs, 0);
     navigator.pop();
     await advance(tester);
-    await finishReplacement(tester, observer);
+    await finishNavigation(tester, observer);
     expect(find.byType(ChannelsScreen), findsOneWidget);
-    expect(observer.replacements, 1);
+    expect(observer.handoffs, 1);
     expect(c.manualDisconnects, 0);
     await close(tester, c, settings);
   });
@@ -276,12 +280,12 @@ void main() {
     expect(identical(firstIdentity, c.identity), isFalse);
     await advance(tester);
     expect(settings.endpoints.length, 2);
-    await finishReplacement(tester, observer);
+    await finishNavigation(tester, observer);
     expect(find.byType(ChannelsScreen), findsOneWidget);
-    expect(observer.replacements, 1);
+    expect(observer.handoffs, 1);
     oldSave.complete();
     await advance(tester);
-    expect(observer.replacements, 1);
+    expect(observer.handoffs, 1);
     expect(c.manualDisconnects, 0);
     expect(tester.takeException(), isNull);
     await close(tester, c, settings);

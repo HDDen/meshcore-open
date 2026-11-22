@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../utils/radio_guard.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
 import '../helpers/discovery_list.dart';
@@ -591,6 +592,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   onTap: () => Navigator.of(sheetContext).pop('copy_contact'),
                 ),
                 ListTile(
+                  enabled: !isRadioReadOnly(connector),
                   leading: const Icon(Icons.delete),
                   title: Text(l10n.discoveredContacts_deleteContact),
                   onTap: () => Navigator.of(sheetContext).pop('delete_contact'),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/legacy_offline_access.dart';
 import '../l10n/l10n.dart';
 import '../screens/channels_screen.dart';
 import '../utils/app_route_observer.dart';
@@ -61,7 +62,13 @@ class _OfflineHistoryButtonState extends State<OfflineHistoryButton>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: LegacyOfflineAccess.instance,
+    builder: (context, _) => _buildButton(context),
+  );
+
+  Widget _buildButton(BuildContext context) {
+    if (!LegacyOfflineAccess.instance.enabled) return const SizedBox.shrink();
     final sources = widget.connector.offlineHistorySources;
     return SizedBox(
       height: 56,
@@ -159,7 +166,7 @@ class _OfflineHistoryButtonState extends State<OfflineHistoryButton>
     _isClosingOfflineSession = true;
     _offlineSessionActive = false;
     try {
-      if (widget.connector.isOfflineMode) {
+      if (widget.connector.isLegacyOfflineSession) {
         await widget.connector.exitOfflineHistory();
       }
       if (mounted) widget.onClosed?.call();

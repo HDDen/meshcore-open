@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/locale_tag.dart';
+import 'screens/channels_screen.dart';
+import 'helpers/legacy_offline_binding.dart';
 import 'MCOtxt/mcotxt.dart';
 import 'package:provider/provider.dart';
 
@@ -470,17 +473,7 @@ Future<void> _startApplication() async {
       : null;
 
   _setStartupStage('MCO-STARTUP-106', 'Contacts and channel settings');
-  await connector.loadContactCache();
-  StartupTiming.mark('  channel settings');
-  await connector.loadChannelSettings();
-  StartupTiming.mark('  cached channels');
-  await connector.loadCachedChannels();
-
-  // Load persisted channel messages
-  _setStartupStage('MCO-STARTUP-107', 'Message history');
-  await connector.loadAllChannelMessages();
-  StartupTiming.mark('  unread state');
-  await connector.loadUnreadState();
+  await connector.restoreLastRadio();
 
   _setStartupStage('MCO-STARTUP-108', 'User interface');
   runApp(
@@ -715,6 +708,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   TxPowerSession? _nodeIdentityImportChecked;
   bool _nodeIdentityImportShowing = false;
   late final LegacySenderBlockerBinding _legacySenderBlocker;
+  late final LegacyOfflineBinding _legacyOffline;
+  late final Widget _home = (PlatformInfo.isWeb && !PlatformInfo.isChrome)
+      ? const ChromeRequiredScreen()
+      : widget.connector.hasRadioData ? const ChannelsScreen() : const ScannerScreen();
 
   @override
   void initState() {
@@ -723,6 +720,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     iosAppPresentationActive.addListener(_syncHolidayThemeForeground);
     _syncHolidayThemeForeground();
     _legacySenderBlocker = LegacySenderBlockerBinding(widget.settingsSectionsService);
+    _legacyOffline = LegacyOfflineBinding(widget.settingsSectionsService);
     widget.settingsSectionsService.setUiContextProvider(
       () => MeshCoreApp._navigatorKey.currentContext,
     );
@@ -869,6 +867,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     unawaited(widget.connector.flushChannelRuleVerdicts());
     widget.connector.messageFilterService?.flushRecentClean();
     _legacySenderBlocker.dispose();
+    _legacyOffline.dispose();
     _imageMaintenance.dispose();
     _bleLogPowerSettings.dispose();
     _blePluginLogPowerSettings.dispose();
@@ -883,7 +882,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
 
   void _handleConnectionStateChanged() {
     final connector = widget.connector;
-    if (connector.isOfflineMode) {
+    if (connector.isLegacyOfflineSession) {
       _scannerNavigationScheduled = false;
       return;
     }
@@ -892,10 +891,10 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     // a recovering link. A restart that fails leaves the flag cleared and
     // the link down, which the next notification treats as usual.
     if (connector.isRestartingTransport) return;
-    if (connector.wasManuallyDisconnected) {
+    if (connector.wasManuallyDisconnected && !connector.hasRadioData) {
       _hadReadyConnection = false;
       _recoveringConnection = false;
-      _scheduleScannerNavigation();
+      if (!connector.hasRadioData) _scheduleScannerNavigation();
       return;
     }
     if (connector.isConnected) {
@@ -907,8 +906,9 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         !connector.isRecoveringConnection) {
       _hadReadyConnection = false;
       _recoveringConnection = false;
+      connector.pausePendingOutgoingMessages();
       MeshCoreApp._scaffoldMessengerKey.currentState?.clearSnackBars();
-      _scheduleScannerNavigation();
+      if (!connector.hasRadioData) _scheduleScannerNavigation();
       return;
     }
 
@@ -1115,7 +1115,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
     if (_scannerNavigationScheduled) return;
     _scannerNavigationScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || widget.connector.hasRadioData) return;
       MeshCoreApp._navigatorKey.currentState?.popUntil(
         (route) => route.isFirst,
       );
@@ -1342,9 +1342,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
                 child: content,
               ));
             },
-            home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)
-                ? const ChromeRequiredScreen()
-                : const ScannerScreen(),
+            home: _home,
           );
         },
       ),
@@ -1428,6 +1426,6 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
 
   Locale? _localeFromSetting(String? languageCode) {
     if (languageCode == null) return null;
-    return Locale(languageCode);
+    return localeFromTag(languageCode);
   }
 }

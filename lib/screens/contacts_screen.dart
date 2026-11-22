@@ -11,7 +11,9 @@ import 'package:meshcore_open/utils/platform_info.dart';
 import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/radio_guard.dart';
 import '../connector/meshcore_connector.dart';
+import '../widgets/connect_sheet.dart';
 import '../review_mode/review_mode_banner.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_action_data_helper.dart';
@@ -422,7 +424,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   Future<void> _saveGroups() async {
-    final selfPublicKeyHex = context.read<MeshCoreConnector>().selfPublicKeyHex;
+    final selfPublicKeyHex = context.read<MeshCoreConnector>().storageKeyHex;
     if (selfPublicKeyHex.isEmpty) {
       return;
     }
@@ -432,7 +434,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   bool _hasGroupStoreScope(MeshCoreConnector connector) {
-    return connector.selfPublicKeyHex.isNotEmpty;
+    return connector.storageKeyHex.isNotEmpty;
   }
 
   void _syncGroupScopeIfNeeded(MeshCoreConnector connector) {
@@ -703,7 +705,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         child: PopupMenuRow(
                           icon: Icons.logout,
                           iconColor: Theme.of(context).colorScheme.error,
-                          text: context.l10n.common_disconnect,
+                          text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
                         ),
                         onTap: () => _disconnect(context, connector),
                       ),
@@ -713,6 +715,12 @@ class _ContactsScreenState extends State<ContactsScreen>
                           text: context.l10n.chat_searchMessages,
                         ),
                         onTap: () => _showMessageSearch(this.context),
+                      ),
+                      PopupMenuItem(
+                        child: PopupMenuRow(icon: Icons.settings, text: context.l10n.common_settings),
+                        onTap: () => Navigator.of(this.context).push(MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        )),
                       ),
                       ..._serviceHeaderItems(
                         context,
@@ -811,7 +819,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
-                        text: context.l10n.common_disconnect,
+                        text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
                       ),
                       onTap: () => _disconnect(context, connector),
                     ),
@@ -1309,11 +1317,12 @@ class _ContactsScreenState extends State<ContactsScreen>
     );
   }
 
-  Future<void> _disconnect(
-    BuildContext context,
-    MeshCoreConnector connector,
-  ) async {
-    await showDisconnectDialog(context, connector);
+  Future<void> _disconnect(BuildContext context, MeshCoreConnector connector) async {
+    if (!connector.isConnected) {
+      await showConnectSheet(this.context);
+      return;
+    }
+    await showDisconnectDialog(this.context, connector);
   }
 
   ContactGroup? _selectedGroupForName(String selectedGroupName) {
@@ -2252,6 +2261,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   void _showRepeaterLogin(BuildContext context, Contact repeater) {
+    if (!ensureRadioConnected(context)) return;
     showDialog(
       context: context,
       builder: (context) => RepeaterLoginDialog(
@@ -2699,6 +2709,8 @@ class _ContactsScreenState extends State<ContactsScreen>
     MeshCoreConnector connector,
     Contact contact,
   ) {
+    final readOnly = isRadioReadOnly(connector);
+    Color? tint(Color color) => readOnly ? null : color;
     // Long press/right-click always opens contact actions, including repeaters.
     // Repeater management/login remains an explicit action of the tap menu.
     final isRoom = contact.type == advTypeRoom;
@@ -2777,27 +2789,32 @@ class _ContactsScreenState extends State<ContactsScreen>
                           ),
                         ),
                       );
-                    },
+                  },
+                ),
+                ListTile(
+                  enabled: !readOnly,
+                  leading: Icon(
+                    Icons.meeting_room,
+                    color: tint(MeshPalette.blue),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.meeting_room, color: MeshPalette.blue),
-                    title: Text(context.l10n.contacts_roomLogin),
-                    onTap: () {
-                      Navigator.pop(sheetContext);
+                  title: Text(context.l10n.contacts_roomLogin),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
                       _showRoomLogin(
                         context,
                         contact,
                         RoomLoginDestination.chat,
                       );
-                    },
+                  },
+                ),
+                ListTile(
+                  enabled: !readOnly,
+                  leading: Icon(
+                    Icons.room_preferences,
+                    color: tint(MeshPalette.warn),
                   ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.room_preferences,
-                      color: MeshPalette.warn,
-                    ),
-                    title: Text(context.l10n.room_management),
-                    onTap: () {
+                  title: Text(context.l10n.room_management),
+                  onTap: () {
                       Navigator.pop(sheetContext);
                       _showRoomLogin(
                         context,
@@ -3082,13 +3099,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                       });
                     },
                   ),
-                ] else ...[
-                  if (contact.pathLength > 0)
-                    ListTile(
-                      leading: Icon(Icons.radar, color: MeshPalette.signal),
-                      title: Text(context.l10n.contacts_chatTraceRoute),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
+              ] else ...[
+                if (contact.pathLength > 0)
+                  ListTile(
+                    enabled: !readOnly,
+                    leading: Icon(Icons.radar, color: tint(MeshPalette.signal)),
+                    title: Text(context.l10n.contacts_chatTraceRoute),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
                         final hw = context
                             .read<MeshCoreConnector>()
                             .pathHashByteWidth;
@@ -3116,14 +3134,15 @@ class _ContactsScreenState extends State<ContactsScreen>
                       _openChat(context, contact);
                     },
                   ),
-                ],
-                ListTile(
-                  leading: Icon(
-                    isFavorite ? Icons.star : Icons.star_border,
-                    color: MeshPalette.warn,
-                  ),
-                  title: Text(
-                    isFavorite
+              ],
+              ListTile(
+                enabled: !readOnly,
+                leading: Icon(
+                  isFavorite ? Icons.star : Icons.star_border,
+                  color: tint(MeshPalette.warn),
+                ),
+                title: Text(
+                  isFavorite
                         ? context.l10n.listFilter_removeFromFavorites
                         : context.l10n.listFilter_addToFavorites,
                   ),
@@ -3166,12 +3185,13 @@ class _ContactsScreenState extends State<ContactsScreen>
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _contactExport(contact.publicKey);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.connect_without_contact),
-                  title: Text(context.l10n.contacts_ShareContactZeroHop),
-                  onTap: () {
+                },
+              ),
+              ListTile(
+                enabled: !readOnly,
+                leading: const Icon(Icons.connect_without_contact),
+                title: Text(context.l10n.contacts_ShareContactZeroHop),
+                onTap: () {
                     Navigator.pop(sheetContext);
                     _contactZeroHop(contact.publicKey);
                   },

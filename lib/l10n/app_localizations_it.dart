@@ -200,38 +200,38 @@ class AppLocalizationsIt extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Backup e ripristino';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Salva o ripristina i dati dell\'app e le impostazioni della radio';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importa';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Importa file';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Password (facoltativa)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Elementi di backup e ripristino';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Impostazioni di posizione';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Chiave privata (sensibile)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'Chiave API IPFS (sensibile)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Chiave API Stadia Maps (sensibile)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1412,10 +1412,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_actions => 'Azioni';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Esporta';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Esporta contatti e ripetitori come GPX';
 
   @override
   String get settings_deleteAllPaths => 'Elimina tutti i percorsi';
@@ -1675,7 +1676,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appSettings_languageSl => 'Sloveno';
 
   @override
-  String get appSettings_languagePt => 'Portoghese';
+  String get appSettings_languagePt => 'Portoghese (Brasile)';
 
   @override
   String get appSettings_languageIt => 'Italiano';
@@ -2853,7 +2854,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get routing_title => 'Instradamento';
 
   @override
-  String get routing_modeAuto => 'Automatico';
+  String get routing_modeAuto => 'Auto';
 
   @override
   String get routing_modeFlood => 'Flood';
@@ -3149,7 +3150,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get map_sensor => 'Sensore';
 
   @override
-  String get map_pinDm => 'Pin (DM)';
+  String get map_pinDm => 'Segnaposto (DM)';
 
   @override
   String get map_pinPrivate => 'Pin (Privato)';
@@ -3993,7 +3994,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get repeater_neighbors => 'Vicini';
 
   @override
-  String get repeater_neighborsSubtitle => 'Visualizza vicini a salto zero.';
+  String get repeater_neighborsSubtitle => 'Visualizza vicini Zero Hop.';
 
   @override
   String get repeater_settings => 'Impostazioni';
@@ -4446,8 +4447,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Trasmettere un annuncio flood attraverso la rete';
 
   @override
-  String get repeater_sendAdvertZeroHop =>
-      'Inviare un annuncio senza intermediari';
+  String get repeater_sendAdvertZeroHop => 'Invia annuncio Zero Hop';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
@@ -11076,4 +11076,47 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portoghese (Portogallo)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Ricostruita dall\'IA';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Riconnessione…';
+
+  @override
+  String get connectSheet_title => 'Connetti una radio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Riconnetti a $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Scegli una radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB o TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Interrompi la riconnessione';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Impossibile raggiungere $name. Assicurati che sia acceso e nelle vicinanze.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Connettiti a una radio per inviare messaggi';
 }

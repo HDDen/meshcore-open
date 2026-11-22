@@ -6,6 +6,21 @@ void main() {
   final start = DateTime.utc(2026, 1, 1, 12);
   const campaign = 'join the local mesh channel today';
 
+  test('short repeated publications from the same sender are filtered', () {
+    final tracker = DuplicateTracker();
+    FilterReason? publish(String channel, String sender, int seconds) => tracker.check(
+      channelId: channel, sender: sender, textKey: 'test',
+      sentAt: start.add(Duration(seconds: seconds)),
+      receivedAt: start.add(Duration(seconds: seconds)),
+      publicationId: '$channel-$sender-$seconds',
+    );
+    expect(publish('a', 'A', 0), isNull);
+    expect(publish('a', 'A', 1), FilterReason.duplicate);
+    expect(publish('b', 'A', 2), isNull);
+    expect(publish('b', 'B', 3), isNull);
+    expect(publish('b', 'C', 4), isNull);
+  });
+
   FilterReason? check(
     DuplicateTracker tracker, {
     String channel = 'a',

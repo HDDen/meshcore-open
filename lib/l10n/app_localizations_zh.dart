@@ -27,8 +27,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupChannels_title => 'Restore channels';
 
   @override
-  String get backupChannels_intro =>
-      'Choose a MeshCore backup to preview channel additions and renames on the connected node.';
+  String get backupChannels_intro => 'Choose a MeshCore backup to preview channel additions and renames on the connected node.';
 
   @override
   String get backupChannels_choose => 'Choose a backup file';
@@ -43,27 +42,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupChannels_password => 'Backup password';
 
   @override
-  String get backupChannels_badPassword =>
-      'The password is incorrect or the backup is damaged.';
+  String get backupChannels_badPassword => 'The password is incorrect or the backup is damaged.';
 
   @override
-  String get backupChannels_fileTooLarge =>
-      'Choose a backup of 32 MiB or less.';
+  String get backupChannels_fileTooLarge => 'Choose a backup of 32 MiB or less.';
 
   @override
-  String get backupChannels_invalidFile =>
-      'This backup is invalid or uses an unsupported format.';
+  String get backupChannels_invalidFile => 'This backup is invalid or uses an unsupported format.';
 
   @override
   String get backupChannels_readFailed => 'Could not open the backup file.';
 
   @override
-  String get backupChannels_noChannels =>
-      'This backup contains no channels to restore.';
+  String get backupChannels_noChannels => 'This backup contains no channels to restore.';
 
   @override
-  String get backupChannels_waitForNode =>
-      'Connect to the node, wait for channel sync, then refresh the preview.';
+  String get backupChannels_waitForNode => 'Connect to the node, wait for channel sync, then refresh the preview.';
 
   @override
   String backupChannels_target(String node) {
@@ -91,12 +85,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupChannels_nameConflict =>
-      'This name belongs to a different channel key.';
+  String get backupChannels_nameConflict => 'This name belongs to a different channel key.';
 
   @override
-  String get backupChannels_slotUnknown =>
-      'Could not verify the slot contents.';
+  String get backupChannels_slotUnknown => 'Could not verify the slot contents.';
 
   @override
   String backupChannels_confirm(String node, int count) {
@@ -124,70 +116,58 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupChannels_applyFailed =>
-      'Could not finish restoring channels. Refresh the preview to check the current channels.';
+  String get backupChannels_applyFailed => 'Could not finish restoring channels. Refresh the preview to check the current channels.';
 
   @override
   String get backupChannels_exportTitle => 'Channel backup';
 
   @override
-  String get backupChannels_exportIntro =>
-      'Save the connected node’s channel names, slots and keys to a JSON backup.';
+  String get backupChannels_exportIntro => 'Save the connected node’s channel names, slots and keys to a JSON backup.';
 
   @override
   String get backupChannels_createBackup => 'Create backup';
 
   @override
-  String get backupChannels_exportPasswordHint =>
-      'The backup includes channel keys. Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
+  String get backupChannels_exportPasswordHint => 'The backup includes channel keys. Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
 
   @override
   String get backupChannels_repeatPassword => 'Repeat password';
 
   @override
-  String get backupChannels_exportNotReady =>
-      'Connect to the node and wait for the channel list to finish syncing.';
+  String get backupChannels_exportNotReady => 'Connect to the node and wait for the channel list to finish syncing.';
 
   @override
-  String get backupChannels_exportEmpty =>
-      'There are no channels to back up on this node.';
+  String get backupChannels_exportEmpty => 'There are no channels to back up on this node.';
 
   @override
   String get backupChannels_exportSaved => 'Channel backup saved.';
 
   @override
-  String get backupChannels_exportShared =>
-      'The channel backup was offered in the system share sheet.';
+  String get backupChannels_exportShared => 'The channel backup was offered in the system share sheet.';
 
   @override
-  String get backupChannels_exportFailed =>
-      'Could not save the channel backup.';
+  String get backupChannels_exportFailed => 'Could not save the channel backup.';
 
   @override
   String get backupExport_title => 'Back up contacts and channels';
 
   @override
-  String get backupExport_intro =>
-      'Choose which lists from the connected node to save in a JSON backup.';
+  String get backupExport_intro => 'Choose which lists from the connected node to save in a JSON backup.';
 
   @override
   String get backupExport_createTitle => 'Create backup';
 
   @override
-  String get backupExport_pickSections =>
-      'Choose what to include in the JSON backup.';
+  String get backupExport_pickSections => 'Choose what to include in the JSON backup.';
 
   @override
-  String get backupExport_contactsHint =>
-      'Reads a complete contact list from the node before saving.';
+  String get backupExport_contactsHint => 'Reads a complete contact list from the node before saving.';
 
   @override
-  String get backupExport_passwordHint =>
-      'Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
+  String get backupExport_passwordHint => 'Set a password to encrypt the file. Leave the field empty for a readable JSON backup.';
 
   @override
-  String get backupExport_notReady =>
-      'Could not verify the selected lists. Connect to the node, wait for sync, and try again.';
+  String get backupExport_notReady => 'Could not verify the selected lists. Connect to the node, wait for sync, and try again.';
 
   @override
   String get backupExport_empty => 'The selected lists are empty on this node.';
@@ -196,67 +176,61 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupExport_saved => 'Backup saved.';
 
   @override
-  String get backupExport_shared =>
-      'The backup was offered in the system share sheet.';
+  String get backupExport_shared => 'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => '备份与恢复';
 
   @override
-  String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+  String get backupRestore_subtitle => '保存或恢复应用数据和无线电设置';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => '导入';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => '导入文件';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => '密码（可选）';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => '备份和恢复项目';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => '位置设置';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => '私钥（敏感）';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS API 密钥（敏感）';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API 密钥（敏感）';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
 
   @override
-  String get backupRestore_passwordRequired =>
-      'Set a backup password to include the selected keys.';
+  String get backupRestore_passwordRequired => 'Set a backup password to include the selected keys.';
 
   @override
   String get backupRestore_review => 'Review and restore';
 
   @override
-  String get backupRestore_historySeparate =>
-      'Export message history to a separate file.';
+  String get backupRestore_historySeparate => 'Export message history to a separate file.';
 
   @override
-  String get backupRestore_invalidSections =>
-      'Some sections could not be read.';
+  String get backupRestore_invalidSections => 'Some sections could not be read.';
 
   @override
   String get backupRestore_localApplied => 'Settings restored.';
 
   @override
-  String get backupRestore_keysIntro =>
-      'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
+  String get backupRestore_keysIntro => 'Add keys from this file to the current profile. Existing keys with the same public key are kept.';
 
   @override
   String get backupIdentity_confirmTitle => 'Replace node identity?';
@@ -273,32 +247,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupIdentity_backupKey => 'Public key from the backup';
 
   @override
-  String get backupIdentity_completed =>
-      'Node identity verified. The new key is active.';
+  String get backupIdentity_completed => 'Node identity verified. The new key is active.';
 
   @override
-  String get backupIdentity_notReady =>
-      'Wait for synchronization and message sending to finish, then reopen the confirmation.';
+  String get backupIdentity_notReady => 'Wait for synchronization and message sending to finish, then reopen the confirmation.';
 
   @override
-  String get backupIdentity_unsupported =>
-      'This firmware has private-key import disabled.';
+  String get backupIdentity_unsupported => 'This firmware has private-key import disabled.';
 
   @override
-  String get backupIdentity_rejected =>
-      'The node rejected the identity replacement.';
+  String get backupIdentity_rejected => 'The node rejected the identity replacement.';
 
   @override
-  String get backupIdentity_unconfirmed =>
-      'The result of the key write could not be confirmed. Reconnect and check the node public key before trying again.';
+  String get backupIdentity_unconfirmed => 'The result of the key write could not be confirmed. Reconnect and check the node public key before trying again.';
 
   @override
-  String get backupIdentity_reconnect =>
-      'The node confirmed the key write. Reconnect to verify the new identity.';
+  String get backupIdentity_reconnect => 'The node confirmed the key write. Reconnect to verify the new identity.';
 
   @override
-  String get backupRestore_nodeKeyExportOnly =>
-      'You can export the node key here.';
+  String get backupRestore_nodeKeyExportOnly => 'You can export the node key here.';
 
   @override
   String get backupExport_failed => 'Could not save the backup.';
@@ -307,16 +274,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupContacts_title => 'Restore contacts';
 
   @override
-  String get backupContacts_intro =>
-      'Choose a MeshCore backup to preview contacts that can be added to the connected node.';
+  String get backupContacts_intro => 'Choose a MeshCore backup to preview contacts that can be added to the connected node.';
 
   @override
-  String get backupContacts_noContacts =>
-      'This backup contains no contacts to restore.';
+  String get backupContacts_noContacts => 'This backup contains no contacts to restore.';
 
   @override
-  String get backupContacts_waitForNode =>
-      'Connect to the node, wait for contact sync, then refresh the preview.';
+  String get backupContacts_waitForNode => 'Connect to the node, wait for contact sync, then refresh the preview.';
 
   @override
   String backupContacts_summary(int add, int existing, int noRoom) {
@@ -329,8 +293,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupContacts_floodFallback =>
-      'Contacts with routes from another node or an unsupported hash width will start in Flood mode.';
+  String get backupContacts_floodFallback => 'Contacts with routes from another node or an unsupported hash width will start in Flood mode.';
 
   @override
   String backupContacts_confirm(String node, int count) {
@@ -363,8 +326,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupContacts_applyFailed =>
-      'Could not finish restoring contacts. Refresh the preview to check the current contact list.';
+  String get backupContacts_applyFailed => 'Could not finish restoring contacts. Refresh the preview to check the current contact list.';
 
   @override
   String get backupDiscoveredContacts_label => 'Discovered nodes';
@@ -373,8 +335,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupDiscoveredContacts_title => 'Restore discovered nodes';
 
   @override
-  String get backupDiscoveredContacts_intro =>
-      'Choose a MeshCore Open backup with discovered nodes. They will be added to the discovery list in the current app profile.';
+  String get backupDiscoveredContacts_intro => 'Choose a MeshCore Open backup with discovered nodes. They will be added to the discovery list in the current app profile.';
 
   @override
   String backupDiscoveredContacts_confirm(int count) {
@@ -382,22 +343,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String backupDiscoveredContacts_summary(
-    int count,
-    int skipped,
-    int invalid,
-    int noRoom,
-  ) {
+  String backupDiscoveredContacts_summary(int count, int skipped, int invalid, int noRoom) {
     return 'To add: $count. Already known: $skipped. Unreadable entries: $invalid. No space: $noRoom.';
   }
 
   @override
-  String get backupDiscoveredContacts_changed =>
-      'The contact or discovery list changed. Refresh the preview.';
+  String get backupDiscoveredContacts_changed => 'The contact or discovery list changed. Refresh the preview.';
 
   @override
-  String get backupDiscoveredContacts_failed =>
-      'Could not restore discovered nodes.';
+  String get backupDiscoveredContacts_failed => 'Could not restore discovered nodes.';
 
   @override
   String get backupContactGroups_label => 'Contact groups';
@@ -406,16 +360,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupContactGroups_title => 'Restore contact groups';
 
   @override
-  String get backupContactGroups_intro =>
-      'Choose a MeshCore Open backup with contact groups. New groups will be added to the connected node’s group list.';
+  String get backupContactGroups_intro => 'Choose a MeshCore Open backup with contact groups. New groups will be added to the connected node’s group list.';
 
   @override
-  String get backupContactGroups_empty =>
-      'This backup contains no contact groups.';
+  String get backupContactGroups_empty => 'This backup contains no contact groups.';
 
   @override
-  String get backupContactGroups_waitForNode =>
-      'Connect to the target node and refresh the preview.';
+  String get backupContactGroups_waitForNode => 'Connect to the target node and refresh the preview.';
 
   @override
   String backupContactGroups_summary(int count, int skipped) {
@@ -433,8 +384,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupContactGroups_changed =>
-      'The node or its group list changed. Refresh the preview.';
+  String get backupContactGroups_changed => 'The node or its group list changed. Refresh the preview.';
 
   @override
   String get backupContactGroups_failed => 'Could not restore contact groups.';
@@ -443,16 +393,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupContactSettings_label => 'Individual contact settings';
 
   @override
-  String get backupContactSettings_title =>
-      'Restore individual contact settings';
+  String get backupContactSettings_title => 'Restore individual contact settings';
 
   @override
-  String get backupContactSettings_intro =>
-      'Choose a MeshCore Open backup. Settings are matched to contacts by public key. The preview counts missing settings that can be added.';
+  String get backupContactSettings_intro => 'Choose a MeshCore Open backup. Settings are matched to contacts by public key. The preview counts missing settings that can be added.';
 
   @override
-  String get backupContactSettings_empty =>
-      'This backup contains no supported contact settings.';
+  String get backupContactSettings_empty => 'This backup contains no supported contact settings.';
 
   @override
   String backupContactSettings_summary(int count, int skipped) {
@@ -470,27 +417,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupContactSettings_changed =>
-      'The node or its contact settings changed. Refresh the preview.';
+  String get backupContactSettings_changed => 'The node or its contact settings changed. Refresh the preview.';
 
   @override
-  String get backupContactSettings_failed =>
-      'Could not restore contact settings.';
+  String get backupContactSettings_failed => 'Could not restore contact settings.';
 
   @override
   String get backupChannelSettings_label => 'Channel settings and order';
 
   @override
-  String get backupChannelSettings_title =>
-      'Restore channel settings and order';
+  String get backupChannelSettings_title => 'Restore channel settings and order';
 
   @override
-  String get backupChannelSettings_intro =>
-      'Choose a MeshCore Open backup. Settings and order are matched by channel key. Existing settings and a saved order take priority.';
+  String get backupChannelSettings_intro => 'Choose a MeshCore Open backup. Settings and order are matched by channel key. Existing settings and a saved order take priority.';
 
   @override
-  String get backupChannelSettings_empty =>
-      'This backup contains no supported channel settings or order.';
+  String get backupChannelSettings_empty => 'This backup contains no supported channel settings or order.';
 
   @override
   String backupChannelSettings_summary(int count, int skipped) {
@@ -516,12 +458,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupChannelSettings_changed =>
-      'The node, its channels, or their settings changed. Refresh the preview.';
+  String get backupChannelSettings_changed => 'The node, its channels, or their settings changed. Refresh the preview.';
 
   @override
-  String get backupChannelSettings_failed =>
-      'Could not restore channel settings.';
+  String get backupChannelSettings_failed => 'Could not restore channel settings.';
 
   @override
   String get backupCommunities_label => 'Communities';
@@ -530,15 +470,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupCommunities_title => 'Restore communities';
 
   @override
-  String get backupCommunities_intro =>
-      'Choose a MeshCore Open backup with communities to add to the connected node’s profile. Restore their radio channels separately.';
+  String get backupCommunities_intro => 'Choose a MeshCore Open backup with communities to add to the connected node’s profile. Restore their radio channels separately.';
 
   @override
   String get backupCommunities_empty => 'This backup contains no communities.';
 
   @override
-  String get backupCommunities_passwordHint =>
-      'This backup contains shared community keys. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
+  String get backupCommunities_passwordHint => 'This backup contains shared community keys. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
 
   @override
   String backupCommunities_summary(int count, int skipped) {
@@ -556,8 +494,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupCommunities_changed =>
-      'The node or its community list changed. Refresh the preview.';
+  String get backupCommunities_changed => 'The node or its community list changed. Refresh the preview.';
 
   @override
   String get backupCommunities_failed => 'Could not restore communities.';
@@ -569,16 +506,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupAppSettings_menu => 'App settings backup';
 
   @override
-  String get backupAppSettings_scope =>
-      'Language, theme, scale, and display preferences.';
+  String get backupAppSettings_scope => 'Language, theme, scale, and display preferences.';
 
   @override
-  String get backupAppSettings_noSupported =>
-      'This backup contains no supported app settings.';
+  String get backupAppSettings_noSupported => 'This backup contains no supported app settings.';
 
   @override
-  String get backupAppSettings_noChanges =>
-      'These settings already match the backup.';
+  String get backupAppSettings_noChanges => 'These settings already match the backup.';
 
   @override
   String backupAppSettings_confirm(int count) {
@@ -591,8 +525,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupAppSettings_changed =>
-      'The settings changed. Refresh the preview.';
+  String get backupAppSettings_changed => 'The settings changed. Refresh the preview.';
 
   @override
   String get backupAppSettings_failed => 'Could not restore app settings.';
@@ -608,8 +541,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupAppSettings_modelDownloadFailed =>
-      'Could not download the model.';
+  String get backupAppSettings_modelDownloadFailed => 'Could not download the model.';
 
   @override
   String get backupMessageFilter_menu => 'Spam filter backup';
@@ -621,16 +553,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupMessageFilter_title => 'Restore the spam filter';
 
   @override
-  String get backupMessageFilter_scope =>
-      'Rules, duplicate and repeated-character checks, display mode, and excluded channels.';
+  String get backupMessageFilter_scope => 'Rules, duplicate and repeated-character checks, display mode, and excluded channels.';
 
   @override
-  String get backupMessageFilter_empty =>
-      'This file contains no supported spam filter settings or rules.';
+  String get backupMessageFilter_empty => 'This file contains no supported spam filter settings or rules.';
 
   @override
-  String get backupMessageFilter_noChanges =>
-      'The backup contains no new rules or settings changes.';
+  String get backupMessageFilter_noChanges => 'The backup contains no new rules or settings changes.';
 
   @override
   String backupMessageFilter_summary(int rules, int settings) {
@@ -638,39 +567,31 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupMessageFilter_confirm =>
-      'Apply the preview to the current app profile? The filter and learning switches keep their current values.';
+  String get backupMessageFilter_confirm => 'Apply the preview to the current app profile? The filter and learning switches keep their current values.';
 
   @override
-  String get backupMessageFilter_applied =>
-      'Spam filter settings and rules restored.';
+  String get backupMessageFilter_applied => 'Spam filter settings and rules restored.';
 
   @override
-  String get backupMessageFilter_changed =>
-      'The spam filter has changed. Refresh the preview.';
+  String get backupMessageFilter_changed => 'The spam filter has changed. Refresh the preview.';
 
   @override
-  String get backupMessageFilter_failed =>
-      'Could not finish restoring the spam filter. Refresh the preview.';
+  String get backupMessageFilter_failed => 'Could not finish restoring the spam filter. Refresh the preview.';
 
   @override
-  String get backupFilterTraining_exportTitle =>
-      'Back up spam training examples';
+  String get backupFilterTraining_exportTitle => 'Back up spam training examples';
 
   @override
   String get backupFilterTraining_title => 'Restore spam training examples';
 
   @override
-  String get backupFilterTraining_scope =>
-      'Manual spam and not-spam examples and ordinary messages from the current app profile.';
+  String get backupFilterTraining_scope => 'Manual spam and not-spam examples and ordinary messages from the current app profile.';
 
   @override
-  String get backupFilterTraining_empty =>
-      'There are no supported training examples to transfer.';
+  String get backupFilterTraining_empty => 'There are no supported training examples to transfer.';
 
   @override
-  String get backupFilterTraining_passwordHint =>
-      'This backup contains message excerpts and sender names. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
+  String get backupFilterTraining_passwordHint => 'This backup contains message excerpts and sender names. Set a password to encrypt the file or leave it empty for unencrypted JSON.';
 
   @override
   String backupFilterTraining_summary(int spam, int notSpam, int ordinary) {
@@ -678,8 +599,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupFilterTraining_confirm =>
-      'Add examples to the training data in the current profile? Local manual labels take priority. Only examples that fit within the limits are added.';
+  String get backupFilterTraining_confirm => 'Add examples to the training data in the current profile? Local manual labels take priority. Only examples that fit within the limits are added.';
 
   @override
   String backupFilterTraining_applied(int count) {
@@ -687,30 +607,25 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupFilterTraining_failed =>
-      'Could not restore training examples.';
+  String get backupFilterTraining_failed => 'Could not restore training examples.';
 
   @override
   String get backupNodeProfile_exportTitle => 'Back up the node profile';
 
   @override
-  String get backupNodeProfile_exportIntro =>
-      'Choose which settings from the connected node to include. Selecting location includes the node’s coordinates in the file.';
+  String get backupNodeProfile_exportIntro => 'Choose which settings from the connected node to include. Selecting location includes the node’s coordinates in the file.';
 
   @override
   String get backupNodeProfile_title => 'Restore the node profile';
 
   @override
-  String get backupNodeProfile_intro =>
-      'Choose a backup and select the changes to apply to the connected node.';
+  String get backupNodeProfile_intro => 'Choose a backup and select the changes to apply to the connected node.';
 
   @override
-  String get backupNodeProfile_empty =>
-      'This file contains no supported node profile settings.';
+  String get backupNodeProfile_empty => 'This file contains no supported node profile settings.';
 
   @override
-  String get backupNodeProfile_noChanges =>
-      'The supported settings already match the connected node.';
+  String get backupNodeProfile_noChanges => 'The supported settings already match the connected node.';
 
   @override
   String backupNodeProfile_radioUnavailable(String settings) {
@@ -753,16 +668,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupMessageHistory_title => 'Restore message history';
 
   @override
-  String get backupMessageHistory_intro =>
-      'Choose a MeshCore Open backup with this node’s message history. Messages are saved to the current app profile.';
+  String get backupMessageHistory_intro => 'Choose a MeshCore Open backup with this node’s message history. Messages are saved to the current app profile.';
 
   @override
-  String get backupMessageHistory_empty =>
-      'This file contains no supported message history.';
+  String get backupMessageHistory_empty => 'This file contains no supported message history.';
 
   @override
-  String get backupMessageHistory_waitForNode =>
-      'Connect to the node used to create the backup, wait for sync, and refresh the preview.';
+  String get backupMessageHistory_waitForNode => 'Connect to the node used to create the backup, wait for sync, and refresh the preview.';
 
   @override
   String backupMessageHistory_summary(int count, int skipped) {
@@ -780,15 +692,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get backupMessageHistory_failed =>
-      'Could not import message history. Refresh the preview.';
+  String get backupMessageHistory_failed => 'Could not import message history. Refresh the preview.';
 
   @override
   String get backupMessageHistory_exportTitle => 'Back up message history';
 
   @override
-  String get backupMessageHistory_exportIntro =>
-      'Choose which message history to save for this node in a separate JSON file. Channel history is included when it can be uniquely matched to a channel key.';
+  String get backupMessageHistory_exportIntro => 'Choose which message history to save for this node in a separate JSON file. Channel history is included when it can be uniquely matched to a channel key.';
 
   @override
   String get backupMessageHistory_direct => 'Direct messages';
@@ -797,16 +707,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupMessageHistory_channels => 'Channel messages';
 
   @override
-  String get backupMessageHistory_exportNotReady =>
-      'Connect to the node and wait for the selected data to finish syncing.';
+  String get backupMessageHistory_exportNotReady => 'Connect to the node and wait for the selected data to finish syncing.';
 
   @override
-  String get backupMessageHistory_exportEmpty =>
-      'There is no history to back up in the selected sections.';
+  String get backupMessageHistory_exportEmpty => 'There is no history to back up in the selected sections.';
 
   @override
-  String get backupMessageHistory_exportTooLarge =>
-      'The backup exceeds the 32 MiB restore limit. Try backing up direct and channel history separately.';
+  String get backupMessageHistory_exportTooLarge => 'The backup exceeds the 32 MiB restore limit. Try backing up direct and channel history separately.';
 
   @override
   String get common_ok => '确定';
@@ -1135,8 +1042,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanner_chromeRequired => '需要 Chrome 浏览器';
 
   @override
-  String get scanner_chromeRequiredMessage =>
-      '此 Web 应用程序需要 Google Chrome 或基于 Chromium 的浏览器以支持蓝牙。';
+  String get scanner_chromeRequiredMessage => '此 Web 应用程序需要 Google Chrome 或基于 Chromium 的浏览器以支持蓝牙。';
 
   @override
   String get scanner_enableBluetooth => '启用蓝牙';
@@ -1193,8 +1099,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_regionSettingsSubtitle => '管理已保存的区域';
 
   @override
-  String get settings_regionEmptyExplanation =>
-      '地区可将泛洪消息限制在该区域内的中继器。可从附近的中继器获取，或按名称添加。';
+  String get settings_regionEmptyExplanation => '地区可将泛洪消息限制在该区域内的中继器。可从附近的中继器获取，或按名称添加。';
 
   @override
   String get settings_regionFetchFromRepeaters => '从中继器获取';
@@ -1220,8 +1125,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_regionRadioDefault => '电台默认地区';
 
   @override
-  String get settings_regionRadioDefaultSubtitle =>
-      '保存在电台上。不指定地区发送的泛洪会使用它，本应用和连接此电台的其他应用都一样。';
+  String get settings_regionRadioDefaultSubtitle => '保存在电台上。不指定地区发送的泛洪会使用它，本应用和连接此电台的其他应用都一样。';
 
   @override
   String get settings_regionRadioDefaultUpdated => '电台默认地区已更新';
@@ -1343,8 +1247,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_telemetryEnvironmentMode => '遥测环境模式';
 
   @override
-  String get settings_telemetryPerContactHint =>
-      '要允许某个联系人，请打开其聊天并从菜单中选择“联系人设置”。';
+  String get settings_telemetryPerContactHint => '要允许某个联系人，请打开其聊天并从菜单中选择“联系人设置”。';
 
   @override
   String get settings_advertLocation => '广播中的位置';
@@ -1356,8 +1259,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_autoZeroHopAdvertOnGpsUpdate => 'GPS 更新时自动发送零跳广播';
 
   @override
-  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      'GPS 位置变化时发送零跳广播（需要开启“广播中的位置”）。';
+  String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle => 'GPS 位置变化时发送零跳广播（需要开启“广播中的位置”）。';
 
   @override
   String get settings_multiAck => '多重ACK';
@@ -1372,10 +1274,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_actions => '操作';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => '导出';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle => '将联系人和中继站导出为 GPX';
 
   @override
   String get settings_deleteAllPaths => '删除所有路径';
@@ -1443,20 +1345,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_aboutLegalese => '2026 MeshCore 开源项目';
 
   @override
-  String get settings_aboutDescription =>
-      '一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。';
+  String get settings_aboutDescription => '一个开源的 Flutter 客户端，用于 MeshCore LoRa 无线网络设备。';
 
   @override
-  String get settings_aboutModDescription =>
-      '「Advanced」修改版基于原版 meshcore_open，包含在原应用仓库中提出的更改，或针对使用地区的特定更改，因此未以 PR 形式提交。';
+  String get settings_aboutModDescription => '「Advanced」修改版基于原版 meshcore_open，包含在原应用仓库中提出的更改，或针对使用地区的特定更改，因此未以 PR 形式提交。';
 
   @override
-  String get settings_aboutModLink =>
-      'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced \n修改版网站：\nhttps://mcoadvanced.ru';
+  String get settings_aboutModLink => 'Github 上的发布版本：\nhttps://github.com/HDDen/meshcore-open/releases \n修改版的 Telegram 群组：\nhttps://t.me/mcoadvanced \n修改版网站：\nhttps://mcoadvanced.ru';
 
   @override
-  String get settings_aboutOpenMeteoAttribution =>
-      'LOS 高程数据:Open-Meteo (CC BY 4.0)';
+  String get settings_aboutOpenMeteoAttribution => 'LOS 高程数据:Open-Meteo (CC BY 4.0)';
 
   @override
   String get settings_infoName => '名称';
@@ -1492,8 +1390,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_presetCustom => '自定义';
 
   @override
-  String get settings_radioMatchWarning =>
-      '你通信的所有节点必须使用相同的频率、带宽和扩频因子。编码速率（CR）可以不同。';
+  String get settings_radioMatchWarning => '你通信的所有节点必须使用相同的频率、带宽和扩频因子。编码速率（CR）可以不同。';
 
   @override
   String get settings_frequency => '频率 (MHz)';
@@ -1536,8 +1433,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_clientRepeatSubtitle => '允许此设备为其他设备转发网状网络数据包';
 
   @override
-  String get settings_clientRepeatFreqWarning =>
-      '离网转发需要使用 433、869.495 或 918 MHz 频率';
+  String get settings_clientRepeatFreqWarning => '离网转发需要使用 433、869.495 或 918 MHz 频率';
 
   @override
   String settings_error(String message) {
@@ -1554,8 +1450,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_channelMaxbytesOutgoingTitle => '限制频道外发 payload，字节';
 
   @override
-  String get settings_channelMaxbytesOutgoingSubtitle =>
-      '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包的转发确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。';
+  String get settings_channelMaxbytesOutgoingSubtitle => '此限制会同时计算消息文本和发送者名称。观察发现，当消息超过一定字节数后，数据包的转发确认将停止传输。这在 BLE 连接中尤为明显。确认仍能工作的近似阈值为 139 字节。对于 TCP/USB，此限制约为 150 字节。';
 
   @override
   String get settings_quickAnswersTitle => '快捷回复';
@@ -1624,7 +1519,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_languageSl => '斯洛文尼亚语';
 
   @override
-  String get appSettings_languagePt => '葡萄牙语';
+  String get appSettings_languagePt => '葡萄牙语（巴西）';
 
   @override
   String get appSettings_languageIt => '意大利语';
@@ -1675,8 +1570,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_showKeyboardHidingButton => '显示隐藏键盘按钮';
 
   @override
-  String get settings_pathHashModeHelper =>
-      '此无线电发送的泛洪数据包在路径中记录的每个节点 ID 的大小：1 字节（256 个 ID，最多 64 跳）、2 字节（6.5 万个 ID，最多 32 跳）、3 字节（1600 万个 ID，最多 21 跳）。ID 越大冲突越少，但固件低于 v1.14 的中继器会丢弃带 2 或 3 字节 ID 的数据包。';
+  String get settings_pathHashModeHelper => '此无线电发送的泛洪数据包在路径中记录的每个节点 ID 的大小：1 字节（256 个 ID，最多 64 跳）、2 字节（6.5 万个 ID，最多 32 跳）、3 字节（1600 万个 ID，最多 21 跳）。ID 越大冲突越少，但固件低于 v1.14 的中继器会丢弃带 2 或 3 字节 ID 的数据包。';
 
   @override
   String settings_requiresFirmware(Object version) {
@@ -1687,8 +1581,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_channelMinHops => '重发频道消息，直到传得足够远';
 
   @override
-  String get appSettings_channelMinHopsSubtitle =>
-      '如果消息没有从足够多的中继器回传，就重新发送。会占用更多空中时间。';
+  String get appSettings_channelMinHopsSubtitle => '如果消息没有从足够多的中继器回传，就重新发送。会占用更多空中时间。';
 
   @override
   String appSettings_channelMinHopsCount(Object count) {
@@ -1707,8 +1600,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get appSettings_automaticDirectFloodRetries =>
-      'Retry personal messages in automatic Flood';
+  String get appSettings_automaticDirectFloodRetries => 'Retry personal messages in automatic Flood';
 
   @override
   String get appSettings_channelMinHopsCountRepeaters => '同时统计附近不同的中继器';
@@ -1733,8 +1625,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_regionOnHopsLine => '在跳数旁显示地区';
 
   @override
-  String get appSettings_regionOnHopsLineSubtitle =>
-      '将频道消息的地区与跳数显示在同一行，而不是在其下方。';
+  String get appSettings_regionOnHopsLineSubtitle => '将频道消息的地区与跳数显示在同一行，而不是在其下方。';
 
   @override
   String get appSettings_notifications => '通知';
@@ -1764,8 +1655,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_batteryOptimization => '后台活动';
 
   @override
-  String get appSettings_batteryOptimizationSubtitle =>
-      '在电池设置中将 MeshCore Open 设为“不优化”，这样后台也能继续接收消息';
+  String get appSettings_batteryOptimizationSubtitle => '在电池设置中将 MeshCore Open 设为“不优化”，这样后台也能继续接收消息';
 
   @override
   String get appSettings_channelMessageNotifications => '频道消息通知';
@@ -1801,12 +1691,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_autoRouteRotationSubtitle => '在最佳路径和泛洪模式之间切换';
 
   @override
-  String get appSettings_experimentalRouteRanking =>
-      'Experimental route selection';
+  String get appSettings_experimentalRouteRanking => 'Experimental route selection';
 
   @override
-  String get appSettings_experimentalRouteRankingHelp =>
-      'Use recent deliveries and nearby radio activity to choose a path for retries.';
+  String get appSettings_experimentalRouteRankingHelp => 'Use recent deliveries and nearby radio activity to choose a path for retries.';
 
   @override
   String get appSettings_autoRouteRotationEnabled => '自动路径轮换已启用';
@@ -1892,8 +1780,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_showOnlineLinks => 'Show Online Map Connections';
 
   @override
-  String get appSettings_showOnlineLinksSubtitle =>
-      'Display connection lines between nodes from the online map';
+  String get appSettings_showOnlineLinksSubtitle => 'Display connection lines between nodes from the online map';
 
   @override
   String get appSettings_timeFilter => '时间过滤器';
@@ -1945,8 +1832,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get appSettings_stadiaApiKeyDialogDescription =>
-      '请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。';
+  String get appSettings_stadiaApiKeyDialogDescription => '请输入你的 Stadia Maps API 密钥。该应用会使用它来请求栅格瓦片。';
 
   @override
   String get appSettings_offlineMapCache => '离线地图缓存';
@@ -2060,8 +1946,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get contacts_noContactsDiscoveredHint =>
-      '你的无线电能听到但尚未添加的节点会列在“已发现的联系人”中';
+  String get contacts_noContactsDiscoveredHint => '你的无线电能听到但尚未添加的节点会列在“已发现的联系人”中';
 
   @override
   String get contacts_manageRepeater => '管理转发节点';
@@ -2385,8 +2270,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_doNotFilterMessagesOnChannels => '将这些频道中的消息视为已确定送达';
 
   @override
-  String get settings_doNotFilterMessagesOnChannelsSubtitle =>
-      '发送到所列频道的消息不等待节点确认，也不重试。';
+  String get settings_doNotFilterMessagesOnChannelsSubtitle => '发送到所列频道的消息不等待节点确认，也不重试。';
 
   @override
   String get channels_publicChannelAdded => '已添加公共频道';
@@ -2533,8 +2417,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_clearSelection => 'Clear selection';
 
   @override
-  String get chat_deleteSelectedFailed =>
-      'Some selected messages could not be deleted.';
+  String get chat_deleteSelectedFailed => 'Some selected messages could not be deleted.';
 
   @override
   String get chat_selectAll => 'Select all loaded messages';
@@ -2750,8 +2633,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routing_modeManualHint => '始终沿您设置的确切路径发送。';
 
   @override
-  String get routing_modeDirectHint =>
-      'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
+  String get routing_modeDirectHint => 'Sends directly, without repeaters. Use this when the contact is in direct radio range.';
 
   @override
   String get routing_currentRoute => '当前路线';
@@ -3628,12 +3510,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String mapCache_boundsLabel(
-    String north,
-    String south,
-    String east,
-    String west,
-  ) {
+  String mapCache_boundsLabel(String north, String south, String east, String west) {
     return '北 $north, 南 $south, 东 $east, 西 $west';
   }
 
@@ -3825,8 +3702,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_clockSyncAfterLogin => '登录后，自动同步时钟';
 
   @override
-  String get repeater_clockSyncAfterLoginSubtitle =>
-      '成功登录后自动发送 \"clock sync\" 命令。';
+  String get repeater_clockSyncAfterLoginSubtitle => '成功登录后自动发送 \"clock sync\" 命令。';
 
   @override
   String get repeater_statusTitle => '转发节点状态';
@@ -3900,12 +3776,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_packetErrors => '数据包错误';
 
   @override
-  String repeater_daysHoursMinsSecs(
-    int days,
-    int hours,
-    int minutes,
-    int seconds,
-  ) {
+  String repeater_daysHoursMinsSecs(int days, int hours, int minutes, int seconds) {
     return '$days天 $hours小时 $minutes分 $seconds秒';
   }
 
@@ -4164,8 +4035,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_pathHashMode => '路径哈希模式';
 
   @override
-  String get repeater_pathHashModeHelper =>
-      '此中继器发送的通告在路径中使用的 ID 大小：1 字节（256 个 ID，最多 64 跳）、2 字节（约 6.5 万个 ID，最多 32 跳）、3 字节（约 1600 万个 ID，最多 21 跳）。不影响转发：v1.14 及更新版本的中继器转发所有大小，但旧版固件会丢弃带有 2 或 3 字节 ID 的数据包。';
+  String get repeater_pathHashModeHelper => '此中继器发送的通告在路径中使用的 ID 大小：1 字节（256 个 ID，最多 64 跳）、2 字节（约 6.5 万个 ID，最多 32 跳）、3 字节（约 1600 万个 ID，最多 21 跳）。不影响转发：v1.14 及更新版本的中继器转发所有大小，但旧版固件会丢弃带有 2 或 3 字节 ID 的数据包。';
 
   @override
   String get repeater_keySettings => '更改节点密钥';
@@ -4203,29 +4073,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_txDelay => '泛洪发送延迟';
 
   @override
-  String get repeater_txDelayHelper =>
-      '泛洪流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.5）。值越高冲突越少，但投递越慢。';
+  String get repeater_txDelayHelper => '泛洪流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.5）。值越高冲突越少，但投递越慢。';
 
   @override
   String get repeater_directTxDelay => '直接的 TX 延迟';
 
   @override
-  String get repeater_directTxDelayHelper =>
-      '直连（非泛洪）流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.3）。';
+  String get repeater_directTxDelayHelper => '直连（非泛洪）流量的重传间隔，以数据包空中时间的倍数表示（0-2，默认 0.3）。';
 
   @override
   String get repeater_intThresh => '干扰阈值';
 
   @override
-  String get repeater_intThreshHelper =>
-      '将阈值传递给射频信号的噪声水平校准，使其能够拒绝高于该水平的干扰。 0 表示禁用——只有在您在嘈杂频段中看到 RX 错误时才启用。';
+  String get repeater_intThreshHelper => '将阈值传递给射频信号的噪声水平校准，使其能够拒绝高于该水平的干扰。 0 表示禁用——只有在您在嘈杂频段中看到 RX 错误时才启用。';
 
   @override
   String get repeater_agcResetInterval => 'AGC 重置间隔';
 
   @override
-  String get repeater_agcResetIntervalHelper =>
-      '定期重置无线电的自动增益控制，以便从卡死的增益状态中恢复。单位为秒，向下取整为 4 的倍数。0 表示禁用定期重置。';
+  String get repeater_agcResetIntervalHelper => '定期重置无线电的自动增益控制，以便从卡死的增益状态中恢复。单位为秒，向下取整为 4 的倍数。0 表示禁用定期重置。';
 
   @override
   String get repeater_actionsTitle => '操作';
@@ -4401,15 +4267,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpSetRepeat => '启用或禁用此节点的转发功能';
 
   @override
-  String get repeater_cliHelpSetAllowReadOnly =>
-      '（房间服务器）设为 \'on\' 时允许空密码登录，但不能在房间中发帖（仅只读）。';
+  String get repeater_cliHelpSetAllowReadOnly => '（房间服务器）设为 \'on\' 时允许空密码登录，但不能在房间中发帖（仅只读）。';
 
   @override
   String get repeater_cliHelpSetFloodMax => '设置传入泛洪数据包的最大跳数（≥ 该值则不转发）';
 
   @override
-  String get repeater_cliHelpSetIntThresh =>
-      '设置干扰阈值（dB）。默认值为 14。设为 0 可禁用信道干扰检测。';
+  String get repeater_cliHelpSetIntThresh => '设置干扰阈值（dB）。默认值为 14。设为 0 可禁用信道干扰检测。';
 
   @override
   String get repeater_cliHelpSetAgcResetInterval => '设置 AGC 重置间隔（秒），设为0禁用';
@@ -4418,15 +4282,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpSetMultiAcks => '启用或禁用“多重确认”功能';
 
   @override
-  String get repeater_cliHelpSetAdvertInterval =>
-      '设置发送本地（零跳）广播包的定时间隔（分钟）。设为 0 可禁用。';
+  String get repeater_cliHelpSetAdvertInterval => '设置发送本地（零跳）广播包的定时间隔（分钟）。设为 0 可禁用。';
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval => '设置泛洪广播间隔（小时），设为0禁用';
 
   @override
-  String get repeater_cliHelpSetGuestPassword =>
-      '设置/更新访客密码。（对于转发节点，访客登录后可以发送 \"Get Stats\" 请求）';
+  String get repeater_cliHelpSetGuestPassword => '设置/更新访客密码。（对于转发节点，访客登录后可以发送 \"Get Stats\" 请求）';
 
   @override
   String get repeater_cliHelpSetName => '设置广播名称';
@@ -4438,20 +4300,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpSetLon => '设置广播经度（十进制）';
 
   @override
-  String get repeater_cliHelpSetRadio =>
-      '设置全新的无线电参数并保存到首选项。需要执行 \"reboot\" 命令才能生效。';
+  String get repeater_cliHelpSetRadio => '设置全新的无线电参数并保存到首选项。需要执行 \"reboot\" 命令才能生效。';
 
   @override
-  String get repeater_cliHelpSetRxDelay =>
-      '（实验性）设置接收延迟的基数（须 > 1 才生效），根据信号强度/评分对接收到的数据包施加轻微延迟。设为 0 可禁用。';
+  String get repeater_cliHelpSetRxDelay => '（实验性）设置接收延迟的基数（须 > 1 才生效），根据信号强度/评分对接收到的数据包施加轻微延迟。设为 0 可禁用。';
 
   @override
-  String get repeater_cliHelpSetTxDelay =>
-      '设置一个因子，与泛洪模式数据包的空中时间相乘，并结合随机时隙机制来延迟其转发。（以降低冲突的可能性）';
+  String get repeater_cliHelpSetTxDelay => '设置一个因子，与泛洪模式数据包的空中时间相乘，并结合随机时隙机制来延迟其转发。（以降低冲突的可能性）';
 
   @override
-  String get repeater_cliHelpSetDirectTxDelay =>
-      '与 txdelay 相同，但用于对直连模式数据包的转发施加随机延迟。';
+  String get repeater_cliHelpSetDirectTxDelay => '与 txdelay 相同，但用于对直连模式数据包的转发施加随机延迟。';
 
   @override
   String get repeater_cliHelpSetBridgeEnabled => '启用/禁用桥接';
@@ -4475,8 +4333,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpTempRadio => '临时设置无线电参数指定分钟，之后恢复（不保存）';
 
   @override
-  String get repeater_cliHelpSetPerm =>
-      '修改 ACL。如果 \"permissions\" 为零，则删除匹配的条目（按公钥前缀）。如果 pubkey-hex 为完整长度且当前不在 ACL 中，则添加新条目。按匹配的公钥前缀更新条目。权限位因固件角色而异，但低 2 位为：0（访客）、1（只读）、2（读写）、3（管理员）';
+  String get repeater_cliHelpSetPerm => '修改 ACL。如果 \"permissions\" 为零，则删除匹配的条目（按公钥前缀）。如果 pubkey-hex 为完整长度且当前不在 ACL 中，则添加新条目。按匹配的公钥前缀更新条目。权限位因固件角色而异，但低 2 位为：0（访客）、1（只读）、2（读写）、3（管理员）';
 
   @override
   String get repeater_cliHelpGetBridgeType => '获取桥接类型：none、rs232、espnow';
@@ -4491,8 +4348,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpLogErase => '删除所有记录的数据包';
 
   @override
-  String get repeater_cliHelpNeighbors =>
-      '显示通过零跳广播收到的其他转发节点列表。每行格式为 id-prefix-hex:timestamp:snr×4';
+  String get repeater_cliHelpNeighbors => '显示通过零跳广播收到的其他转发节点列表。每行格式为 id-prefix-hex:timestamp:snr×4';
 
   @override
   String get repeater_cliHelpNeighborRemove => '从邻居列表删除第一个匹配项（通过公钥前缀）';
@@ -4501,27 +4357,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpRegion => '（仅串口）列出所有定义区域及当前泛洪权限';
 
   @override
-  String get repeater_cliHelpRegionLoad =>
-      '注意：这是一个特殊的多命令调用。随后的每条命令都是一个区域名称（用空格缩进表示父级层次，至少一个空格）。发送空行/空命令即结束。';
+  String get repeater_cliHelpRegionLoad => '注意：这是一个特殊的多命令调用。随后的每条命令都是一个区域名称（用空格缩进表示父级层次，至少一个空格）。发送空行/空命令即结束。';
 
   @override
-  String get repeater_cliHelpRegionGet =>
-      '搜索具有给定名称前缀的区域（或用 \"*\" 表示全局范围）。回复格式为 \"-> region-name (parent-name) \'F\'\"';
+  String get repeater_cliHelpRegionGet => '搜索具有给定名称前缀的区域（或用 \"*\" 表示全局范围）。回复格式为 \"-> region-name (parent-name) \'F\'\"';
 
   @override
   String get repeater_cliHelpRegionPut => '添加或更新区域定义';
 
   @override
-  String get repeater_cliHelpRegionRemove =>
-      '删除具有给定名称的区域定义。（名称必须完全匹配，且该区域不能有子区域）';
+  String get repeater_cliHelpRegionRemove => '删除具有给定名称的区域定义。（名称必须完全匹配，且该区域不能有子区域）';
 
   @override
-  String get repeater_cliHelpRegionAllowf =>
-      '为指定区域设置泛洪（\'F\'lood）权限。（\'*\' 表示全局/旧版范围）';
+  String get repeater_cliHelpRegionAllowf => '为指定区域设置泛洪（\'F\'lood）权限。（\'*\' 表示全局/旧版范围）';
 
   @override
-  String get repeater_cliHelpRegionDenyf =>
-      '移除指定区域的泛洪（\'F\'lood）权限。（注意：目前不建议对全局/旧版范围使用此命令！）';
+  String get repeater_cliHelpRegionDenyf => '移除指定区域的泛洪（\'F\'lood）权限。（注意：目前不建议对全局/旧版范围使用此命令！）';
 
   @override
   String get repeater_cliHelpRegionHome => '回复当前的“主”区域。（尚未在任何地方应用，保留供将来使用）';
@@ -4533,8 +4384,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpRegionSave => '保存区域列表到存储';
 
   @override
-  String get repeater_cliHelpGps =>
-      '显示 GPS 状态。GPS 关闭时仅回复 off；开启时回复 on、status、fix 和卫星数量';
+  String get repeater_cliHelpGps => '显示 GPS 状态。GPS 关闭时仅回复 off；开启时回复 on、status、fix 和卫星数量';
 
   @override
   String get repeater_cliHelpGpsOnOff => '切换 GPS 电源';
@@ -4546,8 +4396,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGpsSetLoc => '将节点坐标设为 GPS 坐标并保存';
 
   @override
-  String get repeater_cliHelpGpsAdvert =>
-      '显示节点广播中的位置配置：\n- none：不在广播中包含位置\n- share：共享 GPS 位置（来自 SensorManager）\n- prefs：广播首选项中保存的位置';
+  String get repeater_cliHelpGpsAdvert => '显示节点广播中的位置配置：\n- none：不在广播中包含位置\n- share：共享 GPS 位置（来自 SensorManager）\n- prefs：广播首选项中保存的位置';
 
   @override
   String get repeater_cliHelpGpsAdvertSet => '设置广播位置配置';
@@ -4625,35 +4474,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpErase => '（仅限串口）格式化设备的文件系统。清除所有设置和联系人。';
 
   @override
-  String get repeater_cliHelpSetDutyCycle =>
-      '设置允许的最大发射占空比百分比（1-100）。内部会相应调整空中时间因子。';
+  String get repeater_cliHelpSetDutyCycle => '设置允许的最大发射占空比百分比（1-100）。内部会相应调整空中时间因子。';
 
   @override
   String get repeater_cliHelpSetPrvKey => '替换设备身份私钥。需要重启才能应用。会生成新的公钥。';
 
   @override
-  String get repeater_cliHelpSetRadioRxGain =>
-      '（仅适用于 SX126x 芯片） 启用增强型 RX 增益，以在较高电流下提高灵敏度。';
+  String get repeater_cliHelpSetRadioRxGain => '（仅适用于 SX126x 芯片） 启用增强型 RX 增益，以在较高电流下提高灵敏度。';
 
   @override
-  String get repeater_cliHelpSetOwnerInfo =>
-      '设置广播中包含的所有者联系信息字符串。使用 \'|\' 作为换行符。';
+  String get repeater_cliHelpSetOwnerInfo => '设置广播中包含的所有者联系信息字符串。使用 \'|\' 作为换行符。';
 
   @override
-  String get repeater_cliHelpSetPathHashMode =>
-      '设置路径哈希模式：本节点发送的泛洪数据包路径中，每一跳的哈希占多少字节。0 = 1 字节，1 = 2 字节，2 = 3 字节。';
+  String get repeater_cliHelpSetPathHashMode => '设置路径哈希模式：本节点发送的泛洪数据包路径中，每一跳的哈希占多少字节。0 = 1 字节，1 = 2 字节，2 = 3 字节。';
 
   @override
-  String get repeater_cliHelpSetLoopDetect =>
-      '设置路由环路检测的灵敏度：off、minimal、moderate 或 strict。';
+  String get repeater_cliHelpSetLoopDetect => '设置路由环路检测的灵敏度：off、minimal、moderate 或 strict。';
 
   @override
-  String get repeater_cliHelpSetFreq =>
-      '（仅限串口）仅快速设置频率。需要重启。设置完整无线电参数时建议使用 \"set radio\"。';
+  String get repeater_cliHelpSetFreq => '（仅限串口）仅快速设置频率。需要重启。设置完整无线电参数时建议使用 \"set radio\"。';
 
   @override
-  String get repeater_cliHelpSetBridgeChannel =>
-      '（仅适用于 ESPNow 桥）设置桥使用的 WiFi 频道（1-14）。';
+  String get repeater_cliHelpSetBridgeChannel => '（仅适用于 ESPNow 桥）设置桥使用的 WiFi 频道（1-14）。';
 
   @override
   String get repeater_cliHelpGetName => '显示配置的节点名称。';
@@ -4788,8 +4630,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpRegionDefault => '显示当前默认的区域范围。';
 
   @override
-  String get repeater_cliHelpRegionDefaultSet =>
-      '设置默认的区域范围。使用 \"<null>\" 可以清除。';
+  String get repeater_cliHelpRegionDefaultSet => '设置默认的区域范围。使用 \"<null>\" 可以清除。';
 
   @override
   String get repeater_cliHelpRegionListAllowed => '列出允许泛洪流量的区域。';
@@ -5419,22 +5260,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losNoElevationData => '无海拔数据';
 
   @override
-  String losProfileClear(
-    String distance,
-    String distanceUnit,
-    String clearance,
-    String heightUnit,
-  ) {
+  String losProfileClear(String distance, String distanceUnit, String clearance, String heightUnit) {
     return '$distance $distanceUnit，视距畅通，最小净空 $clearance $heightUnit';
   }
 
   @override
-  String losProfileBlocked(
-    String distance,
-    String distanceUnit,
-    String obstruction,
-    String heightUnit,
-  ) {
+  String losProfileBlocked(String distance, String distanceUnit, String obstruction, String heightUnit) {
     return '$distance $distanceUnit，被 $obstruction $heightUnit 阻止';
   }
 
@@ -5486,12 +5317,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losBlockedSpotsHint => '点击受阻点，在地图上突出显示它。';
 
   @override
-  String losBlockedSpotChip(
-    String distance,
-    String distanceUnit,
-    String obstruction,
-    String heightUnit,
-  ) {
+  String losBlockedSpotChip(String distance, String distanceUnit, String obstruction, String heightUnit) {
     return '$distance $distanceUnit • $obstruction $heightUnit';
   }
 
@@ -5499,13 +5325,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losSelectedObstructionTitle => '所选障碍物';
 
   @override
-  String losSelectedObstructionDetails(
-    String obstruction,
-    String heightUnit,
-    String distanceFromA,
-    String distanceUnit,
-    String distanceFromB,
-  ) {
+  String losSelectedObstructionDetails(String obstruction, String heightUnit, String distanceFromA, String distanceUnit, String distanceFromB) {
     return '被 $obstruction $heightUnit 遮挡，距 A $distanceFromA，距 B $distanceFromB（$distanceUnit）。';
   }
 
@@ -5519,12 +5339,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get losFrequencyDialogTitle => '无线电地平线计算';
 
   @override
-  String losFrequencyDialogDescription(
-    double baselineK,
-    double baselineFreq,
-    double frequencyMHz,
-    double kFactor,
-  ) {
+  String losFrequencyDialogDescription(double baselineK, double baselineFreq, double frequencyMHz, double kFactor) {
     return '从 $baselineFreq MHz 处的 k=$baselineK 开始，计算将当前 $frequencyMHz MHz 频段的 k 因子调整为 $kFactor，该因子定义了弯曲的无线电范围上限。';
   }
 
@@ -5591,11 +5406,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoveredContacts_importNoContacts => '在导入文件中未找到联系人。';
 
   @override
-  String discoveredContacts_importSummary(
-    int imported,
-    int skipped,
-    int invalid,
-  ) {
+  String discoveredContacts_importSummary(int imported, int skipped, int invalid) {
     return '已导入：$imported，已跳过（已存在）：$skipped，无法读取的条目：$invalid。';
   }
 
@@ -5622,8 +5433,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_copyAdvertToClipboard => '复制本节点的 meshcore:// 链接';
 
   @override
-  String get contacts_addContactFromClipboard =>
-      '通过剪贴板中的 «meshcore://» 链接添加联系人';
+  String get contacts_addContactFromClipboard => '通过剪贴板中的 «meshcore://» 链接添加联系人';
 
   @override
   String get contacts_scanQrCode => '扫描二维码';
@@ -5722,12 +5532,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notification_replyFailedTitle => '回复未发送';
 
   @override
-  String get notification_replyNotConnected =>
-      '未连接到无线电。请在 MeshCore Open 中重新连接后再次发送回复。';
+  String get notification_replyNotConnected => '未连接到无线电。请在 MeshCore Open 中重新连接后再次发送回复。';
 
   @override
-  String get notification_replyTooLong =>
-      '回复太长，无法从通知中发送。请改为在 MeshCore Open 中发送。';
+  String get notification_replyTooLong => '回复太长，无法从通知中发送。请改为在 MeshCore Open 中发送。';
 
   @override
   String get notification_replyUnavailable => '此对话已不在所连接的无线电上。';
@@ -5736,8 +5544,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notification_replySendFailed => '回复可能未发送。请在 MeshCore Open 中检查后重试。';
 
   @override
-  String get notification_replyAppNotRunning =>
-      'MeshCore Open 未在运行。请打开它并再次发送回复。';
+  String get notification_replyAppNotRunning => 'MeshCore Open 未在运行。请打开它并再次发送回复。';
 
   @override
   String get settings_gpxExportRepeaters => '导出转发节点/房间服务器到 GPX';
@@ -5779,12 +5586,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_gpxExportAllContacts => '所有联系人位置';
 
   @override
-  String get settings_gpxExportShareText =>
-      '来自 MeshCore Open (Advanced mod) 的地图数据导出';
+  String get settings_gpxExportShareText => '来自 MeshCore Open (Advanced mod) 的地图数据导出';
 
   @override
-  String get settings_gpxExportShareSubject =>
-      'MeshCore Open (Advanced mod) GPX 地图数据导出';
+  String get settings_gpxExportShareSubject => 'MeshCore Open (Advanced mod) GPX 地图数据导出';
 
   @override
   String get snrIndicator_nearByRepeaters => '附近的转发节点';
@@ -5793,15 +5598,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get snrIndicator_lastSeen => '最后在线';
 
   @override
-  String get snrIndicator_nearByRepeatersDescription =>
-      '你的无线电直接听到的中继器，最近听到的排在前面。';
+  String get snrIndicator_nearByRepeatersDescription => '你的无线电直接听到的中继器，最近听到的排在前面。';
 
   @override
   String get snrIndicator_unknownRepeater => '未知中继器';
 
   @override
-  String get snrIndicator_unknownRepeaterHint =>
-      '此中继器尚未加入联系人。无线电收到其广播通告后，将显示名称、位置和操作选项。';
+  String get snrIndicator_unknownRepeaterHint => '此中继器尚未加入联系人。无线电收到其广播通告后，将显示名称、位置和操作选项。';
 
   @override
   String get contactsSettings_title => '联系人设置';
@@ -5840,8 +5643,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactsSettings_overwriteOldestTitle => '覆盖最旧的';
 
   @override
-  String get contactsSettings_overwriteOldestSubtitle =>
-      '当联系人列表已满时，将替换最老的非收藏联系人。';
+  String get contactsSettings_overwriteOldestSubtitle => '当联系人列表已满时，将替换最老的非收藏联系人。';
 
   @override
   String get discoveredContacts_Title => '添加已发现的联系人';
@@ -5899,8 +5701,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get discoveredContacts_scanTitle => '附近节点';
 
   @override
-  String get discoveredContacts_scanExplanation =>
-      '请求直接无线电范围内的节点自报身份。中继器和传感器会响应，房间服务器和伴侣设备通常不会。';
+  String get discoveredContacts_scanExplanation => '请求直接无线电范围内的节点自报身份。中继器和传感器会响应，房间服务器和伴侣设备通常不会。';
 
   @override
   String get discoveredContacts_scanning => '正在扫描…';
@@ -5943,8 +5744,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_jumpToOldestUnread => '跳转到最早的未读消息';
 
   @override
-  String get appSettings_jumpToOldestUnreadSubtitle =>
-      '打开包含未读消息的聊天时，滚动到第一条未读消息，而不是最新消息。';
+  String get appSettings_jumpToOldestUnreadSubtitle => '打开包含未读消息的聊天时，滚动到第一条未读消息，而不是最新消息。';
 
   @override
   String get appSettings_languageHu => '匈牙利语';
@@ -6178,15 +5978,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_copyMsgPathEditTemplateTitle => '编辑模板';
 
   @override
-  String get settings_copyMsgPathEditTemplateDscr =>
-      '请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的前缀\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行';
+  String get settings_copyMsgPathEditTemplateDscr => '请使用占位模板：\n%hopInd% - 跳的序号\n%hopKey% - 跳的前缀\n%hopName% - 跳的名称\n%collisionMarker% - 中继器冲突标记\n%div% - 分隔符（最后一跳会省略）\n%hops% - 跳数\n\\n - 换行';
 
   @override
   String get settings_copyMsgPathEditFinalTitle => '最终消息';
 
   @override
-  String get settings_copyMsgPathEditFinalDscr =>
-      '可用模板：\n%senderName% - 发送者名称\n%path% - 已生成的路径\n%hops% - 跳数\n\\n - 换行';
+  String get settings_copyMsgPathEditFinalDscr => '可用模板：\n%senderName% - 发送者名称\n%path% - 已生成的路径\n%hops% - 跳数\n\\n - 换行';
 
   @override
   String get settings_channelsSendAsBinary => '以二进制发送扩展格式（频道）';
@@ -6219,8 +6017,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_centerMap => '地图居中';
 
   @override
-  String get chrome_bluetoothRequiresChromium =>
-      'Web Bluetooth 需要 Chromium 浏览器';
+  String get chrome_bluetoothRequiresChromium => 'Web Bluetooth 需要 Chromium 浏览器';
 
   @override
   String channels_communityShortId(String id) {
@@ -6510,8 +6307,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_canvasPaletteDynamicUsed => '实际使用的颜色';
 
   @override
-  String get chat_canvasPaletteDynamicDscr =>
-      '请注意！请谨慎使用动态调色板！它主要用于带渐变的图像，以便构建更小的调色板并使用不属于同一基础调色板的颜色。供参考：基础调色板越小，编码所用色调信息的开销就越低；颜色总数越少，画布上每个像素的开销就越低。';
+  String get chat_canvasPaletteDynamicDscr => '请注意！请谨慎使用动态调色板！它主要用于带渐变的图像，以便构建更小的调色板并使用不属于同一基础调色板的颜色。供参考：基础调色板越小，编码所用色调信息的开销就越低；颜色总数越少，画布上每个像素的开销就越低。';
 
   @override
   String get chat_canvasPaletteAlpha => '透明色';
@@ -6718,19 +6514,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsMCOimg_replacementsScale => '在聊天中缩放原图';
 
   @override
-  String get settings_modSettingsMCOimg_replacementsLottieScale =>
-      'lottie 替换图的尺寸限制';
+  String get settings_modSettingsMCOimg_replacementsLottieScale => 'lottie 替换图的尺寸限制';
 
   @override
-  String get settings_modSettingsMCOimg_scaleNearestNeighbor =>
-      '使用 Nearest Neighbor 缩放';
+  String get settings_modSettingsMCOimg_scaleNearestNeighbor => '使用 Nearest Neighbor 缩放';
 
   @override
   String get settings_modSettingsMCOimg_replacementsSharp => '在聊天中锐化原图';
 
   @override
-  String get settings_modSettingsMCOimg_replacementsSharpDscr =>
-      '注意！会关闭 GIF 动画！';
+  String get settings_modSettingsMCOimg_replacementsSharpDscr => '注意！会关闭 GIF 动画！';
 
   @override
   String get settings_modSettingsHideChInd => '隐藏频道序号';
@@ -6742,8 +6535,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsHideRadioStats => '隐藏顶栏的无线电统计';
 
   @override
-  String get settings_modSettingsSNRindicatorAllRepActivity =>
-      'SNR 指示器：对中继器的所有响应都触发，而不只是广播';
+  String get settings_modSettingsSNRindicatorAllRepActivity => 'SNR 指示器：对中继器的所有响应都触发，而不只是广播';
 
   @override
   String get settings_modSettingsIncomingQuoteAsMentions => '将收到消息中的引用显示为提及';
@@ -6755,8 +6547,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsSharedMsgHistory => '共享消息历史';
 
   @override
-  String get settings_modSettingsSharedMsgHistoryDscr =>
-      '合并从不同设备接收到的消息历史；最终的历史仅保存在应用中';
+  String get settings_modSettingsSharedMsgHistoryDscr => '合并从不同设备接收到的消息历史；最终的历史仅保存在应用中';
 
   @override
   String get settings_modSettingsSharedMsgHistoryDisabled => '已关闭';
@@ -6774,8 +6565,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsMessagingShowCompressionRatio => '显示压缩率';
 
   @override
-  String get settings_modSettingsMessagingCompressionRatioWithSendername =>
-      '计算时也计入节点名称';
+  String get settings_modSettingsMessagingCompressionRatioWithSendername => '计算时也计入节点名称';
 
   @override
   String get settings_modSettingsVisualHideMapZoomControls => '隐藏地图上的缩放面板';
@@ -6827,8 +6617,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsNoRetraHeading => '若在这么多秒内未听到转发，则将消息标记为未发送：';
 
   @override
-  String get settings_modSettingsNoRetraDscr =>
-      '注意！由于节点固件的机制，大于约 133 字节的频道消息在物理上无法收到确认，将始终被标记为失败！请与应用设置中的负载限制一起使用此选项！';
+  String get settings_modSettingsNoRetraDscr => '注意！由于节点固件的机制，大于约 133 字节的频道消息在物理上无法收到确认，将始终被标记为失败！请与应用设置中的负载限制一起使用此选项！';
 
   @override
   String get settings_selfTelemetryShow => '查看传感器';
@@ -6931,16 +6720,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsRoomServer => '房间服务器与联系人';
 
   @override
-  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen =>
-      '将有历史记录的服务器与频道显示在同一屏幕';
+  String get settings_modSettingsRoomServerShowNotemptyOnChatscreen => '将有历史记录的服务器与频道显示在同一屏幕';
 
   @override
-  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen =>
-      '将有历史记录的联系人与频道显示在同一屏幕';
+  String get settings_modSettingsRoomServerShowNotemptyContactsOnChatscreen => '将有历史记录的联系人与频道显示在同一屏幕';
 
   @override
-  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting =>
-      '保留原有的拖放机制：更改频道顺序会同时更改其在节点上的顺序，并且无法排序联系人或服务器';
+  String get settings_modSettingsRoomServerDisableRoomAndContactsSorting => '保留原有的拖放机制：更改频道顺序会同时更改其在节点上的顺序，并且无法排序联系人或服务器';
 
   @override
   String get settings_modSettingsMapAndLocation => '地图与位置';
@@ -6955,8 +6741,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsExactQuoteLimit => '构建引用的字节上限';
 
   @override
-  String get settings_modSettingsExactQuoteLimitDscr =>
-      '默认上限为 30。除上限之外，还会附加 5 个字节，用于为不支持该功能的客户端标记引用';
+  String get settings_modSettingsExactQuoteLimitDscr => '默认上限为 30。除上限之外，还会附加 5 个字节，用于为不支持该功能的客户端标记引用';
 
   @override
   String get settings_appSettingsCustomChemistry => '自定义';
@@ -6965,8 +6750,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get map_clearDiscoveredContactsCache => '清除节点本地缓存';
 
   @override
-  String get map_clearDiscoveredContactsCacheDisclaimer =>
-      '确定要清除已发现联系人的缓存吗？这不会影响节点上的联系人。';
+  String get map_clearDiscoveredContactsCacheDisclaimer => '确定要清除已发现联系人的缓存吗？这不会影响节点上的联系人。';
 
   @override
   String get snrIndicator_v2_nearByRepeaters => '中继器活动';
@@ -6990,8 +6774,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_batchOperations_removeConfirm => '要从节点内存中删除选中的联系人吗？';
 
   @override
-  String get contacts_batchOperations_removeWithCacheConfirm =>
-      'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
+  String get contacts_batchOperations_removeWithCacheConfirm => 'Remove the selected contacts? Contacts not stored on the node will be removed from the local cache.';
 
   @override
   String get contacts_batchOperations_removeSuccess => '选中的联系人已删除';
@@ -7089,8 +6872,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageMessages_autoProcessTitle => '自动处理图像';
 
   @override
-  String get imageMessages_autoProcessSubtitle =>
-      '每张图像到达后立即重建。每次约占用 2 GB 内存、持续约一秒；关闭此项则改为点击后再重建。';
+  String get imageMessages_autoProcessSubtitle => '每张图像到达后立即重建。每次约占用 2 GB 内存、持续约一秒；关闭此项则改为点击后再重建。';
 
   @override
   String get imageSend_title => '发送图片';
@@ -7179,8 +6961,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_parityTitle => '恢复包';
 
   @override
-  String get imageSend_paritySubtitle =>
-      '多一个数据包。群发消息不被确认，因此如果某个数据包丢失，接收方可以重新构建图像。';
+  String get imageSend_paritySubtitle => '多一个数据包。群发消息不被确认，因此如果某个数据包丢失，接收方可以重新构建图像。';
 
   @override
   String get imageSend_send => '发送';
@@ -7201,12 +6982,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get imageSend_codecDisabled => '图片消息在设置中已关闭。';
 
   @override
-  String get imageSend_deviceUnsupported =>
-      '此无线电无法发送图像数据包。请连接运行伴侣固件 v1.15.0 或更高版本的设备。';
+  String get imageSend_deviceUnsupported => '此无线电无法发送图像数据包。请连接运行伴侣固件 v1.15.0 或更高版本的设备。';
 
   @override
-  String get imageSend_directMessagesUnsupported =>
-      '图片作为群组数据传输，因此只能发送到频道，而不能直接发送给个人。';
+  String get imageSend_directMessagesUnsupported => '图片作为群组数据传输，因此只能发送到频道，而不能直接发送给个人。';
 
   @override
   String get imageSend_tooLarge => '该图像编码后的数据包数量超过了网状网络格式所允许的上限。';
@@ -7333,8 +7112,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_yandexApiKeyMissing => '未设置 — 将显示 OpenStreetMap';
 
   @override
-  String get appSettings_yandexApiKeyDialogDescription =>
-      '请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。';
+  String get appSettings_yandexApiKeyDialogDescription => '请输入您在 Yandex 开发者控制台申请的密钥。Tiles API 免费额度为每秒最多 30 次请求。地图数据 © Yandex。';
 
   @override
   String get appSettings_yandexSigningSecret => 'Yandex 签名密钥';
@@ -7343,8 +7121,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_yandexSigningSecretMissing => '未设置 — 请求将不带签名发送';
 
   @override
-  String get appSettings_yandexSigningSecretDialogDescription =>
-      '可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。';
+  String get appSettings_yandexSigningSecretDialogDescription => '可选。请粘贴在 Yandex 控制台中与您的密钥绑定的签名密钥。当签名模式为可选时，未签名的请求同样可用。';
 
   @override
   String get appSettings_yandexTileScale => 'Yandex 瓦片分辨率';
@@ -7355,12 +7132,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get appSettings_yandexTileScaleDescription =>
-      '数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。';
+  String get appSettings_yandexTileScaleDescription => '数值越大，同一瓦片的像素尺寸越大——在高密度屏幕上更清晰，但流量和缓存占用也更多。';
 
   @override
-  String get settings_aboutYandexMapsTerms =>
-      '地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/';
+  String get settings_aboutYandexMapsTerms => '地图瓦片由 Yandex Maps 提供。使用条款： \nhttps://yandex.ru/legal/maps_termsofuse/';
 
   @override
   String get map_showMarksFromChannels => '显示来自以下频道的标记…';
@@ -7447,10 +7222,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageHistoryMigrationWarningTitle => '消息历史仅部分迁移';
 
   @override
-  String messageHistoryMigrationWarningDescription(
-    int histories,
-    int messages,
-  ) {
+  String messageHistoryMigrationWarningDescription(int histories, int messages) {
     return '迁移过程中有 $histories 个会话和 $messages 条单独消息无法恢复。其余历史已保留。';
   }
 
@@ -7499,8 +7271,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageHistoryDatabaseRetry => '重新尝试恢复';
 
   @override
-  String get messageHistoryDatabaseRetryDescription =>
-      '用当前解析器重新检查隔离区，并把修复成功的消息放回历史。';
+  String get messageHistoryDatabaseRetryDescription => '用当前解析器重新检查隔离区，并把修复成功的消息放回历史。';
 
   @override
   String messageHistoryDatabaseRetryResult(int restored, int remaining) {
@@ -7511,43 +7282,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageHistoryDatabaseDiagnostic => '导出诊断信息';
 
   @override
-  String get messageHistoryDatabaseDiagnosticDescription =>
-      '生成不含消息正文和联系人密钥的报告。';
+  String get messageHistoryDatabaseDiagnosticDescription => '生成不含消息正文和联系人密钥的报告。';
 
   @override
   String get messageHistoryDatabaseRecovery => '导出恢复数据';
 
   @override
-  String get messageHistoryDatabaseRecoveryDescription =>
-      '生成仅包含被拒记录的文件。其中可能含有私人对话。';
+  String get messageHistoryDatabaseRecoveryDescription => '生成仅包含被拒记录的文件。其中可能含有私人对话。';
 
   @override
   String get messageHistoryDatabaseRecoveryWarningTitle => '导出机密数据';
 
   @override
-  String get messageHistoryDatabaseRecoveryWarningDescription =>
-      '恢复文件包含被拒消息的原始内容和会话标识符。在提供给他人之前请先检查其内容。';
+  String get messageHistoryDatabaseRecoveryWarningDescription => '恢复文件包含被拒消息的原始内容和会话标识符。在提供给他人之前请先检查其内容。';
 
   @override
   String get messageHistoryDatabaseDeleteAfterExportTitle => '导出后删除隔离区？';
 
   @override
-  String get messageHistoryDatabaseDeleteAfterExportDescription =>
-      '恢复文件已保存。是否从数据库中删除已导出的被拒数据？';
+  String get messageHistoryDatabaseDeleteAfterExportDescription => '恢复文件已保存。是否从数据库中删除已导出的被拒数据？';
 
   @override
   String get messageHistoryDatabaseClearQuarantine => '删除隔离区';
 
   @override
-  String get messageHistoryDatabaseClearQuarantineDescription =>
-      '删除被拒数据，且无法恢复。';
+  String get messageHistoryDatabaseClearQuarantineDescription => '删除被拒数据，且无法恢复。';
 
   @override
   String get messageHistoryDatabaseClearWarningTitle => '删除被拒数据？';
 
   @override
-  String get messageHistoryDatabaseClearWarningDescription =>
-      '删除后，隔离区中的消息将无法再恢复或导出。';
+  String get messageHistoryDatabaseClearWarningDescription => '删除后，隔离区中的消息将无法再恢复或导出。';
 
   @override
   String get messageHistoryDatabaseMaintenance => '维护';
@@ -7556,26 +7321,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageHistoryDatabaseIncrementalVacuum => '释放未使用的空间';
 
   @override
-  String get messageHistoryDatabaseIncrementalVacuumDescription =>
-      '逐步将未使用的 SQLite 页面归还给操作系统。';
+  String get messageHistoryDatabaseIncrementalVacuumDescription => '逐步将未使用的 SQLite 页面归还给操作系统。';
 
   @override
-  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription =>
-      '此数据库需要先执行完整的 VACUUM。';
+  String get messageHistoryDatabaseIncrementalVacuumUnavailableDescription => '此数据库需要先执行完整的 VACUUM。';
 
   @override
   String get messageHistoryDatabaseFullVacuum => 'VACUUM（完全重建数据库）';
 
   @override
-  String get messageHistoryDatabaseFullVacuumDescription =>
-      '完全重建数据库文件。该操作可能耗时，并需要额外的可用空间。';
+  String get messageHistoryDatabaseFullVacuumDescription => '完全重建数据库文件。该操作可能耗时，并需要额外的可用空间。';
 
   @override
   String get messageHistoryDatabaseFullVacuumWarningTitle => '完全重建数据库？';
 
   @override
-  String get messageHistoryDatabaseFullVacuumWarningDescription =>
-      '操作完成前请勿关闭应用。SQLite 可能需要与当前数据库大小相当的额外空间。';
+  String get messageHistoryDatabaseFullVacuumWarningDescription => '操作完成前请勿关闭应用。SQLite 可能需要与当前数据库大小相当的额外空间。';
 
   @override
   String get messageHistoryDatabaseCopyPath => '复制路径';
@@ -7645,18 +7406,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsRecoverLongEchoes => '恢复长数据包的转发副本';
 
   @override
-  String get settings_modSettingsRecoverLongEchoesDscr =>
-      '识别被 BLE 帧长度限制截断的本机频道消息 RX 日志副本';
+  String get settings_modSettingsRecoverLongEchoesDscr => '识别被 BLE 帧长度限制截断的本机频道消息 RX 日志副本';
 
   @override
   String get chat_canvasV4TextSize => '文字大小';
 
   @override
-  String chat_unknownAppDataPlaceholder(
-    String namespace,
-    int subtype,
-    int version,
-  ) {
+  String chat_unknownAppDataPlaceholder(String namespace, int subtype, int version) {
     return '收到未知子类型的数据包（$namespace，子类型 $subtype 版本 $version），可能需要更新应用';
   }
 
@@ -7718,26 +7474,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsDirectEchoRecovery => '无需等待路线走完即可接收私聊消息';
 
   @override
-  String get settings_modSettingsDirectEchoRecoveryDscr =>
-      '注意！节点的私钥将被导出到应用内存中，由应用自己而不是节点来解密数据包。';
+  String get settings_modSettingsDirectEchoRecoveryDscr => '注意！节点的私钥将被导出到应用内存中，由应用自己而不是节点来解密数据包。';
 
   @override
-  String get settings_modSettingsSuppressPhantomChannels =>
-      'Suppress phantom channels';
+  String get settings_modSettingsSuppressPhantomChannels => 'Suppress phantom channels';
 
   @override
   String get adaptiveTxPower => 'Adaptive TX Power';
 
   @override
-  String get adaptiveTxPowerRequiresMinHops =>
-      'Enable channel retries by minimum hop count to use this setting.';
+  String get adaptiveTxPowerRequiresMinHops => 'Enable channel retries by minimum hop count to use this setting.';
 
   @override
   String get adaptiveTxPowerTarget => 'Increase TX power to';
 
   @override
-  String get adaptiveTxPowerChannelRetries =>
-      'Boost the last N channel retries';
+  String get adaptiveTxPowerChannelRetries => 'Boost the last N channel retries';
 
   @override
   String get adaptiveTxPowerDirect => 'Use for direct messages';
@@ -7749,8 +7501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageSentWithTxPowerBoost => 'Sent with boosted TX power';
 
   @override
-  String get messageSentWithTxPowerBoostAndLna =>
-      'Sent with boosted TX power and LNA enabled by the app';
+  String get messageSentWithTxPowerBoostAndLna => 'Sent with boosted TX power and LNA enabled by the app';
 
   @override
   String get adaptiveTxPowerFloodRetries => 'Boost the last N Flood attempts';
@@ -7761,12 +7512,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_modSettingsSuppressPhantomChannelsDscr =>
-      'Ignore messages from unnamed channel slots with an all-zero key.';
+  String get settings_modSettingsSuppressPhantomChannelsDscr => 'Ignore messages from unnamed channel slots with an all-zero key.';
 
   @override
-  String get settings_modSettingsDirectEchoRecoveryPrompt =>
-      '要启用私聊消息加速接收吗？\n为此，节点的私钥将被读取到应用的内存（RAM）中。';
+  String get settings_modSettingsDirectEchoRecoveryPrompt => '要启用私聊消息加速接收吗？\n为此，节点的私钥将被读取到应用的内存（RAM）中。';
 
   @override
   String get channelPath_incompletePaths => '不完整路径';
@@ -7833,8 +7582,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get room_postsPushed => '已推送的帖子';
 
   @override
-  String get repeater_cliRegionLoadActive =>
-      '区域加载模式：每行发送一个区域名称，并用空格缩进表示其位于父级之下（在名称后添加 F 可允许泛洪）。每行不会有回复。发送空行以结束，然后发送“region save”以保存结果。';
+  String get repeater_cliRegionLoadActive => '区域加载模式：每行发送一个区域名称，并用空格缩进表示其位于父级之下（在名称后添加 F 可允许泛洪）。每行不会有回复。发送空行以结束，然后发送“region save”以保存结果。';
 
   @override
   String get repeater_cliRegionLoadHint => '区域行，或留空以结束';
@@ -7843,12 +7591,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliRegionLoadEnd => '（区域加载结束）';
 
   @override
-  String get repeater_cliHelpRegionDef =>
-      '在一条命令中定义一条区域链：每个名称都添加在上一个名称之下；“name,parent”会添加该名称，然后在指定的父级下继续。回复区域列表。';
+  String get repeater_cliHelpRegionDef => '在一条命令中定义一条区域链：每个名称都添加在上一个名称之下；“name,parent”会添加该名称，然后在指定的父级下继续。回复区域列表。';
 
   @override
-  String get repeater_cliHelpSetFloodMaxUnscoped =>
-      '设置转发无区域范围的泛洪数据包时的最大跳数(0-64)。';
+  String get repeater_cliHelpSetFloodMaxUnscoped => '设置转发无区域范围的泛洪数据包时的最大跳数(0-64)。';
 
   @override
   String get repeater_cliHelpSetFloodMaxAdvert => '设置转发泛洪广播包时的最大跳数(0-64)。';
@@ -7860,12 +7606,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_cliHelpGetFloodMaxAdvert => '显示泛洪广播包的最大跳数。';
 
   @override
-  String get repeater_cliHelpSetRadioFemRxGain =>
-      '切换 LoRa 前端模块的 RX 增益（LNA）。不支持此功能的板卡会回复“Error: unsupported”。';
+  String get repeater_cliHelpSetRadioFemRxGain => '切换 LoRa 前端模块的 RX 增益（LNA）。不支持此功能的板卡会回复“Error: unsupported”。';
 
   @override
-  String get repeater_cliHelpSetRadioFemTxGain =>
-      '切换 LoRa 前端模块的 TX 增益（PA）。不支持此功能的板卡会回复“Error: unsupported”。';
+  String get repeater_cliHelpSetRadioFemTxGain => '切换 LoRa 前端模块的 TX 增益（PA）。不支持此功能的板卡会回复“Error: unsupported”。';
 
   @override
   String get repeater_cliHelpGetRadioFemRxGain => '显示 LoRa 前端模块的 RX 增益是否已开启。';
@@ -7918,12 +7662,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get dataFolder_missingPath =>
-      '--data-dir 参数未指定文件夹。写法为：--data-dir=<路径>。';
+  String get dataFolder_missingPath => '--data-dir 参数未指定文件夹。写法为：--data-dir=<路径>。';
 
   @override
-  String get dataFolder_otherFolderHint =>
-      '启动应用副本时可以为其指定单独的数据文件夹：--data-dir=<路径>。相对路径从应用所在文件夹算起。';
+  String get dataFolder_otherFolderHint => '启动应用副本时可以为其指定单独的数据文件夹：--data-dir=<路径>。相对路径从应用所在文件夹算起。';
 
   @override
   String dataFolder_details(String error) {
@@ -7982,12 +7724,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dataCleanup_title => '删除旧数据？';
 
   @override
-  String get dataCleanup_body =>
-      '在之前的某次启动中，数据已复制到此数据文件夹。原始数据仍在系统文件夹中，如果这里的数据完整，可以将其删除：';
+  String get dataCleanup_body => '在之前的某次启动中，数据已复制到此数据文件夹。原始数据仍在系统文件夹中，如果这里的数据完整，可以将其删除：';
 
   @override
-  String get dataCleanup_note =>
-      '其他新的应用副本将不再收到这些数据的提示。在共享的临时文件夹和“文档”中，只会删除复制到这里的文件。';
+  String get dataCleanup_note => '其他新的应用副本将不再收到这些数据的提示。在共享的临时文件夹和“文档”中，只会删除复制到这里的文件。';
 
   @override
   String get dataCleanup_keep => '保留';
@@ -8004,8 +7744,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_modSettingsExactQuoteLatest => '也用于作者的最新消息';
 
   @override
-  String get settings_modSettingsExactQuoteLatestDscr =>
-      '关闭时，对作者最新消息的回复只包含提及。开启时，可正确处理你与其他人的最新消息不同步、实际是不同消息的情况。';
+  String get settings_modSettingsExactQuoteLatestDscr => '关闭时，对作者最新消息的回复只包含提及。开启时，可正确处理你与其他人的最新消息不同步、实际是不同消息的情况。';
 
   @override
   String get channelPath_deliveryConfirmedPath => '已通过此路径确认送达';
@@ -8017,8 +7756,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelPath_deliveredDirectly => '已直接送达，未经过中继器';
 
   @override
-  String get channelPath_incompletePathsNote =>
-      '私聊消息的数据包只携带剩余的跳，而不是完整路线：每个中继器依次将自身从剩余路径中移除。';
+  String get channelPath_incompletePathsNote => '私聊消息的数据包只携带剩余的跳，而不是完整路线：每个中继器依次将自身从剩余路径中移除。';
 
   @override
   String get discoveredContacts_previouslyHeard => '以前收到的节点';
@@ -8418,8 +8156,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get settings_regionFetchNoRepeaters =>
-      '目前还没有已知的中继器。请将中继器添加为联系人,或等待其广播后重试。';
+  String get settings_regionFetchNoRepeaters => '目前还没有已知的中继器。请将中继器添加为联系人,或等待其广播后重试。';
 
   @override
   String get settings_regionFetchNoneResponded => '附近没有中继器响应。请靠近中继器后重试。';
@@ -8433,16 +8170,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_routingSection => '路由';
 
   @override
-  String get appSettings_resetRoutingToDefault =>
-      'Reset Routing Algorithm to Default';
+  String get appSettings_resetRoutingToDefault => 'Reset Routing Algorithm to Default';
 
   @override
-  String get appSettings_resetRoutingToDefaultSubtitle =>
-      'Restore the default route weight settings and message attempt limit';
+  String get appSettings_resetRoutingToDefaultSubtitle => 'Restore the default route weight settings and message attempt limit';
 
   @override
-  String get appSettings_routingResetToDefault =>
-      'Routing algorithm settings reset to default';
+  String get appSettings_routingResetToDefault => 'Routing algorithm settings reset to default';
 
   @override
   String get appSettings_imageMessagesSection => '图片消息';
@@ -8462,12 +8196,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String translation_downloadProgressTotal(
-    Object current,
-    Object fileName,
-    Object percent,
-    Object total,
-  ) {
+  String translation_downloadProgressTotal(Object current, Object fileName, Object percent, Object total) {
     return '$fileName:$current / $total MB($percent%)';
   }
 
@@ -8620,8 +8349,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkMap_uploadTitle => '分享我的电台收到的信息';
 
   @override
-  String get networkMap_uploadExplanation =>
-      '开启后，当您的电台已连接时，应用会把电台收到的数据包的简要信息发送到 MeshCore Open 网络地图，让大家看到有哪些转发节点以及它们如何相连。发送内容包括每个数据包的类型、路由、跳数、信号强度和大小，以及转发节点自身广播中的名称和大致位置。绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置：位置会取整到约 2 公里，且应用每天都会使用新的随机 ID。';
+  String get networkMap_uploadExplanation => '开启后，当您的电台已连接时，应用会把电台收到的数据包的简要信息发送到 MeshCore Open 网络地图，让大家看到有哪些转发节点以及它们如何相连。发送内容包括每个数据包的类型、路由、跳数、信号强度和大小，以及转发节点自身广播中的名称和大致位置。绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置：位置会取整到约 2 公里，且应用每天都会使用新的随机 ID。';
 
   @override
   String get networkMap_whatWeCollect => '我们收集的内容';
@@ -8630,8 +8358,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkMap_promptTitle => '要帮助建设网络地图吗？';
 
   @override
-  String get networkMap_promptBody =>
-      'MeshCore Open 可以把您的电台收到的信息分享到公开的网络地图 map.meshcoreopen.org，让大家看到有哪些转发节点以及它们如何相连。\n\n绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置。位置会取整到约 2 公里。';
+  String get networkMap_promptBody => 'MeshCore Open 可以把您的电台收到的信息分享到公开的网络地图 map.meshcoreopen.org，让大家看到有哪些转发节点以及它们如何相连。\n\n绝不会发送消息内容、谁在和谁通信、频道名称、您的联系人或您的精确位置。位置会取整到约 2 公里。';
 
   @override
   String get networkMap_promptSettingsHint => '您可以随时在 设置 → 应用设置 → 网络地图 中更改。';
@@ -8791,50 +8518,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_skipIdleDirectProgressParsing => '仅在发送时解析进度';
 
   @override
-  String get powerSaving_skipIdleDirectProgressParsingDescription =>
-      '没有被跟踪的发送时，不为私聊送达进度解析无线电帧。消息接收和送达确认保持不变。';
+  String get powerSaving_skipIdleDirectProgressParsingDescription => '没有被跟踪的发送时，不为私聊送达进度解析无线电帧。消息接收和送达确认保持不变。';
 
   @override
   String get powerSaving_cacheChannelKeyHashes => '缓存频道参数';
 
   @override
-  String get powerSaving_cacheChannelKeyHashesDescription =>
-      '处理传入数据包时，重复使用未更改频道密钥的已计算哈希。消息校验和解密保持不变。';
+  String get powerSaving_cacheChannelKeyHashesDescription => '处理传入数据包时，重复使用未更改频道密钥的已计算哈希。消息校验和解密保持不变。';
 
   @override
   String get powerSaving_pauseHiddenStatusAnimations => '暂停隐藏的状态动画';
 
   @override
-  String get powerSaving_pauseHiddenStatusAnimationsDescription =>
-      '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止发送圆点和脉动指示器。屏幕上可见的指示器继续播放动画。';
+  String get powerSaving_pauseHiddenStatusAnimationsDescription => '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止发送圆点和脉动指示器。屏幕上可见的指示器继续播放动画。';
 
   @override
   String get powerSaving_disableContinuousStatusAnimations => '静态状态指示器';
 
   @override
-  String get powerSaving_disableContinuousStatusAnimationsDescription =>
-      '将发送圆点动画和状态指示器的柔和脉动替换为静态指示器，包括屏幕上。状态、重复计数和发送处理保持不变。';
+  String get powerSaving_disableContinuousStatusAnimationsDescription => '将发送圆点动画和状态指示器的柔和脉动替换为静态指示器，包括屏幕上。状态、重复计数和发送处理保持不变。';
 
   @override
   String get powerSaving_reduceBlePluginLogs => '减少蓝牙诊断日志';
 
   @override
-  String get powerSaving_reduceBlePluginLogsDescription =>
-      '减少 Android、iOS 和 macOS 上的蓝牙诊断输出。警告、错误和应用的帧日志保持不变。在 Windows、Linux 和浏览器中无效。';
+  String get powerSaving_reduceBlePluginLogsDescription => '减少 Android、iOS 和 macOS 上的蓝牙诊断输出。警告、错误和应用的帧日志保持不变。在 Windows、Linux 和浏览器中无效。';
 
   @override
   String get powerSaving_deferBleLogDescriptions => '延迟生成帧日志描述';
 
   @override
-  String get powerSaving_deferBleLogDescriptionsDescription =>
-      '在需要显示或复制时才生成文字描述。帧数据和记录时间会立即保存；日志内容和隐私数据保护不变。';
+  String get powerSaving_deferBleLogDescriptionsDescription => '在需要显示或复制时才生成文字描述。帧数据和记录时间会立即保存；日志内容和隐私数据保护不变。';
 
   @override
   String get powerSaving_uiNotificationInterval => '界面更新间隔';
 
   @override
-  String get powerSaving_uiNotificationDescription =>
-      '在事件连续到来时合并普通更新。间隔越长，显示越不及时。数据包和确认的处理不会延迟；连接状态的变化保持原有的 50 毫秒窗口。';
+  String get powerSaving_uiNotificationDescription => '在事件连续到来时合并普通更新。间隔越长，显示越不及时。数据包和确认的处理不会延迟；连接状态的变化保持原有的 50 毫秒窗口。';
 
   @override
   String powerSaving_milliseconds(int milliseconds) {
@@ -8868,8 +8588,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get powerSaving_radioStatsDescription =>
-      '在无线电统计屏幕被其他屏幕覆盖或应用不活动时生效。可见屏幕仍每秒更新一次。其他功能可能请求更频繁的更新。';
+  String get powerSaving_radioStatsDescription => '在无线电统计屏幕被其他屏幕覆盖或应用不活动时生效。可见屏幕仍每秒更新一次。其他功能可能请求更频繁的更新。';
 
   @override
   String get powerSaving_customDescription => '最小值保持原有行为。自定义设置与预设配置文件分开保存。';
@@ -8881,8 +8600,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_pauseHiddenRadioIndicator => '暂停隐藏的无线电指示器的轮询';
 
   @override
-  String get powerSaving_pauseHiddenRadioIndicatorDescription =>
-      '当指示器被隐藏、被其他屏幕覆盖或应用不活动时，停止为其轮询。消息发送和其他轮询使用者仍保留所需的更新。';
+  String get powerSaving_pauseHiddenRadioIndicatorDescription => '当指示器被隐藏、被其他屏幕覆盖或应用不活动时，停止为其轮询。消息发送和其他轮询使用者仍保留所需的更新。';
 
   @override
   String get powerSaving_batteryInterval => '节点电池查询间隔';
@@ -8896,29 +8614,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_gpsInterval => '节点 GPS 更新间隔';
 
   @override
-  String get powerSaving_gpsDescription =>
-      '在应用打开时和后台均生效，仅当节点上开启了 GPS 时适用。间隔越长，显示的节点位置越不及时。手机 GPS 和 wardrive 单独设置。';
+  String get powerSaving_gpsDescription => '在应用打开时和后台均生效，仅当节点上开启了 GPS 时适用。间隔越长，显示的节点位置越不及时。手机 GPS 和 wardrive 单独设置。';
 
   @override
   String get powerSaving_pauseIdleImageCleanup => '空闲时暂停图像清理';
 
   @override
-  String get powerSaving_pauseIdleImageCleanupDescription =>
-      '仅在存在未完成的图像或为识别重复而保留的最近完成图像时执行清理。缺失数据包的等待时间不变。';
+  String get powerSaving_pauseIdleImageCleanupDescription => '仅在存在未完成的图像或为识别重复而保留的最近完成图像时执行清理。缺失数据包的等待时间不变。';
 
   @override
   String get powerSaving_pauseHiddenGifs => '暂停隐藏的 GIF';
 
   @override
-  String get powerSaving_pauseHiddenGifsDescription =>
-      '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止 GIF 帧。返回时继续播放，除非你手动暂停了该 GIF。';
+  String get powerSaving_pauseHiddenGifsDescription => '在可见区域之外、被其他屏幕覆盖以及应用不活动时，停止 GIF 帧。返回时继续播放，除非你手动暂停了该 GIF。';
 
   @override
   String get powerSaving_backgroundReconnectInterval => '后台重新连接的间隔';
 
   @override
-  String get powerSaving_backgroundReconnectDescription =>
-      '仅限 BLE 和 TCP，在前六次 1/2/4/8/16/30 秒的等待之后生效。应用不活动时适用；返回应用后恢复正常节奏。等待越长，连接恢复可能越慢。连接所用的时间会计入等待。';
+  String get powerSaving_backgroundReconnectDescription => '仅限 BLE 和 TCP，在前六次 1/2/4/8/16/30 秒的等待之后生效。应用不活动时适用；返回应用后恢复正常节奏。等待越长，连接恢复可能越慢。连接所用的时间会计入等待。';
 
   @override
   String get powerSaving_cpuSleepAlways => '尽可能始终允许 CPU 休眠';
@@ -8927,8 +8641,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_cpuSleepBle => 'BLE 连接时';
 
   @override
-  String get powerSaving_cpuSleepDescription =>
-      '允许设备在操作之间休眠。单独的选项在后台生效；所有活动场景都必须允许休眠。“始终”选项不受场景限制。';
+  String get powerSaving_cpuSleepDescription => '允许设备在操作之间休眠。单独的选项在后台生效；所有活动场景都必须允许休眠。“始终”选项不受场景限制。';
 
   @override
   String get powerSaving_cpuSleepProxy => 'companion 代理运行时';
@@ -8946,15 +8659,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_cpuSleepUnconditional => '始终，无例外';
 
   @override
-  String get powerSaving_cpuSleepUnconditionalDescription =>
-      '完全释放本应用的 CPU 唤醒锁，包括操作进行期间。设备休眠可能延迟或中断这些操作。Android 和其他组件的唤醒锁不变。';
+  String get powerSaving_cpuSleepUnconditionalDescription => '完全释放本应用的 CPU 唤醒锁，包括操作进行期间。设备休眠可能延迟或中断这些操作。Android 和其他组件的唤醒锁不变。';
 
   @override
   String get powerSaving_blePriorityTitle => '与节点的 BLE 连接模式';
 
   @override
-  String get powerSaving_blePriorityDescription =>
-      '重新连接到节点后生效。“原始”不请求任何更改；High 优先考虑速度，Low power 优先考虑节能。实际参数由 Android 和节点决定；节能模式可能使数据交换变慢。';
+  String get powerSaving_blePriorityDescription => '重新连接到节点后生效。“原始”不请求任何更改；High 优先考虑速度，Low power 优先考虑节能。实际参数由 Android 和节点决定；节能模式可能使数据交换变慢。';
 
   @override
   String get powerSaving_bleOriginal => '原始';
@@ -8972,22 +8683,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_releaseTcpWifiLock => '不为 TCP 保持 Wi-Fi';
 
   @override
-  String get powerSaving_releaseTcpWifiLockDescription =>
-      '通过 TCP 连接节点时（包括经由 Tailscale）允许 Wi-Fi 正常节能。立即生效，屏幕上和后台均适用；后台服务和 CPU 休眠设置不变。部分设备上可能出现延迟或连接中断。';
+  String get powerSaving_releaseTcpWifiLockDescription => '通过 TCP 连接节点时（包括经由 Tailscale）允许 Wi-Fi 正常节能。立即生效，屏幕上和后台均适用；后台服务和 CPU 休眠设置不变。部分设备上可能出现延迟或连接中断。';
 
   @override
   String get powerSaving_reduceDeliveryObservationWrites => '减少送达统计的重写';
 
   @override
-  String get powerSaving_reduceDeliveryObservationWritesDescription =>
-      '仅更新已保存送达统计中发生变化的部分。内容和顺序不变，保存也不会额外延迟。';
+  String get powerSaving_reduceDeliveryObservationWritesDescription => '仅更新已保存送达统计中发生变化的部分。内容和顺序不变，保存也不会额外延迟。';
 
   @override
   String get powerSaving_iosImmortalizerTitle => 'iOS：后台保持';
 
   @override
-  String get powerSaving_iosImmortalizerDescription =>
-      '内置 TCP 后台保持的实验性选项。可通过“自定义设置”使用；原始值保持当前行为。帧和 GPU 保护保持开启。';
+  String get powerSaving_iosImmortalizerDescription => '内置 TCP 后台保持的实验性选项。可通过“自定义设置”使用；原始值保持当前行为。帧和 GPU 保护保持开启。';
 
   @override
   String get powerSaving_iosImmortalizerFrames => '在后台暂停 UI 帧调度';
@@ -9005,8 +8713,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_iosImmortalizerWithoutAudio => '无音频（实验性）';
 
   @override
-  String get powerSaving_iosImmortalizerWithoutAudioDescription =>
-      '没有静音音频时，iOS 可能暂停应用和消息送达。音频设置会保留，但在此模式下不生效。';
+  String get powerSaving_iosImmortalizerWithoutAudioDescription => '没有静音音频时，iOS 可能暂停应用和消息送达。音频设置会保留，但在此模式下不生效。';
 
   @override
   String get powerSaving_iosImmortalizerSampleRate => '静音文件采样率';
@@ -9021,8 +8728,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_iosImmortalizerBuffer => '首选音频 I/O 缓冲区';
 
   @override
-  String get powerSaving_iosImmortalizerBufferDescription =>
-      '这是对 iOS 的请求，而不是保证的硬件时长。“系统”保持原有偏好不变。已接受的值请在诊断中查看。';
+  String get powerSaving_iosImmortalizerBufferDescription => '这是对 iOS 的请求，而不是保证的硬件时长。“系统”保持原有偏好不变。已接受的值请在诊断中查看。';
 
   @override
   String get powerSaving_iosImmortalizerSystem => '系统（原有偏好）';
@@ -9031,8 +8737,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerSaving_iosImmortalizerLoop => '静音循环长度';
 
   @override
-  String get powerSaving_iosImmortalizerLoopDescription =>
-      '原始为 1 秒。更长的 PCM 循环占用更多内存；尚未证实能节省电量。';
+  String get powerSaving_iosImmortalizerLoopDescription => '原始为 1 秒。更长的 PCM 循环占用更多内存；尚未证实能节省电量。';
 
   @override
   String get companionCli_title => 'CompanionCLI';
@@ -9067,8 +8772,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get companionCli_emptyReply => '收到空回复';
 
   @override
-  String get companionCli_unavailable =>
-      '发送需要连接协议版本 14 或更新（MeshCore 1.18+）的 companion 节点。历史仍可查看。';
+  String get companionCli_unavailable => '发送需要连接协议版本 14 或更新（MeshCore 1.18+）的 companion 节点。历史仍可查看。';
 
   @override
   String get companionCli_busy => '请等待当前命令完成。';
@@ -9077,8 +8781,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get companionCli_invalidCommand => '请输入一条不含换行和空字节、至少两个 UTF-8 字节的命令。';
 
   @override
-  String get companionCli_tooLong =>
-      '命令超出限制：最多 172 个 UTF-8 字节；set radio 参数最多 131 字节。';
+  String get companionCli_tooLong => '命令超出限制：最多 172 个 UTF-8 字节；set radio 参数最多 131 字节。';
 
   @override
   String get companionCli_tagExhausted => 'CLI 请求标识符已用尽。请重新启动应用以开始新的安全会话。';
@@ -9102,19 +8805,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cliHistory_temporary => '在此浏览器中，CLI 历史仅保留到页面重新加载前，不会保存到设置中。';
 
   @override
-  String get cliHistory_clearCurrentNodeConfirm =>
-      '清除当前节点的此控制台历史？其他节点的历史将保留。正在执行的命令不会被取消。';
+  String get cliHistory_clearCurrentNodeConfirm => '清除当前节点的此控制台历史？其他节点的历史将保留。正在执行的命令不会被取消。';
 
   @override
-  String get companionCli_helpNote =>
-      '命令在已连接的 companion 节点上执行。点按命令即可插入，替换 <...> 参数后点按发送。可用性取决于固件和板子。';
+  String get companionCli_helpNote => '命令在已连接的 companion 节点上执行。点按命令即可插入，替换 <...> 参数后点按发送。可用性取决于固件和板子。';
 
   @override
   String get companionCli_helpGetTimezone => '显示已设置的 UTC 偏移（小时）。';
 
   @override
-  String get companionCli_helpSetTimezone =>
-      '设置 UTC 偏移，范围为 −12 至 +14 小时，可包含小数。';
+  String get companionCli_helpSetTimezone => '设置 UTC 偏移，范围为 −12 至 +14 小时，可包含小数。';
 
   @override
   String get companionCli_helpSetPin => '设置 BLE PIN。在 set pin 后输入你自己的数字 PIN。';
@@ -9132,8 +8832,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get companionCli_helpSetRxGain => '开启或关闭增强接收增益。需要无线电驱动支持。';
 
   @override
-  String get companionCli_helpGetPathHashMode =>
-      '显示泛洪数据包的路径哈希长度模式：每跳 0 = 1 字节，1 = 2 字节，2 = 3 字节。';
+  String get companionCli_helpGetPathHashMode => '显示泛洪数据包的路径哈希长度模式：每跳 0 = 1 字节，1 = 2 字节，2 = 3 字节。';
 
   @override
   String get companionCli_helpSetTx => '以 dBm 为单位设置 LoRa 发射功率，并通过无线电驱动立即生效。';
@@ -9175,8 +8874,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get companionCli_helpHardwareTitle => '特定板子的命令';
 
   @override
-  String get companionCli_helpHardwareNote =>
-      'FEM 增益命令取决于板子和前端模块。风扇命令适用于 T-Beam 1W。';
+  String get companionCli_helpHardwareNote => 'FEM 增益命令取决于板子和前端模块。风扇命令适用于 T-Beam 1W。';
 
   @override
   String get companionCli_helpGetFan => '显示 T-Beam 1W 的风扇模式、温度、风扇状态和冷却时间。';
@@ -9185,12 +8883,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get companionCli_helpSetFan => '设置 T-Beam 1W 的风扇模式：开、关或自动。';
 
   @override
-  String get companionCli_helpSetFanLow =>
-      '以 °C 为单位设置风扇的温度下限阈值：0–100，低于 fan.hi。';
+  String get companionCli_helpSetFanLow => '以 °C 为单位设置风扇的温度下限阈值：0–100，低于 fan.hi。';
 
   @override
-  String get companionCli_helpSetFanHigh =>
-      '以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。';
+  String get companionCli_helpSetFanHigh => '以 °C 为单位设置风扇的温度上限阈值：高于 fan.lo，最高 120。';
 
   @override
   String get updates_automaticCheck => '检查 GitHub 更新';
@@ -9277,8 +8973,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get snrIndicator_ambiguousRepeaterHint =>
-      '多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。';
+  String get snrIndicator_ambiguousRepeaterHint => '多个联系人具有此前缀。名称仅为推测，此条目无法使用联系人操作。';
 
   @override
   String get map_pathTraceAddMoreHint => '点击更多节点以添加跳数，选择追踪的返回方式，然后点击“运行路径追踪”。';
@@ -9290,16 +8985,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get manualTrace_hashes => 'Hop hashes';
 
   @override
-  String get manualTrace_invalidHashes =>
-      'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
+  String get manualTrace_invalidHashes => 'Enter valid hexadecimal hashes of the same width (1, 2 or 3 bytes each).';
 
   @override
-  String get manualTrace_requestTooLong =>
-      'This trace exceeds the radio request limit. Remove hops or choose As entered.';
+  String get manualTrace_requestTooLong => 'This trace exceeds the radio request limit. Remove hops or choose As entered.';
 
   @override
-  String get manualTrace_unresolvedHop =>
-      'Each 3-byte hash must match a unique known relay.';
+  String get manualTrace_unresolvedHop => 'Each 3-byte hash must match a unique known relay.';
 
   @override
   String get map_pathTraceModeRoundTrip => '往返';
@@ -9326,15 +9018,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contacts_removeFailed => '无线电未确认移除。该联系人未被移除。';
 
   @override
-  String get contacts_removeAutoAddNote =>
-      '你的无线电会自动添加此类联系人，因此它下次发送广播时会重新出现。如需保持移除，请在联系人设置中关闭自动添加。';
+  String get contacts_removeAutoAddNote => '你的无线电会自动添加此类联系人，因此它下次发送广播时会重新出现。如需保持移除，请在联系人设置中关闭自动添加。';
 
   @override
   String get appSettings_ipfsImageLinks => 'IPFS provider configuration';
 
   @override
-  String get appSettings_ipfsImageLinksSubtitle =>
-      'Upload for url Images (or Files) via IPFS provider and default gateway to receive';
+  String get appSettings_ipfsImageLinksSubtitle => 'Upload for url Images (or Files) via IPFS provider and default gateway to receive';
 
   @override
   String get appSettings_publicIpfsGateway => 'Public gateway';
@@ -9361,22 +9051,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_uploadIpfsGateway => 'Upload gateway';
 
   @override
-  String get appSettings_uploadIpfsGatewaySubtitle =>
-      'Gateway to share Image or File as url-link. Leave empty to use ipfs: format, which may not be opened by other clients.';
+  String get appSettings_uploadIpfsGatewaySubtitle => 'Gateway to share Image or File as url-link. Leave empty to use ipfs: format, which may not be opened by other clients.';
 
   @override
   String get appSettings_uploadIpfsEndpoint => 'Upload endpoint';
 
   @override
-  String get appSettings_uploadIpfsEndpointSubtitle =>
-      'The API endpoint used to upload files';
+  String get appSettings_uploadIpfsEndpointSubtitle => 'The API endpoint used to upload files';
 
   @override
   String get appSettings_uploadIpfsApiKey => 'Upload API key';
 
   @override
-  String get appSettings_ipfsImageLinksDescription =>
-      'Public gateway downloads ipfs: format images. Upload gateway is used to generate share links for uploaded url images or files.';
+  String get appSettings_ipfsImageLinksDescription => 'Public gateway downloads ipfs: format images. Upload gateway is used to generate share links for uploaded url images or files.';
 
   @override
   String get chat_sendImageIpfs => 'Send image or file via IPFS';
@@ -9387,35 +9074,28 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get chat_ipfsUploadNotConfigured =>
-      'Configure an IPFS upload provider in App Settings first.';
+  String get chat_ipfsUploadNotConfigured => 'Configure an IPFS upload provider in App Settings first.';
 
   @override
   String get chat_ipfsSelectedFileEmpty => 'The selected file is empty.';
 
   @override
-  String get chat_ipfsEndpointInvalid =>
-      'The IPFS upload endpoint must be a full http:// or https:// address. Check it in App Settings.';
+  String get chat_ipfsEndpointInvalid => 'The IPFS upload endpoint must be a full http:// or https:// address. Check it in App Settings.';
 
   @override
-  String get chat_ipfsPinataTokenMissing =>
-      'Pinata needs an API key or JWT. Add it in App Settings.';
+  String get chat_ipfsPinataTokenMissing => 'Pinata needs an API key or JWT. Add it in App Settings.';
 
   @override
-  String get chat_ipfsFilebaseTokenMissing =>
-      'Filebase needs an API token. Add it in App Settings.';
+  String get chat_ipfsFilebaseTokenMissing => 'Filebase needs an API token. Add it in App Settings.';
 
   @override
-  String get chat_ipfsKuboPathInvalid =>
-      'The Kubo upload endpoint must end with /api/v0/add. Check it in App Settings.';
+  String get chat_ipfsKuboPathInvalid => 'The Kubo upload endpoint must end with /api/v0/add. Check it in App Settings.';
 
   @override
-  String get chat_ipfsLinkNoRoom =>
-      'Not enough room for the image link. Shorten your message, then try again.';
+  String get chat_ipfsLinkNoRoom => 'Not enough room for the image link. Shorten your message, then try again.';
 
   @override
-  String get chat_ipfsLinkOverLimit =>
-      'Image link added, but the message is now too long. Shorten it before sending.';
+  String get chat_ipfsLinkOverLimit => 'Image link added, but the message is now too long. Shorten it before sending.';
 
   @override
   String get urlImage_disabledInAppSettings => 'Turned off in app settings';
@@ -9424,16 +9104,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_loadLinkImages => 'Load images from links';
 
   @override
-  String get appSettings_loadLinkImagesSubtitle =>
-      'Show pictures from links in messages. Loading an image shares your IP address with the site that hosts it.';
+  String get appSettings_loadLinkImagesSubtitle => 'Show pictures from links in messages. Loading an image shares your IP address with the site that hosts it.';
 
   @override
-  String get appSettings_showLinkImagesByDefault =>
-      'Show link images in all chats by default';
+  String get appSettings_showLinkImagesByDefault => 'Show link images in all chats by default';
 
   @override
-  String get appSettings_showLinkImagesByDefaultSubtitle =>
-      'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
+  String get appSettings_showLinkImagesByDefaultSubtitle => 'Load link images in every chat unless you turned them off there. This shares your IP address with image hosts in every chat.';
 
   @override
   String get channels_scanQrCodeDesc => '通过二维码加入频道或社区。';
@@ -9452,8 +9129,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get channels_qrImportChanged =>
-      'Connection or channels changed. Start the import again.';
+  String get channels_qrImportChanged => 'Connection or channels changed. Start the import again.';
 
   @override
   String get map_requestLocation => '更新位置';
@@ -9475,15 +9151,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_floodMaxAdvert => '广播泛洪最大跳数';
 
   @override
-  String get repeater_floodMaxAdvertHelper =>
-      '广播（advert）泛洪可传输的最大跳数 (0-64，默认 8)';
+  String get repeater_floodMaxAdvertHelper => '广播（advert）泛洪可传输的最大跳数 (0-64，默认 8)';
 
   @override
   String get repeater_floodMaxUnscoped => '无区域泛洪最大跳数';
 
   @override
-  String get repeater_floodMaxUnscopedHelper =>
-      '未指定区域的泛洪最大跳数 (0-64，默认 64)。较低的值（如 3）可将无区域流量限制在本地。';
+  String get repeater_floodMaxUnscopedHelper => '未指定区域的泛洪最大跳数 (0-64，默认 64)。较低的值（如 3）可将无区域流量限制在本地。';
 
   @override
   String get repeater_floodMaxUnscopedUnset => '与泛洪最大跳数相同';
@@ -9492,8 +9166,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_rxDelay => '接收延迟';
 
   @override
-  String get repeater_rxDelayHelper =>
-      '转发前先暂缓处理以弱信号收到的泛洪包，让强信号路径优先，从而减少重复发送 (0-20，0 为关闭)。';
+  String get repeater_rxDelayHelper => '转发前先暂缓处理以弱信号收到的泛洪包，让强信号路径优先，从而减少重复发送 (0-20，0 为关闭)。';
 
   @override
   String get repeater_cad => '信道活动检测';
@@ -9514,12 +9187,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeater_extraSf => '额外扩频因子';
 
   @override
-  String get repeater_extraSfHelper =>
-      '同时监听最多 3 个额外的扩频因子（SF），用逗号分隔（例如 9,10）。留空则关闭。';
+  String get repeater_extraSfHelper => '同时监听最多 3 个额外的扩频因子（SF），用逗号分隔（例如 9,10）。留空则关闭。';
 
   @override
-  String get repeater_lr2021Only =>
-      '仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。';
+  String get repeater_lr2021Only => '仅适用于配备 LR2021 无线电的转发节点。其他转发节点没有此设置，会拒绝该更改。';
 
   @override
   String get chatBackground_choosePicture => '选择图片';
@@ -9733,8 +9404,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appSettings_holidayAnimations => '节日消息动画';
 
   @override
-  String get appSettings_holidayAnimationsSubtitle =>
-      '有人发送节日祝福时，显示蝙蝠、火鸡、圣诞老人或烟花';
+  String get appSettings_holidayAnimationsSubtitle => '有人发送节日祝福时，显示蝙蝠、火鸡、圣诞老人或烟花';
 
   @override
   String get themes_holidays => '节日';
@@ -9754,15 +9424,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themes_holidayAutoAppliedTag => '已自动启用';
 
   @override
-  String get holidayGreeting_halloween =>
-      '万圣节快乐|萬聖節快樂|万圣夜快乐|萬聖夜快樂|不给糖就捣蛋|不給糖就搗蛋';
+  String get holidayGreeting_halloween => '万圣节快乐|萬聖節快樂|万圣夜快乐|萬聖夜快樂|不给糖就捣蛋|不給糖就搗蛋';
 
   @override
   String get holidayGreeting_thanksgiving => '感恩节快乐|感恩節快樂|感恩节愉快|感恩節愉快';
 
   @override
-  String get holidayGreeting_christmas =>
-      '圣诞快乐|聖誕快樂|圣诞节快乐|聖誕節快樂|圣诞节愉快|聖誕節愉快|圣诞愉快|聖誕愉快';
+  String get holidayGreeting_christmas => '圣诞快乐|聖誕快樂|圣诞节快乐|聖誕節快樂|圣诞节愉快|聖誕節愉快|圣诞愉快|聖誕愉快';
 
   @override
   String get holidayGreeting_newYear => '新年快乐|新年快樂|元旦快乐|元旦快樂|新年好|新年愉快';
@@ -9774,8 +9442,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_enabled => 'Filter messages';
 
   @override
-  String get messageFilter_enabledSubtitle =>
-      'Applies to incoming channel messages';
+  String get messageFilter_enabledSubtitle => 'Applies to incoming channel messages';
 
   @override
   String get messageFilter_displayTitle => 'Filtered messages';
@@ -9784,8 +9451,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_displayHide => 'Hide filtered rows completely';
 
   @override
-  String get messageFilter_displayHideHelp =>
-      'Review loaded filtered messages from the channel menu.';
+  String get messageFilter_displayHideHelp => 'Review loaded filtered messages from the channel menu.';
 
   @override
   String get messageFilter_rulesSection => 'Your rules';
@@ -9827,8 +9493,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_ruleMatchExact => 'Exact';
 
   @override
-  String get messageFilter_filteredMessagesEmpty =>
-      'No filtered messages in the loaded history.';
+  String get messageFilter_filteredMessagesEmpty => 'No filtered messages in the loaded history.';
 
   @override
   String get messageFilter_ghostSingle => 'Hidden message · Tap to view';
@@ -9865,8 +9530,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_filterLikeThis => 'Filter messages like this…';
 
   @override
-  String get messageFilter_currentChannelToggle =>
-      'Filter messages in this channel';
+  String get messageFilter_currentChannelToggle => 'Filter messages in this channel';
 
   @override
   String get messageFilter_ruleSaved => 'Rule saved';
@@ -9878,8 +9542,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_ghostIconTooltip => 'Hidden by your message filter';
 
   @override
-  String get messageFilter_saveError =>
-      'Could not save the message filter change.';
+  String get messageFilter_saveError => 'Could not save the message filter change.';
 
   @override
   String get messageFilter_loadOlder => 'Load older messages';
@@ -9891,8 +9554,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_duplicates => 'Repeated publications';
 
   @override
-  String get messageFilter_duplicatesSubtitle =>
-      'The same text posted again or by several senders.';
+  String get messageFilter_duplicatesSubtitle => 'The same text posted again or by several senders.';
 
   @override
   String get messageFilter_repeatSends => 'Sends to count as a repeat';
@@ -9906,26 +9568,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_repeatedCharacters => 'Repeated characters';
 
   @override
-  String get messageFilter_repeatedCharactersSubtitle =>
-      'Runs of 20 or more identical characters. Spaces and digits are ignored.';
+  String get messageFilter_repeatedCharactersSubtitle => 'Runs of 20 or more identical characters. Spaces and digits are ignored.';
 
   @override
-  String get messageFilter_reasonRepeatedCharacters =>
-      'Filtered: repeated characters';
+  String get messageFilter_reasonRepeatedCharacters => 'Filtered: repeated characters';
 
   @override
   String get messageFilter_reasonDuplicate => 'Filtered: repeated publication';
 
   @override
-  String get messageFilter_reasonCrossSenderDuplicate =>
-      'Filtered: the same text from several senders';
+  String get messageFilter_reasonCrossSenderDuplicate => 'Filtered: the same text from several senders';
 
   @override
   String get messageFilter_learning => 'Learn from spam feedback';
 
   @override
-  String get messageFilter_learningHelp =>
-      'Uses a local model. Only manual feedback is saved.';
+  String get messageFilter_learningHelp => 'Uses a local model. Only manual feedback is saved.';
 
   @override
   String messageFilter_learningSubtitle(int spam, int notSpam) {
@@ -9936,20 +9594,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_resetLearning => 'Reset learning';
 
   @override
-  String get messageFilter_resetLearningConfirm =>
-      'Clear the examples and reset the learned model? Your rules and message history are kept.';
+  String get messageFilter_resetLearningConfirm => 'Clear the examples and reset the learned model? Your rules and message history are kept.';
 
   @override
-  String get messageFilter_reasonLearned =>
-      'Filtered: similar to messages marked as spam';
+  String get messageFilter_reasonLearned => 'Filtered: similar to messages marked as spam';
 
   @override
-  String get messageFilter_learningSqlHelp =>
-      'Uses a local model and one SQLite training pool for all nodes.';
+  String get messageFilter_learningSqlHelp => 'Uses a local model and one SQLite training pool for all nodes.';
 
   @override
-  String get messageFilter_enableLearningPrompt =>
-      'To use the spam filter fully, enable learning. Enable it now?';
+  String get messageFilter_enableLearningPrompt => 'To use the spam filter fully, enable learning. Enable it now?';
 
   @override
   String get quickActions_title => 'Quick actions';
@@ -10047,8 +9701,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quickActions_required => 'Enter a value.';
 
   @override
-  String get quickActions_channelMissing =>
-      'The channel name must match exactly one channel on the connected radio.';
+  String get quickActions_channelMissing => 'The channel name must match exactly one channel on the connected radio.';
 
   @override
   String get quickActions_failed => 'Could not complete the action.';
@@ -10066,8 +9719,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get extraKeys_invalidPassword => 'Enter matching passwords.';
 
   @override
-  String get extraKeys_unlockError =>
-      'Could not unlock the keys. Check the password.';
+  String get extraKeys_unlockError => 'Could not unlock the keys. Check the password.';
 
   @override
   String get extraKeys_actionError => 'Could not complete the key action.';
@@ -10076,24 +9728,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get extraKeys_importNodeNever => 'Never for this node';
 
   @override
-  String get extraKeys_importNodePromptEnabled =>
-      'Ask to save the node’s private key on connection for later offline use';
+  String get extraKeys_importNodePromptEnabled => 'Ask to save the node’s private key on connection for later offline use';
 
   @override
-  String get extraKeys_clearImportNodeBlocks =>
-      'Clear the list of nodes with blocked key requests';
+  String get extraKeys_clearImportNodeBlocks => 'Clear the list of nodes with blocked key requests';
 
   @override
-  String get extraKeys_importNodeBlocksCleared =>
-      'List cleared. Key requests will resume on future connections.';
+  String get extraKeys_importNodeBlocksCleared => 'List cleared. Key requests will resume on future connections.';
 
   @override
-  String get extraKeys_importNodePrompt =>
-      'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
+  String get extraKeys_importNodePrompt => 'Save the node’s private key and name in the key list so you can receive messages addressed to it while it’s disconnected and send direct messages on its behalf?';
 
   @override
-  String get extraKeys_nodeExportUnavailable =>
-      'This firmware does not allow exporting the node’s private key.';
+  String get extraKeys_nodeExportUnavailable => 'This firmware does not allow exporting the node’s private key.';
 
   @override
   String get extraKeys_advertise => 'Send Flood advert';
@@ -10114,12 +9761,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get extraKeys_generate => 'Generate private key';
 
   @override
-  String get extraKeys_encrypted =>
-      'The key will be stored encrypted in the app.';
+  String get extraKeys_encrypted => 'The key will be stored encrypted in the app.';
 
   @override
-  String get extraKeys_invalidKey =>
-      'Enter a valid name and a 64-byte MeshCore private key.';
+  String get extraKeys_invalidKey => 'Enter a valid name and a 64-byte MeshCore private key.';
 
   @override
   String get extraKeys_rememberUnlock => 'Remember unlock on this device';
@@ -10131,8 +9776,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get extraKeys_locked => 'Key unavailable';
 
   @override
-  String get extraKeys_roomLoginFailed =>
-      'Could not confirm posting access for this key. Check the room password and connection.';
+  String get extraKeys_roomLoginFailed => 'Could not confirm posting access for this key. Check the room password and connection.';
 
   @override
   String get themes_mcoaHeading => 'MCOa settings:';
@@ -10234,8 +9878,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themes_mcoaComposerCounter => 'Byte counter color';
 
   @override
-  String get themes_mcoaComposerCounterWarning =>
-      'Byte counter color (almost full)';
+  String get themes_mcoaComposerCounterWarning => 'Byte counter color (almost full)';
 
   @override
   String get themes_mcoaComposerCounterError => 'Byte counter color (exceeded)';
@@ -10265,8 +9908,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themes_mcoaSearchBorder => 'Search: border';
 
   @override
-  String get themes_mcoaSearchContactsBackground =>
-      'Search: background (contacts)';
+  String get themes_mcoaSearchContactsBackground => 'Search: background (contacts)';
 
   @override
   String get themes_mcoaSearchBackground => 'Search: background';
@@ -10341,20 +9983,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themes_mcoaSenderNameBrightness => 'Sender name brightness';
 
   @override
-  String get extraKeys_ackWithoutPath =>
-      'Confirm delivery without sending a route';
+  String get extraKeys_ackWithoutPath => 'Confirm delivery without sending a route';
 
   @override
-  String get extraKeys_ackWithoutPathHelper =>
-      'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.';
+  String get extraKeys_ackWithoutPathHelper => 'Do not send PATH with an embedded ACK, to avoid affecting the route saved by the sender; for a flood message, reply with a flood ACK, which the sender may still use to assign a route.';
 
   @override
-  String get backup_officialFormat =>
-      'Export in the official MeshCore app format';
+  String get backup_officialFormat => 'Export in the official MeshCore app format';
 
   @override
-  String get backup_officialFormatHint =>
-      'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.';
+  String get backup_officialFormatHint => 'Creates unencrypted JSON. The password does not apply. Only data supported by the official format is included; MCOa settings and additional keys are excluded.';
 
   @override
   String dataTransfer_portableOfferBody(String target) {
@@ -10368,8 +10006,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_senderByName => 'By sender name';
 
   @override
-  String get messageFilter_senderKeyHelp =>
-      'A verified matching key is filtered even after a name change. A different verified key is allowed. Without a verified signature, the sender name is used.';
+  String get messageFilter_senderKeyHelp => 'A verified matching key is filtered even after a name change. A different verified key is allowed. Without a verified signature, the sender name is used.';
 
   @override
   String messageFilter_filterSenderKeyConfirm(String name) {
@@ -10380,8 +10017,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageFilter_ruleFieldMcmpKey => 'MCMP key';
 
   @override
-  String get messageFilter_invalidMcmpKey =>
-      'Enter a 64-character hexadecimal public key';
+  String get messageFilter_invalidMcmpKey => 'Enter a 64-character hexadecimal public key';
 
   @override
   String get messageFilter_unblockSender => 'Unblock sender';
@@ -10393,8 +10029,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get channelRegionFilter_noneAllowed => 'None';
 
   @override
-  String get channelRegionFilter_saveError =>
-      'Could not save the region filter';
+  String get channelRegionFilter_saveError => 'Could not save the region filter';
 
   @override
   String get channelRegionFilter_unknown => 'Unknown regions';
@@ -10404,4 +10039,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => '葡萄牙语（葡萄牙）';
+
+  @override
+  String get receivedImage_syntheticBadge => 'AI 重建';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return '离线 · $name';
+  }
+
+  @override
+  String get appBar_offline => '离线';
+
+  @override
+  String get appBar_reconnecting => '正在重新连接…';
+
+  @override
+  String get connectSheet_title => '连接无线电';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return '重新连接到 $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => '选择无线电';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => '蓝牙、USB 或 TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => '停止重新连接';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return '无法连接到 $name。请确保其已开机且在附近。';
+  }
+
+  @override
+  String get chat_composerOffline => '连接到无线电后才能发送消息';
 }

@@ -200,38 +200,38 @@ class AppLocalizationsSl extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Varnostna kopija in obnovitev';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Shranite ali obnovite podatke aplikacije in nastavitve radia';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Uvozi';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Uvozi datoteko';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Geslo (neobvezno)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Elementi varnostne kopije in obnovitve';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Nastavitve lokacije';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Zasebni ključ (občutljivo)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'Ključ API IPFS (občutljivo)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Ključ API Stadia Maps (občutljivo)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1405,10 +1405,11 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settings_actions => 'Akcije';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Izvozi';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Izvozi kontakte in repetitorje kot GPX';
 
   @override
   String get settings_deleteAllPaths => 'Izbriši vse poti';
@@ -2215,23 +2216,23 @@ class AppLocalizationsSl extends AppLocalizations {
   String get contacts_noMembers => 'Ni članov.';
 
   @override
-  String get contacts_lastSeenNow => 'Nazadnje viden zdaj';
+  String get contacts_lastSeenNow => 'pravkar';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return 'Zadnjič viden pred $minutes minutami';
+    return '~ $minutes min';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => 'Zadnjič viden pred 1 uro.';
+  String get contacts_lastSeenHourAgo => '~ 1 ura';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return 'Zadnjič viden pred $hours urami';
+    return '~ $hours ur';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => 'Zadnjič viden pred 1 dnem';
+  String get contacts_lastSeenDayAgo => '~ 1 dan';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
@@ -11008,4 +11009,47 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugalski (Portugalska)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Rekonstruirala UI';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Brez povezave · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Brez povezave';
+
+  @override
+  String get appBar_reconnecting => 'Ponovno povezovanje…';
+
+  @override
+  String get connectSheet_title => 'Poveži radio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Ponovno poveži z $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Izberi radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB ali TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Ustavi ponovno povezovanje';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Ni mogoče doseči $name. Preverite, ali je vklopljen in v bližini.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Za pošiljanje sporočil se povežite z radiem';
 }

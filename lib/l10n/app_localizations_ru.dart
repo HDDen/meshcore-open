@@ -1144,7 +1144,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanner_stop => 'Стоп';
 
   @override
-  String get scanner_scan => 'Сканирование';
+  String get scanner_scan => 'Сканировать';
 
   @override
   String get scanner_bluetoothOff => 'Bluetooth выключен';
@@ -1220,7 +1220,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionEmptyExplanation =>
-      'Регионы ограничивают рассылку сообщений только ретрансляторами в заданной области. Получите их с ближних ретрансляторов или добавьте по названию.';
+      'Регионы ограничивают Flood-сообщения только ретрансляторами в заданной области. Получите их с ближних ретрансляторов или добавьте по названию.';
 
   @override
   String get settings_regionFetchFromRepeaters => 'Получить с ретрансляторов';
@@ -1248,7 +1248,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionRadioDefaultSubtitle =>
-      'Сохраняется на радио. Его используют рассылки flood без региона — из этого и любого другого приложения, подключённого к радио.';
+      'Сохраняется на радио. Его используют Flood-пакеты без региона — из этого и любого другого приложения, подключённого к радио.';
 
   @override
   String get settings_regionRadioDefaultUpdated =>
@@ -1680,7 +1680,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_languageSl => 'Словенский';
 
   @override
-  String get appSettings_languagePt => 'Португальский';
+  String get appSettings_languagePt => 'Португальский (Бразилия)';
 
   @override
   String get appSettings_languageIt => 'Итальянский';
@@ -2582,12 +2582,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String channels_regionRadioDefaultApplies(String region) {
-    return 'Это радио отправляет flood без региона в свой регион по умолчанию: $region.';
+    return 'Это радио отправляет Flood без региона в свой регион по умолчанию: $region.';
   }
 
   @override
   String get channels_regionSelectExplanation =>
-      'Сообщения рассылки в этом канале будут пересылаться только ретрансляторами в выбранном регионе.';
+      'Flood-сообщения в этом канале будут пересылаться только ретрансляторами в выбранном регионе.';
 
   @override
   String get channels_regionEmpty => 'Регионов пока нет.';
@@ -3985,7 +3985,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get repeater_neighbors => 'Соседи';
 
   @override
-  String get repeater_neighborsSubtitle => 'Просмотр соседей на нулевом хопе.';
+  String get repeater_neighborsSubtitle => 'Просмотр соседей Zero Hop.';
 
   @override
   String get repeater_settings => 'Настройки';
@@ -4746,7 +4746,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionAllowf =>
-      'Разрешает рассылку («F»lood) для заданного региона. («*» для глобальной/устаревшей области)';
+      'Разрешает «F»lood для заданного региона. («*» для глобальной/устаревшей области)';
 
   @override
   String get repeater_cliHelpRegionDenyf =>
@@ -8331,7 +8331,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliRegionLoadActive =>
-      'Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить рассылку по сети). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.';
+      'Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить Flood). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.';
 
   @override
   String get repeater_cliRegionLoadHint =>
@@ -8346,19 +8346,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMaxUnscoped =>
-      'Задаёт максимальное число хопов для пересылки пакетов рассылки (flood) без региональной области (0-64).';
+      'Задаёт максимальное число хопов для пересылки Flood-пакетов без региональной области (0-64).';
 
   @override
   String get repeater_cliHelpSetFloodMaxAdvert =>
-      'Задаёт максимальное число хопов для пересылки анонсов, рассылаемых по сети (flood) (0-64).';
+      'Задаёт максимальное число хопов для пересылки Flood-анонсов (0-64).';
 
   @override
   String get repeater_cliHelpGetFloodMaxUnscoped =>
-      'Показывает максимальное число хопов для пакетов рассылки (flood) без региональной области.';
+      'Показывает максимальное число хопов для Flood-пакетов без региональной области.';
 
   @override
   String get repeater_cliHelpGetFloodMaxAdvert =>
-      'Показывает максимальное число хопов для анонсов, рассылаемых по сети (flood).';
+      'Показывает максимальное число хопов для Flood-анонсов.';
 
   @override
   String get repeater_cliHelpSetRadioFemRxGain =>
@@ -11044,4 +11044,47 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Акцентный цвет (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Португальский (Португалия)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Реконструировано ИИ';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Не в сети · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Не в сети';
+
+  @override
+  String get appBar_reconnecting => 'Переподключение…';
+
+  @override
+  String get connectSheet_title => 'Подключить радио';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Переподключиться к $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Выбрать радио';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB или TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Остановить переподключение';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Не удалось связаться с $name. Убедитесь, что оно включено и находится рядом.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Подключитесь к радио, чтобы отправлять сообщения';
 }

@@ -31,7 +31,6 @@ class DuplicateTracker {
 
   static const _sameSenderWindowMs = 10 * Duration.millisecondsPerMinute;
   static const _crossSenderWindowMs = 30 * Duration.millisecondsPerMinute;
-  static const _sameSenderMinWords = 3;
   static const _crossSenderMinWords = 6;
 
   static const _maxAllowedTexts = 4000;
@@ -54,12 +53,11 @@ class DuplicateTracker {
     int sameSenderSends = MessageFilterSettings.minRepeatSends,
     Object? publicationId,
   }) {
-    if (textKey.length < 10) return null;
+    if (textKey.isEmpty) return null;
     var words = 1;
     for (var i = 0; i < textKey.length && words < _crossSenderMinWords; i++) {
       if (textKey.codeUnitAt(i) == 0x20) words++;
     }
-    if (words < _sameSenderMinWords) return null;
 
     final key = (channelId, textKey);
     if (_allowed.contains(key)) return null;

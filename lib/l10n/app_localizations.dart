@@ -122,6 +122,7 @@ abstract class AppLocalizations {
     Locale('nl'),
     Locale('pl'),
     Locale('pt'),
+    Locale('pt', 'PT'),
     Locale('ru'),
     Locale('sk'),
     Locale('sl'),
@@ -2886,7 +2887,7 @@ abstract class AppLocalizations {
   /// No description provided for @appSettings_languagePt.
   ///
   /// In en, this message translates to:
-  /// **'Português'**
+  /// **'Português (Brasil)'**
   String get appSettings_languagePt;
 
   /// No description provided for @appSettings_languageIt.
@@ -18453,6 +18454,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accent color (Warning)'**
   String get themes_mcoaWarning;
+
+  /// No description provided for @appSettings_languagePtPt.
+  ///
+  /// In en, this message translates to:
+  /// **'Português (Portugal)'**
+  String get appSettings_languagePtPt;
+
+  /// Permanent label burnt into the bottom of every received image that an AI model reconstructed from a tiny bitstream. Must never be empty; keep it short (one line over a narrow image).
+  ///
+  /// In en, this message translates to:
+  /// **'AI-reconstructed'**
+  String get receivedImage_syntheticBadge;
+
+  /// App bar subtitle while no radio is connected; name is the last connected radio
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · {name}'**
+  String appBar_offlineSubtitle(String name);
+
+  /// App bar subtitle while no radio is connected and no radio name is known
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get appBar_offline;
+
+  /// App bar chip while the app is reconnecting to the radio
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get appBar_reconnecting;
+
+  /// Title of the sheet opened by the Connect button
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio'**
+  String get connectSheet_title;
+
+  /// Connect sheet option that reconnects to the last radio
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect to {name}'**
+  String connectSheet_reconnect(String name);
+
+  /// Connect sheet option that opens the radio scanner
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a radio'**
+  String get connectSheet_chooseRadio;
+
+  /// Subtitle of the Choose a radio option
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth, USB or TCP'**
+  String get connectSheet_chooseRadioSubtitle;
+
+  /// Connect sheet option that cancels the automatic reconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Stop reconnecting'**
+  String get connectSheet_stopReconnecting;
+
+  /// Shown when reconnecting to the last radio fails
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach {name}. Make sure it is on and nearby.'**
+  String connectSheet_reconnectFailed(String name);
+
+  /// Shown in place of the message box while no radio is connected
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a radio to send messages'**
+  String get chat_composerOffline;
 }
 
 class _AppLocalizationsDelegate
@@ -18491,6 +18564,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'pt':
+      {
+        switch (locale.countryCode) {
+          case 'PT':
+            return AppLocalizationsPtPt();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'bg':

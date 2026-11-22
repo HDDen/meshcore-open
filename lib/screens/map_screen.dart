@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../widgets/connect_sheet.dart';
 import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings.dart';
@@ -1377,9 +1378,11 @@ class _MapScreenState extends State<MapScreen>
                       child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
-                        text: context.l10n.common_disconnect,
+                        text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
                       ),
-                      onTap: () => _disconnect(context, connector),
+                      onTap: () => connector.isConnected
+                          ? _disconnect(this.context, connector)
+                          : showConnectSheet(this.context),
                     ),
                     PopupMenuItem(
                       child: PopupMenuRow(
@@ -6631,31 +6634,8 @@ class _MapScreenState extends State<MapScreen>
     }
   }
 
-  Future<void> _disconnect(
-    BuildContext context,
-    MeshCoreConnector connector,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.common_disconnect),
-        content: Text(context.l10n.map_disconnectConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(context.l10n.common_disconnect),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await connector.disconnect();
-    }
+  Future<void> _disconnect(BuildContext context, MeshCoreConnector connector) async {
+    await showDisconnectDialog(context, connector);
   }
 
   Future<void> _clearDiscoveredContactsCache(

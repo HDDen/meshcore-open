@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../connector/meshcore_connector.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../l10n/l10n.dart';
+import '../utils/radio_guard.dart';
 import '../models/channel.dart';
 import '../services/app_settings_service.dart';
 import 'channel_widget_color_picker.dart';
@@ -18,6 +19,7 @@ void showChannelEditSheet(
   MeshCoreConnector connector,
   Channel channel,
 ) {
+  if (!ensureRadioConnected(context)) return;
   final appSettingsService = Provider.of<AppSettingsService>(
     context,
     listen: false,
@@ -336,6 +338,7 @@ void showChannelEditSheet(
                     Expanded(
                       child: FilledButton(
                         onPressed: () async {
+                          if (!ensureRadioConnected(context)) return;
                           final name = nameController.text.trim();
                           final pskHex = pskController.text.trim();
 

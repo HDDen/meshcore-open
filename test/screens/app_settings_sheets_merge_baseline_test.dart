@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -374,7 +375,12 @@ void main() {
           ('dark', l10n.appSettings_themeDark),
           ('system', l10n.appSettings_themeSystem),
         ]) {
-          final option = find.descendant(of: control, matching: find.text(label));
+          final option = find.descendant(
+            of: control,
+            matching: find.byWidgetPredicate(
+              (widget) => widget is MeshSegmentLabel && widget.text == label,
+            ),
+          );
           expect(option.hitTestable(), findsOneWidget);
           await tester.tap(option);
           await tester.pumpAndSettle();

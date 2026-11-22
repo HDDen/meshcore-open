@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
+import '../l10n/locale_tag.dart';
 import '../helpers/background_task_options.dart';
 import '../helpers/android_cpu_runtime.dart';
 import '../helpers/uptime_heartbeat_monitor.dart';
@@ -483,7 +484,7 @@ class BackgroundService {
     final supported = AppLocalizations.supportedLocales;
     final override = _languageOverrideProvider?.call();
     if (override != null && override.isNotEmpty) {
-      final overrideLocale = Locale(override);
+      final overrideLocale = localeFromTag(override);
       final isSupported = supported.any(
         (l) => l.languageCode == overrideLocale.languageCode,
       );

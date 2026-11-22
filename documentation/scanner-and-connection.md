@@ -6,7 +6,7 @@ On Android and iOS, returning to the app immediately retries a lost BLE or TCP c
 
 ## BLE Scanner (Home Screen)
 
-The BLE Scanner is the app's home screen, displayed immediately on launch.
+The scanner is shown on launch when no radio has been remembered. Otherwise the app opens Channels with the last radio's saved data; see [offline mode](offline-mode.md).
 
 ### How to Access
 
@@ -84,7 +84,7 @@ Tap a device tile or its Connect button:
 
 ### Offline History
 
-The Offline button is available on the BLE scanner and on the USB and TCP connection screens. It opens a source picker with:
+The default offline mode opens the last remembered radio automatically and offers a Connect sheet. The old Offline source picker on BLE, USB and TCP screens is hidden and disabled by default. The private module can unlock it with its independent legacy-offline activation phrase. Once unlocked, it offers:
 
 - **Shared mode** first: combines saved contacts, channels and messages from every known node scope.
 - One entry for each previously connected node: opens only that node's locally stored history and UI state.
@@ -94,8 +94,8 @@ Offline history is read-only with respect to the radio. Chats, message search, t
 ### Connection Loss and Recovery
 
 - A recoverable BLE loss keeps the current screen open and shows a red reconnecting snackbar. Pending messages remain queued while the connector retries indefinitely; after a successful handshake they resume naturally and a green reconnected snackbar is shown.
-- Manual disconnect returns to the selected connection screen.
-- При потере USB-соединения приложение возвращается к экрану подключения. BLE и ранее установленный TCP поддерживают автоматическое восстановление; особенности TCP описаны в разделе [Automatic Reconnect](#automatic-reconnect).
+- Manual disconnect stays on the current screen with saved radio data, read-only. The Connect action can reconnect or choose another radio.
+- При потере USB-соединения текущий экран остаётся открыт для чтения. BLE и ранее установленный TCP поддерживают автоматическое восстановление; особенности TCP описаны в разделе [Automatic Reconnect](#automatic-reconnect).
 - On Android, the foreground-service notification reflects connected/reconnecting state. The service retains the main Flutter engine; it does not contain a second BLE connector.
 
 ---
@@ -114,7 +114,7 @@ From the Scanner screen, tap the **USB** icon button in the app bar.
   - Raw port name (subtitle, only shown when it differs from the display name)
   - Chevron trailing icon (the entire tile is tappable to connect)
 - Transport switcher buttons (outlined, not FABs) to switch to BLE or TCP (these use `pushReplacement`, so back navigation returns to Scanner, not between USB/TCP)
-- An **Offline** button for opening saved history without selecting a serial port
+- A legacy **Offline** history picker, visible only after its private-module activation
 
 ### Key Interactions
 
@@ -199,7 +199,7 @@ From the Scanner screen, tap the **TCP/IP** icon button in the app bar.
 - **Port number** text field
 - **Connect** button
 - Transport switcher buttons (outlined, not FABs) to switch to USB or BLE
-- An **Offline** button for opening saved history without connecting to the configured endpoint
+- A legacy **Offline** history picker, visible only after its private-module activation
 
 ### Key Interactions
 

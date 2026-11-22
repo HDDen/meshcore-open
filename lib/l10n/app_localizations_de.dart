@@ -200,38 +200,40 @@ class AppLocalizationsDe extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Sichern & Wiederherstellen';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'App-Daten und Funkeinstellungen sichern oder wiederherstellen';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importieren';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Datei importieren';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Passwort (optional)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items =>
+      'Elemente für Sicherung und Wiederherstellung';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Standorteinstellungen';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Privater Schlüssel (sensibel)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS-API-Schlüssel (sensibel)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey =>
+      'Stadia-Maps-API-Schlüssel (sensibel)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1412,10 +1414,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_actions => 'Aktionen';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exportieren';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Kontakte und Repeater als GPX exportieren';
 
   @override
   String get settings_deleteAllPaths => 'Alle Pfade löschen';
@@ -1675,7 +1678,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appSettings_languageSl => 'Slowenisch';
 
   @override
-  String get appSettings_languagePt => 'Portugiesisch';
+  String get appSettings_languagePt => 'Portugiesisch (Brasilien)';
 
   @override
   String get appSettings_languageIt => 'Italienisch';
@@ -2855,7 +2858,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get routing_title => 'Routing';
 
   @override
-  String get routing_modeAuto => 'Automatisch';
+  String get routing_modeAuto => 'Auto';
 
   @override
   String get routing_modeFlood => 'Flood';
@@ -11074,4 +11077,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugiesisch (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'KI-rekonstruiert';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Verbindung wird wiederhergestellt…';
+
+  @override
+  String get connectSheet_title => 'Funkgerät verbinden';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Erneut mit $name verbinden';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Funkgerät auswählen';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB oder TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Wiederverbindung abbrechen';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return '$name ist nicht erreichbar. Stellen Sie sicher, dass es eingeschaltet und in der Nähe ist.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Mit einem Funkgerät verbinden, um Nachrichten zu senden';
 }

@@ -200,38 +200,37 @@ class AppLocalizationsJa extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'バックアップと復元';
 
   @override
-  String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+  String get backupRestore_subtitle => 'アプリのデータと無線機の設定を保存または復元します';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'インポート';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'ファイルをインポート';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'パスワード（任意）';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'バックアップと復元の項目';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => '位置情報設定';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => '秘密鍵（機密）';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS APIキー（機密）';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Stadia Maps APIキー（機密）';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1380,10 +1379,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settings_actions => '操作';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'エクスポート';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle => '連絡先とリピータをGPXでエクスポート';
 
   @override
   String get settings_deleteAllPaths => 'すべての経路を削除';
@@ -1638,7 +1637,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appSettings_languageSl => 'スロベニア語';
 
   @override
-  String get appSettings_languagePt => 'ポルトガル語';
+  String get appSettings_languagePt => 'ポルトガル語（ブラジル）';
 
   @override
   String get appSettings_languageIt => 'イタリア語';
@@ -10599,4 +10598,46 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'ポルトガル語（ポルトガル）';
+
+  @override
+  String get receivedImage_syntheticBadge => 'AI再構築';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'オフライン · $name';
+  }
+
+  @override
+  String get appBar_offline => 'オフライン';
+
+  @override
+  String get appBar_reconnecting => '再接続中…';
+
+  @override
+  String get connectSheet_title => '無線機に接続';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return '$name に再接続';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => '無線機を選択';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth、USB、またはTCP';
+
+  @override
+  String get connectSheet_stopReconnecting => '再接続を停止';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return '$name に接続できませんでした。電源が入っていて近くにあることを確認してください。';
+  }
+
+  @override
+  String get chat_composerOffline => 'メッセージを送信するには無線機に接続してください';
 }

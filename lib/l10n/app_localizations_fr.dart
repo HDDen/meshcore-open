@@ -200,38 +200,38 @@ class AppLocalizationsFr extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Sauvegarde et restauration';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Enregistrer ou restaurer les données de l\'application et les réglages de la radio';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importer';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Importer un fichier';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Mot de passe (facultatif)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Éléments de sauvegarde et de restauration';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Réglages de position';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Clé privée (sensible)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'Clé API IPFS (sensible)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Clé API Stadia Maps (sensible)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1397,11 +1397,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdate =>
-      'Annonce zéro saut automatique lors de la mise à jour GPS';
+      'Annonce Zero Hop automatique lors de la mise à jour GPS';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      'Lorsque la position GPS change, envoyer une annonce zéro saut (nécessite la position dans l\'annonce).';
+      'Lorsque la position GPS change, envoyer une annonce Zero Hop (nécessite la position dans l\'annonce).';
 
   @override
   String get settings_multiAck => 'Plusieurs accusés de réception';
@@ -1418,10 +1418,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_actions => 'Actions';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exporter';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Exporter les contacts et répéteurs au format GPX';
 
   @override
   String get settings_deleteAllPaths => 'Supprimer tous les chemins';
@@ -1682,7 +1683,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appSettings_languageSl => 'Slovène';
 
   @override
-  String get appSettings_languagePt => 'Portugais';
+  String get appSettings_languagePt => 'Portugais (Brésil)';
 
   @override
   String get appSettings_languageIt => 'Italien';
@@ -3917,7 +3918,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get login_autoUseSavedPath => 'Auto (utiliser le chemin sauvegardé)';
 
   @override
-  String get login_forceFloodMode => 'Mode tout le réseau forcé';
+  String get login_forceFloodMode => 'Mode flood forcé';
 
   @override
   String get login_managePaths => 'Gérer les chemins';
@@ -4104,17 +4105,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
-    return 'Total : $total, Tout le réseau : $flood, Direct : $direct';
+    return 'Total : $total, Flood : $flood, Direct : $direct';
   }
 
   @override
   String repeater_packetRxTotal(int total, String flood, String direct) {
-    return 'Total : $total, Tout le réseau : $flood, Direct : $direct';
+    return 'Total : $total, Flood : $flood, Direct : $direct';
   }
 
   @override
   String repeater_duplicatesFloodDirect(String flood, String direct) {
-    return 'Tout le réseau : $flood, Direct : $direct';
+    return 'Flood : $flood, Direct : $direct';
   }
 
   @override
@@ -4225,8 +4226,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodAdvertInterval =>
-      'Intervalle des annonces à tout le réseau (flood)';
+  String get repeater_floodAdvertInterval => 'Intervalle des annonces flood';
 
   @override
   String repeater_floodAdvertIntervalHours(int hours) {
@@ -4457,7 +4457,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Diffuser une annonce flood via le réseau.';
 
   @override
-  String get repeater_sendAdvertZeroHop => 'Envoyer une annonce sans relais';
+  String get repeater_sendAdvertZeroHop => 'Envoyer une annonce Zero Hop';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
@@ -5408,7 +5408,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get channelPath_unknownPath => 'Inconnu';
 
   @override
-  String get channelPath_floodPath => 'Tout le réseau';
+  String get channelPath_floodPath => 'Flood';
 
   @override
   String get channelPath_directPath => 'Direct';
@@ -5963,10 +5963,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get contacts_zeroHopAdvert => 'Annonce Zero saut';
+  String get contacts_zeroHopAdvert => 'Annonce Zero Hop';
 
   @override
-  String get contacts_floodAdvert => 'Annonce à tout le réseau';
+  String get contacts_floodAdvert => 'Annonce flood';
 
   @override
   String get contacts_copyAdvertToClipboard =>
@@ -10318,7 +10318,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get themes_iconReset => 'Utiliser l\'icône par défaut';
 
   @override
-  String get themes_iconRoom => 'Rooms';
+  String get themes_iconRoom => 'Salles';
 
   @override
   String get themes_iconSend => 'Bouton d\'envoi';
@@ -11095,4 +11095,47 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugais (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Reconstruite par IA';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Hors ligne · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Hors ligne';
+
+  @override
+  String get appBar_reconnecting => 'Reconnexion…';
+
+  @override
+  String get connectSheet_title => 'Connecter une radio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Se reconnecter à $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Choisir une radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB ou TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Arrêter la reconnexion';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Impossible de joindre $name. Vérifiez qu\'elle est allumée et à proximité.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Connectez-vous à une radio pour envoyer des messages';
 }

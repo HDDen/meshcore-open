@@ -15,6 +15,7 @@ import '../services/repeater_command_service.dart';
 import '../services/storage_service.dart';
 import '../theme/mesh_theme.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/mesh_nav_tile.dart';
 import '../widgets/radio_disconnected_banner.dart';
 import '../widgets/routing_sheet.dart';
 import '../utils/keys.dart';
@@ -1508,7 +1509,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                 )
               : null,
         ),
-        body: SafeArea(
+        body: MeshSettingsTileTheme(child: SafeArea(
           top: false,
           child: _isLoading && _nameController.text.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -1564,7 +1565,7 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
                     _buildDangerZoneCard(),
                   ],
                 ),
-        ),
+        )),
       ),
     );
   }
@@ -2009,12 +2010,16 @@ class _RepeaterSettingsScreenState extends State<RepeaterSettingsScreen> {
     return Row(
       children: [
         Expanded(
-          child: SwitchListTile(
+          child: AnimatedOpacity(
+            opacity: loaded ? 1 : 0.6,
+            duration: const Duration(milliseconds: 150),
+            child: SwitchListTile(
             title: Text(title),
             subtitle: Text(subtitle),
             value: loaded && value,
             onChanged: loaded ? onChanged : null,
             contentPadding: EdgeInsets.zero,
+            ),
           ),
         ),
         IconButton(

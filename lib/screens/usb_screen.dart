@@ -15,7 +15,7 @@ import '../widgets/empty_state.dart';
 import '../widgets/mesh_ui.dart';
 import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
-import 'channels_screen.dart';
+import '../utils/main_navigation.dart';
 import 'tcp_screen.dart';
 
 class UsbScreen extends StatefulWidget {
@@ -62,9 +62,7 @@ class _UsbScreenState extends State<UsbScreen> with WidgetsBindingObserver {
         // would replace whatever screen the user has pushed above it.
         if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
         _navigatedToChannels = true;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
-        );
+        navigateToMainAfterConnect(context);
       }
     };
     _connector.addListener(_connectionListener);

@@ -17,6 +17,8 @@ import 'package:provider/provider.dart';
 
 import '../config/build_features.dart';
 import '../connector/meshcore_connector.dart';
+import '../widgets/offline_composer_bar.dart';
+import '../utils/radio_guard.dart';
 import '../models/community.dart';
 import '../storage/community_store.dart';
 import '../utils/platform_info.dart';
@@ -397,7 +399,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// (see [_onCoveringRouteStatus]).
   Future<void> _loadCommunities() async {
     final connector = context.read<MeshCoreConnector>();
-    _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    _communityStore.setPublicKeyHex = connector.storageKeyHex;
     final communities = await _communityStore.loadCommunities();
     if (mounted) {
       setState(() {
@@ -587,6 +589,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   void _setReplyingTo(ChannelMessage message) {
+    if (!ensureRadioConnected(context)) return;
     final connector = context.read<MeshCoreConnector>();
     final settings = context.read<AppSettingsService>().settings;
     final draft = _composerBodyText(_textController.text);
@@ -4625,6 +4628,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
 
   Widget _buildMessageComposer(BuildContext context) {
     final connector = context.watch<MeshCoreConnector>();
+    if (!connector.isConnected) return const OfflineComposerBar();
     final settings = context.watch<AppSettingsService>().settings;
     final scheme = Theme.of(context).colorScheme;
     final maxBytes = _maxChannelComposerBytes(connector, settings);
@@ -5526,7 +5530,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
           message,
     ];
     final selected = selectable.where(_messageSelection.contains).toList();
-    final editable = connector.isChannelFilterEnabled(channel)
+    final editable = connector.isConnected && connector.isChannelFilterEnabled(channel)
         ? selected.where((message) =>
             canSelectChannelVerdict(connector, channel, message))
         : const <ChannelMessage>[];
@@ -5581,6 +5585,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   }
 
   Future<void> _showMessageActions(ChannelMessage message) async {
+    final readOnly = isRadioReadOnly(context.read<MeshCoreConnector>());
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
     final hasMcoOriginal = mcoImage == null
@@ -5599,7 +5604,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final filter = connector.messageFilterService;
     final filterChannelId = widget.channel.storageId;
     final canFilterMessage =
-        filter != null &&
+        !readOnly && filter != null &&
         filter.appliesTo(filterChannelId) &&
         filterChannelId != null &&
         !connector.isOfflineSharedMode &&
@@ -5650,12 +5655,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       _showMessagePathInfo(message);
                     },
                   ),
-                // Can't react to your own messages
-                if (!message.isOutgoing)
-                  ListTile(
-                    leading: const Icon(Icons.add_reaction_outlined),
-                    title: Text(context.l10n.chat_addReaction),
-                    onTap: () {
+              // Can't react to your own messages
+              if (!message.isOutgoing)
+                ListTile(
+                  enabled: !readOnly,
+                  leading: const Icon(Icons.add_reaction_outlined),
+                  title: Text(context.l10n.chat_addReaction),
+                  onTap: () {
                       Navigator.pop(sheetContext);
                       _showEmojiPicker(message);
                     },
@@ -5881,6 +5887,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                     },
                   ),
                 ListTile(
+                  enabled: !readOnly,
                   leading: const Icon(Icons.delete_outline),
                   iconColor: McoaThemeStyle.of(context).colors['warning'],
                   textColor: McoaThemeStyle.of(context).colors['warning'],

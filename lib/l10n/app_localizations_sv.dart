@@ -200,38 +200,40 @@ class AppLocalizationsSv extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Säkerhetskopia och återställning';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Spara eller återställ appdata och radioinställningar';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importera';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Importera fil';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Lösenord (valfritt)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items =>
+      'Objekt för säkerhetskopiering och återställning';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Platsinställningar';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Privat nyckel (känslig)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS API-nyckel (känslig)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey =>
+      'API-nyckel för Stadia Maps (känslig)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1405,10 +1407,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settings_actions => 'Åtgärder';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exportera';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Exportera kontakter och repeatrar som GPX';
 
   @override
   String get settings_deleteAllPaths => 'Ta bort alla rutter';
@@ -1478,7 +1481,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get settings_aboutLegalese => '2026 MeshCore Open Source Project';
+  String get settings_aboutLegalese => '2026 MeshCore Open Source-projekt';
 
   @override
   String get settings_aboutDescription =>
@@ -1668,7 +1671,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get appSettings_languageSl => 'Sloveniska';
 
   @override
-  String get appSettings_languagePt => 'Portugisiska';
+  String get appSettings_languagePt => 'Portugisiska (Brasilien)';
 
   @override
   String get appSettings_languageIt => 'Italienska';
@@ -10996,4 +10999,47 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugisiska (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'AI-rekonstruerad';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Återansluter…';
+
+  @override
+  String get connectSheet_title => 'Anslut en radio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Återanslut till $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Välj en radio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB eller TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Sluta återansluta';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Kunde inte nå $name. Kontrollera att den är påslagen och i närheten.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Anslut till en radio för att skicka meddelanden';
 }

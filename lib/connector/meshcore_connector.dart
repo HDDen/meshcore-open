@@ -174,6 +174,8 @@ import '../storage/contact_location_estimate_store.dart';
 import '../storage/contact_discovery_store.dart';
 import '../storage/contact_settings_store.dart';
 import '../storage/contact_store.dart';
+import '../storage/last_radio_store.dart';
+import '../helpers/legacy_offline_access.dart';
 import '../storage/contact_group_store.dart';
 import '../storage/message_store.dart';
 import '../storage/message_history_storage.dart';
@@ -278,6 +280,14 @@ enum MeshCoreConnectionState {
 }
 
 enum MeshCoreTransportType { bluetooth, usb, tcp, review }
+
+/// Thrown by [MeshCoreConnector.sendFrame] when no radio is connected.
+class RadioNotConnectedException implements Exception {
+  const RadioNotConnectedException();
+
+  @override
+  String toString() => 'Exception: Not connected to a MeshCore device';
+}
 
 class RepeaterBatterySnapshot {
   final int millivolts;
@@ -930,6 +940,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _lastEvictDiscoveredContacts = false;
   final Map<String, _PendingContactSend> _pendingContactSends = {};
   final Map<String, _PendingChannelSend> _pendingChannelSends = {};
+  final LastRadioStore _lastRadioStore = LastRadioStore();
+  LastRadio? _lastRadio;
+  String? _offlineScopeKeyHex;
+  int _offlineLoadGeneration = 0;
   bool _isOfflineMode = false;
   bool _isOfflineSharedMode = false;
   String? _offlineHistoryScope;
@@ -1075,12 +1089,9 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _unreadStateLoaded ? _contactUnreadCount.version : -1;
 
   List<Contact> get contacts {
-    final selfKey = _selfPublicKey;
-    if (selfKey == null) {
-      return List.unmodifiable(_contacts);
-    }
+    final selfKey = storageKeyHex;
     return List.unmodifiable(
-      _contacts.where((contact) => !listEquals(contact.publicKey, selfKey)),
+      _contacts.where((contact) => contact.publicKeyHex != selfKey),
     );
   }
 
@@ -1284,10 +1295,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         : _channels,
   );
   bool get isConnected => _state == MeshCoreConnectionState.connected;
-  bool get isOfflineMode => _isOfflineMode;
+  bool get isLegacyOfflineSession => _isOfflineMode;
+  bool get isOfflineMode => _isOfflineMode || (!isConnected && hasRadioData);
   bool get isOfflineSharedMode => _isOfflineMode && _isOfflineSharedMode;
   String? get offlineHistoryScope => _offlineHistoryScope;
-  bool get hasReadableSession => isConnected || isOfflineMode;
+  bool get hasReadableSession => isConnected || isOfflineMode || hasRadioData;
   bool get wasManuallyDisconnected => _manualDisconnect;
   bool get isRecoveringConnection => _isRecoveringConnection;
 
@@ -1389,7 +1401,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   /// [_mcmpSigningFailedController].
   Stream<void> get mcmpSigningFailures => _mcmpSigningFailedController.stream;
   Uint8List? get selfPublicKey => _selfPublicKey;
-  String get selfPublicKeyHex => _offlinePublicKeyHex ?? _selfPublicKeyHex;
+  String get selfPublicKeyHex => _offlinePublicKeyHex ??
+      (_selfPublicKeyHex.isNotEmpty ? _selfPublicKeyHex : _offlineScopeKeyHex ?? '');
+  /// Scope shown by per-radio storage, including the remembered offline radio.
+  String get storageKeyHex => selfPublicKeyHex;
+  bool get hasRadioData => storageKeyHex.isNotEmpty;
+  LastRadio? get lastRadio => _lastRadio;
+  String? get lastRadioName => _lastRadio?.name.trim().isNotEmpty == true
+      ? _lastRadio!.name.trim() : _lastRadio?.bleDisplayName;
 
   /// First 2 bytes of the local public key, big-endian: the `senderPrefix`
   /// stamped into every outgoing image chunk header. Null until SELF_INFO.
@@ -1601,6 +1620,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<bool> enterOfflineHistory({String? scope, bool shared = false}) async {
+    if (!LegacyOfflineAccess.instance.enabled) return false;
     if (isConnected || _state == MeshCoreConnectionState.connecting) {
       return false;
     }
@@ -2207,6 +2227,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> resendMessage(Contact contact, Message message) async {
+    // sendMessage does nothing offline, so deleting first would lose it.
+    if (!isConnected) return;
     await deleteMessage(message);
     await sendMessage(
       contact,
@@ -8086,6 +8108,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
         }
       },
     );
+    notifyListeners();
   }
 
   Future<void> disconnect({
@@ -8354,6 +8377,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     _setState(MeshCoreConnectionState.disconnected);
+    await _reloadOfflineStateIfIdle();
     _syncBackgroundTcpService();
     _appDebugLogService?.info(
       'Disconnect complete transport=$transportLabel manual=$manual',
@@ -8404,7 +8428,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     bool waitForGenericAck = false,
   }) async {
     if (!isConnected) {
-      throw Exception("Not connected to a MeshCore device");
+      throw const RadioNotConnectedException();
     }
 
     // Register the expected reply before writing. Some transports can deliver
@@ -8452,7 +8476,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> _writeFrameToActiveTransportCore(Uint8List data) async {
     if (!isConnected) {
-      throw Exception("Not connected to a MeshCore device");
+      throw const RadioNotConnectedException();
     }
     if (_nodeIdentityWriteSession != null &&
         (data.first != cmdImportPrivateKey ||
@@ -12668,7 +12692,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     required String name,
   }) async {
     if (!isConnected) {
-      throw Exception("Not connected to a MeshCore device");
+      throw const RadioNotConnectedException();
     }
 
     final key = pubKeyToHex(publicKey);
@@ -15311,9 +15335,15 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     if (_messageStateOwnerKey != null &&
         _messageStateOwnerKey != selfPublicKeyHex) {
       _clearSessionMessageState();
+      _channels.clear();
+      _cachedChannels.clear();
     }
     _messageStateOwnerKey = selfPublicKeyHex;
     if (parsedSelfInfo) {
+      _rememberLastRadio(
+        tcpHost: _activeTransport == MeshCoreTransportType.tcp ? _lastTcpHost : null,
+        tcpPort: _activeTransport == MeshCoreTransportType.tcp ? _lastTcpPort : null,
+      );
       _showNotificationInBackground(_notificationService.bindRadio(
         selfPublicKeyHex,
         currentUnreadTotal: getTotalUnreadCount,
@@ -22619,6 +22649,146 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     _channelResendRevision++;
     _messageStateOwnerKey = null;
     _persistedStateLoadedKey = null;
+  }
+
+  /// Points every per-radio store at [keyHex].
+  void _bindStorageScope(String keyHex) {
+    unawaited(flushChannelRuleVerdicts());
+    unawaited(_unreadStore.flush());
+    _bindStoresToPublicKey(keyHex);
+    _discoveryContactStore.setPublicKeyHex = keyHex;
+  }
+
+  /// Records the connected radio so its data can be shown offline later.
+  /// The simulated review radio is never remembered.
+  void _rememberLastRadio({String? tcpHost, int? tcpPort}) {
+    if (_activeTransport == MeshCoreTransportType.review) return;
+    final keyHex = selfPublicKeyHex;
+    if (keyHex.isEmpty) return;
+    final isBle = _activeTransport == MeshCoreTransportType.bluetooth;
+    final radio = LastRadio(
+      publicKeyHex: keyHex,
+      name: _selfName?.trim() ?? '',
+      transport: switch (_activeTransport) {
+        MeshCoreTransportType.usb => LastRadio.transportUsb,
+        MeshCoreTransportType.tcp => LastRadio.transportTcp,
+        _ => LastRadio.transportBle,
+      },
+      bleRemoteId: isBle ? _deviceId : null,
+      bleDisplayName: isBle ? _deviceDisplayName : null,
+      tcpHost: tcpHost,
+      tcpPort: tcpPort,
+      savedAt: DateTime.now(),
+    );
+    _lastRadio = radio;
+    _offlineScopeKeyHex = keyHex;
+    unawaited(_lastRadioStore.save(radio));
+  }
+
+  /// Loads the remembered radio's saved contacts, channels, messages and
+  /// unread counts so they can be shown while no radio is connected.
+  Future<void> restoreLastRadio() async {
+    _lastRadio = _lastRadioStore.load();
+    final keyHex = _lastRadio?.publicKeyHex;
+    if (keyHex == null) return;
+    _offlineScopeKeyHex = keyHex;
+    if (_state != MeshCoreConnectionState.disconnected) return;
+    await _loadOfflineState(keyHex);
+  }
+
+  Future<void> _reloadOfflineStateIfIdle() async {
+    if (_disposed || _state != MeshCoreConnectionState.disconnected) return;
+    final keyHex = _offlineScopeKeyHex;
+    if (keyHex == null) {
+      // Nothing to show offline (for example after a review-only session).
+      _channels.clear();
+      _cachedChannels.clear();
+      notifyListeners();
+      return;
+    }
+    await _loadOfflineState(keyHex);
+  }
+
+  Future<void> _loadOfflineState(String keyHex) async {
+    final generation = ++_offlineLoadGeneration;
+    // A connect started meanwhile owns the state; its SELF_INFO reloads.
+    bool superseded() =>
+        _disposed ||
+        generation != _offlineLoadGeneration ||
+        _state != MeshCoreConnectionState.disconnected;
+
+    _clearSessionMessageState();
+    _bindStorageScope(keyHex);
+    // A connect to this radio keeps what is loaded here; a different radio's
+    // SELF_INFO drops it. _persistedStateLoadedKey stays null so a connect
+    // reloads from storage.
+    _messageStateOwnerKey = keyHex;
+    _channels.clear();
+    try {
+      await loadContactCache();
+      if (superseded()) return;
+      await _loadDiscoveredContactCache();
+      if (superseded()) return;
+      await loadUnreadState();
+      if (superseded()) return;
+      await _prepareCachedChannelStorage(keyHex);
+      if (superseded()) return;
+      _channels
+        ..clear()
+        ..addAll(_cachedChannels);
+      _applyChannelOrder();
+      await _loadChannelOrder(publicKeyHex: keyHex, allowLegacyMigration: false);
+      if (superseded()) return;
+      _recalculateCachedChannelsUnreadTotal();
+      for (final contact in List<Contact>.of(_contacts)) {
+        await _loadMessagesForContact(contact.publicKeyHex);
+        if (superseded()) return;
+      }
+    } catch (e) {
+      appLogger.warn('Loading saved radio data failed: $e');
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Connects to the remembered radio over BLE or TCP. Returns whether a
+  /// connection was made; USB and web need the user to pick a port.
+  Future<bool> reconnectToLastRadio() async {
+    final radio = _lastRadio;
+    if (radio == null || PlatformInfo.isWeb) return false;
+    try {
+      if (radio.canReconnectBle) {
+        await connect(
+          BluetoothDevice.fromId(radio.bleRemoteId!),
+          displayName: radio.bleDisplayName ?? radio.name,
+        );
+      } else if (radio.canReconnectTcp) {
+        await connectTcp(host: radio.tcpHost!, port: radio.tcpPort!);
+      } else {
+        return false;
+      }
+    } catch (e) {
+      _appDebugLogService?.warn(
+        'Reconnect to last radio failed: $e',
+        tag: 'Connection',
+      );
+      return false;
+    }
+    return isConnected;
+  }
+
+  /// Stops a pending automatic reconnect while disconnected.
+  void cancelAutoReconnect() {
+    if (_state == MeshCoreConnectionState.connected ||
+        _state == MeshCoreConnectionState.connecting) {
+      return;
+    }
+    _manualDisconnect = true;
+    _cancelReconnectTimer();
+    _reconnectAttempts = 0;
+    _reconnectTransport = null;
+    _isRecoveringConnection = false;
+    unawaited(_backgroundService?.stop());
+    notifyListeners();
   }
 
   String _nextReactionSendQueueId() {

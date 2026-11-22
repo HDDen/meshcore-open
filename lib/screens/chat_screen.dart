@@ -13,6 +13,8 @@ import '../utils/platform_info.dart';
 import '../utils/app_logger.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../widgets/offline_composer_bar.dart';
+import '../utils/radio_guard.dart';
 import '../connector/meshcore_protocol.dart';
 import '../config/build_features.dart';
 import '../helpers/marker_message.dart';
@@ -1745,6 +1747,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(BuildContext context, MeshCoreConnector connector) {
+    if (!connector.isConnected) return const OfflineComposerBar();
     final maxBytes = _maxContactInputBytes(connector);
     final settings = context.watch<AppSettingsService>().settings;
     final replyingTo = _replyingToMessage;
@@ -2311,6 +2314,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _showMessageActions(Message message, Contact contact) async {
+    final readOnly = isRadioReadOnly(context.read<MeshCoreConnector>());
     final translationService = context.read<TranslationService>();
     final mcoImage = MCOImageMessage.tryDecode(message.text);
     final hasMcoOriginal = mcoImage == null
@@ -2348,12 +2352,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       _setReplyingTo(message);
                     },
                   ),
-                // Can't react to your own messages
-                if (!message.isOutgoing)
-                  ListTile(
-                    leading: const Icon(Icons.add_reaction_outlined),
-                    title: Text(context.l10n.chat_addReaction),
-                    onTap: () {
+              // Can't react to your own messages
+              if (!message.isOutgoing)
+                ListTile(
+                  enabled: !readOnly,
+                  leading: const Icon(Icons.add_reaction_outlined),
+                  title: Text(context.l10n.chat_addReaction),
+                  onTap: () {
                       Navigator.pop(sheetContext);
                       _showEmojiPicker(message, contact);
                     },
@@ -2510,6 +2515,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
                 ListTile(
+                  enabled: !readOnly,
                   leading: const Icon(Icons.delete_outline),
                   iconColor: McoaThemeStyle.of(context).colors['warning'],
                   textColor: McoaThemeStyle.of(context).colors['warning'],

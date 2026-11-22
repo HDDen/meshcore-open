@@ -100,6 +100,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final connector = context.watch<MeshCoreConnector>();
+    final canFetch = !_isFetchingRegions && connector.isConnected;
     final isWaitingForDefaultScopeSync =
         !_hasLoadedDefaultScope && _isWaitingForNodeSync(connector);
     if (!_hasLoadedDefaultScope &&
@@ -131,7 +132,7 @@ class _RegionManagementScreenState extends State<RegionManagementScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.travel_explore),
-            onPressed: _isFetchingRegions ? null : _showFetchRegionsDialog,
+            onPressed: canFetch ? _showFetchRegionsDialog : null,
           ),
         ],
       ),

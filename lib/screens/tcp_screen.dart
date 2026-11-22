@@ -21,7 +21,7 @@ import '../widgets/offline_history_button.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/tcp_connection_navigation.dart';
 import '../utils/app_route_observer.dart';
-import 'channels_screen.dart';
+import '../utils/main_navigation.dart';
 import 'usb_screen.dart';
 
 class TcpScreen extends StatefulWidget {
@@ -207,9 +207,7 @@ class _TcpScreenState extends State<TcpScreen>
       },
       navigate: () {
         _handedOffToChannels = true;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ChannelsScreen()),
-        );
+        navigateToMainAfterConnect(context);
       },
     );
   }

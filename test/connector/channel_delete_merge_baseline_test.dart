@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/helpers/legacy_offline_access.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
@@ -200,6 +201,7 @@ Future<void> main() async {
 
   group('U08b2 baseline: fork channel deletion', () {
     setUp(() async {
+      LegacyOfflineAccess.instance.setEnabled(true);
       savedPaths = PathProviderPlatform.instance;
       PathProviderPlatform.instance = _NoPreferencesDirectory();
       SharedPreferences.setMockInitialValues({});
@@ -215,6 +217,7 @@ Future<void> main() async {
     });
 
     tearDown(() async {
+      LegacyOfflineAccess.instance.setEnabled(false);
       connector.connected = false;
       connector.dispose();
       ChannelIdentities.instance.resetForTesting();

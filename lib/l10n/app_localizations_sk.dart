@@ -200,38 +200,38 @@ class AppLocalizationsSk extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Zálohovanie a obnovenie';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Uložte alebo obnovte dáta aplikácie a nastavenia rádia';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importovať';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Importovať súbor';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Heslo (voliteľné)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Položky zálohy a obnovenia';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Nastavenia polohy';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Súkromný kľúč (citlivé)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'Kľúč API IPFS (citlivé)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Kľúč API Stadia Maps (citlivé)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1410,10 +1410,11 @@ class AppLocalizationsSk extends AppLocalizations {
   String get settings_actions => 'Možné akcie';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exportovať';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Exportovať kontakty a opakovače ako GPX';
 
   @override
   String get settings_deleteAllPaths => 'Odstrániť všetky cesty';
@@ -1649,7 +1650,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_themeLight => 'Svetlé';
 
   @override
-  String get appSettings_themeDark => 'Tmavé';
+  String get appSettings_themeDark => 'Tmavý';
 
   @override
   String get appSettings_language => 'Jazyk';
@@ -1676,7 +1677,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get appSettings_languageSl => 'Slovinčina';
 
   @override
-  String get appSettings_languagePt => 'Portugalčina';
+  String get appSettings_languagePt => 'Portugalčina (Brazília)';
 
   @override
   String get appSettings_languageIt => 'Taliančina';
@@ -2805,7 +2806,7 @@ class AppLocalizationsSk extends AppLocalizations {
   }
 
   @override
-  String get debugFrame_textTypeCli => 'CLI (Command Line Interface)';
+  String get debugFrame_textTypeCli => 'CLI';
 
   @override
   String get debugFrame_textTypePlain => 'Jednoduché';
@@ -5207,7 +5208,7 @@ class AppLocalizationsSk extends AppLocalizations {
   String get telemetry_timeLabel => 'Čas';
 
   @override
-  String get telemetry_gyrometerLabel => 'Gyrometer';
+  String get telemetry_gyrometerLabel => 'Gyroskop';
 
   @override
   String get telemetry_colourLabel => 'Farba';
@@ -11010,4 +11011,46 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Portugalčina (Portugalsko)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'Rekonštruované AI';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Pripájanie…';
+
+  @override
+  String get connectSheet_title => 'Pripojiť rádio';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Znova sa pripojiť k $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Vybrať rádio';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB alebo TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Zastaviť pripájanie';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Nedá sa spojiť s $name. Uistite sa, že je zapnuté a nablízku.';
+  }
+
+  @override
+  String get chat_composerOffline => 'Na odosielanie správ sa pripojte k rádiu';
 }

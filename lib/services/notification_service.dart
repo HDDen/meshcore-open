@@ -22,6 +22,7 @@ import '../helpers/legacy_notification_registry.dart';
 import '../helpers/reaction_helper.dart';
 import '../helpers/windows_notification_identity.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/locale_tag.dart';
 import '../models/app_settings.dart';
 import '../storage/data_root.dart';
 import '../utils/app_logger.dart';
@@ -74,7 +75,7 @@ class NotificationService {
     try {
       PrefsManager.instance.setString(
         notificationLanguagePrefsKey,
-        locale.languageCode,
+        localeTag(locale),
       );
     } catch (_) {}
   }

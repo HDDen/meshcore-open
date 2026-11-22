@@ -23,7 +23,7 @@ import '../helpers/scanner_tcp_navigation.dart';
 import '../review_mode/review_mode_entry.dart';
 import 'backup_export_screen.dart';
 import 'backup_restore_screen.dart';
-import 'channels_screen.dart';
+import '../utils/main_navigation.dart';
 import 'usb_screen.dart';
 
 enum _ScannerBackupAction {
@@ -78,9 +78,7 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
           isCurrentRoute &&
           !_changedNavigation) {
         _changedNavigation = true;
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const ChannelsScreen()));
+        navigateToMainAfterConnect(context);
       }
     };
 
@@ -137,9 +135,7 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
       _reopenPreferredTransportOnReturn = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const ChannelsScreen()),
-        );
+        navigateToMainAfterConnect(context);
       });
       return;
     }
@@ -177,7 +173,11 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
     appRouteObserver.unsubscribe(this);
     _connector.removeListener(_connectionListener);
     unawaited(_bluetoothStateSubscription.cancel());
-    if (!_changedNavigation) {
+    final state = _connector.state;
+    if (!_changedNavigation &&
+        _connector.activeTransport == MeshCoreTransportType.bluetooth &&
+        (state == MeshCoreConnectionState.connecting ||
+         state == MeshCoreConnectionState.connected)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_connector.disconnect(manual: true));
       });

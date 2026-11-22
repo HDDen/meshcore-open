@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../connector/meshcore_connector.dart';
 import '../l10n/l10n.dart';
+import '../utils/radio_guard.dart';
 import '../models/contact.dart';
 import '../utils/app_logger.dart';
 import 'snack_bar_builder.dart';
@@ -14,6 +15,7 @@ Future<void> deleteContactWithFeedback(
   Contact contact, {
   bool keepMessages = false,
 }) async {
+  if (!ensureRadioConnected(context)) return;
   try {
     await connector.deleteContact(
       contact,

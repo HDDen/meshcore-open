@@ -178,12 +178,12 @@ class _ManualPathTraceScreenState extends State<ManualPathTraceScreen> {
               spacing: 8,
               children: [
                 ChoiceChip(
-                  label: Text(l10n.map_pathTraceModeRoundTrip),
+                  label: MeshSegmentLabel(l10n.map_pathTraceModeRoundTrip),
                   selected: _roundTrip,
                   onSelected: (_) => setState(() => _roundTrip = true),
                 ),
                 ChoiceChip(
-                  label: Text(l10n.map_pathTraceModeAsEntered),
+                  label: MeshSegmentLabel(l10n.map_pathTraceModeAsEntered),
                   selected: !_roundTrip,
                   onSelected: (_) => setState(() => _roundTrip = false),
                 ),

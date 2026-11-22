@@ -10,7 +10,9 @@ import 'package:meshcore_open/widgets/app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../utils/radio_guard.dart';
 import '../connector/meshcore_connector.dart';
+import '../widgets/connect_sheet.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
 import '../helpers/contact_merge_helper.dart';
@@ -482,9 +484,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   child: PopupMenuRow(
                     icon: Icons.logout,
                     iconColor: Theme.of(menuContext).colorScheme.error,
-                    text: menuContext.l10n.common_disconnect,
+                    text: connector.isConnected ? menuContext.l10n.common_disconnect : menuContext.l10n.common_connect,
                   ),
-                  onTap: () => _disconnect(context),
+                  onTap: () => connector.isConnected ? _disconnect(context) : showConnectSheet(context),
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(
@@ -492,7 +494,6 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     text: menuContext.l10n.common_settings,
                   ),
                   onTap: () {
-                    if (blockIfOffline(context, connector)) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -1205,6 +1206,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     Channel channel,
   ) {
     final parentContext = context;
+    final readOnly = isRadioReadOnly(connector);
     final settingsService = context.read<AppSettingsService>();
 
     showModalBottomSheet(
@@ -1260,27 +1262,32 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     await Future<void>.delayed(const Duration(milliseconds: 100));
                     if (!parentContext.mounted) return;
                     showChannelNotificationModeSheet(parentContext, channel.muteKey);
-                  },
+                },
+              ),
+              ListTile(
+                enabled: !readOnly,
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: readOnly
+                      ? null
+                      : Theme.of(sheetContext).colorScheme.error,
                 ),
-                ListTile(
-                  leading: Icon(
-                    Icons.delete_outline,
-                    color: Theme.of(sheetContext).colorScheme.error,
+                title: Text(
+                  sheetContext.l10n.channels_deleteChannel,
+                  style: TextStyle(
+                    color: readOnly
+                        ? null
+                        : Theme.of(sheetContext).colorScheme.error,
                   ),
-                  title: Text(
-                    sheetContext.l10n.channels_deleteChannel,
-                    style: TextStyle(
-                      color: Theme.of(sheetContext).colorScheme.error,
-                    ),
-                  ),
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    await Future.delayed(const Duration(milliseconds: 100));
-                    if (parentContext.mounted) {
-                      _confirmDeleteChannel(parentContext, connector, channel);
-                    }
-                  },
                 ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  if (parentContext.mounted) {
+                    _confirmDeleteChannel(parentContext, connector, channel);
+                  }
+                },
+              ),
               ],
             ),
           ),
@@ -1377,7 +1384,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         .read<AppSettingsService>()
         .settings
         .roomServerDisableRoomAndContactsSorting;
-    if (disableRoomAndContactsSorting && !connector.isOfflineMode) {
+    if (disableRoomAndContactsSorting && !connector.isLegacyOfflineSession) {
       return _buildLegacyChannelsList(
         context,
         connector,
@@ -1403,7 +1410,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
             roomServerContacts,
           ).isNotEmpty;
     }).toList();
-    if (connector.isOfflineMode) {
+    if (connector.isLegacyOfflineSession) {
       visibleGroups.sort(
         (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
       );
@@ -1416,7 +1423,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
         if (!groupedItemNames.contains(_groupKeyForRoom(room)))
           _ChannelScreenItem.room(room),
     ];
-    if (connector.isOfflineMode) {
+    if (connector.isLegacyOfflineSession) {
       ungroupedItems.sort(_compareOfflineChannelItems);
     } else {
       _sortChannelScreenItems(
@@ -1927,7 +1934,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       roomServerContacts,
     );
     final items = List<_ChannelScreenItem>.from(baseItems);
-    if (connector.isOfflineMode) {
+    if (connector.isLegacyOfflineSession) {
       items.sort(
         (a, b) =>
             _offlineItemNameForSort(a).compareTo(_offlineItemNameForSort(b)),
@@ -2894,7 +2901,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
       );
     }).toList();
 
-    if (connector.isOfflineMode) {
+    if (connector.isLegacyOfflineSession) {
       filtered.sort((a, b) {
         if (a.isPublicChannel != b.isPublicChannel) {
           return a.isPublicChannel ? -1 : 1;
@@ -3086,7 +3093,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
     bool isRegularHashtag = true;
     Community? selectedCommunity;
 
-    _communityStore.setPublicKeyHex = connector.selfPublicKeyHex;
+    _communityStore.setPublicKeyHex = connector.storageKeyHex;
 
     showMeshSheet(
       context,
@@ -3361,12 +3368,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () {
-                                final name = nameController.text.trim();
-                                final pskHex = pskController.text.trim();
-                                if (name.isEmpty) {
+                              Expanded(
+                                child: FilledButton(
+                                  onPressed: () {
+                                    if (!ensureRadioConnected(context)) return;
+                                    final name = nameController.text.trim();
+                                    final pskHex = pskController.text.trim();
+                                    if (name.isEmpty) {
                                   showDismissibleSnackBar(
                                     context,
                                     content: Text(
@@ -3423,12 +3431,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   ),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            final nextIndex = _resolveFreeChannelSlot(
-                              context,
-                              connector,
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () {
+                                if (!ensureRadioConnected(context)) return;
+                                final nextIndex = _resolveFreeChannelSlot(
+                                  context,
+                                  connector,
                             );
                             if (nextIndex == null) return;
                             final psk = Channel.parsePskHex(
@@ -3602,12 +3611,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       ),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () async {
-                                var hashtag = hashtagController.text.trim();
-                                if (hashtag.isEmpty) {
-                                  showDismissibleSnackBar(
+                              Expanded(
+                                child: FilledButton(
+                                  onPressed: () async {
+                                    if (!ensureRadioConnected(context)) return;
+                                    var hashtag = hashtagController.text.trim();
+                                    if (hashtag.isEmpty) {
+                                      showDismissibleSnackBar(
                                     context,
                                     content: Text(
                                       sheetContext
@@ -3814,12 +3824,13 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () async {
-                                final name = nameController.text.trim();
-                                final publicLabel =
-                                    context.l10n.channels_public;
+                              Expanded(
+                                child: FilledButton(
+                                  onPressed: () async {
+                                    if (!ensureRadioConnected(context)) return;
+                                    final name = nameController.text.trim();
+                                    final publicLabel =
+                                        context.l10n.channels_public;
                                 if (name.isEmpty) {
                                   showDismissibleSnackBar(
                                     context,
@@ -4122,6 +4133,7 @@ class _ChannelsScreenState extends State<ChannelsScreen>
   }
 
   void _addPublicChannel(BuildContext context, MeshCoreConnector connector) {
+    if (!ensureRadioConnected(context)) return;
     final index = _resolveFreeChannelSlot(context, connector);
     if (index == null) return;
     final psk = Channel.parsePskHex(Channel.publicChannelPsk);
@@ -4233,40 +4245,31 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                                 _confirmLeaveCommunity(this.context, community);
                               }
                             },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'share',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.qr_code),
-                                    const SizedBox(width: 12),
-                                    Text(context.l10n.community_showQr),
-                                  ],
+                            itemBuilder: (context) {
+                              final readOnly = isRadioReadOnly(
+                                context.read<MeshCoreConnector>(),
+                              );
+                              return [
+                                PopupMenuItem(
+                                  value: 'share',
+                                  child: MeshMenuItemRow(
+                                    icon: Icons.qr_code,
+                                    label: context.l10n.community_showQr,
+                                  ),
                                 ),
-                              ),
-                              PopupMenuItem(
-                                value: 'leave',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.exit_to_app,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      context.l10n.community_delete,
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                      ),
-                                    ),
-                                  ],
+                                PopupMenuItem(
+                                  value: 'leave',
+                                  enabled: !readOnly,
+                                  child: MeshMenuItemRow(
+                                    icon: Icons.exit_to_app,
+                                    label: context.l10n.community_delete,
+                                    color: readOnly
+                                        ? null
+                                        : Theme.of(context).colorScheme.error,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ];
+                            },
                           ),
                           onTap: () {
                             Navigator.pop(sheetContext);

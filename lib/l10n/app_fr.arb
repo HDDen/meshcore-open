@@ -100,8 +100,8 @@
   "settings_locationInvalid": "Latitude ou longitude invalide.",
   "settings_latitude": "Latitude",
   "settings_longitude": "Longitude",
-  "settings_autoZeroHopAdvertOnGpsUpdate": "Annonce zéro saut automatique lors de la mise à jour GPS",
-  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Lorsque la position GPS change, envoyer une annonce zéro saut (nécessite la position dans l'annonce).",
+  "settings_autoZeroHopAdvertOnGpsUpdate": "Annonce Zero Hop automatique lors de la mise à jour GPS",
+  "settings_autoZeroHopAdvertOnGpsUpdateSubtitle": "Lorsque la position GPS change, envoyer une annonce Zero Hop (nécessite la position dans l'annonce).",
   "settings_privacyMode": "Mode de confidentialité",
   "settings_privacyModeSubtitle": "Masquer le nom et la localisation dans les annonces",
   "settings_privacyModeToggle": "Activez le mode confidentialité pour masquer votre nom et votre localisation dans les annonces.",
@@ -199,7 +199,7 @@
   "appSettings_languageDe": "Allemand",
   "appSettings_languagePl": "Polonais",
   "appSettings_languageSl": "Slovène",
-  "appSettings_languagePt": "Portugais",
+  "appSettings_languagePt": "Portugais (Brésil)",
   "appSettings_languageIt": "Italien",
   "appSettings_languageZh": "Chinois",
   "appSettings_languageSv": "Suédois",
@@ -920,7 +920,7 @@
   "login_routing": "Routage",
   "login_routingMode": "Mode de routage",
   "login_autoUseSavedPath": "Auto (utiliser le chemin sauvegardé)",
-  "login_forceFloodMode": "Mode tout le réseau forcé",
+  "login_forceFloodMode": "Mode flood forcé",
   "login_managePaths": "Gérer les chemins",
   "login_login": "Connexion",
   "login_attempt": "Tentative {current}/{max}",
@@ -1002,7 +1002,7 @@
       }
     }
   },
-  "repeater_packetTxTotal": "Total : {total}, Tout le réseau : {flood}, Direct : {direct}",
+  "repeater_packetTxTotal": "Total : {total}, Flood : {flood}, Direct : {direct}",
   "@repeater_packetTxTotal": {
     "placeholders": {
       "total": {
@@ -1016,7 +1016,7 @@
       }
     }
   },
-  "repeater_packetRxTotal": "Total : {total}, Tout le réseau : {flood}, Direct : {direct}",
+  "repeater_packetRxTotal": "Total : {total}, Flood : {flood}, Direct : {direct}",
   "@repeater_packetRxTotal": {
     "placeholders": {
       "total": {
@@ -1030,7 +1030,7 @@
       }
     }
   },
-  "repeater_duplicatesFloodDirect": "Tout le réseau : {flood}, Direct : {direct}",
+  "repeater_duplicatesFloodDirect": "Flood : {flood}, Direct : {direct}",
   "@repeater_duplicatesFloodDirect": {
     "placeholders": {
       "flood": {
@@ -1087,7 +1087,7 @@
       }
     }
   },
-  "repeater_floodAdvertInterval": "Intervalle des annonces à tout le réseau (flood)",
+  "repeater_floodAdvertInterval": "Intervalle des annonces flood",
   "repeater_floodAdvertIntervalHours": "{hours} heures",
   "@repeater_floodAdvertIntervalHours": {
     "placeholders": {
@@ -1169,7 +1169,7 @@
   "repeater_actionsTitle": "Actions",
   "repeater_sendAdvert": "Envoyer une annonce flood",
   "repeater_sendAdvertSubtitle": "Diffuser une annonce flood via le réseau.",
-  "repeater_sendAdvertZeroHop": "Envoyer une annonce sans relais",
+  "repeater_sendAdvertZeroHop": "Envoyer une annonce Zero Hop",
   "repeater_sendAdvertZeroHopSubtitle": "Diffuser une annonce d'un seul saut (sans relais)",
   "repeater_clockSync": "Synchroniser l'heure maintenant",
   "repeater_clockSyncSubtitle": "Envoyez l'heure de votre téléphone au répéteur.",
@@ -1544,7 +1544,7 @@
     }
   },
   "channelPath_unknownPath": "Inconnu",
-  "channelPath_floodPath": "Tout le réseau",
+  "channelPath_floodPath": "Flood",
   "channelPath_directPath": "Direct",
   "channelPath_observedZeroOf": "0 sur {total} sauts",
   "@channelPath_observedZeroOf": {
@@ -1824,9 +1824,9 @@
   "appSettings_enableMessageTracingSubtitle": "Afficher les métadonnées détaillées de routage et de synchronisation des messages",
   "contacts_clipboardEmpty": "Le presse-papiers est vide.",
   "contacts_contactImported": "Le contact a été importé.",
-  "contacts_floodAdvert": "Annonce à tout le réseau",
+  "contacts_floodAdvert": "Annonce flood",
   "contacts_contactImportFailed": "Échec de l'importation du contact.",
-  "contacts_zeroHopAdvert": "Annonce Zero saut",
+  "contacts_zeroHopAdvert": "Annonce Zero Hop",
   "contacts_copyAdvertToClipboard": "Copier son propre lien « meshcore:// »",
   "contacts_addContactFromClipboard": "Ajouter un contact par lien « meshcore:// » depuis le presse-papiers",
   "contacts_ShareContact": "Copier le contact dans le presse-papiers",
@@ -3247,7 +3247,7 @@
   "chat_pathManagement": "Gestion des chemins",
   "chat_routingMode": "Mode de routage",
   "chat_autoUseSavedPath": "Auto (utiliser le chemin sauvegardé)",
-  "chat_forceFloodMode": "Mode tout le réseau forcé",
+  "chat_forceFloodMode": "Mode flood forcé",
   "chat_recentAckPaths": "Chemins ACK récents (touchez pour utiliser) :",
   "chat_pathHistoryFull": "L'historique du chemin est plein. Supprimez les entrées pour en ajouter de nouvelles.",
   "chat_hopSingular": "saut",
@@ -3306,7 +3306,7 @@
   "path_tooLong": "Le chemin est trop long. Maximum 64 sauts autorisés.",
   "path_setPath": "Définir le chemin",
   "repeater_autoUseSavedPath": "Auto (utiliser le chemin sauvegardé)",
-  "repeater_forceFloodMode": "Mode tout le réseau forcé",
+  "repeater_forceFloodMode": "Mode flood forcé",
   "repeater_pathManagement": "Gestion des chemins",
   "chat_ShowAllPaths": "Afficher tous les chemins",
   "@path_routeWeight": {
@@ -4477,7 +4477,7 @@
   "themes_iconPictureFailed": "Impossible d'utiliser cette image",
   "themes_iconRepeater": "Répéteurs",
   "themes_iconReset": "Utiliser l'icône par défaut",
-  "themes_iconRoom": "Rooms",
+  "themes_iconRoom": "Salles",
   "themes_iconSend": "Bouton d'envoi",
   "themes_iconSensor": "Capteurs",
   "themes_iconUsePicture": "Utiliser une image",
@@ -4529,5 +4529,72 @@
   "holidayGreeting_halloween": "Joyeux Halloween|Joyeuse Halloween|Bon Halloween|Happy Halloween",
   "holidayGreeting_thanksgiving": "Joyeux Thanksgiving|Joyeuse Action de grâce|Joyeux Jour de l'Action de grâce|Bon Thanksgiving|Happy Thanksgiving",
   "holidayGreeting_christmas": "Joyeux Noël|Joyeuses fêtes|Bon Noël|Merry Christmas",
-  "holidayGreeting_newYear": "Bonne année|Bonne et heureuse année|Happy New Year"
+  "holidayGreeting_newYear": "Bonne année|Bonne et heureuse année|Happy New Year",
+  "settings_export": "Exporter",
+  "settings_exportSubtitle": "Exporter les contacts et répéteurs au format GPX",
+  "backupRestore_title": "Sauvegarde et restauration",
+  "backupRestore_subtitle": "Enregistrer ou restaurer les données de l'application et les réglages de la radio",
+  "backupRestore_import": "Importer",
+  "backupRestore_selectImportFile": "Importer un fichier",
+  "backupRestore_password": "Mot de passe (facultatif)",
+  "backupRestore_passwordHelp": "Un mot de passe chiffre le fichier. Sans mot de passe, il est enregistré en clair et peut inclure des clés privées/de canal, l'historique et les identifiants.",
+  "backupRestore_importUnavailable": "Vérifiez le mot de passe ou choisissez un fichier de sauvegarde pris en charge.",
+  "backupRestore_items": "Éléments de sauvegarde et de restauration",
+  "backupRestore_nodeSettings": "Réglages du nœud",
+  "backupRestore_nodeSettingsDescription": "Nom de l'appareil, clés privée et publique, réglages radio et régions",
+  "backupRestore_deviceName": "Nom de l'appareil",
+  "backupRestore_privateKey": "Clé privée (sensible)",
+  "backupRestore_publicKey": "Clé publique",
+  "backupRestore_radioSettings": "Réglages radio",
+  "backupRestore_regions": "Régions",
+  "backupRestore_location": "Position",
+  "backupRestore_contactSettings": "Réglages des contacts",
+  "backupRestore_privacySettings": "Réglages de confidentialité",
+  "backupRestore_contactsData": "Contacts",
+  "backupRestore_perContactSettings": "Réglages et filtres par contact",
+  "backupRestore_contactGroups": "Groupes de contacts",
+  "backupRestore_contactHistory": "Historique des contacts",
+  "backupRestore_channelsData": "Canaux",
+  "backupRestore_channelFilters": "Réglages du filtre de messages",
+  "backupRestore_channelSettings": "Réglages des canaux",
+  "backupRestore_communities": "Communautés",
+  "backupRestore_channelHistory": "Historique des canaux",
+  "backupRestore_locationSettings": "Réglages de position",
+  "backupRestore_locationSettingsDescription": "Position, réglages des contacts et de confidentialité",
+  "backupRestore_appSettings": "Réglages de l'application",
+  "backupRestore_appSettingsDescription": "Préférences de l'application et réglages d'apparence",
+  "backupRestore_ipfsKey": "Clé API IPFS (sensible)",
+  "backupRestore_stadiaMapKey": "Clé API Stadia Maps (sensible)",
+  "backupRestore_contacts": "Contacts",
+  "backupRestore_contactsDescription": "Contacts, filtres et réglages par contact, groupes et historique des messages",
+  "backupRestore_discoveredContacts": "Contacts découverts",
+  "backupRestore_discoveredContactsDescription": "Contacts découverts et leurs détails enregistrés",
+  "backupRestore_channels": "Canaux",
+  "backupRestore_channelsDescription": "Canaux, filtres de canaux, communautés et historique des messages",
+  "backupRestore_backup": "Créer une sauvegarde",
+  "backupRestore_restore": "Restaurer la sélection",
+  "backupRestore_backupComplete": "Fichier de sauvegarde créé.",
+  "backupRestore_restoreComplete": "Restauration terminée. Reconnectez-vous si vous avez restauré l'identité de la radio.",
+  "backupRestore_missingModelsTitle": "Modèles non téléchargés",
+  "backupRestore_missingModelsMessage": "Les réglages restaurés sélectionnent des modèles indisponibles sur cet appareil :\n{models}\n\nLes télécharger maintenant ?",
+  "backupRestore_downloadModels": "Télécharger les modèles",
+  "backupRestore_downloading": "Téléchargement…",
+  "backupRestore_cancelDownload": "Annuler le téléchargement",
+  "backupRestore_failed": "Échec de l'opération de sauvegarde : {error}",
+  "backupRestore_fileTooLarge": "Le fichier de sauvegarde dépasse la limite de 100 Mo.",
+  "backupRestore_selectAtLeastOne": "Sélectionnez au moins un élément.",
+  "backupRestore_replaceIdentityTitle": "Remplacer l'identité de la radio ?",
+  "backupRestore_replaceIdentityMessage": "Restaurer les réglages du nœud remplace la clé privée de la radio connectée et modifie son identité. Continuez uniquement si c'est voulu.",
+  "appSettings_languagePtPt": "Portugais (Portugal)",
+  "receivedImage_syntheticBadge": "Reconstruite par IA",
+  "appBar_offlineSubtitle": "Hors ligne · {name}",
+  "appBar_offline": "Hors ligne",
+  "appBar_reconnecting": "Reconnexion…",
+  "connectSheet_title": "Connecter une radio",
+  "connectSheet_reconnect": "Se reconnecter à {name}",
+  "connectSheet_chooseRadio": "Choisir une radio",
+  "connectSheet_chooseRadioSubtitle": "Bluetooth, USB ou TCP",
+  "connectSheet_stopReconnecting": "Arrêter la reconnexion",
+  "connectSheet_reconnectFailed": "Impossible de joindre {name}. Vérifiez qu'elle est allumée et à proximité.",
+  "chat_composerOffline": "Connectez-vous à une radio pour envoyer des messages"
 }

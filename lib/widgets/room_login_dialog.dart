@@ -14,6 +14,7 @@ import '../theme/mesh_theme.dart';
 import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
+import '../utils/radio_guard.dart';
 import '../helpers/utf8_length_limiter.dart';
 import 'additional_identity_sender_picker.dart';
 import 'routing_sheet.dart';
@@ -145,6 +146,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
 
   Future<void> _handleLogin() async {
     if (_isLoading || _isLoggingIn) return;
+    if (!ensureRadioConnected(context)) return;
     final senderKey = _senderKey;
     if (senderKey != null) {
       await _loginWithAdditionalKey(senderKey);

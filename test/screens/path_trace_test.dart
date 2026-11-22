@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meshcore_open/widgets/mesh_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:typed_data';
@@ -286,7 +287,10 @@ void main() {
 
     await tester.enterText(field, 'A1, B2');
     await tester.pump();
-    await tester.tap(find.text(l10n.map_pathTraceModeAsEntered));
+    await tester.tap(find.byWidgetPredicate(
+      (widget) => widget is MeshSegmentLabel &&
+          widget.text == l10n.map_pathTraceModeAsEntered,
+    ));
     await tester.pump();
     final radioKey = connector.radioKey;
     connector.radioKey = '02' * 32;

@@ -16,6 +16,7 @@ import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/utf8_length_limiter.dart';
 import 'routing_sheet.dart';
+import '../utils/radio_guard.dart';
 
 class RepeaterLoginDialog extends StatefulWidget {
   final Contact repeater;
@@ -94,6 +95,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
 
   Future<void> _handleLogin() async {
     if (_isLoggingIn) return;
+    if (!ensureRadioConnected(context)) return;
 
     setState(() {
       _isLoggingIn = true;

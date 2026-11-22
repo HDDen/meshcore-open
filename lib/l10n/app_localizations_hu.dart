@@ -200,38 +200,38 @@ class AppLocalizationsHu extends AppLocalizations {
       'The backup was offered in the system share sheet.';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Mentés és visszaállítás';
 
   @override
   String get backupRestore_subtitle =>
-      'Save and restore app data and radio settings';
+      'Alkalmazásadatok és rádióbeállítások mentése vagy visszaállítása';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Importálás';
 
   @override
-  String get backupRestore_selectImportFile => 'Import file';
+  String get backupRestore_selectImportFile => 'Fájl importálása';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Jelszó (opcionális)';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Mentési és visszaállítási elemek';
 
   @override
-  String get backupRestore_locationSettings => 'Location settings';
+  String get backupRestore_locationSettings => 'Helybeállítások';
 
   @override
   String get backupRestore_autoAddMaxHops => 'Maximum hops for adding contacts';
 
   @override
-  String get backupRestore_privateKey => 'Node private key';
+  String get backupRestore_privateKey => 'Privát kulcs (érzékeny)';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API key';
+  String get backupRestore_ipfsKey => 'IPFS API-kulcs (érzékeny)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API key';
+  String get backupRestore_stadiaMapKey => 'Stadia Maps API-kulcs (érzékeny)';
 
   @override
   String get backupRestore_extraKeys => 'Additional private keys';
@@ -1138,7 +1138,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get scanner_stop => 'Leállítás';
 
   @override
-  String get scanner_scan => 'Letapogatás';
+  String get scanner_scan => 'Keresés';
 
   @override
   String get scanner_bluetoothOff => 'Bluetooth ki van kapcsolva';
@@ -1213,7 +1213,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_regionEmptyExplanation =>
-      'A tájak a megadott terület átjátszóira korlátozzák az elárasztási üzeneteket. Töltse le őket a közeli átjátszókról, vagy adjon hozzá tájat név szerint.';
+      'A tájak a megadott terület átjátszóira korlátozzák a flood üzeneteket. Töltse le őket a közeli átjátszókról, vagy adjon hozzá tájat név szerint.';
 
   @override
   String get settings_regionFetchFromRepeaters => 'Lekérés az átjátszókról';
@@ -1241,7 +1241,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_regionRadioDefaultSubtitle =>
-      'A rádión van tárolva. A táj nélkül küldött elárasztásokhoz ezt használja, ebből az alkalmazásból és a rádióhoz csatlakozó bármely másik alkalmazásból is.';
+      'A rádión van tárolva. A táj nélkül küldött flood üzenetekhez ezt használja, ebből az alkalmazásból és a rádióhoz csatlakozó bármely másik alkalmazásból is.';
 
   @override
   String get settings_regionRadioDefaultUpdated =>
@@ -1409,10 +1409,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_actions => 'Műveletek';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Exportálás';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Névjegyek és átjátszók exportálása GPX-ként';
 
   @override
   String get settings_deleteAllPaths => 'Az összes útvonal törlése';
@@ -1675,7 +1676,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appSettings_languageSl => 'Slovenščina';
 
   @override
-  String get appSettings_languagePt => 'Português';
+  String get appSettings_languagePt => 'Português (Brasil)';
 
   @override
   String get appSettings_languageIt => 'Italiano';
@@ -1730,7 +1731,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_pathHashModeHelper =>
-      'Az elküldött elárasztási csomagok útvonalában rögzített csomópontazonosító mérete: 1 bájt (256 azonosító, legfeljebb 64 ugrás), 2 bájt (65 ezer, legfeljebb 32 ugrás), 3 bájt (16 millió, legfeljebb 21 ugrás). A nagyobb azonosítók csökkentik az ütközéseket, de az v1.14-nél régebbi firmware-t futtató átjátszók eldobják a 2 vagy 3 bájtos azonosítókat tartalmazó csomagokat.';
+      'Az elküldött flood csomagok útvonalában rögzített csomópontazonosító mérete: 1 bájt (256 azonosító, legfeljebb 64 ugrás), 2 bájt (65 ezer, legfeljebb 32 ugrás), 3 bájt (16 millió, legfeljebb 21 ugrás). A nagyobb azonosítók csökkentik az ütközéseket, de az v1.14-nél régebbi firmware-t futtató átjátszók eldobják a 2 vagy 3 bájtos azonosítókat tartalmazó csomagokat.';
 
   @override
   String settings_requiresFirmware(Object version) {
@@ -2575,12 +2576,12 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String channels_regionRadioDefaultApplies(String region) {
-    return 'Ez a rádió a táj nélküli elárasztásokat az alapértelmezett tájában küldi: $region.';
+    return 'Ez a rádió a táj nélküli flood üzeneteket az alapértelmezett tájában küldi: $region.';
   }
 
   @override
   String get channels_regionSelectExplanation =>
-      'A csatorna elárasztási üzeneteit csak a kiválasztott táj átjátszói továbbítják.';
+      'A csatorna flood üzeneteit csak a kiválasztott táj átjátszói továbbítják.';
 
   @override
   String get channels_regionEmpty => 'Még nincsenek tájak.';
@@ -5726,7 +5727,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String losAntennaA(String value, String unit) {
-    return 'Antenna A: $value $unit';
+    return 'A antenna: $value $unit';
   }
 
   @override
@@ -10099,29 +10100,29 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodMaxAdvert => 'Advert elárasztás max ugrás';
+  String get repeater_floodMaxAdvert => 'Advert flood max ugrás';
 
   @override
   String get repeater_floodMaxAdvertHelper =>
-      'Az elárasztott advert által megtehető legtöbb ugrás (0-64, alapértelmezett 8)';
+      'A flood advert által megtehető legtöbb ugrás (0-64, alapértelmezett 8)';
 
   @override
-  String get repeater_floodMaxUnscoped => 'Régió nélküli elárasztás max ugrás';
+  String get repeater_floodMaxUnscoped => 'Régió nélküli flood max ugrás';
 
   @override
   String get repeater_floodMaxUnscopedHelper =>
-      'A régióhatókör nélküli elárasztások legtöbb ugrása (0-64, alapértelmezett 64). Egy alacsony érték, például 3, helyben tartja a régió nélküli forgalmat.';
+      'A régióhatókör nélküli flood üzenetek legtöbb ugrása (0-64, alapértelmezett 64). Egy alacsony érték, például 3, helyben tartja a régió nélküli forgalmat.';
 
   @override
   String get repeater_floodMaxUnscopedUnset =>
-      'Megegyezik az elárasztás max értékével';
+      'Megegyezik a flood max értékével';
 
   @override
   String get repeater_rxDelay => 'Vételi késleltetés';
 
   @override
   String get repeater_rxDelayHelper =>
-      'Visszatartja a gyenge jellel hallott elárasztási csomagokat a továbbítás előtt, így az erős jelű útvonalak mennek előre, és kevesebb duplikátum kerül elküldésre (0-20, a 0 kikapcsolja).';
+      'Visszatartja a gyenge jellel hallott flood csomagokat a továbbítás előtt, így az erős jelű útvonalak mennek előre, és kevesebb duplikátum kerül elküldésre (0-20, a 0 kikapcsolja).';
 
   @override
   String get repeater_cad => 'Csatornaaktivitás-érzékelés';
@@ -11047,4 +11048,46 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get themes_mcoaWarning => 'Accent color (Warning)';
+
+  @override
+  String get appSettings_languagePtPt => 'Português (Portugal)';
+
+  @override
+  String get receivedImage_syntheticBadge => 'MI által rekonstruálva';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Offline · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Offline';
+
+  @override
+  String get appBar_reconnecting => 'Újracsatlakozás…';
+
+  @override
+  String get connectSheet_title => 'Rádió csatlakoztatása';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Újracsatlakozás: $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Rádió kiválasztása';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB vagy TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Újracsatlakozás leállítása';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Nem érhető el: $name. Ellenőrizze, hogy be van-e kapcsolva és a közelben van-e.';
+  }
+
+  @override
+  String get chat_composerOffline => 'Üzenetküldéshez csatlakozzon rádióhoz';
 }
