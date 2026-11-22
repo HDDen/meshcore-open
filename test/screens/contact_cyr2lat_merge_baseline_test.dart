@@ -33,6 +33,7 @@ const _loads = <Symbol>{
 class _Settings extends AppSettingsService {
   _Settings({String alpha = 'Alpha', String beta = 'Beta'}) : value = AppSettings(
     hideRadioStatsButton: true,
+    showQuickActionsInContactHeader: false,
     canvasActive: false,
     cyr2latProfiles: [
       Cyr2LatProfile(id: _alpha, name: alpha, charMap: const {'я': 'ya'}),
@@ -109,8 +110,9 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
           return 0;
         case #mcmpSigningFailures:
           return failures.stream;
-        case #isOfflineMode:
         case #isConnected:
+          return true;
+        case #isOfflineMode:
         case #isLoadingContacts:
         case #isSyncingChannels:
         case #isShowingQueuedMessageSyncProgress:

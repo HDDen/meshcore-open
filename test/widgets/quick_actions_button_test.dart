@@ -41,6 +41,9 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   String? get selfName => 'Test radio';
 
   @override
+  String? get lastRadioName => null;
+
+  @override
   int? get batteryPercent => 80;
 
   @override

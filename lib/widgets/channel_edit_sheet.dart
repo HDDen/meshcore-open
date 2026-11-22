@@ -19,7 +19,7 @@ void showChannelEditSheet(
   MeshCoreConnector connector,
   Channel channel,
 ) {
-  if (!ensureRadioConnected(context)) return;
+  if (!ensureRadioConnected(context, connector: connector)) return;
   final appSettingsService = Provider.of<AppSettingsService>(
     context,
     listen: false,
@@ -338,7 +338,7 @@ void showChannelEditSheet(
                     Expanded(
                       child: FilledButton(
                         onPressed: () async {
-                          if (!ensureRadioConnected(context)) return;
+                          if (!ensureRadioConnected(context, connector: connector)) return;
                           final name = nameController.text.trim();
                           final pskHex = pskController.text.trim();
 

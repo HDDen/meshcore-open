@@ -49,6 +49,7 @@ import '../storage/prefs_manager.dart';
 import '../utils/contact_search.dart';
 import '../utils/app_route_observer.dart';
 import '../utils/disconnect_navigation_mixin.dart';
+import '../utils/dialog_utils.dart' show showDisconnectDialog;
 import '../utils/route_transitions.dart';
 import '../helpers/blocked_senders.dart';
 import '../helpers/channel_marker_styles.dart';

@@ -986,6 +986,9 @@ class _RenderSegmentLabel extends RenderBox {
   }
 
   @override
+  bool hitTestSelf(Offset position) => true;
+
+  @override
   void paint(PaintingContext context, Offset offset) {
     _painter.paint(context.canvas, offset + _paintOffset);
   }

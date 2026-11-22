@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
+import 'package:meshcore_open/helpers/legacy_offline_access.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/screens/scanner_screen.dart';
 import 'package:meshcore_open/storage/connection_transport_preference_store.dart';
@@ -58,6 +59,7 @@ void main() {
   late _NoNetwork network;
 
   setUp(() async {
+    LegacyOfflineAccess.instance.setEnabled(false);
     previousPaths = PathProviderPlatform.instance;
     PathProviderPlatform.instance = _NoPreferencesDirectory();
     previousNetwork = HttpOverrides.current;
@@ -75,6 +77,7 @@ void main() {
   });
 
   tearDown(() {
+    LegacyOfflineAccess.instance.setEnabled(false);
     HttpOverrides.global = previousNetwork;
     PathProviderPlatform.instance = previousPaths;
     ConnectionTransportPreferenceStore.resetCache();
@@ -110,7 +113,7 @@ void main() {
           final context = tester.element(find.byType(ScannerScreen));
           final l10n = AppLocalizations.of(context);
           expect(find.byType(OfflineHistoryButton), findsOneWidget);
-          expect(find.text(l10n.app_offline), findsOneWidget);
+          expect(find.text(l10n.app_offline), findsNothing);
           expect(find.text(l10n.scanner_scan), findsOneWidget);
           expect(network.clientCreations, 0);
           expect(tester.takeException(), isNull);
@@ -123,6 +126,14 @@ void main() {
         connector.notifyListeners();
         await tester.pump(const Duration(milliseconds: 60));
         await tester.pumpWidget(app(ThemeData.dark()));
+        await tester.pumpAndSettle();
+        expectScanner();
+
+        final l10n = AppLocalizations.of(tester.element(find.byType(ScannerScreen)));
+        LegacyOfflineAccess.instance.setEnabled(true);
+        await tester.pumpAndSettle();
+        expect(find.text(l10n.app_offline), findsOneWidget);
+        LegacyOfflineAccess.instance.setEnabled(false);
         await tester.pumpAndSettle();
         expectScanner();
 

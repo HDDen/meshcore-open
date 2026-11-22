@@ -24,6 +24,31 @@ Widget _segments(double width, List<String> labels) {
 }
 
 void main() {
+  testWidgets('tapping a painted segment label selects its segment', (tester) async {
+    Set<int>? requested;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: MeshSegmentLabel('Auto')),
+              ButtonSegment(value: 1, label: MeshSegmentLabel('Flood')),
+            ],
+            selected: const {0},
+            onSelectionChanged: (value) => requested = value,
+          ),
+        ),
+      ),
+    ));
+    final label = find.byWidgetPredicate(
+      (widget) => widget is MeshSegmentLabel && widget.text == 'Flood',
+    );
+    expect(label.hitTestable(), findsOneWidget);
+    await tester.tap(label);
+    await tester.pump();
+    expect(requested, {1});
+  });
+
   testWidgets('short labels lay out on one line at full size', (tester) async {
     await tester.pumpWidget(_segments(360, ['Auto', 'Flood', 'Manual']));
     expect(tester.takeException(), isNull);

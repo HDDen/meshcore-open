@@ -57,6 +57,12 @@ class _Radio extends ChangeNotifier implements MeshCoreConnector {
   String get selfPublicKeyHex => _node;
 
   @override
+  String get storageKeyHex => _node;
+
+  @override
+  bool get isConnected => true;
+
+  @override
   Future<void> setChannel(int index, String name, Uint8List psk) async {
     writes.add((index, name, Uint8List.fromList(psk)));
   }

@@ -22656,7 +22656,6 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(flushChannelRuleVerdicts());
     unawaited(_unreadStore.flush());
     _bindStoresToPublicKey(keyHex);
-    _discoveryContactStore.setPublicKeyHex = keyHex;
   }
 
   /// Records the connected radio so its data can be shown offline later.

@@ -60,7 +60,6 @@ import '../helpers/channel_group_helper.dart';
 import '../helpers/channel_preview_text.dart';
 import '../helpers/channel_qr_link.dart'; // channel-qr-scan
 import '../helpers/gif_helper.dart';
-import '../helpers/offline_mode_helper.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
 import 'channel_chat_screen.dart';
@@ -524,9 +523,10 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                     viewState,
                   );
                   final waitingForInitialChannels =
+                      connector.isConnected &&
                       !connector.hasLoadedChannels && !connector.isLoadingChannels;
                   final waitingForFirstChannel =
-                      connector.isLoadingChannels && channels.isEmpty;
+                      connector.isConnected && connector.isLoadingChannels && channels.isEmpty;
                   final waitingForChannelGroups =
                       connector.isConnected &&
                       (connector.selfPublicKeyHex.isEmpty ||

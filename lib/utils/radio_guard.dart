@@ -21,8 +21,14 @@ extension RadioReadOnlyContext on BuildContext {
 /// Safety net for radio actions that could not be disabled in the UI (for
 /// example a dialog that was already open when the link dropped). Returns
 /// true when connected; otherwise explains why and offers to connect.
-bool ensureRadioConnected(BuildContext context) {
-  if (!isRadioReadOnly(context.read<MeshCoreConnector>())) return true;
+/// Pass [connector] when the caller already owns a radio, so the check uses
+/// that instance instead of requiring (or selecting another) provider.
+bool ensureRadioConnected(
+  BuildContext context, {
+  MeshCoreConnector? connector,
+}) {
+  final radio = connector ?? context.read<MeshCoreConnector>();
+  if (!isRadioReadOnly(radio)) return true;
   final l10n = context.l10n;
   showDismissibleSnackBar(
     context,

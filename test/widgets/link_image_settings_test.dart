@@ -39,6 +39,10 @@ class _Settings extends AppSettingsService {
 // Capture sheet commands without radio, SQL or preference writes. Real store
 // inheritance/reopen tests live in the storage baseline package.
 class _ChannelConnector extends MeshCoreConnector {
+  bool connected = true;
+  @override
+  bool get isConnected => connected;
+
   bool initialUrlChoice = false;
   bool cyr2latChoice = false;
   String? cyr2latProfile;
@@ -160,22 +164,82 @@ void main() {
     String language = 'en',
     Size size = const Size(800, 600),
     double textScale = 1,
+    MeshCoreConnector? providedConnector,
   }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final channel = Channel(index: 1, name: 'Example', psk: Uint8List.fromList(List.filled(16, 1)));
-    await tester.pumpWidget(app(settings,
+    final host = app(settings,
       Builder(builder: (context) => TextButton(
         onPressed: () => showChannelEditSheet(context, connector, channel),
         child: const Text('Edit'),
       )), language: language, textScale: textScale,
-    ));
+    );
+    await tester.pumpWidget(providedConnector == null
+        ? host
+        : ChangeNotifierProvider<MeshCoreConnector>.value(
+            value: providedConnector, child: host,
+          ));
+    final l10n = AppLocalizations.of(tester.element(find.text('Edit')));
     await tester.tap(find.text('Edit'));
     await tester.pumpAndSettle();
-    return AppLocalizations.of(tester.element(find.byType(DraggableScrollableSheet)));
+    expect(tester.takeException(), isNull);
+    return l10n;
   }
+
+  testWidgets('a disconnected editor radio cannot use another provider radio', (tester) async {
+    final settings = _Settings();
+    final connector = _ChannelConnector()..connected = false;
+    final otherRadio = _ChannelConnector();
+    try {
+      final l10n = await openSheet(tester, settings, connector,
+          providedConnector: otherRadio);
+      expect(find.byType(DraggableScrollableSheet), findsNothing);
+      expect(find.text(l10n.settings_notConnectedError), findsOneWidget);
+      expect(connector.radioUpdates, 0);
+      expect(connector.completedSaves, 0);
+      expect(otherRadio.radioUpdates, 0);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      connector.dispose();
+      otherRadio.dispose();
+      settings.dispose();
+    }
+  });
+
+  testWidgets('disconnect before Save preserves the draft and writes nothing', (tester) async {
+    final settings = _Settings();
+    final connector = _ChannelConnector();
+    final otherRadio = _ChannelConnector();
+    try {
+      final l10n = await openSheet(tester, settings, connector,
+          providedConnector: otherRadio);
+      final name = find.byType(TextField).first;
+      await tester.enterText(name, 'Unsaved draft');
+      connector.connected = false;
+      await tester.tap(find.widgetWithText(FilledButton, l10n.common_save));
+      await tester.pumpAndSettle();
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      expect(tester.widget<TextField>(name).controller!.text, 'Unsaved draft');
+      expect(connector.radioUpdates, 0);
+      expect(connector.completedSaves, 0);
+      expect(connector.profileWrites, isEmpty);
+      expect(connector.cyr2latWrites, isEmpty);
+      expect(connector.urlWrites, isEmpty);
+      expect(otherRadio.radioUpdates, 0);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      connector.dispose();
+      otherRadio.dispose();
+      settings.dispose();
+    }
+  });
 
   Future<Finder> revealProfile(WidgetTester tester) async {
     final field = find.byType(DropdownButtonFormField<String>);

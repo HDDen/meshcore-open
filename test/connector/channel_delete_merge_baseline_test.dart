@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidFlutterLocalNotificationsPlugin;
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/legacy_offline_access.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
@@ -108,6 +110,23 @@ Future<String?> _sqliteProblem() async {
 
 Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const notifications = MethodChannel('dexterous.com/flutter/local_notifications');
+  setUpAll(() {
+    // SELF_INFO binds notifications. Test the real service with a platform
+    // adapter and mocked calls, without accessing OS notification APIs.
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, (call) async {
+      if (call.method == 'initialize' || call.method == 'areNotificationsEnabled') {
+        return true;
+      }
+      return null;
+    });
+  });
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, null);
+  });
   final sqliteProblem = await _sqliteProblem();
   final storage = MessageHistoryStorage.instance;
   late Directory directory;

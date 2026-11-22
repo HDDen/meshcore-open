@@ -6,6 +6,7 @@ import '../helpers/manual_trace_input.dart';
 import '../helpers/trace_request_limits.dart';
 import '../l10n/l10n.dart';
 import '../services/ui_view_state_service.dart';
+import '../widgets/mesh_ui.dart' show MeshSegmentLabel;
 import 'path_trace_map.dart';
 
 class ManualPathTraceScreen extends StatefulWidget {

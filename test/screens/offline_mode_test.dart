@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mco_service/mco_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidFlutterLocalNotificationsPlugin;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../support/history_test_environment.dart';
 
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
@@ -38,10 +41,21 @@ import 'package:meshcore_open/storage/channel_store.dart';
 import 'package:meshcore_open/storage/contact_store.dart';
 import 'package:meshcore_open/storage/last_radio_store.dart';
 import 'package:meshcore_open/storage/message_store.dart';
-import 'package:meshcore_open/storage/prefs_manager.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/offline_composer_bar.dart';
 import 'package:meshcore_open/widgets/connect_sheet.dart';
+
+// No private runtime or network is needed to build the contact header menu.
+class _ContactMenuSections extends ChangeNotifier implements SettingsSectionsService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #contactHeaderActionItems) {
+      return <PopupMenuEntry<dynamic>>[];
+    }
+    if (invocation.memberName == #contactActionTiles) return <Widget>[];
+    return super.noSuchMethod(invocation);
+  }
+}
 
 final _radioKey = Uint8List.fromList(List<int>.generate(32, (i) => 0xA0 + i));
 final _radioHex = pubKeyToHex(_radioKey);
@@ -104,29 +118,54 @@ Future<Widget> _app(
   Widget home,
 ) async {
   final storage = StorageService();
-  final settings = AppSettingsService();
-  await tester.runAsync(settings.loadSettings);
-  final translation = TranslationService(settings);
+  final settings = await tester.runAsync(() async {
+    final service = AppSettingsService();
+    try {
+      await service.loadSettings();
+      // Header polling is covered separately; keep radio I/O in runAsync here.
+      await service.updateSettings(service.settings.copyWith(
+        showQuickActionsInMainHeader: false,
+        showQuickActionsInChannelHeader: false,
+        showQuickActionsInContactHeader: false,
+      ));
+      return service;
+    } catch (_) {
+      service.dispose();
+      rethrow;
+    }
+  });
+  if (settings == null) {
+    throw StateError('Offline fixture settings initialization failed');
+  }
+  addTearDown(() async {
+    // Widgets release polling owners and listeners before their services die,
+    // including when an assertion exits the test before its explicit unmount.
+    await tester.pumpWidget(const SizedBox.shrink());
+    settings.dispose();
+  });
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: connector),
-      ChangeNotifierProvider.value(value: MessageRetryService()),
-      ChangeNotifierProvider.value(value: PathHistoryService(storage)),
-      ChangeNotifierProvider.value(value: settings),
-      ChangeNotifierProvider.value(value: BleDebugLogService()),
-      ChangeNotifierProvider.value(value: AppDebugLogService()),
-      ChangeNotifierProvider.value(value: ChatTextScaleService()),
-      ChangeNotifierProvider.value(value: translation),
-      ChangeNotifierProvider.value(value: UiViewStateService()),
-      Provider.value(value: storage),
-      ChangeNotifierProvider.value(
-        value: MapTileCacheService(appSettingsService: settings),
+      ChangeNotifierProvider<SettingsSectionsService>(
+        create: (_) => _ContactMenuSections(),
       ),
-      ChangeNotifierProvider.value(value: TimeoutPredictionService(storage)),
-      ChangeNotifierProvider.value(value: ImageCodecService(settings)),
-      ChangeNotifierProvider.value(value: ReceivedImageStore()),
-      ChangeNotifierProvider.value(
-        value: NetworkMapUploadService(
+      ChangeNotifierProvider(create: (_) => MessageRetryService()),
+      ChangeNotifierProvider(create: (_) => PathHistoryService(storage)),
+      ChangeNotifierProvider.value(value: settings),
+      ChangeNotifierProvider(create: (_) => BleDebugLogService()),
+      ChangeNotifierProvider(create: (_) => AppDebugLogService()),
+      ChangeNotifierProvider(create: (_) => ChatTextScaleService()),
+      ChangeNotifierProvider(create: (_) => TranslationService(settings)),
+      ChangeNotifierProvider(create: (_) => UiViewStateService()),
+      Provider.value(value: storage),
+      ChangeNotifierProvider(
+        create: (_) => MapTileCacheService(appSettingsService: settings),
+      ),
+      ChangeNotifierProvider(create: (_) => TimeoutPredictionService(storage)),
+      ChangeNotifierProvider(create: (_) => ImageCodecService(settings)),
+      ChangeNotifierProvider(create: (_) => ReceivedImageStore()),
+      ChangeNotifierProvider(
+        create: (_) => NetworkMapUploadService(
           connector: connector,
           settings: settings,
         ),
@@ -167,10 +206,25 @@ Future<void> _waitFor(
   });
 }
 
+// Construct I/O owners in the same real async zone as their store loads.
+// ContactStore/ChannelStore create Future.value() write queues in constructors;
+// creating those in FakeAsync and awaiting them in runAsync deadlocks until
+// fake microtasks run, while the test is waiting for runAsync to return.
+Future<MeshCoreConnector> _newConnector(WidgetTester tester) async {
+  final connector = await tester.runAsync(() async => MeshCoreConnector());
+  if (connector == null) {
+    throw StateError('Offline fixture connector creation failed');
+  }
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    connector.dispose();
+  });
+  return connector;
+}
+
 /// Restores the seeded radio into a connector that never connects.
 Future<MeshCoreConnector> _offlineConnector(WidgetTester tester) async {
-  final connector = MeshCoreConnector();
-  addTearDown(connector.dispose);
+  final connector = await _newConnector(tester);
   await tester.runAsync(connector.restoreLastRadio);
   expect(connector.isConnected, isFalse);
   expect(connector.channels, isNotEmpty);
@@ -190,6 +244,23 @@ PopupMenuItem<Object?> _menuItem(String label) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const notifications = MethodChannel('dexterous.com/flutter/local_notifications');
+  setUpAll(() {
+    // SELF_INFO binds notifications. Test the real service with a platform
+    // adapter and mocked calls, without accessing OS notification APIs.
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, (call) async {
+      if (call.method == 'initialize' || call.method == 'areNotificationsEnabled') {
+        return true;
+      }
+      return null;
+    });
+  });
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, null);
+  });
 
   final tempDir = Directory.systemTemp.createTempSync('offline_mode_test');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -198,16 +269,12 @@ void main() {
         (call) async => tempDir.path,
       );
 
+  final history = HistoryTestEnvironment();
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    PrefsManager.reset();
-    await PrefsManager.initialize();
-
-
+    await history.setUp();
     await _seedRadio();
-
-
   });
+  tearDown(history.tearDown);
 
   testWidgets('Channels screen stays put offline with saved data and a '
       'Connect control', (tester) async {
@@ -297,14 +364,14 @@ void main() {
     await _settle(tester);
     expect(find.text(_l10n.contact_clearChat), findsNothing);
     expect(find.text(_l10n.contact_telemetry), findsNothing);
-    expect(_menuItem(_l10n.contact_info).enabled, isTrue);
+    expect(find.text(_l10n.contact_info), findsNothing);
+    expect(_menuItem(_l10n.chat_searchMessages).enabled, isTrue);
     await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('a draft typed while connected survives a disconnect and '
       'reconnect', (tester) async {
-    final connector = MeshCoreConnector();
-    addTearDown(connector.dispose);
+    final connector = await _newConnector(tester);
     connector.reviewRadioFactoryForTest = () => ReviewRadio(
       scheduledMessageInterval: const Duration(hours: 1),
       ackDelay: const Duration(hours: 1),
