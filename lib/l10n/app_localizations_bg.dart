@@ -400,185 +400,194 @@ class AppLocalizationsBg extends AppLocalizations {
       'Уведомления, съобщения и предпочитания за карта';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Експорт';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle =>
+      'Експорт на контакти и повторители като GPX';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Резервно копие';
 
   @override
   String get backupRestore_subtitle =>
-      'Save or restore app data and radio settings';
+      'Запазване или възстановяване на данните на приложението и настройките на радиото';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Импорт';
 
   @override
-  String get backupRestore_selectImportFile => 'Import File';
+  String get backupRestore_selectImportFile => 'Импорт на файл';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Парола (по избор)';
 
   @override
   String get backupRestore_passwordHelp =>
-      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+      'Паролата криптира файла. Без парола се записва обикновен текст, който може да включва частни ключове и ключове на канали, история и идентификационни данни.';
 
   @override
   String get backupRestore_importUnavailable =>
-      'Check the password or choose a supported backup file.';
+      'Проверете паролата или изберете поддържан файл с резервно копие.';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items =>
+      'Елементи за резервно копие и възстановяване';
 
   @override
-  String get backupRestore_nodeSettings => 'Node Settings';
+  String get backupRestore_nodeSettings => 'Настройки на възела';
 
   @override
   String get backupRestore_nodeSettingsDescription =>
-      'Device name, private and public keys, radio settings, and regions';
+      'Име на устройството, частен и публичен ключ, настройки на радиото и региони';
 
   @override
-  String get backupRestore_deviceName => 'Device Name';
+  String get backupRestore_deviceName => 'Име на устройството';
 
   @override
-  String get backupRestore_privateKey => 'Private Key (sensitive)';
+  String get backupRestore_privateKey => 'Частен ключ (чувствителен)';
 
   @override
-  String get backupRestore_publicKey => 'Public Key';
+  String get backupRestore_publicKey => 'Публичен ключ';
 
   @override
-  String get backupRestore_radioSettings => 'Radio Settings';
+  String get backupRestore_radioSettings => 'Настройки на радиото';
 
   @override
-  String get backupRestore_regions => 'Regions';
+  String get backupRestore_regions => 'Региони';
 
   @override
-  String get backupRestore_location => 'Location';
+  String get backupRestore_location => 'Местоположение';
 
   @override
-  String get backupRestore_contactSettings => 'Contact Settings';
+  String get backupRestore_contactSettings => 'Настройки на контактите';
 
   @override
-  String get backupRestore_privacySettings => 'Privacy Settings';
+  String get backupRestore_privacySettings => 'Настройки за поверителност';
 
   @override
-  String get backupRestore_contactsData => 'Contacts';
+  String get backupRestore_contactsData => 'Контакти';
 
   @override
-  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+  String get backupRestore_perContactSettings =>
+      'Настройки и филтри на контактите';
 
   @override
-  String get backupRestore_contactGroups => 'Contact Groups';
+  String get backupRestore_contactGroups => 'Групи контакти';
 
   @override
-  String get backupRestore_contactHistory => 'Contact History';
+  String get backupRestore_contactHistory => 'История на контактите';
 
   @override
-  String get backupRestore_channelsData => 'Channels';
+  String get backupRestore_channelsData => 'Канали';
 
   @override
-  String get backupRestore_channelFilters => 'Message Filter Settings';
+  String get backupRestore_channelFilters =>
+      'Настройки на филтъра за съобщения';
 
   @override
-  String get backupRestore_channelSettings => 'Channel Settings';
+  String get backupRestore_channelSettings => 'Настройки на каналите';
 
   @override
-  String get backupRestore_communities => 'Communities';
+  String get backupRestore_communities => 'Общности';
 
   @override
-  String get backupRestore_channelHistory => 'Channel History';
+  String get backupRestore_channelHistory => 'История на каналите';
 
   @override
-  String get backupRestore_locationSettings => 'Location Settings';
+  String get backupRestore_locationSettings => 'Настройки за местоположение';
 
   @override
   String get backupRestore_locationSettingsDescription =>
-      'Location, contact settings, and privacy settings';
+      'Местоположение, настройки на контактите и поверителност';
 
   @override
-  String get backupRestore_appSettings => 'App Settings';
+  String get backupRestore_appSettings => 'Настройки на приложението';
 
   @override
   String get backupRestore_appSettingsDescription =>
-      'App preferences and appearance settings';
+      'Предпочитания и настройки на външния вид';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+  String get backupRestore_ipfsKey => 'API ключ за IPFS (чувствителен)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+  String get backupRestore_stadiaMapKey =>
+      'API ключ за Stadia Maps (чувствителен)';
 
   @override
-  String get backupRestore_contacts => 'Contacts';
+  String get backupRestore_contacts => 'Контакти';
 
   @override
   String get backupRestore_contactsDescription =>
-      'Contacts, per-contact filters and settings, groups, and message history';
+      'Контакти, филтри и настройки по контакт, групи и история на съобщенията';
 
   @override
-  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+  String get backupRestore_discoveredContacts => 'Открити контакти';
 
   @override
   String get backupRestore_discoveredContactsDescription =>
-      'Discovered contacts and their saved details';
+      'Открити контакти и запазените им данни';
 
   @override
-  String get backupRestore_channels => 'Channels';
+  String get backupRestore_bookmarks => 'Bookmarks';
+
+  @override
+  String get backupRestore_channels => 'Канали';
 
   @override
   String get backupRestore_channelsDescription =>
-      'Channels, channel filters, communities, and message history';
+      'Канали, филтри на каналите, общности и история на съобщенията';
 
   @override
-  String get backupRestore_backup => 'Create Backup';
+  String get backupRestore_backup => 'Създай резервно копие';
 
   @override
-  String get backupRestore_restore => 'Restore Selected';
+  String get backupRestore_restore => 'Възстанови избраното';
 
   @override
-  String get backupRestore_backupComplete => 'Backup file created.';
+  String get backupRestore_backupComplete =>
+      'Файлът с резервно копие е създаден.';
 
   @override
   String get backupRestore_restoreComplete =>
-      'Restore complete. Reconnect if you restored the radio identity.';
+      'Възстановяването приключи. Свържете се отново, ако сте възстановили идентичността на радиото.';
 
   @override
-  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+  String get backupRestore_missingModelsTitle => 'Моделите не са изтеглени';
 
   @override
-  String backupRestore_missingModelsMessage(String models) {
-    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
-  }
+  String get backupRestore_missingModelsMessage =>
+      'Възстановените настройки избират модели, които не са налични на това устройство. Да се изтеглят ли сега?';
 
   @override
-  String get backupRestore_downloadModels => 'Download Models';
+  String get backupRestore_downloadModels => 'Изтегли модели';
 
   @override
-  String get backupRestore_downloading => 'Downloading…';
+  String get backupRestore_downloading => 'Изтегляне…';
 
   @override
-  String get backupRestore_cancelDownload => 'Cancel Download';
+  String get backupRestore_cancelDownload => 'Отмени изтеглянето';
 
   @override
   String backupRestore_failed(String error) {
-    return 'Backup operation failed: $error';
+    return 'Операцията с резервно копие е неуспешна: $error';
   }
 
   @override
   String get backupRestore_fileTooLarge =>
-      'Backup file is larger than the 100 MB limit.';
+      'Файлът с резервно копие е по-голям от лимита от 100 MB.';
 
   @override
-  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+  String get backupRestore_selectAtLeastOne => 'Изберете поне един елемент.';
 
   @override
-  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+  String get backupRestore_replaceIdentityTitle =>
+      'Да се замени ли идентичността на радиото?';
 
   @override
   String get backupRestore_replaceIdentityMessage =>
-      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+      'Възстановяването на настройките на възела заменя частния ключ на свързаното радио и променя идентичността му. Продължете само ако е нарочно.';
 
   @override
   String get settings_nodeSettings => 'Настройки на възела';
@@ -930,8 +939,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get settings_infoHardware => 'Оборудование';
 
   @override
-  String get settings_infoFirmware =>
-      'Програмно-оборонни системни программи (фirmware)';
+  String get settings_infoFirmware => 'Фърмуер';
 
   @override
   String get settings_presets => 'Предварителни настройки';
@@ -1269,7 +1277,10 @@ class AppLocalizationsBg extends AppLocalizations {
   String get appSettings_languageSl => 'Словенски';
 
   @override
-  String get appSettings_languagePt => 'Португалски';
+  String get appSettings_languagePt => 'Португалски (Бразилия)';
+
+  @override
+  String get appSettings_languagePtPt => 'Португалски (Португалия)';
 
   @override
   String get appSettings_languageIt => 'Италиански';
@@ -1374,6 +1385,13 @@ class AppLocalizationsBg extends AppLocalizations {
       'Показвай региона на съобщението в канала на същия ред като броя хопове, а не под него.';
 
   @override
+  String get appSettings_showCompressionIndicator => 'Compression indicator';
+
+  @override
+  String get appSettings_showCompressionIndicatorSubtitle =>
+      'Show an icon on messages compressed with SMAZ.';
+
+  @override
   String get appSettings_notifications => 'Уведомления';
 
   @override
@@ -1431,11 +1449,11 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get appSettings_clearPathOnMaxRetrySubtitle =>
-      'Възстанови пътя към контакта след 5 неуспешни опита за изпращане';
+      'Нулиране на записания път към контакта, когато всички опити за изпращане се провалят';
 
   @override
   String get appSettings_pathsWillBeCleared =>
-      'Пътищата ще бъдат почистени след 5 неуспешни опита.';
+      'Пътищата се изчистват, когато всички опити за изпращане се провалят';
 
   @override
   String get appSettings_pathsWillNotBeCleared =>
@@ -1447,7 +1465,7 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationSubtitle =>
-      'Превключвайте между най-добрите пътища и режим Flood';
+      'При всеки директен опит се пробва друг известен маршрут. Следващите опити са Flood. Изключено запазва текущия път на контакта.';
 
   @override
   String get appSettings_autoRouteRotationEnabled =>
@@ -1464,6 +1482,64 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get appSettings_maxMessageRetriesSubtitle =>
       'Брой опити за повторно изпращане, преди съобщението да бъде маркирано като неуспешно.';
+
+  @override
+  String appSettings_directRetries(int count) {
+    return 'Директни опити: $count';
+  }
+
+  @override
+  String get appSettings_directRetriesSubtitle =>
+      'Колко пъти да се пробва известен маршрут. Достъпно и когато автоматичната ротация е изключена.';
+
+  @override
+  String appSettings_floodRetries(int count) {
+    return 'Опити Flood: $count';
+  }
+
+  @override
+  String get appSettings_floodRetriesSubtitle =>
+      'Колко пъти да се използва Flood. Flood заема повече ефирно време. При включена ротация идват след директните опити.';
+
+  @override
+  String appSettings_loginAttempts(int count) {
+    return 'Опити за вход: $count';
+  }
+
+  @override
+  String get appSettings_loginAttemptsSubtitle =>
+      'Колко пъти да се опитва вход към ретранслатор или room сървър, преди да се откаже.';
+
+  @override
+  String get appSettings_repeatersAndRooms => 'Повторители и стаи';
+
+  @override
+  String get appSettings_clockSyncAfterLogin =>
+      'Синхронизиране на часовника при вход';
+
+  @override
+  String get appSettings_clockSyncAfterLoginSubtitle =>
+      'След успешен вход в повторител се изпраща clock sync. Всеки повторител пак може да е По подразбиране, Вкл. или Изкл.';
+
+  @override
+  String get appSettings_loginPasswordAutofocus =>
+      'Фокус върху полето за парола';
+
+  @override
+  String get appSettings_loginPasswordAutofocusSubtitle =>
+      'При отваряне на вход в повторител или стая курсорът отива в празното поле за парола. Изключено оставя диалога видим, докато не докоснете полето.';
+
+  @override
+  String get appSettings_resetRepeaterRoomSettings =>
+      'Нулиране на настройките за повторители и стаи';
+
+  @override
+  String get appSettings_resetRepeaterRoomSettingsSubtitle =>
+      'Възстановява настройките в този раздел. Изборите за отделни повторители остават.';
+
+  @override
+  String get appSettings_repeaterRoomSettingsReset =>
+      'Настройките за повторители и стаи са нулирани';
 
   @override
   String get appSettings_ipfsImageLinks => 'Конфигурация на IPFS доставчик';
@@ -1824,27 +1900,48 @@ class AppLocalizationsBg extends AppLocalizations {
   String get contacts_noMembers => 'Няма членове';
 
   @override
-  String get contacts_lastSeenNow => 'Видян току-що';
+  String contacts_groupCurrentMembers(int count) {
+    return 'Current members ($count)';
+  }
+
+  @override
+  String get contacts_groupAddContacts => 'Add contacts';
+
+  @override
+  String contacts_groupRemoveMember(String name) {
+    return 'Remove $name from group';
+  }
+
+  @override
+  String contacts_groupAddMember(String name) {
+    return 'Add $name to group';
+  }
+
+  @override
+  String get contacts_lastSeenNow => 'наскоро';
+
+  @override
+  String get contacts_lastSeenNever => 'not heard yet';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return 'Преди $minutes минути';
+    return '~ $minutes мин.';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => 'Преди час';
+  String get contacts_lastSeenHourAgo => '~ 1 ч.';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return 'Преди $hours часа';
+    return '~ $hours ч.';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => 'Преди 1 ден';
+  String get contacts_lastSeenDayAgo => '~ 1 дн.';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return 'Преди $days дни';
+    return '~ $days дн.';
   }
 
   @override
@@ -2007,16 +2104,6 @@ class AppLocalizationsBg extends AppLocalizations {
   String channels_editChannelTitle(int index) {
     return 'Редактирай Канал $index';
   }
-
-  @override
-  String get channels_smazCompression => 'Компресия SMAZ';
-
-  @override
-  String get channels_cyr2latCompression => 'Компресия Cyr2Lat';
-
-  @override
-  String get channels_cyr2latCompressionDscr =>
-      'Заменя някои кирилични символи с латиница при изпращане.';
 
   @override
   String get channels_cyr2latSettingsHeading => 'Настройки на Cyr2Lat';
@@ -2270,6 +2357,30 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => 'Съобщението е изтрито';
+
+  @override
+  String get chat_bookmark => 'Bookmark';
+
+  @override
+  String get chat_removeBookmark => 'Remove bookmark';
+
+  @override
+  String get chat_showBookmarks => 'Show bookmarks';
+
+  @override
+  String get bookmarks_title => 'Bookmarks';
+
+  @override
+  String get bookmarks_empty => 'No bookmarked messages';
+
+  @override
+  String get bookmarks_channel => 'Channel';
+
+  @override
+  String get bookmarks_contact => 'Contact';
+
+  @override
+  String get bookmarks_remove => 'Remove bookmark';
 
   @override
   String get chat_selectMessages => 'Избор на съобщения';
@@ -2563,7 +2674,7 @@ class AppLocalizationsBg extends AppLocalizations {
   String get routing_title => 'Маршрутизиране';
 
   @override
-  String get routing_modeAuto => 'Автоматично';
+  String get routing_modeAuto => 'Авто';
 
   @override
   String get routing_modeFlood => 'Flood';
@@ -2678,8 +2789,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String get pathEditor_hexLabel => 'Шестнадесетични префикси';
 
   @override
-  String get pathEditor_hexHelper =>
-      'Два шестнадесетични идентификатора на скок, разделени със запетаи';
+  String pathEditor_hexHelper(int count) {
+    return '$count шестнадесетични идентификатора на скок, разделени със запетаи';
+  }
 
   @override
   String pathEditor_invalidTokens(String tokens) {
@@ -2720,10 +2832,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get chat_publicKey => 'Публичен ключ';
-
-  @override
-  String get chat_compressOutgoingMessages =>
-      'Компресиране на изходящи съобщения';
 
   @override
   String get chat_floodForced => 'Flood (принудително)';
@@ -2915,10 +3023,6 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get map_lastSeen => 'Последно видян';
-
-  @override
-  String get map_disconnectConfirm =>
-      'Сигурни ли сте, че искате да прекъснете връзката с това устройство?';
 
   @override
   String get map_from => 'От';
@@ -3475,7 +3579,16 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get repeater_clockSyncAfterLoginSubtitle =>
-      'Автоматично изпращайте съобщение \"синхронизиране на часовника\" след успешно влизане.';
+      'По подразбиране следва „Повторители и стаи“ в настройките. Вкл. и Изкл. важат само за този повторител.';
+
+  @override
+  String get repeater_clockSyncDefault => 'По подразбиране';
+
+  @override
+  String get repeater_clockSyncOn => 'Вкл.';
+
+  @override
+  String get repeater_clockSyncOff => 'Изкл.';
 
   @override
   String get repeater_statusTitle => 'Статус на повтарянето';
@@ -3899,7 +4012,7 @@ class AppLocalizationsBg extends AppLocalizations {
       'Разпространи Flood обява в мрежата.';
 
   @override
-  String get repeater_sendAdvertZeroHop => 'Изпрати обява с нулев скок';
+  String get repeater_sendAdvertZeroHop => 'Изпрати Zero Hop обява';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
@@ -5428,7 +5541,7 @@ class AppLocalizationsBg extends AppLocalizations {
   }
 
   @override
-  String get contacts_zeroHopAdvert => 'Обява без скок';
+  String get contacts_zeroHopAdvert => 'Zero Hop обява';
 
   @override
   String get contacts_floodAdvert => 'Flood обява';
@@ -5584,6 +5697,19 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get notification_replyAppNotRunning =>
       'MeshCore Open не работи. Отворете го и изпратете отговора си повторно.';
+
+  @override
+  String get settings_exportBookmarks => 'Export bookmarks to Markdown';
+
+  @override
+  String get settings_exportBookmarksSubtitle =>
+      'Share or save bookmarked messages as a Markdown file.';
+
+  @override
+  String get settings_exportBookmarksSuccess => 'Bookmarks exported.';
+
+  @override
+  String get settings_exportBookmarksNoBookmarks => 'No bookmarks to export.';
 
   @override
   String get settings_gpxExportRepeaters =>
@@ -6241,11 +6367,61 @@ class AppLocalizationsBg extends AppLocalizations {
       'Това устройство не може да покаже реконструкцията.';
 
   @override
+  String receivedImage_packetEchoes(int number, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'repeated $count times',
+      one: 'repeated once',
+      zero: 'no repeater heard',
+    );
+    return 'Packet $number: $_temp0';
+  }
+
+  @override
+  String receivedImage_recoveryPacketEchoes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'repeated $count times',
+      one: 'repeated once',
+      zero: 'no repeater heard',
+    );
+    return 'Recovery packet: $_temp0';
+  }
+
+  @override
+  String get imageSend_preparingPreview => 'Preparing preview…';
+
+  @override
+  String get imageSend_tryAnother => 'Try another version';
+
+  @override
+  String get imageSend_versionsHint =>
+      'Each version is reconstructed a little differently. Pick the one that looks most like your photo.';
+
+  @override
+  String imageSend_versionLabel(int number) {
+    return 'Version $number';
+  }
+
+  @override
+  String imageSend_versionPackets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count packets',
+      one: '1 packet',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get imageSend_modelNotDownloaded =>
       'Моделът за изображения още не е изтеглен. Изтеглете го в настройките, за да изпращате изображения.';
 
   @override
-  String get imageSend_originalSize => 'Късно на използване на език:';
+  String get imageSend_originalSize => 'Оригинал';
 
   @override
   String get imageSend_onAirSize => 'В ефир';
@@ -6421,6 +6597,9 @@ class AppLocalizationsBg extends AppLocalizations {
   String receivedImage_shareCaption(int bytes) {
     return 'Възстановено от ИИ от $bytes байта; фините детайли се генерират, а не се предават.';
   }
+
+  @override
+  String get receivedImage_syntheticBadge => 'Реконструирано от ИИ';
 
   @override
   String get receivedImage_packetInfo => 'Информация за пакета';
@@ -6939,15 +7118,15 @@ class AppLocalizationsBg extends AppLocalizations {
 
   @override
   String get appSettings_resetRoutingToDefault =>
-      'Нулиране на алгоритъма за маршрутизация до стойност по подразбиране';
+      'Нулиране на настройките за маршрутизация до стойностите по подразбиране';
 
   @override
   String get appSettings_resetRoutingToDefaultSubtitle =>
-      'Възстановяване на настройките на алгоритъма за маршрутизация до заводските стойности по подразбиране';
+      'Възстановяване на настройките за маршрутизация в този раздел до стойностите по подразбиране';
 
   @override
   String get appSettings_routingResetToDefault =>
-      'Настройките на алгоритъма за маршрутизация са нулирани до стойност по подразбиране';
+      'Настройките за маршрутизация са нулирани до стойностите по подразбиране';
 
   @override
   String get appSettings_imageMessagesSection => 'Съобщения с изображения';
@@ -7447,4 +7626,170 @@ class AppLocalizationsBg extends AppLocalizations {
   @override
   String get messageFilter_ghostIconTooltip =>
       'Скрито от твоя филтър за съобщения';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Офлайн · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Офлайн';
+
+  @override
+  String get appBar_reconnecting => 'Повторно свързване…';
+
+  @override
+  String get connectSheet_title => 'Свържи радио';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Свържи отново с $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Избери радио';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB или TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Спри повторното свързване';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Няма връзка с $name. Уверете се, че е включено и наблизо.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Свържете се с радио, за да изпращате съобщения';
+
+  @override
+  String get modelDownload_notDownloaded => 'Не е изтеглен';
+
+  @override
+  String get modelDownload_downloading => 'Изтегляне';
+
+  @override
+  String get modelDownload_active => 'Активен';
+
+  @override
+  String get modelDownload_failed => 'Неуспешно изтегляне';
+
+  @override
+  String get modelDownload_incomplete => 'Непълен';
+
+  @override
+  String get modelDownload_verifying => 'Проверка на изтеглянето';
+
+  @override
+  String get modelDownload_useModel => 'Използвай този модел';
+
+  @override
+  String modelDownload_removeFailed(String error) {
+    return 'Моделът не можа да бъде премахнат: $error';
+  }
+
+  @override
+  String modelDownload_progress(String current, String total, String percent) {
+    return '$current / $total MB ($percent%)';
+  }
+
+  @override
+  String get chatCompression_title => 'Compression';
+
+  @override
+  String chatCompression_label(String mode) {
+    return 'Compression: $mode';
+  }
+
+  @override
+  String get chatCompression_off => 'Off';
+
+  @override
+  String get chatCompression_smaz => 'SMAZ';
+
+  @override
+  String get chatCompression_cyr2lat => 'Cyr2Lat';
+
+  @override
+  String get chatCompression_changeHint => 'Change compression for this chat';
+
+  @override
+  String get chatCompression_sheetSubtitle =>
+      'Applies to messages you send in this chat. Saved on this phone.';
+
+  @override
+  String get chatCompression_offDescription =>
+      'No compression. Sends your text exactly as typed. Every app can read it. Saves no bytes.';
+
+  @override
+  String get chatCompression_smazDescription =>
+      'Lossless compression for short text. The recipient\'s app must support SMAZ; other apps show unreadable \"s:…\" text. Only used when it makes a message smaller, so not every message is compressed.';
+
+  @override
+  String get chatCompression_cyr2latDescription =>
+      'Not lossless. Swaps some Cyrillic letters for lookalike Latin ones (А→A, З→3) to save bytes. Readable in any app with no decoding, but the exact characters change, including your own sent messages here. Copying, search and technical text may be affected. Results depend on the chosen profile.';
+
+  @override
+  String get chatCompression_profile => 'Cyr2Lat profile';
+
+  @override
+  String get chatCompression_noStorageId =>
+      'Can\'t change compression until this channel has synced from the radio.';
+
+  @override
+  String get chatCompression_saveFailed =>
+      'Couldn\'t save the compression setting. Showing the saved setting.';
+
+  @override
+  String get messageMeta_smazCompressed => 'SMAZ compressed';
+
+  @override
+  String get addContact_title => 'Add Contact';
+
+  @override
+  String get addContact_infoBanner =>
+      'If you know the public key of someone you want to contact, you can add them manually without waiting for them to advert.';
+
+  @override
+  String get addContact_contactType => 'Contact Type';
+
+  @override
+  String get addContact_name => 'Name';
+
+  @override
+  String get addContact_nameRequired => 'Please enter a name';
+
+  @override
+  String get addContact_publicKeyHex => 'Public Key (hex)';
+
+  @override
+  String get addContact_publicKeyRequired => 'Please enter a public key';
+
+  @override
+  String get addContact_publicKeyInvalid =>
+      'Public key must be 64 hex characters (32 bytes)';
+
+  @override
+  String get addContact_clipboardKeyLoaded =>
+      'Public key filled in. Choose a contact type, enter a name, and tap save.';
+
+  @override
+  String get addContact_fromDiscovered => 'Add from Discovered Contacts';
+
+  @override
+  String get addContact_saveFailed => 'Failed to add contact.';
+
+  @override
+  String get coordinateMap_title => 'Location';
+
+  @override
+  String get coordinate_copyLocation => 'Copy location';
+
+  @override
+  String get coordinate_openInMaps => 'Open in maps';
+
+  @override
+  String get coordinate_copied => 'Location copied';
 }

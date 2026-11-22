@@ -345,7 +345,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanner_stop => 'Стоп';
 
   @override
-  String get scanner_scan => 'Сканирование';
+  String get scanner_scan => 'Сканировать';
 
   @override
   String get scanner_bluetoothOff => 'Bluetooth выключен';
@@ -402,185 +402,189 @@ class AppLocalizationsRu extends AppLocalizations {
       'Уведомления, сообщения и настройки карты';
 
   @override
-  String get settings_export => 'Export';
+  String get settings_export => 'Экспорт';
 
   @override
-  String get settings_exportSubtitle => 'Export contacts and repeaters as GPX';
+  String get settings_exportSubtitle => 'Экспорт контактов и репитеров в GPX';
 
   @override
-  String get backupRestore_title => 'Backup & Restore';
+  String get backupRestore_title => 'Резервное копирование';
 
   @override
   String get backupRestore_subtitle =>
-      'Save or restore app data and radio settings';
+      'Сохранение и восстановление данных приложения и настроек радио';
 
   @override
-  String get backupRestore_import => 'Import';
+  String get backupRestore_import => 'Импорт';
 
   @override
-  String get backupRestore_selectImportFile => 'Import File';
+  String get backupRestore_selectImportFile => 'Импорт файла';
 
   @override
-  String get backupRestore_password => 'Password (optional)';
+  String get backupRestore_password => 'Пароль (необязательно)';
 
   @override
   String get backupRestore_passwordHelp =>
-      'A password encrypts the file. Blank saves plaintext that may include private/channel keys, history, and credentials.';
+      'Пароль шифрует файл. Без пароля файл сохраняется открытым текстом и может содержать приватные ключи и ключи каналов, историю и учётные данные.';
 
   @override
   String get backupRestore_importUnavailable =>
-      'Check the password or choose a supported backup file.';
+      'Проверьте пароль или выберите поддерживаемый файл резервной копии.';
 
   @override
-  String get backupRestore_items => 'Backup and restore items';
+  String get backupRestore_items => 'Элементы резервной копии и восстановления';
 
   @override
-  String get backupRestore_nodeSettings => 'Node Settings';
+  String get backupRestore_nodeSettings => 'Настройки узла';
 
   @override
   String get backupRestore_nodeSettingsDescription =>
-      'Device name, private and public keys, radio settings, and regions';
+      'Имя устройства, приватный и публичный ключи, настройки радио и регионы';
 
   @override
-  String get backupRestore_deviceName => 'Device Name';
+  String get backupRestore_deviceName => 'Имя устройства';
 
   @override
-  String get backupRestore_privateKey => 'Private Key (sensitive)';
+  String get backupRestore_privateKey => 'Приватный ключ (секретный)';
 
   @override
-  String get backupRestore_publicKey => 'Public Key';
+  String get backupRestore_publicKey => 'Публичный ключ';
 
   @override
-  String get backupRestore_radioSettings => 'Radio Settings';
+  String get backupRestore_radioSettings => 'Настройки радио';
 
   @override
-  String get backupRestore_regions => 'Regions';
+  String get backupRestore_regions => 'Регионы';
 
   @override
-  String get backupRestore_location => 'Location';
+  String get backupRestore_location => 'Местоположение';
 
   @override
-  String get backupRestore_contactSettings => 'Contact Settings';
+  String get backupRestore_contactSettings => 'Настройки контактов';
 
   @override
-  String get backupRestore_privacySettings => 'Privacy Settings';
+  String get backupRestore_privacySettings => 'Настройки конфиденциальности';
 
   @override
-  String get backupRestore_contactsData => 'Contacts';
+  String get backupRestore_contactsData => 'Контакты';
 
   @override
-  String get backupRestore_perContactSettings => 'Contact Settings and Filters';
+  String get backupRestore_perContactSettings =>
+      'Настройки и фильтры контактов';
 
   @override
-  String get backupRestore_contactGroups => 'Contact Groups';
+  String get backupRestore_contactGroups => 'Группы контактов';
 
   @override
-  String get backupRestore_contactHistory => 'Contact History';
+  String get backupRestore_contactHistory => 'История контактов';
 
   @override
-  String get backupRestore_channelsData => 'Channels';
+  String get backupRestore_channelsData => 'Каналы';
 
   @override
-  String get backupRestore_channelFilters => 'Message Filter Settings';
+  String get backupRestore_channelFilters => 'Настройки фильтра сообщений';
 
   @override
-  String get backupRestore_channelSettings => 'Channel Settings';
+  String get backupRestore_channelSettings => 'Настройки каналов';
 
   @override
-  String get backupRestore_communities => 'Communities';
+  String get backupRestore_communities => 'Сообщества';
 
   @override
-  String get backupRestore_channelHistory => 'Channel History';
+  String get backupRestore_channelHistory => 'История каналов';
 
   @override
-  String get backupRestore_locationSettings => 'Location Settings';
+  String get backupRestore_locationSettings => 'Настройки местоположения';
 
   @override
   String get backupRestore_locationSettingsDescription =>
-      'Location, contact settings, and privacy settings';
+      'Местоположение, настройки контактов и конфиденциальности';
 
   @override
-  String get backupRestore_appSettings => 'App Settings';
+  String get backupRestore_appSettings => 'Настройки приложения';
 
   @override
   String get backupRestore_appSettingsDescription =>
-      'App preferences and appearance settings';
+      'Параметры приложения и внешнего вида';
 
   @override
-  String get backupRestore_ipfsKey => 'IPFS API Key (sensitive)';
+  String get backupRestore_ipfsKey => 'Ключ API IPFS (секретный)';
 
   @override
-  String get backupRestore_stadiaMapKey => 'Stadia Maps API Key (sensitive)';
+  String get backupRestore_stadiaMapKey => 'Ключ API Stadia Maps (секретный)';
 
   @override
-  String get backupRestore_contacts => 'Contacts';
+  String get backupRestore_contacts => 'Контакты';
 
   @override
   String get backupRestore_contactsDescription =>
-      'Contacts, per-contact filters and settings, groups, and message history';
+      'Контакты, фильтры и настройки по контактам, группы и история сообщений';
 
   @override
-  String get backupRestore_discoveredContacts => 'Discovered Contacts';
+  String get backupRestore_discoveredContacts => 'Обнаруженные контакты';
 
   @override
   String get backupRestore_discoveredContactsDescription =>
-      'Discovered contacts and their saved details';
+      'Обнаруженные контакты и их сохранённые данные';
 
   @override
-  String get backupRestore_channels => 'Channels';
+  String get backupRestore_bookmarks => 'Bookmarks';
+
+  @override
+  String get backupRestore_channels => 'Каналы';
 
   @override
   String get backupRestore_channelsDescription =>
-      'Channels, channel filters, communities, and message history';
+      'Каналы, фильтры каналов, сообщества и история сообщений';
 
   @override
-  String get backupRestore_backup => 'Create Backup';
+  String get backupRestore_backup => 'Создать резервную копию';
 
   @override
-  String get backupRestore_restore => 'Restore Selected';
+  String get backupRestore_restore => 'Восстановить выбранное';
 
   @override
-  String get backupRestore_backupComplete => 'Backup file created.';
+  String get backupRestore_backupComplete => 'Файл резервной копии создан.';
 
   @override
   String get backupRestore_restoreComplete =>
-      'Restore complete. Reconnect if you restored the radio identity.';
+      'Восстановление завершено. Переподключитесь, если вы восстановили идентификатор радио.';
 
   @override
-  String get backupRestore_missingModelsTitle => 'Models Not Downloaded';
+  String get backupRestore_missingModelsTitle => 'Модели не загружены';
 
   @override
-  String backupRestore_missingModelsMessage(String models) {
-    return 'The restored settings select models that are not available on this device:\n$models\n\nDownload them now?';
-  }
+  String get backupRestore_missingModelsMessage =>
+      'Восстановленные настройки выбирают модели, которых нет на этом устройстве. Загрузить их сейчас?';
 
   @override
-  String get backupRestore_downloadModels => 'Download Models';
+  String get backupRestore_downloadModels => 'Загрузить модели';
 
   @override
-  String get backupRestore_downloading => 'Downloading…';
+  String get backupRestore_downloading => 'Загрузка…';
 
   @override
-  String get backupRestore_cancelDownload => 'Cancel Download';
+  String get backupRestore_cancelDownload => 'Отменить загрузку';
 
   @override
   String backupRestore_failed(String error) {
-    return 'Backup operation failed: $error';
+    return 'Ошибка резервного копирования: $error';
   }
 
   @override
   String get backupRestore_fileTooLarge =>
-      'Backup file is larger than the 100 MB limit.';
+      'Файл резервной копии превышает лимит 100 МБ.';
 
   @override
-  String get backupRestore_selectAtLeastOne => 'Select at least one item.';
+  String get backupRestore_selectAtLeastOne => 'Выберите хотя бы один элемент.';
 
   @override
-  String get backupRestore_replaceIdentityTitle => 'Replace radio identity?';
+  String get backupRestore_replaceIdentityTitle =>
+      'Заменить идентификатор радио?';
 
   @override
   String get backupRestore_replaceIdentityMessage =>
-      'Restoring Node Settings replaces the connected radio\'s private key and changes its identity. Continue only if this is intended.';
+      'Восстановление настроек узла заменяет приватный ключ подключённого радио и меняет его идентификатор. Продолжайте, только если это намеренно.';
 
   @override
   String get settings_nodeSettings => 'Настройки ноды';
@@ -624,7 +628,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionEmptyExplanation =>
-      'Регионы ограничивают рассылку сообщений только ретрансляторами в заданной области. Получите их с ближних ретрансляторов или добавьте по названию.';
+      'Регионы ограничивают Flood-сообщения только ретрансляторами в заданной области. Получите их с ближних ретрансляторов или добавьте по названию.';
 
   @override
   String get settings_regionFetchFromRepeaters => 'Получить с ретрансляторов';
@@ -652,7 +656,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_regionRadioDefaultSubtitle =>
-      'Сохраняется на радио. Его используют рассылки flood без региона — из этого и любого другого приложения, подключённого к радио.';
+      'Сохраняется на радио. Его используют Flood-пакеты без региона — из этого и любого другого приложения, подключённого к радио.';
 
   @override
   String get settings_regionRadioDefaultUpdated =>
@@ -801,11 +805,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdate =>
-      'Авто-анонс без хопов при обновлении GPS';
+      'Авто Zero Hop анонс при обновлении GPS';
 
   @override
   String get settings_autoZeroHopAdvertOnGpsUpdateSubtitle =>
-      'Когда GPS-местоположение меняется, отправлять анонс без хопов (требуется геопозиция в анонсе).';
+      'Когда GPS-местоположение меняется, отправлять Zero Hop анонс (требуется геопозиция в анонсе).';
 
   @override
   String get settings_multiAck => 'Несколько подтверждений';
@@ -821,11 +825,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_actions => 'Действия';
 
   @override
-  String get settings_deleteAllPaths => 'Delete All Paths';
+  String get settings_deleteAllPaths => 'Удалить все пути';
 
   @override
   String get settings_deleteAllPathsSubtitle =>
-      'Clear all path data from contacts.';
+      'Очистить все данные путей в контактах.';
 
   @override
   String get settings_sendAdvertisement => 'Отправить анонсирование';
@@ -928,8 +932,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settings_infoHardware => 'Оборудование';
 
   @override
-  String get settings_infoFirmware =>
-      'Производственное программное обеспечение';
+  String get settings_infoFirmware => 'Прошивка';
 
   @override
   String get settings_presets => 'Пресеты';
@@ -1266,7 +1269,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appSettings_languageSl => 'Словенский';
 
   @override
-  String get appSettings_languagePt => 'Португальский';
+  String get appSettings_languagePt => 'Португальский (Бразилия)';
+
+  @override
+  String get appSettings_languagePtPt => 'Португальский (Португалия)';
 
   @override
   String get appSettings_languageIt => 'Итальянский';
@@ -1309,7 +1315,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settings_pathHashModeHelper =>
-      'Размер каждого идентификатора узла, записываемого в маршрут flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой старше v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
+      'Размер каждого идентификатора узла, записываемого в маршрут Flood-пакетов, отправляемых этим радио: 1 байт (256 идентификаторов, до 64 хопов), 2 байта (65 тыс. идентификаторов, до 32 хопов), 3 байта (16 млн идентификаторов, до 21 хопа). Более длинные идентификаторы уменьшают число коллизий, но ретрансляторы с прошивкой старше v1.14 отбрасывают пакеты с 2- или 3-байтовыми идентификаторами.';
 
   @override
   String settings_requiresFirmware(String version) {
@@ -1373,6 +1379,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывать регион сообщения канала в одной строке с числом хопов, а не под ней.';
 
   @override
+  String get appSettings_showCompressionIndicator => 'Compression indicator';
+
+  @override
+  String get appSettings_showCompressionIndicatorSubtitle =>
+      'Show an icon on messages compressed with SMAZ.';
+
+  @override
   String get appSettings_notifications => 'Уведомления';
 
   @override
@@ -1431,11 +1444,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appSettings_clearPathOnMaxRetrySubtitle =>
-      'Сбросить маршрут контакта после 5 неудачных попыток отправки';
+      'Сбросить сохранённый маршрут контакта, когда все попытки отправки не удались';
 
   @override
   String get appSettings_pathsWillBeCleared =>
-      'Маршруты будут сброшены после 5 неудачных попыток';
+      'Маршруты будут сброшены, когда все попытки отправки не удались';
 
   @override
   String get appSettings_pathsWillNotBeCleared =>
@@ -1447,7 +1460,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appSettings_autoRouteRotationSubtitle =>
-      'Циклически переключаться между лучшими маршрутами и режимом рассылки';
+      'При каждой прямой попытке пробовать другой известный маршрут. Следующие попытки — Flood. Выключено оставляет текущий маршрут контакта.';
 
   @override
   String get appSettings_autoRouteRotationEnabled =>
@@ -1464,6 +1477,63 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appSettings_maxMessageRetriesSubtitle =>
       'Количество попыток повторной отправки сообщения перед тем, как пометить его как неудачное.';
+
+  @override
+  String appSettings_directRetries(int count) {
+    return 'Прямые попытки: $count';
+  }
+
+  @override
+  String get appSettings_directRetriesSubtitle =>
+      'Сколько раз пробовать известный маршрут. Доступно и когда автоматическая ротация выключена.';
+
+  @override
+  String appSettings_floodRetries(int count) {
+    return 'Попытки Flood: $count';
+  }
+
+  @override
+  String get appSettings_floodRetriesSubtitle =>
+      'Сколько раз использовать Flood. Flood занимает больше эфирного времени. При включённой ротации они идут после прямых попыток.';
+
+  @override
+  String appSettings_loginAttempts(int count) {
+    return 'Попытки входа: $count';
+  }
+
+  @override
+  String get appSettings_loginAttemptsSubtitle =>
+      'Сколько раз пытаться войти на ретранслятор или room-сервер, прежде чем сдаться.';
+
+  @override
+  String get appSettings_repeatersAndRooms => 'Ретрансляторы и комнаты';
+
+  @override
+  String get appSettings_clockSyncAfterLogin =>
+      'Синхронизировать часы ретранслятора при входе';
+
+  @override
+  String get appSettings_clockSyncAfterLoginSubtitle =>
+      'После успешного входа на ретранслятор отправляется clock sync. Для каждого ретранслятора по-прежнему можно выбрать По умолчанию, Вкл. или Выкл.';
+
+  @override
+  String get appSettings_loginPasswordAutofocus => 'Фокус на поле пароля';
+
+  @override
+  String get appSettings_loginPasswordAutofocusSubtitle =>
+      'При открытии входа на ретранслятор или в комнату курсор ставится в пустое поле пароля. Выключено оставляет окно видимым, пока вы не нажмёте на поле.';
+
+  @override
+  String get appSettings_resetRepeaterRoomSettings =>
+      'Сбросить настройки ретрансляторов и комнат';
+
+  @override
+  String get appSettings_resetRepeaterRoomSettingsSubtitle =>
+      'Возвращает настройки этого раздела. Выбор, сохранённый для отдельных ретрансляторов, остаётся.';
+
+  @override
+  String get appSettings_repeaterRoomSettingsReset =>
+      'Настройки ретрансляторов и комнат сброшены';
 
   @override
   String get appSettings_ipfsImageLinks => 'Настройка провайдера IPFS';
@@ -1821,27 +1891,48 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contacts_noMembers => 'Нет участников';
 
   @override
-  String get contacts_lastSeenNow => 'Видели только что';
+  String contacts_groupCurrentMembers(int count) {
+    return 'Current members ($count)';
+  }
+
+  @override
+  String get contacts_groupAddContacts => 'Add contacts';
+
+  @override
+  String contacts_groupRemoveMember(String name) {
+    return 'Remove $name from group';
+  }
+
+  @override
+  String contacts_groupAddMember(String name) {
+    return 'Add $name to group';
+  }
+
+  @override
+  String get contacts_lastSeenNow => 'недавно';
+
+  @override
+  String get contacts_lastSeenNever => 'not heard yet';
 
   @override
   String contacts_lastSeenMinsAgo(int minutes) {
-    return 'Видели $minutes мин назад';
+    return '~ $minutes мин.';
   }
 
   @override
-  String get contacts_lastSeenHourAgo => 'Видели 1 час назад';
+  String get contacts_lastSeenHourAgo => '~ 1 ч';
 
   @override
   String contacts_lastSeenHoursAgo(int hours) {
-    return 'Видели $hours ч назад';
+    return '~ $hours ч';
   }
 
   @override
-  String get contacts_lastSeenDayAgo => 'Видели 1 день назад';
+  String get contacts_lastSeenDayAgo => '~ 1 дн.';
 
   @override
   String contacts_lastSeenDaysAgo(int days) {
-    return 'Видели $days дн. назад';
+    return '~ $days дн.';
   }
 
   @override
@@ -2006,16 +2097,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get channels_smazCompression => 'Сжатие SMAZ';
-
-  @override
-  String get channels_cyr2latCompression => 'Сжатие Cyr2Lat';
-
-  @override
-  String get channels_cyr2latCompressionDscr =>
-      'Заменяет некоторые кириллические символы на латиницу при отправке.';
-
-  @override
   String get channels_cyr2latSettingsHeading => 'Настройка Cyr2Lat';
 
   @override
@@ -2156,7 +2237,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String channels_regionSetTo(String region) {
-    return 'РЕГИОН: $region';
+    return 'Регион: $region';
   }
 
   @override
@@ -2176,12 +2257,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String channels_regionRadioDefaultApplies(String region) {
-    return 'Это радио отправляет flood без региона в свой регион по умолчанию: $region.';
+    return 'Это радио отправляет Flood без региона в свой регион по умолчанию: $region.';
   }
 
   @override
   String get channels_regionSelectExplanation =>
-      'Сообщения рассылки в этом канале будут пересылаться только ретрансляторами в выбранном регионе.';
+      'Flood-сообщения в этом канале будут пересылаться только ретрансляторами в выбранном регионе.';
 
   @override
   String get channels_regionEmpty => 'Регионов пока нет.';
@@ -2268,6 +2349,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chat_messageDeleted => 'Сообщение удалено';
+
+  @override
+  String get chat_bookmark => 'Bookmark';
+
+  @override
+  String get chat_removeBookmark => 'Remove bookmark';
+
+  @override
+  String get chat_showBookmarks => 'Show bookmarks';
+
+  @override
+  String get bookmarks_title => 'Bookmarks';
+
+  @override
+  String get bookmarks_empty => 'No bookmarked messages';
+
+  @override
+  String get bookmarks_channel => 'Channel';
+
+  @override
+  String get bookmarks_contact => 'Contact';
+
+  @override
+  String get bookmarks_remove => 'Remove bookmark';
 
   @override
   String get chat_selectMessages => 'Выбрать сообщения';
@@ -2572,7 +2677,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_modeAuto => 'Авто';
 
   @override
-  String get routing_modeFlood => 'Рассылка';
+  String get routing_modeFlood => 'Flood';
 
   @override
   String get routing_modeManual => 'Вручную';
@@ -2639,15 +2744,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get routing_qualityWorked => 'Осуществлено';
 
   @override
-  String get routing_qualityFlood =>
-      'Узнал из новостей, распространяющихся в интернете.';
+  String get routing_qualityFlood => 'Услышано через Flood';
 
   @override
   String get routing_qualityUntested => 'Непроверенный';
 
   @override
   String routing_lastWorked(String when) {
-    return 'worked $when';
+    return 'работал $when';
   }
 
   @override
@@ -2655,11 +2759,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String routing_deliveryCounts(int successes, int failures) {
-    return '$successes delivered, $failures failed';
+    return '$successes доставлено, $failures не доставлено';
   }
 
   @override
-  String get routing_floodDelivery => 'Доставка рассылкой';
+  String get routing_floodDelivery => 'Доставка Flood';
 
   @override
   String get pathEditor_title => 'Создать маршрут';
@@ -2687,8 +2791,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pathEditor_hexLabel => 'Префиксы шестнадцатеричной системы';
 
   @override
-  String get pathEditor_hexHelper =>
-      'Два шестнадцатеричных символа на каждом шаге, разделенные запятыми.';
+  String pathEditor_hexHelper(int count) {
+    return '$count шестнадцатеричных символа на каждом шаге, разделенные запятыми.';
+  }
 
   @override
   String pathEditor_invalidTokens(String tokens) {
@@ -2731,10 +2836,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chat_publicKey => 'Публичный ключ';
 
   @override
-  String get chat_compressOutgoingMessages => 'Сжимать исходящие сообщения';
-
-  @override
-  String get chat_floodForced => 'Рассылка (принудительно)';
+  String get chat_floodForced => 'Flood (принудительно)';
 
   @override
   String get chat_directForced => 'Прямой (принудительно)';
@@ -2745,7 +2847,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get chat_floodAuto => 'Рассылка (авто)';
+  String get chat_floodAuto => 'Flood (авто)';
 
   @override
   String get chat_direct => 'Прямой';
@@ -2923,10 +3025,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get map_lastSeen => 'Последнее появление';
-
-  @override
-  String get map_disconnectConfirm =>
-      'Вы уверены, что хотите отключиться от этого устройства?';
 
   @override
   String get map_from => 'От';
@@ -3381,7 +3479,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Авто (использовать сохранённый маршрут)';
 
   @override
-  String get login_forceFloodMode => 'Принудительный режим рассылки';
+  String get login_forceFloodMode => 'Принудительный режим Flood';
 
   @override
   String get login_managePaths => 'Управление маршрутами';
@@ -3466,7 +3564,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get repeater_neighbors => 'Соседи';
 
   @override
-  String get repeater_neighborsSubtitle => 'Просмотр соседей на нулевом хопе.';
+  String get repeater_neighborsSubtitle => 'Просмотр соседей Zero Hop.';
 
   @override
   String get repeater_settings => 'Настройки';
@@ -3480,7 +3578,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_clockSyncAfterLoginSubtitle =>
-      'Автоматически отправлять сообщение \"синхронизация времени\" после успешной авторизации.';
+      '«По умолчанию» следует разделу «Ретрансляторы и комнаты» в настройках. «Вкл.» и «Выкл.» только для этого ретранслятора.';
+
+  @override
+  String get repeater_clockSyncDefault => 'По умолчанию';
+
+  @override
+  String get repeater_clockSyncOn => 'Вкл.';
+
+  @override
+  String get repeater_clockSyncOff => 'Выкл.';
 
   @override
   String get repeater_statusTitle => 'Статус репитера';
@@ -3567,17 +3674,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String repeater_packetTxTotal(int total, String flood, String direct) {
-    return 'Всего: $total, Рассылка: $flood, Прямые: $direct';
+    return 'Всего: $total, Flood: $flood, Прямые: $direct';
   }
 
   @override
   String repeater_packetRxTotal(int total, String flood, String direct) {
-    return 'Всего: $total, Рассылка: $flood, Прямые: $direct';
+    return 'Всего: $total, Flood: $flood, Прямые: $direct';
   }
 
   @override
   String repeater_duplicatesFloodDirect(String flood, String direct) {
-    return 'Рассылка: $flood, Прямые: $direct';
+    return 'Flood: $flood, Прямые: $direct';
   }
 
   @override
@@ -3687,8 +3794,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get repeater_floodAdvertInterval =>
-      'Интервал анонсирований рассылкой (flood)';
+  String get repeater_floodAdvertInterval => 'Интервал Flood-анонсов';
 
   @override
   String repeater_floodAdvertIntervalHours(int hours) {
@@ -3811,11 +3917,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Общая метаинформация для этого ретранслятора';
 
   @override
-  String get repeater_floodMax => 'Максимальное количество хопов при рассылке';
+  String get repeater_floodMax => 'Максимальное количество хопов при Flood';
 
   @override
   String get repeater_floodMaxHelper =>
-      'Максимальное количество пакетов, которые могут быть отправлены в одном потоке (0-64)';
+      'Максимум хопов для Flood-пакета (0-64)';
 
   @override
   String get repeater_advancedSettings => 'Продвинутый';
@@ -3829,7 +3935,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_pathHashModeHelper =>
-      'Байты, используемые для кодирования идентификатора этого ретранслятора в тегах flood-маршрута/обнаружения циклов. 0 = 1 байт (256 идентификаторов, до 64 хопов), 1 = 2 байта (65 000 идентификаторов, до 32 хопов), 2 = 3 байта (16 миллионов идентификаторов, до 21 хопа). Прошивки до v1.14 всегда использовали 1-байтовые маршруты; v1.14 и новее можно настроить на 2- или 3-байтовые маршруты.';
+      'Байты, используемые для кодирования идентификатора этого ретранслятора в тегах Flood-маршрута/обнаружения циклов. 0 = 1 байт (256 идентификаторов, до 64 хопов), 1 = 2 байта (65 000 идентификаторов, до 32 хопов), 2 = 3 байта (16 миллионов идентификаторов, до 21 хопа). Прошивки до v1.14 всегда использовали 1-байтовые маршруты; v1.14 и новее можно настроить на 2- или 3-байтовые маршруты.';
 
   @override
   String get repeater_keySettings => 'Изменить ключи идентичности';
@@ -3871,7 +3977,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_txDelayHelper =>
-      'Задержка повторной передачи для трафика при рассылке (flood), в качестве коэффициента, умножающего время передачи пакета (от 0 до 2, по умолчанию 0,5). Более высокое значение означает меньшее количество столкновений, но более медленную передачу.';
+      'Задержка повторной передачи для трафика при Flood, в качестве коэффициента, умножающего время передачи пакета (от 0 до 2, по умолчанию 0,5). Более высокое значение означает меньшее количество столкновений, но более медленную передачу.';
 
   @override
   String get repeater_directTxDelay => 'Прямая задержка сигнала TX';
@@ -3898,19 +4004,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get repeater_actionsTitle => 'Действия';
 
   @override
-  String get repeater_sendAdvert => 'Отправить анонс рассылкой';
+  String get repeater_sendAdvert => 'Отправить Flood-анонс';
 
   @override
   String get repeater_sendAdvertSubtitle =>
-      'Разошлите анонс рассылкой по всей сети.';
+      'Разошлите Flood-анонс по всей сети.';
 
   @override
-  String get repeater_sendAdvertZeroHop =>
-      'Опубликуйте анонс, не требующий промежуточного распространения.';
+  String get repeater_sendAdvertZeroHop => 'Отправить Zero Hop анонс';
 
   @override
   String get repeater_sendAdvertZeroHopSubtitle =>
-      'Разместите анонс, распространяемый одним способом (без использования ретрансляторов).';
+      'Анонс только ближайшим соседям (без ретрансляторов).';
 
   @override
   String get repeater_clockSync => 'Синхронизировать время сейчас';
@@ -3921,12 +4026,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String repeater_actionSucceeded(String action) {
-    return '$action succeeded';
+    return '$action: успешно';
   }
 
   @override
   String repeater_actionFailed(String action, String error) {
-    return '$action failed: $error';
+    return '$action: ошибка: $error';
   }
 
   @override
@@ -4077,7 +4182,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMax =>
-      'Устанавливает максимальное число хопов для входящих пакетов в режиме рассылки (если >= макс., пакет не пересылается)';
+      'Устанавливает максимальное число хопов для входящих пакетов в режиме Flood (если >= макс., пакет не пересылается)';
 
   @override
   String get repeater_cliHelpSetIntThresh =>
@@ -4093,11 +4198,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetAdvertInterval =>
-      'Устанавливает интервал (в минутах) отправки локального (нулевой хоп) анонсирования. Установите 0, чтобы отключить.';
+      'Устанавливает интервал (в минутах) отправки локального (Zero Hop) анонса. Установите 0, чтобы отключить.';
 
   @override
   String get repeater_cliHelpSetFloodAdvertInterval =>
-      'Устанавливает интервал (в часах) отправки анонсирований рассылкой. Установите 0, чтобы отключить.';
+      'Устанавливает интервал (в часах) отправки Flood-анонсов. Установите 0, чтобы отключить.';
 
   @override
   String get repeater_cliHelpSetGuestPassword =>
@@ -4124,7 +4229,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetTxDelay =>
-      'Устанавливает множитель времени в эфире для пакета в режиме рассылки и применяет случайную задержку перед пересылкой (чтобы уменьшить коллизии).';
+      'Устанавливает множитель времени в эфире для пакета в режиме Flood и применяет случайную задержку перед пересылкой (чтобы уменьшить коллизии).';
 
   @override
   String get repeater_cliHelpSetDirectTxDelay =>
@@ -4179,7 +4284,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpNeighbors =>
-      'Показывает список других репитеров, услышанных через анонсы нулевого хопа. Каждая строка: префикс-id-в-hex:временная-метка:snr×4';
+      'Показывает список других репитеров, услышанных через Zero Hop анонсы. Каждая строка: префикс-id-в-hex:временная-метка:snr×4';
 
   @override
   String get repeater_cliHelpNeighborRemove =>
@@ -4187,7 +4292,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegion =>
-      '(только через последовательный порт) Показывает все определённые регионы и текущие права на рассылку.';
+      '(только через последовательный порт) Показывает все определённые регионы и текущие права на Flood.';
 
   @override
   String get repeater_cliHelpRegionLoad =>
@@ -4207,11 +4312,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionAllowf =>
-      'Разрешает рассылку («F»lood) для заданного региона. («*» для глобальной/устаревшей области)';
+      'Разрешает «F»lood для заданного региона. («*» для глобальной/устаревшей области)';
 
   @override
   String get repeater_cliHelpRegionDenyf =>
-      'Запрещает рассылку («F»lood) для заданного региона. (НЕ рекомендуется для глобальной области!)';
+      'Запрещает «F»lood для заданного региона. (НЕ рекомендуется для глобальной области!)';
 
   @override
   String get repeater_cliHelpRegionHome =>
@@ -4275,7 +4380,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliRegionLoadActive =>
-      'Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить рассылку по сети). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.';
+      'Режим загрузки регионов: отправляйте по одному имени региона на строку, с отступом пробелами под родителем (добавьте F после имени, чтобы разрешить Flood). Строки не получают ответа. Отправьте пустую строку, чтобы завершить, затем \"region save\", чтобы сохранить результат.';
 
   @override
   String get repeater_cliRegionLoadHint =>
@@ -4290,19 +4395,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpSetFloodMaxUnscoped =>
-      'Задаёт максимальное число хопов для пересылки пакетов рассылки (flood) без региональной области (0-64).';
+      'Задаёт максимальное число хопов для пересылки Flood-пакетов без региональной области (0-64).';
 
   @override
   String get repeater_cliHelpSetFloodMaxAdvert =>
-      'Задаёт максимальное число хопов для пересылки анонсов, рассылаемых по сети (flood) (0-64).';
+      'Задаёт максимальное число хопов для пересылки Flood-анонсов (0-64).';
 
   @override
   String get repeater_cliHelpGetFloodMaxUnscoped =>
-      'Показывает максимальное число хопов для пакетов рассылки (flood) без региональной области.';
+      'Показывает максимальное число хопов для Flood-пакетов без региональной области.';
 
   @override
   String get repeater_cliHelpGetFloodMaxAdvert =>
-      'Показывает максимальное число хопов для анонсов, рассылаемых по сети (flood).';
+      'Показывает максимальное число хопов для Flood-анонсов.';
 
   @override
   String get repeater_cliHelpSetRadioFemRxGain =>
@@ -4373,7 +4478,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpAdvertZeroHop =>
-      'Отправляет анонс, распространяемый только среди ближайших соседей (без промежуточных узлов).';
+      'Отправляет Zero Hop анонс (только ближайшим соседям).';
 
   @override
   String get repeater_cliHelpStartOta =>
@@ -4500,7 +4605,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetFloodAdvertInterval =>
-      'Отображает интервал анонсирования рассылкой (flood) в часах.';
+      'Отображает интервал Flood-анонсов в часах.';
 
   @override
   String get repeater_cliHelpGetGuestPassword =>
@@ -4518,7 +4623,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetTxDelay =>
-      'Отображает коэффициент задержки при работе в режиме рассылки (flood).';
+      'Отображает коэффициент задержки при работе в режиме Flood.';
 
   @override
   String get repeater_cliHelpGetDirectTxDelay =>
@@ -4526,7 +4631,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpGetFloodMax =>
-      'Отображает максимальное количество хопов при рассылке.';
+      'Отображает максимальное количество хопов при Flood.';
 
   @override
   String get repeater_cliHelpGetOwnerInfo =>
@@ -4614,11 +4719,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_cliHelpRegionListAllowed =>
-      'Перечисляет регионы, где разрешена рассылка (flood).';
+      'Перечисляет регионы, где разрешён Flood.';
 
   @override
   String get repeater_cliHelpRegionListDenied =>
-      'Перечисляет регионы, где запрещена рассылка (flood).';
+      'Перечисляет регионы, где запрещён Flood.';
 
   @override
   String get repeater_cliHelpStatsPackets =>
@@ -4905,7 +5010,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelPath_unknownPath => 'Неизвестный';
 
   @override
-  String get channelPath_floodPath => 'Рассылка';
+  String get channelPath_floodPath => 'Flood';
 
   @override
   String get channelPath_directPath => 'Прямой';
@@ -5444,10 +5549,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get contacts_zeroHopAdvert => 'Анонс без хопов';
+  String get contacts_zeroHopAdvert => 'Zero Hop анонс';
 
   @override
-  String get contacts_floodAdvert => 'Анонс рассылкой';
+  String get contacts_floodAdvert => 'Flood-анонс';
 
   @override
   String get contacts_copyAdvertToClipboard =>
@@ -5608,6 +5713,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get notification_replyAppNotRunning =>
       'MeshCore Open не запущен. Откройте его и отправьте ответ снова.';
+
+  @override
+  String get settings_exportBookmarks => 'Export bookmarks to Markdown';
+
+  @override
+  String get settings_exportBookmarksSubtitle =>
+      'Share or save bookmarked messages as a Markdown file.';
+
+  @override
+  String get settings_exportBookmarksSuccess => 'Bookmarks exported.';
+
+  @override
+  String get settings_exportBookmarksNoBookmarks => 'No bookmarks to export.';
 
   @override
   String get settings_gpxExportRepeaters =>
@@ -6270,6 +6388,56 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это устройство не может показать реконструкцию.';
 
   @override
+  String receivedImage_packetEchoes(int number, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'repeated $count times',
+      one: 'repeated once',
+      zero: 'no repeater heard',
+    );
+    return 'Packet $number: $_temp0';
+  }
+
+  @override
+  String receivedImage_recoveryPacketEchoes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'repeated $count times',
+      one: 'repeated once',
+      zero: 'no repeater heard',
+    );
+    return 'Recovery packet: $_temp0';
+  }
+
+  @override
+  String get imageSend_preparingPreview => 'Preparing preview…';
+
+  @override
+  String get imageSend_tryAnother => 'Try another version';
+
+  @override
+  String get imageSend_versionsHint =>
+      'Each version is reconstructed a little differently. Pick the one that looks most like your photo.';
+
+  @override
+  String imageSend_versionLabel(int number) {
+    return 'Version $number';
+  }
+
+  @override
+  String imageSend_versionPackets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count packets',
+      one: '1 packet',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get imageSend_modelNotDownloaded =>
       'Модель изображения ещё не загружена. Загрузите её в настройках, чтобы отправлять изображения.';
 
@@ -6335,7 +6503,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get imageSend_floodNote =>
-      'Руководство по маршрутизации потоков: каждый ретрансатор в зоне перераспределяет каждый пакет, поэтому канал остаётся занятным дольше, чем это.';
+      'Flood: каждый ретранслятор в зоне повторяет каждый пакет, поэтому канал занят дольше, чем указано.';
 
   @override
   String get imageSend_parityTitle => 'Пакет восстановления';
@@ -6454,6 +6622,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get receivedImage_syntheticBadge => 'Реконструировано ИИ';
+
+  @override
   String get receivedImage_packetInfo => 'Информация о пакете';
 
   @override
@@ -6543,14 +6714,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_floodMaxAdvertHelper =>
-      'Максимальное число хопов, которое может пройти рассылаемый адверт (0-64, по умолчанию 8)';
+      'Максимальное число хопов, которое может пройти Flood-адверт (0-64, по умолчанию 8)';
 
   @override
   String get repeater_floodMaxUnscoped => 'Макс. число хопов без области';
 
   @override
   String get repeater_floodMaxUnscopedHelper =>
-      'Максимальное число хопов для рассылки без региональной области (0-64, по умолчанию 64). Низкое значение, например 3, оставляет трафик без области локальным.';
+      'Максимальное число хопов для Flood без региональной области (0-64, по умолчанию 64). Низкое значение, например 3, оставляет трафик без области локальным.';
 
   @override
   String get repeater_floodMaxUnscopedUnset => 'Как макс. хопов';
@@ -6560,7 +6731,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get repeater_rxDelayHelper =>
-      'Удерживает пакеты рассылки, принятые со слабым сигналом, перед пересылкой, чтобы пути с сильным сигналом шли первыми и отправлялось меньше дубликатов (0-20, 0 отключает).';
+      'Удерживает Flood-пакеты, принятые со слабым сигналом, перед пересылкой, чтобы пути с сильным сигналом шли первыми и отправлялось меньше дубликатов (0-20, 0 отключает).';
 
   @override
   String get repeater_cad => 'Обнаружение активности канала';
@@ -6962,15 +7133,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appSettings_resetRoutingToDefault =>
-      'Сбросить алгоритм маршрутизации к значению по умолчанию';
+      'Сбросить настройки маршрутизации к значениям по умолчанию';
 
   @override
   String get appSettings_resetRoutingToDefaultSubtitle =>
-      'Восстановить настройки алгоритма маршрутизации к заводским значениям по умолчанию';
+      'Вернуть настройки маршрутизации в этом разделе к значениям по умолчанию';
 
   @override
   String get appSettings_routingResetToDefault =>
-      'Настройки алгоритма маршрутизации сброшены к значению по умолчанию';
+      'Настройки маршрутизации сброшены к значениям по умолчанию';
 
   @override
   String get appSettings_imageMessagesSection => 'Сообщения-изображения';
@@ -7472,4 +7643,170 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get messageFilter_ghostIconTooltip =>
       'Скрыто вашим фильтром сообщений';
+
+  @override
+  String appBar_offlineSubtitle(String name) {
+    return 'Не в сети · $name';
+  }
+
+  @override
+  String get appBar_offline => 'Не в сети';
+
+  @override
+  String get appBar_reconnecting => 'Переподключение…';
+
+  @override
+  String get connectSheet_title => 'Подключить радио';
+
+  @override
+  String connectSheet_reconnect(String name) {
+    return 'Переподключиться к $name';
+  }
+
+  @override
+  String get connectSheet_chooseRadio => 'Выбрать радио';
+
+  @override
+  String get connectSheet_chooseRadioSubtitle => 'Bluetooth, USB или TCP';
+
+  @override
+  String get connectSheet_stopReconnecting => 'Остановить переподключение';
+
+  @override
+  String connectSheet_reconnectFailed(String name) {
+    return 'Не удалось связаться с $name. Убедитесь, что оно включено и находится рядом.';
+  }
+
+  @override
+  String get chat_composerOffline =>
+      'Подключитесь к радио, чтобы отправлять сообщения';
+
+  @override
+  String get modelDownload_notDownloaded => 'Не скачано';
+
+  @override
+  String get modelDownload_downloading => 'Загрузка';
+
+  @override
+  String get modelDownload_active => 'Активна';
+
+  @override
+  String get modelDownload_failed => 'Не удалось скачать';
+
+  @override
+  String get modelDownload_incomplete => 'Неполная';
+
+  @override
+  String get modelDownload_verifying => 'Проверка загрузки';
+
+  @override
+  String get modelDownload_useModel => 'Использовать эту модель';
+
+  @override
+  String modelDownload_removeFailed(String error) {
+    return 'Не удалось удалить модель: $error';
+  }
+
+  @override
+  String modelDownload_progress(String current, String total, String percent) {
+    return '$current / $total MB ($percent%)';
+  }
+
+  @override
+  String get chatCompression_title => 'Compression';
+
+  @override
+  String chatCompression_label(String mode) {
+    return 'Compression: $mode';
+  }
+
+  @override
+  String get chatCompression_off => 'Off';
+
+  @override
+  String get chatCompression_smaz => 'SMAZ';
+
+  @override
+  String get chatCompression_cyr2lat => 'Cyr2Lat';
+
+  @override
+  String get chatCompression_changeHint => 'Change compression for this chat';
+
+  @override
+  String get chatCompression_sheetSubtitle =>
+      'Applies to messages you send in this chat. Saved on this phone.';
+
+  @override
+  String get chatCompression_offDescription =>
+      'No compression. Sends your text exactly as typed. Every app can read it. Saves no bytes.';
+
+  @override
+  String get chatCompression_smazDescription =>
+      'Lossless compression for short text. The recipient\'s app must support SMAZ; other apps show unreadable \"s:…\" text. Only used when it makes a message smaller, so not every message is compressed.';
+
+  @override
+  String get chatCompression_cyr2latDescription =>
+      'Not lossless. Swaps some Cyrillic letters for lookalike Latin ones (А→A, З→3) to save bytes. Readable in any app with no decoding, but the exact characters change, including your own sent messages here. Copying, search and technical text may be affected. Results depend on the chosen profile.';
+
+  @override
+  String get chatCompression_profile => 'Cyr2Lat profile';
+
+  @override
+  String get chatCompression_noStorageId =>
+      'Can\'t change compression until this channel has synced from the radio.';
+
+  @override
+  String get chatCompression_saveFailed =>
+      'Couldn\'t save the compression setting. Showing the saved setting.';
+
+  @override
+  String get messageMeta_smazCompressed => 'SMAZ compressed';
+
+  @override
+  String get addContact_title => 'Add Contact';
+
+  @override
+  String get addContact_infoBanner =>
+      'If you know the public key of someone you want to contact, you can add them manually without waiting for them to advert.';
+
+  @override
+  String get addContact_contactType => 'Contact Type';
+
+  @override
+  String get addContact_name => 'Name';
+
+  @override
+  String get addContact_nameRequired => 'Please enter a name';
+
+  @override
+  String get addContact_publicKeyHex => 'Public Key (hex)';
+
+  @override
+  String get addContact_publicKeyRequired => 'Please enter a public key';
+
+  @override
+  String get addContact_publicKeyInvalid =>
+      'Public key must be 64 hex characters (32 bytes)';
+
+  @override
+  String get addContact_clipboardKeyLoaded =>
+      'Public key filled in. Choose a contact type, enter a name, and tap save.';
+
+  @override
+  String get addContact_fromDiscovered => 'Add from Discovered Contacts';
+
+  @override
+  String get addContact_saveFailed => 'Failed to add contact.';
+
+  @override
+  String get coordinateMap_title => 'Location';
+
+  @override
+  String get coordinate_copyLocation => 'Copy location';
+
+  @override
+  String get coordinate_openInMaps => 'Open in maps';
+
+  @override
+  String get coordinate_copied => 'Location copied';
 }

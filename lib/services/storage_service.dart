@@ -3,7 +3,15 @@ import '../models/delivery_observation.dart';
 import '../models/path_history.dart';
 import '../storage/legacy_key_migration.dart';
 import '../storage/prefs_manager.dart';
+import '../storage/history_store.dart';
 import '../utils/app_logger.dart';
+
+/// Per-repeater clock sync, on top of the app-wide default.
+///
+/// A missing entry follows the Repeaters and Rooms setting. `true` and
+/// `false` in the saved map are explicit On and Off from before that choice
+/// existed, and they keep winning over the global default.
+enum RepeaterClockSyncOverride { followDefault, on, off }
 
 class StorageService {
   static const String _pathHistoryPrefix = 'path_history_';
@@ -28,66 +36,133 @@ class StorageService {
       ? '$_pathHistoryPrefix$contactPubKeyHex'
       : '$_pathHistoryPrefix${_publicKeyHex}_$contactPubKeyHex';
 
-  Future<Map<String, bool>> _loadRepeaterAutoClockSyncAfterLogin() async {
+  Future<Map<String, RepeaterClockSyncOverride>>
+  _loadRepeaterClockSyncOverrides() async {
     final prefs = PrefsManager.instance;
     final jsonStr = prefs.getString(_repeaterAutoClockSyncAfterLoginKey);
-
     if (jsonStr == null) return {};
 
     try {
       final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-      return json.map((key, value) => MapEntry(key, value == true));
+      final overrides = <String, RepeaterClockSyncOverride>{};
+      for (final entry in json.entries) {
+        final override = switch (entry.value) {
+          true || 'on' => RepeaterClockSyncOverride.on,
+          false || 'off' => RepeaterClockSyncOverride.off,
+          _ => RepeaterClockSyncOverride.followDefault,
+        };
+        if (override != RepeaterClockSyncOverride.followDefault) {
+          overrides[entry.key] = override;
+        }
+      }
+      return overrides;
     } catch (e) {
       return {};
     }
   }
 
+  Future<void> _saveRepeaterClockSyncOverrides(
+    Map<String, RepeaterClockSyncOverride> overrides,
+  ) async {
+    final prefs = PrefsManager.instance;
+    final stored = <String, bool>{
+      for (final entry in overrides.entries)
+        if (entry.value == RepeaterClockSyncOverride.on)
+          entry.key: true
+        else if (entry.value == RepeaterClockSyncOverride.off)
+          entry.key: false,
+    };
+    if (stored.isEmpty) {
+      await prefs.remove(_repeaterAutoClockSyncAfterLoginKey);
+      return;
+    }
+    await prefs.setString(
+      _repeaterAutoClockSyncAfterLoginKey,
+      jsonEncode(stored),
+    );
+  }
+
+  Future<RepeaterClockSyncOverride> getRepeaterClockSyncOverride(
+    String repeaterPubKeyHex,
+  ) async {
+    final overrides = await _loadRepeaterClockSyncOverrides();
+    return overrides[repeaterPubKeyHex] ??
+        RepeaterClockSyncOverride.followDefault;
+  }
+
+  /// Whether this repeater should receive `clock sync` after login.
+  ///
+  /// An explicit per-repeater choice wins. Otherwise [globalDefault] applies.
+  Future<bool> repeaterClockSyncAfterLogin(
+    String repeaterPubKeyHex, {
+    required bool globalDefault,
+  }) async {
+    return switch (await getRepeaterClockSyncOverride(repeaterPubKeyHex)) {
+      RepeaterClockSyncOverride.followDefault => globalDefault,
+      RepeaterClockSyncOverride.on => true,
+      RepeaterClockSyncOverride.off => false,
+    };
+  }
+
+  Future<void> setRepeaterClockSyncOverride(
+    String repeaterPubKeyHex,
+    RepeaterClockSyncOverride override,
+  ) async {
+    final overrides = await _loadRepeaterClockSyncOverrides();
+    if (override == RepeaterClockSyncOverride.followDefault) {
+      overrides.remove(repeaterPubKeyHex);
+    } else {
+      overrides[repeaterPubKeyHex] = override;
+    }
+    await _saveRepeaterClockSyncOverrides(overrides);
+  }
+
   Future<bool> getRepeaterAutoClockSyncAfterLoginEnabled(
     String repeaterPubKeyHex,
   ) async {
-    final settings = await _loadRepeaterAutoClockSyncAfterLogin();
-    return settings[repeaterPubKeyHex] ?? false;
+    return repeaterClockSyncAfterLogin(repeaterPubKeyHex, globalDefault: false);
   }
 
   Future<void> setRepeaterAutoClockSyncAfterLoginEnabled(
     String repeaterPubKeyHex,
     bool enabled,
   ) async {
-    final prefs = PrefsManager.instance;
-    final settings = await _loadRepeaterAutoClockSyncAfterLogin();
-    settings[repeaterPubKeyHex] = enabled;
-    final jsonStr = jsonEncode(settings);
-    await prefs.setString(_repeaterAutoClockSyncAfterLoginKey, jsonStr);
+    await setRepeaterClockSyncOverride(
+      repeaterPubKeyHex,
+      enabled ? RepeaterClockSyncOverride.on : RepeaterClockSyncOverride.off,
+    );
   }
 
   Future<void> savePathHistory(
     String contactPubKeyHex,
     ContactPathHistory history,
   ) async {
-    final prefs = PrefsManager.instance;
+    final prefs = HistoryStore.instance;
     final key = _pathHistoryKey(contactPubKeyHex);
     final jsonStr = jsonEncode(history.toJson());
     await prefs.setString(key, jsonStr);
   }
 
   Future<ContactPathHistory?> loadPathHistory(String contactPubKeyHex) async {
-    final prefs = PrefsManager.instance;
+    final prefs = HistoryStore.instance;
+    final scope = _publicKeyHex;
+    final allowLegacyMigration =
+        scope.isNotEmpty && canMigrateLegacyKeys(scope);
     final key = _pathHistoryKey(contactPubKeyHex);
-    var jsonStr = prefs.getString(key);
+    var jsonStr = await prefs.getString(key);
     final legacyKey = '$_pathHistoryPrefix$contactPubKeyHex';
-    if (jsonStr == null &&
-        _publicKeyHex.isNotEmpty &&
-        canMigrateLegacyKeys(_publicKeyHex)) {
+    if (jsonStr == null && allowLegacyMigration) {
       // Move the pre-scoping history into the first radio that loads it so
       // learned routes survive the upgrade without leaking into other radios.
-      final legacy = prefs.getString(legacyKey);
+      final legacy = await prefs.getString(legacyKey);
       if (legacy != null) {
-        await prefs.setString(key, legacy);
-        await prefs.remove(legacyKey);
+        if (await prefs.setString(key, legacy)) {
+          await prefs.remove(legacyKey);
+        }
         jsonStr = legacy;
       }
-    } else if (jsonStr == null && _publicKeyHex.isEmpty) {
-      jsonStr = prefs.getString(legacyKey);
+    } else if (jsonStr == null && scope.isEmpty) {
+      jsonStr = await prefs.getString(legacyKey);
     }
 
     if (jsonStr == null) return null;
@@ -101,7 +176,7 @@ class StorageService {
   }
 
   Future<void> clearPathHistory(String contactPubKeyHex) async {
-    final prefs = PrefsManager.instance;
+    final prefs = HistoryStore.instance;
     await prefs.remove(_pathHistoryKey(contactPubKeyHex));
     await prefs.remove('$_pathHistoryPrefix$contactPubKeyHex');
   }
@@ -109,7 +184,7 @@ class StorageService {
   /// Clears the path histories of the connected radio only. Histories of other
   /// radios are left alone; with no radio scope set, everything is cleared.
   Future<void> clearAllPathHistories() async {
-    final prefs = PrefsManager.instance;
+    final prefs = HistoryStore.instance;
     final scopedPrefix = _publicKeyHex.isEmpty
         ? _pathHistoryPrefix
         : '$_pathHistoryPrefix${_publicKeyHex}_';
@@ -117,7 +192,7 @@ class StorageService {
     // radio on the next load and bring the cleared routes back.
     final clearLegacy =
         _publicKeyHex.isNotEmpty && canMigrateLegacyKeys(_publicKeyHex);
-    final pathHistoryKeys = prefs.getKeys().where((key) {
+    final pathHistoryKeys = (await prefs.getKeys()).where((key) {
       if (key.startsWith(scopedPrefix)) return true;
       return clearLegacy &&
           key.startsWith(_pathHistoryPrefix) &&

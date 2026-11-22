@@ -1,5 +1,28 @@
 import 'package:flutter/material.dart';
 
+/// Title style of settings rows: [MeshNavTile] and, through
+/// [MeshSettingsTileTheme], stock [ListTile]s and [SwitchListTile]s.
+TextStyle? meshTileTitleStyle(ThemeData theme) =>
+    theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600);
+
+/// Gives the [ListTile]s, [SwitchListTile]s and [CheckboxListTile]s below it
+/// the same semibold title as [MeshNavTile], so settings rows built from
+/// either read alike. Subtitles already match (`bodyMedium`,
+/// `onSurfaceVariant`). Wrap a settings screen's body in it.
+class MeshSettingsTileTheme extends StatelessWidget {
+  final Widget child;
+
+  const MeshSettingsTileTheme({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTileTheme.merge(
+      titleTextStyle: meshTileTitleStyle(Theme.of(context)),
+      child: child,
+    );
+  }
+}
+
 /// Settings-style navigation row: leading icon, bold title, secondary
 /// subtitle and an optional trailing chevron.
 ///
@@ -51,10 +74,7 @@ class MeshNavTile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
-                ),
+                style: meshTileTitleStyle(theme)?.copyWith(color: titleColor),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
@@ -99,14 +119,18 @@ class MeshNavTile extends StatelessWidget {
 }
 
 /// One radio-style option row inside a bottom sheet picker.
+/// The selected row shows a filled radio icon and a bold title, so the
+/// choice never depends on colour alone. A null [onTap] disables the row.
 class MeshSheetOption extends StatelessWidget {
   final String label;
+  final String? subtitle;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const MeshSheetOption({
     super.key,
     required this.label,
+    this.subtitle,
     required this.selected,
     required this.onTap,
   });
@@ -114,14 +138,23 @@ class MeshSheetOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return ListTile(
-      leading: Icon(
-        selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-        size: 24,
-        color: selected ? scheme.primary : scheme.onSurfaceVariant,
+    return Semantics(
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      child: ListTile(
+        leading: Icon(
+          selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+          size: 24,
+          color: selected ? scheme.primary : scheme.onSurfaceVariant,
+        ),
+        title: Text(
+          label,
+          style: selected ? const TextStyle(fontWeight: FontWeight.w700) : null,
+        ),
+        subtitle: subtitle == null ? null : Text(subtitle!),
+        enabled: onTap != null,
+        onTap: onTap,
       ),
-      title: Text(label),
-      onTap: onTap,
     );
   }
 }

@@ -15,9 +15,10 @@ import '../widgets/device_tile.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/get_node_banner.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/settings_reveal.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../review_mode/review_mode_entry.dart';
-import 'channels_screen.dart';
+import '../utils/main_navigation.dart';
 import 'tcp_screen.dart';
 import 'usb_screen.dart';
 
@@ -56,9 +57,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
           isCurrentRoute &&
           !_changedNavigation) {
         _changedNavigation = true;
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const ChannelsScreen()));
+        navigateToMainAfterConnect(context);
       }
     };
 
@@ -86,7 +85,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
   void dispose() {
     _connector.removeListener(_connectionListener);
     unawaited(_bluetoothStateSubscription.cancel());
-    if (!_changedNavigation) {
+    // Only cancel a Bluetooth connection this screen started; a pending
+    // auto-reconnect (state disconnected) or a USB/TCP/review link is left
+    // alone, so peeking at the scanner from the main screens is harmless.
+    final state = _connector.state;
+    if (!_changedNavigation &&
+        _connector.activeTransport == MeshCoreTransportType.bluetooth &&
+        (state == MeshCoreConnectionState.connecting ||
+            state == MeshCoreConnectionState.connected)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(_connector.disconnect(manual: true));
       });
@@ -146,17 +152,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
           builder: (context, connector, child) {
             return Column(
               children: [
-                // Bluetooth off warning — slides in/out with AnimatedSize
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  child: _bluetoothState == BluetoothAdapterState.off
-                      ? _BluetoothOffBanner(
-                          onEnable: PlatformInfo.isAndroid
-                              ? () => FlutterBluePlus.turnOn()
-                              : null,
-                        )
-                      : const SizedBox.shrink(),
+                RevealOnEnable(
+                  visible: _bluetoothState == BluetoothAdapterState.off,
+                  child: _BluetoothOffBanner(
+                    onEnable: PlatformInfo.isAndroid
+                        ? () => FlutterBluePlus.turnOn()
+                        : null,
+                  ),
                 ),
 
                 // Connection status header
@@ -249,16 +251,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
         subtitle: isBluetoothOff
             ? context.l10n.scanner_bluetoothOffMessage
             : null,
-        action: (isBluetoothOff || isScanning)
-            ? null
-            : FilledButton.icon(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  _toggleScan(connector);
-                },
-                icon: const Icon(Icons.bluetooth_searching),
-                label: Text(context.l10n.scanner_scan),
-              ),
       );
     }
 

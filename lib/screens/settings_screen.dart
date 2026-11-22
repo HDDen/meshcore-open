@@ -14,6 +14,7 @@ import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
 import '../widgets/mesh_nav_tile.dart';
 import '../widgets/mesh_ui.dart';
+import '../widgets/settings_reveal.dart';
 import '../widgets/radio_settings_dialog.dart';
 import 'app_settings_screen.dart';
 import 'app_debug_log_screen.dart';
@@ -25,6 +26,7 @@ import '../widgets/sync_progress_overlay.dart';
 import 'region_management_screen.dart';
 import 'backup_restore_screen.dart';
 import 'export_screen.dart';
+import '../utils/radio_guard.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -238,14 +240,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Guards a radio command: returns false (after telling the user) when the
   /// radio is not connected, because the connector silently ignores commands
   /// sent while disconnected and a success message would be a lie.
-  bool _ensureConnected(BuildContext context, MeshCoreConnector connector) {
-    if (connector.isConnected) return true;
-    showDismissibleSnackBar(
-      context,
-      content: Text(context.l10n.settings_notConnectedError),
-    );
-    return false;
-  }
+  bool _ensureConnected(BuildContext context, MeshCoreConnector connector) =>
+      ensureRadioConnected(context);
 
   Widget _buildIdentityCardContent(
     BuildContext context,
@@ -306,62 +302,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
 
-        // Expandable detail rows
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          alignment: Alignment.topCenter,
-          child: _deviceInfoExpanded
-              ? Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(height: 1),
-                      const SizedBox(height: 10),
-                      _infoRow(
-                        context,
-                        label: l10n.settings_infoId,
-                        value: connector.deviceIdLabel,
-                      ),
-                      _buildBatteryInfoRow(context, connector),
-                      if (connector.manufacturerName != null)
-                        _infoRow(
-                          context,
-                          label: l10n.settings_infoHardware,
-                          value: connector.manufacturerName!,
-                        ),
-                      if (connector.firmwareVersionString != null)
-                        _infoRow(
-                          context,
-                          label: l10n.settings_infoFirmware,
-                          value: connector.firmwareVersionString!,
-                        ),
-                      if (connector.selfName != null)
-                        _infoRow(
-                          context,
-                          label: l10n.settings_nodeName,
-                          value: connector.selfName!,
-                        ),
-                      if (connector.selfPublicKey != null)
-                        _publicKeyRow(
-                          context,
-                          label: l10n.settings_infoPublicKey,
-                          publicKeyHex: pubKeyToHex(connector.selfPublicKey!),
-                        ),
-                      _infoRow(
-                        context,
-                        label: l10n.settings_infoContactsCount,
-                        value: '${connector.contacts.length}',
-                      ),
-                      _infoRow(
-                        context,
-                        label: l10n.settings_infoChannelCount,
-                        value: '${connector.channels.length}',
-                      ),
-                    ],
+        RevealOnEnable(
+          visible: _deviceInfoExpanded,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(height: 1),
+                const SizedBox(height: 10),
+                _infoRow(
+                  context,
+                  label: l10n.settings_infoId,
+                  value: connector.deviceIdLabel,
+                ),
+                _buildBatteryInfoRow(context, connector),
+                if (connector.manufacturerName != null)
+                  _infoRow(
+                    context,
+                    label: l10n.settings_infoHardware,
+                    value: connector.manufacturerName!,
                   ),
-                )
-              : const SizedBox.shrink(),
+                if (connector.firmwareVersionString != null)
+                  _infoRow(
+                    context,
+                    label: l10n.settings_infoFirmware,
+                    value: connector.firmwareVersionString!,
+                  ),
+                if (connector.selfName != null)
+                  _infoRow(
+                    context,
+                    label: l10n.settings_nodeName,
+                    value: connector.selfName!,
+                  ),
+                if (connector.selfPublicKey != null)
+                  _publicKeyRow(
+                    context,
+                    label: l10n.settings_infoPublicKey,
+                    publicKeyHex: pubKeyToHex(connector.selfPublicKey!),
+                  ),
+                _infoRow(
+                  context,
+                  label: l10n.settings_infoContactsCount,
+                  value: '${connector.contacts.length}',
+                ),
+                _infoRow(
+                  context,
+                  label: l10n.settings_infoChannelCount,
+                  value: '${connector.channels.length}',
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -1148,14 +1140,13 @@ void _privacySettings(BuildContext context, MeshCoreConnector connector) {
                     : null,
               ),
               const SizedBox(height: 8),
-              SwitchListTile(
-                title: Text(l10n.settings_multiAck),
-                subtitle: Text(l10n.settings_multiAckSubtitle),
+              FeatureToggleRow(
+                title: l10n.settings_multiAck,
+                subtitle: l10n.settings_multiAckSubtitle,
                 value: multiAcks == 1,
                 onChanged: (value) {
                   setDialogState(() => multiAcks = value ? 1 : 0);
                 },
-                contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(

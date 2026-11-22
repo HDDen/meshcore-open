@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
+import '../services/app_settings_service.dart';
 import '../services/storage_service.dart';
 import '../services/repeater_command_service.dart';
 import '../connector/meshcore_connector.dart';
@@ -15,6 +16,7 @@ import '../widgets/mesh_ui.dart';
 import '../utils/app_logger.dart';
 import '../helpers/utf8_length_limiter.dart';
 import 'routing_sheet.dart';
+import '../utils/radio_guard.dart';
 
 class RepeaterLoginDialog extends StatefulWidget {
   final Contact repeater;
@@ -39,7 +41,9 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
   String? _loginError;
   late MeshCoreConnector _connector;
   int _currentAttempt = 0;
-  static const int _maxAttempts = 5;
+
+  int get _maxAttempts =>
+      context.read<AppSettingsService>().settings.loginAttempts;
 
   @override
   void initState() {
@@ -93,6 +97,7 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
 
   Future<void> _handleLogin() async {
     if (_isLoggingIn) return;
+    if (!ensureRadioConnected(context)) return;
 
     setState(() {
       _isLoggingIn = true;
@@ -193,10 +198,13 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
         await _storage.removeRepeaterPassword(widget.repeater.publicKeyHex);
       }
 
-      final autoClockSync = await _storage
-          .getRepeaterAutoClockSyncAfterLoginEnabled(
-            widget.repeater.publicKeyHex,
-          );
+      final globalClockSync = mounted
+          ? context.read<AppSettingsService>().settings.clockSyncAfterLogin
+          : false;
+      final autoClockSync = await _storage.repeaterClockSyncAfterLogin(
+        widget.repeater.publicKeyHex,
+        globalDefault: globalClockSync,
+      );
       if (autoClockSync) {
         try {
           final timestampSeconds =
@@ -388,7 +396,12 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                       }
                     },
                     onSubmitted: (_) => _handleLogin(),
-                    autofocus: _passwordController.text.isEmpty,
+                    autofocus:
+                        context
+                            .watch<AppSettingsService>()
+                            .settings
+                            .loginPasswordAutofocus &&
+                        _passwordController.text.isEmpty,
                   ),
                   const SizedBox(height: 12),
                   CheckboxListTile(
@@ -446,48 +459,24 @@ class _RepeaterLoginDialogState extends State<RepeaterLoginDialog> {
                             itemBuilder: (context) => [
                               PopupMenuItem(
                                 value: 'auto',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.auto_mode,
-                                      size: 20,
-                                      color: !isFloodMode
-                                          ? scheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.login_autoUseSavedPath,
-                                      style: TextStyle(
-                                        fontWeight: !isFloodMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                child: MeshMenuItemRow(
+                                  icon: Icons.auto_mode,
+                                  label: l10n.login_autoUseSavedPath,
+                                  iconColor: !isFloodMode
+                                      ? scheme.primary
+                                      : null,
+                                  selected: !isFloodMode,
                                 ),
                               ),
                               PopupMenuItem(
                                 value: 'flood',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.waves,
-                                      size: 20,
-                                      color: isFloodMode
-                                          ? scheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.login_forceFloodMode,
-                                      style: TextStyle(
-                                        fontWeight: isFloodMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                child: MeshMenuItemRow(
+                                  icon: Icons.waves,
+                                  label: l10n.login_forceFloodMode,
+                                  iconColor: isFloodMode
+                                      ? scheme.primary
+                                      : null,
+                                  selected: isFloodMode,
                                 ),
                               ),
                             ],

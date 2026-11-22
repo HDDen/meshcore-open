@@ -15,6 +15,7 @@ import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/contact.dart';
 import 'package:meshcore_open/review_mode/review_radio.dart';
+import 'package:meshcore_open/screens/add_contact_screen.dart';
 import 'package:meshcore_open/screens/app_debug_log_screen.dart';
 import 'package:meshcore_open/screens/app_settings_screen.dart';
 import 'package:meshcore_open/screens/ble_debug_log_screen.dart';
@@ -25,6 +26,7 @@ import 'package:meshcore_open/screens/chat_screen.dart';
 import 'package:meshcore_open/screens/chrome_required_screen.dart';
 import 'package:meshcore_open/screens/companion_radio_stats_screen.dart';
 import 'package:meshcore_open/screens/contacts_screen.dart';
+import 'package:meshcore_open/screens/coordinate_map_screen.dart';
 import 'package:meshcore_open/screens/discovery_screen.dart';
 import 'package:meshcore_open/screens/line_of_sight_map_screen.dart';
 import 'package:meshcore_open/screens/map_cache_screen.dart';
@@ -145,7 +147,7 @@ _interactions = {
           .first,
     );
   },
-  'Contacts add sheet': (t, _) async {
+  'Contacts add page': (t, _) async {
     await t.tap(find.byType(FloatingActionButton));
   },
   // Four routing modes (Auto, Flood, Direct, Manual) share one row.
@@ -161,7 +163,8 @@ _interactions = {
 
 final Map<String, _ScreenBuilder> _screens = {
   'Contacts options sheet': (_) => const ContactsScreen(),
-  'Contacts add sheet': (_) => const ContactsScreen(),
+  'Contacts add page': (_) => const ContactsScreen(),
+  'AddContact': (_) => const AddContactScreen(),
   'Routing sheet': (c) => ChatScreen(contact: _contactOfType(c, advTypeChat)),
   'Scanner': (_) => const ScannerScreen(),
   'Tcp': (_) => const TcpScreen(),
@@ -221,6 +224,11 @@ final Map<String, _ScreenBuilder> _screens = {
       LineOfSightEndpoint(label: 'B', point: LatLng(45.6, -122.7)),
     ],
   ),
+  'CoordinateMap': (_) => const CoordinateMapScreen(
+    latitude: 45.515232,
+    longitude: -122.678385,
+    label: '45.515232, -122.678385',
+  ),
 };
 
 void main() {
@@ -241,9 +249,20 @@ void main() {
 
   final variants = [
     for (final entry in _screens.entries) (entry, false),
-    // Repeater screens add a banner while the companion radio is offline.
+    // Repeater screens add a banner while the companion radio is offline;
+    // the main and chat screens swap in the Connect button and the
+    // read-only composer bar.
     for (final entry in _screens.entries)
-      if (entry.key.startsWith('Repeater') || entry.key == 'Neighbors')
+      if (entry.key.startsWith('Repeater') ||
+          const {
+            'Neighbors',
+            'Channels',
+            'Contacts',
+            'Map',
+            'Chat',
+            'ChannelChat',
+            'Settings',
+          }.contains(entry.key))
         (entry, true),
   ];
   for (final (entry, offline) in variants) {

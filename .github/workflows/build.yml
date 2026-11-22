@@ -4,7 +4,19 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'BETA-*'
+      - 'PRE-BETA-*'
+      - 'Alpha*'
+      - 'RELEASE-*'
+      - 'v*'
   pull_request:
+
+env:
+  # ONNX Runtime for the Linux jobs. Its Linux downloads from
+  # github.com/microsoft/onnxruntime currently 404, so tagged Linux AppImages
+  # ship without image messages until this is set back to "on".
+  MESHCORE_LINUX_ONNX: "off"
 
 jobs:
   android:
@@ -65,7 +77,7 @@ jobs:
         run: |
           shellcheck scripts/build_appimage.sh scripts/appimage/*.sh scripts/appimage/AppRun
           bash scripts/appimage/test_packaging.sh
-      - run: flutter pub get
+      - run: scripts/onnx.sh "$MESHCORE_LINUX_ONNX"
       - run: flutter build linux --release --no-pub
       - uses: docker/setup-buildx-action@v3
       - name: Read AppImage base image
@@ -135,7 +147,7 @@ jobs:
         run: |
           shellcheck scripts/build_appimage.sh scripts/appimage/*.sh scripts/appimage/AppRun
           bash scripts/appimage/test_packaging.sh
-      - run: flutter pub get
+      - run: scripts/onnx.sh "$MESHCORE_LINUX_ONNX"
       - run: flutter test --reporter expanded
       - name: Build ARM64 Linux release
         run: |
@@ -198,3 +210,51 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build web --release --no-pub
+
+  publish-linux-assets:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - linux
+      - linux-arm64
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x86_64-appimage
+          path: release/linux-x86_64
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-arm64-appimage
+          path: release/linux-arm64
+      - name: Prepare Linux AppImages
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          test -n "$version"
+          x86_64="$(find release/linux-x86_64 -type f -name 'meshcore-open-x86_64.AppImage' -print -quit)"
+          aarch64="$(find release/linux-arm64 -type f -name 'meshcore-open-aarch64.AppImage' -print -quit)"
+          test -n "$x86_64"
+          test -n "$aarch64"
+          mkdir -p dist
+          cp "$x86_64" "dist/meshcore-open-${version}-linux-x86_64.AppImage"
+          cp "$aarch64" "dist/meshcore-open-${version}-linux-aarch64.AppImage"
+          chmod +x dist/*.AppImage
+      - name: Publish Linux AppImages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          files=(dist/*.AppImage)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${files[@]}" --clobber
+          else
+            gh release create "$TAG" "${files[@]}" \
+              --verify-tag \
+              --title "$TAG" \
+              --generate-notes
+          fi

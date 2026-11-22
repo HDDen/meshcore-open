@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../l10n/l10n.dart';
 import '../models/contact.dart';
 import '../l10n/contact_localization.dart';
+import '../services/app_settings_service.dart';
 import '../services/storage_service.dart';
 import '../connector/meshcore_connector.dart';
 import '../connector/meshcore_protocol.dart';
@@ -16,6 +17,7 @@ import '../utils/app_logger.dart';
 import '../helpers/snack_bar_builder.dart';
 import '../helpers/utf8_length_limiter.dart';
 import 'routing_sheet.dart';
+import '../utils/radio_guard.dart';
 
 class RoomLoginDialog extends StatefulWidget {
   final Contact room;
@@ -35,7 +37,9 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
   bool _obscurePassword = true;
   late MeshCoreConnector _connector;
   int _currentAttempt = 0;
-  static const int _maxAttempts = 5;
+
+  int get _maxAttempts =>
+      context.read<AppSettingsService>().settings.loginAttempts;
 
   @override
   void initState() {
@@ -90,6 +94,7 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
 
   Future<void> _handleLogin() async {
     if (_isLoggingIn) return;
+    if (!ensureRadioConnected(context)) return;
 
     setState(() {
       _isLoggingIn = true;
@@ -319,6 +324,10 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                     ),
                     onSubmitted: (_) => _handleLogin(),
                     autofocus:
+                        context
+                            .watch<AppSettingsService>()
+                            .settings
+                            .loginPasswordAutofocus &&
                         !PlatformInfo.isMobile &&
                         _passwordController.text.isEmpty,
                   ),
@@ -378,48 +387,24 @@ class _RoomLoginDialogState extends State<RoomLoginDialog> {
                             itemBuilder: (context) => [
                               PopupMenuItem(
                                 value: 'auto',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.auto_mode,
-                                      size: 20,
-                                      color: !isFloodMode
-                                          ? scheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.login_autoUseSavedPath,
-                                      style: TextStyle(
-                                        fontWeight: !isFloodMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                child: MeshMenuItemRow(
+                                  icon: Icons.auto_mode,
+                                  label: l10n.login_autoUseSavedPath,
+                                  iconColor: !isFloodMode
+                                      ? scheme.primary
+                                      : null,
+                                  selected: !isFloodMode,
                                 ),
                               ),
                               PopupMenuItem(
                                 value: 'flood',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.waves,
-                                      size: 20,
-                                      color: isFloodMode
-                                          ? scheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.login_forceFloodMode,
-                                      style: TextStyle(
-                                        fontWeight: isFloodMode
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                child: MeshMenuItemRow(
+                                  icon: Icons.waves,
+                                  label: l10n.login_forceFloodMode,
+                                  iconColor: isFloodMode
+                                      ? scheme.primary
+                                      : null,
+                                  selected: isFloodMode,
                                 ),
                               ),
                             ],

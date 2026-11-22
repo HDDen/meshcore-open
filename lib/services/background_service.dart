@@ -2,9 +2,31 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
+import '../l10n/locale_tag.dart';
 import '../utils/platform_info.dart';
 
 class BackgroundService {
+  /// Options for the service that keeps the radio link alive in the
+  /// background.
+  ///
+  /// The radio link lives in the app process; once the user swipes the app
+  /// away it is gone, so a lingering "connected" notification (or an
+  /// automatic restart) would only be misleading. Swiping away stops the
+  /// service through `android:stopWithTask="true"` in AndroidManifest.xml.
+  ///
+  /// `stopWithTask` must stay unset here: in flutter_foreground_task (9.2 to
+  /// 11.0 at least) the option does not watch the task but stops the service
+  /// as soon as no activity is resumed, which is every time the app goes to
+  /// the background or the screen turns off. Android then caches and freezes
+  /// the process, the Bluetooth link drops and the low-memory killer ends it.
+  @visibleForTesting
+  static final ForegroundTaskOptions taskOptions = ForegroundTaskOptions(
+    eventAction: ForegroundTaskEventAction.repeat(5000),
+    autoRunOnBoot: false,
+    allowWifiLock: false,
+    allowAutoRestart: false,
+  );
+
   bool _initialized = false;
   String? Function()? _languageOverrideProvider;
 
@@ -29,16 +51,7 @@ class BackgroundService {
         showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.repeat(5000),
-        autoRunOnBoot: false,
-        allowWifiLock: false,
-        // The radio link lives in the app process; once the user swipes the
-        // app away it is gone, so a lingering "connected" notification (or
-        // an automatic restart) would only be misleading.
-        allowAutoRestart: false,
-        stopWithTask: true,
-      ),
+      foregroundTaskOptions: taskOptions,
     );
     _initialized = true;
   }
@@ -65,7 +78,7 @@ class BackgroundService {
     final supported = AppLocalizations.supportedLocales;
     final override = _languageOverrideProvider?.call();
     if (override != null && override.isNotEmpty) {
-      final overrideLocale = Locale(override);
+      final overrideLocale = localeFromTag(override);
       final isSupported = supported.any(
         (l) => l.languageCode == overrideLocale.languageCode,
       );

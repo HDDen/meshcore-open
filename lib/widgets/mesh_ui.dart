@@ -1,18 +1,21 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../theme/mesh_theme.dart';
 import '../theme/theme_icons.dart';
+import 'contact_visuals.dart';
 
 /// MeshCore shared design kit.
 ///
 /// Building blocks used across all screens so the app reads as one product:
 /// [SectionHeader], [MeshCard], [StatusChip], [StatTile], [AvatarCircle],
 /// [SignalBars], [RouteChip], [PulseDot], [BottomSheetHeader] +
-/// [showMeshSheet], [ErrorRetryCard], and [ListEntrance].
+/// [showMeshSheet], [ErrorRetryCard], [ListEntrance], [MeshSegmentLabel]
+/// and [MeshMenuItemRow].
 
 /// Small-caps mono section label, optionally with a trailing widget.
 class SectionHeader extends StatelessWidget {
@@ -281,7 +284,8 @@ class StatTile extends StatelessWidget {
 
 /// Initials avatar with a deterministic per-name hue, or a fixed [color]
 /// for node-type coloring. Optional [icon] or themeable [iconSlot] replaces
-/// initials.
+/// initials. Initials come from [avatarInitials]; a name with no letters,
+/// digits or emoji shows a generic person icon instead.
 class AvatarCircle extends StatelessWidget {
   final String name;
   final double size;
@@ -318,7 +322,7 @@ class AvatarCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = color ?? _colorFor(name);
-    final initials = _initials(name);
+    final initials = avatarInitials(name);
     final background = _tintedCardBackground(context, accent, 0.14);
     // A theme picture (e.g. a holiday marker) fills the whole circle, the
     // same as on the map, rather than sitting small inside the tint.
@@ -358,9 +362,9 @@ class AvatarCircle extends StatelessWidget {
               size: size * 0.55,
               color: readableAccent(accent, background, minContrast: 3),
             )
-          : icon != null
+          : icon != null || initials == null
           ? Icon(
-              icon,
+              icon ?? Icons.person_outline,
               size: size * 0.5,
               color: readableAccent(accent, background, minContrast: 3),
             )
@@ -373,21 +377,6 @@ class AvatarCircle extends StatelessWidget {
               ),
             ),
     );
-  }
-
-  static String _initials(String name) {
-    final words = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return '?';
-    if (words.length == 1) {
-      return words.first.characters.take(2).toString().toUpperCase();
-    }
-    return (words.first.characters.take(1).toString() +
-            words[1].characters.take(1).toString())
-        .toUpperCase();
   }
 }
 
@@ -697,6 +686,11 @@ class ErrorRetryCard extends StatelessWidget {
 
 /// Staggered fade + slide entrance for list items. Wrap each item and pass
 /// its [index]; animation only plays once per widget lifecycle.
+///
+/// Only rows built while their list is at rest at the top play it. Rows that
+/// a scroll brings into view appear at once: a delayed fade there leaves
+/// blank rows trailing the finger and adds a ticker and an opacity layer per
+/// row during a fling.
 class ListEntrance extends StatefulWidget {
   final int index;
   final Widget child;
@@ -709,43 +703,365 @@ class ListEntrance extends StatefulWidget {
 
 class _ListEntranceState extends State<ListEntrance>
     with SingleTickerProviderStateMixin {
-  // Created eagerly: a lazy `late final` initializer would run on first
-  // access — which can be dispose(), where ticker creation throws.
-  late final AnimationController _controller;
-  late final CurvedAnimation _curve;
+  // Created in initState, not lazily: a lazy initializer would run on first
+  // access — which can be dispose(), where ticker creation throws. Null when
+  // the row skips the entrance.
+  AnimationController? _controller;
+  CurvedAnimation? _curve;
+
+  /// Whether the enclosing list has scrolled away from the top or is moving,
+  /// i.e. this row is entering because of a scroll.
+  bool _enteredByScroll() {
+    final scrollable = context.findAncestorStateOfType<ScrollableState>();
+    if (scrollable == null) return false;
+    final position = scrollable.position;
+    return position.isScrollingNotifier.value ||
+        (position.hasPixels && position.pixels != 0);
+  }
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    // Decided once: changing the tree shape later would rebuild the row.
+    if (_enteredByScroll()) return;
+    final controller = _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
-    _curve = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _curve = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
     final delay = Duration(milliseconds: 24 * widget.index.clamp(0, 12));
     Future.delayed(delay, () {
-      if (mounted) _controller.forward();
+      if (mounted) controller.forward();
     });
   }
 
   @override
   void dispose() {
-    _curve.dispose();
-    _controller.dispose();
+    _curve?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final curve = _curve;
+    if (curve == null) return widget.child;
     return FadeTransition(
-      opacity: _curve,
+      opacity: curve,
       child: SlideTransition(
         position: Tween(
           begin: const Offset(0, 0.04),
           end: Offset.zero,
-        ).animate(_curve),
+        ).animate(curve),
         child: widget.child,
       ),
     );
+  }
+}
+
+/// Contents of a [PopupMenuItem]: a 20px icon, a 12px gap and a label that
+/// wraps to at most [maxLines] lines and then ends in an ellipsis, so long
+/// translations are never clipped at the menu edge.
+///
+/// Pass an [icon], or a [leading] widget for custom icons (sized 20). With
+/// neither, a 20px gap keeps the label aligned with rows that have one.
+/// [color] tints icon and label (e.g. red for a destructive action);
+/// [iconColor] tints only the icon. [selected] bolds the label, for menus
+/// that mark the current choice.
+class MeshMenuItemRow extends StatelessWidget {
+  final IconData? icon;
+  final Widget? leading;
+  final String label;
+  final Color? color;
+  final Color? iconColor;
+  final bool selected;
+  final int maxLines;
+
+  const MeshMenuItemRow({
+    super.key,
+    this.icon,
+    this.leading,
+    required this.label,
+    this.color,
+    this.iconColor,
+    this.selected = false,
+    this.maxLines = 2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveIconColor = iconColor ?? color;
+    return Row(
+      children: [
+        IconTheme.merge(
+          data: IconThemeData(size: 20, color: effectiveIconColor),
+          child: SizedBox(
+            width: 20,
+            child:
+                leading ??
+                (icon == null
+                    ? null
+                    : Icon(icon, size: 20, color: effectiveIconColor)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontWeight: selected ? FontWeight.bold : null,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Label for a [ButtonSegment] that never breaks a word in the middle.
+///
+/// Uses the button's text style. If the label does not fit on one line it is
+/// scaled down, but not below [minFontSize] (before the user's text scale).
+/// Below that, a multi-word label wraps at word boundaries onto up to
+/// [maxLines] centred lines, shrunk just enough for its longest word to fit.
+/// A single word that still does not fit keeps shrinking on one line, as
+/// splitting or clipping it would be harder to read than smaller text.
+class MeshSegmentLabel extends LeafRenderObjectWidget {
+  final String text;
+  final double minFontSize;
+  final int maxLines;
+
+  const MeshSegmentLabel(
+    this.text, {
+    super.key,
+    this.minFontSize = 12,
+    this.maxLines = 2,
+  });
+
+  TextStyle _style(BuildContext context) {
+    final style = DefaultTextStyle.of(context).style;
+    return MediaQuery.boldTextOf(context)
+        ? style.merge(const TextStyle(fontWeight: FontWeight.bold))
+        : style;
+  }
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderSegmentLabel(
+      text: text,
+      style: _style(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: Directionality.of(context),
+      minFontSize: minFontSize,
+      maxLines: maxLines,
+    );
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) {
+    (renderObject as _RenderSegmentLabel)
+      ..text = text
+      ..style = _style(context)
+      ..textScaler = MediaQuery.textScalerOf(context)
+      ..textDirection = Directionality.of(context)
+      ..minFontSize = minFontSize
+      ..maxLines = maxLines;
+  }
+}
+
+class _RenderSegmentLabel extends RenderBox {
+  _RenderSegmentLabel({
+    required String text,
+    required TextStyle style,
+    required TextScaler textScaler,
+    required TextDirection textDirection,
+    required double minFontSize,
+    required int maxLines,
+  }) : _text = text,
+       _style = style,
+       _textScaler = textScaler,
+       _textDirection = textDirection,
+       _minFontSize = minFontSize,
+       _maxLines = maxLines;
+
+  final TextPainter _painter = TextPainter(textAlign: TextAlign.center);
+
+  String _text;
+  set text(String value) {
+    if (value == _text) return;
+    _text = value;
+    markNeedsLayout();
+    markNeedsSemanticsUpdate();
+  }
+
+  TextStyle _style;
+  set style(TextStyle value) {
+    if (value == _style) return;
+    _style = value;
+    // Layout even for a colour-only change: the painter takes the new style
+    // (the selected or disabled colour) in _fit, not in paint.
+    markNeedsLayout();
+  }
+
+  @visibleForTesting
+  Color? get debugPaintedColor => _painter.text?.style?.color;
+
+  TextScaler _textScaler;
+  set textScaler(TextScaler value) {
+    if (value == _textScaler) return;
+    _textScaler = value;
+    markNeedsLayout();
+  }
+
+  TextDirection _textDirection;
+  set textDirection(TextDirection value) {
+    if (value == _textDirection) return;
+    _textDirection = value;
+    markNeedsLayout();
+    markNeedsSemanticsUpdate();
+  }
+
+  double _minFontSize;
+  set minFontSize(double value) {
+    if (value == _minFontSize) return;
+    _minFontSize = value;
+    markNeedsLayout();
+  }
+
+  int _maxLines;
+  set maxLines(int value) {
+    if (value == _maxLines) return;
+    _maxLines = value;
+    markNeedsLayout();
+  }
+
+  double get _fontSize => _style.fontSize ?? 14;
+
+  /// [_textScaler] further multiplied by [factor].
+  TextScaler _scaled(double factor) {
+    if (factor >= 1) return _textScaler;
+    return TextScaler.linear(_textScaler.scale(_fontSize) * factor / _fontSize);
+  }
+
+  double _lineWidth(TextPainter painter, String text, TextScaler scaler) {
+    painter
+      ..text = TextSpan(text: text, style: _style)
+      ..textDirection = _textDirection
+      ..textScaler = scaler
+      ..maxLines = 1
+      ..ellipsis = null
+      ..layout();
+    return painter.width;
+  }
+
+  /// Configures [painter] for [maxWidth] and lays it out.
+  void _fit(TextPainter painter, double maxWidth) {
+    final full = _lineWidth(painter, _text, _textScaler);
+    var factor = 1.0;
+    var lines = 1;
+    if (full > maxWidth) {
+      // A little slack: glyph metrics do not scale exactly linearly.
+      final fitFactor = maxWidth / full * 0.98;
+      final floor = math.min(1.0, _minFontSize / _fontSize);
+      final words = _text.trim().split(RegExp(r'\s+'));
+      if (fitFactor >= floor || words.length < 2) {
+        factor = fitFactor;
+      } else {
+        final longest = words
+            .map((w) => _lineWidth(painter, w, _textScaler))
+            .reduce(math.max);
+        factor = math.min(1.0, maxWidth / longest * 0.98);
+        lines = _maxLines;
+      }
+    }
+    painter
+      ..text = TextSpan(text: _text, style: _style)
+      ..textDirection = _textDirection
+      ..textScaler = _scaled(factor)
+      ..maxLines = lines
+      ..ellipsis = '\u2026'
+      ..layout(maxWidth: maxWidth);
+  }
+
+  double _intrinsicHeight(double width) {
+    final painter = TextPainter(textAlign: TextAlign.center);
+    _fit(painter, width);
+    final height = painter.height;
+    painter.dispose();
+    return height;
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    final painter = TextPainter();
+    final floor = math.min(1.0, _minFontSize / _fontSize);
+    final longest = _text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .map((w) => _lineWidth(painter, w, _scaled(floor)))
+        .reduce(math.max);
+    painter.dispose();
+    return longest.ceilToDouble();
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) {
+    final painter = TextPainter();
+    final width = _lineWidth(painter, _text, _textScaler);
+    painter.dispose();
+    return width.ceilToDouble();
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _intrinsicHeight(width);
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _intrinsicHeight(width);
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final painter = TextPainter(textAlign: TextAlign.center);
+    _fit(painter, constraints.maxWidth);
+    final size = constraints.constrain(painter.size);
+    painter.dispose();
+    return size;
+  }
+
+  Offset get _paintOffset => Offset(
+    (size.width - _painter.width) / 2,
+    (size.height - _painter.height) / 2,
+  );
+
+  @override
+  void performLayout() {
+    _fit(_painter, constraints.maxWidth);
+    size = constraints.constrain(_painter.size);
+  }
+
+  @override
+  double? computeDistanceToActualBaseline(TextBaseline baseline) {
+    return _paintOffset.dy + _painter.computeDistanceToActualBaseline(baseline);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    _painter.paint(context.canvas, offset + _paintOffset);
+  }
+
+  @override
+  void describeSemanticsConfiguration(SemanticsConfiguration config) {
+    super.describeSemanticsConfiguration(config);
+    config
+      ..label = _text
+      ..textDirection = _textDirection;
+  }
+
+  @override
+  void dispose() {
+    _painter.dispose();
+    super.dispose();
   }
 }

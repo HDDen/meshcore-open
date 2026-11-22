@@ -5,10 +5,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/locale_tag.dart';
 import 'package:provider/provider.dart';
 
 import 'review_mode/review_mode_storage.dart';
 import 'screens/chrome_required_screen.dart';
+import 'screens/channels_screen.dart';
 import 'utils/platform_info.dart';
 
 import 'connector/meshcore_connector.dart';
@@ -39,6 +41,7 @@ import 'services/ui_view_state_service.dart';
 import 'services/chat_background_service.dart';
 import 'services/timeout_prediction_service.dart';
 import 'storage/prefs_manager.dart';
+import 'storage/history_store.dart';
 import 'theme/mesh_theme.dart';
 import 'utils/app_logger.dart';
 import 'widgets/image_send_codec_binding.dart';
@@ -66,6 +69,7 @@ void main() async {
 
   // Initialize SharedPreferences cache
   await PrefsManager.initialize();
+  await HistoryStore.initialize();
 
   // Initialize services
   final storage = StorageService();
@@ -136,6 +140,8 @@ void main() async {
       <Uint8List>[blob],
       channelIndex: channelIndex,
       interChunkDelay: Duration.zero,
+      // One blob at a time: echo tracking needs the whole chunk set.
+      repairUnheardChunks: false,
     ),
     // Overwritten by onImageSenderPrefix as soon as SELF_INFO lands.
     senderPrefix: 0,
@@ -201,9 +207,7 @@ void main() async {
     settings: appSettingsService,
   );
 
-  await connector.loadContactCache();
-  await connector.loadCachedChannels();
-  await connector.loadUnreadState();
+  await connector.restoreLastRadio();
 
   runApp(
     MeshCoreApp(
@@ -416,6 +420,14 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
         notifications: NotificationService(),
       );
 
+  // Chosen once: the settings Consumer below rebuilds MaterialApp, and a new
+  // home there would replace the route the user is on.
+  late final Widget _home = (PlatformInfo.isWeb && !PlatformInfo.isChrome)
+      ? const ChromeRequiredScreen()
+      : widget.connector.hasRadioData
+      ? const ChannelsScreen()
+      : const ScannerScreen();
+
   @override
   void initState() {
     super.initState();
@@ -532,9 +544,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
                 child: child ?? const SizedBox.shrink(),
               );
             },
-            home: (PlatformInfo.isWeb && !PlatformInfo.isChrome)
-                ? const ChromeRequiredScreen()
-                : const ScannerScreen(),
+            home: _home,
           );
         },
       ),
@@ -575,6 +585,6 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
 
   Locale? _localeFromSetting(String? languageCode) {
     if (languageCode == null) return null;
-    return Locale(languageCode);
+    return localeFromTag(languageCode);
   }
 }
