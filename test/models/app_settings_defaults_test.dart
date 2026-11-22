@@ -2,6 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/models/app_settings.dart';
 
 void main() {
+  test('path copy defaults and stored user templates remain independent', () {
+    const hop = r'%collisionMarker%%hopKey%: %hopName%%div%';
+    const finalPath = r'@%senderName% - %hops%h:\n%path%';
+    for (final settings in [AppSettings(), AppSettings.fromJson({})]) {
+      expect(settings.copyMsgPathTemplate, hop);
+      expect(settings.copyMsgPathFinalTemplate, finalPath);
+    }
+    final custom = AppSettings.fromJson({
+      'copy_msg_path_template': 'custom %hopKey%',
+      'copy_msg_path_final_template': 'custom %path%',
+    });
+    final reloaded = AppSettings.fromJson(custom.toJson());
+    expect(reloaded.copyMsgPathTemplate, 'custom %hopKey%');
+    expect(reloaded.copyMsgPathFinalTemplate, 'custom %path%');
+  });
+
   const defaults = <String, Object>{
     'clear_path_on_max_retry': true,
     'enable_time_seconds': true,

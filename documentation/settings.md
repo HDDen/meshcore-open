@@ -610,3 +610,9 @@ settings. Retry options live on the App settings page; their Settings entry
 opens that page directly and reveals the minimum-hop/repeater retry switch.
 The initial positioning happens once, so subsequent edits and manual scrolling
 retain the user's position. Existing normal taps keep their original behavior.
+
+
+The default message-path copy templates are
+`%collisionMarker%%hopKey%: %hopName%%div%` for a hop and
+`@%senderName% - %hops%h:\n%path%` for the complete path (`\n` inserts a line break).
+Explicitly saved templates are retained without migration.

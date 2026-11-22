@@ -507,7 +507,7 @@ class AppSettings {
   static const String defaultCopyMsgPathTemplate =
       r'%collisionMarker%%hopKey%: %hopName%%div%';
   static const String defaultCopyMsgPathFinalTemplate =
-      r'@%senderName% - %hops% hops: %path%';
+      r'@%senderName% - %hops%h:\n%path%';
   static const int minChannelResendTimeoutSeconds = 10;
   static const int defaultChannelResendTimeoutSeconds = 30;
   static const int maxChannelResendTimeoutSeconds = 30;
