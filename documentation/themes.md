@@ -3,6 +3,8 @@
 Open **Settings → App Settings → Appearance → Themes** to choose colors, icons,
 map markers and chat backgrounds. These settings are stored on the device.
 
+Новые установки начинают с встроенной темы **MeshCore Liam (dark)**. В списке встроенных тем она находится сразу после стандартной MeshCore. Сохранённый выбор при обновлении не меняется; стандартную тему по-прежнему можно выбрать вручную.
+
 ## Choosing a theme
 
 - **MeshCore** uses the saved System, Light or Dark mode. Tapping one of those

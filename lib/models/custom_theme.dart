@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+import '../helpers/liam_dark_theme.dart';
 import '../helpers/theme_media.dart';
 import '../helpers/mcoa_theme_options.dart';
 import '../theme/theme_icons.dart';
@@ -248,6 +249,13 @@ class CustomTheme {
 
   /// Ready-made themes. They also serve as starting points for new ones.
   static const List<CustomTheme> presets = [
+    CustomTheme(
+      id: liamDarkThemeId,
+      name: liamDarkThemeName,
+      background: liamDarkBackground,
+      accent: liamDarkAccent,
+      mcoa: liamDarkMcoa,
+    ),
     CustomTheme(
       id: '${presetIdPrefix}forest',
       name: 'Forest',

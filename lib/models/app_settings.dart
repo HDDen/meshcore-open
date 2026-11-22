@@ -1,4 +1,5 @@
 import 'adaptive_tx_power_settings.dart';
+import '../helpers/liam_dark_theme.dart';
 import 'custom_theme.dart';
 import 'image_codec_support.dart';
 import 'translation_support.dart';
@@ -888,7 +889,7 @@ class AppSettings {
     this.regionOnHopsLine = false,
     this.themeMode = 'system',
     this.customThemes = const [],
-    this.activeThemeId,
+    this.activeThemeId = liamDarkThemeId,
     this.holidayAutoSwitch = false,
     this.holidayAnimationsEnabled = false,
     this.holidayThemeDismissed,

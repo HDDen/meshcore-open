@@ -64,6 +64,20 @@ void main() {
     ),
   );
 
+  testWidgets('Liam is the default preset directly after MeshCore', (tester) async {
+    await tester.pumpWidget(app(const ThemesScreen()));
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(tester.element(find.byType(ThemesScreen)));
+    final liam = CustomTheme.presets.first;
+    expect(settings.activeCustomTheme, liam);
+    expect(liam.name, 'MeshCore Liam (dark)');
+    final stockY = tester.getTopLeft(find.text(l10n.themes_default)).dy;
+    final liamY = tester.getTopLeft(find.text(liam.name)).dy;
+    final forestY = tester.getTopLeft(find.text('Forest')).dy;
+    expect(stockY, lessThan(liamY));
+    expect(liamY, lessThan(forestY));
+  });
+
   testWidgets('U19b: selecting a preset and Default preserves stock mode', (tester) async {
     await settings.setThemeMode('light');
     await tester.pumpWidget(app(const ThemesScreen()));
@@ -120,6 +134,8 @@ void main() {
   });
 
   testWidgets('MCOa color picker updates the draft and Default removes the override', (tester) async {
+    final originalTheme = settings.activeCustomTheme;
+    final originalSettings = settings.settings.toJson();
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -155,7 +171,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
         .theme.mcoa.colors['header'], const Color(0xFF123456));
-    expect(settings.activeCustomTheme, isNull);
+    expect(settings.activeCustomTheme, same(originalTheme));
+    expect(settings.settings.toJson(), originalSettings);
     final inline = find.byKey(const ValueKey('mcoa-color-hex-header'));
     expect(tester.widget<TextField>(inline).controller!.text, '#123456');
     await tester.enterText(inline, '#80445566');
@@ -189,7 +206,8 @@ void main() {
     expect(tester.widget<McoaThemeEditor>(find.byType(McoaThemeEditor))
         .theme.mcoa.colors, isNot(contains('header')));
     expect(tester.widget<TextField>(inline).controller!.text, isEmpty);
-    expect(settings.activeCustomTheme, isNull);
+    expect(settings.activeCustomTheme, same(originalTheme));
+    expect(settings.settings.toJson(), originalSettings);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
@@ -235,6 +253,8 @@ void main() {
   });
 
   testWidgets('theme sections start folded and preserve edits independently', (tester) async {
+    final originalTheme = settings.activeCustomTheme;
+    final originalSettings = settings.settings.toJson();
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -287,7 +307,8 @@ void main() {
     await tester.tap(background);
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(hex).controller!.text, '#123456');
-    expect(settings.activeCustomTheme, isNull);
+    expect(settings.activeCustomTheme, same(originalTheme));
+    expect(settings.settings.toJson(), originalSettings);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

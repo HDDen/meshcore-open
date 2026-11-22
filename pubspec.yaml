@@ -136,6 +136,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/themes/meshcore-liam-dark/
     - assets/themes/christmas/
     - assets/themes/halloween/
     - assets/themes/new_year/
