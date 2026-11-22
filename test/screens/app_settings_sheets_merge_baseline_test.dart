@@ -4,6 +4,7 @@ import 'package:mco_service/mco_service.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/models/app_settings.dart';
+import 'package:meshcore_open/models/custom_theme.dart';
 import 'package:meshcore_open/screens/app_settings_screen.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
 import 'package:meshcore_open/services/translation_service.dart';
@@ -21,6 +22,16 @@ class _Settings extends AppSettingsService {
   final writes = <(String, Object?)>[];
   @override
   AppSettings get settings => value;
+
+  @override
+  CustomTheme? get chosenCustomTheme {
+    final id = value.activeThemeId;
+    if (id == null) {
+      return null;
+    }
+    return CustomTheme.presetById(id) ??
+        value.customThemes.where((theme) => theme.id == id).firstOrNull;
+  }
 
   void _apply(AppSettings next, String key, Object? changed) {
     value = next;
@@ -355,7 +366,9 @@ void main() {
         final before = settings.value;
         final control = find.byType(SegmentedButton<String>);
         await tester.ensureVisible(control);
-        expect(tester.widget<SegmentedButton<String>>(control).selected, {'system'});
+        // A built-in custom theme is active on a fresh installation.
+        expect(before.activeThemeId, isNotNull);
+        expect(tester.widget<SegmentedButton<String>>(control).selected, isEmpty);
         for (final (mode, label) in [
           ('light', l10n.appSettings_themeLight),
           ('dark', l10n.appSettings_themeDark),
@@ -366,7 +379,7 @@ void main() {
           await tester.tap(option);
           await tester.pumpAndSettle();
           expect(tester.widget<SegmentedButton<String>>(control).selected, {mode});
-          expect(settings.value.toJson(), before.copyWith(themeMode: mode).toJson());
+          expect(settings.value.toJson(), before.copyWith(themeMode: mode, activeThemeId: null).toJson());
         }
         expect(settings.writes, [
           ('theme', 'light'),

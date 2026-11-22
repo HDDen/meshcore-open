@@ -298,7 +298,7 @@ void main() {
   }
 
   TestWidgetsFlutterBinding.ensureInitialized();
-  testWidgets('main settings opens the existing message filter after app settings', (tester) async {
+  testWidgets('main settings opens the existing message filter before app settings', (tester) async {
     final service = MessageFilterService();
     addTearDown(service.dispose);
     await _withScreen(tester, (connector, l10n) async {
@@ -307,7 +307,7 @@ void main() {
       expect(filter, findsOneWidget);
       expect(
         tester.getTopLeft(filter).dy,
-        greaterThan(tester.getTopLeft(find.text(l10n.settings_appSettings).last).dy),
+        lessThan(tester.getTopLeft(find.text(l10n.settings_appSettings).last).dy),
       );
       expect(
         tester.getTopLeft(filter).dy,

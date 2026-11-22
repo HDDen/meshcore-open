@@ -3,6 +3,9 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidFlutterLocalNotificationsPlugin;
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/channel_echo_recovery.dart';
@@ -181,6 +184,21 @@ Future<_Connector> _connectorWithChannels(
 
 Future<void> main() async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const notifications = MethodChannel('dexterous.com/flutter/local_notifications');
+  setUpAll(() {
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, (call) async {
+          if (call.method == 'initialize' || call.method == 'areNotificationsEnabled') {
+            return true;
+          }
+          return null;
+        });
+  });
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, null);
+  });
   final psk = _psk(1);
   final environment = HistoryTestEnvironment();
   setUp(environment.setUp);

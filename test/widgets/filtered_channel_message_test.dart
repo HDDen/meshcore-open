@@ -16,9 +16,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _manual = FilterVerdict(reason: FilterReason.manual);
 const _action = ValueKey('spam-action');
-const _prompt =
-    'Для полноценного функционирования функционала необходимо включить '
-    'функцию обучения спам-фильтра. Включить это сейчас?';
 
 class _Store extends MessageFilterStore {
   MessageFilterSettings settings = const MessageFilterSettings(enabled: true);
@@ -345,7 +342,7 @@ void main() {
       await tester.pumpAndSettle();
       final dialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
       expect(dialog.title, isNull);
-      expect((dialog.content! as Text).data, _prompt);
+      expect((dialog.content! as Text).data, l10n.messageFilter_enableLearningPrompt);
       expect(connector.marks, isEmpty);
 
       await tester.tap(find.text(l10n.common_cancel));

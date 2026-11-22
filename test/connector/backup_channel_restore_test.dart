@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidFlutterLocalNotificationsPlugin;
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/backup_channel_restore.dart';
@@ -325,6 +327,23 @@ class _Radio {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const notifications = MethodChannel('dexterous.com/flutter/local_notifications');
+  setUpAll(() {
+    // Identity restoration binds the notification service during SELF_INFO.
+    // Provide the platform adapter without touching the OS notification API.
+    AndroidFlutterLocalNotificationsPlugin.registerWith();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, (call) async {
+          if (call.method == 'initialize' || call.method == 'areNotificationsEnabled') {
+            return true;
+          }
+          return null;
+        });
+  });
+  tearDownAll(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(notifications, null);
+  });
   final storage = MessageHistoryStorage.instance;
   late PathProviderPlatform savedPaths;
   late _Radio radio;
