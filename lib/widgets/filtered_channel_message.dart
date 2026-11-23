@@ -19,6 +19,7 @@ class FilteredChannelMessage extends StatelessWidget {
     required this.connector,
     this.initiallyExpanded = false,
     this.review = false,
+    this.inline = false,
     this.onSelect,
   });
 
@@ -27,6 +28,7 @@ class FilteredChannelMessage extends StatelessWidget {
   final MeshCoreConnector connector;
   final bool initiallyExpanded;
   final bool review;
+  final bool inline;
   final VoidCallback? onSelect;
 
   @override
@@ -50,7 +52,7 @@ class FilteredChannelMessage extends StatelessWidget {
     final senderKey = BlockedSenders.verifiedKeyOf(message);
     final editable = !connector.isOfflineSharedMode && message.sharedHistorySourceName == null;
     final content = <Widget>[
-      if (!review) ...[
+      if (!review && verdict.reason != FilterReason.senderRule) ...[
         Text(reason, style: compactStyle),
         if (detail != null) Text(detail, style: compactStyle),
         const SizedBox(height: 8),
@@ -86,7 +88,7 @@ class FilteredChannelMessage extends StatelessWidget {
           ],
         ),
     ];
-    final Widget tile = review
+    final Widget tile = review || inline
         ? SizedBox(
             width: double.infinity,
             child: Padding(
@@ -236,15 +238,25 @@ class FilteredChannelGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    final connector = context.watch<MeshCoreConnector>();
+    return ExpansionTile(
+      key: PageStorageKey(('filtered-group', channel.storageId,
+        messages.isEmpty ? null : channelPostIdentity(messages.first))),
       leading: const Icon(Icons.filter_alt_outlined),
-      title: Text(context.l10n.messageFilter_ghostMany(messages.length)),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => showFilteredChannelMessages(
-        context,
-        channel,
-        group: messages,
-      ),
+      title: Text(context.l10n.messageFilter_ghostMany(messages.length),
+        style: Theme.of(context).textTheme.bodySmall),
+      expandedAlignment: Alignment.centerLeft,
+      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final message in messages)
+          FilteredChannelMessage(
+            key: ValueKey(channelPostIdentity(message)),
+            message: message,
+            channel: channel,
+            connector: connector,
+            inline: true,
+          ),
+      ],
     );
   }
 }

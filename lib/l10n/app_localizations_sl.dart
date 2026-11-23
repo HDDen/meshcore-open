@@ -11046,6 +11046,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get messageFilter_unblockSender => 'Unblock sender';
 
   @override
+  String get channelRegionFilter_noFilter => 'No filter';
+
+  @override
   String get channelRegionFilter_menu => 'Region filter';
 
   @override

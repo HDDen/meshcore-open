@@ -5414,6 +5414,7 @@
   "messageFilter_ruleFieldMcmpKey": "MCMP key",
   "messageFilter_invalidMcmpKey": "Enter a 64-character hexadecimal public key",
   "messageFilter_unblockSender": "Unblock sender",
+  "channelRegionFilter_noFilter": "No filter",
   "channelRegionFilter_menu": "Region filter",
   "channelRegionFilter_title": "Show messages from regions",
   "channelRegionFilter_noneAllowed": "None",

@@ -75,6 +75,23 @@ void main() {
     expect(opened, 3);
   });
 
+  testWidgets('no-filter label truncates while the region stays visible', (tester) async {
+    await tester.pumpWidget(_app(const SizedBox(width: 135,
+      child: ChannelRegionFilterLine(
+        regionHeader: 'Region: north', knownRegions: [], hidden: {},
+        onConfigure: _noop,
+      ),
+    )));
+    final label = tester.renderObject<RenderParagraph>(find.text('No filter'));
+    expect(label.overflow, TextOverflow.ellipsis);
+    expect(label.didExceedMaxLines, isTrue);
+    final region = tester.renderObject<RenderParagraph>(
+      find.byKey(const ValueKey('channel-header-region')),
+    );
+    expect(region.didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a region wider than the header keeps its natural single-line width', (tester) async {
     await tester.pumpWidget(_app(const SizedBox(width: 80,
       child: ChannelRegionFilterLine(
@@ -100,6 +117,7 @@ void main() {
     ));
     await tester.pumpWidget(_app(line({})));
     expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
+    expect(find.text('No filter'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('channel-region-filter')));
     expect(opened, 1);
     await tester.pumpWidget(_app(line({'', ChannelRegionFilter.unknown})));

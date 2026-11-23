@@ -134,7 +134,7 @@ void main() {
     expect(body(first.messageId), findsOneWidget);
     expect(body(second.messageId), findsOneWidget);
     expect(find.text(l10n.messageFilter_notSpam), findsNWidgets(2));
-    expect(find.text(reply.text), findsNothing);
+    expect(find.text(reply.text), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

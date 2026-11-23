@@ -77,10 +77,25 @@ class ChannelRegionFilterLine extends StatelessWidget {
         .where((region) => !hidden.contains(region)).toList();
     final first = allowed.isEmpty ? context.l10n.channelRegionFilter_noneAllowed
         : _regionLabel(context, allowed.first);
-    final label = '$first${allowed.length > 1 ? ' +${allowed.length - 1}' : ''}';
+    final label = active
+        ? '$first${allowed.length > 1 ? ' +${allowed.length - 1}' : ''}'
+        : context.l10n.channelRegionFilter_noFilter;
     return DefaultTextStyle.merge(
       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
-      child: SingleChildScrollView(
+      child: LayoutBuilder(builder: (context, constraints) {
+        final regionText = TextPainter(
+          text: TextSpan(text: '$regionHeader •',
+            style: DefaultTextStyle.of(context).style),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+          maxLines: 1,
+        )..layout();
+        final labelWidth = constraints.hasBoundedWidth
+            ? (constraints.maxWidth - regionText.width - 16)
+                .clamp(0.0, double.infinity).toDouble()
+            : double.infinity;
+        regionText.dispose();
+        return SingleChildScrollView(
         key: const ValueKey('channel-header-region-scroll'),
         scrollDirection: Axis.horizontal,
         child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -93,15 +108,21 @@ class ChannelRegionFilterLine extends StatelessWidget {
               onTap: onConfigure,
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(active ? Icons.filter_alt : Icons.filter_alt_outlined, size: 13),
-                if (active) ...[
-                  const SizedBox(width: 3),
-                  Text(label, maxLines: 1, softWrap: false),
-                ],
+                const SizedBox(width: 3),
+                if (active)
+                  Text(label, maxLines: 1, softWrap: false)
+                else
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: labelWidth),
+                    child: Text(label, maxLines: 1, softWrap: false,
+                      overflow: TextOverflow.ellipsis),
+                  ),
               ]),
             ),
           ),
         ]),
-      ),
+        );
+      }),
     );
   }
 }

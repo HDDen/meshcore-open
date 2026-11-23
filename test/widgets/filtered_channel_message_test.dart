@@ -80,6 +80,7 @@ Future<AppLocalizations> _open(
   WidgetTester tester,
   _Connector connector, {
   required FilterVerdict? verdict,
+  FilterVerdict hiddenVerdict = _manual,
 }) async {
   final channel = Channel.fromHex(0, 'Test', Channel.publicChannelPsk);
   final now = DateTime.utc(2026);
@@ -90,7 +91,7 @@ Future<AppLocalizations> _open(
     timestamp: now,
     receivedAt: now,
     isOutgoing: false,
-    filterVerdict: verdict == null ? _manual : null,
+    filterVerdict: verdict == null ? hiddenVerdict : null,
   );
   await tester.pumpWidget(
     MaterialApp(
@@ -193,6 +194,69 @@ void main() {
     expect(find.text('Alice: Example post'), findsNothing);
   });
 
+  testWidgets('sender-rule content does not repeat the sender detail', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(PrefsManager.reset);
+    await tester.runAsync(PrefsManager.initialize);
+    final service = MessageFilterService(store: _Store())..load();
+    final connector = _Connector(messageFilterService: service);
+    addTearDown(service.dispose);
+    addTearDown(connector.dispose);
+    final l10n = await _open(tester, connector, verdict: null,
+      hiddenVerdict: const FilterVerdict(reason: FilterReason.senderRule, detail: 'Alice'));
+    expect(find.text(l10n.messageFilter_ruleFieldSender), findsNothing);
+    expect(find.text('Alice'), findsOneWidget);
+    expect(find.text('Alice: Example post'), findsOneWidget);
+  });
+
+  testWidgets('filtered group expands inline with compact messages and collapses', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(PrefsManager.reset);
+    await tester.runAsync(PrefsManager.initialize);
+    final service = MessageFilterService(store: _Store())..load();
+    final connector = _Connector(messageFilterService: service);
+    addTearDown(service.dispose);
+    addTearDown(connector.dispose);
+    final channel = Channel.fromHex(0, 'Test', Channel.publicChannelPsk);
+    final posts = [for (final id in ['First', 'Second']) ChannelMessage(
+      messageId: id, channelIndex: channel.index, senderName: 'Alice', text: id,
+      timestamp: DateTime.utc(2026), receivedAt: DateTime.utc(2026),
+      isOutgoing: false, filterVerdict: _manual,
+    )];
+    await tester.pumpWidget(ChangeNotifierProvider<MeshCoreConnector>.value(
+      value: connector,
+      child: MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ListView(children: [
+          FilteredChannelGroup(messages: posts, channel: channel),
+          const Text('Visible neighbour'),
+        ])),
+      ),
+    ));
+    final group = find.byType(ExpansionTile);
+    final l10n = AppLocalizations.of(tester.element(group));
+    final title = find.text(l10n.messageFilter_ghostMany(2));
+    final compactStyle = Theme.of(tester.element(group)).textTheme.bodySmall;
+    expect(tester.widget<Text>(title).style, compactStyle);
+    expect(find.text('Alice: First'), findsNothing);
+    await tester.tap(title);
+    await tester.pumpAndSettle();
+    expect(find.byType(ExpansionTile), findsOneWidget);
+    expect(find.text('Visible neighbour'), findsOneWidget);
+    expect(find.text('Alice: First'), findsOneWidget);
+    expect(find.text('Alice: Second'), findsOneWidget);
+    expect(find.text(l10n.messageFilter_notSpam), findsNWidgets(2));
+    for (final text in tester.widgetList<SelectableText>(find.byType(SelectableText))) {
+      expect(text.style, compactStyle);
+    }
+    await tester.tap(title);
+    await tester.pumpAndSettle();
+    expect(find.text('Alice: First'), findsNothing);
+    expect(find.text('Visible neighbour'), findsOneWidget);
+  });
+
   testWidgets('U34 baseline: review keeps a shared post separate and read-only', (
     tester,
   ) async {
@@ -229,12 +293,16 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: FilteredChannelGroup(messages: [shared], channel: channel),
+            body: Builder(builder: (context) => TextButton(
+              key: const ValueKey('open-filtered-review'),
+              onPressed: () => showFilteredChannelMessages(context, channel, group: [shared]),
+              child: const Text('Open review'),
+            )),
           ),
         ),
       ),
     );
-    await tester.tap(find.byType(FilteredChannelGroup));
+    await tester.tap(find.byKey(const ValueKey('open-filtered-review')));
     await tester.pumpAndSettle();
 
     final tile = find.byType(FilteredChannelMessage);
@@ -293,11 +361,15 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: FilteredChannelGroup(messages: posts, channel: channel)),
+          home: Scaffold(body: Builder(builder: (context) => TextButton(
+            key: const ValueKey('open-filtered-review'),
+            onPressed: () => showFilteredChannelMessages(context, channel, group: posts),
+            child: const Text('Open review'),
+          ))),
         ),
       ),
     );
-    await tester.tap(find.byType(FilteredChannelGroup));
+    await tester.tap(find.byKey(const ValueKey('open-filtered-review')));
     await tester.pumpAndSettle();
     final appBar = find.byType(AppBar);
     final l10n = AppLocalizations.of(tester.element(appBar));

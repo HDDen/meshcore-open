@@ -4189,6 +4189,7 @@
   "messageFilter_ruleFieldMcmpKey": "MCMP-ключ",
   "messageFilter_invalidMcmpKey": "Введите открытый ключ из 64 hex-символов",
   "messageFilter_unblockSender": "Разблокировать отправителя",
+  "channelRegionFilter_noFilter": "Без фильтра",
   "channelRegionFilter_menu": "Фильтр по региону",
   "channelRegionFilter_title": "Показывать сообщения с регионом",
   "channelRegionFilter_noneAllowed": "Нет",

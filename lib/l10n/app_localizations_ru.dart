@@ -11081,6 +11081,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messageFilter_unblockSender => 'Разблокировать отправителя';
 
   @override
+  String get channelRegionFilter_noFilter => 'Без фильтра';
+
+  @override
   String get channelRegionFilter_menu => 'Фильтр по региону';
 
   @override
