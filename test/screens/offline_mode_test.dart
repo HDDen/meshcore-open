@@ -45,6 +45,8 @@ import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/offline_composer_bar.dart';
 import 'package:meshcore_open/widgets/connect_sheet.dart';
 import 'package:meshcore_open/widgets/offline_history_button.dart';
+import 'package:meshcore_open/screens/bookmarks_screen.dart';
+import 'package:meshcore_open/models/bookmarked_message.dart';
 import 'package:meshcore_open/helpers/legacy_offline_access.dart';
 
 // No private runtime or network is needed to build the contact header menu.
@@ -310,6 +312,63 @@ void main() {
       expect(find.byType(ChannelsScreen), findsNothing);
       expect(connector.isLegacyOfflineSession, isFalse);
       expect(connector.hasRadioData, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
+  for (final channelBookmark in [false, true]) {
+    testWidgets('bookmark opens original ${channelBookmark ? "channel" : "DM"}; copy and remove stay independent', (tester) async {
+      final connector = await _offlineConnector(tester);
+      final channel = connector.channels.single;
+      final contact = connector.contacts.single;
+      final bookmark = channelBookmark
+          ? BookmarkedMessage.fromChannel(message: connector.getChannelMessages(channel).single,
+              channelId: channel.storageId!, channelName: channel.name, senderName: 'Bob')
+          : BookmarkedMessage.fromContact(message: connector.getMessages(contact).first,
+              contactKey: contact.publicKeyHex, contactName: contact.name, senderName: 'Alice');
+      await tester.runAsync(() => connector.setBookmarkedMessage(bookmark, isBookmarked: true));
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') copied = (call.arguments as Map)['text'] as String;
+        return null;
+      });
+      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+      await tester.pumpWidget(await _app(tester, connector, const BookmarksScreen()));
+      Future<void> until(bool Function() ready) async {
+        for (var i = 0; i < 100 && !ready(); i++) {
+          await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 10)));
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+        expect(ready(), isTrue);
+      }
+      await until(() => find.byTooltip(_l10n.common_copy).evaluate().isNotEmpty);
+      await tester.tap(find.byTooltip(_l10n.common_copy));
+      await _settle(tester);
+      expect(copied, bookmark.text);
+      expect(find.byType(BookmarksScreen), findsOneWidget);
+      expect(find.byType(ChatScreen), findsNothing);
+      expect(find.byType(ChannelChatScreen), findsNothing);
+      await tester.tap(find.byType(Card).first);
+      await _settle(tester);
+      if (channelBookmark) {
+        expect(tester.widget<ChannelChatScreen>(find.byType(ChannelChatScreen)).initialMessageId, bookmark.messageId);
+      } else {
+        final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
+        expect(chat.initialMessageId, bookmark.messageId);
+        expect(chat.showRadioHistoryInitially, isTrue);
+      }
+      expect(find.text(bookmark.text), findsWidgets);
+      await tester.pump(const Duration(seconds: 2));
+      Navigator.of(tester.element(find.byType(channelBookmark ? ChannelChatScreen : ChatScreen))).pop();
+      await _settle(tester);
+      await tester.tap(find.byTooltip(_l10n.bookmarks_remove));
+      await until(() => find.text(_l10n.bookmarks_empty).evaluate().isNotEmpty);
+      expect(find.byType(BookmarksScreen), findsOneWidget);
+      expect(find.byType(ChatScreen), findsNothing);
+      expect(find.byType(ChannelChatScreen), findsNothing);
+      expect(await tester.runAsync(connector.loadBookmarkedMessages), isEmpty);
+      await tester.pump(const Duration(seconds: 2));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
