@@ -7,6 +7,7 @@ import '../helpers/legacy_offline_access.dart';
 import '../l10n/l10n.dart';
 import '../screens/channels_screen.dart';
 import '../utils/app_route_observer.dart';
+import '../utils/app_logger.dart';
 
 class OfflineHistoryButton extends StatefulWidget {
   final MeshCoreConnector connector;
@@ -63,13 +64,21 @@ class _OfflineHistoryButtonState extends State<OfflineHistoryButton>
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: LegacyOfflineAccess.instance,
+    listenable: Listenable.merge([
+      LegacyOfflineAccess.instance,
+      widget.connector,
+    ]),
     builder: (context, _) => _buildButton(context),
   );
 
   Widget _buildButton(BuildContext context) {
-    if (!LegacyOfflineAccess.instance.enabled) return const SizedBox.shrink();
-    final sources = widget.connector.offlineHistorySources;
+    final legacy = LegacyOfflineAccess.instance.enabled;
+    final sources = legacy
+        ? widget.connector.offlineHistorySources
+        : const <OfflineHistorySource>[];
+    final available = legacy
+        ? sources.isNotEmpty
+        : widget.connector.hasRadioData || widget.connector.lastRadio != null;
     return SizedBox(
       height: 56,
       child: Align(
@@ -82,9 +91,11 @@ class _OfflineHistoryButtonState extends State<OfflineHistoryButton>
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              onPressed: sources.isEmpty || _isLoading
+              onPressed: !available || _isLoading
                   ? null
-                  : () => _openOfflineHistory(sources),
+                  : legacy
+                  ? () => _openOfflineHistory(sources)
+                  : _openSavedRadio,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -110,6 +121,44 @@ class _OfflineHistoryButtonState extends State<OfflineHistoryButton>
         ),
       ),
     );
+  }
+
+  Future<void> _openSavedRadio() async {
+    _setLoading(true);
+    var entered = false;
+    try {
+      await widget.connector.stopScan();
+      if (!mounted) return;
+      final state = widget.connector.state;
+      if (state == MeshCoreConnectionState.connecting ||
+          state == MeshCoreConnectionState.connected ||
+          state == MeshCoreConnectionState.disconnecting) {
+        await widget.connector.disconnect(manual: true);
+      } else {
+        widget.connector.cancelAutoReconnect();
+      }
+      if (!mounted) return;
+      if (!widget.connector.hasRadioData) {
+        await widget.connector.restoreLastRadio();
+      }
+      entered = widget.connector.hasRadioData;
+    } catch (error) {
+      appLogger.warn(
+        'Could not open saved radio data: ${error.runtimeType}',
+        tag: 'Offline',
+      );
+    } finally {
+      _setLoading(false);
+    }
+    if (!mounted || !entered) return;
+    _offlineSessionActive = true;
+    widget.onOpened?.call();
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const ChannelsScreen()),
+    );
+    if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
+      await _finishOfflineSession();
+    }
   }
 
   Future<void> _openOfflineHistory(List<OfflineHistorySource> sources) async {

@@ -8,8 +8,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_tag.dart';
-import 'screens/channels_screen.dart';
 import 'helpers/legacy_offline_binding.dart';
+import 'helpers/startup_tcp_autoconnect.dart';
 import 'MCOtxt/mcotxt.dart';
 import 'package:provider/provider.dart';
 
@@ -711,7 +711,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
   late final LegacyOfflineBinding _legacyOffline;
   late final Widget _home = (PlatformInfo.isWeb && !PlatformInfo.isChrome)
       ? const ChromeRequiredScreen()
-      : widget.connector.hasRadioData ? const ChannelsScreen() : const ScannerScreen();
+      : const ScannerScreen();
 
   @override
   void initState() {
@@ -795,6 +795,7 @@ class _MeshCoreAppState extends State<MeshCoreApp> with WidgetsBindingObserver {
           reason: 'startup',
         ),
       );
+      if (mounted) { unawaited(autoconnectSavedTcpRadio(widget.connector)); }
       unawaited(_showMessageHistoryMigrationWarning());
       if (widget.connector.isSessionReady) _maybeScheduleTxPowerRecovery();
       _maybeScheduleDirectEchoRecoveryPrompt();

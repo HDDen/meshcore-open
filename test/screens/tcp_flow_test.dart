@@ -20,6 +20,9 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   MeshCoreConnectionState initialState = MeshCoreConnectionState.disconnected;
   MeshCoreTransportType initialTransport = MeshCoreTransportType.bluetooth;
   String? initialEndpoint;
+  bool savedRadioData = false;
+  @override
+  bool get hasRadioData => savedRadioData;
   int connectTcpCalls = 0;
   int stopScanCalls = 0;
   Completer<void>? pendingScanStop;
@@ -107,6 +110,41 @@ void main() {
     ConnectionTransportPreferenceStore.resetCache();
     SharedPreferences.setMockInitialValues({});
     await PrefsManager.initialize();
+  });
+
+  testWidgets('scanner stays visible with saved data and offers upstream offline entry', (tester) async {
+    await ConnectionTransportPreferenceStore().save(ConnectionTransportPreferenceStore.tcp);
+    final connector = _FakeMeshCoreConnector()..savedRadioData = true;
+    await tester.pumpWidget(_buildTestApp(connector: connector, child: const ScannerScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byType(ScannerScreen), findsOneWidget);
+    expect(find.byType(TcpScreen), findsNothing);
+    final l10n = AppLocalizations.of(tester.element(find.byType(ScannerScreen)));
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, l10n.app_offline)).onPressed, isNotNull);
+    expect(connector.connectTcpCalls, 0);
+    connector.initialTransport = MeshCoreTransportType.tcp;
+    connector.initialState = MeshCoreConnectionState.connected;
+    connector.notifyListeners();
+    await tester.pumpAndSettle();
+    // A TCP socket without SELF_INFO must not leave the scanner yet.
+    expect(find.byType(ScannerScreen), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 60));
+  });
+
+  testWidgets('saved offline data does not block an explicit TCP connection', (tester) async {
+    final connector = _FakeMeshCoreConnector()..savedRadioData = true;
+    await tester.pumpWidget(_buildTestApp(connector: connector, child: const TcpScreen()));
+    await tester.pumpAndSettle();
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '192.168.1.77');
+    await tester.enterText(fields.at(1), '5000');
+    await tester.tap(find.byKey(const Key('tcp_connect_button')));
+    await tester.pumpAndSettle();
+    expect(connector.connectTcpCalls, 1);
+    expect(connector.lastHost, '192.168.1.77');
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 60));
   });
 
   testWidgets('TcpScreen uses localized TCP copy', (tester) async {

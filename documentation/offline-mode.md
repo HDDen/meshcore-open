@@ -4,7 +4,8 @@ When no radio is connected, the app keeps showing the last radio you connected t
 
 ## What you see
 
-- **Launch.** If a radio has connected before, the app opens on Channels instead of the scanner. With no remembered radio it opens on the scanner, as before.
+- **Launch.** The app opens the scanner. Its bottom **Offline** button opens the last radio's saved Channels in the upstream read-only mode. The button is disabled until a radio profile has been saved. If `legacyOffline` is unlocked, the same button opens the former saved-history picker instead.
+- **TCP autoconnect at launch.** If the last successfully connected radio used TCP and TCP Autoconnect is enabled, the app attempts that radio's saved host and port while showing the scanner; Channels opens after the TCP handshake. It does not use a subsequently edited, unconnected address. If the connection fails, the saved data stays visible. Web, explicit legacy offline sessions and manual disconnections do not trigger this startup attempt.
 - **Contacts, channels, messages, unread counts and the map** show that radio's saved data. Chats open, scroll, search and jump as usual.
 - **App bar.** The battery and signal indicators are replaced by a **Connect** button (icon only on narrow screens). The subtitle reads "Offline · *radio name*". While the app is connecting, or a dropped link will be retried, a "Reconnecting…" chip shows instead; tapping it opens the same sheet.
 - **Message box.** Each chat replaces the message box with "Connect to a radio to send messages" and a Connect button. Text you typed before the link dropped is kept and comes back when the radio reconnects.

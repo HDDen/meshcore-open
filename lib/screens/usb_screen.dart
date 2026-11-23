@@ -298,7 +298,7 @@ class _UsbScreenState extends State<UsbScreen> with WidgetsBindingObserver {
         .toList();
     final canConnect =
         !isConnecting &&
-        !_connector.isOfflineMode &&
+        !_connector.isLegacyOfflineSession &&
         connector.state == MeshCoreConnectionState.disconnected;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -408,7 +408,7 @@ class _UsbScreenState extends State<UsbScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _pollHotPlug() async {
-    if (_isLoadingPorts || _connector.isOfflineMode) return;
+    if (_isLoadingPorts || _connector.isLegacyOfflineSession) return;
     if (!mounted) return;
     // Don't poll while connecting or connected.
     if (_connector.state != MeshCoreConnectionState.disconnected) return;

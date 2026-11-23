@@ -130,7 +130,7 @@ class _TcpScreenState extends State<TcpScreen>
   void didPopNext() => _scheduleTcpNavigation();
 
   void _scheduleTcpNavigation() {
-    if (!mounted || _tcpNavigationScheduled ||
+    if (!mounted || _isOpeningOfflineHistory || _tcpNavigationScheduled ||
         _handedOffToChannels || _connectionNavigation.hasNavigated ||
         !_connector.isTcpTransportConnected ||
         !_connector.hasCompletedSelfInfoHandshake) {
@@ -796,7 +796,7 @@ class _TcpScreenState extends State<TcpScreen>
         !_autoconnectEnabled ||
         _isAutoconnecting ||
         _isOpeningOfflineHistory ||
-        _connector.isOfflineMode) {
+        _connector.isLegacyOfflineSession) {
       return;
     }
     if (startup) {
@@ -833,7 +833,7 @@ class _TcpScreenState extends State<TcpScreen>
 
   Future<void> _connectTcp({bool showErrors = true}) async {
     if (_isOpeningOfflineHistory ||
-        _connector.isOfflineMode ||
+        _connector.isLegacyOfflineSession ||
         _connector.state == MeshCoreConnectionState.connecting ||
         _connector.state == MeshCoreConnectionState.connected ||
         _connector.state == MeshCoreConnectionState.disconnecting) {

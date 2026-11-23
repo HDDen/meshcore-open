@@ -75,7 +75,10 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
           // back to this screen, and the TCP screen is no longer on the stack.
           (_connector.activeTransport == MeshCoreTransportType.bluetooth ||
               _connector.activeTransport == MeshCoreTransportType.tcp) &&
+          (_connector.activeTransport != MeshCoreTransportType.tcp ||
+              _connector.hasCompletedSelfInfoHandshake) &&
           isCurrentRoute &&
+          !_isOpeningOfflineHistory &&
           !_changedNavigation) {
         _changedNavigation = true;
         navigateToMainAfterConnect(context);
@@ -127,7 +130,10 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
     // the channels now rather than at the next notification. A user who
     // backed out of them keeps this screen: the flag resets on a
     // disconnect only.
-    if (_connector.state == MeshCoreConnectionState.connected &&
+    if (!_isOpeningOfflineHistory &&
+        _connector.state == MeshCoreConnectionState.connected &&
+        (_connector.activeTransport != MeshCoreTransportType.tcp ||
+            _connector.hasCompletedSelfInfoHandshake) &&
         (_connector.activeTransport == MeshCoreTransportType.bluetooth ||
             _connector.activeTransport == MeshCoreTransportType.tcp) &&
         !_changedNavigation) {
@@ -148,7 +154,7 @@ class _ScannerScreenState extends State<ScannerScreen> with RouteAware {
   }
 
   void _openPreferredTransport() {
-    if (!mounted || _openedPreferredTransport) return;
+    if (!mounted || _openedPreferredTransport || _connector.hasRadioData) return;
     _openedPreferredTransport = true;
     final transport = ConnectionTransportPreferenceStore().lastTransport;
 

@@ -44,6 +44,8 @@ import 'package:meshcore_open/storage/message_store.dart';
 import 'package:meshcore_open/theme/mesh_theme.dart';
 import 'package:meshcore_open/widgets/offline_composer_bar.dart';
 import 'package:meshcore_open/widgets/connect_sheet.dart';
+import 'package:meshcore_open/widgets/offline_history_button.dart';
+import 'package:meshcore_open/helpers/legacy_offline_access.dart';
 
 // No private runtime or network is needed to build the contact header menu.
 class _ContactMenuSections extends ChangeNotifier implements SettingsSectionsService {
@@ -275,6 +277,43 @@ void main() {
     await _seedRadio();
   });
   tearDown(history.tearDown);
+
+  for (final legacy in [false, true]) {
+    testWidgets('offline entry chooses ${legacy ? "legacy picker" : "saved upstream radio"}', (tester) async {
+      LegacyOfflineAccess.instance.setEnabled(legacy);
+      addTearDown(() => LegacyOfflineAccess.instance.setEnabled(false));
+      final connector = await _offlineConnector(tester);
+      await tester.pumpWidget(await _app(tester, connector,
+        Scaffold(body: OfflineHistoryButton(connector: connector))));
+      await _settle(tester);
+      final offline = find.widgetWithText(FilledButton, _l10n.app_offline);
+      expect(tester.widget<FilledButton>(offline).onPressed, isNotNull);
+      await tester.tap(offline);
+      await _settle(tester);
+      if (legacy) {
+        expect(find.text(_l10n.app_offline_sharedMode), findsOneWidget);
+        expect(find.byType(ChannelsScreen), findsNothing);
+        await tester.runAsync(() async {
+          await tester.tap(find.ancestor(of: find.byIcon(Icons.memory_outlined).first, matching: find.byType(ListTile)));
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        });
+        await _settle(tester);
+      } else {
+        expect(find.text(_l10n.app_offline_sharedMode), findsNothing);
+      }
+      expect(find.byType(ChannelsScreen), findsOneWidget);
+      expect(find.text('Base Camp'), findsOneWidget);
+      expect(connector.isLegacyOfflineSession, legacy);
+      expect(connector.isOfflineMode, isTrue);
+      Navigator.of(tester.element(find.byType(ChannelsScreen))).pop();
+      await _settle(tester);
+      expect(find.byType(ChannelsScreen), findsNothing);
+      expect(connector.isLegacyOfflineSession, isFalse);
+      expect(connector.hasRadioData, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
 
   testWidgets('Channels screen stays put offline with saved data and a '
       'Connect control', (tester) async {
