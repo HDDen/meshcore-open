@@ -1223,6 +1223,8 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               icon: const Icon(Icons.more_vert),
               onSelected: (value) {
                 switch (value) {
+                  case 'regionFilter':
+                    unawaited(_configureRegionFilter(context.read<MeshCoreConnector>()));
                   case 'showBookmarks':
                     setState(() => _showBookmarkedOnly = !_showBookmarkedOnly);
                   case 'searchMessages':
@@ -1273,6 +1275,13 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'regionFilter',
+                  child: PopupMenuRow(
+                    icon: Icons.filter_alt_outlined,
+                    text: context.l10n.channelRegionFilter_menu,
+                  ),
+                ),
                 PopupMenuItem(value: 'showBookmarks', child: PopupMenuRow(
                   icon: _showBookmarkedOnly ? Icons.bookmark : Icons.bookmark_border,
                   text: context.l10n.chat_showBookmarks,

@@ -14,7 +14,7 @@ Map<String, Offset> coincidentRepeaterOffsets(
   Offset Function(LatLng)? project,
   double worldWidth = 0,
 }) {
-  if (zoom < maxZoom - 3 || spacing <= 0) {
+  if (zoom < maxZoom - 5 || spacing <= 0) {
     return const {};
   }
   final groups = <List<String>>[];

@@ -37,7 +37,7 @@ void main() {
       ];
       await tester.pumpWidget(MaterialApp(home: Scaffold(body: FlutterMap(
         mapController: controller,
-        options: const MapOptions(initialCenter: point, initialZoom: 14.9, maxZoom: 18),
+        options: const MapOptions(initialCenter: point, initialZoom: 12.9, maxZoom: 18),
         children: [CoincidentRepeaterMarkerLayer(
           markers: markers, repeaterKeys: const {'a', 'b', 'c'}, maxZoom: 18,
         )],
@@ -46,7 +46,7 @@ void main() {
       Marker marker(String key) => tester.widget<MarkerLayer>(find.byType(MarkerLayer))
           .markers.singleWhere((m) => m.key == ValueKey(key));
       expect(marker('node:a'), same(markers[0]));
-      for (final zoom in [15.0, 18.0]) {
+      for (final zoom in [13.0, 14.0, 15.0, 16.0, 17.0, 18.0]) {
         controller.move(point, zoom);
         await tester.pump();
         for (final id in ['a', 'b', 'c']) {
@@ -68,8 +68,8 @@ void main() {
             closeTo(node.alignment!.y * node.height / 2, 0.001));
         expect(marker('node:chat'), same(markers.last));
       }
-      expect(selected, ['a', 'b', 'c', 'a', 'b', 'c']);
-      controller.move(point, 14.9);
+      expect(selected, [for (var level = 0; level < 6; level++) ...['a', 'b', 'c']]);
+      controller.move(point, 12.9);
       await tester.pump();
       expect(marker('node:a'), same(markers[0]));
       await tester.pumpWidget(const SizedBox.shrink());

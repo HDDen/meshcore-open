@@ -39,7 +39,7 @@ class _CoincidentRepeaterMarkerLayerState
   Widget build(BuildContext context) {
     final camera = MapCamera.of(context);
     final zoom = camera.zoom;
-    final active = zoom >= widget.maxZoom - 3;
+    final active = zoom >= widget.maxZoom - 5;
     final spreadZoom = active ? zoom : null;
     if (!identical(_previous, widget.markers) ||
         _spreadZoom != spreadZoom ||

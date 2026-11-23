@@ -18467,6 +18467,12 @@ abstract class AppLocalizations {
   /// **'Unblock sender'**
   String get messageFilter_unblockSender;
 
+  /// No description provided for @channelRegionFilter_menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Region filter'**
+  String get channelRegionFilter_menu;
+
   /// No description provided for @channelRegionFilter_title.
   ///
   /// In en, this message translates to:

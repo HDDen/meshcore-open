@@ -6,10 +6,10 @@ import 'package:meshcore_open/helpers/coincident_repeater_offsets.dart';
 void main() {
   const point = LatLng(45, 39);
 
-  test('only the four highest zoom levels spread identical coordinates', () {
+  test('only the six highest zoom levels spread identical coordinates', () {
     final positions = {'b': point, 'a': point, 'alone': const LatLng(46, 39)};
-    expect(coincidentRepeaterOffsets(positions, zoom: 14.999, maxZoom: 18), isEmpty);
-    for (final zoom in [15.0, 16.0, 17.0, 18.0]) {
+    expect(coincidentRepeaterOffsets(positions, zoom: 12.999, maxZoom: 18), isEmpty);
+    for (final zoom in [13.0, 14.0, 15.0, 16.0, 17.0, 18.0]) {
       final offsets = coincidentRepeaterOffsets(positions, zoom: zoom, maxZoom: 18);
       expect(offsets.keys, unorderedEquals(['a', 'b']));
       expect((offsets['a']! - offsets['b']!).distance, closeTo(42, 0.001));
