@@ -208,7 +208,8 @@ void main() {
       final tiles = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
       int index(String label) => tiles.indexWhere((tile) =>
           tile.title is Text && (tile.title! as Text).data == label);
-      final block = index(legacy ? l10n.chat_blockSender : l10n.chat_selectMessages);
+      final block = index(legacy ? l10n.chat_blockSender : l10n.chat_bookmark);
+      expect(index(l10n.chat_bookmark), index(l10n.chat_selectMessages) - 1);
       expect(index(l10n.chat_selectMessages), index(l10n.common_delete) - 1);
       final delete = tiles[index(l10n.common_delete)];
       expect(delete.iconColor, legacy ? const Color(0xFF7856AB) : isNull);

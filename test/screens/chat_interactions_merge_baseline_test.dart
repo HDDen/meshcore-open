@@ -38,6 +38,7 @@ import 'package:meshcore_open/widgets/chat_additional_actions_menu.dart';
 import 'package:meshcore_open/widgets/contact_chat_composer.dart';
 import 'package:meshcore_open/widgets/contact_chat_title.dart';
 import 'package:meshcore_open/widgets/message_search_sheet.dart';
+import 'package:meshcore_open/widgets/message_resend_badge.dart';
 import 'package:meshcore_open/widgets/swipe_reply_bubble.dart';
 import 'package:meshcore_open/widgets/tx_power_boost_badge.dart';
 import 'package:provider/provider.dart';
@@ -383,6 +384,13 @@ void main() {
       addTearDown(settings.dispose);
       addTearDown(scale.dispose);
 
+      // Unmount consumers before their externally owned notifiers are disposed,
+      // even when an expectation fails before the normal cleanup below.
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(seconds: 2));
+      });
+
       const boostedText = 'Outgoing message sent with a power boost';
       const regularText = 'Outgoing message sent with normal power';
       const lnaText = 'Outgoing message sent with a power boost and LNA';
@@ -469,14 +477,23 @@ void main() {
       )).color;
       expect(iconColor(lnaBadge), Colors.red);
       expect(iconColor(badge), tester.widget<TxPowerBoostBadge>(badge).color);
-      final metadata = tester.element(badge).findAncestorWidgetOfExactType<Wrap>()!;
-      final previous = metadata.children.indexWhere(
+      final List<Widget> details;
+      if (inChannel) {
+        final resend = find.ancestor(of: badge, matching: find.byType(MessageResendBadge));
+        expect(resend, findsOneWidget);
+        final retry = tester.widget<MessageResendBadge>(resend);
+        expect(retry.resends, 2);
+        expect(retry.showAttempts, isTrue);
+        expect(retry.boosted, isTrue);
+        details = tester.element(badge).findAncestorWidgetOfExactType<Row>()!.children;
+      } else {
+        details = tester.element(badge).findAncestorWidgetOfExactType<Wrap>()!.children;
+      }
+      final previous = details.indexWhere(
         (widget) => widget is Text && widget.data == (inChannel ? '3' : '1.2s'),
       );
       expect(previous, isNonNegative);
-      final boostIndex = metadata.children.indexWhere(
-        (widget) => widget is TxPowerBoostBadge,
-      );
+      final boostIndex = details.indexWhere((widget) => widget is TxPowerBoostBadge);
       expect(boostIndex, inChannel ? greaterThan(previous) : previous + 1);
       if (!inChannel) {
         final activeBubble = find.ancestor(

@@ -113,7 +113,12 @@ void main() {
           final context = tester.element(find.byType(ScannerScreen));
           final l10n = AppLocalizations.of(context);
           expect(find.byType(OfflineHistoryButton), findsOneWidget);
-          expect(find.text(l10n.app_offline), findsNothing);
+          expect(find.text(l10n.app_offline), findsOneWidget);
+          final offlineButton = find.descendant(
+            of: find.byType(OfflineHistoryButton),
+            matching: find.byType(FilledButton),
+          );
+          expect(tester.widget<FilledButton>(offlineButton).onPressed, isNull);
           expect(find.text(l10n.scanner_scan), findsOneWidget);
           expect(network.clientCreations, 0);
           expect(tester.takeException(), isNull);
