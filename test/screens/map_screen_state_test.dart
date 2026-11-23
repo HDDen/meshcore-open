@@ -169,6 +169,15 @@ class _PathLocationConnector extends _LocationConnector {
   }
 }
 
+class _DiscoveryBusyWardrive extends WardriveService {
+  _DiscoveryBusyWardrive(super.connector, this.sending);
+  final bool sending;
+  @override
+  bool get isSendingDiscovery => sending;
+  @override
+  bool get isAwaitingDiscoveryResponse => !sending;
+}
+
 class _PhoneLocationWardrive extends WardriveService {
   _PhoneLocationWardrive(super.connector, this.phonePosition);
 
@@ -407,6 +416,30 @@ void main() {
       await _Harness.unmount(tester);
     }
   });
+
+  for (final sending in [false, true]) {
+    testWidgets('discovery spinner inherits FAB icon color (sending=$sending)', (tester) async {
+      const foreground = Color(0xFF123456);
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)
+          .copyWith(onPrimaryContainer: Colors.white),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Colors.white, foregroundColor: foreground),
+      );
+      await _Harness.pump(tester, nodes: [], zoom: 12,
+        screenOverride: Theme(data: theme, child: const MapScreen()),
+        wardriveFactory: (connector) => _DiscoveryBusyWardrive(connector, sending));
+      final discovery = find.byWidgetPredicate((widget) =>
+        widget is FloatingActionButton && widget.heroTag == 'wardrive_discovery');
+      final spinner = find.descendant(of: discovery,
+        matching: find.byType(CircularProgressIndicator));
+      expect(spinner, findsOneWidget);
+      expect(tester.widget<CircularProgressIndicator>(spinner).color, foreground);
+      final car = find.byIcon(Icons.directions_car_filled);
+      expect(IconTheme.of(tester.element(car)).color, foreground);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('leaving the map clears wardrive state after widget tree unlock', (tester) async {
     try {

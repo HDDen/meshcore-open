@@ -1831,9 +1831,11 @@ class _MapScreenState extends State<MapScreen>
                 ? SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    child: Builder(
+                      builder: (context) => CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: IconTheme.of(context).color,
+                      ),
                     ),
                   )
                 : const Icon(Icons.radar),
