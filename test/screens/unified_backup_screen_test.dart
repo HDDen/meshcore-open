@@ -7,6 +7,8 @@ import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/helpers/portable_app_settings.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/theme/mcoa_theme_style.dart';
 import 'package:meshcore_open/helpers/backup_node_identity.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
@@ -106,6 +108,7 @@ void main() {
     WidgetTester tester, BackupScreen screen, {
     String language = 'en',
     double scale = 1,
+    Color? warningColor,
   }) async {
     await tester.runAsync(() async {
       await PrefsManager.initialize();
@@ -121,6 +124,9 @@ void main() {
         ChangeNotifierProvider<AppSettingsService>.value(value: service),
       ],
       child: MaterialApp(
+        theme: warningColor == null ? null : ThemeData(extensions: [
+          McoaThemeStyle(McoaThemeOptions(colors: {'warning': warningColor})),
+        ]),
         locale: Locale(language),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -201,6 +207,10 @@ void main() {
     await tester.tap(find.widgetWithText(OutlinedButton, l10n.backupRestore_selectImportFile));
     await _waitFor(tester, () => find.text(l10n.backupRestore_sectionHint).evaluate().isNotEmpty);
     expect(tester.takeException(), isNull);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byKey(const ValueKey('backup-official-format')), findsNothing);
+    expect(find.widgetWithText(FilledButton, l10n.backupChannels_createBackup), findsNothing);
+    expect(find.text(l10n.backupMessageHistory_exportTitle), findsNothing);
     final shared = find.byKey(const ValueKey('restore-portable-appSettings'));
     await _reveal(tester, shared);
     expect(find.byKey(const ValueKey('restore-appSettings')), findsOneWidget);
@@ -292,14 +302,47 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('encrypted import highlights password with theme Warning until decrypted', (tester) async {
+    const warning = Color(0xFFAB4312);
+    final contents = await tester.runAsync(() => BackupSnapshot(
+      createdAt: DateTime.utc(2026, 11, 19),
+      portableSettings: {PortableAppSettings.extension:
+        PortableAppSettings.capture(PortableAppSettings.extension, AppSettings())},
+    ).encode(password: 'unlock'));
+    final l10n = await show(tester, BackupScreen(
+      pickFile: () async => XFile.fromData(utf8.encode(contents!), name: 'encrypted.json'),
+    ), warningColor: warning);
+    final password = find.byKey(const ValueKey('backup-password'));
+    expect(tester.widget<TextField>(password).decoration!.enabledBorder, isNull);
+    await tester.tap(find.widgetWithText(OutlinedButton, l10n.backupRestore_selectImportFile));
+    await _waitFor(tester, () => tester.widget<TextField>(password).decoration!.labelText == l10n.backupChannels_password);
+    var decoration = tester.widget<TextField>(password).decoration!;
+    expect(decoration.enabledBorder!.borderSide.color, warning);
+    expect(decoration.focusedBorder!.borderSide.color, warning);
+    expect(decoration.labelStyle!.color, warning);
+    await tester.enterText(password, 'wrong');
+    await tester.tap(find.widgetWithText(TextButton, l10n.backupChannels_preview));
+    await _waitFor(tester, () => tester.widget<TextField>(password).decoration!.helperText == l10n.backupChannels_badPassword);
+    expect(tester.widget<TextField>(password).decoration!.enabledBorder!.borderSide.color, warning);
+    await tester.enterText(password, 'unlock');
+    await tester.tap(find.widgetWithText(TextButton, l10n.backupChannels_preview));
+    await _waitFor(tester, () => find.byKey(const ValueKey('restore-portable-mcoaAppSettings')).evaluate().isNotEmpty);
+    decoration = tester.widget<TextField>(password).decoration!;
+    expect(decoration.enabledBorder, isNull);
+    expect(decoration.labelText, l10n.backupRestore_password);
+    expect(service.settings.tcpServerAddress, 'keep-local-endpoint');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('API credentials require an encrypted export', (tester) async {
+    const warning = Color(0xFFB56A12);
     var saves = 0;
     final l10n = await show(tester, BackupScreen(
       saveFile: (value, name, {sharePositionOrigin}) async {
         saves++;
         return BackupJsonSaveResult.saved;
       },
-    ));
+    ), warningColor: warning);
     final secret = find.byKey(const ValueKey('backup-ipfsKey'));
     await _reveal(tester, secret);
     await tester.tap(secret);
@@ -309,5 +352,19 @@ void main() {
     await tester.pump();
     expect(find.text(l10n.backupRestore_passwordRequired), findsOneWidget);
     expect(saves, 0);
+    final snackbar = tester.widget<SnackBar>(find.byType(SnackBar));
+    final colors = Theme.of(tester.element(find.byType(BackupScreen))).colorScheme;
+    expect(snackbar.backgroundColor, colors.error);
+    expect(tester.widget<Text>(find.text(l10n.backupRestore_passwordRequired)).style!.color, colors.onError);
+    final password = find.byKey(const ValueKey('backup-password'));
+    // The field is above the currently scrolled export controls.
+    tester.state<ScrollableState>(find.byType(Scrollable).first).position.jumpTo(0);
+    await tester.pump();
+    expect(tester.widget<TextField>(password).decoration!.enabledBorder!.borderSide.color, warning);
+    await tester.enterText(password, 'backup password');
+    await tester.pump();
+    expect(tester.widget<TextField>(password).decoration!.enabledBorder, isNull);
+    await tester.pump(const Duration(seconds: 5));
+
   });
 }

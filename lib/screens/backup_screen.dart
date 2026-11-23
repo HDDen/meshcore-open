@@ -12,6 +12,7 @@ import '../helpers/backup_node_identity.dart';
 import '../helpers/backup_location_preferences.dart';
 import '../helpers/portable_app_settings.dart';
 import '../helpers/official_backup_export.dart';
+import '../helpers/snack_bar_builder.dart';
 import '../l10n/app_localizations.dart';
 import '../l10n/l10n.dart';
 import '../models/app_settings_backup.dart';
@@ -25,6 +26,8 @@ import '../storage/region_store.dart';
 import '../utils/backup_json_file.dart';
 import '../utils/share_origin.dart';
 import '../widgets/mesh_ui.dart';
+import '../theme/mesh_theme.dart';
+import '../theme/mcoa_theme_style.dart';
 import 'additional_identity_screen.dart';
 import 'backup_export_screen.dart';
 import 'backup_restore_screen.dart';
@@ -90,6 +93,8 @@ class _BackupScreenState extends State<BackupScreen> {
   _ImportedSections? _imported;
   bool _busy = false;
   bool _officialFormat = false;
+  bool _needsImportPassword = false;
+  bool _needsExportPassword = false;
   String? _notice;
 
   @override
@@ -127,6 +132,7 @@ class _BackupScreenState extends State<BackupScreen> {
       setState(() {
         _file = file;
         _imported = null;
+        if (chooseFile) _needsImportPassword = false;
       });
       final contents = await readBackupJson(file);
       if (!mounted) return;
@@ -136,6 +142,7 @@ class _BackupScreenState extends State<BackupScreen> {
       if (!mounted) return;
       setState(() {
         _imported = imported;
+        _needsImportPassword = false;
         if (imported.invalid.isNotEmpty) {
           _notice = context.l10n.backupRestore_invalidSections;
         } else if (imported.sections.isEmpty) {
@@ -144,9 +151,12 @@ class _BackupScreenState extends State<BackupScreen> {
       });
     } on BackupPasswordException catch (error) {
       if (mounted) {
-        setState(() => _notice = error.rejected
-            ? context.l10n.backupChannels_badPassword
-            : context.l10n.backupChannels_password);
+        setState(() {
+          _needsImportPassword = true;
+          _notice = error.rejected
+              ? context.l10n.backupChannels_badPassword
+              : context.l10n.backupChannels_password;
+        });
       }
     } on BackupFileTooLarge {
       if (mounted) setState(() => _notice = context.l10n.backupChannels_fileTooLarge);
@@ -173,7 +183,17 @@ class _BackupScreenState extends State<BackupScreen> {
     final password = official ? '' : _password.text;
     final l10n = context.l10n;
     if (!official && password.isEmpty && items.any(_secretItems.contains)) {
-      setState(() => _notice = l10n.backupRestore_passwordRequired);
+      setState(() {
+        _needsExportPassword = true;
+        _notice = null;
+      });
+      final scheme = Theme.of(context).colorScheme;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      showDismissibleSnackBar(context,
+        backgroundColor: scheme.error,
+        content: Text(l10n.backupRestore_passwordRequired,
+          style: TextStyle(color: scheme.onError)),
+      );
       return;
     }
     final app = context.read<AppSettingsService>().settings;
@@ -665,6 +685,12 @@ class _BackupScreenState extends State<BackupScreen> {
     final node = context.watch<MeshCoreConnector>();
     final selected = _selected.where((item) => _available(node, item)).toSet();
     final imported = _imported;
+    final highlightPassword = _needsImportPassword || _needsExportPassword;
+    final warningColor = McoaThemeStyle.warning(context, MeshPalette.alert);
+    final inputTheme = Theme.of(context).inputDecorationTheme;
+    final passwordBorder = (inputTheme.enabledBorder ?? inputTheme.border ??
+        const OutlineInputBorder()).copyWith(borderSide: BorderSide(color: warningColor));
+
     return PopScope(
       canPop: !_busy,
       child: Scaffold(
@@ -692,15 +718,32 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextField(
+                      key: const ValueKey('backup-password'),
                       controller: _password,
+                      onChanged: (value) {
+                        if (_needsExportPassword && value.isNotEmpty) {
+                          setState(() => _needsExportPassword = false);
+                        }
+                      },
+                      cursorColor: highlightPassword ? warningColor : null,
                       enabled: !_busy,
                       obscureText: true,
                       autocorrect: false,
                       enableSuggestions: false,
                       decoration: InputDecoration(
-                        labelText: l10n.backupRestore_password,
-                        helperText: l10n.backupExport_passwordHint,
+                        labelText: highlightPassword
+                            ? l10n.backupChannels_password : l10n.backupRestore_password,
+                        helperText: _needsImportPassword
+                            ? _notice : l10n.backupExport_passwordHint,
                         helperMaxLines: 4,
+                        labelStyle: highlightPassword ? TextStyle(color: warningColor) : null,
+                        floatingLabelStyle: highlightPassword ? TextStyle(color: warningColor) : null,
+                        helperStyle: highlightPassword ? TextStyle(color: warningColor) : null,
+                        enabledBorder: highlightPassword ? passwordBorder : null,
+                        disabledBorder: highlightPassword ? passwordBorder : null,
+                        focusedBorder: highlightPassword
+                            ? passwordBorder.copyWith(borderSide: BorderSide(color: warningColor, width: 2))
+                            : null,
                       ),
                     ),
                     if (_file case final file?) ...[
@@ -731,86 +774,88 @@ class _BackupScreenState extends State<BackupScreen> {
                   child: Column(children: _imports(node, imported)),
                 ),
               ],
-              SectionHeader(l10n.backupRestore_items),
-              MeshCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _group(l10n.settings_nodeSettings, Icons.router_outlined, [
-                      _option(node, 'deviceName', l10n.settings_nodeName),
-                      _option(node, 'privateKey', l10n.backupRestore_privateKey),
-                      _option(node, 'publicKey', l10n.settings_infoPublicKey),
-                      _option(node, 'radioSettings', l10n.settings_radioSettings),
-                      _option(node, 'regions', l10n.settings_regionSettings),
-                    ]),
-                    const Divider(height: 1),
-                    _group(l10n.backupRestore_locationSettings, Icons.place_outlined, [
-                      _option(node, 'location', l10n.settings_location),
-                      _option(node, 'contactSettings', l10n.settings_contactSettings),
-                      _option(node, 'privacySettings', l10n.settings_privacy),
-                    ]),
-                    const Divider(height: 1),
-                    _group(l10n.settings_appSettings, Icons.settings_outlined, [
-                      _option(node, PortableAppSettings.shared, l10n.settings_appSettings),
-                      _option(node, PortableAppSettings.extension, l10n.settings_modSettings),
-                      _option(node, PortableAppSettings.ipfsKey, l10n.backupRestore_ipfsKey),
-                      _option(node, PortableAppSettings.stadiaKey, l10n.backupRestore_stadiaMapKey),
-                      if (MessageHistoryStorage.instance.hasDatabase)
-                        _option(node, BackupAdditionalIdentities.section, l10n.backupRestore_extraKeys),
-                    ]),
-                    const Divider(height: 1),
-                    _group(l10n.contacts_title, Icons.contacts_outlined, [
-                      _option(node, 'contacts', l10n.contacts_title),
-                      _option(node, 'perContactSettings', l10n.backupContactSettings_label),
-                      _option(node, 'contactGroups', l10n.backupContactGroups_label),
-                    ]),
-                    const Divider(height: 1),
-                    _option(node, 'discoveredContacts', l10n.backupDiscoveredContacts_label),
-                    _option(node, 'bookmarks', l10n.backupRestore_bookmarks),
-                    const Divider(height: 1),
-                    _group(l10n.channels_title, Icons.forum_outlined, [
-                      _option(node, 'channels', l10n.channels_title),
-                      _option(node, 'channelFilters', l10n.messageFilter_title),
-                      _option(node, 'channelSettings', l10n.backupChannelSettings_label),
-                      _option(node, 'communities', l10n.backupCommunities_label),
-                      if (MessageHistoryStorage.instance.hasDatabase)
-                        _option(node, BackupFilterTraining.section, l10n.backupFilterTraining_exportTitle),
-                    ]),
-                    if (!kIsWeb) ...[
+              if (imported == null || imported.sections.isEmpty) ...[
+                SectionHeader(l10n.backupRestore_items),
+                MeshCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _group(l10n.settings_nodeSettings, Icons.router_outlined, [
+                        _option(node, 'deviceName', l10n.settings_nodeName),
+                        _option(node, 'privateKey', l10n.backupRestore_privateKey),
+                        _option(node, 'publicKey', l10n.settings_infoPublicKey),
+                        _option(node, 'radioSettings', l10n.settings_radioSettings),
+                        _option(node, 'regions', l10n.settings_regionSettings),
+                      ]),
                       const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.history),
-                        title: Text(l10n.backupMessageHistory_exportTitle),
-                        subtitle: Text(l10n.backupRestore_historySeparate),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _busy ? null : () => Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => BackupExportScreen.messageHistory(
-                              saveFile: widget.saveFile,
+                      _group(l10n.backupRestore_locationSettings, Icons.place_outlined, [
+                        _option(node, 'location', l10n.settings_location),
+                        _option(node, 'contactSettings', l10n.settings_contactSettings),
+                        _option(node, 'privacySettings', l10n.settings_privacy),
+                      ]),
+                      const Divider(height: 1),
+                      _group(l10n.settings_appSettings, Icons.settings_outlined, [
+                        _option(node, PortableAppSettings.shared, l10n.settings_appSettings),
+                        _option(node, PortableAppSettings.extension, l10n.settings_modSettings),
+                        _option(node, PortableAppSettings.ipfsKey, l10n.backupRestore_ipfsKey),
+                        _option(node, PortableAppSettings.stadiaKey, l10n.backupRestore_stadiaMapKey),
+                        if (MessageHistoryStorage.instance.hasDatabase)
+                          _option(node, BackupAdditionalIdentities.section, l10n.backupRestore_extraKeys),
+                      ]),
+                      const Divider(height: 1),
+                      _group(l10n.contacts_title, Icons.contacts_outlined, [
+                        _option(node, 'contacts', l10n.contacts_title),
+                        _option(node, 'perContactSettings', l10n.backupContactSettings_label),
+                        _option(node, 'contactGroups', l10n.backupContactGroups_label),
+                      ]),
+                      const Divider(height: 1),
+                      _option(node, 'discoveredContacts', l10n.backupDiscoveredContacts_label),
+                      _option(node, 'bookmarks', l10n.backupRestore_bookmarks),
+                      const Divider(height: 1),
+                      _group(l10n.channels_title, Icons.forum_outlined, [
+                        _option(node, 'channels', l10n.channels_title),
+                        _option(node, 'channelFilters', l10n.messageFilter_title),
+                        _option(node, 'channelSettings', l10n.backupChannelSettings_label),
+                        _option(node, 'communities', l10n.backupCommunities_label),
+                        if (MessageHistoryStorage.instance.hasDatabase)
+                          _option(node, BackupFilterTraining.section, l10n.backupFilterTraining_exportTitle),
+                      ]),
+                      if (!kIsWeb) ...[
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.history),
+                          title: Text(l10n.backupMessageHistory_exportTitle),
+                          subtitle: Text(l10n.backupRestore_historySeparate),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _busy ? null : () => Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => BackupExportScreen.messageHistory(
+                                saveFile: widget.saveFile,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              SwitchListTile(
-                key: const ValueKey('backup-official-format'),
-                title: Text(l10n.backup_officialFormat),
-                subtitle: Text(l10n.backup_officialFormatHint,
-                  style: Theme.of(context).textTheme.bodySmall),
-                value: _officialFormat,
-                onChanged: _busy ? null : (value) => setState(() => _officialFormat = value),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: FilledButton.icon(
-                  onPressed: _busy || selected.isEmpty ? null : () => _export(node, selected),
-                  icon: const Icon(Icons.backup_outlined),
-                  label: Text(l10n.backupChannels_createBackup),
+                SwitchListTile(
+                  key: const ValueKey('backup-official-format'),
+                  title: Text(l10n.backup_officialFormat),
+                  subtitle: Text(l10n.backup_officialFormatHint,
+                    style: Theme.of(context).textTheme.bodySmall),
+                  value: _officialFormat,
+                  onChanged: _busy ? null : (value) => setState(() => _officialFormat = value),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilledButton.icon(
+                    onPressed: _busy || selected.isEmpty ? null : () => _export(node, selected),
+                    icon: const Icon(Icons.backup_outlined),
+                    label: Text(l10n.backupChannels_createBackup),
+                  ),
+                ),
+              ],
 
             ],
           ),
