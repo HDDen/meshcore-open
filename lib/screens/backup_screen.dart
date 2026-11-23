@@ -636,7 +636,7 @@ class _BackupScreenState extends State<BackupScreen> {
         if (entry.key == BackupRestoreSection.portableSettings)
           for (final item in entry.value.portableSettings.keys)
             ListTile(
-              key: ValueKey('restore-$item'),
+              key: ValueKey('restore-portable-$item'),
               title: Text(_settingsTitle(l10n, item)),
               trailing: const Icon(Icons.chevron_right),
               onTap: _busy ? null :
@@ -706,6 +706,13 @@ class _BackupScreenState extends State<BackupScreen> {
                     if (_file case final file?) ...[
                       const SizedBox(height: 12),
                       Text(file.name),
+                      if (imported != null && imported.sections.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.backupRestore_sectionHint,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                       if (imported == null)
                         TextButton(
                           onPressed: _busy ? null : () => _import(chooseFile: false),

@@ -509,6 +509,12 @@ abstract class AppLocalizations {
   /// **'Set a backup password to include the selected keys.'**
   String get backupRestore_passwordRequired;
 
+  /// No description provided for @backupRestore_sectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To restore settings, open each listed section and start its restoration.'**
+  String get backupRestore_sectionHint;
+
   /// No description provided for @backupRestore_review.
   ///
   /// In en, this message translates to:
@@ -5671,7 +5677,7 @@ abstract class AppLocalizations {
   /// No description provided for @map_runTrace.
   ///
   /// In en, this message translates to:
-  /// **'Run path trace'**
+  /// **'Trace'**
   String get map_runTrace;
 
   /// No description provided for @map_runTraceWithReturnPath.

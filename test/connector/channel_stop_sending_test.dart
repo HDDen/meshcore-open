@@ -12,6 +12,8 @@ import 'package:meshcore_open/models/channel.dart';
 import 'package:meshcore_open/models/channel_message.dart';
 import 'package:meshcore_open/models/message.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
+import 'package:meshcore_open/services/received_image_store.dart';
+import 'package:meshcore_open/models/image_codec_support.dart';
 import 'package:meshcore_open/services/message_retry_service.dart';
 import 'package:meshcore_open/storage/message_history_database.dart';
 import 'package:meshcore_open/storage/message_history_storage.dart';
@@ -151,6 +153,70 @@ void main() {
       );
     });
     tearDown(storage.resetForTesting);
+
+    for (final (enabled, tryLna) in [(false, false), (true, false), (true, true)]) {
+      testWidgets('AEIC retries share adaptive TX policy and restore (enabled=$enabled, LNA=$tryLna)', (tester) async {
+        final node = _Node(txPower: 11, cliSupported: true);
+        final settings = AppSettingsService();
+        final images = ReceivedImageStore(blobs: InMemoryReceivedImageBlobStore(),
+          processAutomatically: false);
+        try {
+          await settings.updateSettings(AppSettings(
+            channelMinHopsEnabled: true, channelMinHopsRetries: 2,
+            channelMinHopsDelaySeconds: 20, noRetransmissionWarningSeconds: 0,
+            adaptiveTxPower: AdaptiveTxPowerSettings(enabled: enabled,
+              targetDbm: 18, channelRetries: 1, tryLna: tryLna),
+          ));
+          node.attachAppSettingsServiceForTest(settings);
+          node.bindImageReceiveBackgroundWork(images);
+          await node.prepareChannelHistory();
+          final wallStart = DateTime.now();
+          final fakeStart = tester.binding.clock.now();
+          node.setChannelResendClockForTest(() =>
+            wallStart.add(tester.binding.clock.now().difference(fakeStart)));
+          final blob = Uint8List.fromList([0x11, 0x11, 7, 1, 0, 1]);
+          await node.sendImageChunks([blob], channelIndex: 0,
+            interChunkDelay: Duration.zero);
+          final entry = await images.registerOutgoing(channelIndex: 0,
+            senderPrefix: 0x1111, imgId: 7, previewPng: Uint8List(1),
+            bitstream: Uint8List(1), rate: AeicRatePoint.ft32, chunkCount: 1);
+          expect(node.currentTxPower, 11);
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.transmissions == 2);
+          expect(node.currentTxPower, 11);
+          expect(images.entryFor(entry.streamId)!.sentWithTxPowerBoost, isFalse);
+          node.holdData = true;
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.transmissions == 3);
+          expect(node.currentTxPower, enabled ? 18 : 11);
+          expect(images.entryFor(entry.streamId)!.sentWithTxPowerBoost, isFalse,
+            reason: 'A held radio write must not stamp boost evidence');
+          node.release();
+          await _until(tester, () => node.pendingCommandReplyCountForTest == 0);
+          if (enabled) {
+            await _until(tester, () => images.entryFor(entry.streamId)!.sentWithTxPowerBoost);
+          }
+          await tester.pump(const Duration(seconds: 21));
+          await _until(tester, () => node.currentTxPower == 11 &&
+            node.imageResendProgress(0, 0x1111, 7, entry.firstSeen) == null);
+          expect(images.entryFor(entry.streamId)!.sentWithTxPowerBoost, enabled);
+          expect(images.entryFor(entry.streamId)!.sentWithAdaptiveLna, enabled && tryLna);
+          expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
+          expect(node.frames.where((f) => f.first == cmdSetRadioTxPower)
+            .map((f) => f[1]), enabled ? [18, 11] : <int>[]);
+          for (final frame in node.frames.where((f) => f.first == cmdSendChannelData)) {
+            expect(frame.sublist(5), blob);
+          }
+        } finally {
+          node.release();
+          await tester.pump();
+          node.dispose();
+          images.dispose();
+          settings.dispose();
+          await tester.pump();
+        }
+      });
+    }
 
     testWidgets('Flood Auto without a route raises TX before the retry and restores after ACK', (
       tester,

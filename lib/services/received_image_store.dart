@@ -202,6 +202,8 @@ class ReceivedImageEntry {
   /// This is the local user's own send. Its PNG is their real 512x512 crop, so
   /// [synthesized] is false and the R6 label must NOT be shown.
   final bool isOutgoing;
+  final bool sentWithTxPowerBoost;
+  final bool sentWithAdaptiveLna;
 
   /// Whether the pixels are generative-model output. Derived, never supplied:
   /// `synthesized == !isOutgoing`.
@@ -275,6 +277,8 @@ class ReceivedImageEntry {
     this.metadataAssumed = true,
     this.recoveredWithParity = false,
     this.isOutgoing = false,
+    this.sentWithTxPowerBoost = false,
+    this.sentWithAdaptiveLna = false,
     this.decodeMs,
     this.error,
     this.needsManualDecode = false,
@@ -319,6 +323,8 @@ class ReceivedImageEntry {
     int? aspectCode,
     bool? metadataAssumed,
     bool? recoveredWithParity,
+    bool? sentWithTxPowerBoost,
+    bool? sentWithAdaptiveLna,
     Object? decodeMs = _unset,
     Object? error = _unset,
     bool? needsManualDecode,
@@ -350,6 +356,8 @@ class ReceivedImageEntry {
       metadataAssumed: metadataAssumed ?? this.metadataAssumed,
       recoveredWithParity: recoveredWithParity ?? this.recoveredWithParity,
       isOutgoing: isOutgoing,
+      sentWithTxPowerBoost: sentWithTxPowerBoost ?? this.sentWithTxPowerBoost,
+      sentWithAdaptiveLna: sentWithAdaptiveLna ?? this.sentWithAdaptiveLna,
       decodeMs: identical(decodeMs, _unset) ? this.decodeMs : decodeMs as int?,
       error: identical(error, _unset) ? this.error : error as String?,
       needsManualDecode: needsManualDecode ?? this.needsManualDecode,
@@ -389,6 +397,8 @@ class ReceivedImageEntry {
     'metadataAssumed': metadataAssumed,
     'recoveredWithParity': recoveredWithParity,
     'isOutgoing': isOutgoing,
+    if (sentWithTxPowerBoost) 'sentWithTxPowerBoost': true,
+    if (sentWithAdaptiveLna) 'sentWithAdaptiveLna': true,
     'synthesized': synthesized,
     'needsManualDecode': needsManualDecode,
     'bitstreamStored': bitstreamStored,
@@ -423,6 +433,8 @@ class ReceivedImageEntry {
       metadataAssumed: json['metadataAssumed'] as bool? ?? true,
       recoveredWithParity: json['recoveredWithParity'] as bool? ?? false,
       isOutgoing: json['isOutgoing'] as bool? ?? false,
+      sentWithTxPowerBoost: json['sentWithTxPowerBoost'] as bool? ?? false,
+      sentWithAdaptiveLna: json['sentWithAdaptiveLna'] as bool? ?? false,
       decodeMs: json['decodeMs'] as int?,
       error: json['error'] as String?,
       needsManualDecode: json['needsManualDecode'] as bool? ?? false,
@@ -1273,6 +1285,28 @@ class ReceivedImageStore extends ChangeNotifier {
     final stored = await _store(entry);
     await evictToBudget(protect: stored.streamId);
     return stored;
+  }
+
+  /// Stamp only an outgoing stream registered after this send started.
+  Future<void> markOutgoingTxPowerBoost({
+    required int channelIndex,
+    required int senderPrefix,
+    required int imgId,
+    required DateTime startedAt,
+    required bool withLna,
+  }) async {
+    final matches = _entries.values.where((entry) => entry.isOutgoing &&
+        entry.channelIndex == channelIndex && entry.senderPrefix == senderPrefix &&
+        entry.imgId == imgId && !entry.firstSeen.isBefore(startedAt)).toList();
+    for (final entry in matches) {
+      if (entry.sentWithTxPowerBoost && (!withLna || entry.sentWithAdaptiveLna)) {
+        continue;
+      }
+      await _store(entry.copyWith(
+        sentWithTxPowerBoost: true,
+        sentWithAdaptiveLna: entry.sentWithAdaptiveLna || withLna,
+      ));
+    }
   }
 
   // ---- decode scheduling ---------------------------------------------------

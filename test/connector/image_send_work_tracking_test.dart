@@ -167,6 +167,30 @@ void main() {
     }, timeout: timeout);
   }
 
+  testWidgets('AEIC valid chunks expose attempts only while their own retry is active', (tester) async {
+    await _withImage(tester, (c) async {
+      c.setChannelResendClockForTest(tester.binding.clock.now);
+      await c.settings.updateSettings(c.settings.settings.copyWith(
+        channelMinHopsEnabled: true, channelMinHops: 2,
+        channelMinHopsRetries: 1, channelMinHopsDelaySeconds: 3,
+      ));
+      final blob = Uint8List.fromList([0x11, 0x22, 7, 1, 0, 1]);
+      final result = _Result(c.send(blobs: [blob], delay: Duration.zero));
+      await tester.pump();
+      expect(result.value, isTrue);
+      final seen = DateTime.now();
+      expect(c.imageResendProgress(2, 0x1122, 7, seen), (resends: 0, maxResends: 1));
+      expect(c.imageResendProgress(2, 0x1122, 8, seen), isNull);
+      expect(c.imageResendProgress(3, 0x1122, 7, seen), isNull);
+      expect(c.imageResendProgress(2, 0x1122, 7, DateTime(2000)), isNull);
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.imageResendProgress(2, 0x1122, 7, seen), (resends: 1, maxResends: 1));
+      expect(c.frames.where((frame) => frame[0] == cmdSendChannelData), hasLength(2));
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.imageResendProgress(2, 0x1122, 7, seen), isNull);
+    });
+  }, timeout: timeout);
+
   for (final stop in ['disconnect', 'dispose', 'initial error']) {
     testWidgets('AEIC retry work is released on $stop', (tester) async {
       await _withImage(tester, (c) async {

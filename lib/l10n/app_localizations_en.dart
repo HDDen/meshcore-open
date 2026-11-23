@@ -241,6 +241,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set a backup password to include the selected keys.';
 
   @override
+  String get backupRestore_sectionHint =>
+      'To restore settings, open each listed section and start its restoration.';
+
+  @override
   String get backupRestore_review => 'Review and restore';
 
   @override
@@ -3276,7 +3280,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap nodes or enter a hash here to add them to the path.';
 
   @override
-  String get map_runTrace => 'Run path trace';
+  String get map_runTrace => 'Trace';
 
   @override
   String get map_runTraceWithReturnPath => 'Return back on the same path.';

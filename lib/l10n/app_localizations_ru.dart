@@ -243,6 +243,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чтобы включить выбранные ключи, задайте пароль резервной копии.';
 
   @override
+  String get backupRestore_sectionHint =>
+      'Для восстановления настроек зайдите в каждый предложенный раздел и запустите его восстановление';
+
+  @override
   String get backupRestore_review => 'Просмотреть и восстановить';
 
   @override
@@ -3313,7 +3317,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажимайте на узлы либо пропишите хэш сюда, чтобы добавить их в путь.';
 
   @override
-  String get map_runTrace => 'Запустить трассировку пути';
+  String get map_runTrace => 'Трассировка';
 
   @override
   String get map_runTraceWithReturnPath => 'Вернуться обратно по тому же пути';

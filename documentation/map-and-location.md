@@ -199,6 +199,8 @@ is used. This action does not request another trace or start GPS tracking.
 3. Choose **Round trip** (the trace comes back along the same hops) or **As entered** (the hops are used exactly as listed, so add the return hops yourself).
 4. Tap **Run path trace**. Nothing is sent until you press this button.
 
+The panel places Round trip, As entered, Delete, Clear and Close in one row with icons above small captions; the active mode is highlighted. Below this row, Request regions, View last result (when available) and Trace are centered at their natural widths, with compact padding and 6px corners. All actions use the same borderless text-button style. The upper buttons share the tallest button's height and keep icons and captions aligned to the top. Long labels are truncated with an ellipsis.
+
 Tap the chevron next to **Path Trace** to hide the controls and leave the title visible. Tap it again to show the same route and mode.
 
 Returning from the result keeps your hops, mode and the last result (**View last result** reopens it without sending again). **Close** or the back button hides the panel without discarding the hops; reopening **Path Trace** during the same session resumes where you left off. The hops are dropped when you connect to a different radio.

@@ -104,3 +104,15 @@ class AeicChunkResend {
     }
   }
 }
+
+/// Session-only status of one outgoing image; packet bytes are unchanged.
+class AeicImageSendStatus {
+  AeicImageSendStatus({required this.startedAt, required this.pendingChunks,
+    required this.maxResends});
+  final DateTime startedAt;
+  final int maxResends;
+  int pendingChunks;
+  int resends = 0;
+  bool sentWithTxPowerBoost = false;
+  bool sentWithAdaptiveLna = false;
+}

@@ -241,6 +241,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Set a backup password to include the selected keys.';
 
   @override
+  String get backupRestore_sectionHint =>
+      'To restore settings, open each listed section and start its restoration.';
+
+  @override
   String get backupRestore_review => 'Review and restore';
 
   @override

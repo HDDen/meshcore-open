@@ -140,7 +140,8 @@ import '../services/image_chunk_transport.dart'
         ImageChunkOutcome,
         ImageChunkTransport,
         dataTypeAeicImage,
-        senderPrefixFromKey;
+        senderPrefixFromKey,
+        parseImageChunkHeader;
 import '../services/image_codec_service.dart';
 import '../services/received_image_store.dart';
 import '../services/message_filter/channel_rule_verdict_writer.dart';
@@ -10881,9 +10882,39 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   final _aeicChunkResends = AeicChunkResends();
+  final _aeicSendStatuses = <String, AeicImageSendStatus>{};
+  // Bounded evidence bridges retries and asynchronous outgoing PNG registration.
+  final _aeicBoostEvidence = <String, AeicImageSendStatus>{};
+
+  Future<void> syncImageTxPowerBoost(ReceivedImageEntry entry) async {
+    final status = _aeicBoostEvidence[
+      '${entry.channelIndex}:${entry.senderPrefix}:${entry.imgId}'];
+    if (status == null || !status.sentWithTxPowerBoost ||
+        entry.firstSeen.isBefore(status.startedAt)) { return; }
+    await _receivedImageStore?.markOutgoingTxPowerBoost(
+      channelIndex: entry.channelIndex, senderPrefix: entry.senderPrefix,
+      imgId: entry.imgId, startedAt: status.startedAt,
+      withLna: status.sentWithAdaptiveLna,
+    );
+  }
+
+  ({int resends, int maxResends})? imageResendProgress(
+    int channelIndex, int senderPrefix, int imgId, DateTime firstSeen,
+  ) {
+    final status = _aeicSendStatuses['$channelIndex:$senderPrefix:$imgId'];
+    if (status == null || firstSeen.isBefore(status.startedAt)) return null;
+    return (resends: status.resends, maxResends: status.maxResends);
+  }
+
+  void _notifyImageSendStatus() {
+    _channelResendRevision++;
+    if (!_disposed) notifyListeners();
+  }
 
   void _cancelChannelHopControls() {
     _aeicChunkResends.cancelAll();
+    _aeicSendStatuses.clear();
+    _aeicBoostEvidence.clear();
     for (final control in _channelHopControls.values) {
       control.cancel();
     }
@@ -11205,6 +11236,22 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final revision = _channelInboxRevision;
     final channelId = _findChannelByIndex(channelIndex)?.storageId;
     final region = _channelSendScope(channelIndex);
+    final header = parseImageChunkHeader(blobs.first);
+    final statusKey = header == null ? null
+        : '$channelIndex:${header.senderPrefix}:${header.imgId}';
+    final status = tracked.isEmpty || statusKey == null ? null : AeicImageSendStatus(
+      startedAt: DateTime.now(), pendingChunks: tracked.length,
+      maxResends: settings!.channelMinHopsRetries,
+    );
+    if (status != null) {
+      _aeicSendStatuses[statusKey!] = status;
+      _aeicBoostEvidence.remove(statusKey);
+      _aeicBoostEvidence[statusKey] = status;
+      while (_aeicBoostEvidence.length > 256) {
+        _aeicBoostEvidence.remove(_aeicBoostEvidence.keys.first);
+      }
+      _notifyImageSendStatus();
+    }
     var watching = false;
     try {
       await _runScopedChannelSend(() async {
@@ -11238,6 +11285,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
             );
           }
           unawaited(_outgoingQueueWork.runRetry(() async {
+            var requestedBoost = false;
             try {
               await packet.watch(
                 maxResends: settings!.channelMinHopsRetries,
@@ -11245,15 +11293,59 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                 now: () => _channelResendNow(),
                 canContinue: canContinue,
                 isSatisfied: satisfied,
-                resend: (_) => _runScopedChannelSend(() async {
+                resend: (retry) => _runScopedChannelSend(() async {
                   if (packet.cancelled || !canContinue() || satisfied()) { return; }
                   if (interChunkDelay > Duration.zero) {
                     await Future<void>.delayed(interChunkDelay);
                   }
                   await _waitForRadioQuiet(lastInboundRxTime: _lastChannelMsgRxTime);
                   if (packet.cancelled || !canContinue() || satisfied()) { return; }
+                  TxPowerSession? boostedSession;
+                  final live = _appSettingsService?.settings;
+                  final adaptive = live?.adaptiveTxPower;
+                  final target = adaptive?.targetDbm;
+                  if (live?.channelMinHopsEnabled == true &&
+                      adaptive?.enabled == true && target != null &&
+                      MessageHistoryStorage.instance.hasAdaptiveTxPowerJournal &&
+                      AdaptiveTxPower.isInLastRetries(
+                        retry: retry, maxRetries: settings.channelMinHopsRetries,
+                        boostedRetries: adaptive!.channelRetries,
+                      )) {
+                    requestedBoost = true;
+                    final session = txPowerSession;
+                    try {
+                      if (await _acquireAdaptiveTxPower(packet, target,
+                          canProceed: () => !packet.cancelled && canContinue() && !satisfied())) {
+                        boostedSession = session;
+                      }
+                    } catch (error) {
+                      appLogger.warn('AEIC TX power boost was not confirmed: $error', tag: 'Connector');
+                    }
+                    if (packet.cancelled || !canContinue() || satisfied()) return;
+                  }
+                  final withLna = boostedSession != null && _adaptiveLna.enabledByApp;
                   await _sendFrameAndWaitForCommandAck(
                     buildSendChannelDataFrame(channelIndex, dataTypeAeicImage, packet.blob),
+                  );
+                  if (status != null && boostedSession != null &&
+                      txPowerSession == boostedSession &&
+                      identical(_aeicBoostEvidence[statusKey], status)) {
+                    status.sentWithTxPowerBoost = true;
+                    status.sentWithAdaptiveLna |= withLna;
+                    await _receivedImageStore?.markOutgoingTxPowerBoost(
+                      channelIndex: channelIndex, senderPrefix: header!.senderPrefix,
+                      imgId: header.imgId, startedAt: status.startedAt,
+                      withLna: status.sentWithAdaptiveLna,
+                    );
+                  }
+                  if (status != null) {
+                    if (retry > status.resends) { status.resends = retry; }
+                    _notifyImageSendStatus();
+                  }
+                  _appDebugLogService?.info(
+                    'AEIC chunk resent: channel=$channelIndex img=${header?.imgId} '
+                    'chunk=${parseImageChunkHeader(packet.blob)?.index} retry=$retry',
+                    tag: 'Channel resend',
                   );
                 }, region: region,
                   canSend: () => !packet.cancelled && canContinue() && !satisfied()),
@@ -11270,6 +11362,13 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
                   tag: 'Channel resend');
             } finally {
               _aeicChunkResends.release(packet);
+              if (requestedBoost) await _releaseTxPower(packet);
+              if (status != null && --status.pendingChunks == 0) {
+                if (identical(_aeicSendStatuses[statusKey], status)) {
+                  _aeicSendStatuses.remove(statusKey);
+                }
+                _notifyImageSendStatus();
+              }
             }
           }));
         }
@@ -11280,6 +11379,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       if (!watching) {
         for (final packet in tracked) {
           _aeicChunkResends.release(packet);
+        }
+        if (status != null && identical(_aeicSendStatuses[statusKey], status)) {
+          _aeicSendStatuses.remove(statusKey);
+          _notifyImageSendStatus();
         }
       }
     }

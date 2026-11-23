@@ -66,6 +66,7 @@ import '../helpers/wardrive_coverage_helper.dart';
 import '../helpers/shared_marker_deletions.dart';
 import '../widgets/channel_marker_settings_sheet.dart';
 import '../widgets/quick_switch_bar.dart';
+import '../widgets/path_trace_controls.dart';
 import '../widgets/map_action_buttons_layer.dart';
 import '../widgets/map_poi_cluster.dart';
 import '../widgets/coincident_repeater_marker_layer.dart';
@@ -8343,84 +8344,27 @@ class _MapScreenState extends State<MapScreen>
   }
 
   Widget _buildPathTraceControls() {
-    final l10n = context.l10n;
     final hasHops = _pathTrace.isNotEmpty;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (hasHops && !_isRegionRequestTrace) ...[
-          // Temporarily hidden: keep the upstream hint available for later.
-          // Text(l10n.map_pathTraceAddMoreHint),
-          // const SizedBox(height: 6),
-          // Wrapping choices also fit narrow screens and larger text sizes.
-          Wrap(
-            spacing: 8,
-            children: [
-              ChoiceChip(
-                label: Text(l10n.map_pathTraceModeRoundTrip),
-                selected: _traceReturnPath,
-                onSelected: (_) => _setTraceReturnPath(true),
-              ),
-              ChoiceChip(
-                label: Text(l10n.map_pathTraceModeAsEntered),
-                selected: !_traceReturnPath,
-                onSelected: (_) => _setTraceReturnPath(false),
-              ),
-            ],
-          ),
-          Text(_traceReturnPath
-              ? l10n.map_pathTraceModeRoundTripHint
-              : l10n.map_pathTraceModeAsEnteredHint),
-        ],
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            if (hasHops) TextButton.icon(
-              onPressed: _removePath,
-              icon: const Icon(Icons.undo),
-              label: Text(l10n.common_delete),
-            ),
-            // Trace by hop hashes is available from the Contacts menu.
-            // if (hasHops && !_isRegionRequestTrace)
-            //   TextButton.icon(
-            //     onPressed: _openManualPathTrace,
-            //     icon: const Icon(Icons.keyboard),
-            //     label: Text(l10n.manualTrace_title),
-            //   ),
-            if (hasHops && !_isRegionRequestTrace) TextButton.icon(
-              onPressed: _clearPathTrace,
-              icon: const Icon(Icons.delete_outline),
-              label: Text(l10n.common_clear),
-            ),
-            TextButton.icon(
-              onPressed: _closePathTrace,
-              icon: const Icon(Icons.close),
-              label: Text(l10n.common_close),
-            ),
-            if (hasHops && !_isRegionRequestTrace) OutlinedButton.icon(
-              onPressed: _openCurrentPathRegionRequest,
-              icon: const Icon(Icons.travel_explore),
-              label: Text(l10n.contacts_requestRegions),
-            ),
-            if (hasHops && !_isRegionRequestTrace && _traceDraft.lastResult != null)
-              OutlinedButton.icon(
-                onPressed: () => _openPathTraceResult(
-                  flipPathAround: _traceReturnPath, reuseLastResult: true,
-                ),
-                icon: const Icon(Icons.history),
-                label: Text(l10n.map_pathTraceViewLast),
-              ),
-            if (hasHops) FilledButton.icon(
-              onPressed: _isRegionRequestTrace
-                  ? () => _openRegionRequestResult()
-                  : () => _openPathTraceResult(flipPathAround: _traceReturnPath),
-              icon: Icon(_isRegionRequestTrace ? Icons.travel_explore : Icons.radar),
-              label: Text(_isRegionRequestTrace ? l10n.contacts_requestRegions : l10n.map_runTrace),
-            ),
-          ],
-        ),
-      ],
+    return PathTraceControls(
+      onClose: _closePathTrace,
+      onRemove: hasHops ? _removePath : null,
+      onClear: hasHops && !_isRegionRequestTrace ? _clearPathTrace : null,
+      onRegions: hasHops && !_isRegionRequestTrace ? _openCurrentPathRegionRequest : null,
+      onLastResult: hasHops && !_isRegionRequestTrace && _traceDraft.lastResult != null
+          ? () => _openPathTraceResult(flipPathAround: _traceReturnPath, reuseLastResult: true)
+          : null,
+      onRun: !hasHops ? null : _isRegionRequestTrace
+          ? () => _openRegionRequestResult()
+          : () => _openPathTraceResult(flipPathAround: _traceReturnPath),
+      regionRequest: _isRegionRequestTrace,
+      roundTrip: _traceReturnPath,
+      onRoundTrip: hasHops && !_isRegionRequestTrace
+          ? () => _setTraceReturnPath(true) : null,
+      onAsEntered: hasHops && !_isRegionRequestTrace
+          ? () => _setTraceReturnPath(false) : null,
+      // Mode hint remains hidden to keep the panel compact.
+      // Text(_traceReturnPath ? l10n.map_pathTraceModeRoundTripHint
+      //     : l10n.map_pathTraceModeAsEnteredHint),
     );
   }
 

@@ -543,7 +543,7 @@ void main() {
         expect(find.ancestor(of: title,
           matching: find.byType(EdgeSwipePopBlocker)), findsOneWidget);
         final mode = find.widgetWithText(
-          ChoiceChip,
+          TextButton,
           l10n.map_pathTraceModeAsEntered,
         );
         final runTrace = find.text(l10n.map_runTrace);
@@ -576,7 +576,7 @@ void main() {
         await _pumpFrames(tester);
 
         expect(editorText(tester), '1011,2021');
-        expect(tester.widget<ChoiceChip>(mode).selected, isTrue);
+        expect(view.mapPathTrace.returnPath, isFalse);
         expect(runTrace, findsOneWidget);
         expect(remove, findsOneWidget);
         expect(connector.sentFrames, isEmpty);

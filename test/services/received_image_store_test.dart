@@ -915,6 +915,29 @@ void main() {
       expect(decoder.calls, 0);
     });
 
+    test('outgoing boost evidence persists and ignores older reused image ids', () async {
+      final h = _build();
+      addTearDown(h.store.dispose);
+      Future<ReceivedImageEntry> register() => h.store.registerOutgoing(
+        channelIndex: 1, senderPrefix: kSelf, imgId: 3,
+        previewPng: Uint8List(1), bitstream: Uint8List(1),
+        rate: AeicRatePoint.ft32, chunkCount: 1);
+      final old = await register();
+      h.advance(const Duration(seconds: 1));
+      final start = h.clock();
+      final current = await register();
+      await h.store.markOutgoingTxPowerBoost(channelIndex: 1,
+        senderPrefix: kSelf, imgId: 3, startedAt: start, withLna: true);
+      expect(h.store.entryFor(old.streamId)!.sentWithTxPowerBoost, isFalse);
+      final saved = h.store.entryFor(current.streamId)!;
+      final restored = ReceivedImageEntry.fromJson(saved.copyWith(region: 'test').toJson());
+      expect(restored.sentWithTxPowerBoost, isTrue);
+      expect(restored.sentWithAdaptiveLna, isTrue);
+      final legacy = saved.toJson()..remove('sentWithTxPowerBoost')
+        ..remove('sentWithAdaptiveLna');
+      expect(ReceivedImageEntry.fromJson(legacy).sentWithTxPowerBoost, isFalse);
+    });
+
     test('registerOutgoing parks, keeping the crop and the bitstream', () async {
       final h = _build();
       final entry = await h.store.registerOutgoing(

@@ -150,3 +150,19 @@ keeps the previous single-burst behavior.
 MCOimg raster images use the same compact rectangle painting in chat, the canvas editor and PNG rendering. Adjacent same-color pixels are painted together; transparency and pixel colors remain unchanged. A four-byte solid image can legitimately describe a full 256x256 canvas and is not rejected because its file is small. This rendering path is separate from the AEIC model decoder described above.
 
 Legacy MCOimg v1/v2 images remain readable. The canvas editor creates only v3/v4: importing a legacy image preserves its pixels and dimensions but selects v3 and calculates a new encoded result. The original file is not modified.
+
+### Active outgoing image retries
+
+While AEIC chunks are still monitored for propagation or being retried, the
+outgoing image metadata shows the normal sending animation after the echo
+counters, followed by the attempt number (initial send = 1). For a multi-chunk
+image this is the highest attempt reached by any chunk, not a sum of packet
+commands. The indicator ends when all chunk watches finish, including exhausted
+retry budgets or cancellation; it is not a recipient delivery acknowledgement.
+Actual retransmissions are logged under `[Channel resend]` as `AEIC chunk resent`,
+with channel, image id, chunk index and retry number. Retries require the normal
+channel propagation retry setting to be enabled. Packet contents are unchanged.
+
+AEIC retries also use adaptive TX Power when enabled: the configured last channel retry rounds may raise power (and optionally enable LNA). The initial transmission does not request a boost. Power is restored when the last retry owner finishes. A lightning badge records a confirmed boosted chunk transmission; the badge is red when adaptive LNA was used. This evidence is saved with the outgoing image.
+
+Right-click an AEIC image card on desktop, or hold it on touch devices, to open its actions. The menu offers packet information, decoding again while the encoded data remains available, and deletion from local image history. The sender label and metadata are also part of this menu target; ordinary taps keep opening or processing the image.

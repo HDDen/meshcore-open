@@ -127,6 +127,7 @@ import '../widgets/quick_answers_picker_dialog.dart';
 import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/received_image_message.dart';
+import '../widgets/received_image_actions.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -3765,7 +3766,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
       widget.channel.index,
     );
     try {
-      await store.registerOutgoing(
+      final registered = await store.registerOutgoing(
         channelIndex: widget.channel.index,
         channelId: widget.channel.storageId,
         // The same 16 bits the chunk header carries, so the entry keys the
@@ -3786,6 +3787,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         region: region,
         regionInfoAvailable: true,
       );
+      await connector.syncImageTxPowerBoost(registered);
     } on Exception catch (error) {
       debugPrint('outgoing image registration failed: $error');
     }
@@ -4017,6 +4019,9 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final bubbleTheme = MeshBubbleTheme.of(context);
     final textColor = isOutgoing ? bubbleTheme.meInk : scheme.onSurface;
     final metaColor = textColor.withValues(alpha: 0.65);
+    final resend = isOutgoing ? context.read<MeshCoreConnector>().imageResendProgress(
+      entry.channelIndex, entry.senderPrefix, entry.imgId, entry.firstSeen,
+    ) : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -4031,95 +4036,114 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             const SizedBox(width: 6),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: isOutgoing
-                    ? bubbleTheme.me
-                    : scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(MeshRadii.lg),
-                border: Border.all(
+            child: ReceivedImageActions(
+              entry: entry,
+              store: context.read<ReceivedImageStore>(),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
                   color: isOutgoing
-                      ? bubbleTheme.meBorder
-                      : scheme.outlineVariant,
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isOutgoing)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
-                      child: Text(
-                        _imageSenderLabel(entry),
-                        style: TextStyle(
-                          fontSize: 13 * textScale,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                        ),
-                      ),
-                    ),
-                  ReceivedImageMessage(
-                    streamId: entry.streamId,
-                    isOutgoing: isOutgoing,
-                    fallbackTextColor: textColor,
-                    strings: _receivedImageStrings(context),
-                    // The placeholder's "no model installed" tap lands here.
-                    // `focusImageMessages` scrolls straight to the image block
-                    // It sits below six other sections, so the plain screen
-                    // would open at the top with no sign of what was tapped for.
-                    onOpenCodecSettings: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            const AppSettingsScreen(focusImageMessages: true),
-                      ),
-                    ),
+                      ? bubbleTheme.me
+                      : scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(MeshRadii.lg),
+                  border: Border.all(
+                    color: isOutgoing
+                        ? bubbleTheme.meBorder
+                        : scheme.outlineVariant,
+                    width: 1,
                   ),
-                  if (settings.enableMessageTracing &&
-                      settings.showMessageRegion)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 8,
-                        right: 8,
-                        bottom: 3,
-                      ),
-                      child: Text(
-                        context.l10n.channels_messageRegion(
-                          _imageRegionLabel(entry),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isOutgoing)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+                        child: Text(
+                          _imageSenderLabel(entry),
+                          style: TextStyle(
+                            fontSize: 13 * textScale,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
                         ),
-                        style: MeshTheme.mono(
-                          fontSize: 10 * textScale,
-                          color: metaColor,
+                      ),
+                    ReceivedImageMessage(
+                      streamId: entry.streamId,
+                      isOutgoing: isOutgoing,
+                      fallbackTextColor: textColor,
+                      strings: _receivedImageStrings(context),
+                      // The placeholder's "no model installed" tap lands here.
+                      // `focusImageMessages` scrolls straight to the image block
+                      // It sits below six other sections, so the plain screen
+                    // would open at the top with no sign of what was tapped for.
+                      onOpenCodecSettings: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              const AppSettingsScreen(focusImageMessages: true),
                         ),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _formatTime(
-                            context,
-                            entry.firstSeen,
-                            enableSeconds: enableTimeSeconds,
+                    if (settings.enableMessageTracing &&
+                        settings.showMessageRegion)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 8,
+                          right: 8,
+                          bottom: 3,
+                        ),
+                        child: Text(
+                          context.l10n.channels_messageRegion(
+                            _imageRegionLabel(entry),
                           ),
                           style: MeshTheme.mono(
                             fontSize: 10 * textScale,
                             color: metaColor,
                           ),
                         ),
-                        if (settings.enableMessageTracing)
-                          ..._imagePacketRepeats(
-                            entry,
-                            textScale,
-                            metaColor,
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTime(
+                              context,
+                              entry.firstSeen,
+                              enableSeconds: enableTimeSeconds,
+                            ),
+                            style: MeshTheme.mono(
+                              fontSize: 10 * textScale,
+                              color: metaColor,
+                            ),
                           ),
-                      ],
+                          if (settings.enableMessageTracing)
+                            ..._imagePacketRepeats(
+                              entry,
+                              textScale,
+                              metaColor,
+                            ),
+                          if (entry.sentWithTxPowerBoost) ...[
+                          const SizedBox(width: 4),
+                          TxPowerBoostBadge(size: 11 * textScale, color: metaColor,
+                            withLna: entry.sentWithAdaptiveLna),
+                        ],
+                        if (resend != null) ...[
+                            const SizedBox(width: 6),
+                            MessageStatusIcon(
+                              isAcked: false, isPending: true, isChannel: true,
+                              size: 11 * textScale, onColor: metaColor,
+                            ),
+                            const SizedBox(width: 2),
+                            Text('${resend.resends + 1}',
+                              style: MeshTheme.mono(fontSize: 10 * textScale, color: metaColor)),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

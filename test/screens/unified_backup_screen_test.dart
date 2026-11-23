@@ -11,6 +11,7 @@ import 'package:meshcore_open/helpers/backup_node_identity.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
 import 'package:meshcore_open/l10n/l10n.dart';
 import 'package:meshcore_open/models/app_settings.dart';
+import 'package:meshcore_open/models/app_settings_backup.dart';
 import 'package:meshcore_open/screens/backup_screen.dart';
 import 'package:meshcore_open/services/adaptive_tx_power.dart';
 import 'package:meshcore_open/services/app_settings_service.dart';
@@ -184,6 +185,34 @@ void main() {
     });
   }
 
+  testWidgets('display and portable settings in one backup have distinct restore rows', (tester) async {
+    final source = AppSettings(clearPathOnMaxRetry: false);
+    final contents = await BackupSnapshot(
+      createdAt: DateTime.utc(2026, 11, 19),
+      appSettings: AppSettingsBackup.capture(source),
+      portableSettings: {
+        PortableAppSettings.shared: PortableAppSettings.capture(PortableAppSettings.shared, source),
+        PortableAppSettings.extension: PortableAppSettings.capture(PortableAppSettings.extension, source),
+      },
+    ).encode(password: '');
+    final l10n = await show(tester, BackupScreen(
+      pickFile: () async => XFile.fromData(utf8.encode(contents), name: 'full-settings.json'),
+    ));
+    await tester.tap(find.widgetWithText(OutlinedButton, l10n.backupRestore_selectImportFile));
+    await _waitFor(tester, () => find.text(l10n.backupRestore_sectionHint).evaluate().isNotEmpty);
+    expect(tester.takeException(), isNull);
+    final shared = find.byKey(const ValueKey('restore-portable-appSettings'));
+    await _reveal(tester, shared);
+    expect(find.byKey(const ValueKey('restore-appSettings')), findsOneWidget);
+    expect(shared, findsOneWidget);
+    await tester.tap(shared);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, l10n.backupChannels_apply));
+    await _waitFor(tester, () => find.text(l10n.backupRestore_localApplied).evaluate().isNotEmpty);
+    expect(service.settings.clearPathOnMaxRetry, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a single import keeps cancellation and merges fork settings after confirmation', (tester) async {
     final contents = await BackupSnapshot(
       createdAt: DateTime.utc(2026, 11, 19),
@@ -199,7 +228,7 @@ void main() {
       },
     ));
     await tester.tap(find.widgetWithText(OutlinedButton, l10n.backupRestore_selectImportFile));
-    final restore = find.byKey(const ValueKey('restore-mcoaAppSettings'));
+    final restore = find.byKey(const ValueKey('restore-portable-mcoaAppSettings'));
     await _waitFor(tester, () => restore.evaluate().isNotEmpty);
     await _reveal(tester, restore);
     await tester.tap(restore);
