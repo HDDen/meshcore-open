@@ -110,6 +110,7 @@ class _MarkerLabelDialogState extends State<MarkerLabelDialog> {
     );
     return AlertDialog(
       title: Text(l10n.map_pinLabel),
+      scrollable: true,
       content: ByteCountedTextField(
         autofocus: true,
         focusNode: _focusNode,
@@ -117,9 +118,12 @@ class _MarkerLabelDialogState extends State<MarkerLabelDialog> {
         controller: _controller,
         decoration: InputDecoration(
           hintText: l10n.map_label,
-          helperText: l10n.map_labelUpdateHint,
-          helperMaxLines: 3,
-          helperStyle: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          helper: Text(
+            l10n.map_labelUpdateHint,
+            softWrap: true,
+            overflow: TextOverflow.visible,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
           border: border,
           enabledBorder: border,
           focusedBorder: OutlineInputBorder(

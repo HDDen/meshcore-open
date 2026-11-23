@@ -128,6 +128,7 @@ import '../widgets/quick_actions_button.dart';
 import '../widgets/radio_stats_entry.dart';
 import '../widgets/received_image_message.dart';
 import '../widgets/received_image_actions.dart';
+import '../widgets/message_resend_badge.dart';
 import '../widgets/shared_contact_message.dart';
 import '../widgets/sync_progress_overlay.dart';
 import '../widgets/translated_message_content.dart';
@@ -2750,42 +2751,15 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                     size: 12 * textScale,
                                   ),
-                                if (showSendAttempts) ...[
-                                  const SizedBox(width: 6),
-                                  if (resendInProgress) ...[
-                                    SizedBox(
-                                      width: 9 * textScale,
-                                      height: 9 * textScale,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        color: metaColor,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ] else ...[
-                                    Icon(
-                                      Icons.replay,
-                                      size: 11 * textScale,
-                                      color: metaColor,
-                                    ),
-                                    const SizedBox(width: 2),
-                                  ],
-                                  Text(
-                                    '${message.resendCount + 1}',
-                                    style: MeshTheme.mono(
-                                      fontSize: 10 * textScale,
-                                      color: metaColor,
-                                    ),
-                                  ),
-                                ],
-                                if (showTxPowerBoostBadge) ...[
-                                  const SizedBox(width: 4),
-                                  TxPowerBoostBadge(
+                                if (showSendAttempts || showTxPowerBoostBadge)
+                                  MessageResendBadge(
+                                    resends: message.resendCount,
+                                    pending: resendInProgress,
+                                    color: metaColor, textScale: textScale,
+                                    showAttempts: showSendAttempts,
+                                    boosted: showTxPowerBoostBadge,
                                     withLna: message.sentWithAdaptiveLna,
-                                    size: 12 * textScale,
-                                    color: metaColor,
                                   ),
-                                ],
                                 // Under the resend setting the sent check
                                 // mark is left out: the attempt badge already
                                 // says the message went out.
@@ -4017,11 +3991,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
     final enableTimeSeconds = settings.enableTimeSeconds;
     final isOutgoing = entry.isOutgoing;
     final bubbleTheme = MeshBubbleTheme.of(context);
-    final textColor = isOutgoing ? bubbleTheme.meInk : scheme.onSurface;
-    final metaColor = textColor.withValues(alpha: 0.65);
-    final resend = isOutgoing ? context.read<MeshCoreConnector>().imageResendProgress(
-      entry.channelIndex, entry.senderPrefix, entry.imgId, entry.firstSeen,
-    ) : null;
+    final textColor = McoaThemeStyle.color(
+      context,
+      'text',
+      isOutgoing ? bubbleTheme.meInk : scheme.onSurface,
+      outgoing: isOutgoing,
+    );
+    final metaColor = McoaThemeStyle.color(
+      context,
+      'badges',
+      textColor.withValues(alpha: 0.65),
+      outgoing: isOutgoing,
+    );
+    final boost = context.read<MeshCoreConnector>().imageTxPowerBoost(entry);
+    final resend = isOutgoing
+        ? context.read<MeshCoreConnector>().imageResendProgress(
+            entry.channelIndex,
+            entry.senderPrefix,
+            entry.imgId,
+            entry.firstSeen,
+          )
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -4039,17 +4029,27 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             child: ReceivedImageActions(
               entry: entry,
               store: context.read<ReceivedImageStore>(),
-              child: Container(
+              child: McoaChatBubbleBox(
+                outgoing: isOutgoing,
+                metadataVisible: settings.enableMessageTracing,
+                duration: const Duration(milliseconds: 1000),
+                curve: Curves.easeInOut,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isOutgoing
-                      ? bubbleTheme.me
-                      : scheme.surfaceContainerLow,
+                  color: McoaThemeStyle.color(
+                    context,
+                    'background',
+                    isOutgoing ? bubbleTheme.me : scheme.surfaceContainerLow,
+                    outgoing: isOutgoing,
+                  ),
                   borderRadius: BorderRadius.circular(MeshRadii.lg),
                   border: Border.all(
-                    color: isOutgoing
-                        ? bubbleTheme.meBorder
-                        : scheme.outlineVariant,
+                    color: McoaThemeStyle.color(
+                      context,
+                      'border',
+                      isOutgoing ? bubbleTheme.meBorder : scheme.outlineVariant,
+                      outgoing: isOutgoing,
+                    ),
                     width: 1,
                   ),
                 ),
@@ -4058,7 +4058,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                   children: [
                     if (!isOutgoing)
                       Padding(
-                        padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+                        padding: const EdgeInsets.only(
+                          left: 8,
+                          top: 4,
+                          bottom: 4,
+                        ),
                         child: Text(
                           _imageSenderLabel(entry),
                           style: TextStyle(
@@ -4072,11 +4076,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                       streamId: entry.streamId,
                       isOutgoing: isOutgoing,
                       fallbackTextColor: textColor,
+                      captionFontSize: 10 * textScale,
                       strings: _receivedImageStrings(context),
                       // The placeholder's "no model installed" tap lands here.
                       // `focusImageMessages` scrolls straight to the image block
                       // It sits below six other sections, so the plain screen
-                    // would open at the top with no sign of what was tapped for.
+                      // would open at the top with no sign of what was tapped for.
                       onOpenCodecSettings: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) =>
@@ -4084,6 +4089,31 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       ),
                     ),
+                    if (settings.enableMessageTracing &&
+                        (McoaThemeStyle.of(
+                              context,
+                            ).separateMetadataFor(isOutgoing) ||
+                            (!isOutgoing &&
+                                McoaThemeStyle.of(
+                                      context,
+                                    ).incomingMetadataSpacing >
+                                    0)))
+                      McoaMessageMetadataSpacing(
+                        height: isOutgoing
+                            ? 0
+                            : McoaThemeStyle.of(
+                                context,
+                              ).incomingMetadataSpacing.toDouble(),
+                        metadataTopPadding: McoaThemeStyle.of(
+                          context,
+                        ).metadataTopPaddingFor(isOutgoing).toDouble(),
+                        messageBottomPadding:
+                            McoaThemeStyle.of(
+                              context,
+                            ).separateMetadataFor(isOutgoing)
+                            ? 4
+                            : 0,
+                      ),
                     if (settings.enableMessageTracing &&
                         settings.showMessageRegion)
                       Padding(
@@ -4103,7 +4133,11 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                         ),
                       ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4),
+                      padding: const EdgeInsets.only(
+                        left: 8,
+                        right: 8,
+                        bottom: 4,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -4119,26 +4153,22 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                             ),
                           ),
                           if (settings.enableMessageTracing)
-                            ..._imagePacketRepeats(
-                              entry,
-                              textScale,
-                              metaColor,
+                            ..._imagePacketRepeats(entry, textScale, metaColor),
+                          if (resend != null ||
+                              entry.sentWithTxPowerBoost ||
+                              boost != null)
+                            MessageResendBadge(
+                              resends: resend?.resends ?? 0,
+                              pending: resend != null,
+                              showAttempts: resend != null,
+                              color: metaColor,
+                              textScale: textScale,
+                              boosted:
+                                  entry.sentWithTxPowerBoost || boost != null,
+                              withLna:
+                                  entry.sentWithAdaptiveLna ||
+                                  boost?.withLna == true,
                             ),
-                          if (entry.sentWithTxPowerBoost) ...[
-                          const SizedBox(width: 4),
-                          TxPowerBoostBadge(size: 11 * textScale, color: metaColor,
-                            withLna: entry.sentWithAdaptiveLna),
-                        ],
-                        if (resend != null) ...[
-                            const SizedBox(width: 6),
-                            MessageStatusIcon(
-                              isAcked: false, isPending: true, isChannel: true,
-                              size: 11 * textScale, onColor: metaColor,
-                            ),
-                            const SizedBox(width: 2),
-                            Text('${resend.resends + 1}',
-                              style: MeshTheme.mono(fontSize: 10 * textScale, color: metaColor)),
-                          ],
                         ],
                       ),
                     ),

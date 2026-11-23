@@ -200,6 +200,7 @@ void main() {
           await _until(tester, () => node.currentTxPower == 11 &&
             node.imageResendProgress(0, 0x1111, 7, entry.firstSeen) == null);
           expect(images.entryFor(entry.streamId)!.sentWithTxPowerBoost, enabled);
+          expect(node.imageTxPowerBoost(entry), enabled ? (withLna: tryLna) : null);
           expect(images.entryFor(entry.streamId)!.sentWithAdaptiveLna, enabled && tryLna);
           expect(await storage.readAdaptiveTxPowerBaseline(node.selfPublicKeyHex), isNull);
           expect(node.frames.where((f) => f.first == cmdSetRadioTxPower)

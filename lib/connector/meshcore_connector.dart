@@ -10886,6 +10886,14 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   // Bounded evidence bridges retries and asynchronous outgoing PNG registration.
   final _aeicBoostEvidence = <String, AeicImageSendStatus>{};
 
+  ({bool withLna})? imageTxPowerBoost(ReceivedImageEntry entry) {
+    final status = _aeicBoostEvidence[
+      '${entry.channelIndex}:${entry.senderPrefix}:${entry.imgId}'];
+    if (!entry.isOutgoing || status == null || !status.sentWithTxPowerBoost ||
+        entry.firstSeen.isBefore(status.startedAt)) { return null; }
+    return (withLna: status.sentWithAdaptiveLna);
+  }
+
   Future<void> syncImageTxPowerBoost(ReceivedImageEntry entry) async {
     final status = _aeicBoostEvidence[
       '${entry.channelIndex}:${entry.senderPrefix}:${entry.imgId}'];

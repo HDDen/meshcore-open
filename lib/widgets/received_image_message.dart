@@ -141,6 +141,7 @@ class ReceivedImageMessage extends StatefulWidget {
   final Color fallbackTextColor;
 
   final double maxSize;
+  final double captionFontSize;
 
   /// Test/preview override. Normally resolved from the widget tree.
   final ReceivedImageStore? store;
@@ -157,6 +158,7 @@ class ReceivedImageMessage extends StatefulWidget {
     required this.isOutgoing,
     required this.fallbackTextColor,
     this.maxSize = 200,
+    this.captionFontSize = 10,
     this.store,
     this.strings,
     this.onOpenCodecSettings,
@@ -601,7 +603,10 @@ class _ReceivedImageMessageState extends State<ReceivedImageMessage> {
           if (synthesized)
             SizedBox(
               width: size,
-              child: _SyntheticCaption(bytes: entry.bitstreamByteCount),
+              child: _SyntheticCaption(
+                bytes: entry.bitstreamByteCount,
+                fontSize: widget.captionFontSize,
+              ),
             ),
         ],
       ),
@@ -673,7 +678,13 @@ class _SyntheticCaption extends StatelessWidget {
   /// Size of the bitstream this image was reconstructed from.
   final int bytes;
 
-  const _SyntheticCaption({required this.bytes, this.onDark = false});
+  final double fontSize;
+
+  const _SyntheticCaption({
+    required this.bytes,
+    this.onDark = false,
+    this.fontSize = 12,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -686,7 +697,7 @@ class _SyntheticCaption extends StatelessWidget {
         // than none — it clips exactly where the warning was going.
         softWrap: true,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: fontSize,
           color: onDark
               ? Colors.white70
               : Theme.of(context).colorScheme.onSurfaceVariant,

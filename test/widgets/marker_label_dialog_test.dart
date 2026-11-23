@@ -69,6 +69,17 @@ void main() {
   });
 
   group('MarkerLabelDialog', () {
+    testWidgets('marker update hint wraps without a line limit', (tester) async {
+      await _open(tester);
+      final field = tester.widget<TextField>(find.byType(TextField));
+      final hint = field.decoration!.helper! as Text;
+      expect(hint.maxLines, isNull);
+      expect(hint.overflow, TextOverflow.visible);
+      expect(hint.softWrap, isTrue);
+      expect(tester.widget<AlertDialog>(find.byType(AlertDialog)).scrollable, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('confirm returns the sanitised label', (tester) async {
       final results = await _open(tester);
       await tester.enterText(find.byType(TextField), 'Camp | north');

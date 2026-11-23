@@ -514,6 +514,7 @@ void main() {
       find.textContaining('AI-reconstructed from'),
     );
     expect(caption.maxLines, isNull, reason: 'the sentence must wrap in full');
+    expect(caption.style!.fontSize, 10);
     expect(caption.overflow, isNot(TextOverflow.ellipsis));
     // And the tail of the sentence is actually present.
     expect(find.textContaining('not transmitted'), findsOneWidget);
