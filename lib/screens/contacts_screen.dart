@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 import '../utils/radio_guard.dart';
 import '../connector/meshcore_connector.dart';
+import '../helpers/connection_menu_state.dart';
 import '../widgets/connect_sheet.dart';
 import '../review_mode/review_mode_banner.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
@@ -701,7 +702,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                         child: PopupMenuRow(
                           icon: Icons.logout,
                           iconColor: Theme.of(context).colorScheme.error,
-                          text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
+                          text: connectionMenuShowsDisconnect(connector) ? context.l10n.common_disconnect : context.l10n.common_connect,
                         ),
                         onTap: () => _disconnect(context, connector),
                       ),
@@ -815,7 +816,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                       child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
-                        text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
+                        text: connectionMenuShowsDisconnect(connector) ? context.l10n.common_disconnect : context.l10n.common_connect,
                       ),
                       onTap: () => _disconnect(context, connector),
                     ),
@@ -1314,7 +1315,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   }
 
   Future<void> _disconnect(BuildContext context, MeshCoreConnector connector) async {
-    if (!connector.isConnected) {
+    if (!connectionMenuShowsDisconnect(connector)) {
       await showConnectSheet(this.context);
       return;
     }

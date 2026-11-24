@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../utils/radio_guard.dart';
 import '../connector/meshcore_connector.dart';
+import '../helpers/connection_menu_state.dart';
 import '../widgets/connect_sheet.dart';
 import '../helpers/channel_binary_data_helper.dart';
 import '../helpers/chat_keyboard_navigation_history.dart';
@@ -488,9 +489,9 @@ class _ChannelsScreenState extends State<ChannelsScreen>
                   child: PopupMenuRow(
                     icon: Icons.logout,
                     iconColor: Theme.of(menuContext).colorScheme.error,
-                    text: connector.isConnected ? menuContext.l10n.common_disconnect : menuContext.l10n.common_connect,
+                    text: connectionMenuShowsDisconnect(connector) ? menuContext.l10n.common_disconnect : menuContext.l10n.common_connect,
                   ),
-                  onTap: () => connector.isConnected ? _disconnect(context) : showConnectSheet(context),
+                  onTap: () => connectionMenuShowsDisconnect(connector) ? _disconnect(context) : showConnectSheet(context),
                 ),
                 PopupMenuItem(
                   child: PopupMenuRow(

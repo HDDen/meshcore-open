@@ -4,6 +4,8 @@
 
 On Android and iOS, returning to the app immediately retries a lost BLE or TCP connection instead of waiting for the scheduled backoff. A pending timer is accelerated without adding a second attempt, and an active connection attempt is not duplicated. On iOS, a connection attempt whose readiness wait has exceeded 20 seconds is cancelled and retried. Failed attempts continue through the normal reconnect backoff. Already connected CoreBluetooth peripherals resume service discovery without waiting for a new connection event. Manual disconnects and offline history do not trigger this recovery.
 
+The Contacts, Channels and Map header menus show **Disconnect** while connecting, recovering, waiting for an automatic retry (including the TCP cooldown), or restarting a transport. Confirming it manually disconnects and cancels automatic recovery. Only an idle disconnected/scanning session offers **Connect**.
+
 ## TCP reconnect pause
 
 After five consecutive TCP attempts that end before initial synchronization completes, or five unexpected disconnects within one minute, automatic TCP connection attempts pause for 30 seconds. The initial sync includes contacts, channels and queued messages; receiving SELF_INFO alone does not reset this counter. Completing sync resets the incomplete-attempt counter, while rapid disconnects are still counted over the rolling minute.

@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../connector/meshcore_connector.dart';
+import '../helpers/connection_menu_state.dart';
 import '../widgets/connect_sheet.dart';
 import '../connector/meshcore_protocol.dart';
 import '../l10n/l10n.dart';
@@ -1386,9 +1387,9 @@ class _MapScreenState extends State<MapScreen>
                       child: PopupMenuRow(
                         icon: Icons.logout,
                         iconColor: Theme.of(context).colorScheme.error,
-                        text: connector.isConnected ? context.l10n.common_disconnect : context.l10n.common_connect,
+                        text: connectionMenuShowsDisconnect(connector) ? context.l10n.common_disconnect : context.l10n.common_connect,
                       ),
-                      onTap: () => connector.isConnected
+                      onTap: () => connectionMenuShowsDisconnect(connector)
                           ? _disconnect(this.context, connector)
                           : showConnectSheet(this.context),
                     ),
