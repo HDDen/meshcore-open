@@ -4939,6 +4939,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       ),
       c: () => isConnected,
       d: _restartActiveTransport,
+      h: refreshDeviceInfo,
       e: () => this,
       f: (a, b) =>
           ChannelBinaryDataHelper.tryDecodeAppData(dataType: a, payload: b),

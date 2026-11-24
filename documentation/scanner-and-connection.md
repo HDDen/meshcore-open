@@ -257,3 +257,6 @@ empty name and an all-zero key. If the slot lookup times out, notification
 delivery continues.
 
 This feature remains experimental. The merge preserves the earlier research implementation; reliable sharing of the node with the foreground connection, history reconciliation, and disabling an already saved receiver require further work or device verification. Validate the iOS signing/entitlements and the deployment target for the chosen build profile on a Mac before relying on it. The normal BLE peripheral mode for the companion proxy remains in the app's background-mode configuration.
+
+
+Companion-proxy radio settings: changing TX Power, radio parameters or path-hash size does not require disconnecting clients. The proxy server invalidates cached configuration after accepted commands and obtains current values over its existing node connection when clients verify settings. A CLI power read and the settings dialog should therefore agree. This correction must be installed on the proxy server; existing licences do not need reissuing.
