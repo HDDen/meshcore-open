@@ -8,6 +8,9 @@ import 'package:meshcore_open/connector/meshcore_connector.dart';
 import 'package:meshcore_open/connector/meshcore_protocol.dart';
 import 'package:meshcore_open/helpers/background_work_tracker.dart';
 import 'package:meshcore_open/helpers/composer_draft_cache.dart';
+import 'package:meshcore_open/helpers/mcmp_app_codec.dart';
+import 'package:meshcore_open/helpers/mcoa_theme_options.dart';
+import 'package:meshcore_open/theme/mcoa_theme_style.dart';
 import 'package:meshcore_open/helpers/contact_share_helper.dart';
 import 'package:meshcore_open/helpers/mcotxt_app_codec.dart';
 import 'package:meshcore_open/l10n/app_localizations.dart';
@@ -375,6 +378,73 @@ void main() {
 
   for (final inChannel in [false, true]) {
     final scope = inChannel ? 'channel' : 'contact';
+    for (final outgoing in [false, true]) {
+      for (final room in inChannel ? [false] : [false, true]) {
+        testWidgets('POI uses message ink and MCMP respects direction in $scope (outgoing=$outgoing, room=$room)', (tester) async {
+          final node = _PagedNode();
+          final settings = AppSettingsService();
+          final scale = ChatTextScaleService();
+          addTearDown(node.dispose);
+          addTearDown(settings.dispose);
+          addTearDown(scale.dispose);
+          addTearDown(() async {
+            await tester.pumpWidget(const SizedBox.shrink());
+            await tester.pump(const Duration(seconds: 2));
+          });
+          const wire = 'm:45.0,39.0|Theme POI|';
+          final stamp = _time.millisecondsSinceEpoch ~/ 1000 + 1;
+          if (inChannel) {
+            node.setChannelMessagesForTest(_channel.index, [
+              _channelPost('poi-theme', wire, 1).copyWith(
+                isOutgoing: outgoing, containerTimestamp: stamp,
+                mcmpSignatureStatus: McmpSignatureStatus.unsigned,
+              ),
+            ]);
+          } else {
+            node._recentDirect
+              ..clear()
+              ..add(_directPost('poi-theme', wire, 1).copyWith(
+                isOutgoing: outgoing, containerTimestamp: stamp,
+                mcmpSignatureStatus: McmpSignatureStatus.unsigned,
+              ));
+          }
+          const incomingInk = Color(0xFF123456);
+          const outgoingInk = Color(0xFF654321);
+          final expected = outgoing ? outgoingInk : incomingInk;
+          await tester.pumpWidget(MultiProvider(
+            providers: [
+              ChangeNotifierProvider<MeshCoreConnector>.value(value: node),
+              ChangeNotifierProvider<AppSettingsService>.value(value: settings),
+              ChangeNotifierProvider<ChatTextScaleService>.value(value: scale),
+            ],
+            child: MaterialApp(
+              theme: ThemeData(extensions: const [McoaThemeStyle(McoaThemeOptions(colors: {
+                'incoming_text': incomingInk, 'outgoing_text': outgoingInk,
+                'incoming_badges': Colors.pink, 'outgoing_badges': Colors.orange,
+              }))]),
+              locale: const Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: inChannel
+                  ? ChannelChatScreen(channel: _channel)
+                  : ChatScreen(contact: room ? _contact.copyWith(type: advTypeRoom) : _contact),
+            ),
+          ));
+          await tester.pumpAndSettle();
+          final signature = find.byIcon(Icons.no_encryption_outlined);
+          if (inChannel || room) {
+            expect(signature, findsOneWidget);
+            expect(tester.widget<Icon>(signature).color,
+                outgoing ? Colors.orange : expected);
+          } else {
+            expect(signature, findsNothing);
+          }
+          expect(tester.widget<Icon>(find.byIcon(Icons.location_on_outlined)).color, expected);
+          expect(tester.widget<Text>(find.text('Theme POI')).style?.color, expected);
+        });
+      }
+    }
+
     testWidgets('TX power boost appears after send details in the $scope bubble',
         (tester) async {
       final node = _PagedNode();

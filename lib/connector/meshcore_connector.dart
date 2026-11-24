@@ -85,6 +85,7 @@ import '../helpers/connection_teardown_background_work.dart';
 import '../helpers/device_polling_intervals.dart';
 import '../helpers/radio_stats_send_polling.dart';
 import '../helpers/reconnect_backoff.dart';
+import '../helpers/tcp_reconnect_pause.dart';
 import '../helpers/reconnect_power_settings.dart';
 import '../helpers/ui_notification_batcher.dart';
 import '../helpers/channel_mention_matcher.dart';
@@ -482,6 +483,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   bool _autoReconnectInFlight = false;
   ReconnectPowerSettings? _reconnectPowerSettings;
   Duration Function()? _reconnectClock;
+  final Stopwatch _tcpReconnectUptime = Stopwatch()..start();
+  late final _tcpReconnectPause = TcpReconnectPause(
+    now: () => _reconnectClock?.call() ?? _tcpReconnectUptime.elapsed,
+  );
   Timer? _batteryPollTimer;
   Timer? _rxWatchdogTimer;
   DateTime _rxSilenceAnchor = DateTime.fromMillisecondsSinceEpoch(0);
@@ -1059,7 +1064,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       _state == MeshCoreConnectionState.connected &&
       _activeTransport == MeshCoreTransportType.tcp;
   bool shouldSuppressAutoconnect(MeshCoreTransportType transport) =>
-      _manualDisconnect && _lastManualDisconnectTransport == transport;
+      (_manualDisconnect && _lastManualDisconnectTransport == transport) ||
+      (transport == MeshCoreTransportType.tcp && _tcpReconnectPause.isPaused);
+
+  Duration get tcpAutoReconnectPauseRemaining => _tcpReconnectPause.remaining;
   bool get isReviewMode =>
       _activeTransport == MeshCoreTransportType.review &&
       _state != MeshCoreConnectionState.disconnected;
@@ -6424,6 +6432,7 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
+    if (automaticReconnect && _tcpReconnectPause.isPaused) return;
     if (!automaticReconnect &&
         (_appSettingsService?.settings.backgroundTcpEnabled ?? false)) {
       unawaited(
@@ -6448,9 +6457,16 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     await stopScan();
+    // Recheck after asynchronous cleanup: no automatic entry point may bypass
+    // a cooldown which started while it was awaiting a previous teardown.
+    if (automaticReconnect && _tcpReconnectPause.isPaused) {
+      _scheduleReconnect();
+      return;
+    }
     if (!automaticReconnect) {
       _cancelReconnectTimer();
     }
+    _tcpReconnectPause.beginAttempt('${host.trim()}:$port');
     _manualDisconnect = false;
     _lastManualDisconnectTransport = null;
     _lastTcpHost = host.trim();
@@ -8141,21 +8157,33 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     backgroundIntervalSeconds: _reconnectPowerSettings?.intervalSeconds ?? 30,
   );
 
+  Duration _guardedReconnectDelay(Duration delay) {
+    if (_reconnectTransport != MeshCoreTransportType.tcp) return delay;
+    final remaining = _tcpReconnectPause.remaining;
+    // Keep one fixed cooldown deadline even if a manual dial fails in it.
+    return remaining > Duration.zero ? remaining : delay;
+  }
+
   void _refreshReconnectDelay() {
-    if (_reconnectImmediately) return;
+    if (_reconnectImmediately ||
+        (_reconnectTransport == MeshCoreTransportType.tcp && _tcpReconnectPause.isPaused)) {
+      return;
+    }
     final pending = _reconnectTimer;
     if (pending == null) return;
-    pending.updateDelay(Duration(
+    pending.updateDelay(_guardedReconnectDelay(Duration(
       milliseconds: _reconnectDelayMs(pending.attemptIndex),
-    ));
+    )));
   }
 
   void _scheduleReconnect({bool immediately = false}) {
     if (!_shouldAutoReconnect) return;
     if (_reconnectTimer?.isActive == true) {
+      // App resume must not accelerate an already scheduled cooldown.
+      if (_reconnectTransport == MeshCoreTransportType.tcp && _tcpReconnectPause.isPaused) return;
       if (immediately) {
         _reconnectImmediately = true;
-        _reconnectTimer!.updateDelay(Duration.zero);
+        _reconnectTimer!.updateDelay(_guardedReconnectDelay(Duration.zero));
       }
       return;
     }
@@ -8166,7 +8194,8 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
     final delayMs = _nextReconnectDelayMs();
     _reconnectTimer = ReconnectWait(
       attemptIndex: attemptIndex,
-      delay: immediately ? Duration.zero : Duration(milliseconds: delayMs),
+      delay: _guardedReconnectDelay(
+        immediately ? Duration.zero : Duration(milliseconds: delayMs)),
       now: _reconnectClock,
       onElapsed: () async {
         _reconnectImmediately = false;
@@ -8178,6 +8207,11 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
           return;
         }
 
+        if (reconnectTransport == MeshCoreTransportType.tcp &&
+            _tcpReconnectPause.isPaused) {
+          _scheduleReconnect();
+          return;
+        }
         if (_autoReconnectInFlight) return;
         _autoReconnectInFlight = true;
         try {
@@ -8273,6 +8307,21 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     final transportAtDisconnect = _activeTransport;
+    if (transportAtDisconnect == MeshCoreTransportType.tcp) {
+      if (hasCompletedSelfInfoHandshake && isSessionReady) {
+        _tcpReconnectPause.markSynchronized();
+      }
+      final paused = _tcpReconnectPause.endAttempt(
+        manual: manual || _transportRestartInProgress,
+      );
+      if (paused) {
+        _cancelReconnectTimer();
+        _appDebugLogService?.warn(
+          'TCP automatic reconnect paused for 30 seconds after 5 unstable sessions',
+          tag: 'TCP',
+        );
+      }
+    }
     final wasUsingIosNativeBleCentral = _usingIosNativeBleCentral;
     final transportLabel = switch (transportAtDisconnect) {
       MeshCoreTransportType.bluetooth => 'BLE',
@@ -23131,6 +23180,10 @@ class MeshCoreConnector extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void notifyListeners() {
     if (_disposed) return;
+    if (_activeTransport == MeshCoreTransportType.tcp &&
+        hasCompletedSelfInfoHandshake && isSessionReady) {
+      _tcpReconnectPause.markSynchronized();
+    }
     markNotifyDirty();
   }
 

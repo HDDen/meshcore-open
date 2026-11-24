@@ -4,6 +4,12 @@
 
 On Android and iOS, returning to the app immediately retries a lost BLE or TCP connection instead of waiting for the scheduled backoff. A pending timer is accelerated without adding a second attempt, and an active connection attempt is not duplicated. On iOS, a connection attempt whose readiness wait has exceeded 20 seconds is cancelled and retried. Failed attempts continue through the normal reconnect backoff. Already connected CoreBluetooth peripherals resume service discovery without waiting for a new connection event. Manual disconnects and offline history do not trigger this recovery.
 
+## TCP reconnect pause
+
+After five consecutive TCP attempts that end before initial synchronization completes, or five unexpected disconnects within one minute, automatic TCP connection attempts pause for 30 seconds. The initial sync includes contacts, channels and queued messages; receiving SELF_INFO alone does not reset this counter. Completing sync resets the incomplete-attempt counter, while rapid disconnects are still counted over the rolling minute.
+
+The pause is shared by startup, background recovery and the TCP screen. Reopening that screen or resuming the app cannot bypass it. During the pause you can edit the address and connect manually, including to another node. Manual attempts do not extend or cancel the current pause. Automatic recovery may resume after the pause unless you manually disconnected or cancelled recovery. Failure counters are separate for different endpoints; changing an address does not bypass an already active pause. These counters are held only in memory and do not affect BLE or USB.
+
 ## BLE Scanner (Home Screen)
 
 The scanner is shown on launch when no radio has been remembered. Otherwise the app opens Channels with the last radio's saved data; see [offline mode](offline-mode.md).

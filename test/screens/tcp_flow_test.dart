@@ -23,12 +23,19 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
   bool savedRadioData = false;
   @override
   bool get hasRadioData => savedRadioData;
+  bool tcpPaused = false;
+  bool? lastAutomatic;
   int connectTcpCalls = 0;
   int stopScanCalls = 0;
   Completer<void>? pendingScanStop;
   Completer<void>? pendingScanStart;
   String? lastHost;
   int? lastPort;
+
+  @override
+  bool shouldSuppressAutoconnect(MeshCoreTransportType transport) =>
+      (transport == MeshCoreTransportType.tcp && tcpPaused) ||
+      super.shouldSuppressAutoconnect(transport);
 
   @override
   MeshCoreConnectionState get state => initialState;
@@ -74,6 +81,7 @@ class _FakeMeshCoreConnector extends MeshCoreConnector {
     required int port,
     bool automaticReconnect = false,
   }) async {
+    lastAutomatic = automaticReconnect;
     connectTcpCalls += 1;
     lastHost = host;
     lastPort = port;
@@ -110,6 +118,38 @@ void main() {
     ConnectionTransportPreferenceStore.resetCache();
     SharedPreferences.setMockInitialValues({});
     await PrefsManager.initialize();
+  });
+
+  testWidgets('reopening TCP during cooldown skips autoconnect but permits the manual button', (tester) async {
+    final connector = _FakeMeshCoreConnector()..tcpPaused = true;
+    final settings = AppSettingsService();
+    await settings.setTcpServerAddress('192.0.2.77');
+    await settings.setTcpServerPort(5000);
+    settings.dispose();
+    await ConnectionTransportPreferenceStore().setAutoconnectEnabled(
+      ConnectionTransportPreferenceStore.tcp, true,
+    );
+    for (var visit = 0; visit < 2; visit++) {
+      await tester.pumpWidget(_buildTestApp(connector: connector, child: const TcpScreen()));
+      await tester.pumpAndSettle();
+      expect(connector.connectTcpCalls, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    }
+    await tester.pumpWidget(_buildTestApp(connector: connector, child: const TcpScreen()));
+    await tester.pumpAndSettle();
+    expect(connector.connectTcpCalls, 0);
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '192.0.2.78');
+    await tester.enterText(fields.at(1), '5000');
+    await tester.tap(find.byKey(const Key('tcp_connect_button')));
+    await tester.pumpAndSettle();
+    expect(connector.connectTcpCalls, 1);
+    expect(connector.lastHost, '192.0.2.78');
+    expect(connector.lastAutomatic, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    connector.dispose();
   });
 
   testWidgets('scanner stays visible with saved data and offers upstream offline entry', (tester) async {

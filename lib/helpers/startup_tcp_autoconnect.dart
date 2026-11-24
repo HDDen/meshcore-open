@@ -29,7 +29,8 @@ Future<bool> autoconnectSavedTcpRadio(
     return false;
   }
   try {
-    return await connector.reconnectToLastRadio();
+    await connector.connectTcp(host: radio.tcpHost!, port: radio.tcpPort!, automaticReconnect: true);
+    return connector.isConnected;
   } catch (error) {
     appLogger.warn(
       'Startup TCP autoconnect failed: ${error.runtimeType}',

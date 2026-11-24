@@ -199,6 +199,37 @@ void main() {
   });
   tearDown(PrefsManager.reset);
 
+  testWidgets('five incomplete TCP attempts pause all automatic entry points but allow manual dial', (tester) async {
+    await _withTcp(tester, (c) async {
+      var now = Duration.zero;
+      c.setReconnectClockForTest(() => now);
+      c.tcp.connectedAfterOpen = false;
+      for (var i = 0; i < 5; i++) {
+        final open = _Result(c.open());
+        await tester.pump();
+        expect(open.completed, isTrue);
+      }
+      expect(c.tcp.opens, 5);
+      expect(c.tcpAutoReconnectPauseRemaining, const Duration(seconds: 30));
+      expect(c.shouldSuppressAutoconnect(MeshCoreTransportType.tcp), isTrue);
+      expect(c.shouldSuppressAutoconnect(MeshCoreTransportType.bluetooth), isFalse);
+      c.resumeMobileRecoveryForTest();
+      now += const Duration(seconds: 29);
+      await tester.pump(const Duration(seconds: 29));
+      expect(c.tcp.opens, 5);
+      await c.open(automatic: true);
+      expect(c.tcp.opens, 5);
+      final manual = _Result(c.open());
+      await tester.pump();
+      expect(manual.completed, isTrue);
+      expect(c.tcp.opens, 6);
+      expect(c.tcpAutoReconnectPauseRemaining, const Duration(seconds: 1));
+      now += const Duration(seconds: 1);
+      await tester.pump(const Duration(seconds: 1));
+      expect(c.tcp.opens, 7);
+    });
+  }, timeout: timeout);
+
   testWidgets('baseline: open remains pending while the transport manager is opening', (tester) async {
     await _withTcp(tester, (c) async {
       final gate = c.gate();

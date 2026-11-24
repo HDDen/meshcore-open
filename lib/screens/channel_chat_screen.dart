@@ -1752,7 +1752,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   /// messages: status icon, verified-key fingerprint and the name-collision
   /// warning. Outgoing messages show their signed/unsigned badge in the meta
   /// row instead.
-  Widget _buildMcmpSignatureIcon(ChannelMessage message) {
+  Widget _buildMcmpSignatureIcon(ChannelMessage message, Color textColor) {
     if (message.isOutgoing ||
         !McmpSignatureBadge.isVisible(
           status: message.mcmpSignatureStatus,
@@ -1774,7 +1774,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
         packetTimestamp: message.timestamp,
         containerTimestamp: message.containerTimestamp,
         textScale: 1.0,
-        color: scheme.onSurface.withValues(alpha: 0.65),
+        color: textColor,
         errorColor: scheme.error,
       ),
     );
@@ -2120,7 +2120,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                                     ),
                                   ),
                                 ),
-                                _buildMcmpSignatureIcon(message),
+                                _buildMcmpSignatureIcon(message, textColor),
                               ],
                             ),
                           ),
@@ -2164,7 +2164,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
                           _buildPoiMessage(
                             context,
                             poi,
-                            isOutgoing,
+                            textColor,
                             textScale,
                             message.senderName,
                             isRemoval: poiRemoved,
@@ -3429,17 +3429,12 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
   Widget _buildPoiMessage(
     BuildContext context,
     MarkerPayload poi,
-    bool isOutgoing,
+    Color textColor,
     double textScale,
     String senderName, {
     bool isRemoval = false,
     Widget? trailing,
   }) {
-    final scheme = Theme.of(context).colorScheme;
-    final textColor =
-        isOutgoing ? MeshBubbleTheme.of(context).meInk : scheme.onSurface;
-    final metaColor = textColor.withValues(alpha: 0.7);
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -3448,7 +3443,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
             isRemoval
                 ? Icons.location_off_outlined
                 : Icons.location_on_outlined,
-            color: scheme.primary,
+            color: textColor,
           ),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -3493,7 +3488,7 @@ class _ChannelChatScreenState extends State<ChannelChatScreen> {
               if (poi.label.isNotEmpty)
                 Text(
                   poi.label,
-                  style: TextStyle(color: metaColor, fontSize: 12 * textScale),
+                  style: TextStyle(color: textColor, fontSize: 12 * textScale),
                 ),
             ],
           ),

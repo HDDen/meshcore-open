@@ -84,14 +84,14 @@ class ChannelRegionFilterLine extends StatelessWidget {
       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal),
       child: LayoutBuilder(builder: (context, constraints) {
         final regionText = TextPainter(
-          text: TextSpan(text: '$regionHeader •',
+          text: TextSpan(text: regionHeader,
             style: DefaultTextStyle.of(context).style),
           textDirection: Directionality.of(context),
           textScaler: MediaQuery.textScalerOf(context),
           maxLines: 1,
         )..layout();
         final labelWidth = constraints.hasBoundedWidth
-            ? (constraints.maxWidth - regionText.width - 16)
+            ? (constraints.maxWidth - regionText.width - 22)
                 .clamp(0.0, double.infinity).toDouble()
             : double.infinity;
         regionText.dispose();
@@ -99,8 +99,9 @@ class ChannelRegionFilterLine extends StatelessWidget {
         key: const ValueKey('channel-header-region-scroll'),
         scrollDirection: Axis.horizontal,
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text('$regionHeader •', key: const ValueKey('channel-header-region'),
+          Text(regionHeader, key: const ValueKey('channel-header-region'),
             maxLines: 1, softWrap: false),
+          const SizedBox(width: 6),
           Tooltip(
             message: context.l10n.channelRegionFilter_title,
             child: InkWell(

@@ -821,7 +821,7 @@ class _TcpScreenState extends State<TcpScreen>
       _isAutoconnecting = true;
     });
     try {
-      await _connectTcp(showErrors: false);
+      await _connectTcp(showErrors: false, automaticReconnect: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -831,7 +831,7 @@ class _TcpScreenState extends State<TcpScreen>
     }
   }
 
-  Future<void> _connectTcp({bool showErrors = true}) async {
+  Future<void> _connectTcp({bool showErrors = true, bool automaticReconnect = false}) async {
     if (_isOpeningOfflineHistory ||
         _connector.isLegacyOfflineSession ||
         _connector.state == MeshCoreConnectionState.connecting ||
@@ -867,7 +867,7 @@ class _TcpScreenState extends State<TcpScreen>
       if (wifiSsid != null) {
         _wifiSsidController.text = wifiSsid;
       }
-      await _connector.connectTcp(host: host, port: parsedPort);
+      await _connector.connectTcp(host: host, port: parsedPort, automaticReconnect: automaticReconnect);
       // The state listener also handles successful automatic retries after
       // this Future has already failed. Both paths share the same handoff.
       _scheduleTcpNavigation();

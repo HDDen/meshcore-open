@@ -3261,7 +3261,6 @@ class ContactMessageBubble extends StatelessWidget {
                             context,
                             poi,
                             textColor,
-                            metaColor,
                             textScale,
                             senderName,
                             isRemoval: poiRemoved,
@@ -3665,7 +3664,7 @@ class ContactMessageBubble extends StatelessWidget {
                               showFingerprint:
                                   message.fourByteRoomContactKey.isNotEmpty,
                               textScale: textScale,
-                              color: metaColor,
+                              color: textColor,
                               errorColor: scheme.error,
                             ),
                           ),
@@ -4101,7 +4100,6 @@ class ContactMessageBubble extends StatelessWidget {
     BuildContext context,
     MarkerPayload poi,
     Color textColor,
-    Color metaColor,
     double textScale,
     String senderName, {
     bool isRemoval = false,
@@ -4159,7 +4157,7 @@ class ContactMessageBubble extends StatelessWidget {
               if (poi.label.isNotEmpty)
                 Text(
                   poi.label,
-                  style: TextStyle(color: metaColor, fontSize: 12 * textScale),
+                  style: TextStyle(color: textColor, fontSize: 12 * textScale),
                 ),
             ],
           ),

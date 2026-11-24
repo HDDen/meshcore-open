@@ -16,6 +16,8 @@ class _Connector extends MeshCoreConnector {
   bool legacyOffline = false;
   bool review = false;
   bool reconnectScheduled = false;
+  bool tcpPaused = false;
+  bool? lastAutomatic;
   bool fail = false;
 
   @override
@@ -31,13 +33,14 @@ class _Connector extends MeshCoreConnector {
   @override
   bool get isAutoReconnectScheduled => reconnectScheduled;
   @override
-  bool shouldSuppressAutoconnect(MeshCoreTransportType transport) => manual;
+  bool shouldSuppressAutoconnect(MeshCoreTransportType transport) => manual || (transport == MeshCoreTransportType.tcp && tcpPaused);
   @override
   Future<void> connectTcp({
     required String host,
     required int port,
     bool automaticReconnect = false,
   }) async {
+    lastAutomatic = automaticReconnect;
     targets.add((host: host, port: port));
     if (fail) throw StateError('Synthetic connection failure');
     connectionState = MeshCoreConnectionState.connected;
@@ -102,6 +105,16 @@ void main() {
       expect(connector.targets, hasLength(1));
     },
   );
+
+  test('startup respects TCP cooldown and marks its dial automatic', () async {
+    await remember();
+    connector.tcpPaused = true;
+    expect(await autoconnectSavedTcpRadio(connector), isFalse);
+    expect(connector.targets, isEmpty);
+    connector.tcpPaused = false;
+    expect(await autoconnectSavedTcpRadio(connector), isTrue);
+    expect(connector.lastAutomatic, isTrue);
+  });
 
   test('TCP autoconnect off leaves offline data untouched', () async {
     await remember();

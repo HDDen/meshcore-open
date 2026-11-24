@@ -189,3 +189,6 @@ an effect or in the five seconds after it stops are skipped.
 Touches pass through the effect. It stops when the app or chat loses
 visibility and follows the system's reduced-motion setting and the selected
 power profile.
+
+
+Message decorations: neutral incoming MCMP signature icons use incoming message text color, while outgoing MCMP icons use outgoing badge color. Shared-location text/icons use the message text color in both directions. Signature verification success, collision and error indicators retain their semantic colors. The channel header separates its send region and display filter with a small gap instead of a bullet.

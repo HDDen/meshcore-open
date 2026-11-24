@@ -118,6 +118,7 @@ void main() {
     await tester.pumpWidget(_app(line({})));
     expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
     expect(find.text('No filter'), findsOneWidget);
+    expect(find.textContaining('•'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('channel-region-filter')));
     expect(opened, 1);
     await tester.pumpWidget(_app(line({'', ChannelRegionFilter.unknown})));
