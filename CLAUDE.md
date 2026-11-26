@@ -4000,7 +4000,7 @@ ported. Owner runs analysis and regression tests before the next merge stage.
 
 **Version-only stage prepared 2026-11-22: `3944c4f4`.** Upstream changes
 only its version from `99.0.2+28` to `99.0.3+29`. Retain the fork release
-`9.5.3-mcoa.1.13.0+47` in all three profiles and the active manifest. No runtime
+`9.5.3-mcoa.1.13.0+48` in all three profiles and the active manifest. No runtime
 or dependency changes belong to this stage; the next stage is `84fc394e`
 (AppImage release packaging).
 
@@ -4525,7 +4525,7 @@ by the owner; native Linux/device checks remain pending.
 
 ## Dependencies
 
-App version: `9.5.3-mcoa.1.13.0+47` — Dart SDK constraint: `^3.9.2`. The base
+App version: `9.5.3-mcoa.1.13.0+48` — Dart SDK constraint: `^3.9.2`. The base
 is upstream's version (9.5.0 since its build 13), the fork's own release
 number follows `-mcoa.`, the build number counts the fork's builds; the base
 was 9.5.1 from 2026-08-20 to 2026-10-13 with no upstream 9.5.1 behind it.
