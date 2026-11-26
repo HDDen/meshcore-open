@@ -976,7 +976,7 @@ AppSettings persists the app-wide switch (default true) and selected levels
 5/10/15/20/25/30 (default 10/25). Mod Settings → Battery contains these controls
 and the relocated power-saving tile. `helpers/low_battery_alert_tracker.dart`
 requires two consecutive valid readings per selected threshold; each re-arms
-strictly above threshold + 5. Rising voltage and its subsequent equal readings
+at or above threshold + 1 (25% rearms at 26%). Rising voltage and its subsequent equal readings
 suppress alerts until voltage falls. This is an inference from raw millivolts,
 not a charger flag. Disabled/unselected thresholds cancel existing notifications
 and invalidate their queued shows with per-crossing tokens; changing another

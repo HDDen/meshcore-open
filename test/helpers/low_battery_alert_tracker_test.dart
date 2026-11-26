@@ -13,6 +13,10 @@ void main() {
       expect(state.observe(millivolts: voltage, percent: level).threshold, isNull);
       expect(state.observe(millivolts: voltage, percent: level).threshold, level);
       expect(state.observe(millivolts: voltage - 10, percent: level - 1).threshold, isNull);
+      expect(state.observe(millivolts: voltage, percent: level).rearmed, isEmpty);
+      expect(state.observe(millivolts: voltage + 10, percent: level + 1).rearmed, [level]);
+      expect(state.observe(millivolts: voltage, percent: level).threshold, isNull);
+      expect(state.observe(millivolts: voltage, percent: level).threshold, level);
     });
   }
 
@@ -29,13 +33,13 @@ void main() {
     expect(state.observe(millivolts: 3290, percent: 29).threshold, 30);
   });
 
-  test('lowest confirmed level wins; rearm remains strictly above level + 5', () {
+  test('lowest confirmed level wins; rearm starts at level + 1', () {
     final state = tracker([25, 10]);
     state.observe(millivolts: 3100, percent: 10);
     expect(state.observe(millivolts: 3100, percent: 10).threshold, 10);
     expect(state.alertedThresholds, unorderedEquals([10, 25]));
-    expect(state.observe(millivolts: 3300, percent: 30).rearmed, [10]);
-    expect(state.observe(millivolts: 3310, percent: 31).rearmed, [25]);
+    expect(state.observe(millivolts: 3250, percent: 25).rearmed, [10]);
+    expect(state.observe(millivolts: 3260, percent: 26).rearmed, [25]);
     expect(state.observe(millivolts: 3250, percent: 25).threshold, isNull);
     expect(state.observe(millivolts: 3250, percent: 25).threshold, 25);
   });

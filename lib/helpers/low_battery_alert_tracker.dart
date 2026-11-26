@@ -66,7 +66,7 @@ class LowBatteryAlertTracker {
     final rearmed = <int>[];
     final crossed = <int>[];
     for (final threshold in _thresholds) {
-      if (percent > threshold + 5 && _alerted.remove(threshold)) {
+      if (percent >= threshold + 1 && _alerted.remove(threshold)) {
         _notificationTokens.remove(threshold);
         rearmed.add(threshold);
       }

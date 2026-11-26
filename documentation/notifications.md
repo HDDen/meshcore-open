@@ -90,8 +90,8 @@ the battery indicator. A zero reading or, for ordinary profiles, a reading below
 custom/additional profile whose minimum is below 2 V remains supported. The
 raw voltage and battery indicator are not changed by this notification filter.
 
-A threshold alerts once per connection session until charge rises strictly
-above it by five percentage points (for example, above **30%** for a **25%** alert).
+A threshold alerts once per connection session until charge rises at least
+one percentage point above it (for example, **26%** or more for a **25%** alert).
 Recharging past that boundary clears the corresponding notification and allows
 another alert after two new low readings. Disconnecting, resetting the
 connection handshake or changing radio identity clears the previous radio's

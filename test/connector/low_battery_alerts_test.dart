@@ -343,14 +343,14 @@ void main() {
       });
     }, timeout: timeout);
 
-    testWidgets('rearm is strictly above five points and uses the same id', (tester) async {
+    testWidgets('rearm starts at one point above the threshold and uses the same id', (tester) async {
       await _withAlerts(tester, (h) async {
         await h.reading(3240);
         await h.reading(3240);
         final id = h.plugin.args(h.plugin.shown.single)['id'];
-        await h.reading(3360);
+        await h.reading(3300);
         expect(h.plugin.cancelled, isEmpty);
-        await h.reading(3372);
+        await h.reading(3312);
         expect(h.plugin.cancelled, hasLength(1));
         expect(h.plugin.args(h.plugin.cancelled.single)['id'], id);
         await h.reading(3240);
