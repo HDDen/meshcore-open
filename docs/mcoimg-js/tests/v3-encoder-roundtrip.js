@@ -171,6 +171,16 @@ assert(v3.MCOImageV3Codec.inspectBody(solid.body).containerName === 'solidBackgr
 assertImage(codec.decodeBody(solid.body), solidImage, 'solid/winner');
 containers.add('solidBackground');
 
+// 1x1 solid images in profiles wider than 5 bits: the zero colour-ref tail must still be written,
+// or the decoder runs out of bits.
+for (const profile of [v3.PaletteProfile.master64, v3.PaletteProfile.dynamicGlobal512]) {
+  for (const color of [1, 2, 7, 31]) {
+    const tinySolid = image(`solid-1x1-${profile}-${color}`, 1, 1, profile, [color]);
+    const encoded = codec.encode(tinySolid, { compressionLevel: 'normal', packetNonce: 0x11 });
+    assertImage(codec.decodeBody(encoded.body), tinySolid, tinySolid.name);
+  }
+}
+
 const deterministicImage = cases[0].image;
 const deterministicOptions = {
   compressionLevel: 'normal',
