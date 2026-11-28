@@ -3926,8 +3926,9 @@
     writeImagePreamble(writer, image, ScanMode.h, implicit, MCOImageV3Container.solidBackground, ref & CONTAINER_CONTEXT_MASK);
     if (image.transparentColor != null) writeColorRef(writer, image.paletteProfile, image.transparentColor);
     if (!implicit) {
-      const tail = ref >> 5;
-      if (tail > 0) writer.writeBits(tail, Math.max(0, globalBits(image.paletteProfile) - 5));
+      // The decoder always reads globalBits - 5 tail bits, even when they are zero.
+      const tailBits = Math.max(0, globalBits(image.paletteProfile) - 5);
+      if (tailBits > 0) writer.writeBits(ref >> 5, tailBits);
     }
     return makeCandidate(writer.toBytes(), {
       mode: ImageMode.rawGlobal, scan: ScanMode.h, backgroundColor: color,
